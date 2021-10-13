@@ -41,11 +41,11 @@ namespace Tasks.DBInit
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
             var effectiveTraitModel = new EffectiveTraitModel(relationModel, NullLogger<EffectiveTraitModel>.Instance);
-            var predicateModel = new GenericTraitEntityModel<Predicate, string>(effectiveTraitModel, ciModel, attributeModel, baseRelationModel);
+            var predicateModel = new GenericTraitEntityModel<Predicate, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
-            var traitModel = new GenericTraitEntityModel<RecursiveTrait, string>(effectiveTraitModel, ciModel, attributeModel, baseRelationModel);
+            var traitModel = new GenericTraitEntityModel<RecursiveTrait, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var lbas = new Mock<ILayerBasedAuthorizationService>();
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());

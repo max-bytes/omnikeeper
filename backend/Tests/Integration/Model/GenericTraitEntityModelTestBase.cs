@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
-    abstract class GenericTraitEntityModelTestBase : DIServicedTestBase
+    public abstract class GenericTraitEntityModelTestBase : DIServicedTestBase
     {
         public GenericTraitEntityModelTestBase() : base(true)
         {
@@ -35,12 +35,12 @@ namespace Tests.Integration.Model
             var effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
-            var baseRelationModel = ServiceProvider.GetRequiredService<IBaseRelationModel>();
+            var relationModel = ServiceProvider.GetRequiredService<IRelationModel>();
             var metaConfigurationModel = ServiceProvider.GetRequiredService<IMetaConfigurationModel>();
 
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(ModelContextBuilder.BuildImmediate());
 
-            var model = new GenericTraitEntityModel<T, ID>(effectiveTraitModel, ciModel, attributeModel, baseRelationModel);
+            var model = new GenericTraitEntityModel<T, ID>(effectiveTraitModel, ciModel, attributeModel, relationModel);
 
             var changesetProxy1 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
 
@@ -90,12 +90,12 @@ namespace Tests.Integration.Model
             var effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
-            var baseRelationModel = ServiceProvider.GetRequiredService<IBaseRelationModel>();
+            var relationModel = ServiceProvider.GetRequiredService<IRelationModel>();
             var metaConfigurationModel = ServiceProvider.GetRequiredService<IMetaConfigurationModel>();
 
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(ModelContextBuilder.BuildImmediate());
 
-            var model = new GenericTraitEntityModel<T, ID>(effectiveTraitModel, ciModel, attributeModel, baseRelationModel);
+            var model = new GenericTraitEntityModel<T, ID>(effectiveTraitModel, ciModel, attributeModel, relationModel);
 
             var rt1 = await model.GetAll(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.IsEmpty(rt1);

@@ -21,12 +21,13 @@ namespace Omnikeeper.Base.Model
         private readonly IEffectiveTraitModel effectiveTraitModel;
         protected readonly ICIModel ciModel;
         protected readonly IAttributeModel attributeModel;
-        protected readonly IBaseRelationModel baseRelationModel;
+        protected readonly IRelationModel relationModel;
         private readonly GenericTrait trait;
 
         //private readonly FieldInfo ciidFieldInfo;
         //private readonly TraitEntityAttribute traitEntityAttribute;
-        private readonly IEnumerable<TraitAttributeFieldInfo> fieldInfos;
+        private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
+        private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
         private static readonly MyJSONSerializer<object> DefaultSerializer = new MyJSONSerializer<object>(() =>
         {
@@ -38,16 +39,16 @@ namespace Omnikeeper.Base.Model
             return s;
         });
 
-        public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IBaseRelationModel baseRelationModel)
+        public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
         {
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.attributeModel = attributeModel;
-            this.baseRelationModel = baseRelationModel;
+            this.relationModel = relationModel;
 
             trait = RecursiveTraitService.FlattenSingleRecursiveTrait(TraitBuilderFromClass.Class2RecursiveTrait<T>());
 
-            (_, fieldInfos) = TraitBuilderFromClass.ExtractFieldInfos<T>();
+            (_, attributeFieldInfos, relationFieldInfos) = TraitBuilderFromClass.ExtractFieldInfos<T>();
 
             // TODO: prefetch/calculate idAttribute field infos
         }
@@ -130,7 +131,7 @@ namespace Omnikeeper.Base.Model
 
             var changed = false;
 
-            foreach (var taFieldInfo in fieldInfos)
+            foreach (var taFieldInfo in attributeFieldInfos)
             {
                 var entityValue = taFieldInfo.FieldInfo.GetValue(t);
 
@@ -170,8 +171,34 @@ namespace Omnikeeper.Base.Model
                         throw new Exception(); // TODO
                     }
                 }
+            }
 
-                // TODO: support relations
+            foreach (var trFieldInfo in relationFieldInfos)
+            {
+                var entityValue = trFieldInfo.FieldInfo.GetValue(t);
+
+                if (entityValue != null)
+                {
+                    var otherCIIDs = entityValue as Guid[];
+                    if (otherCIIDs == null)
+                        throw new Exception(); // invalid type
+                    var predicateID = trFieldInfo.TraitRelationAttribute.predicateID;
+
+                    foreach (var otherCIID in otherCIIDs) {
+                        var fromCIID = (trFieldInfo.TraitRelationAttribute.directionForward) ? ciid : otherCIID;
+                        var toCIID = (trFieldInfo.TraitRelationAttribute.directionForward) ? otherCIID : ciid;
+
+                        (_, var tmpChanged) = await relationModel.InsertRelation(fromCIID, toCIID, predicateID, writeLayer, changesetProxy, dataOrigin, trans);
+                        changed = changed || tmpChanged;
+                    }
+                }
+                else
+                {
+                    if (!trFieldInfo.TraitRelationAttribute.optional)
+                    {
+                        throw new Exception(); // TODO
+                    }
+                }
             }
 
             var dc = await GetSingleByCIID(ciid, layerSet, trans, changesetProxy.TimeThreshold);
@@ -189,11 +216,27 @@ namespace Omnikeeper.Base.Model
                 return false; // no dc with this ID exists
             }
 
-            foreach (var traitAttributeField in fieldInfos)
+            foreach (var traitAttributeField in attributeFieldInfos)
             {
                 var (_, _) = await attributeModel.RemoveAttribute(traitAttributeField.TraitAttributeAttribute.aName, dc.ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+            }
 
-                // TODO: support relations
+            if (!relationFieldInfos.IsEmpty())
+            {
+                var allRelationsForward = await relationModel.GetRelations(RelationSelectionFrom.Build(dc.ciid), writeLayerID, trans, TimeThreshold.BuildLatest());
+                var allRelationsBackward = await relationModel.GetRelations(RelationSelectionTo.Build(dc.ciid), writeLayerID, trans, TimeThreshold.BuildLatest());
+                foreach (var traitRelationField in relationFieldInfos)
+                {
+                    var predicateID = traitRelationField.TraitRelationAttribute.predicateID;
+                    var relevantRelationsForward = allRelationsForward.Where(r => r.PredicateID == predicateID);
+                    var relevantRelationsBackward = allRelationsBackward.Where(r => r.PredicateID == predicateID);
+                    var relationsToRemove = relevantRelationsForward.Concat(relevantRelationsBackward);
+
+                    foreach (var r in relationsToRemove)
+                    {
+                        var (_, _) = await relationModel.RemoveRelation(r.FromCIID, r.ToCIID, r.PredicateID, writeLayerID, changesetProxy, dataOrigin, trans);
+                    }
+                }
             }
 
             var dcAfterDeletion = await GetSingleByCIID(dc.ciid, layerSet, trans, changesetProxy.TimeThreshold);
@@ -214,45 +257,56 @@ namespace Omnikeeper.Base.Model
             TraitAttributeAttribute = traitAttributeAttribute;
             AttributeValueType = attributeValueType;
             IsArray = isArray;
+        }
+    }
 
-            // find JSON serializer, if it exists
-            //if (attributeValueType == AttributeValueType.JSON && traitAttributeAttribute.isJSONSerialized)
-            //{
-            //    var fieldType = fieldInfo.FieldType;
-            //    var serializerField = fieldType.GetField("Serializer", BindingFlags.Static);
+    public class TraitRelationFieldInfo
+    {
+        public readonly FieldInfo FieldInfo;
+        public readonly TraitRelationAttribute TraitRelationAttribute;
 
-            //    var serializer = (MyJSONSerializer<?>)serializerField.GetValue(null);
-
-            //}
+        public TraitRelationFieldInfo(FieldInfo fieldInfo, TraitRelationAttribute traitRelationAttribute)
+        {
+            FieldInfo = fieldInfo;
+            TraitRelationAttribute = traitRelationAttribute;
         }
     }
 
     // TODO: refactor
     public static class TraitBuilderFromClass
     {
-        public static (TraitEntityAttribute ta, IEnumerable<TraitAttributeFieldInfo>) ExtractFieldInfos<C>() where C : TraitEntity, new()
+        public static (TraitEntityAttribute te, IEnumerable<TraitAttributeFieldInfo> ta, IEnumerable<TraitRelationFieldInfo> tr) ExtractFieldInfos<C>() where C : TraitEntity, new()
         {
             Type type = typeof(C);
             var ta = Attribute.GetCustomAttribute(type, typeof(TraitEntityAttribute)) as TraitEntityAttribute;
             if (ta == null)
                 throw new Exception($"Could not find attribute TraitEntity on class {type.Name}");
 
-            var fieldInfos = new List<TraitAttributeFieldInfo>();
+            var attributeFieldInfos = new List<TraitAttributeFieldInfo>();
+            var relationFieldInfos = new List<TraitRelationFieldInfo>();
             foreach (FieldInfo fInfo in type.GetFields())
             {
                 if (!fInfo.IsStatic) // ignore static fields
                 {
                     var taa = Attribute.GetCustomAttribute(fInfo, typeof(TraitAttributeAttribute)) as TraitAttributeAttribute;
-                    if (taa == null)
-                        throw new Exception($"Trait class {type.Name}: field without TraitAttribute attribute detected: {fInfo.Name}");
-
-                    var (attributeValueType, isArray) = Type2AttributeValueType(fInfo, taa);
-
-                    fieldInfos.Add(new TraitAttributeFieldInfo(fInfo, taa, attributeValueType, isArray));
+                    var tra = Attribute.GetCustomAttribute(fInfo, typeof(TraitRelationAttribute)) as TraitRelationAttribute;
+                    if (taa == null && tra == null)
+                        throw new Exception($"Trait class {type.Name}: field with neither TraitAttribute nor TraitRelation attribute detected: {fInfo.Name}");
+                    else if (taa != null)
+                    {
+                        var (attributeValueType, isArray) = Type2AttributeValueType(fInfo, taa);
+                        attributeFieldInfos.Add(new TraitAttributeFieldInfo(fInfo, taa, attributeValueType, isArray));
+                    } else if (tra != null)
+                    {
+                        relationFieldInfos.Add(new TraitRelationFieldInfo(fInfo, tra));
+                    } else
+                    {
+                        throw new Exception($"Trait class {type.Name}: field with both TraitAttribute AND TraitRelation attribute detected: {fInfo.Name}");
+                    }
                 }
             }
 
-            return (ta, fieldInfos);
+            return (ta, attributeFieldInfos, relationFieldInfos);
         }
 
         public static (FieldInfo idField, string attributeName, AttributeValueType attributeValueType) ExtractIDAttributeInfos<C>() where C : TraitEntity, new()
@@ -273,11 +327,11 @@ namespace Omnikeeper.Base.Model
 
         public static C EffectiveTrait2Object<C>(EffectiveTrait et, MyJSONSerializer<object> jsonSerializer) where C : TraitEntity, new()
         {
-            var (_, fieldInfos) = ExtractFieldInfos<C>();
+            var (_, attributeFieldInfos, relationFieldInfos) = ExtractFieldInfos<C>();
 
             var ret = new C();
 
-            foreach (var taFieldInfo in fieldInfos)
+            foreach (var taFieldInfo in attributeFieldInfos)
             {
                 // get value from effective trait
                 if (et.TraitAttributes.TryGetValue(taFieldInfo.TraitAttributeAttribute.taName, out var attribute))
@@ -317,8 +371,27 @@ namespace Omnikeeper.Base.Model
                     if (!taFieldInfo.TraitAttributeAttribute.optional)
                         throw new Exception($"Could not find trait attribute {taFieldInfo.TraitAttributeAttribute.taName} for mandatory field");
                 }
+            }
 
-                // TODO: relations
+            foreach (var trFieldInfo in relationFieldInfos)
+            {
+                var isForward = trFieldInfo.TraitRelationAttribute.directionForward;
+                var predicateID = trFieldInfo.TraitRelationAttribute.predicateID;
+                var trName = trFieldInfo.TraitRelationAttribute.trName;
+                var relationList = (isForward) ? et.OutgoingTraitRelations : et.IncomingTraitRelations;
+                // get value from effective trait
+                if (relationList.TryGetValue(trName, out var relations))
+                {
+                    var otherCIIDs = ((isForward) ? relations.Select(r => r.Relation.ToCIID) : relations.Select(r => r.Relation.FromCIID)).ToArray();
+                    
+                    trFieldInfo.FieldInfo.SetValue(ret, otherCIIDs);
+                }
+                else
+                {
+                    // optional or not? depending on that, throw error or continue
+                    if (!trFieldInfo.TraitRelationAttribute.optional)
+                        throw new Exception($"Could not find trait relation {trFieldInfo.TraitRelationAttribute.trName} for mandatory field");
+                }
             }
 
             return ret;
@@ -326,12 +399,14 @@ namespace Omnikeeper.Base.Model
 
         public static RecursiveTrait Class2RecursiveTrait<C>() where C : TraitEntity, new()
         {
-            var (ta, fieldInfos) = ExtractFieldInfos<C>();
+            var (ta, attributeFieldInfos, relationFieldInfos) = ExtractFieldInfos<C>();
 
             var requiredAttributes = new List<TraitAttribute>();
             var optionalAttributes = new List<TraitAttribute>();
+            var requiredRelations = new List<TraitRelation>();
+            var optionalRelations = new List<TraitRelation>();
 
-            foreach (var taFieldInfo in fieldInfos)
+            foreach (var taFieldInfo in attributeFieldInfos)
             {
                 var constraints = FieldInfo2AttributeValueConstraints(taFieldInfo.FieldInfo).ToList();
                 var taa = taFieldInfo.TraitAttributeAttribute;
@@ -339,9 +414,16 @@ namespace Omnikeeper.Base.Model
                 targetAttributeList.Add(new TraitAttribute(taa.taName, new CIAttributeTemplate(taa.aName, taFieldInfo.AttributeValueType, taFieldInfo.IsArray, constraints)));
             }
 
+            foreach (var trFieldInfo in relationFieldInfos)
+            {
+                var tra = trFieldInfo.TraitRelationAttribute;
+                var targetRelationList = (tra.optional) ? optionalRelations : requiredRelations;
+                targetRelationList.Add(new TraitRelation(tra.trName, new RelationTemplate(tra.predicateID, tra.directionForward, tra.minCardinality, tra.maxCardinality)));
+            }
+
             var traitOrigin = new TraitOriginV1(ta.originType);
 
-            var ret = new RecursiveTrait(ta.traitName, traitOrigin, requiredAttributes, optionalAttributes);
+            var ret = new RecursiveTrait(ta.traitName, traitOrigin, requiredAttributes, optionalAttributes, requiredRelations, optionalRelations);
             return ret;
         }
 
@@ -389,6 +471,8 @@ namespace Omnikeeper.Base.Model
                     avt = AttributeValueType.Text;
                 else if (elementType == typeof(long))
                     avt = AttributeValueType.Integer;
+                else if (elementType == typeof(JObject))
+                    avt = AttributeValueType.JSON;
                 else
                     throw new Exception("Not supported (yet)");
             }

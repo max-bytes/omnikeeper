@@ -41,6 +41,38 @@ namespace Omnikeeper.Base.Entity
     }
 
     [AttributeUsage(AttributeTargets.Field)]
+    public sealed class TraitRelationAttribute : Attribute
+    {
+        public readonly string trName;
+        public readonly string predicateID;
+        public readonly bool directionForward;
+        public readonly int? minCardinality;
+        public readonly int? maxCardinality;
+        public readonly bool optional;
+
+        public TraitRelationAttribute(string trName, string predicateID, bool directionForward, int minCardinality, int maxCardinality, bool optional = false)
+        {
+            this.trName = trName;
+            this.predicateID = predicateID;
+            this.predicateID = predicateID;
+            this.directionForward = directionForward;
+
+            if (minCardinality == -1)
+                this.minCardinality = null;
+            else
+                this.minCardinality = minCardinality;
+            if (maxCardinality == -1)
+                this.maxCardinality = null;
+            else
+                this.maxCardinality = maxCardinality;
+
+            this.optional = optional;
+        }
+    }
+
+    
+
+   [AttributeUsage(AttributeTargets.Field)]
     public sealed class TraitEntityIDAttribute : Attribute
     {
         public TraitEntityIDAttribute()

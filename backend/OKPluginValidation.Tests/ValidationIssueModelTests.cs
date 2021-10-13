@@ -1,29 +1,20 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using NUnit.Framework;
 using OKPluginValidation.Validation;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Plugins;
-using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Tests.Integration;
+using Tests.Integration.Model;
 
 namespace OKPluginValidation.Tests
 {
-    class ValidationIssueModelTests : DIServicedTestBase
+    class ValidationIssueModelTests : GenericTraitEntityModelTestBase
     {
-        public ValidationIssueModelTests() : base(true)
-        {
-        }
-
         protected override void InitServices(IServiceCollection services)
         {
             base.InitServices(services);
@@ -34,70 +25,57 @@ namespace OKPluginValidation.Tests
         }
 
         [Test]
-        public async Task TestBasic()
+        public void TestTraitGeneration()
         {
-            var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
-            var layerOKConfig = await ServiceProvider.GetRequiredService<ILayerModel>().UpsertLayer("__okconfig", ModelContextBuilder.BuildImmediate());
-            var userInDatabase = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
-            var user = new AuthenticatedUser(userInDatabase,
-                new HashSet<string>() {
-                    PermissionUtils.GetLayerReadPermission(layerOKConfig), PermissionUtils.GetLayerWritePermission(layerOKConfig),
-                });
-            currentUserServiceMock.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
+            var et = TraitBuilderFromClass.Class2RecursiveTrait<ValidationIssue>();
 
-            var metaConfigurationModel = ServiceProvider.GetRequiredService<IMetaConfigurationModel>();
+            et.Should().BeEquivalentTo(
+                new RecursiveTrait("__meta.validation.validation_issue", new TraitOriginV1(TraitOriginType.Plugin),
+                    new List<TraitAttribute>() {
+                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("validation_issue.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("message", CIAttributeTemplate.BuildFromParams("validation_issue.message", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                    },
+                    new List<TraitAttribute>() {
+                        new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                    },
+                    new List<TraitRelation>()
+                    {
+                        new TraitRelation("has_issue", new RelationTemplate("__meta.validation.has_issue", false, 1, null)),
+                    }
+                )
+            );
+        }
 
-            var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(ModelContextBuilder.BuildImmediate());
-
-            var validationIssueModel = ServiceProvider.GetRequiredService<IValidationIssueModel>();
-
+        [Test]
+        public async Task TestGenericOperations()
+        {
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            var affectedCIIDs = new Guid[] { 
+                await ciModel.CreateCI(ModelContextBuilder.BuildImmediate()), 
+                await ciModel.CreateCI(ModelContextBuilder.BuildImmediate()), 
+                await ciModel.CreateCI(ModelContextBuilder.BuildImmediate()) 
+            };
+            await TestGenericModelOperations(
+                () => new ValidationIssue("validation_issue1", "msg1", new Guid[] { affectedCIIDs[0], affectedCIIDs[1] }),
+                () => new ValidationIssue("validation_issue2", "msg2", new Guid[] { affectedCIIDs[2] }),
+                "validation_issue1", "non_existant_id"
+                );
+        }
+        [Test]
+        public async Task TestGetByDataID()
+        {
+            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            var affectedCIIDs = new Guid[] {
+                await ciModel.CreateCI(ModelContextBuilder.BuildImmediate()),
+                await ciModel.CreateCI(ModelContextBuilder.BuildImmediate()),
+                await ciModel.CreateCI(ModelContextBuilder.BuildImmediate())
+            };
 
-            // create a test ci to relate to
-            Guid otherCIID;
-            using (var trans = ModelContextBuilder.BuildDeferred())
-            {
-                otherCIID = await ciModel.CreateCI(trans);
-                trans.Commit();
-            }
-
-            var vi1 = await validationIssueModel.GetValidationIssues(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            Assert.IsEmpty(vi1);
-
-            var changesetProxy1 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
-
-            ValidationIssue validationIssue;
-            using (var trans = ModelContextBuilder.BuildDeferred())
-            {
-                bool changed;
-                (validationIssue, changed) = await validationIssueModel.InsertOrUpdate("test-ID", "test-message", new Guid[] { otherCIID },
-                    metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                    new DataOriginV1(DataOriginType.Manual), changesetProxy1, trans);
-
-                Assert.IsNotNull(validationIssue);
-                Assert.IsTrue(changed);
-
-                trans.Commit();
-            }
-
-            var vi2 = await validationIssueModel.GetValidationIssues(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            Assert.AreEqual(1, vi2.Count());
-            var tmp = vi2.First().Value;
-            validationIssue.Should().BeEquivalentTo(tmp, options => options.WithStrictOrdering());
-
-            var changesetProxy2 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
-
-            using (var trans = ModelContextBuilder.BuildDeferred())
-            {
-                bool deleted = await validationIssueModel.TryToDelete(validationIssue.ID,
-                    metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, 
-                    new DataOriginV1(DataOriginType.Manual), changesetProxy2, trans);
-                Assert.IsTrue(deleted);
-                trans.Commit();
-            }
-
-            var vi3 = await validationIssueModel.GetValidationIssues(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            Assert.IsEmpty(vi3);
+            await TestGenericModelGetByDataID(
+                () => new ValidationIssue("validation_issue1", "msg1", new Guid[] { affectedCIIDs[0], affectedCIIDs[1] }),
+                () => new ValidationIssue("validation_issue2", "msg2", new Guid[] { affectedCIIDs[2] }),
+                "validation_issue1", "validation_issue2", "non_existant_id"
+                );
         }
     }
 }
