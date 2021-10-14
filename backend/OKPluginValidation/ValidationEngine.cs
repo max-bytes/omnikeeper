@@ -5,6 +5,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,19 +16,21 @@ namespace OKPluginValidation.Validation
     public class ValidationEngine : IValidationEngine
     {
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly IValidationIssueModel validationIssueModel;
-        private readonly IValidationModel validationModel;
+        private readonly GenericTraitEntityModel<ValidationIssue, string> validationIssueModel;
+        private readonly GenericTraitEntityModel<Validation, string> validationModel;
+        private readonly IAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly IUserInDatabaseModel userInDatabaseModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IDictionary<string, IValidationRule> availableValidationRules;
 
-        public ValidationEngine(IModelContextBuilder modelContextBuilder, IValidationIssueModel validationIssueModel, IValidationModel validationModel,
+        public ValidationEngine(IModelContextBuilder modelContextBuilder, GenericTraitEntityModel<ValidationIssue, string> validationIssueModel, GenericTraitEntityModel<Validation, string> validationModel, IAttributeModel attributeModel,
             IChangesetModel changesetModel, IUserInDatabaseModel userInDatabaseModel, IEnumerable<IValidationRule> availableValidationRules, IMetaConfigurationModel metaConfigurationModel)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.validationIssueModel = validationIssueModel;
             this.validationModel = validationModel;
+            this.attributeModel = attributeModel;
             this.changesetModel = changesetModel;
             this.userInDatabaseModel = userInDatabaseModel;
             this.metaConfigurationModel = metaConfigurationModel;
@@ -36,6 +39,20 @@ namespace OKPluginValidation.Validation
 
         public async Task<bool> Run(ILogger logger)
         {
+            //var timeThreshold = TimeThreshold.BuildLatest();
+            //var username = "__validation.engine";
+            //var displayName = username;
+            //// generate a unique but deterministic GUID
+            //var userGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
+            //var guid = GuidUtility.Create(userGuidNamespace, username);
+            //var user = await userInDatabaseModel.UpsertUser(username, displayName, guid, UserType.Robot, modelContextBuilder.BuildImmediate());
+            //var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
+
+            //using var trans = modelContextBuilder.BuildDeferred();
+            //await attributeModel.InsertAttribute("Test-JSON2", AttributeScalarValueJSON.BuildFromString(TMP.JSON), new Guid("5cb5a891-e749-4d32-a0af-8e72d58866cf"), "tsa_cmdb", 
+            //    changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
+            //trans.Commit();
+
             var validationWriteLayerID = "__okvalidation"; // TODO
             var validationWriteLayerset = new LayerSet(validationWriteLayerID);
 
@@ -43,7 +60,7 @@ namespace OKPluginValidation.Validation
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var validations = await validationModel.GetValidations(metaConfiguration.ConfigLayerset, modelContextBuilder.BuildImmediate(), timeThreshold);
+            var validations = await validationModel.GetAllByDataID(metaConfiguration.ConfigLayerset, modelContextBuilder.BuildImmediate(), timeThreshold);
 
             // user handling: get or create
             // TODO: generalize, offer method for upserting a special process user (consolidate with CLB users)
@@ -85,11 +102,11 @@ namespace OKPluginValidation.Validation
             {
                 using var trans = modelContextBuilder.BuildDeferred();
                 var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
-                var oldValidationIssues = await validationIssueModel.GetValidationIssues(validationWriteLayerset, trans, timeThreshold);
+                var oldValidationIssues = await validationIssueModel.GetAllByDataID(validationWriteLayerset, trans, timeThreshold);
 
                 // TODO: implement a bulk update instead of updating each item separately
                 foreach (var (_, newIssue) in newIssues)
-                    await validationIssueModel.InsertOrUpdate(newIssue.ID, newIssue.Message, newIssue.AffectedCIs, validationWriteLayerset, validationWriteLayerID,
+                    await validationIssueModel.InsertOrUpdate(newIssue, validationWriteLayerset, validationWriteLayerID,
                         new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans);
 
                 var outdatedIssues = oldValidationIssues.Where(kv => !newIssues.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
