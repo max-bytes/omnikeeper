@@ -78,7 +78,23 @@ export function Context(props) {
                     save={save}
                     refreshData={() => refreshData(gridApi)}
                     excelExport={() => {
-                        aGGridEnterpriseActive && gridApi.exportDataAsExcel({fileName: 'gridview_export.xlsx'});
+                        aGGridEnterpriseActive &&
+                        gridApi.exportDataAsExcel({
+                            fileName: 'gridview_export.xlsx',
+                            // process cell to use valueFormatter with Excel Export
+                            processCellCallback: (params) => {
+                                const colDef = params.column.getColDef();
+                                if (colDef.valueFormatter) {
+                                    const valueFormatterParams = {
+                                        ...params,
+                                        data: params.node.data,
+                                        colDef: params.column.getColDef()
+                                    };
+                                    return colDef.valueFormatter(valueFormatterParams);
+                                }
+                                return params.value;
+                            }
+                        });
                     }}
                 />
             </Header>
@@ -96,6 +112,9 @@ export function Context(props) {
                         defaultColDef={defaultColDef}
                         animateRows={true}
                         rowSelection="multiple"
+                        enableRangeSelection={true}
+                        suppressMultiRangeSelection={true}
+                        suppressRowClickSelection={true}
                         onCellValueChanged={updateCellValue}
                         suppressFieldDotNotation={true}
                         getRowNodeId={function (data) {
@@ -179,8 +198,7 @@ export function Context(props) {
                 const editableCell = focusedCell.column.colDef.editable(params);
                 const editableCol = focusedCell.column.colDef.editable;
                 if (editableCol && editableCell) {
-                    const currentValue = rowNode.data[focusedCell.column.colId];
-                    rowNode.setDataValue(focusedCell.column.colId, {...currentValue, values: []});
+                    rowNode.setDataValue(focusedCell.column.colId, undefined);
                 }
             }
         }
