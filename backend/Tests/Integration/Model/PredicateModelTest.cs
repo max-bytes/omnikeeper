@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
-    class PredicateModelTest : GenericTraitEntityModelTestBase
+    class PredicateModelTest : GenericTraitEntityModelTestBase<Predicate, string>
     {
         [Test]
         public void TestTraitGeneration()

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
-    class AuthRoleModelTest : GenericTraitEntityModelTestBase
+    class AuthRoleModelTest : GenericTraitEntityModelTestBase<AuthRole, string>
     {
         [Test]
         public void TestTraitGeneration()

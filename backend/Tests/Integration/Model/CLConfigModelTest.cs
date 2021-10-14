@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
-    class CLConfigModelTest : GenericTraitEntityModelTestBase
+    class CLConfigModelTest : GenericTraitEntityModelTestBase<CLConfigV1, string>
     {
         [Test]
         public void TestTraitGeneration()
@@ -36,18 +37,18 @@ namespace Tests.Integration.Model
         public async Task TestGenericOperations()
         {
             await TestGenericModelOperations(
-                () => new AuthRole("test_auth_role01", new string[] { "p1", "p2" }),
-                () => new AuthRole("test_auth_role02", new string[] { "p3" }),
-                "test_auth_role01", "test_auth_role02", "non_existant"
+                () => new CLConfigV1("test_cl_config01", "clBrainRef1", JObject.Parse(@"{""foo"": ""bar""}")),
+                () => new CLConfigV1("test_cl_config02", "clBrainRef2", JObject.Parse(@"{""foo"": ""blub""}")),
+                "test_cl_config01", "test_cl_config02", "non_existant"
                 );
         }
         [Test]
         public async Task TestGetByDataID()
         {
             await TestGenericModelGetByDataID(
-                () => new AuthRole("test_auth_role01", new string[] { "p1", "p2" }),
-                () => new AuthRole("test_auth_role02", new string[] { "p3" }),
-                "test_auth_role01", "test_auth_role02", "non_existant_id"
+                () => new CLConfigV1("test_cl_config01", "clBrainRef1", JObject.Parse(@"{""foo"": ""bar""}")),
+                () => new CLConfigV1("test_cl_config02", "clBrainRef2", JObject.Parse(@"{""foo"": ""blub""}")),
+                "test_cl_config01", "test_cl_config02", "non_existant_id"
                 );
         }
     }

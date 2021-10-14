@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace Tests.Integration.Model
 {
-    class BaseConfigurationModelTest : GenericTraitEntityModelTestBase
+    class BaseConfigurationModelTest : GenericTraitEntityModelTestBase<BaseConfigurationV2, string>
     {
         [Test]
         public void TestTraitGeneration()

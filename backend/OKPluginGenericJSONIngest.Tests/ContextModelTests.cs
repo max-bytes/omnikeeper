@@ -15,7 +15,7 @@ using Tests.Integration.Model;
 
 namespace OKPluginGenericJSONIngest
 {
-    class ContextModelTests : GenericTraitEntityModelTestBase
+    class ContextModelTests : GenericTraitEntityModelTestBase<Context, string>
     {
         protected override void InitServices(IServiceCollection services)
         {

@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
-    class RecursiveTraitModelTests : GenericTraitEntityModelTestBase
+    class RecursiveTraitModelTests : GenericTraitEntityModelTestBase<RecursiveTrait, string>
     {
         [Test]
         public void TestTraitGeneration()

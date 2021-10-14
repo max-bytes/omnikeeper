@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
-    class GridViewContextModelTest : GenericTraitEntityModelTestBase
+    class GridViewContextModelTest : GenericTraitEntityModelTestBase<GridViewContext, string>
     {
         [Test]
         public void TestTraitGeneration()

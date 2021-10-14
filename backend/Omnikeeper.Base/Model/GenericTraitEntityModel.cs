@@ -115,7 +115,7 @@ namespace Omnikeeper.Base.Model
             return ret;
         }
 
-        public async Task<(T dc, bool changed)> InsertOrUpdate(T t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, ChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(T dc, bool changed)> InsertOrUpdate(T t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var (idField, _, _) = TraitBuilderFromClass.ExtractIDAttributeInfos<T>();
 
@@ -141,10 +141,10 @@ namespace Omnikeeper.Base.Model
             foreach (var taFieldInfo in attributeFieldInfos)
             {
                 var entityValue = taFieldInfo.FieldInfo.GetValue(t);
+                var attributeName = taFieldInfo.TraitAttributeAttribute.aName;
 
                 if (entityValue != null)
                 {
-                    var attributeName = taFieldInfo.TraitAttributeAttribute.aName;
 
                     if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.TraitAttributeAttribute.isJSONSerialized)
                     {
@@ -176,6 +176,16 @@ namespace Omnikeeper.Base.Model
                     if (!taFieldInfo.TraitAttributeAttribute.optional)
                     {
                         throw new Exception(); // TODO
+                    } else
+                    {
+                        // this is an optional attribute, and it is not set, so we actually try to remove the attribute
+                        try
+                        {
+                            (_, var tmpChanged) = await attributeModel.RemoveAttribute(attributeName, ciid, writeLayer, changesetProxy, dataOrigin, trans);
+                            changed = changed || tmpChanged;
+                        } catch (Exception)
+                        { // catch exception that is throw if attribute does not exist
+                        }
                     }
                 }
             }
@@ -421,6 +431,11 @@ namespace Omnikeeper.Base.Model
                     // optional or not? depending on that, throw error or continue
                     if (!taFieldInfo.TraitAttributeAttribute.optional)
                         throw new Exception($"Could not find trait attribute {taFieldInfo.TraitAttributeAttribute.taName} for mandatory field");
+                    else
+                    {
+                        // set to default value, to ensure consistency and not rely on default constructor
+                        taFieldInfo.FieldInfo.SetValue(ret, default);
+                    }
                 }
             }
 

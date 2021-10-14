@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
-    class GeneratorModelTest : GenericTraitEntityModelTestBase
+    class GeneratorModelTest : GenericTraitEntityModelTestBase<GeneratorV1, string>
     {
         [Test]
         public void TestTraitGeneration()

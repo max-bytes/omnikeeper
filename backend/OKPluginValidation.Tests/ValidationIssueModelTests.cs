@@ -13,7 +13,7 @@ using Tests.Integration.Model;
 
 namespace OKPluginValidation.Tests
 {
-    class ValidationIssueModelTests : GenericTraitEntityModelTestBase
+    class ValidationIssueModelTests : GenericTraitEntityModelTestBase<ValidationIssue, string>
     {
         protected override void InitServices(IServiceCollection services)
         {
