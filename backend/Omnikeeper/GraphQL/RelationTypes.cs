@@ -1,13 +1,11 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Types;
-using GraphQL.Utilities;
-using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -113,7 +111,10 @@ namespace Omnikeeper.GraphQL
                 var layerstackIDs = context.Source!.LayerStackIDs;
 
                 var loader = dataLoaderContextAccessor.Context.GetOrAddLoader("GetAllLayers", () => layerModel.GetLayers(userContext.Transaction));
-                return loader.LoadAsync().Then(layers => layers.Where(l => layerstackIDs.Contains(l.ID)));
+                return loader.LoadAsync().Then(layers => layers
+                        .Where(l => layerstackIDs.Contains(l.ID))
+                        .OrderBy(l => layerstackIDs.IndexOf(l.ID))
+                    );
             });
         }
     }
