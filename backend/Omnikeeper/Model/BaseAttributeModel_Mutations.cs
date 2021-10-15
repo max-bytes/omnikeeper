@@ -30,46 +30,13 @@ namespace Omnikeeper.Model
             if (currentAttribute != null && currentAttribute.Value.Equals(value))
                 return (currentAttribute, false);
 
-            var changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
-            var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
-
-            var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
             var id = Guid.NewGuid();
+            var (_, changesetID) = await _BulkUpdate(
+                new (Guid, string, IAttributeValue, Guid?, Guid)[] { (ciid, name, value, currentAttribute?.ID, id) }, 
+                new (Guid, string, IAttributeValue, Guid, Guid)[0], 
+                layerID, origin, changesetProxy, trans);
 
-            using var commandHistoric = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, removed, ""timestamp"", changeset_id, partition_index) 
-                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @removed, @timestamp, @changeset_id, @partition_index)", trans.DBConnection, trans.DBTransaction);
-            commandHistoric.Parameters.AddWithValue("id", id);
-            commandHistoric.Parameters.AddWithValue("name", name);
-            commandHistoric.Parameters.AddWithValue("ci_id", ciid);
-            commandHistoric.Parameters.AddWithValue("type", value.Type);
-            commandHistoric.Parameters.AddWithValue("value_text", valueText);
-            commandHistoric.Parameters.AddWithValue("value_binary", valueBinary);
-            commandHistoric.Parameters.AddWithValue("value_control", valueControl);
-            commandHistoric.Parameters.AddWithValue("layer_id", layerID);
-            commandHistoric.Parameters.AddWithValue("removed", false);
-            commandHistoric.Parameters.AddWithValue("timestamp", changeset.Timestamp);
-            commandHistoric.Parameters.AddWithValue("changeset_id", changeset.ID);
-            commandHistoric.Parameters.AddWithValue("partition_index", partitionIndex);
-            await commandHistoric.ExecuteNonQueryAsync();
-
-            using var commandLatest = new NpgsqlCommand(@"
-                INSERT INTO attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id) 
-                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @timestamp, @changeset_id)
-                ON CONFLICT ON CONSTRAINT name_ci_id_layer_id DO UPDATE SET id = EXCLUDED.id, type = EXCLUDED.type, value_text = EXCLUDED.value_text, value_binary = EXCLUDED.value_binary, 
-                value_control = EXCLUDED.value_control, ""timestamp"" = EXCLUDED.""timestamp"", changeset_id = EXCLUDED.changeset_id", trans.DBConnection, trans.DBTransaction);
-            commandLatest.Parameters.AddWithValue("id", id);
-            commandLatest.Parameters.AddWithValue("name", name);
-            commandLatest.Parameters.AddWithValue("ci_id", ciid);
-            commandLatest.Parameters.AddWithValue("type", value.Type);
-            commandLatest.Parameters.AddWithValue("value_text", valueText);
-            commandLatest.Parameters.AddWithValue("value_binary", valueBinary);
-            commandLatest.Parameters.AddWithValue("value_control", valueControl);
-            commandLatest.Parameters.AddWithValue("layer_id", layerID);
-            commandLatest.Parameters.AddWithValue("timestamp", changeset.Timestamp);
-            commandLatest.Parameters.AddWithValue("changeset_id", changeset.ID);
-            await commandLatest.ExecuteNonQueryAsync();
-
-            return (new CIAttribute(id, name, ciid, value, changeset.ID), true);
+            return (new CIAttribute(id, name, ciid, value, changesetID), true);
         }
 
         public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
@@ -83,32 +50,13 @@ namespace Omnikeeper.Model
                 throw new Exception("Trying to remove attribute that does not exist");
             }
 
-            var changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
-            var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
-            var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(currentAttribute.Value);
             var id = Guid.NewGuid();
+            var (_, changesetID) = await _BulkUpdate(
+                new (Guid, string, IAttributeValue, Guid?, Guid)[0],
+                new (Guid, string, IAttributeValue, Guid, Guid)[] { (ciid, name, currentAttribute.Value, currentAttribute.ID, id) },
+                layerID, origin, changesetProxy, trans);
 
-            using var commandHistoric = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, removed, ""timestamp"", changeset_id, partition_index) 
-                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @removed, @timestamp, @changeset_id, @partition_index)", trans.DBConnection, trans.DBTransaction);
-            commandHistoric.Parameters.AddWithValue("id", id);
-            commandHistoric.Parameters.AddWithValue("name", name);
-            commandHistoric.Parameters.AddWithValue("ci_id", ciid);
-            commandHistoric.Parameters.AddWithValue("type", currentAttribute.Value.Type);
-            commandHistoric.Parameters.AddWithValue("value_text", valueText);
-            commandHistoric.Parameters.AddWithValue("value_binary", valueBinary);
-            commandHistoric.Parameters.AddWithValue("value_control", valueControl);
-            commandHistoric.Parameters.AddWithValue("layer_id", layerID);
-            commandHistoric.Parameters.AddWithValue("removed", true);
-            commandHistoric.Parameters.AddWithValue("timestamp", changeset.Timestamp);
-            commandHistoric.Parameters.AddWithValue("changeset_id", changeset.ID);
-            commandHistoric.Parameters.AddWithValue("partition_index", partitionIndex);
-            await commandHistoric.ExecuteNonQueryAsync();
-
-            using var commandLatest = new NpgsqlCommand(@"DELETE FROM attribute_latest WHERE id = @id", trans.DBConnection, trans.DBTransaction);
-            commandLatest.Parameters.AddWithValue("id", currentAttribute.ID);
-            await commandLatest.ExecuteNonQueryAsync();
-
-            var ret = new CIAttribute(id, name, ciid, currentAttribute.Value, changeset.ID);
+            var ret = new CIAttribute(id, name, ciid, currentAttribute.Value, changesetID);
 
             return (ret, true);
         }
@@ -131,9 +79,9 @@ namespace Omnikeeper.Model
                         (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, new string[] { data.LayerID }, trans: trans, atTime: readTS)) :
                         (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), new RegexAttributeSelection($"^{data.NamePrefix}"), new string[] { data.LayerID }, trans: trans, atTime: readTS)),
                 _ => null
-            }).SelectMany(t => t.Values.SelectMany(tt => tt.Values)).ToDictionary(a => a.InformationHash, a => (attribute: a, newAttributeID: Guid.NewGuid())); // TODO: slow?
+            }).SelectMany(t => t.Values.SelectMany(tt => tt.Values)).ToDictionary(a => a.InformationHash); // TODO: slow?
             
-            var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, bool isNew, Guid attributeID, Guid? existingAttributeID)>();
+            var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)>();
             var informationHashesToInsert = new HashSet<string>();
             foreach (var fragment in data.Fragments)
             {
@@ -151,29 +99,36 @@ namespace Omnikeeper.Model
                 // remove the current attribute from the list of attributes to remove
                 outdatedAttributes.Remove(informationHash, out var currentAttribute);
 
-                var isNew = currentAttribute.attribute == null;
-
                 // handle equality case, also think about what should happen if a different user inserts the same data
-                if (currentAttribute.attribute != null && currentAttribute.attribute.Value.Equals(value))
+                if (currentAttribute != null && currentAttribute.Value.Equals(value))
                     continue;
 
-                var attributeID = Guid.NewGuid();
-                actualInserts.Add((ciid, fullName, value, isNew, attributeID, currentAttribute.attribute?.ID));
+                actualInserts.Add((ciid, fullName, value, currentAttribute?.ID, Guid.NewGuid()));
             }
 
+            // perform updates in bulk
+            await _BulkUpdate(actualInserts, outdatedAttributes.Values.Select(a => (a.CIID, a.Name, a.Value, a.ID, Guid.NewGuid())), data.LayerID, origin, changesetProxy, trans);
 
-            // changeset is only created and copy mode is only entered when there is actually anything inserted
-            // TODO: refactor into _BulkUpdate(), analogous to relations, then we can code-share for the single inserts/removes as well
-            if (!actualInserts.IsEmpty() || !outdatedAttributes.IsEmpty())
+            // TODO: check what returned data is actually needed
+            // return all attributes that have changed (their ciids and the attribute full names)
+            return actualInserts.Select(i => (i.ciid, i.fullName)).Concat(outdatedAttributes.Values.Select(i => (i.CIID, i.Name)));
+        }
+
+        private async Task<(bool changed, Guid changesetID)> _BulkUpdate(
+            IEnumerable<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> actualInserts,
+            IEnumerable<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes,
+            string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)
+        {
+            if (!actualInserts.IsEmpty() || !removes.IsEmpty())
             {
-                Changeset changeset = await changesetProxy.GetChangeset(data.LayerID, origin, trans);
+                Changeset changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
 
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
                 // historic
                 // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
                 using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, removed, ""timestamp"", changeset_id, partition_index) FROM STDIN (FORMAT BINARY)");
-                foreach (var (ciid, fullName, value, isNew, newAttributeID, _) in actualInserts)
+                foreach (var (ciid, fullName, value, _, newAttributeID) in actualInserts)
                 {
                     var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
 
@@ -185,7 +140,7 @@ namespace Omnikeeper.Model
                     writerHistoric.Write(valueText);
                     writerHistoric.Write(valueBinary);
                     writerHistoric.Write(valueControl);
-                    writerHistoric.Write(data.LayerID);
+                    writerHistoric.Write(layerID);
                     writerHistoric.Write(false);
                     writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(changeset.ID);
@@ -193,19 +148,19 @@ namespace Omnikeeper.Model
                 }
 
                 // remove outdated 
-                foreach (var (outdatedAttribute, newAttributeID) in outdatedAttributes.Values)
+                foreach (var (ciid, name, value, _, newAttributeID) in removes)
                 {
-                    var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(outdatedAttribute.Value);
+                    var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
 
                     writerHistoric.StartRow();
                     writerHistoric.Write(newAttributeID);
-                    writerHistoric.Write(outdatedAttribute.Name);
-                    writerHistoric.Write(outdatedAttribute.CIID);
-                    writerHistoric.Write(outdatedAttribute.Value.Type, "attributevaluetype");
+                    writerHistoric.Write(name);
+                    writerHistoric.Write(ciid);
+                    writerHistoric.Write(value.Type, "attributevaluetype");
                     writerHistoric.Write(valueText);
                     writerHistoric.Write(valueBinary);
                     writerHistoric.Write(valueControl);
-                    writerHistoric.Write(data.LayerID);
+                    writerHistoric.Write(layerID);
                     writerHistoric.Write(true);
                     writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(changeset.ID);
@@ -220,11 +175,11 @@ namespace Omnikeeper.Model
                 // NOTE: actual new inserts are only those that have isNew, which must be equivalent to NOT having an entry in the latest table
                 // that allows us to do COPY insertion, because we guarantee that there are no unique constraint violations
                 // should this ever throw a unique constraint violation, means there is a bug and _latest and _historic are out of sync
-                var actualNewInserts = actualInserts.Where(t => t.isNew);
+                var actualNewInserts = actualInserts.Where(t => t.existingAttributeID == null);
                 if (!actualNewInserts.IsEmpty())
                 {
                     using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
-                    foreach (var (ciid, fullName, value, isNew, newAttributeID, _) in actualNewInserts)
+                    foreach (var (ciid, fullName, value, _, newAttributeID) in actualNewInserts)
                     {
                         var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
                         writerLatest.StartRow();
@@ -235,7 +190,7 @@ namespace Omnikeeper.Model
                         writerLatest.Write(valueText);
                         writerLatest.Write(valueBinary);
                         writerLatest.Write(valueControl);
-                        writerLatest.Write(data.LayerID);
+                        writerLatest.Write(layerID);
                         writerLatest.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                         writerLatest.Write(changeset.ID);
                     }
@@ -246,8 +201,8 @@ namespace Omnikeeper.Model
                 // updates (actual updates and removals)
                 // TODO: improve performance
                 // add index, use CTEs
-                var actualModified = actualInserts.Where(t => !t.isNew);
-                foreach (var (ciid, fullName, value, isNew, newAttributeID, existingAttributeID) in actualModified)
+                var actualModified = actualInserts.Where(t => t.existingAttributeID != null);
+                foreach (var (ciid, fullName, value, existingAttributeID, newAttributeID) in actualModified)
                 {
                     using var commandUpdateLatest = new NpgsqlCommand(@"
                         UPDATE attribute_latest SET id = @id, type = @type, value_text = @value_text, value_binary = @value_binary, 
@@ -267,17 +222,19 @@ namespace Omnikeeper.Model
 
                 // TODO: improve performance
                 // add index, use CTEs
-                foreach (var (outdatedAttribute, newAttributeID) in outdatedAttributes.Values)
+                foreach (var (_, _, _, attributeID, _) in removes)
                 {
                     using var commandRemoveLatest = new NpgsqlCommand(@"
                         DELETE FROM attribute_latest WHERE id = @id", trans.DBConnection, trans.DBTransaction);
-                    commandRemoveLatest.Parameters.AddWithValue("id", outdatedAttribute.ID);
+                    commandRemoveLatest.Parameters.AddWithValue("id", attributeID);
                     await commandRemoveLatest.ExecuteNonQueryAsync();
                 }
-            }
 
-            // return all attributes that have changed (their ciids and the attribute full names)
-            return actualInserts.Select(i => (i.ciid, i.fullName)).Concat(outdatedAttributes.Values.Select(i => (i.attribute.CIID, i.attribute.Name)));
+                return (true, changeset.ID);
+            } else
+            {
+                return (false, default);
+            }
         }
     }
 }
