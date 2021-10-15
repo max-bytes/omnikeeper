@@ -120,6 +120,7 @@ namespace Omnikeeper.Model
                     if (tt.RequiredRelations.Count > 0)
                     {
                         var ciids = cis.Select(ci => ci.ID).ToHashSet();
+                        // TODO: only fetch relations with relevant predicateIDs
                         if (tt.RequiredRelations.Any(r => r.RelationTemplate.DirectionForward))
                             fromRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(ciids), layers, trans, atTime)).ToLookup(r => r.Relation.FromCIID);
                         if (tt.RequiredRelations.Any(r => !r.RelationTemplate.DirectionForward))

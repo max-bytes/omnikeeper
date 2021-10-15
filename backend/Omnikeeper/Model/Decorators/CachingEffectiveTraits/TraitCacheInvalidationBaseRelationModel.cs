@@ -65,6 +65,26 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return t;
         }
 
+        public async Task<bool> BulkReplaceOutgoingRelations(Guid fromCIID, string predicateID, IEnumerable<Guid> toCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        {
+            var changed = await model.BulkReplaceOutgoingRelations(fromCIID, predicateID, toCIIDs, layerID, changesetProxy, origin, trans);
+            if (changed)
+            {
+                cache.AddCIIDs(toCIIDs.Concat(fromCIID), layerID);
+            }
+            return changed;
+        }
+
+        public async Task<bool> BulkReplaceIncomingRelations(Guid toCIID, string predicateID, IEnumerable<Guid> fromCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        {
+            var changed = await model.BulkReplaceIncomingRelations(toCIID, predicateID, fromCIIDs, layerID, changesetProxy, origin, trans);
+            if (changed)
+            {
+                cache.AddCIIDs(fromCIIDs.Concat(toCIID), layerID);
+            }
+            return changed;
+        }
+
         public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await model.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);

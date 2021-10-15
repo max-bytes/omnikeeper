@@ -136,6 +136,8 @@ namespace Omnikeeper.Base.Model
         private async Task<bool> WriteAttributesAndRelations(T t, Guid ciid, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var changed = false;
+
+            // TODO: do attribute inserts/removes in bulk, like relations... is that worth it?
             foreach (var taFieldInfo in attributeFieldInfos)
             {
                 var entityValue = taFieldInfo.FieldInfo.GetValue(t);
@@ -189,12 +191,6 @@ namespace Omnikeeper.Base.Model
 
             if (!relationFieldInfos.IsEmpty())
             {
-                var allRelationsForward = await relationModel.GetRelations(RelationSelectionFrom.Build(ciid), writeLayer, trans, TimeThreshold.BuildLatest());
-                var allRelationsBackward = await relationModel.GetRelations(RelationSelectionTo.Build(ciid), writeLayer, trans, TimeThreshold.BuildLatest());
-
-                var toAdd = new List<(Guid fromCIID, Guid toCIID, string predicateID)>();
-                var toRemove = new List<(Guid fromCIID, Guid toCIID, string predicateID)>();
-
                 foreach (var trFieldInfo in relationFieldInfos)
                 {
                     var entityValue = trFieldInfo.FieldInfo.GetValue(t);
@@ -208,33 +204,12 @@ namespace Omnikeeper.Base.Model
 
                         if (trFieldInfo.TraitRelationAttribute.directionForward)
                         {
-                            var outdatedRelationsForward = allRelationsForward.Where(r => r.PredicateID == predicateID).ToDictionary(r => r.InformationHash);
-                            foreach (var otherCIID in otherCIIDs)
-                            {
-                                var fromCIID = ciid;
-                                var toCIID = otherCIID;
-                                var hash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
-                                if (!outdatedRelationsForward.ContainsKey(hash))
-                                    toAdd.Add((fromCIID, toCIID, predicateID));
-                                else
-                                    outdatedRelationsForward.Remove(hash);
-                            }
-                            toRemove.AddRange(outdatedRelationsForward.Select(r => (r.Value.FromCIID, r.Value.ToCIID, r.Value.PredicateID)));
+                            var tmpChanged = await relationModel.BulkReplaceOutgoingRelations(ciid, predicateID, otherCIIDs, writeLayer, changesetProxy, dataOrigin, trans);
+                            changed = changed || tmpChanged;
                         } else
                         {
-                            var outdatedRelationsBackward = allRelationsBackward.Where(r => r.PredicateID == predicateID).ToDictionary(r => r.InformationHash);
-
-                            foreach (var otherCIID in otherCIIDs)
-                            {
-                                var fromCIID = otherCIID;
-                                var toCIID = ciid;
-                                var hash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
-                                if (!outdatedRelationsBackward.ContainsKey(hash))
-                                    toAdd.Add((fromCIID, toCIID, predicateID));
-                                else
-                                    outdatedRelationsBackward.Remove(hash);
-                            }
-                            toRemove.AddRange(outdatedRelationsBackward.Select(r => (r.Value.FromCIID, r.Value.ToCIID, r.Value.PredicateID)));
+                            var tmpChanged = await relationModel.BulkReplaceIncomingRelations(ciid, predicateID, otherCIIDs, writeLayer, changesetProxy, dataOrigin, trans);
+                            changed = changed || tmpChanged;
                         }
                     }
                     else
@@ -244,17 +219,6 @@ namespace Omnikeeper.Base.Model
                             throw new Exception(); // TODO
                         }
                     }
-                }
-
-                foreach (var (fromCIID, toCIID, predicateID) in toAdd)
-                {
-                    (_, var tmpChanged) = await relationModel.InsertRelation(fromCIID, toCIID, predicateID, writeLayer, changesetProxy, dataOrigin, trans);
-                    changed = changed || tmpChanged;
-                }
-                foreach (var (fromCIID, toCIID, predicateID) in toRemove)
-                {
-                    (_, var tmpChanged) = await relationModel.RemoveRelation(fromCIID, toCIID, predicateID, writeLayer, changesetProxy, dataOrigin, trans);
-                    changed = changed || tmpChanged;
                 }
             }
 

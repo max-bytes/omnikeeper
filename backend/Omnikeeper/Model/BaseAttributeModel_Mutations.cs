@@ -163,6 +163,7 @@ namespace Omnikeeper.Model
 
 
             // changeset is only created and copy mode is only entered when there is actually anything inserted
+            // TODO: refactor into _BulkUpdate(), analogous to relations, then we can code-share for the single inserts/removes as well
             if (!actualInserts.IsEmpty() || !outdatedAttributes.IsEmpty())
             {
                 Changeset changeset = await changesetProxy.GetChangeset(data.LayerID, origin, trans);
@@ -243,6 +244,8 @@ namespace Omnikeeper.Model
                 }
 
                 // updates (actual updates and removals)
+                // TODO: improve performance
+                // add index, use CTEs
                 var actualModified = actualInserts.Where(t => !t.isNew);
                 foreach (var (ciid, fullName, value, isNew, newAttributeID, existingAttributeID) in actualModified)
                 {
