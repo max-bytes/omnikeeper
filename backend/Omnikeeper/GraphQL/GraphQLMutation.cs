@@ -4,11 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,26 +18,26 @@ namespace Omnikeeper.GraphQL
     public partial class GraphQLMutation : ObjectGraphType
     {
         private readonly ILayerModel layerModel;
-        private readonly IPredicateModel predicateModel;
+        private readonly GenericTraitEntityModel<Predicate, string> predicateModel;
         private readonly IChangesetModel changesetModel;
-        private readonly IGeneratorModel generatorModel;
+        private readonly GenericTraitEntityModel<GeneratorV1, string> generatorModel;
         private readonly IOIAContextModel oiaContextModel;
         private readonly IODataAPIContextModel odataAPIContextModel;
-        private readonly IAuthRoleModel authRoleModel;
-        private readonly IRecursiveDataTraitModel recursiveDataTraitModel;
+        private readonly GenericTraitEntityModel<AuthRole, string> authRoleModel;
+        private readonly GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
-        private readonly ICLConfigModel clConfigModel;
+        private readonly GenericTraitEntityModel<CLConfigV1, string> clConfigModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
-            IPredicateModel predicateModel, IChangesetModel changesetModel, IGeneratorModel generatorModel,
-            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, IAuthRoleModel authRoleModel,
-            IRecursiveDataTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
-            IManagementAuthorizationService managementAuthorizationService, ICLConfigModel clConfigModel, IMetaConfigurationModel metaConfigurationModel,
+            GenericTraitEntityModel<Predicate, string> predicateModel, IChangesetModel changesetModel, GenericTraitEntityModel<GeneratorV1, string> generatorModel,
+            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel,
+            GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
+            IManagementAuthorizationService managementAuthorizationService, GenericTraitEntityModel<CLConfigV1, string> clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {

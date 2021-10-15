@@ -10,7 +10,6 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Helper;
-using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Response;
 using System;
 using System.Collections.Generic;
@@ -43,7 +42,7 @@ namespace Omnikeeper.GridView.Queries
 
         public class GetDataQueryHandler : IRequestHandler<Query, (GetDataResponse?, Exception?)>
         {
-            private readonly IGridViewContextModel gridViewContextModel;
+            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
             private readonly IRelationModel relationModel;
             private readonly ICIModel ciModel;
@@ -54,7 +53,7 @@ namespace Omnikeeper.GridView.Queries
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly ICurrentUserService currentUserService;
 
-            public GetDataQueryHandler(IGridViewContextModel gridViewContextModel, IEffectiveTraitModel effectiveTraitModel, IRelationModel relationModel, ICIModel ciModel,
+            public GetDataQueryHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IEffectiveTraitModel effectiveTraitModel, IRelationModel relationModel, ICIModel ciModel,
                 ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
                 ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserService currentUserService)
             {
@@ -81,8 +80,9 @@ namespace Omnikeeper.GridView.Queries
                 var atTime = TimeThreshold.BuildLatest();
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-                var context = await gridViewContextModel.GetFullContext(request.Context, metaConfiguration.ConfigLayerset, atTime, trans);
-                var config = context.Configuration;
+                var context = await gridViewContextModel.GetSingleByDataID(request.Context, metaConfiguration.ConfigLayerset, trans, atTime);
+                if (context == default) return (null, new Exception($"Could not find context with ID {request.Context}"));
+                var config = context.entity.Configuration;
 
                 if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, config.ReadLayerset))
                     return (null, new Exception($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', config.ReadLayerset)}"));

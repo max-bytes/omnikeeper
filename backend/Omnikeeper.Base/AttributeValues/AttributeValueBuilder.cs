@@ -258,6 +258,8 @@ namespace Omnikeeper.Base.AttributeValues
                 AttributeArrayValueText a => MarshalStringArrayV2(a.Values.Select(v => v.Value)),
                 AttributeScalarValueInteger a => MarshalStringV2(a.Value.ToString()),
                 AttributeArrayValueInteger a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
+                // TODO: better JSON marshalling than a simple toString()
+                // JToken even supports casting to byte[], maybe use that? https://www.newtonsoft.com/json/help/html/M_Newtonsoft_Json_Linq_JToken_op_Explicit_31.htm
                 AttributeScalarValueJSON a => MarshalStringV2(a.Value.ToString()),
                 AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
                 AttributeScalarValueYAML a => MarshalStringV2((a.Value.ToString())!),

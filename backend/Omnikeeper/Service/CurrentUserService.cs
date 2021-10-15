@@ -18,10 +18,9 @@ namespace Omnikeeper.Service
 {
     public class CurrentUserService : ICurrentUserService
     {
-
         public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel, ILayerModel layerModel,
             IMetaConfigurationModel metaConfigurationModel,
-            IAuthRoleModel authRoleModel, IConfiguration configuration, ILogger<CurrentUserService> logger)
+            GenericTraitEntityModel<AuthRole, string> authRoleModel, IConfiguration configuration, ILogger<CurrentUserService> logger)
         {
             HttpContextAccessor = httpContextAccessor;
             UserModel = userModel;
@@ -32,7 +31,7 @@ namespace Omnikeeper.Service
             Logger = logger;
         }
 
-        private IAuthRoleModel AuthRoleModel { get; }
+        private GenericTraitEntityModel<AuthRole, string> AuthRoleModel { get; }
         private IConfiguration Configuration { get; }
         public ILogger<CurrentUserService> Logger { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
@@ -125,7 +124,8 @@ namespace Omnikeeper.Service
                 {
                     var metaConfiguration = await MetaConfigurationModel.GetConfigOrDefault(trans);
 
-                    var authRoles = await AuthRoleModel.GetAuthRoles(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+                    var authRoles = await AuthRoleModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+
                     foreach (var role in clientRoles)
                     {
                         if (authRoles.TryGetValue(role, out var authRole))

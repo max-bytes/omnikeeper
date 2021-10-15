@@ -5,9 +5,9 @@ namespace Omnikeeper.GridView.Response
 {
     public class GetContextsResponse
     {
-        public List<FullContext> Contexts { get; set; }
+        public List<GridViewContext> Contexts { get; set; }
 
-        public GetContextsResponse(List<FullContext> Contexts)
+        public GetContextsResponse(List<GridViewContext> Contexts)
         {
             this.Contexts = Contexts;
         }

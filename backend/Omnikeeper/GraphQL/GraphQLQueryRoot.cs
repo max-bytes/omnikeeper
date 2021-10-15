@@ -3,6 +3,7 @@ using GraphQL.Language.AST;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
@@ -26,25 +27,25 @@ namespace Omnikeeper.GraphQL
         private readonly ITraitsProvider traitsProvider;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
-        private readonly IPredicateModel predicateModel;
+        private readonly GenericTraitEntityModel<Predicate, string> predicateModel;
         private readonly IChangesetModel changesetModel;
         private readonly ILayerStatisticsModel layerStatisticsModel;
-        private readonly IGeneratorModel generatorModel;
+        private readonly GenericTraitEntityModel<GeneratorV1, string> generatorModel;
         private readonly IOIAContextModel oiaContextModel;
         private readonly IODataAPIContextModel odataAPIContextModel;
-        private readonly IAuthRoleModel authRoleModel;
-        private readonly ICLConfigModel clConfigModel;
-        private readonly IRecursiveDataTraitModel recursiveDataTraitModel;
+        private readonly GenericTraitEntityModel<AuthRole, string> authRoleModel;
+        private readonly GenericTraitEntityModel<CLConfigV1, string> clConfigModel;
+        private readonly GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
 
         public GraphQLQueryRoot(ICIIDModel ciidModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
-            ICISearchModel ciSearchModel, ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, IPredicateModel predicateModel,
-            IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, IGeneratorModel generatorModel, IBaseConfigurationModel baseConfigurationModel,
-            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, IAuthRoleModel authRoleModel, ICLConfigModel clConfigModel,
-            IRecursiveDataTraitModel recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
+            ICISearchModel ciSearchModel, ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, GenericTraitEntityModel<Predicate, string> predicateModel,
+            IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GenericTraitEntityModel<GeneratorV1, string> generatorModel, IBaseConfigurationModel baseConfigurationModel,
+            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
+            GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.ciidModel = ciidModel;
@@ -194,9 +195,9 @@ namespace Omnikeeper.GraphQL
                         .WithTimeThreshold(() => context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()));
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    var predicates = (await predicateModel.GetPredicates(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold)).Values;
+                    var predicates = await predicateModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold);
 
-                    return predicates;
+                    return predicates.Values;
                 });
 
             FieldAsync<ListGraphType<LayerType>>("layers",
@@ -300,8 +301,8 @@ namespace Omnikeeper.GraphQL
                     var layers = await layerModel.GetLayers(userContext.Transaction); // TODO: we only need count, implement more efficient model method
                     var ciids = await ciidModel.GetCIIDs(userContext.Transaction);
                     var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold);
-                    var predicates = await predicateModel.GetPredicates(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold); // TODO: implement PredicateProvider
-                    var generators = await generatorModel.GetGenerators(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold); // TODO: implement GeneratorProvider
+                    var predicates = await predicateModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold); // TODO: implement PredicateProvider
+                    var generators = await generatorModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold); // TODO: implement GeneratorProvider
 
                     var numActiveAttributes = await layerStatisticsModel.GetActiveAttributes(null, userContext.Transaction);
                     var numAttributeChanges = await layerStatisticsModel.GetAttributeChangesHistory(null, userContext.Transaction);

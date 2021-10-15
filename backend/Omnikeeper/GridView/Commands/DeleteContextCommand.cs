@@ -4,7 +4,7 @@ using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.GridView.Model;
+using Omnikeeper.GridView.Entity;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,14 +25,14 @@ namespace Omnikeeper.GridView.Commands
 
         public class DeleteContextCommandHandler : IRequestHandler<Command, Exception?>
         {
-            private readonly IGridViewContextModel gridViewContextModel;
+            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly ICurrentUserService currentUserService;
             private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly IChangesetModel changesetModel;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
-            public DeleteContextCommandHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder, ICurrentUserService currentUserService,
+            public DeleteContextCommandHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IModelContextBuilder modelContextBuilder, ICurrentUserService currentUserService,
                 IMetaConfigurationModel metaConfigurationModel, IChangesetModel changesetModel, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.gridViewContextModel = gridViewContextModel;

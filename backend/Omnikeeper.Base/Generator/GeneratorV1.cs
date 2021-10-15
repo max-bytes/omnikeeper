@@ -16,21 +16,60 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Generator
 {
-    public class GeneratorV1
+    [TraitEntity("__meta.config.generator", TraitOriginType.Core)]
+    public class GeneratorV1 : TraitEntity, IEquatable<GeneratorV1>
     {
-        public GeneratorV1(string id, string attributeName, GeneratorAttributeValue value)
+        public GeneratorV1(string id, string attributeName, string templateString)
         {
             ID = id;
             AttributeName = attributeName;
-            Value = value;
+            TemplateString = templateString;
+            Name = $"Generator - {ID}";
         }
 
-        public string ID { get; }
-        public string AttributeName { get; }
-        public GeneratorAttributeValue Value { get; }
+        public GeneratorV1() { ID = ""; AttributeName = ""; TemplateString = ""; Name = ""; }
 
+        [TraitAttribute("id", "generator.id")]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        [TraitAttributeValueConstraintTextRegex(IDValidations.GeneratorIDRegexString, IDValidations.GeneratorIDRegexOptions)]
+        [TraitEntityID]
+        public readonly string ID;
+
+        [TraitAttribute("attribute_name", "generator.attribute_name")]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        public readonly string AttributeName;
+
+        [TraitAttribute("attribute_value_template", "generator.attribute_value_template", multilineTextHint: true)]
+        public readonly string TemplateString;
+
+        private GeneratorAttributeValue? _template = null;
+        public GeneratorAttributeValue Template
+        {
+            get
+            {
+                if (_template == null)
+                {
+                    _template = GeneratorAttributeValue.Build(TemplateString);
+                }
+                return _template;
+            }
+        }
+
+        [TraitAttribute("name", "__name", optional: true)]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        public readonly string Name;
 
         public static Guid StaticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
+
+        public override bool Equals(object? obj) => Equals(obj as GeneratorV1);
+        public bool Equals(GeneratorV1? other)
+        {
+            return other != null && ID == other.ID &&
+                   AttributeName == other.AttributeName &&
+                   TemplateString == other.TemplateString &&
+                   Name == other.Name;
+        }
+        public override int GetHashCode() => HashCode.Combine(ID, AttributeName, TemplateString, Name);
     }
 
     public class GeneratorAttributeValue
@@ -114,11 +153,11 @@ namespace Omnikeeper.Base.Generator
 
     public class EffectiveGeneratorProvider : IEffectiveGeneratorProvider
     {
-        private readonly IGeneratorModel generatorModel;
+        private readonly GenericTraitEntityModel<GeneratorV1, string> generatorModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ILayerModel layerModel;
 
-        public EffectiveGeneratorProvider(IGeneratorModel generatorModel, IMetaConfigurationModel metaConfigurationModel, ILayerModel layerModel)
+        public EffectiveGeneratorProvider(GenericTraitEntityModel<GeneratorV1, string> generatorModel, IMetaConfigurationModel metaConfigurationModel, ILayerModel layerModel)
         {
             this.generatorModel = generatorModel;
             this.metaConfigurationModel = metaConfigurationModel;
@@ -153,7 +192,7 @@ namespace Omnikeeper.Base.Generator
                     if (metaConfiguration.ConfigLayerset.Contains(layerID))
                         continue;
 
-                    availableGenerators ??= await generatorModel.GetGenerators(metaConfiguration.ConfigLayerset, trans, timeThreshold);
+                    availableGenerators ??= await generatorModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, timeThreshold);
 
                     var applicableGenerators = activeGeneratorIDsForLayer.Select(id => availableGenerators.GetOrWithClass(id, null)).Where(g => g != null).Select(g => g!);
 
@@ -179,12 +218,12 @@ namespace Omnikeeper.Base.Generator
         {
             try
             {
-                var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? new CIAttribute[0]).Where(a => generator.Value.UsedAttributeNames.Contains(a.Name)).ToList();
-                if (relevantAttributes.Count == generator.Value.UsedAttributeNames.Count) 
+                var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? new CIAttribute[0]).Where(a => generator.Template.UsedAttributeNames.Contains(a.Name)).ToList();
+                if (relevantAttributes.Count() == generator.Template.UsedAttributeNames.Count()) 
                 {
                     var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes);
 
-                    string templateSegment = generator.Value.Template.Render(context);
+                    string templateSegment = generator.Template.Template.Render(context);
 
                     var value = new AttributeScalarValueText(templateSegment);
                     // create a deterministic, dependent guid from the ciid, layerID, attribute values; 

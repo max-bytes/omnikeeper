@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
+using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
@@ -256,11 +257,14 @@ namespace Omnikeeper.GraphQL
                   CheckModifyManagementThrow(userContext, metaConfiguration, "modify predicates");
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
-                  var newPredicate = await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+
+                  var @new = new Predicate(predicate.ID, predicate.WordingFrom, predicate.WordingTo);
+
+                  var newPredicate = await predicateModel.InsertOrUpdate(@new, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  return newPredicate.predicate;
+                  return newPredicate.dc;
               });
 
 
@@ -308,16 +312,18 @@ namespace Omnikeeper.GraphQL
                   var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                   CheckModifyManagementThrow(userContext, metaConfiguration, "modify traits");
 
+                  var @new = new RecursiveTrait(trait.ID, new TraitOriginV1(TraitOriginType.Data), requiredAttributes, optionalAttributes, requiredRelations, optionalRelations, trait.RequiredTraits);
+
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
                   var newTrait = await recursiveDataTraitModel.InsertOrUpdate(
-                      trait.ID, requiredAttributes, optionalAttributes, requiredRelations, optionalRelations, trait.RequiredTraits,
+                      @new,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  return newTrait.recursiveTrait;
+                  return newTrait.dc;
               });
 
             FieldAsync<BooleanGraphType>("manage_removeRecursiveTrait",
@@ -361,14 +367,16 @@ namespace Omnikeeper.GraphQL
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
+                  var changed = new GeneratorV1(generator.ID, generator.AttributeName, generator.AttributeValueTemplate);
+
                   var newGenerator = await generatorModel.InsertOrUpdate(
-                      generator.ID, generator.AttributeName, generator.AttributeValueTemplate,
+                      changed,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  return newGenerator.generator;
+                  return newGenerator.dc;
               });
             FieldAsync<BooleanGraphType>("manage_removeGenerator",
               arguments: new QueryArguments(
@@ -411,14 +419,15 @@ namespace Omnikeeper.GraphQL
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
-                  var newAuthRole = await authRoleModel.InsertOrUpdate(
-                      authRole.ID, authRole.Permissions,
+                  var @new = new AuthRole(authRole.ID, authRole.Permissions);
+
+                  var updated = await authRoleModel.InsertOrUpdate(@new,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  return newAuthRole.authRole;
+                  return updated.dc;
               });
 
             FieldAsync<BooleanGraphType>("manage_removeAuthRole",
@@ -465,14 +474,15 @@ namespace Omnikeeper.GraphQL
 
                   var config = JObject.Parse(clConfig.CLBrainConfig);
 
-                  var newCLConfig = await clConfigModel.InsertOrUpdate(
-                      clConfig.ID, clConfig.CLBrainReference, config,
+                  var updated = new CLConfigV1(clConfig.ID, clConfig.CLBrainReference, config);
+
+                  var newCLConfig = await clConfigModel.InsertOrUpdate(updated,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  return newCLConfig.config;
+                  return newCLConfig.dc;
               });
 
             FieldAsync<BooleanGraphType>("manage_removeCLConfig",

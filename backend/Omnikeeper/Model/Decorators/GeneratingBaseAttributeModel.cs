@@ -33,7 +33,7 @@ namespace Omnikeeper.Model.Decorators
             for (int i = 0; i < egis.Length; i++)
             {
                 foreach (var egi in egis[i])
-                    ret.UnionWith(egi.Value.UsedAttributeNames.Where(name => !baseAttributeSelection.Contains(name)));
+                    ret.UnionWith(egi.Template.UsedAttributeNames.Where(name => !baseAttributeSelection.Contains(name)));
             }
             return ret;
         }

@@ -25,7 +25,7 @@ namespace Tests
             var attributeModel = serviceProvider.GetRequiredService<IAttributeModel>();
             var ciModel = serviceProvider.GetRequiredService<ICIModel>();
             var userModel = serviceProvider.GetRequiredService<IUserInDatabaseModel>();
-            var traitModel = serviceProvider.GetRequiredService<IRecursiveDataTraitModel>();
+            var traitModel = serviceProvider.GetRequiredService<GenericTraitEntityModel<RecursiveTrait, string>>();
             var user = await DBSetup.SetupUser(userModel, modelContextBuilder.BuildImmediate());
             var metaConfigurationModel = serviceProvider.GetRequiredService<IMetaConfigurationModel>();
 
@@ -80,7 +80,7 @@ namespace Tests
                 var rts = Traits.Get();
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in rts)
-                    await traitModel.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.OptionalRelations, rt.RequiredTraits,
+                    await traitModel.InsertOrUpdate(rt,
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changeset, mc);
                 mc.Commit();

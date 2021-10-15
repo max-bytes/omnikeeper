@@ -1,10 +1,11 @@
 ﻿using MediatR;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.GridView.Model;
+using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Response;
 using System;
 using System.Linq;
@@ -22,13 +23,13 @@ namespace Omnikeeper.GridView.Queries
 
         public class GetContextsQueryHandler : IRequestHandler<Query, (GetContextsResponse?, Exception?)>
         {
-            private readonly IGridViewContextModel gridViewContextModel;
+            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly ICurrentUserService currentUserService;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
-            public GetContextsQueryHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder,
+            public GetContextsQueryHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IModelContextBuilder modelContextBuilder,
                 IMetaConfigurationModel metaConfigurationModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.gridViewContextModel = gridViewContextModel;
@@ -44,9 +45,9 @@ namespace Omnikeeper.GridView.Queries
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
 
-                var contexts = await gridViewContextModel.GetFullContexts(metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
+                var contexts = await gridViewContextModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
 
-                return (new GetContextsResponse(contexts.Values.ToList()), null); // TODO: why not return dictionary?
+                return (new GetContextsResponse(contexts.Values.ToList()), null);
             }
         }
     }

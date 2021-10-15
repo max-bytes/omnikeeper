@@ -99,7 +99,7 @@ namespace Tests.Integration.Controller
             r2.Should().BeOfType<OkObjectResult>();
             var ctxData = ((r2 as OkObjectResult)!.Value as GetContextResponse);
             ctxData.Should().NotBeNull();
-            ctxData!.Context.Should().BeEquivalentTo(new FullContext("ctx1", "Context 1", "Description", cfg1), options => options.WithStrictOrdering());
+            ctxData!.Context.Should().BeEquivalentTo(new GridViewContext("ctx1", "Context 1", "Description", cfg1), options => options.WithStrictOrdering());
 
             // test getting data
             var r3 = await controller.GetData("ctx1");

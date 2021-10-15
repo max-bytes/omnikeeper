@@ -25,6 +25,13 @@ namespace Omnikeeper.Base.Utils
                 throw new Exception("Could not deserialize JObject");
             return r;
         }
+        public object Deserialize(JToken jo, Type type)
+        {
+            var r = Serializer.Deserialize(new JTokenReader(jo), type);
+            if (r == null)
+                throw new Exception("Could not deserialize JObject");
+            return r;
+        }
         public T Deserialize(string str)
         {
             var r = JsonConvert.DeserializeObject<T>(str, SerializerSettings);
