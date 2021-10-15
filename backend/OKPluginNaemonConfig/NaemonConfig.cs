@@ -8,6 +8,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -672,72 +673,82 @@ namespace OKPluginNaemonConfig
 
             #region get configuration from legacy objects
 
+            // TODO: we should generate legacy objects only if isNaemonProfileFromDbEnabled condition is fulfilled
+
             // getNaemonConfigObjectsFromLegacyProfiles_globalVars
 
             var variables = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.VariablesFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
-            var tmpVariablesObjs = new List<ConfigObj>();
+
+            var variablesAttributes = new Dictionary<string, string>
+            {
+                ["name"] = "global-variables",
+                ["_ALERTS"] = "OFF",
+                ["_NRPEPORT"] = "5666"
+            };
+
             foreach (var ciItem in variables)
             {
                 ciItem.MergedAttributes.TryGetValue("naemon_variable.reftype", out MergedCIAttribute? refTypeAttribute);
 
                 var refType = refTypeAttribute!.Attribute.Value.Value2String();
 
+
+                ciItem.MergedAttributes.TryGetValue("naemon_variable.type", out MergedCIAttribute? typeAttribute);
+
+                var type = typeAttribute!.Attribute.Value.Value2String();
+
                 // select only variables that have reftype GLOBAL
-                if (refType != "GLOBAL")
+                if (refType != "GLOBAL" || type != "value")
                 {
                     continue;
                 }
 
-                var attributes = new Dictionary<string, string>
-                {
-                    ["name"] = "global-variables",
-                    ["_ALERTS"] = "OFF",
-                    ["_NRPEPORT"] = "5666"
-                };
+                string id = "", name = "", value = "";
+                bool isSecret = false;
 
                 foreach (var attribute in ciItem.MergedAttributes)
                 {
                     switch (attribute.Key)
                     {
                         case "naemon_variable.id":
-                            attributes["_ID"] = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "naemon_variable.type":
-                            attributes["_TYPE"] = attribute.Value.Attribute.Value.Value2String();
+                            id = attribute.Value.Attribute.Value.Value2String();
                             break;
                         case "naemon_variable.name":
-                            attributes["_NAME"] = attribute.Value.Attribute.Value.Value2String();
+                            name = attribute.Value.Attribute.Value.Value2String();
                             break;
                         case "naemon_variable.value":
-                            attributes["_VALUE"] = attribute.Value.Attribute.Value.Value2String();
+                            value = attribute.Value.Attribute.Value.Value2String();
                             break;
                         case "naemon_variable.issecret":
-                            attributes["_ISSECRET"] = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "naemon_variable.reftype":
-                            attributes["_REFTYPE"] = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "naemon_variable.refid":
-                            attributes["_REFID"] = attribute.Value.Attribute.Value.Value2String();
+                            isSecret = Convert.ToBoolean(Convert.ToInt16(attribute.Value.Attribute.Value.Value2String()));
                             break;
                         default:
                             break;
                     }
                 }
 
-                configObjs.Add(new ConfigObj
+                if (isSecret)
                 {
-                    Type = "host",
-                    Attributes = attributes,
-                });
+                    value = $"$(python /opt2/nm-agent/bin/getSecret.py {id})";
+                }
 
-                // for debugging 
-                tmpVariablesObjs.Add(new ConfigObj
+                var key = $"_{name.ToUpper()}";
+                if (!variablesAttributes.ContainsKey(key))
                 {
-                    Type = "host",
-                    Attributes = attributes,
-                });
+                    variablesAttributes.Add(key, value);
+                }
+                else if (value != "")
+                {
+                    variablesAttributes[key] = value;
+                }
+                
             }
+
+            configObjs.Add(new ConfigObj
+            {
+                Type = "host",
+                Attributes = variablesAttributes,
+            });
 
             // getNaemonConfigObjectsFromLegacyProfiles_profiles
 
@@ -759,7 +770,7 @@ namespace OKPluginNaemonConfig
             }
 
 
-            // getCommands -> We need only comand ids here
+            // getCommands -> We need only command ids here
 
             var commands = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.CommandsFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
             var commandsById = new Dictionary<string, MergedCI>();
@@ -809,7 +820,8 @@ namespace OKPluginNaemonConfig
             foreach (var ciItem in modules)
             {
                 var moduleName = ciItem.MergedAttributes["naemon_module.name"]!.Attribute.Value.Value2String().ToLower();
-                var hostObj = new ConfigObj
+
+                configObjs.Add(new ConfigObj
                 {
                     Type = "host",
                     Attributes = new Dictionary<string, string>
@@ -817,9 +829,9 @@ namespace OKPluginNaemonConfig
                         ["name"] = "mod-" + moduleName,
                         ["hostgroups"] = "+" + moduleName,
                     },
-                };
+                });
 
-                var hostGroupObj = new ConfigObj
+                configObjs.Add(new ConfigObj
                 {
                     Type = "hostgroup",
                     Attributes = new Dictionary<string, string>
@@ -827,7 +839,7 @@ namespace OKPluginNaemonConfig
                         ["hostgroup_name"] = moduleName,
                         ["alias"] = moduleName,
                     },
-                };
+                });
 
                 var moduleId = ciItem.MergedAttributes["naemon_module.id"]!.Attribute.Value.Value2String().ToLower();
 
@@ -1153,6 +1165,7 @@ namespace OKPluginNaemonConfig
                 }
 
                 naemonConfigObjs.Add(item.Key, naemonObjs.Concat(configObjs).ToList());
+                //naemonConfigObjs.Add(item.Key, configObjs);
 
                 // TODO: we also need to process deployed cis for this naemon, check applib-confgen-ci.php#74
 
@@ -1165,12 +1178,16 @@ namespace OKPluginNaemonConfig
 
             foreach (var item in naemonConfigObjs)
             {
-                var ci = await ciModel.CreateCI(trans);
+                //var ci = await ciModel.CreateCI(trans);
 
                 var ss = JsonConvert.SerializeObject(item.Value);
 
-                var (attribute, changed) = await attributeModel.InsertAttribute("config", AttributeScalarValueJSON.BuildFromString(ss), ci, "naemon_config", changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+                if (item.Key == "H12037680")
+                {
+                    var a = 5;
+                }
 
+                //var (attribute, changed) = await attributeModel.InsertAttribute("config", AttributeScalarValueJSON.BuildFromString(ss), ci, "naemon_config", changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
             }
 
             return true;
