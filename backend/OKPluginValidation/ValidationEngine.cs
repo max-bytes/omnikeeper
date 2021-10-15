@@ -39,20 +39,6 @@ namespace OKPluginValidation.Validation
 
         public async Task<bool> Run(ILogger logger)
         {
-            //var timeThreshold = TimeThreshold.BuildLatest();
-            //var username = "__validation.engine";
-            //var displayName = username;
-            //// generate a unique but deterministic GUID
-            //var userGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
-            //var guid = GuidUtility.Create(userGuidNamespace, username);
-            //var user = await userInDatabaseModel.UpsertUser(username, displayName, guid, UserType.Robot, modelContextBuilder.BuildImmediate());
-            //var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
-
-            //using var trans = modelContextBuilder.BuildDeferred();
-            //await attributeModel.InsertAttribute("Test-JSON2", AttributeScalarValueJSON.BuildFromString(TMP.JSON), new Guid("5cb5a891-e749-4d32-a0af-8e72d58866cf"), "tsa_cmdb", 
-            //    changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
-            //trans.Commit();
-
             var validationWriteLayerID = "__okvalidation"; // TODO
             var validationWriteLayerset = new LayerSet(validationWriteLayerID);
 
