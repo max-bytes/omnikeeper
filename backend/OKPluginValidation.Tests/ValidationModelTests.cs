@@ -28,7 +28,7 @@ namespace OKPluginValidation.Tests
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitBuilderFromClass.Class2RecursiveTrait<Validation.Validation>();
+            var et = TraitEntityHelper.Class2RecursiveTrait<Validation.Validation>();
 
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.validation.validation", new TraitOriginV1(TraitOriginType.Plugin),

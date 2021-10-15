@@ -27,6 +27,10 @@ namespace Omnikeeper.Base.Model
         private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
         private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
+        private readonly FieldInfo idFieldInfo;
+        private readonly string idAttributeName;
+        private readonly AttributeValueType idAttributeValueType;
+
         private static readonly MyJSONSerializer<object> DefaultSerializer = new MyJSONSerializer<object>(() =>
         {
             var s = new JsonSerializerSettings()
@@ -44,12 +48,12 @@ namespace Omnikeeper.Base.Model
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
 
-            trait = RecursiveTraitService.FlattenSingleRecursiveTrait(TraitBuilderFromClass.Class2RecursiveTrait<T>());
+            trait = RecursiveTraitService.FlattenSingleRecursiveTrait(TraitEntityHelper.Class2RecursiveTrait<T>());
             relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Concat(trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet();
 
-            (_, attributeFieldInfos, relationFieldInfos) = TraitBuilderFromClass.ExtractFieldInfos<T>();
+            (_, attributeFieldInfos, relationFieldInfos) = TraitEntityHelper.ExtractFieldInfos<T>();
 
-            // TODO: prefetch/calculate idAttribute field infos
+            (idFieldInfo, idAttributeName, idAttributeValueType) = TraitEntityHelper.ExtractIDAttributeInfos<T>();
         }
 
         private async Task<(T entity, Guid ciid)> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
@@ -58,15 +62,13 @@ namespace Omnikeeper.Base.Model
             if (ci == null) return default;
             var ciWithTrait = await effectiveTraitModel.GetEffectiveTraitForCI(ci, trait, layerSet, trans, timeThreshold);
             if (ciWithTrait == null) return default;
-            var dc = TraitBuilderFromClass.EffectiveTrait2Object<T>(ciWithTrait, DefaultSerializer);
+            var dc = TraitEntityHelper.EffectiveTrait2Object<T>(ciWithTrait, DefaultSerializer);
             return (dc, ciid);
         }
 
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var (_, idAttributeName, attributeValueType) = TraitBuilderFromClass.ExtractIDAttributeInfos<T>();
-
-            IAttributeValue idAttributeValue = AttributeValueBuilder.BuildFromTypeAndObject(attributeValueType, id);
+            IAttributeValue idAttributeValue = AttributeValueBuilder.BuildFromTypeAndObject(idAttributeValueType, id);
             var cisWithIDAttribute = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(idAttributeName), layerSet, trans, timeThreshold);
             var foundCIID = cisWithIDAttribute.Where(t => t.Value[idAttributeName].Attribute.Value.Equals(idAttributeValue))
                 .Select(t => t.Key)
@@ -90,13 +92,11 @@ namespace Omnikeeper.Base.Model
 
         public async Task<IDictionary<ID, T>> GetAllByDataID(IEnumerable<MergedCI> withinCIs, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var (idField, idAttributeName, attributeValueType) = TraitBuilderFromClass.ExtractIDAttributeInfos<T>();
-
             var cisWithTrait = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, withinCIs, layerSet, trans, timeThreshold);
             var all = new List<(T entity, Guid ciid)>();
             foreach (var (ciid, et) in cisWithTrait.Select(kv => (kv.Key, kv.Value)))
             {
-                var dc = TraitBuilderFromClass.EffectiveTrait2Object<T>(et, DefaultSerializer);
+                var dc = TraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
                 all.Add((dc, ciid));
             }
             all.OrderBy(dc => dc.ciid); // we order by GUID to stay consistent even when multiple CIs would match
@@ -104,7 +104,7 @@ namespace Omnikeeper.Base.Model
             var ret = new Dictionary<ID, T>();
             foreach (var dc in all)
             {
-                var id = (ID)idField.GetValue(dc.entity);
+                var id = (ID)idFieldInfo.GetValue(dc.entity);
                 if (id == null)
                     throw new Exception(); // TODO: error message
                 if (!ret.ContainsKey(id))
@@ -117,9 +117,7 @@ namespace Omnikeeper.Base.Model
 
         public async Task<(T dc, bool changed)> InsertOrUpdate(T t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            var (idField, _, _) = TraitBuilderFromClass.ExtractIDAttributeInfos<T>();
-
-            var id = (ID)idField.GetValue(t);
+            var id = (ID)idFieldInfo.GetValue(t);
             if (id == null)
                 throw new Exception(); // TODO
 
@@ -145,7 +143,6 @@ namespace Omnikeeper.Base.Model
 
                 if (entityValue != null)
                 {
-
                     if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.TraitAttributeAttribute.isJSONSerialized)
                     {
                         // serialize before storing as attribute
@@ -272,13 +269,13 @@ namespace Omnikeeper.Base.Model
                 return false; // no dc with this ID exists
             }
 
-            await RemoveAttributeAndRelations(id, dc.ciid, writeLayerID, dataOrigin, changesetProxy, trans);
+            await RemoveAttributeAndRelations(dc.ciid, writeLayerID, dataOrigin, changesetProxy, trans);
 
             var dcAfterDeletion = await GetSingleByCIID(dc.ciid, layerSet, trans, changesetProxy.TimeThreshold);
             return (dcAfterDeletion == default); // return successful if dc does not exist anymore afterwards
         }
 
-        private async Task RemoveAttributeAndRelations(ID id, Guid ciid, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        private async Task RemoveAttributeAndRelations(Guid ciid, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             foreach (var traitAttributeField in attributeFieldInfos)
             {
@@ -334,7 +331,7 @@ namespace Omnikeeper.Base.Model
     }
 
     // TODO: refactor
-    public static class TraitBuilderFromClass
+    public static class TraitEntityHelper
     {
         public static (TraitEntityAttribute te, IEnumerable<TraitAttributeFieldInfo> ta, IEnumerable<TraitRelationFieldInfo> tr) ExtractFieldInfos<C>() where C : TraitEntity, new()
         {

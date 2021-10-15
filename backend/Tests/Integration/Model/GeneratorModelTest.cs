@@ -15,7 +15,7 @@ namespace Tests.Integration.Model
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitBuilderFromClass.Class2RecursiveTrait<GeneratorV1>();
+            var et = TraitEntityHelper.Class2RecursiveTrait<GeneratorV1>();
 
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.config.generator", new TraitOriginV1(TraitOriginType.Core),

@@ -23,7 +23,7 @@ namespace OKPluginGenericJSONIngest
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => new List<RecursiveTrait>() {
-            TraitBuilderFromClass.Class2RecursiveTrait<Context>(),
+            TraitEntityHelper.Class2RecursiveTrait<Context>(),
         };
     }
 }
