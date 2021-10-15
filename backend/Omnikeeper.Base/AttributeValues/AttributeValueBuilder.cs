@@ -66,6 +66,8 @@ namespace Omnikeeper.Base.AttributeValues
                             else
                                 return AttributeScalarValueYAML.BuildFromString((o as string)!);
                         }
+                    case AttributeValueType.Mask:
+                        return AttributeScalarValueMask.Instance;
                     case AttributeValueType.Image:
                         {
                             throw new Exception("Building AttributeValueImage from type and object not allowed");
@@ -89,6 +91,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(generic.Values),
                     AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(generic.Values),
                     AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(generic.Values),
+                    AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                     AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
                     _ => throw new Exception($"Unknown type {generic.Type} encountered"),
                 };
@@ -100,6 +103,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(generic.Values[0]),
                     AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(generic.Values[0]),
                     AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(generic.Values[0]),
+                    AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                     AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
                     _ => throw new Exception($"Unknown type {generic.Type} encountered"),
                 };
@@ -122,6 +126,7 @@ namespace Omnikeeper.Base.AttributeValues
                         AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(finalValues),
                         AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(finalValues),
                         AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(finalValues),
+                        AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                         _ => throw new Exception($"Unknown type {type} encountered"),
                     };
                 }
@@ -134,6 +139,7 @@ namespace Omnikeeper.Base.AttributeValues
                         AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(finalValue),
                         AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(finalValue),
                         AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(finalValue),
+                        AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                         _ => throw new Exception($"Unknown type {type} encountered"),
                     };
                 }
@@ -193,6 +199,10 @@ namespace Omnikeeper.Base.AttributeValues
                                 return AttributeArrayValueYAML.BuildFromString(UnmarshalStringArrayV2(valueText, valueControl));
                             else
                                 return AttributeScalarValueYAML.BuildFromString(UnmarshalStringV2(valueText, valueControl));
+                        }
+                    case AttributeValueType.Mask:
+                        {
+                            return AttributeScalarValueMask.Instance;
                         }
                     case AttributeValueType.Image:
                         {
@@ -264,6 +274,7 @@ namespace Omnikeeper.Base.AttributeValues
                 AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
                 AttributeScalarValueYAML a => MarshalStringV2((a.Value.ToString())!),
                 AttributeArrayValueYAML a => MarshalStringArrayV2(a.Values.Select(v => (v.Value.ToString())!)),
+                AttributeScalarValueMask a => MarshalStringV2(""),
                 AttributeScalarValueImage a => MarshalBinaryV2(a.Value),
                 AttributeArrayValueImage a => MarshalBinaryArrayV2(a.Values.Select(v => v.Value)),
 
