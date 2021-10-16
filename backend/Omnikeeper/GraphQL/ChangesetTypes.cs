@@ -54,7 +54,7 @@ namespace Omnikeeper.GraphQL
             resolve: async (context) =>
             {
                 // TODO: use dataloader
-                var attributeModel = context.RequestServices!.GetRequiredService<IAttributeModel>();
+                var attributeModel = context.RequestServices!.GetRequiredService<IBaseAttributeModel>();
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var changesetID = context.Source!.ID;
                 return await attributeModel.GetAttributesOfChangeset(changesetID, false, userContext.Transaction);
@@ -63,7 +63,7 @@ namespace Omnikeeper.GraphQL
             resolve: async (context) =>
             {
                 // TODO: use dataloader
-                var attributeModel = context.RequestServices!.GetRequiredService<IAttributeModel>();
+                var attributeModel = context.RequestServices!.GetRequiredService<IBaseAttributeModel>();
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var changesetID = context.Source!.ID;
                 return await attributeModel.GetAttributesOfChangeset(changesetID, true, userContext.Transaction);

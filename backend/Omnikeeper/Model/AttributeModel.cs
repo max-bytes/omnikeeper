@@ -116,20 +116,20 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime);
-        }
+        //public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        //{
+        //    return await baseMutationModel.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime);
+        //}
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
-        {
-            return await baseModel.GetAttributesOfChangeset(changesetID, getRemoved, trans);
-        }
+        //public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
+        //{
+        //    return await baseMutationModel.GetAttributesOfChangeset(changesetID, getRemoved, trans);
+        //}
 
-        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
-        }
+        //public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
+        //{
+        //    return await baseMutationModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
+        //}
 
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
@@ -146,9 +146,9 @@ namespace Omnikeeper.Model
             return await baseModel.BulkReplaceAttributes(data, changeset, origin, trans);
         }
 
-        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
-        }
+        //public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        //{
+        //    return await baseMutationModel.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
+        //}
     }
 }

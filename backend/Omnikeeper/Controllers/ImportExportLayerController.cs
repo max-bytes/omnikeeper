@@ -27,7 +27,7 @@ namespace Omnikeeper.Controllers
     [Authorize]
     public class ImportExportLayerController : ControllerBase
     {
-        private readonly IAttributeModel attributeModel;
+        private readonly IBaseAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly ILayerModel layerModel;
         private readonly ICurrentUserService currentUserService;
@@ -38,7 +38,7 @@ namespace Omnikeeper.Controllers
         private readonly ILayerStatisticsModel layerStatisticsModel;
         private readonly IRelationModel relationModel;
 
-        public ImportExportLayerController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService, ICIModel ciModel,
+        public ImportExportLayerController(IBaseAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService, ICIModel ciModel,
             ILayerBasedAuthorizationService layerBasedAuthorizationService, IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerModel layerModel, ILayerStatisticsModel layerStatisticsModel, IRelationModel relationModel)
         {
             this.modelContextBuilder = modelContextBuilder;

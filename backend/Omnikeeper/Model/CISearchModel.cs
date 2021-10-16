@@ -15,13 +15,15 @@ namespace Omnikeeper.Model
     public class CISearchModel : ICISearchModel
     {
         private readonly IAttributeModel attributeModel;
+        private readonly IBaseAttributeModel baseAttributeModel;
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel traitModel;
         private readonly ILogger<CISearchModel> logger;
 
-        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILogger<CISearchModel> logger)
+        public CISearchModel(IAttributeModel attributeModel, IBaseAttributeModel baseAttributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILogger<CISearchModel> logger)
         {
             this.attributeModel = attributeModel;
+            this.baseAttributeModel = baseAttributeModel;
             this.ciModel = ciModel;
             this.traitModel = traitModel;
             this.logger = logger;
@@ -49,7 +51,7 @@ namespace Omnikeeper.Model
             if (emptyTraitIsRequired)
             {
                 // TODO: better performance possible if we get empty CIIDs and exclude those?
-                var nonEmptyCIIDs = await attributeModel.GetCIIDsWithAttributes(ciidSelection,layerSet.LayerIDs, trans, atTime);
+                var nonEmptyCIIDs = await baseAttributeModel.GetCIIDsWithAttributes(ciidSelection,layerSet.LayerIDs, trans, atTime);
                 var emptyCIIDSelection = ciidSelection.Except(SpecificCIIDsSelection.Build(nonEmptyCIIDs));
                 var emptyCIIDs = await emptyCIIDSelection.GetCIIDsAsync(async () => await ciModel.GetCIIDs(trans));
                 return emptyCIIDs.Select(ciid => new MergedCI(ciid, null, layerSet, atTime, ImmutableDictionary<string, MergedCIAttribute>.Empty));

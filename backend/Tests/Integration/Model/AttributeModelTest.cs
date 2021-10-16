@@ -20,7 +20,8 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestAddingUpdatingRemovingAndRenewingOfAttributes()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
+            var baseAttributeModel = new BaseAttributeModel(new PartitionModel(), new CIIDModel());
+            var attributeModel = new AttributeModel(baseAttributeModel);
             var model = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
@@ -84,7 +85,7 @@ namespace Tests.Integration.Model
 
                 // compare fetching merged vs non-merged
                 var ma3 = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest());
-                var a3 = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset.LayerIDs, trans, TimeThreshold.BuildLatest());
+                var a3 = await baseAttributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset.LayerIDs, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(0, ma3.Count);
                 Assert.AreEqual(0, a3[0].Count());
 
@@ -295,7 +296,8 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
+            var baseAttributeModel = new BaseAttributeModel(new PartitionModel(), new CIIDModel());
+            var attributeModel = new AttributeModel(baseAttributeModel);
             var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             using var trans = ModelContextBuilder.BuildDeferred();
@@ -319,19 +321,19 @@ namespace Tests.Integration.Model
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
             await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
 
-            var a1 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^a"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a1 = (await baseAttributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^a"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(2, a1.Count());
 
-            var a2 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^a2$"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a2 = (await baseAttributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^a2$"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(1, a2.Count());
 
-            var a3 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("3$"), new string[] { layer2.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a3 = (await baseAttributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("3$"), new string[] { layer2.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(1, a3.Count());
 
-            var a4 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^3"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a4 = (await baseAttributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^3"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(0, a4.Count());
 
-            var a5 = (await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid2), new RegexAttributeSelection("^a1$"), new string[] { layer2.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a5 = (await baseAttributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid2), new RegexAttributeSelection("^a1$"), new string[] { layer2.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(1, a5.Count());
         }
 
@@ -340,7 +342,8 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
+            var baseAttributeModel = new BaseAttributeModel(new PartitionModel(), new CIIDModel());
+            var attributeModel = new AttributeModel(baseAttributeModel);
             var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             using var trans = ModelContextBuilder.BuildDeferred();
@@ -373,10 +376,10 @@ namespace Tests.Integration.Model
             trans2.Commit();
 
             using var trans3 = ModelContextBuilder.BuildImmediate();
-            var a1 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^prefix1"), new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a1 = (await baseAttributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^prefix1"), new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(3, a1.Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
-            var a2 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^prefix2"), new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a2 = (await baseAttributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^prefix2"), new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(1, a2.Count());
         }
 
