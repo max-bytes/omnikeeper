@@ -206,9 +206,10 @@ namespace Omnikeeper.Model
             var changed = false;
 
             // bulk update
+            var inserts = toAdd.Select(toCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())).ToList();
+            var removes = toRemove.Select(toCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())).ToList();
             var (tmpChanged, _) = await _BulkUpdate(
-                toAdd.Select(toCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())),
-                toRemove.Select(toCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())),
+                inserts, removes,
                 layerID, origin, changesetProxy, trans);
             changed = tmpChanged || changed;
 
@@ -237,9 +238,10 @@ namespace Omnikeeper.Model
             var changed = false;
 
             // bulk update
+            var inserts = toAdd.Select(fromCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())).ToList();
+            var removes = toRemove.Select(fromCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())).ToList();
             var (tmpChanged, _) = await _BulkUpdate(
-                toAdd.Select(fromCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())),
-                toRemove.Select(fromCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())),
+                inserts, removes,
                 layerID, origin, changesetProxy, trans);
             changed = tmpChanged || changed;
 
@@ -332,7 +334,8 @@ namespace Omnikeeper.Model
             }
 
             // perform actual updates in bulk
-            await _BulkUpdate(actualInserts, outdatedRelations.Values.Select(t => (t.FromCIID, t.ToCIID, t.PredicateID, Guid.NewGuid())), data.LayerID, origin, changesetProxy, trans);
+            var removes = outdatedRelations.Values.Select(t => (t.FromCIID, t.ToCIID, t.PredicateID, Guid.NewGuid())).ToList();
+            await _BulkUpdate(actualInserts, removes, data.LayerID, origin, changesetProxy, trans);
 
             // TODO: data (almost) is never used -> replace with a simpler return structure?
             return actualInserts.Select(r => (r.fromCIID, r.toCIID, r.predicateID))
@@ -340,8 +343,8 @@ namespace Omnikeeper.Model
         }
 
         private async Task<(bool changed, Guid changesetID)> _BulkUpdate(
-            IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)> inserts, 
-            IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)> removes, 
+            IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)> inserts,
+            IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)> removes, 
             string layerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             if (!inserts.IsEmpty() || !removes.IsEmpty())
@@ -350,7 +353,7 @@ namespace Omnikeeper.Model
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
                 // historic
-                    using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, removed, ""timestamp"", partition_index) FROM STDIN (FORMAT BINARY)");
+                using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, removed, ""timestamp"", partition_index) FROM STDIN (FORMAT BINARY)");
                 foreach (var (fromCIID, toCIID, predicateID, newRelationID) in inserts)
                 {
                     writerHistoric.StartRow();

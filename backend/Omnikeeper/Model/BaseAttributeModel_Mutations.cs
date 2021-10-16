@@ -107,7 +107,8 @@ namespace Omnikeeper.Model
             }
 
             // perform updates in bulk
-            await _BulkUpdate(actualInserts, outdatedAttributes.Values.Select(a => (a.CIID, a.Name, a.Value, a.ID, Guid.NewGuid())), data.LayerID, origin, changesetProxy, trans);
+            var removes = outdatedAttributes.Values.Select(a => (a.CIID, a.Name, a.Value, a.ID, Guid.NewGuid())).ToList();
+            await _BulkUpdate(actualInserts, removes, data.LayerID, origin, changesetProxy, trans);
 
             // TODO: check what returned data is actually needed
             // return all attributes that have changed (their ciids and the attribute full names)
@@ -115,8 +116,8 @@ namespace Omnikeeper.Model
         }
 
         private async Task<(bool changed, Guid changesetID)> _BulkUpdate(
-            IEnumerable<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> actualInserts,
-            IEnumerable<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes,
+            IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> actualInserts,
+            IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes,
             string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             if (!actualInserts.IsEmpty() || !removes.IsEmpty())
