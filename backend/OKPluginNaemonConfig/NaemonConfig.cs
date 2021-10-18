@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OKPluginNaemonConfig.Entity;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
@@ -21,13 +22,25 @@ namespace OKPluginNaemonConfig
         private readonly IRelationModel relationModel;
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel traitModel;
+        private readonly GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel;
+        private readonly GenericTraitEntityModel<Host, string> hostModel;
+        private readonly GenericTraitEntityModel<Service, string> serviceModel;
+        private readonly GenericTraitEntityModel<HostsCategory, string> hostsCategoryModel;
         public NaemonConfig(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
-                           IChangesetModel changesetModel, IUserInDatabaseModel userModel)
+                           IChangesetModel changesetModel, IUserInDatabaseModel userModel, 
+                           GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel,
+                           GenericTraitEntityModel<Service, string> serviceModel,
+                           GenericTraitEntityModel<HostsCategory, string> hostsCategoryModel,
+                           GenericTraitEntityModel<Host, string> hostModel)
             : base(atributeModel, layerModel, changesetModel, userModel)
         {
             this.ciModel = ciModel;
             this.relationModel = relationModel;
             this.traitModel = traitModel;
+            this.naemonInstanceModel = naemonInstanceModel;
+            this.hostModel = hostModel;
+            this.serviceModel = serviceModel;
+            this.hostsCategoryModel = hostsCategoryModel;
         }
 
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
@@ -54,147 +67,212 @@ namespace OKPluginNaemonConfig
             var allCIsMonman = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetMonman, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
 
 
+            // load all naemons
+
+            var nInstances = await naemonInstanceModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+
+
             // load naemonInstances
             var naemonInstances = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstanceFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
             var naemonIds = new List<string>();
-            foreach (var ciItem in naemonInstances)
+            foreach (var ciItem in nInstances)
             {
-                var success = ciItem.MergedAttributes.TryGetValue("naemon_instance.id", out MergedCIAttribute? attributeNaemonId);
+                //var success = ciItem.MergedAttributes.TryGetValue("naemon_instance.id", out MergedCIAttribute? attributeNaemonId);
 
-                if (!success)
-                {
-                    // log error here
-                }
+                //if (!success)
+                //{
+                //    // log error here
+                //}
 
-                naemonIds.Add(attributeNaemonId!.Attribute.Value.Value2String());
+                //naemonIds.Add(attributeNaemonId!.Attribute.Value.Value2String());
+                naemonIds.Add(ciItem.Value.Id);
             }
+
 
             // a list with all CI from database
             var ciData = new List<ConfigurationItem>();
-            var hosts = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HCisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var hosts = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HCisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+
+            var hosts = await hostModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
+
+            //foreach (var ciItem in hosts)
+            //{
+            //    var item = new ConfigurationItem
+            //    {
+            //        Type = "HOST"
+            //    };
+
+            //    foreach (var attribute in ciItem.MergedAttributes)
+            //    {
+            //        switch (attribute.Key)
+            //        {
+            //            case "cmdb.id":
+            //                item.Id = attribute.Value.Attribute.Value.Value2String();
+            //                break;
+            //            case "hostname":
+            //                item.Name = attribute.Value.Attribute.Value.Value2String();
+            //                break;
+            //            case "cmdb.status":
+            //                item.Status = attribute.Value.Attribute.Value.Value2String();
+            //                break;
+            //            default:
+            //                break;
+            //        }
+            //    }
+
+            //    ciData.Add(item);
+            //}
 
             foreach (var ciItem in hosts)
             {
-                var item = new ConfigurationItem
+                ciData.Add(new ConfigurationItem
                 {
-                    Type = "HOST"
-                };
-
-                foreach (var attribute in ciItem.MergedAttributes)
-                {
-                    switch (attribute.Key)
-                    {
-                        case "cmdb.id":
-                            item.Id = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "hostname":
-                            item.Name = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "cmdb.status":
-                            item.Status = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                ciData.Add(item);
+                    Type = "HOST",
+                    Id = ciItem.Value.Id,
+                    Name = ciItem.Value.Name,
+                    Status = ciItem.Value.Status,
+                });
             }
 
             // get services
-            var services = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ACisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var services = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ACisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            var services = await serviceModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
+
+            //foreach (var ciItem in services)
+            //{
+            //    var item = new ConfigurationItem
+            //    {
+            //        Type = "SERVICE"
+            //    };
+            //    foreach (var attribute in ciItem.MergedAttributes)
+            //    {
+            //        switch (attribute.Key)
+            //        {
+            //            case "cmdb.id":
+            //                item.Id = attribute.Value.Attribute.Value.Value2String();
+            //                break;
+            //            case "cmdb.name":
+            //                item.Name = attribute.Value.Attribute.Value.Value2String();
+            //                break;
+            //            case "cmdb.environment":
+            //                item.Environment = attribute.Value.Attribute.Value.Value2String();
+            //                break;
+            //            case "cmdb.status":
+            //                item.Status = attribute.Value.Attribute.Value.Value2String();
+            //                break;
+            //            default:
+            //                break;
+            //        }
+            //    }
+
+            //    ciData.Add(item);
+            //}
+
             foreach (var ciItem in services)
             {
-                var item = new ConfigurationItem
+                ciData.Add(new ConfigurationItem
                 {
-                    Type = "SERVICE"
-                };
-                foreach (var attribute in ciItem.MergedAttributes)
-                {
-                    switch (attribute.Key)
-                    {
-                        case "cmdb.id":
-                            item.Id = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "cmdb.name":
-                            item.Name = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "cmdb.environment":
-                            item.Environment = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "cmdb.status":
-                            item.Status = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                ciData.Add(item);
+                    Type = "SERVICE",
+                    Id = ciItem.Value.Id,
+                    Name = ciItem.Value.Name,
+                    Status = ciItem.Value.Status,
+                    Environment = ciItem.Value.Environment,
+                });
             }
 
             // add categories for hosts 
             // HostsCategories
 
-            var hostsCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostsCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var hostsCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostsCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            var hostsCategories = await hostsCategoryModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
 
             // NOTE mcsuk: this part is cumbersome because of the way the data is set up; it would by much cleaner if there was a proper relation between the host and its categories
             // in the original CMDB, there is a relation like that, so I believe we should also add a proper relation in omnikeeper
             // if we have that, we can make use of the relations and find links between categories and hosts through that instead of having to read the cmdb.host_category_hostid 
             // and doing a search in the hosts
+            
+            //foreach (var ciItem in hostsCategories)
+            //{
+            //    var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_category_hostid", out MergedCIAttribute? hostIdAttribute);
+
+            //    if (!success)
+            //    {
+            //        // log error here
+            //    }
+
+            //    var hostId = hostIdAttribute!.Attribute.Value.Value2String();
+
+            //    foreach (var item in ciData)
+            //    {
+            //        if (item.Id == hostId)
+            //        {
+            //            var obj = new Category();
+
+            //            foreach (var attribute in ciItem.MergedAttributes)
+            //            {
+            //                switch (attribute.Key)
+            //                {
+            //                    case "cmdb.host_category_categoryid":
+            //                        obj.Id = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.host_category_cattree":
+            //                        obj.Tree = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.host_category_catgroup":
+            //                        obj.Group = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.host_category_category":
+            //                        obj.Name = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.host_category_catdesc":
+            //                        obj.Desc = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    default:
+            //                        break;
+            //                }
+            //            }
+
+            //            if (!item.Categories.ContainsKey(obj.Group))
+            //            {
+            //                item.Categories.Add(obj.Group, new List<Category> { obj });
+            //            }
+            //            else
+            //            {
+            //                item.Categories[obj.Group].Add(obj);
+            //            }
+
+            //            break;
+            //        }
+            //    }
+            //}
+
             foreach (var ciItem in hostsCategories)
             {
-                var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_category_hostid", out MergedCIAttribute? hostIdAttribute);
+                var host = ciData.Where(el => el.Id == ciItem.Value.HostId).FirstOrDefault();
 
-                if (!success)
+                ciData.ForEach(el =>
                 {
-                    // log error here
-                }
-
-                var hostId = hostIdAttribute!.Attribute.Value.Value2String();
-
-                foreach (var item in ciData)
-                {
-                    if (item.Id == hostId)
+                    if (el.Id == ciItem.Value.HostId)
                     {
-                        var obj = new Category();
-
-                        foreach (var attribute in ciItem.MergedAttributes)
+                        var obj = new Category
                         {
-                            switch (attribute.Key)
-                            {
-                                case "cmdb.host_category_categoryid":
-                                    obj.Id = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.host_category_cattree":
-                                    obj.Tree = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.host_category_catgroup":
-                                    obj.Group = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.host_category_category":
-                                    obj.Name = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.host_category_catdesc":
-                                    obj.Desc = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
+                            Id = ciItem.Value.Id,
+                            Tree = ciItem.Value.CatTree,
+                            Group = ciItem.Value.CatGroup,
+                            Name = ciItem.Value.Category,
+                            Desc = ciItem.Value.CatDesc,
+                        };
 
-                        if (!item.Categories.ContainsKey(obj.Group))
+                        if (!el.Categories.ContainsKey(obj.Group))
                         {
-                            item.Categories.Add(obj.Group, new List<Category> { obj });
+                            el.Categories.Add(obj.Group, new List<Category> { obj });
                         }
                         else
                         {
-                            item.Categories[obj.Group].Add(obj);
+                            el.Categories[obj.Group].Add(obj);
                         }
-
-                        break;
                     }
-                }
+                });
             }
 
             // add categories for services
@@ -1176,19 +1254,20 @@ namespace OKPluginNaemonConfig
 
             var jobjects = new Dictionary<string, JObject>();
 
-            foreach (var item in naemonConfigObjs)
-            {
-                //var ci = await ciModel.CreateCI(trans);
+            //foreach (var item in naemonConfigObjs)
+            //{
+            //    var ci = await ciModel.CreateCI(trans);
 
-                var ss = JsonConvert.SerializeObject(item.Value);
+            //    //var ss = JsonConvert.SerializeObject(item.Value);
+            //    var ss = JArray.FromObject(item.Value);
 
-                if (item.Key == "H12037680")
-                {
-                    var a = 5;
-                }
+            //    if (item.Key == "H12037680")
+            //    {
+            //        var a = 5;
+            //    }
 
-                //var (attribute, changed) = await attributeModel.InsertAttribute("config", AttributeScalarValueJSON.BuildFromString(ss), ci, "naemon_config", changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
-            }
+            //    var (attribute, changed) = await attributeModel.InsertAttribute("config", AttributeScalarValueJSON.Build(ss), ci, "naemon_config", changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+            //}
 
             return true;
         }
