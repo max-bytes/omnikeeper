@@ -26,11 +26,17 @@ namespace OKPluginNaemonConfig
         private readonly GenericTraitEntityModel<Host, string> hostModel;
         private readonly GenericTraitEntityModel<Service, string> serviceModel;
         private readonly GenericTraitEntityModel<HostsCategory, string> hostsCategoryModel;
+        private readonly GenericTraitEntityModel<ServicesCategory, string> servicesCategoryModel;
+        private readonly GenericTraitEntityModel<HostAction, string> hostActionModel;
+        private readonly GenericTraitEntityModel<ServiceAction, string> serviceActionModel;
         public NaemonConfig(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
                            IChangesetModel changesetModel, IUserInDatabaseModel userModel, 
                            GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel,
                            GenericTraitEntityModel<Service, string> serviceModel,
                            GenericTraitEntityModel<HostsCategory, string> hostsCategoryModel,
+                           GenericTraitEntityModel<ServicesCategory, string> servicesCategoryModel,
+                           GenericTraitEntityModel<HostAction, string> hostActionModel,
+                           GenericTraitEntityModel<ServiceAction, string> serviceActionModel,
                            GenericTraitEntityModel<Host, string> hostModel)
             : base(atributeModel, layerModel, changesetModel, userModel)
         {
@@ -41,6 +47,9 @@ namespace OKPluginNaemonConfig
             this.hostModel = hostModel;
             this.serviceModel = serviceModel;
             this.hostsCategoryModel = hostsCategoryModel;
+            this.servicesCategoryModel = servicesCategoryModel;
+            this.hostActionModel = hostActionModel;
+            this.serviceActionModel = serviceActionModel;
         }
 
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
@@ -69,24 +78,13 @@ namespace OKPluginNaemonConfig
 
             // load all naemons
 
-            var nInstances = await naemonInstanceModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
 
 
             // load naemonInstances
             var naemonInstances = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstanceFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
-            var naemonIds = new List<string>();
-            foreach (var ciItem in nInstances)
-            {
-                //var success = ciItem.MergedAttributes.TryGetValue("naemon_instance.id", out MergedCIAttribute? attributeNaemonId);
-
-                //if (!success)
-                //{
-                //    // log error here
-                //}
-
-                //naemonIds.Add(attributeNaemonId!.Attribute.Value.Value2String());
-                naemonIds.Add(ciItem.Value.Id);
-            }
+            
+            var nInstances = await naemonInstanceModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            var naemonIds = nInstances.Select(el => el.Value.Id).ToList();
 
 
             // a list with all CI from database
@@ -180,17 +178,12 @@ namespace OKPluginNaemonConfig
                 });
             }
 
+            #region add categories
             // add categories for hosts 
             // HostsCategories
 
             //var hostsCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostsCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-            var hostsCategories = await hostsCategoryModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
 
-            // NOTE mcsuk: this part is cumbersome because of the way the data is set up; it would by much cleaner if there was a proper relation between the host and its categories
-            // in the original CMDB, there is a relation like that, so I believe we should also add a proper relation in omnikeeper
-            // if we have that, we can make use of the relations and find links between categories and hosts through that instead of having to read the cmdb.host_category_hostid 
-            // and doing a search in the hosts
-            
             //foreach (var ciItem in hostsCategories)
             //{
             //    var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_category_hostid", out MergedCIAttribute? hostIdAttribute);
@@ -246,10 +239,13 @@ namespace OKPluginNaemonConfig
             //    }
             //}
 
+            var hostsCategories = await hostsCategoryModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //NOTE mcsuk: this part is cumbersome because of the way the data is set up; it would by much cleaner if there was a proper relation between the host and its categories
+            // in the original CMDB, there is a relation like that, so I believe we should also add a proper relation in omnikeeper
+            // if we have that, we can make use of the relations and find links between categories and hosts through that instead of having to read the cmdb.host_category_hostid
+            // and doing a search in the hosts
             foreach (var ciItem in hostsCategories)
             {
-                var host = ciData.Where(el => el.Id == ciItem.Value.HostId).FirstOrDefault();
-
                 ciData.ForEach(el =>
                 {
                     if (el.Id == ciItem.Value.HostId)
@@ -276,146 +272,220 @@ namespace OKPluginNaemonConfig
             }
 
             // add categories for services
-            var servicesCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServicesCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var servicesCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServicesCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var servicesCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServicesCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
+
+            //foreach (var ciItem in servicesCategories)
+            //{
+            //    var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_category_svcid", out MergedCIAttribute? serviceIdAttribute);
+
+            //    if (!success)
+            //    {
+            //        // log error here
+            //    }
+
+            //    var serviceId = serviceIdAttribute!.Attribute.Value.Value2String();
+
+            //    foreach (var item in ciData)
+            //    {
+            //        if (item.Id == serviceId)
+            //        {
+            //            var obj = new Category();
+
+            //            foreach (var attribute in ciItem.MergedAttributes)
+            //            {
+            //                switch (attribute.Key)
+            //                {
+            //                    case "cmdb.service_category_categoryid":
+            //                        obj.Id = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.service_category_cattree":
+            //                        obj.Tree = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.service_category_catgroup":
+            //                        obj.Group = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.service_category_category":
+            //                        obj.Name = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.service_category_catdesc":
+            //                        obj.Desc = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    default:
+            //                        break;
+            //                }
+            //            }
+
+            //            if (!item.Categories.ContainsKey(obj.Group))
+            //            {
+            //                item.Categories.Add(obj.Group, new List<Category> { obj });
+            //            }
+            //            else
+            //            {
+            //                item.Categories[obj.Group].Add(obj);
+            //            }
+
+            //            break;
+            //        }
+            //    }
+            //}
+
+            var servicesCategories = await servicesCategoryModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
             // NOTE mcsuk: the same as above for hosts+categories goes here for services+categories
+
             foreach (var ciItem in servicesCategories)
             {
-                var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_category_svcid", out MergedCIAttribute? serviceIdAttribute);
-
-                if (!success)
+                ciData.ForEach(el =>
                 {
-                    // log error here
-                }
-
-                var serviceId = serviceIdAttribute!.Attribute.Value.Value2String();
-
-                foreach (var item in ciData)
-                {
-                    if (item.Id == serviceId)
+                    if (el.Id == ciItem.Value.ServiceId)
                     {
-                        var obj = new Category();
-
-                        foreach (var attribute in ciItem.MergedAttributes)
+                        var obj = new Category
                         {
-                            switch (attribute.Key)
-                            {
-                                case "cmdb.service_category_categoryid":
-                                    obj.Id = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.service_category_cattree":
-                                    obj.Tree = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.service_category_catgroup":
-                                    obj.Group = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.service_category_category":
-                                    obj.Name = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.service_category_catdesc":
-                                    obj.Desc = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
+                            Id = ciItem.Value.Id,
+                            Tree = ciItem.Value.CatTree,
+                            Group = ciItem.Value.CatGroup,
+                            Name = ciItem.Value.Category,
+                            Desc = ciItem.Value.CatDesc,
+                        };
 
-                        if (!item.Categories.ContainsKey(obj.Group))
+                        if (!el.Categories.ContainsKey(obj.Group))
                         {
-                            item.Categories.Add(obj.Group, new List<Category> { obj });
+                            el.Categories.Add(obj.Group, new List<Category> { obj });
                         }
                         else
                         {
-                            item.Categories[obj.Group].Add(obj);
+                            el.Categories[obj.Group].Add(obj);
                         }
-
-                        break;
                     }
-                }
+                });
             }
+            #endregion
 
+
+            #region add actions
             // add host actions to cidata
-            var hostActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var hostActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
             // NOTE mcsuk: the same as above for hosts+categories goes here
+            //foreach (var ciItem in hostActions)
+            //{
+            //    var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_action_hostid", out MergedCIAttribute? hostIdAttribute);
+
+            //    var hostId = hostIdAttribute!.Attribute.Value.Value2String();
+
+            //    foreach (var item in ciData)
+            //    {
+            //        if (item.Id == hostId)
+            //        {
+            //            var obj = new Actions();
+
+            //            foreach (var attribute in ciItem.MergedAttributes)
+            //            {
+            //                switch (attribute.Key)
+            //                {
+            //                    case "cmdb.host_action_id":
+            //                        obj.Id = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.host_action_type":
+            //                        obj.Type = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.host_action_cmd":
+            //                        obj.Cmd = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.host_action_cmduser":
+            //                        obj.CmdUser = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    default:
+            //                        break;
+            //                }
+            //            }
+
+            //            item.Actions = obj;
+            //        }
+            //    }
+            //}
+
+            var hostActions = await hostActionModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //NOTE mcsuk: the same as above for hosts + categories goes here
             foreach (var ciItem in hostActions)
             {
-                var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_action_hostid", out MergedCIAttribute? hostIdAttribute);
-
-                var hostId = hostIdAttribute!.Attribute.Value.Value2String();
-
-                foreach (var item in ciData)
+                ciData.ForEach(el =>
                 {
-                    if (item.Id == hostId)
+                    if (el.Id == ciItem.Value.HostId)
                     {
-                        var obj = new Actions();
-
-                        foreach (var attribute in ciItem.MergedAttributes)
+                        el.Actions = new Actions
                         {
-                            switch (attribute.Key)
-                            {
-                                case "cmdb.host_action_id":
-                                    obj.Id = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.host_action_type":
-                                    obj.Type = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.host_action_cmd":
-                                    obj.Cmd = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.host_action_cmduser":
-                                    obj.CmdUser = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-
-                        item.Actions = obj;
+                            Id = ciItem.Value.Id,
+                            Type = ciItem.Value.Type,
+                            Cmd = ciItem.Value.Cmd,
+                            CmdUser = ciItem.Value.CmdUser,
+                        };
                     }
-                }
+                });
             }
 
             // add service actions to ci data 
-            var serviceActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServiceActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var serviceActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServiceActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
             // NOTE mcsuk: the same as above for hosts+categories goes here
+            //foreach (var ciItem in serviceActions)
+            //{
+            //    var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_action_svcid", out MergedCIAttribute? serviceIdAttribute);
+
+            //    var serviceId = serviceIdAttribute!.Attribute.Value.Value2String();
+
+            //    foreach (var item in ciData)
+            //    {
+            //        if (item.Id == serviceId)
+            //        {
+            //            var obj = new Actions();
+            //            foreach (var attribute in ciItem.MergedAttributes)
+            //            {
+            //                switch (attribute.Key)
+            //                {
+            //                    case "cmdb.service_action_id":
+            //                        obj.Id = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.service_action_type":
+            //                        obj.Type = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.service_action_cmd":
+            //                        obj.Cmd = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    case "cmdb.service_action_cmduser":
+            //                        obj.CmdUser = attribute.Value.Attribute.Value.Value2String();
+            //                        break;
+            //                    default:
+            //                        break;
+            //                }
+            //            }
+
+            //            item.Actions = obj;
+            //        }
+            //    }
+            //}
+
+            var serviceActions = await serviceActionModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //NOTE mcsuk: the same as above for hosts + categories goes here
             foreach (var ciItem in serviceActions)
             {
-                var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_action_svcid", out MergedCIAttribute? serviceIdAttribute);
-
-                var serviceId = serviceIdAttribute!.Attribute.Value.Value2String();
-
-                foreach (var item in ciData)
+                ciData.ForEach(el =>
                 {
-                    if (item.Id == serviceId)
+                    if (el.Id == ciItem.Value.ServiceId)
                     {
-                        var obj = new Actions();
-                        foreach (var attribute in ciItem.MergedAttributes)
+                        el.Actions = new Actions
                         {
-                            switch (attribute.Key)
-                            {
-                                case "cmdb.service_action_id":
-                                    obj.Id = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.service_action_type":
-                                    obj.Type = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.service_action_cmd":
-                                    obj.Cmd = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                case "cmdb.service_action_cmduser":
-                                    obj.CmdUser = attribute.Value.Attribute.Value.Value2String();
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-
-                        item.Actions = obj;
+                            Id = ciItem.Value.Id,
+                            Type = ciItem.Value.Type,
+                            Cmd = ciItem.Value.Cmd,
+                            CmdUser = ciItem.Value.CmdUser,
+                        };
                     }
-                }
+                });
             }
+
+            #endregion
 
             // add normalized ci data from interfaces
 
@@ -1254,20 +1324,20 @@ namespace OKPluginNaemonConfig
 
             var jobjects = new Dictionary<string, JObject>();
 
-            //foreach (var item in naemonConfigObjs)
-            //{
-            //    var ci = await ciModel.CreateCI(trans);
+            foreach (var item in naemonConfigObjs)
+            {
+                //var ci = await ciModel.CreateCI(trans);
 
-            //    //var ss = JsonConvert.SerializeObject(item.Value);
-            //    var ss = JArray.FromObject(item.Value);
+                var s1 = JsonConvert.SerializeObject(item.Value);
+                var ss = JArray.FromObject(item.Value);
 
-            //    if (item.Key == "H12037680")
-            //    {
-            //        var a = 5;
-            //    }
+                if (item.Key == "H12037680")
+                {
+                    var a = 5;
+                }
 
-            //    var (attribute, changed) = await attributeModel.InsertAttribute("config", AttributeScalarValueJSON.Build(ss), ci, "naemon_config", changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
-            //}
+                //var (attribute, changed) = await attributeModel.InsertAttribute("config", AttributeScalarValueJSON.Build(ss), ci, "naemon_config", changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+            }
 
             return true;
         }

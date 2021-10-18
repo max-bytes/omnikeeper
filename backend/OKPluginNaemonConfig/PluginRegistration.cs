@@ -19,7 +19,10 @@ namespace OKPluginNaemonConfig
             sc.AddSingleton<GenericTraitEntityModel<Host, string>>();
             sc.AddSingleton<GenericTraitEntityModel<Service, string>>();
             sc.AddSingleton<GenericTraitEntityModel<HostsCategory, string>>();
-            
+            sc.AddSingleton<GenericTraitEntityModel<ServicesCategory, string>>();
+            sc.AddSingleton<GenericTraitEntityModel<HostAction, string>>();
+            sc.AddSingleton<GenericTraitEntityModel<ServiceAction, string>>();
+
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;
