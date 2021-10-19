@@ -25,7 +25,8 @@ namespace OKPluginNaemonConfig
             sc.AddSingleton<GenericTraitEntityModel<NaemonInstancesTag, string>>();
             sc.AddSingleton<GenericTraitEntityModel<NaemonProfile, string>>();
             sc.AddSingleton<GenericTraitEntityModel<TimePeriod, string>>();
-            
+            sc.AddSingleton<GenericTraitEntityModel<Variable, string>>();
+
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;

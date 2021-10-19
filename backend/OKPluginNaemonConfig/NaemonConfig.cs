@@ -32,6 +32,7 @@ namespace OKPluginNaemonConfig
         private readonly GenericTraitEntityModel<NaemonInstancesTag, string> naemonInstancesTagModel;
         private readonly GenericTraitEntityModel<NaemonProfile, string> naemonProfileModel;
         private readonly GenericTraitEntityModel<TimePeriod, string> timePeriodModel;
+        private readonly GenericTraitEntityModel<Variable, string> variableModel;
         public NaemonConfig(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
                            IChangesetModel changesetModel, IUserInDatabaseModel userModel, 
                            GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel,
@@ -43,6 +44,7 @@ namespace OKPluginNaemonConfig
                            GenericTraitEntityModel<NaemonInstancesTag, string> naemonInstancesTagModel,
                            GenericTraitEntityModel<NaemonProfile, string> naemonProfileModel,
                            GenericTraitEntityModel<TimePeriod, string> timePeriodModel,
+                           GenericTraitEntityModel<Variable, string> variableModel,
                            GenericTraitEntityModel<Host, string> hostModel)
             : base(atributeModel, layerModel, changesetModel, userModel)
         {
@@ -59,6 +61,7 @@ namespace OKPluginNaemonConfig
             this.naemonInstancesTagModel = naemonInstancesTagModel;
             this.naemonProfileModel = naemonProfileModel;
             this.timePeriodModel = timePeriodModel;
+            this.variableModel = variableModel;
         }
 
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
@@ -430,78 +433,10 @@ namespace OKPluginNaemonConfig
 
             // getNaemonConfigObjectsFromLegacyProfiles_globalVars
 
-            var variables = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.VariablesFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
+            //var variables = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.VariablesFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
+            var variables = await variableModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            Helper.ConfigObjects.GetFromLegacyProfilesGlobalVars(configObjs, variables);
 
-            var variablesAttributes = new Dictionary<string, string>
-            {
-                ["name"] = "global-variables",
-                ["_ALERTS"] = "OFF",
-                ["_NRPEPORT"] = "5666"
-            };
-
-            foreach (var ciItem in variables)
-            {
-                ciItem.MergedAttributes.TryGetValue("naemon_variable.reftype", out MergedCIAttribute? refTypeAttribute);
-
-                var refType = refTypeAttribute!.Attribute.Value.Value2String();
-
-
-                ciItem.MergedAttributes.TryGetValue("naemon_variable.type", out MergedCIAttribute? typeAttribute);
-
-                var type = typeAttribute!.Attribute.Value.Value2String();
-
-                // select only variables that have reftype GLOBAL
-                if (refType != "GLOBAL" || type != "value")
-                {
-                    continue;
-                }
-
-                string id = "", name = "", value = "";
-                bool isSecret = false;
-
-                foreach (var attribute in ciItem.MergedAttributes)
-                {
-                    switch (attribute.Key)
-                    {
-                        case "naemon_variable.id":
-                            id = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "naemon_variable.name":
-                            name = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "naemon_variable.value":
-                            value = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "naemon_variable.issecret":
-                            isSecret = Convert.ToBoolean(Convert.ToInt16(attribute.Value.Attribute.Value.Value2String()));
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                if (isSecret)
-                {
-                    value = $"$(python /opt2/nm-agent/bin/getSecret.py {id})";
-                }
-
-                var key = $"_{name.ToUpper()}";
-                if (!variablesAttributes.ContainsKey(key))
-                {
-                    variablesAttributes.Add(key, value);
-                }
-                else if (value != "")
-                {
-                    variablesAttributes[key] = value;
-                }
-                
-            }
-
-            configObjs.Add(new ConfigObj
-            {
-                Type = "host",
-                Attributes = variablesAttributes,
-            });
 
             // getNaemonConfigObjectsFromLegacyProfiles_profiles
 
