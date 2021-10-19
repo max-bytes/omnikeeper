@@ -29,6 +29,8 @@ namespace OKPluginNaemonConfig
         private readonly GenericTraitEntityModel<ServicesCategory, string> servicesCategoryModel;
         private readonly GenericTraitEntityModel<HostAction, string> hostActionModel;
         private readonly GenericTraitEntityModel<ServiceAction, string> serviceActionModel;
+        private readonly GenericTraitEntityModel<NaemonInstancesTag, string> naemonInstancesTagModel;
+        private readonly GenericTraitEntityModel<NaemonProfile, string> naemonProfileModel;
         public NaemonConfig(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
                            IChangesetModel changesetModel, IUserInDatabaseModel userModel, 
                            GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel,
@@ -37,6 +39,8 @@ namespace OKPluginNaemonConfig
                            GenericTraitEntityModel<ServicesCategory, string> servicesCategoryModel,
                            GenericTraitEntityModel<HostAction, string> hostActionModel,
                            GenericTraitEntityModel<ServiceAction, string> serviceActionModel,
+                           GenericTraitEntityModel<NaemonInstancesTag, string> naemonInstancesTagModel,
+                           GenericTraitEntityModel<NaemonProfile, string> naemonProfileModel,
                            GenericTraitEntityModel<Host, string> hostModel)
             : base(atributeModel, layerModel, changesetModel, userModel)
         {
@@ -50,6 +54,8 @@ namespace OKPluginNaemonConfig
             this.servicesCategoryModel = servicesCategoryModel;
             this.hostActionModel = hostActionModel;
             this.serviceActionModel = serviceActionModel;
+            this.naemonInstancesTagModel = naemonInstancesTagModel;
+            this.naemonProfileModel = naemonProfileModel;
         }
 
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
@@ -89,37 +95,8 @@ namespace OKPluginNaemonConfig
 
             // a list with all CI from database
             var ciData = new List<ConfigurationItem>();
-            //var hosts = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HCisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
             var hosts = await hostModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
-
-            //foreach (var ciItem in hosts)
-            //{
-            //    var item = new ConfigurationItem
-            //    {
-            //        Type = "HOST"
-            //    };
-
-            //    foreach (var attribute in ciItem.MergedAttributes)
-            //    {
-            //        switch (attribute.Key)
-            //        {
-            //            case "cmdb.id":
-            //                item.Id = attribute.Value.Attribute.Value.Value2String();
-            //                break;
-            //            case "hostname":
-            //                item.Name = attribute.Value.Attribute.Value.Value2String();
-            //                break;
-            //            case "cmdb.status":
-            //                item.Status = attribute.Value.Attribute.Value.Value2String();
-            //                break;
-            //            default:
-            //                break;
-            //        }
-            //    }
-
-            //    ciData.Add(item);
-            //}
 
             foreach (var ciItem in hosts)
             {
@@ -133,38 +110,7 @@ namespace OKPluginNaemonConfig
             }
 
             // get services
-            //var services = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ACisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
             var services = await serviceModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
-
-            //foreach (var ciItem in services)
-            //{
-            //    var item = new ConfigurationItem
-            //    {
-            //        Type = "SERVICE"
-            //    };
-            //    foreach (var attribute in ciItem.MergedAttributes)
-            //    {
-            //        switch (attribute.Key)
-            //        {
-            //            case "cmdb.id":
-            //                item.Id = attribute.Value.Attribute.Value.Value2String();
-            //                break;
-            //            case "cmdb.name":
-            //                item.Name = attribute.Value.Attribute.Value.Value2String();
-            //                break;
-            //            case "cmdb.environment":
-            //                item.Environment = attribute.Value.Attribute.Value.Value2String();
-            //                break;
-            //            case "cmdb.status":
-            //                item.Status = attribute.Value.Attribute.Value.Value2String();
-            //                break;
-            //            default:
-            //                break;
-            //        }
-            //    }
-
-            //    ciData.Add(item);
-            //}
 
             foreach (var ciItem in services)
             {
@@ -180,65 +126,6 @@ namespace OKPluginNaemonConfig
 
             #region add categories
             // add categories for hosts 
-            // HostsCategories
-
-            //var hostsCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostsCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-
-            //foreach (var ciItem in hostsCategories)
-            //{
-            //    var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_category_hostid", out MergedCIAttribute? hostIdAttribute);
-
-            //    if (!success)
-            //    {
-            //        // log error here
-            //    }
-
-            //    var hostId = hostIdAttribute!.Attribute.Value.Value2String();
-
-            //    foreach (var item in ciData)
-            //    {
-            //        if (item.Id == hostId)
-            //        {
-            //            var obj = new Category();
-
-            //            foreach (var attribute in ciItem.MergedAttributes)
-            //            {
-            //                switch (attribute.Key)
-            //                {
-            //                    case "cmdb.host_category_categoryid":
-            //                        obj.Id = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.host_category_cattree":
-            //                        obj.Tree = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.host_category_catgroup":
-            //                        obj.Group = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.host_category_category":
-            //                        obj.Name = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.host_category_catdesc":
-            //                        obj.Desc = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    default:
-            //                        break;
-            //                }
-            //            }
-
-            //            if (!item.Categories.ContainsKey(obj.Group))
-            //            {
-            //                item.Categories.Add(obj.Group, new List<Category> { obj });
-            //            }
-            //            else
-            //            {
-            //                item.Categories[obj.Group].Add(obj);
-            //            }
-
-            //            break;
-            //        }
-            //    }
-            //}
-
             var hostsCategories = await hostsCategoryModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
             //NOTE mcsuk: this part is cumbersome because of the way the data is set up; it would by much cleaner if there was a proper relation between the host and its categories
             // in the original CMDB, there is a relation like that, so I believe we should also add a proper relation in omnikeeper
@@ -272,65 +159,6 @@ namespace OKPluginNaemonConfig
             }
 
             // add categories for services
-            //var servicesCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServicesCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-            //var servicesCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServicesCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-
-
-            //foreach (var ciItem in servicesCategories)
-            //{
-            //    var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_category_svcid", out MergedCIAttribute? serviceIdAttribute);
-
-            //    if (!success)
-            //    {
-            //        // log error here
-            //    }
-
-            //    var serviceId = serviceIdAttribute!.Attribute.Value.Value2String();
-
-            //    foreach (var item in ciData)
-            //    {
-            //        if (item.Id == serviceId)
-            //        {
-            //            var obj = new Category();
-
-            //            foreach (var attribute in ciItem.MergedAttributes)
-            //            {
-            //                switch (attribute.Key)
-            //                {
-            //                    case "cmdb.service_category_categoryid":
-            //                        obj.Id = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.service_category_cattree":
-            //                        obj.Tree = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.service_category_catgroup":
-            //                        obj.Group = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.service_category_category":
-            //                        obj.Name = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.service_category_catdesc":
-            //                        obj.Desc = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    default:
-            //                        break;
-            //                }
-            //            }
-
-            //            if (!item.Categories.ContainsKey(obj.Group))
-            //            {
-            //                item.Categories.Add(obj.Group, new List<Category> { obj });
-            //            }
-            //            else
-            //            {
-            //                item.Categories[obj.Group].Add(obj);
-            //            }
-
-            //            break;
-            //        }
-            //    }
-            //}
-
             var servicesCategories = await servicesCategoryModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
             // NOTE mcsuk: the same as above for hosts+categories goes here for services+categories
 
@@ -362,50 +190,8 @@ namespace OKPluginNaemonConfig
             }
             #endregion
 
-
             #region add actions
             // add host actions to cidata
-            //var hostActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-
-            // NOTE mcsuk: the same as above for hosts+categories goes here
-            //foreach (var ciItem in hostActions)
-            //{
-            //    var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_action_hostid", out MergedCIAttribute? hostIdAttribute);
-
-            //    var hostId = hostIdAttribute!.Attribute.Value.Value2String();
-
-            //    foreach (var item in ciData)
-            //    {
-            //        if (item.Id == hostId)
-            //        {
-            //            var obj = new Actions();
-
-            //            foreach (var attribute in ciItem.MergedAttributes)
-            //            {
-            //                switch (attribute.Key)
-            //                {
-            //                    case "cmdb.host_action_id":
-            //                        obj.Id = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.host_action_type":
-            //                        obj.Type = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.host_action_cmd":
-            //                        obj.Cmd = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.host_action_cmduser":
-            //                        obj.CmdUser = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    default:
-            //                        break;
-            //                }
-            //            }
-
-            //            item.Actions = obj;
-            //        }
-            //    }
-            //}
-
             var hostActions = await hostActionModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
             //NOTE mcsuk: the same as above for hosts + categories goes here
             foreach (var ciItem in hostActions)
@@ -426,46 +212,6 @@ namespace OKPluginNaemonConfig
             }
 
             // add service actions to ci data 
-            //var serviceActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServiceActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-
-            // NOTE mcsuk: the same as above for hosts+categories goes here
-            //foreach (var ciItem in serviceActions)
-            //{
-            //    var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_action_svcid", out MergedCIAttribute? serviceIdAttribute);
-
-            //    var serviceId = serviceIdAttribute!.Attribute.Value.Value2String();
-
-            //    foreach (var item in ciData)
-            //    {
-            //        if (item.Id == serviceId)
-            //        {
-            //            var obj = new Actions();
-            //            foreach (var attribute in ciItem.MergedAttributes)
-            //            {
-            //                switch (attribute.Key)
-            //                {
-            //                    case "cmdb.service_action_id":
-            //                        obj.Id = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.service_action_type":
-            //                        obj.Type = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.service_action_cmd":
-            //                        obj.Cmd = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    case "cmdb.service_action_cmduser":
-            //                        obj.CmdUser = attribute.Value.Attribute.Value.Value2String();
-            //                        break;
-            //                    default:
-            //                        break;
-            //                }
-            //            }
-
-            //            item.Actions = obj;
-            //        }
-            //    }
-            //}
-
             var serviceActions = await serviceActionModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
             //NOTE mcsuk: the same as above for hosts + categories goes here
             foreach (var ciItem in serviceActions)
@@ -601,6 +347,14 @@ namespace OKPluginNaemonConfig
                     }
                 }
             }
+
+            // new capmap
+            var nInstancesTag = await naemonInstancesTagModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            var nProfiles = await naemonProfileModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            // NOTE we will move to use this when the nInstanceTag are fetched correctlly 
+            var capMapNew = Helper.CIData.BuildCapMap(nInstancesTag, nProfiles, nInstances, cfg!.NaemonsConfigGenerateprofiles);
+
+
 
             #region process core data
             // updateNormalizedCiDataFieldProfile
@@ -1342,18 +1096,6 @@ namespace OKPluginNaemonConfig
             return true;
         }
 
-        private string? GetAttributeValueString(string key, IDictionary<string, MergedCIAttribute> attributes)
-        {
-            var success = attributes.TryGetValue(key, out MergedCIAttribute? attributeValue);
-
-            if (!success)
-            {
-                return null;
-            }
-
-            return (attributeValue.Attribute.Value as AttributeScalarValueText).Value;
-        }
-
         private long? GetAttributeValueInt(string key, IDictionary<string, MergedCIAttribute> attributes)
         {
             var success = attributes.TryGetValue(key, out MergedCIAttribute? attributeValue);
@@ -1373,22 +1115,29 @@ namespace OKPluginNaemonConfig
 
             [JsonProperty("attributes")]
             public Dictionary<string, string> Attributes { get; set; }
+
+            public ConfigObj()
+            {
+                Type = "";
+                Attributes = new Dictionary<string, string>();
+            }
         }
 
         internal class ConfigurationItem
         {
-            //public ConfigurationItem(string type, string id, string name, string status, Dictionary<string, Category> categories, Actions actions)
-            //{
-            //    Type = type;
-            //    Id = id;
-            //    Name = name;
-            //    Status = status;
-            //    Categories = categories;
-            //    Actions = actions;
-            //}
-
             public ConfigurationItem()
             {
+                Type = "";
+                Id = "";
+                Name = "";
+                Status = "";
+                Environment = "";
+                Profile = "";
+                Address = "";
+                Interfaces = new Interfaces();
+                Relations = new Dictionary<string, Dictionary<string, string>>();
+                Categories = new Dictionary<string, List<Category>>();
+                Actions = new Actions();
                 Categories = new Dictionary<string, List<Category>>();
                 Tags = new List<string>();
                 ProfileOrg = new List<string>();
@@ -1412,35 +1161,36 @@ namespace OKPluginNaemonConfig
 
         internal class Category
         {
-            //public Category(string id, string tree, string group, string name, string desc)
-            //{
-            //    Id = id;
-            //    Tree = tree;
-            //    Group = group;
-            //    Name = name;
-            //    Desc = desc;
-            //}
-
             public string Id { get; set; }
             public string Tree { get; set; }
             public string Group { get; set; }
             public string Name { get; set; }
             public string Desc { get; set; }
+
+            public Category()
+            {
+                Id = "";
+                Tree = "";
+                Group = "";
+                Name = "";
+                Desc = "";
+            }
         }
 
         internal class Actions
         {
-            //public Actions(string id, string type, string cmd, string cmdUser)
-            //{
-            //    Id = id;
-            //    Type = type;
-            //    Cmd = cmd;
-            //    CmdUser = cmdUser;
-            //}
             public string Id { get; set; }
             public string Type { get; set; }
             public string Cmd { get; set; }
             public string CmdUser { get; set; }
+
+            public Actions()
+            {
+                Id = "";
+                Type = "";
+                Cmd = "";
+                CmdUser = "";
+            }
         }
 
         internal class Interfaces
@@ -1473,6 +1223,16 @@ namespace OKPluginNaemonConfig
 
             [JsonProperty("naemons-config-generateprofiles", Required = Required.Always)]
             public List<string> NaemonsConfigGenerateprofiles { get; set; }
+
+            public Configuration()
+            {
+                MonmanLayerId = "";
+                CMDBLayerId = "";
+                NaemonConfigLayerId = "";
+                LoadCMDBCustomer = new List<string>();
+                CMDBMonprofilePrefix = new List<string>();
+                NaemonsConfigGenerateprofiles = new List<string>();
+            }
         }
     }
 }
