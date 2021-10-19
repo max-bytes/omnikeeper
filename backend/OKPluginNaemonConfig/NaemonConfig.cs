@@ -31,6 +31,7 @@ namespace OKPluginNaemonConfig
         private readonly GenericTraitEntityModel<ServiceAction, string> serviceActionModel;
         private readonly GenericTraitEntityModel<NaemonInstancesTag, string> naemonInstancesTagModel;
         private readonly GenericTraitEntityModel<NaemonProfile, string> naemonProfileModel;
+        private readonly GenericTraitEntityModel<TimePeriod, string> timePeriodModel;
         public NaemonConfig(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
                            IChangesetModel changesetModel, IUserInDatabaseModel userModel, 
                            GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel,
@@ -41,6 +42,7 @@ namespace OKPluginNaemonConfig
                            GenericTraitEntityModel<ServiceAction, string> serviceActionModel,
                            GenericTraitEntityModel<NaemonInstancesTag, string> naemonInstancesTagModel,
                            GenericTraitEntityModel<NaemonProfile, string> naemonProfileModel,
+                           GenericTraitEntityModel<TimePeriod, string> timePeriodModel,
                            GenericTraitEntityModel<Host, string> hostModel)
             : base(atributeModel, layerModel, changesetModel, userModel)
         {
@@ -56,6 +58,7 @@ namespace OKPluginNaemonConfig
             this.serviceActionModel = serviceActionModel;
             this.naemonInstancesTagModel = naemonInstancesTagModel;
             this.naemonProfileModel = naemonProfileModel;
+            this.timePeriodModel = timePeriodModel;
         }
 
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
@@ -257,6 +260,7 @@ namespace OKPluginNaemonConfig
                 //}
             }
 
+            #region build CapabilityMap
             //getCapabilityMap - NaemonInstancesTagsFlattened
             var naemonInstancesTags = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstancesTagsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
@@ -354,52 +358,12 @@ namespace OKPluginNaemonConfig
             // NOTE we will move to use this when the nInstanceTag are fetched correctlly 
             var capMapNew = Helper.CIData.BuildCapMap(nInstancesTag, nProfiles, nInstances, cfg!.NaemonsConfigGenerateprofiles);
 
-
+            #endregion  
 
             #region process core data
-            // updateNormalizedCiDataFieldProfile
-            foreach (var ciItem in ciData)
-            {
-                var profileCount = 0;
-                ciItem.Profile = "NONE";
-                ciItem.ProfileOrg = new List<string>();
 
-                if (ciItem.Categories.ContainsKey("MONITORING"))
-                {
-                    foreach (var category in ciItem.Categories["MONITORING"])
-                    {
-                        // check profile against configured scoping pattern
-                        var isMyProfileScope = false;
-                        foreach (var pattern in cfg!.CMDBMonprofilePrefix)
-                        {
-                            if (Regex.IsMatch(category.Name, $"^{pattern}", RegexOptions.IgnoreCase))
-                            {
-                                isMyProfileScope = true;
-                                break;
-                            }
-                        }
-
-                        if (isMyProfileScope)
-                        {
-                            profileCount += 1;
-                            ciItem.Profile = category.Name.ToLower();
-                            ciItem.ProfileOrg.Add(category.Name.ToLower());
-                        }
-                    }
-                }
-
-                if (profileCount > 1)
-                {
-                    ciItem.Profile = "MULTIPLE";
-                }
-
-                if (profileCount == 1 && Regex.IsMatch(ciItem.Profile, "^profile", RegexOptions.IgnoreCase))
-                {
-                    // add legacy profile capability
-                    ciItem.Tags.Add("cap_lp_" + ciItem.Profile);
-                }
-
-            }
+            // UpdateNormalizedCiDataFieldProfile
+            Helper.CIData.UpdateProfileField(ciData, cfg!.CMDBMonprofilePrefix);
 
             // updateNormalizedCiDataFieldAddress
             foreach (var ciItem in ciData)
@@ -411,22 +375,7 @@ namespace OKPluginNaemonConfig
             }
 
             // updateNormalizedCiData_addGenericCmdbCapTags
-
-            foreach (var ciItem in ciData)
-            {
-                if (ciItem.Categories.ContainsKey("MONITORING_CAP"))
-                {
-                    foreach (var category in ciItem.Categories["MONITORING_CAP"])
-                    {
-                        ciItem.Tags.Add($"cap_{category.Tree}_{category.Name}".ToLower());
-                    }
-                }
-                else
-                {
-                    // TODO check if we should add this
-                    //ciItem.Tags.Add("cap_default");
-                }
-            }
+            Helper.CIData.AddGenericCmdbCapTags(ciData);
 
             // updateNormalizedCiData_addRelationData
             var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runsOn"), layersetCMDB, trans, changesetProxy.TimeThreshold);
@@ -439,23 +388,7 @@ namespace OKPluginNaemonConfig
             #endregion
 
             /* test compatibility of naemons and add NAEMONSAVAIL */
-            foreach (var item in ciData)
-            {
-                // TODO how to handle cases that dont have tags should NaemonsAvail include all naemon ids
-                item.NaemonsAvail = naemonIds;
-
-                foreach (var requirement in item.Tags)
-                {
-                    if (capMap.ContainsKey(requirement))
-                    {
-                        item.NaemonsAvail = item.NaemonsAvail.Intersect(capMap[requirement]).ToList();
-                    }
-                    else
-                    {
-                        item.NaemonsAvail = new List<string>();
-                    }
-                }
-            }
+            Helper.CIData.AddNaemonsAvailField(ciData, naemonIds, capMap);
 
             var configObjs = new List<ConfigObj>();
 
@@ -465,95 +398,13 @@ namespace OKPluginNaemonConfig
             ciData = ciData.Where(el => el.Status == "ACTIVE" || el.Status == "BASE_INSTALLED" || el.Status == "READY_FOR_SERVICE").ToList();
 
             // getNaemonConfigObjectsFromStaticTemplates - global-commands
-            configObjs.Add(new ConfigObj
-            {
-                Type = "command",
-                Attributes = new Dictionary<string, string>
-                {
-                    ["command_name"] = "check-nrpe",
-                    ["command_line"] = "$USER1$/check_nrpe -2 -t 50 -H $HOSTADDRESS$ -K /opt2/nrpe-ssl/auth.key -C /opt2/nrpe-ssl/auth.crt $ARG1$",
-                }
-            });
+            Helper.ConfigObjects.GetFromStaticTemplates(configObjs);
 
             #region getNaemonConfigObjectsFromTimeperiods
-            var timeperiods = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.TimePeriodsFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
-            foreach (var ciItem in timeperiods)
-            {
-                var timeperiodId = ciItem.MergedAttributes["naemon_timeperiod.id"]!.Attribute.Value.Value2String();
 
-                var obj = new ConfigObj
-                {
-                    Type = "timeperiod",
-                    Attributes = new Dictionary<string, string>(),
-                };
-
-                foreach (var attribute in ciItem.MergedAttributes)
-                {
-                    switch (attribute.Key)
-                    {
-                        case "naemon_timeperiod.name":
-                            obj.Attributes["timeperiod_name"] = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "naemon_timeperiod.alias":
-                            obj.Attributes["alias"] = attribute.Value.Attribute.Value.Value2String();
-                            break;
-                        case "naemon_timeperiod.span_mon":
-                            var monday = attribute.Value.Attribute.Value.Value2String();
-                            if (monday != null && monday.Length > 0)
-                            {
-                                obj.Attributes["monday"] = monday;
-                            }
-                            break;
-                        case "naemon_timeperiod.span_tue":
-                            var tuesday = attribute.Value.Attribute.Value.Value2String();
-                            if (tuesday != null && tuesday.Length > 0)
-                            {
-                                obj.Attributes["tuesday"] = tuesday;
-                            }
-                            break;
-                        case "naemon_timeperiod.span_wed":
-                            var wednesday = attribute.Value.Attribute.Value.Value2String();
-                            if (wednesday != null && wednesday.Length > 0)
-                            {
-                                obj.Attributes["wednesday"] = wednesday;
-                            }
-                            break;
-                        case "naemon_timeperiod.span_thu":
-                            obj.Attributes["thursday"] = attribute.Value.Attribute.Value.Value2String();
-                            var thursday = attribute.Value.Attribute.Value.Value2String();
-                            if (thursday != null && thursday.Length > 0)
-                            {
-                                obj.Attributes["thursday"] = thursday;
-                            }
-                            break;
-                        case "naemon_timeperiod.span_fri":
-                            var friday = attribute.Value.Attribute.Value.Value2String();
-                            if (friday != null && friday.Length > 0)
-                            {
-                                obj.Attributes["friday"] = friday;
-                            }
-                            break;
-                        case "naemon_timeperiod.span_sat":
-                            var saturday = attribute.Value.Attribute.Value.Value2String();
-                            if (saturday != null && saturday.Length > 0)
-                            {
-                                obj.Attributes["saturday"] = saturday;
-                            }
-                            break;
-                        case "naemon_timeperiod.span_sun":
-                            var sunday = attribute.Value.Attribute.Value.Value2String();
-                            if (sunday != null && sunday.Length > 0)
-                            {
-                                obj.Attributes["sunday"] = sunday;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                configObjs.Add(obj);
-            }
+            var timeperiods = await timePeriodModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            Helper.ConfigObjects.GetFromTimeperiods(configObjs, timeperiods);
+            
             #endregion
 
 
@@ -685,13 +536,16 @@ namespace OKPluginNaemonConfig
 
             // getTimeperiods -> We need a list with timeperiod ids
 
-            var timeperiodsById = new Dictionary<string, MergedCI>();
-            foreach (var ciItem in timeperiods)
-            {
-                var timeperiodId = ciItem.MergedAttributes["naemon_timeperiod.id"]!.Attribute.Value.Value2String();
+            //var timeperiodsById = new Dictionary<string, MergedCI>();
+            var timeperiodsById = timeperiods;
 
-                timeperiodsById.Add(timeperiodId, ciItem);
-            }
+
+            //foreach (var ciItem in timeperiods)
+            //{
+            //    var timeperiodId = ciItem.MergedAttributes["naemon_timeperiod.id"]!.Attribute.Value.Value2String();
+
+            //    timeperiodsById.Add(timeperiodId, ciItem);
+            //}
 
             // prepare services
             // get SERVICES_STATIC
@@ -840,21 +694,21 @@ namespace OKPluginNaemonConfig
                             attributes["retry_interval"] = retryInterval.ToString();
                         }
 
-                        var timeperiodCheck = GetAttributeValueInt("naemon_services_static.timeperiod_check", service.MergedAttributes);
-                        if (timeperiodCheck != null && timeperiodsById.ContainsKey(timeperiodCheck.ToString()))
-                        {
-                            var tName = (timeperiodsById[timeperiodCheck.ToString()].MergedAttributes["naemon_timeperiod.name"].Attribute.Value as AttributeScalarValueText)?.Value;
+                        //var timeperiodCheck = GetAttributeValueInt("naemon_services_static.timeperiod_check", service.MergedAttributes);
+                        //if (timeperiodCheck != null && timeperiodsById.ContainsKey(timeperiodCheck.ToString()))
+                        //{
+                        //    var tName = (timeperiodsById[timeperiodCheck.ToString()].MergedAttributes["naemon_timeperiod.name"].Attribute.Value as AttributeScalarValueText)?.Value;
 
-                            attributes["check_period"] = tName;
-                        }
+                        //    attributes["check_period"] = tName;
+                        //}
 
-                        var timeperiodNotify = GetAttributeValueInt("naemon_services_static.timeperiod_notify", service.MergedAttributes);
-                        if (timeperiodNotify != null && timeperiodsById.ContainsKey(timeperiodNotify.ToString()))
-                        {
-                            var tName = (timeperiodsById[timeperiodNotify.ToString()].MergedAttributes["naemon_timeperiod.name"].Attribute.Value as AttributeScalarValueText)?.Value;
+                        //var timeperiodNotify = GetAttributeValueInt("naemon_services_static.timeperiod_notify", service.MergedAttributes);
+                        //if (timeperiodNotify != null && timeperiodsById.ContainsKey(timeperiodNotify.ToString()))
+                        //{
+                        //    var tName = (timeperiodsById[timeperiodNotify.ToString()].MergedAttributes["naemon_timeperiod.name"].Attribute.Value as AttributeScalarValueText)?.Value;
 
-                            attributes["notification_period"] = tName;
-                        }
+                        //    attributes["notification_period"] = tName;
+                        //}
 
                         /* fill variables */
                         var target = (service.MergedAttributes["naemon_services_static.target"].Attribute.Value as AttributeScalarValueText)?.Value;
@@ -1108,7 +962,7 @@ namespace OKPluginNaemonConfig
             return (attributeValue.Attribute.Value as AttributeScalarValueInteger).Value;
         }
 
-        internal class ConfigObj
+        public class ConfigObj
         {
             [JsonProperty("type")]
             public string Type { get; set; }
@@ -1123,7 +977,7 @@ namespace OKPluginNaemonConfig
             }
         }
 
-        internal class ConfigurationItem
+        public class ConfigurationItem
         {
             public ConfigurationItem()
             {
@@ -1159,7 +1013,7 @@ namespace OKPluginNaemonConfig
             public Dictionary<string, Dictionary<string, string>> Relations { get; set; }
         }
 
-        internal class Category
+        public class Category
         {
             public string Id { get; set; }
             public string Tree { get; set; }
@@ -1177,7 +1031,7 @@ namespace OKPluginNaemonConfig
             }
         }
 
-        internal class Actions
+        public class Actions
         {
             public string Id { get; set; }
             public string Type { get; set; }
@@ -1193,7 +1047,7 @@ namespace OKPluginNaemonConfig
             }
         }
 
-        internal class Interfaces
+        public class Interfaces
         {
             public int Id { get; set; }
             public int Type { get; set; }

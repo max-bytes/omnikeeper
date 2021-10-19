@@ -5,7 +5,8 @@ namespace OKPluginNaemonConfig.Entity
     [TraitEntity("instances_tag", TraitOriginType.Core)]
     public class NaemonInstancesTag : TraitEntity
     {
-        // NOTE not all rows are selected correctly here 
+        // NOTE not all rows are selected correctly here since we have two columns as primary key
+        // In this case only unique ids for Id columns are returned which is wrong
         [TraitAttribute("id", "naemon_instance_tag.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitEntityID]

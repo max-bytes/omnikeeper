@@ -24,6 +24,7 @@ namespace OKPluginNaemonConfig
             sc.AddSingleton<GenericTraitEntityModel<ServiceAction, string>>();
             sc.AddSingleton<GenericTraitEntityModel<NaemonInstancesTag, string>>();
             sc.AddSingleton<GenericTraitEntityModel<NaemonProfile, string>>();
+            sc.AddSingleton<GenericTraitEntityModel<TimePeriod, string>>();
             
         }
 
