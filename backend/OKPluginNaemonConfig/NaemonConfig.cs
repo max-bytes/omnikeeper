@@ -25,26 +25,34 @@ namespace OKPluginNaemonConfig
         private readonly GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel;
         private readonly GenericTraitEntityModel<Host, string> hostModel;
         private readonly GenericTraitEntityModel<Service, string> serviceModel;
-        private readonly GenericTraitEntityModel<HostsCategory, string> hostsCategoryModel;
-        private readonly GenericTraitEntityModel<ServicesCategory, string> servicesCategoryModel;
+        private readonly GenericTraitEntityModel<HostCategory, string> hostsCategoryModel;
+        private readonly GenericTraitEntityModel<ServiceCategory, string> servicesCategoryModel;
         private readonly GenericTraitEntityModel<HostAction, string> hostActionModel;
         private readonly GenericTraitEntityModel<ServiceAction, string> serviceActionModel;
-        private readonly GenericTraitEntityModel<NaemonInstancesTag, string> naemonInstancesTagModel;
+        private readonly GenericTraitEntityModel<NaemonInstanceTag, string> naemonInstancesTagModel;
         private readonly GenericTraitEntityModel<NaemonProfile, string> naemonProfileModel;
         private readonly GenericTraitEntityModel<TimePeriod, string> timePeriodModel;
         private readonly GenericTraitEntityModel<Variable, string> variableModel;
+        private readonly GenericTraitEntityModel<ServiceLayer, string> serviceLayerModel;
+        private readonly GenericTraitEntityModel<Command, string> commandModel;
+        private readonly GenericTraitEntityModel<ServiceStatic, string> serviceStaticModel;
+        private readonly GenericTraitEntityModel<Module, string> moduleModel;
         public NaemonConfig(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
                            IChangesetModel changesetModel, IUserInDatabaseModel userModel, 
                            GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel,
                            GenericTraitEntityModel<Service, string> serviceModel,
-                           GenericTraitEntityModel<HostsCategory, string> hostsCategoryModel,
-                           GenericTraitEntityModel<ServicesCategory, string> servicesCategoryModel,
+                           GenericTraitEntityModel<HostCategory, string> hostsCategoryModel,
+                           GenericTraitEntityModel<ServiceCategory, string> servicesCategoryModel,
                            GenericTraitEntityModel<HostAction, string> hostActionModel,
                            GenericTraitEntityModel<ServiceAction, string> serviceActionModel,
-                           GenericTraitEntityModel<NaemonInstancesTag, string> naemonInstancesTagModel,
+                           GenericTraitEntityModel<NaemonInstanceTag, string> naemonInstancesTagModel,
                            GenericTraitEntityModel<NaemonProfile, string> naemonProfileModel,
                            GenericTraitEntityModel<TimePeriod, string> timePeriodModel,
                            GenericTraitEntityModel<Variable, string> variableModel,
+                           GenericTraitEntityModel<ServiceLayer, string> serviceLayerModel,
+                           GenericTraitEntityModel<Command, string> commandModel,
+                           GenericTraitEntityModel<ServiceStatic, string> serviceStaticModel,
+                           GenericTraitEntityModel<Module, string> moduleModel,
                            GenericTraitEntityModel<Host, string> hostModel)
             : base(atributeModel, layerModel, changesetModel, userModel)
         {
@@ -62,6 +70,10 @@ namespace OKPluginNaemonConfig
             this.naemonProfileModel = naemonProfileModel;
             this.timePeriodModel = timePeriodModel;
             this.variableModel = variableModel;
+            this.serviceLayerModel = serviceLayerModel;
+            this.commandModel = commandModel;
+            this.serviceStaticModel = serviceStaticModel;
+            this.moduleModel = moduleModel;
         }
 
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
@@ -424,16 +436,12 @@ namespace OKPluginNaemonConfig
 
             #endregion
 
-
-
-
             #region get configuration from legacy objects
 
             // TODO: we should generate legacy objects only if isNaemonProfileFromDbEnabled condition is fulfilled
 
             // getNaemonConfigObjectsFromLegacyProfiles_globalVars
 
-            //var variables = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.VariablesFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
             var variables = await variableModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
             Helper.ConfigObjects.GetFromLegacyProfilesGlobalVars(configObjs, variables);
 
@@ -442,13 +450,10 @@ namespace OKPluginNaemonConfig
 
             var appendBasetemplates = new List<string> { "global-variables", "tsa-generic-host" };
 
-
-
-
-
             // getNaemonConfigObjectsFromLegacyProfiles_modules
 
             var serviceLayers = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.ServiceLayersFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
+            
             var layersById = new Dictionary<string, MergedCI>();
             foreach (var ciItem in serviceLayers)
             {
@@ -461,6 +466,7 @@ namespace OKPluginNaemonConfig
             // getCommands -> We need only command ids here
 
             var commands = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.CommandsFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
+            
             var commandsById = new Dictionary<string, MergedCI>();
             foreach (var ciItem in commands)
             {
@@ -755,26 +761,37 @@ namespace OKPluginNaemonConfig
             }
 
 
-            // getNaemonConfigObjectsFromLegacyProfiles_commands
-            foreach (var command in commands)
-            {
-                var commandName = (command.MergedAttributes["naemon_command.name"].Attribute.Value as AttributeScalarValueText)?.Value;
-                var commandLine = (command.MergedAttributes["naemon_command.exec"].Attribute.Value as AttributeScalarValueText)?.Value;
+            // We can use this part only when optional attributes are selected correctly
+            var serviceLayers1 = await serviceLayerModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            var commands1 = await commandModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            var servicesStatic1 = await serviceStaticModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            var modules1 = await moduleModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
 
-                configObjs.Add(new ConfigObj
-                {
-                    Type = "command",
-                    Attributes = new Dictionary<string, string>
-                    {
-                        ["command_name"] = commandName,
-                        ["command_line"] = commandLine,
-                    },
-                });
-            }
+            Helper.ConfigObjects.GetNaemonConfigObjectsFromLegacyProfilesModules(configObjs, serviceLayers1, commands1, timeperiods, servicesStatic1, modules1);
+
+
+
+
+            // getNaemonConfigObjectsFromLegacyProfiles_commands
+            //foreach (var command in commands)
+            //{
+            //    var commandName = (command.MergedAttributes["naemon_command.name"].Attribute.Value as AttributeScalarValueText)?.Value;
+            //    var commandLine = (command.MergedAttributes["naemon_command.exec"].Attribute.Value as AttributeScalarValueText)?.Value;
+
+            //    configObjs.Add(new ConfigObj
+            //    {
+            //        Type = "command",
+            //        Attributes = new Dictionary<string, string>
+            //        {
+            //            ["command_name"] = commandName,
+            //            ["command_line"] = commandLine,
+            //        },
+            //    });
+            //}
+
+            Helper.ConfigObjects.GetNaemonConfigObjectsFromLegacyProfilesCommands(configObjs, commands1);
 
             #endregion
-
-
 
             //TODO getNaemonConfigObjectsFromLegacyProfiles_hostcommands
 
@@ -885,6 +902,7 @@ namespace OKPluginNaemonConfig
             return true;
         }
 
+        // NOTE this will be removed
         private long? GetAttributeValueInt(string key, IDictionary<string, MergedCIAttribute> attributes)
         {
             var success = attributes.TryGetValue(key, out MergedCIAttribute? attributeValue);

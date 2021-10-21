@@ -7,7 +7,7 @@ namespace OKPluginNaemonConfig.Helper
     public static partial class CIData
     {
         public static Dictionary<string, List<string>> BuildCapMap(
-            IDictionary<string, NaemonInstancesTag> naemonInstancesTags, 
+            IDictionary<string, NaemonInstanceTag> naemonInstancesTags, 
             IDictionary<string, NaemonProfile> naemonProfiles,
             IDictionary<string, NaemonInstance> naemonInstances,
             List<string> naemonsConfigGenerateprofiles

@@ -11,19 +11,15 @@ namespace OKPluginNaemonConfig.Entity
         public readonly string Id;
 
         [TraitAttribute("type", "cmdb.host_action_type")]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Type;
 
         [TraitAttribute("cmd", "cmdb.host_action_cmd")]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Cmd;
 
         [TraitAttribute("cmduser", "cmdb.host_action_cmduser")]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string CmdUser;
 
         [TraitAttribute("hostid", "cmdb.host_action_hostid")]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string HostId;
 
         public HostAction()

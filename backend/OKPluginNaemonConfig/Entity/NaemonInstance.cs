@@ -11,7 +11,6 @@ namespace OKPluginNaemonConfig.Entity
         public readonly string Id;
 
         [TraitAttribute("name", "naemon_instance.name")]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Name;
         public NaemonInstance()
         {

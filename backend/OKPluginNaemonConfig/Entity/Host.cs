@@ -11,11 +11,9 @@ namespace OKPluginNaemonConfig.Entity
         public readonly string Id;
 
         [TraitAttribute("name", "hostname")]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Name;
 
         [TraitAttribute("status", "cmdb.status")]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Status;
 
         public Host()

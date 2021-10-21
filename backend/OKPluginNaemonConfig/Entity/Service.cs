@@ -11,15 +11,12 @@ namespace OKPluginNaemonConfig.Entity
         public readonly string Id;
 
         [TraitAttribute("name", "cmdb.name")]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Name;
 
         [TraitAttribute("status", "cmdb.status")]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Status;
 
         [TraitAttribute("environment", "cmdb.environment")]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Environment;
 
         public Service()
