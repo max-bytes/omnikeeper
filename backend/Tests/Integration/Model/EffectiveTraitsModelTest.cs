@@ -54,6 +54,14 @@ namespace Tests.Integration.Model
             var cis2 = await traitModel.FilterCIsWithTrait(cis, testTrait2, layerset, trans, timeThreshold);
             Assert.AreEqual(2, cis2.Count());
             cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
+
+            // test inverted filtering
+            var cis3 = await traitModel.FilterCIsWithoutTrait(cis, testTrait1, layerset, trans, timeThreshold);
+            Assert.AreEqual(0, cis3.Count());
+
+            var cis4 = await traitModel.FilterCIsWithoutTrait(cis, testTrait2, layerset, trans, timeThreshold);
+            Assert.AreEqual(1, cis4.Count());
+            cis4.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[1] }, options => options.WithStrictOrdering());
         }
 
         [Test]

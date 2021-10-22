@@ -43,8 +43,12 @@ namespace Omnikeeper.Model
             if (layers.IsEmpty && !(trait is TraitEmpty))
                 return ImmutableList<MergedCI>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
 
-            var ret = await CanResolve(trait, cis, layers, trans, atTime);
-            return ret;
+            return await CanResolve(trait, cis, false, layers, trans, atTime);
+        }
+
+        public async Task<IEnumerable<MergedCI>> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        {
+            return await CanResolve(trait, cis, true, layers, trans, atTime);
         }
 
         public async Task<EffectiveTrait?> GetEffectiveTraitForCI(MergedCI ci, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
@@ -107,7 +111,7 @@ namespace Omnikeeper.Model
             }).ToDictionary(t => t.Key, t => t.Value);
         }
 
-        private async Task<IEnumerable<MergedCI>> CanResolve(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        private async Task<IEnumerable<MergedCI>> CanResolve(ITrait trait, IEnumerable<MergedCI> cis, bool invertResult, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: sanity check: make sure that MergedCIs contain the necessary attributes (in principle), otherwise resolving cannot work properly
 
@@ -133,15 +137,31 @@ namespace Omnikeeper.Model
                         {
                             var (_, errors) = TemplateCheckService.CalculateTemplateErrorsAttributeSimple(ci, ta.AttributeTemplate);
                             if (errors)
+                            {
+                                if (invertResult)
+                                {
+                                    ret.Add(ci);
+                                }
                                 goto ENDOFCILOOP;
+                            }
                         };
                         foreach (var tr in tt.RequiredRelations)
                         {
                             var (_, errors) = TemplateCheckService.CalculateTemplateErrorsRelationSimple(fromRelations[ci.ID], toRelations[ci.ID], tr.RelationTemplate);
                             if (errors)
+                            {
+                                if (invertResult)
+                                {
+                                    ret.Add(ci);
+                                }
                                 goto ENDOFCILOOP;
+                            }
                         }
-                        ret.Add(ci);
+
+                        if (!invertResult)
+                        {
+                            ret.Add(ci);
+                        }
 
                         ENDOFCILOOP:
                         ;
@@ -150,7 +170,7 @@ namespace Omnikeeper.Model
                     return ret;
                 case TraitEmpty te:
                     foreach (var ci in cis)
-                        if (ci.MergedAttributes.IsEmpty()) // NOTE: we do not check for relations
+                        if (ci.MergedAttributes.IsEmpty() != invertResult) // NOTE: we do not check for relations
                             ret.Add(ci);
                     return ret;
                 default:
