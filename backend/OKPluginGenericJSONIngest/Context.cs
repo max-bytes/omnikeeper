@@ -20,12 +20,15 @@ namespace OKPluginGenericJSONIngest
         public readonly string ID;
 
         [TraitAttribute("extract_config", "gji_context.extract_config", isJSONSerialized: true)]
+        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly IExtractConfig ExtractConfig;
 
         [TraitAttribute("transform_config", "gji_context.transform_config", isJSONSerialized: true)]
+        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly ITransformConfig TransformConfig;
 
         [TraitAttribute("load_config", "gji_context.load_config", isJSONSerialized: true)]
+        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly ILoadConfig LoadConfig;
 
         [TraitAttribute("name", "__name", optional: true)]
@@ -41,6 +44,7 @@ namespace OKPluginGenericJSONIngest
             Name = "";
         }
 
+        [JsonConstructor]
         public Context(string id, IExtractConfig extractConfig, ITransformConfig transformConfig, ILoadConfig loadConfig)
         {
             ID = id;
