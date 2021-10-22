@@ -10,7 +10,7 @@ namespace Omnikeeper.Entity.AttributeValues
 {
     public enum AttributeValueType
     {
-        Text, MultilineText, Integer, JSON, YAML, Image
+        Text, MultilineText, Integer, JSON, YAML, Image, Mask
     }
     [ProtoContract]
     [ProtoInclude(1, typeof(AttributeScalarValueImage))]
@@ -18,6 +18,7 @@ namespace Omnikeeper.Entity.AttributeValues
     [ProtoInclude(3, typeof(AttributeScalarValueJSON))]
     [ProtoInclude(4, typeof(AttributeScalarValueText))]
     [ProtoInclude(5, typeof(AttributeScalarValueYAML))]
+    [ProtoInclude(6, typeof(AttributeScalarValueMask))]
     [ProtoInclude(51, typeof(AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>))]
     [ProtoInclude(52, typeof(AttributeArrayValue<AttributeScalarValueInteger, long>))]
     [ProtoInclude(53, typeof(AttributeArrayValue<AttributeScalarValueJSON, JToken>))]

@@ -116,21 +116,6 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime);
-        }
-
-        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
-        {
-            return await baseModel.GetAttributesOfChangeset(changesetID, getRemoved, trans);
-        }
-
-        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
-        }
-
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
             return await baseModel.InsertAttribute(name, value, ciid, layerID, changeset, origin, trans);
@@ -144,11 +129,6 @@ namespace Omnikeeper.Model
         public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
             return await baseModel.BulkReplaceAttributes(data, changeset, origin, trans);
-        }
-
-        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
         }
     }
 }
