@@ -73,13 +73,11 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             return input;
         }
 
-        public JToken TransformJSON(JArray input)
+        public JToken TransformJSON(JToken input)
         {
             // NOTE: jmes.Transform with a JToken as input is marked as obsolete, but works for our case and is much more performant
             // see https://github.com/jdevillard/JmesPath.Net/blob/master/src/jmespath.net/JmesPath.cs#L33
-#pragma warning disable CS0618
             var resultJson = expression.Transform(input);
-#pragma warning restore CS0618
             return resultJson.AsJToken();
         }
     }
