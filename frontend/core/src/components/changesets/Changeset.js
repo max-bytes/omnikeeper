@@ -12,6 +12,7 @@ import Relation from "components/cis/Relation";
 import _ from 'lodash';
 import { ChangesetID, CIID } from "utils/uuidRenderers";
 import CountBadge from "components/CountBadge";
+import AutoSizedList from "utils/AutoSizedList";
 
 const { TabPane } = Tabs;
 const { Title } = Typography;
@@ -55,7 +56,20 @@ export default function Changeset(props) {
         else if (data.changeset.removedRelations.length > 0) 
             defaultActiveTab = "removedRelations";
 
-        return <div style={{marginTop: '1rem'}}>
+        const NewRelationItem = ({ index, style }) => {
+            const r = data.changeset.relations[index];
+            return <div style={style}>
+                <Relation predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />
+            </div>;
+        };
+        const RemovedRelationItem = ({ index, style }) => {
+            const r = data.changeset.removedRelations[index];
+            return <div style={style}>
+                <Relation removed={true} predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />
+            </div>;
+        };
+
+        return <div style={{marginTop: '1rem', flex: '1', display: 'flex', flexDirection: 'column'}}>
             <Descriptions title="Changeset" bordered column={2}>
                 <Descriptions.Item label="User"><UserTypeIcon userType={data.changeset.user.type} /> {data.changeset.user.displayName}</Descriptions.Item>
                 <Descriptions.Item label="Timestamp">{formatTimestamp(data.changeset.timestamp)}</Descriptions.Item>
@@ -63,7 +77,7 @@ export default function Changeset(props) {
                 <Descriptions.Item label="Origin-Type">{data.changeset.dataOrigin.type}</Descriptions.Item>
                 <Descriptions.Item label="Changeset-ID" span={2}><ChangesetID id={data.changeset.id} link={false} /></Descriptions.Item>
             </Descriptions>
-            <Tabs defaultActiveKey={defaultActiveTab} style={{paddingTop: "1rem"}}>
+            <Tabs defaultActiveKey={defaultActiveTab} style={{paddingTop: "1rem", flex: '1'}}>
                 <TabPane 
                  tab={<CountBadge count={data.changeset.attributes.length}>New Attributes</CountBadge>}
                  key="newAttributes" disabled={data.changeset.attributes.length === 0}>
@@ -91,16 +105,12 @@ export default function Changeset(props) {
                 <TabPane 
                  tab={<CountBadge count={data.changeset.relations.length}>New Relations</CountBadge>}
                  key="newRelations" disabled={data.changeset.relations.length === 0}>
-                    {data.changeset.relations.map(r => {
-                        return <Relation predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />;
-                    })}
+                    <AutoSizedList itemCount={data.changeset.relations.length} item={NewRelationItem} />
                 </TabPane>
                 <TabPane 
                  tab={<CountBadge count={data.changeset.removedRelations.length}>Removed Relations</CountBadge>}
                  key="removedRelations" disabled={data.changeset.removedRelations.length === 0}>
-                    {data.changeset.removedRelations.map(r => {
-                        return <Relation removed={true} predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />;
-                    })}
+                     <AutoSizedList itemCount={data.changeset.removedRelations.length} item={RemovedRelationItem} />
                 </TabPane>
             </Tabs>
         </div>;

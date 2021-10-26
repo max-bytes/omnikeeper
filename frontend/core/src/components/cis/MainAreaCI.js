@@ -28,10 +28,18 @@ function LoadingCI(props) {
   
   React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI(); }, [selectedTime, refetchCI]);
 
-  if (dataCI) return (<LoadingOverlay active={loadingCI} spinner>
-      <div style={{ width: "100%", padding: "0 15px" }}>
-        <CI timeThreshold={timeThreshold} ci={dataCI.cis[0]} isEditable={isEditable} ></CI>
-      </div>
+  if (dataCI) return (<LoadingOverlay 
+    active={loadingCI} spinner
+    styles={{
+      wrapper: (base) => ({
+        ...base,
+        minHeight: '100%',
+        display: 'flex',
+        flexDirection: 'column'
+      })
+    }}
+    >
+      <CI timeThreshold={timeThreshold} ci={dataCI.cis[0]} isEditable={isEditable} ></CI>
     </LoadingOverlay>);
   else if (loadingCI) return <p>Loading...</p>;
   else if (errorCI) return <ErrorView error={errorCI}/>;

@@ -29,6 +29,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1 1 auto;
+  padding: 0px 10px;
 }
 
 .layers {
@@ -79,4 +80,8 @@ body {
   flex-grow: inherit;
   flex-direction: inherit;
   width: inherit;
+}
+
+.ant-tabs-content-holder {
+  display: flex;
 }

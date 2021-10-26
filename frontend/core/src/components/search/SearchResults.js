@@ -1,10 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { FixedSizeList as List } from 'react-window';
-import AutoSizer from "react-virtualized-auto-sizer";
 import { Spin } from 'antd';
 import { CIID } from "utils/uuidRenderers";
-
+import AutoSizedList from "utils/AutoSizedList";
 
 export function SearchResults(props) {
 
@@ -38,29 +36,14 @@ export function SearchResults(props) {
             </div>
         </Link>;
     };
-    
-    const Results = () => (
-        <div style={{flex:1}}> {/* reason for the div with flex: 1: https://github.com/bvaughn/react-virtualized/blob/master/docs/usingAutoSizer.md#can-i-use-autosizer-within-a-flex-container */}
-            <AutoSizer>
-                {({ height, width }) => (
-                    <List
-                    height={height}
-                    itemCount={cis?.length ?? 0}
-                    itemSize={42}
-                    width={width}
-                    >
-                    {Row}
-                    </List>
-                )}
-            </AutoSizer>
-        </div>
-    );
 
     return <>
-    <h3>Results:</h3>     
+        <h3>Results:</h3>     
         <Spin spinning={props.loading}>
             <h4>Number of CIs: {cis?.length ?? '?'}</h4>
-            <Results />
+            <div style={{flex:1}}> {/* reason for the div with flex: 1: https://github.com/bvaughn/react-virtualized/blob/master/docs/usingAutoSizer.md#can-i-use-autosizer-within-a-flex-container */}
+                <AutoSizedList itemCount={cis?.length ?? 0} item={Row} />
+            </div>
         </Spin>
     </>;
 }
