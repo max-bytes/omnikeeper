@@ -44,12 +44,6 @@
 //            return await baseModel.GetEffectiveTraitForCI(ci, trait, layers, trans, atTime);
 //        }
 
-//        public async Task<IEnumerable<EffectiveTrait>> GetEffectiveTraitsForCI(IEnumerable<ITrait> traits, MergedCI ci, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-//        {
-//            // cannot cache well
-//            return await baseModel.GetEffectiveTraitsForCI(traits, ci, layers, trans, atTime);
-//        }
-
 //        public async Task<IEnumerable<MergedCI>> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
 //        {
 //            // cannot cache well

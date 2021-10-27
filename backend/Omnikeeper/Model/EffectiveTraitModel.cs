@@ -26,18 +26,6 @@ namespace Omnikeeper.Model
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<EffectiveTrait>> GetEffectiveTraitsForCI(IEnumerable<ITrait> traits, MergedCI ci, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            var resolved = new List<EffectiveTrait>();
-            foreach (var trait in traits)
-            {
-                var r = await Resolve(trait, new MergedCI[] { ci }, layers, trans, atTime);
-                if (r.TryGetValue(ci.ID, out var outValue))
-                    resolved.Add(outValue);
-            }
-            return resolved;
-        }
-
         public async Task<IEnumerable<MergedCI>> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             if (layers.IsEmpty && !(trait is TraitEmpty))
