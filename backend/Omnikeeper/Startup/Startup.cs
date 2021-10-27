@@ -1,3 +1,4 @@
+using Autofac;
 using FluentValidation.AspNetCore;
 using GraphQL;
 using GraphQL.Server;
@@ -51,6 +52,8 @@ namespace Omnikeeper.Startup
 
     public partial class Startup
     {
+        private IMvcBuilder mvcBuilder;
+
         public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
@@ -86,21 +89,8 @@ namespace Omnikeeper.Startup
 
             services.AddSignalR();
 
-            var pluginFolder = Path.Combine(Directory.GetCurrentDirectory(), "OKPlugins");
-            ServiceRegistration.RegisterLogging(services);
-            var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
-            ServiceRegistration.RegisterDB(services, cs, false);
-            ServiceRegistration.RegisterOIABase(services);
-            var enableModelCaching = false; // TODO: model caching seems to have a grave bug that keeps old attributes in the cache, so we disable caching (for now)
-            // TODO: think about per-request caching... which would at least fix issues when f.e. calling LayerModel.GetLayer(someLayerID) lots of times during a single request
-            // TODO: also think about graphql DataLoaders
-            var enabledEffectiveTraitCaching = true;
-            ServiceRegistration.RegisterModels(services, enableModelCaching, enabledEffectiveTraitCaching, true, true);
-            ServiceRegistration.RegisterServices(services);
-            ServiceRegistration.RegisterGraphQL(services);
-            var assemblies = ServiceRegistration.RegisterOKPlugins(services, pluginFolder);
-
-            var mvcBuilder = services.AddControllers();
+            // HACK: member is set here and used later
+            mvcBuilder = services.AddControllers();
 
             // add input and output formatters
             services.AddOptions<MvcOptions>()
@@ -121,11 +111,6 @@ namespace Omnikeeper.Startup
                     config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
                 });
 
-            // load controllers from plugins
-            foreach (var assembly in assemblies)
-            {
-                mvcBuilder.AddApplicationPart(assembly);
-            }
 
             services.AddGraphQL(x => { })
                 .AddErrorInfoProvider(opt => opt.ExposeExceptionStackTrace = CurrentEnvironment.IsDevelopment() || CurrentEnvironment.IsStaging())
@@ -307,6 +292,33 @@ namespace Omnikeeper.Startup
                     inputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
                 }
             }).AddFluentValidation();
+        }
+
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            ServiceRegistration.RegisterLogging(builder);
+
+            var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
+            ServiceRegistration.RegisterDB(builder, cs, false);
+
+            var enableModelCaching = false; // TODO: model caching seems to have a grave bug that keeps old attributes in the cache, so we disable caching (for now)
+            // TODO: think about per-request caching... which would at least fix issues when f.e. calling LayerModel.GetLayer(someLayerID) lots of times during a single request
+            // TODO: also think about graphql DataLoaders
+            var enabledEffectiveTraitCaching = true;
+            ServiceRegistration.RegisterModels(builder, enableModelCaching, enabledEffectiveTraitCaching, true, true);
+
+            ServiceRegistration.RegisterGraphQL(builder);
+            ServiceRegistration.RegisterOIABase(builder);
+            ServiceRegistration.RegisterServices(builder);
+
+            // plugins
+            var pluginFolder = Path.Combine(Directory.GetCurrentDirectory(), "OKPlugins");
+            var assemblies = ServiceRegistration.RegisterOKPlugins(builder, pluginFolder);
+            // load controllers from plugins
+            foreach (var assembly in assemblies)
+            {
+                mvcBuilder.AddApplicationPart(assembly);
+            }
         }
 
         private IWebHostEnvironment CurrentEnvironment { get; set; }

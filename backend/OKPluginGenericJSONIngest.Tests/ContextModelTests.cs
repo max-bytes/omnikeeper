@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -17,13 +19,15 @@ namespace OKPluginGenericJSONIngest
 {
     class ContextModelTests : GenericTraitEntityModelTestBase<Context, string>
     {
-        protected override void InitServices(IServiceCollection services)
+        protected override void InitServices(ContainerBuilder builder)
         {
-            base.InitServices(services);
+            base.InitServices(builder);
 
             // register plugin services
             var plugin = new PluginRegistration();
-            plugin.RegisterServices(services);
+            var serviceCollection = new ServiceCollection();
+            plugin.RegisterServices(serviceCollection);
+            builder.Populate(serviceCollection);
         }
 
         [Test]

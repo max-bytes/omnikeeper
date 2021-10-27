@@ -19,15 +19,9 @@ namespace Tests.Integration.GraphQL
 {
     class CITest : QueryTestBase
     {
-        protected override void InitServices(IServiceCollection services)
-        {
-            base.InitServices(services);
-        }
-
         [Test]
         public async Task TestBasicQuery()
         {
-            using var scope = ServiceProvider.CreateScope();
             var username = "testUser";
             var userGUID = new Guid("7dc848b7-881d-4785-9f25-985e9b6f2715");
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
