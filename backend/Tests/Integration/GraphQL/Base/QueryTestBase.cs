@@ -1,4 +1,6 @@
-﻿using GraphQL;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using GraphQL;
 using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Server;
@@ -26,11 +28,13 @@ namespace Tests.Integration.GraphQL.Base
             DBSetup.Setup();
         }
 
-        protected override void InitServices(IServiceCollection services)
+        protected override void InitServices(ContainerBuilder builder)
         {
-            base.InitServices(services);
+            base.InitServices(builder);
 
-            services.AddGraphQL().AddGraphTypes(typeof(GraphQLSchema));
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddGraphQL().AddGraphTypes(typeof(GraphQLSchema));
+            builder.Populate(serviceCollection);
         }
 
         protected IDocumentExecuter Executer { get; private set; }

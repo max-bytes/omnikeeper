@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="7.1.0" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="9.2.0" />
     <PackageReference Include="GraphQL" Version="4.6.0" />
     <PackageReference Include="GraphQL.Authorization" Version="4.0.0" />
@@ -49,7 +50,6 @@
     <PackageReference Include="NetCore.AutoRegisterDi" Version="1.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NuGet.Frameworks" Version="5.8.0" />
-    <PackageReference Include="Scrutor" Version="3.2.1" />
 	<PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
 	<PackageReference Include="SpanJson.AspNetCore.Formatter" Version="3.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.2" />

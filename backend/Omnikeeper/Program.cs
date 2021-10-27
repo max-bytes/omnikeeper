@@ -1,3 +1,4 @@
+using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,7 +26,9 @@ namespace Omnikeeper
 
             AddAssemblyResolver();
 
-            var host = CreateHostBuilder(args).Build();
+            var host = CreateHostBuilder(args)
+                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                .Build();
 
             using (var scope = host.Services.CreateScope())
             {

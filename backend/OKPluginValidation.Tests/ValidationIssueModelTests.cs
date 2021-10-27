@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using OKPluginValidation.Validation;
@@ -15,13 +17,15 @@ namespace OKPluginValidation.Tests
 {
     class ValidationIssueModelTests : GenericTraitEntityModelTestBase<ValidationIssue, string>
     {
-        protected override void InitServices(IServiceCollection services)
+        protected override void InitServices(ContainerBuilder builder)
         {
-            base.InitServices(services);
+            base.InitServices(builder);
 
             // register plugin services
             var plugin = new PluginRegistration();
-            plugin.RegisterServices(services);
+            var serviceCollection = new ServiceCollection();
+            plugin.RegisterServices(serviceCollection);
+            builder.Populate(serviceCollection);
         }
 
         [Test]
