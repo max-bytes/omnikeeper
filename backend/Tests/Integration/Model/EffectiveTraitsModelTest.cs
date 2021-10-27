@@ -65,27 +65,6 @@ namespace Tests.Integration.Model
         }
 
         [Test]
-        public async Task TestTraitWithNameAndValue()
-        {
-            var traitsProvider = new MockedTraitsProvider();
-            var (traitModel, ciModel, layerset, ciids) = await BaseSetup();
-
-            var timeThreshold = TimeThreshold.BuildLatest();
-
-            var trans = ModelContextBuilder.BuildImmediate();
-
-            var testTrait1 = (await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold))!;
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
-            var et1 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(testTrait1, "a4", new AttributeScalarValueText("text41"), cis, layerset, trans, timeThreshold);
-            Assert.AreEqual(1, et1.Count());
-            Assert.AreEqual(ciids[0], et1.First().Key);
-
-            var et2 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(testTrait1, "a4", new AttributeScalarValueText("text42"), cis, layerset, trans, timeThreshold);
-            Assert.AreEqual(2, et2.Count());
-            et2.Select(e => e.Key).Should().BeEquivalentTo(new Guid[] { ciids[1], ciids[2] }, options => options.WithStrictOrdering());
-        }
-
-        [Test]
         public async Task TestDependentTraits()
         {
             var traitsProvider = new MockedTraitsProvider();

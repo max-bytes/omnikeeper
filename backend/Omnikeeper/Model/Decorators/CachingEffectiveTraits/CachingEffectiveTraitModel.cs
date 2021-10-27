@@ -153,11 +153,5 @@
 //                };
 //            }
 //        }
-
-//        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> GetEffectiveTraitsWithTraitAttributeValue(ITrait trait, string traitAttributeIdentifier, IAttributeValue value, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
-//        {
-//            // cannot cache well
-//            return await baseModel.GetEffectiveTraitsWithTraitAttributeValue(trait, traitAttributeIdentifier, value, cis, layerSet, trans, atTime);
-//        }
 //    }
 //}
