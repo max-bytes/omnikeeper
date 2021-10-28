@@ -11,6 +11,6 @@ namespace Omnikeeper.Base.CLB
     {
         string Name { get; }
 
-        Task<bool> Run(Layer targetLayer, JObject config, IModelContextBuilder modelContextBuilder, ILogger logger);
+        Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContextBuilder modelContextBuilder, ILogger logger);
     }
 }

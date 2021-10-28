@@ -1,4 +1,5 @@
 using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using FluentValidation.AspNetCore;
 using GraphQL;
 using GraphQL.Server;
@@ -52,7 +53,7 @@ namespace Omnikeeper.Startup
 
     public partial class Startup
     {
-        private IMvcBuilder mvcBuilder;
+        private IMvcBuilder? mvcBuilder;
 
         public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
@@ -148,8 +149,7 @@ namespace Omnikeeper.Startup
                     OnTokenValidated = c =>
                     {
                         var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerChallengeContext>>();
-                        var userService = c.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
-                        logger.LogInformation($"Validated token for user {userService.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
+                        logger.LogInformation($"Validated token for user {HttpUserUtils.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
                         return Task.CompletedTask;
                     },
                     OnAuthenticationFailed = c =>
@@ -305,7 +305,7 @@ namespace Omnikeeper.Startup
             // TODO: think about per-request caching... which would at least fix issues when f.e. calling LayerModel.GetLayer(someLayerID) lots of times during a single request
             // TODO: also think about graphql DataLoaders
             var enabledEffectiveTraitCaching = true;
-            ServiceRegistration.RegisterModels(builder, enableModelCaching, enabledEffectiveTraitCaching, true, true);
+            ServiceRegistration.RegisterModels(builder, enableModelCaching, enabledEffectiveTraitCaching, true, true, true);
 
             ServiceRegistration.RegisterGraphQL(builder);
             ServiceRegistration.RegisterOIABase(builder);
@@ -324,7 +324,7 @@ namespace Omnikeeper.Startup
         private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory,
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, 
             ILogger<Startup> logger, IEnumerable<IPluginRegistration> plugins)
         {
             var version = VersionService.GetVersion();
@@ -399,8 +399,7 @@ namespace Omnikeeper.Startup
             });
 
             // Configure hangfire to use the new JobActivator we defined.
-            GlobalConfiguration.Configuration
-                .UseActivator(new AspNetCoreJobActivator(serviceScopeFactory));
+            GlobalConfiguration.Configuration.UseAutofacActivator(app.ApplicationServices.GetAutofacRoot());
             app.UseHangfireServer();
             if (env.IsDevelopment() || env.IsStaging())
             { // TODO: also use in production, but fix auth first

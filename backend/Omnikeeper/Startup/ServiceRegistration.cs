@@ -1,7 +1,13 @@
-﻿using GraphQL;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using Autofac.Extras.DynamicProxy;
+using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
+using Omnikeeper.Base.CLB;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
@@ -12,9 +18,11 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.GraphQL;
+using Omnikeeper.GridView.Entity;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
+using Omnikeeper.Model.Interceptors;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using System;
@@ -24,11 +32,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
-using GraphQL.DataLoader;
-using Omnikeeper.Base.Entity;
-using Omnikeeper.GridView.Entity;
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
 
 namespace Omnikeeper.Startup
 {
@@ -159,8 +162,14 @@ namespace Omnikeeper.Startup
             builder.RegisterType<DataPartitionService>().As<IDataPartitionService>().SingleInstance();
             builder.RegisterType<MarkedForDeletionService>().SingleInstance();
             builder.RegisterType<IngestDataService>().InstancePerLifetimeScope(); // TODO: make singleton
-            builder.RegisterType<CurrentUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
             builder.RegisterType<ReactiveLogReceiver>().SingleInstance();
+
+            builder.RegisterType<CurrentUserInDatabaseService>().As<ICurrentUserInDatabaseService>().SingleInstance();
+            builder.RegisterType<CurrentUserService>().As<ICurrentUserService>().SingleInstance();
+            builder.RegisterType<CurrentHTTPUserService>().SingleInstance();
+            builder.RegisterType<CurrentCLBUserService>().SingleInstance();
+
+            builder.RegisterType<CLBContextAccessor>().SingleInstance();
         }
 
         public static void RegisterLogging(ContainerBuilder builder)
@@ -168,7 +177,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<NpgsqlLoggingProvider>().SingleInstance();
         }
 
-        public static void RegisterModels(ContainerBuilder builder, bool enableModelCaching, bool enableEffectiveTraitCaching, bool enableOIA, bool enabledGenerators)
+        public static void RegisterModels(ContainerBuilder builder, bool enableModelCaching, bool enableEffectiveTraitCaching, bool enableOIA, bool enabledGenerators, bool enableUsageTracking)
         {
             builder.RegisterType<CISearchModel>().As<ICISearchModel>().SingleInstance();
             builder.RegisterType<CIModel>().As<ICIModel>().SingleInstance();
@@ -186,7 +195,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<ChangesetModel>().As<IChangesetModel>().SingleInstance();
             builder.RegisterType<CacheModel>().As<ICacheModel>().SingleInstance();
             builder.RegisterType<ODataAPIContextModel>().As<IODataAPIContextModel>().SingleInstance();
-            builder.RegisterType<EffectiveTraitModel>().As<IEffectiveTraitModel>().SingleInstance();
+            var effectiveTraitModel = builder.RegisterType<EffectiveTraitModel>().As<IEffectiveTraitModel>().SingleInstance();
             builder.RegisterType<BaseConfigurationModel>().As<IBaseConfigurationModel>().SingleInstance();
             builder.RegisterType<MetaConfigurationModel>().As<IMetaConfigurationModel>().SingleInstance();
             builder.RegisterType<OIAContextModel>().As<IOIAContextModel>().SingleInstance();
@@ -197,6 +206,13 @@ namespace Omnikeeper.Startup
             builder.RegisterType<GenericTraitEntityModel<Predicate, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<RecursiveTrait, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<GridViewContext, string>>().SingleInstance(); // TODO: ok this way?
+
+            if (enableUsageTracking)
+            {
+                effectiveTraitModel.EnableInterfaceInterceptors().InterceptedBy(typeof(EffectiveTraitModelUsageTrackingInterceptor));
+                builder.RegisterType<EffectiveTraitModelUsageTrackingInterceptor>().SingleInstance();
+                builder.RegisterType<UsageTrackingService>().SingleInstance();
+            }
 
             // these aren't real models, but we keep them here because they are closely related to models
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();
@@ -242,12 +258,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<SpanJSONDocumentWriter>().As<IDocumentWriter>().SingleInstance();
             builder.RegisterType<DataLoaderContextAccessor>().As<IDataLoaderContextAccessor>().SingleInstance();
             builder.RegisterType<DataLoaderDocumentListener>().SingleInstance();
-
-            // required for Autofac
-            builder
-              .Register(c => new FuncServiceProvider(c.Resolve<IComponentContext>().Resolve))
-              .As<IServiceProvider>()
-              .InstancePerDependency();
         }
     }
 }

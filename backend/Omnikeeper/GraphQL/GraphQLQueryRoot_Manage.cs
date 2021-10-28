@@ -1,5 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.Types;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
@@ -213,12 +214,13 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<StringGraphType>>("manage_debugCurrentUser",
                 resolve: async context =>
                 {
-                    var currentUserService = context.RequestServices!.GetRequiredService<ICurrentUserService>();
-                    var claims = currentUserService.DebugGetAllClaims();
+                    var httpContextAccessor = context.RequestServices!.GetRequiredService<IHttpContextAccessor>();
+                    var currentAuthenticatedUserService = context.RequestServices!.GetRequiredService<ICurrentUserService>();
+                    var claims = httpContextAccessor.HttpContext.User.Claims.Select(c => (c.Type, c.Value));
 
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
-                    var user = await currentUserService.GetCurrentUser(modelContextBuilder.BuildImmediate());
-                    return claims.Select(kv => $"{kv.type}: {kv.value}")
+                    var user = await currentAuthenticatedUserService.GetCurrentUser(modelContextBuilder.BuildImmediate());
+                    return claims.Select(kv => $"{kv.Type}: {kv.Value}")
                         .Concat($"Permissions: {string.Join(", ", user.Permissions)}")
                         .Concat($"User-Type: {user.InDatabase.UserType}")
                     ;

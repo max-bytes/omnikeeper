@@ -68,7 +68,7 @@ namespace Tests.Integration
             ServiceRegistration.RegisterLogging(builder);
             ServiceRegistration.RegisterDB(builder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(builder);
-            ServiceRegistration.RegisterModels(builder, enableModelCaching, true, false, false);
+            ServiceRegistration.RegisterModels(builder, enableModelCaching, true, false, false, false);
             ServiceRegistration.RegisterServices(builder);
             ServiceRegistration.RegisterGraphQL(builder);
 

@@ -1,4 +1,5 @@
-﻿using Hangfire;
+﻿using Autofac;
+using Hangfire;
 using Hangfire.Server;
 using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.CLB;
@@ -7,7 +8,6 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,11 +20,15 @@ namespace Omnikeeper.Runners
     {
         public CLBRunner(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
             IMetaConfigurationModel metaConfigurationModel,
+            IChangesetModel changesetModel, IUserInDatabaseModel userModel, CLBContextAccessor clbContextAccessor,
             ILayerModel layerModel, ILogger<CLBRunner> logger, IModelContextBuilder modelContextBuilder)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.clConfigModel = clConfigModel;
             this.metaConfigurationModel = metaConfigurationModel;
+            this.changesetModel = changesetModel;
+            this.userModel = userModel;
+            this.clbContextAccessor = clbContextAccessor;
             this.layerModel = layerModel;
             this.logger = logger;
             this.modelContextBuilder = modelContextBuilder;
@@ -44,14 +48,13 @@ namespace Omnikeeper.Runners
         {
             logger.LogInformation("Start");
 
-            var timeThreshold = TimeThreshold.BuildLatest();
             var trans = modelContextBuilder.BuildImmediate();
             var activeLayers = await layerModel.GetLayers(AnchorStateFilter.ActiveAndDeprecated, trans);
             var layersWithCLBs = activeLayers.Where(l => l.CLConfigID != "");
 
             if (!layersWithCLBs.IsEmpty()) {
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-                var clConfigs = await clConfigModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, timeThreshold);
+                var clConfigs = await clConfigModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
 
                 foreach (var l in layersWithCLBs)
                 {
@@ -66,15 +69,33 @@ namespace Omnikeeper.Runners
                         }
                         else
                         {
-                            logger.LogInformation($"Running CLB {clb.Name} on layer {l.ID}");
+                            // upsert user and create changesetProxy
+                            using var transUpsertUser = modelContextBuilder.BuildDeferred();
+                            var username = $"__cl.{clb.Name}"; // make username the same as CLB name
+                            var displayName = username;
+                            // generate a unique but deterministic GUID from the clb Name
+                            var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
+                            var guid = GuidUtility.Create(clbUserGuidNamespace, clb.Name);
+                            var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, transUpsertUser);
+                            var changesetProxy = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                            transUpsertUser.Commit();
 
-                            Stopwatch stopWatch = new Stopwatch();
-                            stopWatch.Start();
-                            await clb.Run(l, clConfig.CLBrainConfig, modelContextBuilder, logger);
-                            stopWatch.Stop();
-                            TimeSpan ts = stopWatch.Elapsed;
-                            string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                            logger.LogInformation($"Done in {elapsedTime}");
+                            clbContextAccessor.SetCLBContext(new CLBContext(user));
+
+                            try
+                            {
+                                logger.LogInformation($"Running CLB {clb.Name} on layer {l.ID}");
+                                Stopwatch stopWatch = new Stopwatch();
+                                stopWatch.Start();
+                                await clb.Run(l, clConfig.CLBrainConfig, changesetProxy, modelContextBuilder, logger);
+                                stopWatch.Stop();
+                                TimeSpan ts = stopWatch.Elapsed;
+                                string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                                logger.LogInformation($"Done in {elapsedTime}");
+                            } finally
+                            {
+                                clbContextAccessor.ClearCLBContext();
+                            }
                         }
                     }
                 }
@@ -86,6 +107,9 @@ namespace Omnikeeper.Runners
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
         private readonly GenericTraitEntityModel<CLConfigV1, string> clConfigModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
+        private readonly IChangesetModel changesetModel;
+        private readonly IUserInDatabaseModel userModel;
+        private readonly CLBContextAccessor clbContextAccessor;
         private readonly ILayerModel layerModel;
         private readonly ILogger<CLBRunner> logger;
         private readonly IModelContextBuilder modelContextBuilder;
