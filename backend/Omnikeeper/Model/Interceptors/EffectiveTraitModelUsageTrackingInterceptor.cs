@@ -32,7 +32,7 @@ namespace Omnikeeper.Model.Interceptors
                     return;
                 }
 
-                var user = await currentUserService.GetCurrentUser(modelContextBuilder.BuildImmediate());
+                var user = await currentUserService.CreateAndGetCurrentUser(modelContextBuilder.BuildImmediate());
 
                 usageTrackingService.TrackUseTrait(trait.ID, user.Username);
             }

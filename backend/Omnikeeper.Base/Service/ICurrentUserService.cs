@@ -11,6 +11,6 @@ namespace Omnikeeper.Base.Service
 
     public interface ICurrentUserInDatabaseService
     {
-        Task<UserInDatabase> GetCurrentUser(IModelContext trans);
+        Task<UserInDatabase> CreateAndGetCurrentUser(IModelContext trans);
     }
 }

@@ -47,12 +47,13 @@ namespace Omnikeeper.Service
             {
                 // CLBs implicitly have all permissions
                 var allPermissions = await PermissionUtils.GetAllAvailablePermissions(LayerModel, trans);
-                return new AuthenticatedUser(clbService.GetCurrentUser(clbContextAccessor.CLBContext), allPermissions);
+                var user = await clbService.CreateAndGetCurrentUser(clbContextAccessor.CLBContext, trans);
+                return new AuthenticatedUser(user, allPermissions);
             }
             else if (HttpContextAccessor.HttpContext != null)
             {
                 // TODO: caching
-                var (userInDatabase, httpUser) = await httpService.GetCurrentUser(HttpContextAccessor.HttpContext, trans);
+                var (userInDatabase, httpUser) = await httpService.CreateAndGetCurrentUser(HttpContextAccessor.HttpContext, trans);
 
                 var finalPermissions = new HashSet<string>();
                 if (httpUser.ClientRoles.Contains("__ok_superuser"))
@@ -100,15 +101,15 @@ namespace Omnikeeper.Service
 
         private readonly IHttpContextAccessor httpContextAccessor;
 
-        public async Task<UserInDatabase> GetCurrentUser(IModelContext trans)
+        public async Task<UserInDatabase> CreateAndGetCurrentUser(IModelContext trans)
         {
             if (clbContextAccessor.CLBContext != null)
             {
-                return clbService.GetCurrentUser(clbContextAccessor.CLBContext);
+                return await clbService.CreateAndGetCurrentUser(clbContextAccessor.CLBContext, trans);
             }
             else if (httpContextAccessor.HttpContext != null)
             {
-                var (userInDatabase, _) = await httpService.GetCurrentUser(httpContextAccessor.HttpContext, trans);
+                var (userInDatabase, _) = await httpService.CreateAndGetCurrentUser(httpContextAccessor.HttpContext, trans);
 
                 return userInDatabase;
             }
@@ -121,9 +122,23 @@ namespace Omnikeeper.Service
 
     public class CurrentCLBUserService
     {
-        public UserInDatabase GetCurrentUser(CLBContext clbContext)
+        private readonly IUserInDatabaseModel userModel;
+
+        public CurrentCLBUserService(IUserInDatabaseModel userModel)
         {
-            return clbContext.UserInDatabase;
+            this.userModel = userModel;
+        }
+
+        public async Task<UserInDatabase> CreateAndGetCurrentUser(CLBContext clbContext, IModelContext trans)
+        {
+            // upsert user
+            var username = $"__cl.{clbContext.Brain.Name}"; // make username the same as CLB name
+            var displayName = username;
+            // generate a unique but deterministic GUID from the clb Name
+            var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
+            var guid = GuidUtility.Create(clbUserGuidNamespace, clbContext.Brain.Name);
+            var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, trans);
+            return user;
         }
     }
 
@@ -140,7 +155,7 @@ namespace Omnikeeper.Service
         public ILogger<CurrentHTTPUserService> Logger { get; }
         private IUserInDatabaseModel UserModel { get; }
 
-        public async Task<(UserInDatabase userInDatabase, HttpUser httpUser)> GetCurrentUser(HttpContext httpContext, IModelContext trans)
+        public async Task<(UserInDatabase userInDatabase, HttpUser httpUser)> CreateAndGetCurrentUser(HttpContext httpContext, IModelContext trans)
         {
             // TODO: caching?
             var httpUser = HttpUserUtils.CreateUserFromHttpContext(httpContext, Configuration, Logger);

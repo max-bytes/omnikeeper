@@ -6,6 +6,7 @@ using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -19,13 +20,14 @@ namespace Omnikeeper.Runners
     public class CLBRunner
     {
         public CLBRunner(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
-            IMetaConfigurationModel metaConfigurationModel,
+            IMetaConfigurationModel metaConfigurationModel, ICurrentUserInDatabaseService currentUserService,
             IChangesetModel changesetModel, IUserInDatabaseModel userModel, CLBContextAccessor clbContextAccessor,
             ILayerModel layerModel, ILogger<CLBRunner> logger, IModelContextBuilder modelContextBuilder)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.clConfigModel = clConfigModel;
             this.metaConfigurationModel = metaConfigurationModel;
+            this.currentUserService = currentUserService;
             this.changesetModel = changesetModel;
             this.userModel = userModel;
             this.clbContextAccessor = clbContextAccessor;
@@ -69,18 +71,13 @@ namespace Omnikeeper.Runners
                         }
                         else
                         {
-                            // upsert user and create changesetProxy
+                            clbContextAccessor.SetCLBContext(new CLBContext(clb));
+
                             using var transUpsertUser = modelContextBuilder.BuildDeferred();
-                            var username = $"__cl.{clb.Name}"; // make username the same as CLB name
-                            var displayName = username;
-                            // generate a unique but deterministic GUID from the clb Name
-                            var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
-                            var guid = GuidUtility.Create(clbUserGuidNamespace, clb.Name);
-                            var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, transUpsertUser);
-                            var changesetProxy = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                            var user = await currentUserService.CreateAndGetCurrentUser(transUpsertUser);
                             transUpsertUser.Commit();
 
-                            clbContextAccessor.SetCLBContext(new CLBContext(user));
+                            var changesetProxy = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
                             try
                             {
@@ -107,6 +104,7 @@ namespace Omnikeeper.Runners
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
         private readonly GenericTraitEntityModel<CLConfigV1, string> clConfigModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
+        private readonly ICurrentUserInDatabaseService currentUserService;
         private readonly IChangesetModel changesetModel;
         private readonly IUserInDatabaseModel userModel;
         private readonly CLBContextAccessor clbContextAccessor;

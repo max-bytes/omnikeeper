@@ -4,11 +4,11 @@ namespace Omnikeeper.Base.CLB
 {
     public class CLBContext
     {
-        public readonly UserInDatabase UserInDatabase;
+        public readonly IComputeLayerBrain Brain;
 
-        public CLBContext(UserInDatabase userInDatabase)
+        public CLBContext(IComputeLayerBrain brain)
         {
-            this.UserInDatabase = userInDatabase;
+            this.Brain = brain;
         }
     }
 
