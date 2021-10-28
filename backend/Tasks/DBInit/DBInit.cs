@@ -55,7 +55,7 @@ namespace Tasks.DBInit
 
             var mc = modelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, mc, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
-            var authenticatedUser = new AuthenticatedUser(user, new HashSet<string>() { });
+            var authenticatedUser = new AuthenticatedUser(user, new AuthRole[0]);
 
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
 

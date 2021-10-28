@@ -221,7 +221,7 @@ namespace Omnikeeper.GraphQL
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
                     var user = await currentAuthenticatedUserService.GetCurrentUser(modelContextBuilder.BuildImmediate());
                     return claims.Select(kv => $"{kv.Type}: {kv.Value}")
-                        .Concat($"Permissions: {string.Join(", ", user.Permissions)}")
+                        .Concat($"Permissions: {string.Join(", ", user.AuthRoles.SelectMany(ar => ar.Permissions).ToHashSet())}")
                         .Concat($"User-Type: {user.InDatabase.UserType}")
                     ;
                 });

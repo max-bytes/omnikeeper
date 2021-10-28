@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using System.Linq;
 
 namespace Omnikeeper.Service
 {
@@ -20,7 +21,16 @@ namespace Omnikeeper.Service
 
         public bool HasManagementPermission(AuthenticatedUser user)
         {
-            return debugAllowAll || user.Permissions.Contains(PermissionUtils.GetManagementPermission());
+            if (debugAllowAll)
+                return true;
+
+            foreach(var ar in user.AuthRoles)
+            {
+                if (ar.Permissions.Contains(PermissionUtils.GetManagementPermission()))
+                    // TODO: count usages
+                    return true;
+            }
+            return false;
         }
 
         public bool CanReadManagement(AuthenticatedUser user, MetaConfiguration metaConfiguration, out string message)

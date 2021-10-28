@@ -5,14 +5,14 @@ namespace Omnikeeper.Base.Entity
     public class AuthenticatedUser
     {
         public UserInDatabase InDatabase { get; private set; }
-        public ISet<string> Permissions { get; private set; }
+        public AuthRole[] AuthRoles { get; private set; }
 
         public string Username => InDatabase.Username;
 
-        public AuthenticatedUser(UserInDatabase inDatabase, ISet<string> permissions)
+        public AuthenticatedUser(UserInDatabase inDatabase, AuthRole[] authRoles)
         {
             InDatabase = inDatabase;
-            Permissions = permissions;
+            AuthRoles = authRoles;
         }
     }
 }

@@ -129,8 +129,9 @@ namespace Tests.Integration.Model
             var layer = await ServiceProvider.GetRequiredService<ILayerModel>().UpsertLayer("testlayer", ModelContextBuilder.BuildImmediate());
             var userInDatabase = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             var user = new AuthenticatedUser(userInDatabase,
-                new HashSet<string>() {
+                new AuthRole[] { new AuthRole("ar1", new string[] {
                     PermissionUtils.GetLayerReadPermission(layer), PermissionUtils.GetLayerWritePermission(layer),
+                })
                 });
             currentUserServiceMock.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 

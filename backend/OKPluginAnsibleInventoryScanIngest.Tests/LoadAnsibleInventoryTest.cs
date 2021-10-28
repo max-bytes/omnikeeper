@@ -72,7 +72,7 @@ namespace Tests.Ingest
 
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserService>();
-            var user = new AuthenticatedUser(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, mc), new HashSet<string>() { PermissionUtils.GetLayerWritePermission(layer1) });
+            var user = new AuthenticatedUser(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, mc), new AuthRole[] { new AuthRole("ar1", new string[] { PermissionUtils.GetLayerWritePermission(layer1) }) });
             mockCurrentUserService.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
             var mockAuthorizationService = new Mock<ILayerBasedAuthorizationService>();

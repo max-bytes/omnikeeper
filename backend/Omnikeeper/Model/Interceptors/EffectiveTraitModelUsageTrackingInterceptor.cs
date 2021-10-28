@@ -10,9 +10,9 @@ namespace Omnikeeper.Model.Interceptors
     {
         private readonly ICurrentUserInDatabaseService currentUserService;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly UsageTrackingService usageTrackingService;
+        private readonly IUsageTrackingService usageTrackingService;
 
-        public EffectiveTraitModelUsageTrackingInterceptor(ICurrentUserInDatabaseService currentUserService, IModelContextBuilder modelContextBuilder, UsageTrackingService usageTrackingService)
+        public EffectiveTraitModelUsageTrackingInterceptor(ICurrentUserInDatabaseService currentUserService, IModelContextBuilder modelContextBuilder, IUsageTrackingService usageTrackingService)
         {
             this.currentUserService = currentUserService;
             this.modelContextBuilder = modelContextBuilder;

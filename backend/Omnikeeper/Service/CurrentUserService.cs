@@ -46,37 +46,41 @@ namespace Omnikeeper.Service
             if (clbContextAccessor.CLBContext != null)
             {
                 // CLBs implicitly have all permissions
-                var allPermissions = await PermissionUtils.GetAllAvailablePermissions(LayerModel, trans);
+                var suar = await PermissionUtils.GetSuperUserAuthRole(LayerModel, trans);
                 var user = await clbService.CreateAndGetCurrentUser(clbContextAccessor.CLBContext, trans);
-                return new AuthenticatedUser(user, allPermissions);
+                return new AuthenticatedUser(user, new AuthRole[] { suar });
             }
             else if (HttpContextAccessor.HttpContext != null)
             {
                 // TODO: caching
                 var (userInDatabase, httpUser) = await httpService.CreateAndGetCurrentUser(HttpContextAccessor.HttpContext, trans);
 
-                var finalPermissions = new HashSet<string>();
                 if (httpUser.ClientRoles.Contains("__ok_superuser"))
                 {
-                    var allPermissions = await PermissionUtils.GetAllAvailablePermissions(LayerModel, trans);
-                    finalPermissions.UnionWith(allPermissions);
+                    var suar = await PermissionUtils.GetSuperUserAuthRole(LayerModel, trans);
+                    return new AuthenticatedUser(userInDatabase, new AuthRole[] { suar });
                 }
                 else
                 {
                     var metaConfiguration = await MetaConfigurationModel.GetConfigOrDefault(trans);
 
-                    var authRoles = await AuthRoleModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+                    var allAuthRoles = await AuthRoleModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
 
+                    var activeAuthRoles = new List<AuthRole>();
                     foreach (var role in httpUser.ClientRoles)
                     {
-                        if (authRoles.TryGetValue(role, out var authRole))
+                        if (allAuthRoles.TryGetValue(role, out var authRole))
                         {
-                            finalPermissions.UnionWith(authRole.Permissions);
+                            activeAuthRoles.Add(authRole);
                         }
                     }
+
+                    // order auth roles of user by ID, so they are consistent
+                    activeAuthRoles.Sort((a, b) => a.ID.CompareTo(b.ID));
+
+                    return new AuthenticatedUser(userInDatabase, activeAuthRoles.ToArray());
                 }
 
-                return new AuthenticatedUser(userInDatabase, finalPermissions);
             }
             else
             {

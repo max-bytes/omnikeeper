@@ -211,7 +211,7 @@ namespace Omnikeeper.Startup
             {
                 effectiveTraitModel.EnableInterfaceInterceptors().InterceptedBy(typeof(EffectiveTraitModelUsageTrackingInterceptor));
                 builder.RegisterType<EffectiveTraitModelUsageTrackingInterceptor>().SingleInstance();
-                builder.RegisterType<UsageTrackingService>().SingleInstance();
+                builder.RegisterType<UsageTrackingService>().As<IUsageTrackingService>().SingleInstance();
             }
 
             // these aren't real models, but we keep them here because they are closely related to models
