@@ -22,7 +22,6 @@ using Omnikeeper.GridView.Entity;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
-using Omnikeeper.Model.Interceptors;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using System;
@@ -209,9 +208,10 @@ namespace Omnikeeper.Startup
 
             if (enableUsageTracking)
             {
-                effectiveTraitModel.EnableInterfaceInterceptors().InterceptedBy(typeof(EffectiveTraitModelUsageTrackingInterceptor));
-                builder.RegisterType<EffectiveTraitModelUsageTrackingInterceptor>().SingleInstance();
-                builder.RegisterType<UsageTrackingService>().As<IUsageTrackingService>().SingleInstance();
+                //effectiveTraitModel.EnableInterfaceInterceptors().InterceptedBy(typeof(EffectiveTraitModelUsageTrackingInterceptor));
+                //builder.RegisterType<EffectiveTraitModelUsageTrackingInterceptor>().SingleInstance();
+                builder.RegisterDecorator<UsageTrackingEffectiveTraitModel, IEffectiveTraitModel>();
+                builder.RegisterType<UsageTrackingService>().As<IUsageTrackingService>().SingleInstance(); // TODO: some need a working instance of this class even when usage tracking is off
             }
 
             // these aren't real models, but we keep them here because they are closely related to models
