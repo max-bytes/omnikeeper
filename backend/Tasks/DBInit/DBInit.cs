@@ -40,7 +40,7 @@ namespace Tasks.DBInit
             var baseRelationModel = new BaseRelationModel(partitionModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
-            var effectiveTraitModel = new EffectiveTraitModel(relationModel, NullLogger<EffectiveTraitModel>.Instance);
+            var effectiveTraitModel = new EffectiveTraitModel(relationModel);
             var predicateModel = new GenericTraitEntityModel<Predicate, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
