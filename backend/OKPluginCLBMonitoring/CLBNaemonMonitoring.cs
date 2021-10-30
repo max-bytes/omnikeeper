@@ -49,189 +49,187 @@ namespace OKPluginCLBMonitoring
         {
             logger.LogDebug("Start clbMonitoring");
 
-            var x = await traitModel.GetEffectiveTraitsForTrait(Traits.ContactgroupFlattened, new List<MergedCI>(), await layerModel.BuildLayerSet(new string[] { "__okconfig" }, trans), trans, changesetProxy.TimeThreshold);
-            Console.WriteLine(x);
-            //// TODO: make configurable
-            //var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
-            //// TODO: make configurable
-            //var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
+            // TODO: make configurable
+            var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
+            // TODO: make configurable
+            var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
 
 
-            //var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
+            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
 
-            //// prepare contact groups
-            //var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, (Guid ciid, string name, string message) => LogError(ciid, name, message));
-            //await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, Traits.ContactgroupFlattened, trans, changesetProxy.TimeThreshold);
+            // prepare contact groups
+            var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, (Guid ciid, string name, string message) => LogError(ciid, name, message));
+            await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, Traits.ContactgroupFlattened, trans, changesetProxy.TimeThreshold);
 
-            //// prepare list of all monitored cis
-            //var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).ToHashSet();
-            //if (monitoredCIIDs.IsEmpty()) return true;
-            //var monitoredCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoredCIIDs), layerSetAll, true, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold))
-            //    .ToDictionary(ci => ci.ID);
+            // prepare list of all monitored cis
+            var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).ToHashSet();
+            if (monitoredCIIDs.IsEmpty()) return true;
+            var monitoredCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoredCIIDs), layerSetAll, true, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold))
+                .ToDictionary(ci => ci.ID);
 
-            //// prepare list of all monitoring modules
-            //var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).ToHashSet();
-            //if (monitoringModuleCIIDs.IsEmpty()) return true;
-            //var monitoringModuleCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoringModuleCIIDs), layerSetMonitoringDefinitionsOnly, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold))
-            //    .ToDictionary(ci => ci.ID);
-
-
-            //logger.LogDebug("Prep");
-
-            //// find and parse commands, insert into monitored CIs
-            //var renderedTemplateSegments = new List<(Guid ciid, string? moduleName, string templateSegment)>();
-            //foreach (var p in allHasMonitoringModuleRelations)
-            //{
-            //    logger.LogDebug("Process mm relation...");
-
-            //    var monitoringModuleCI = monitoringModuleCIs[p.Relation.ToCIID];
-
-            //    var monitoringModuleET = await traitModel.GetEffectiveTraitForCI(monitoringModuleCI, Traits.ModuleFlattened, layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
-            //    if (monitoringModuleET == null)
-            //    {
-            //        logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{Traits.ModuleFlattened.ID}\"");
-            //        LogError(monitoringModuleCI.ID, "error", $"Expected this CI to have trait \"{Traits.ModuleFlattened.ID}\"");
-            //        continue;
-            //    }
-            //    logger.LogDebug("  Fetched effective traits");
-            //    var templateStr = (monitoringModuleET.TraitAttributes["template"].Attribute.Value as AttributeScalarValueText)?.Value;
-
-            //    // create template context based on monitored CI, so that the templates can access all the related variables
-            //    var context = ScribanVariableService.CreateComplexCIBasedTemplateContext(monitoredCIs[p.Relation.FromCIID], layerSetAll, changesetProxy.TimeThreshold, trans, ciModel, relationModel);
-
-            //    logger.LogDebug("  Parse/Render config segments");
-            //    // template parsing and rendering
-            //    try
-            //    {
-            //        logger.LogDebug($"  Parsing template:\n{templateStr}");
-
-            //        var template = Scriban.Template.Parse(templateStr);
-            //        string templateSegment = template.Render(context);
-            //        logger.LogDebug($"  Rendered template:\n{templateSegment}");
-            //        renderedTemplateSegments.Add((p.Relation.FromCIID, monitoringModuleCI.CIName, templateSegment));
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        logger.LogError($"Error parsing or rendering command from monitoring module \"{monitoringModuleCI.ID}\": {e.Message}");
-            //        LogError(monitoringModuleCI.ID, "error", $"Error parsing or rendering command: {e.Message}");
-            //    }
-            //    logger.LogDebug("  Processed mm relation");
-            //}
-
-            //var parseErrors = new List<(Guid ciid, string? template, string? error)>();
-            //IEnumerable<(Guid ciid, AttributeArrayValueJSON attributeValue, IEnumerable<NaemonHostTemplate> hostTemplates, IEnumerable<NaemonServiceTemplate> serviceTemplates)>? renderedTemplatesPerCI = renderedTemplateSegments.GroupBy(t => t.ciid)
-            //    .Select(tt =>
-            //    {
-            //        var fragments = tt.SelectMany(ttt =>
-            //        {
-            //            try
-            //            {
-            //                var r = JsonConvert.DeserializeObject<INaemonFragmentTemplate[]>(ttt.templateSegment);
-            //                if (r == null) return new INaemonFragmentTemplate[0];
-            //                return r;
-            //            }
-            //            catch (Exception e)
-            //            {
-            //                parseErrors.Add((ciid: tt.Key, ttt.templateSegment, error: $"Could not parse service template: {e.Message}"));
-            //                return new INaemonFragmentTemplate[0];
-            //            }
-            //        }).Where(ttt => ttt != null).ToList();
-
-            //        var values = tt.Select(ttt => ttt.templateSegment).ToArray();
-            //        try
-            //        {
-            //            var attributeValue = AttributeArrayValueJSON.BuildFromString(values);
-            //            return (ciid: tt.Key, attributeValue,
-            //                hostTemplates: fragments.Select(t => t as NaemonHostTemplate).WhereNotNull(),
-            //                serviceTemplates: fragments.Select(t => t as NaemonServiceTemplate).WhereNotNull());
-            //        }
-            //        catch (Exception e)
-            //        {
-            //            parseErrors.Add((ciid: tt.Key, string.Join(',', values), error: e.Message));
-            //            return default;
-            //        }
-            //    }).Where(tt => tt.attributeValue != null).ToList();
-
-            //if (parseErrors.Count > 0)
-            //{
-            //    foreach (var (ciid, commandStr, error) in parseErrors)
-            //    {
-            //        logger.LogError($"Error parsing the following command fragment:\n{commandStr}\nError: {error}");
-            //        LogError(ciid, "error", $"Error parsing the following command fragment:\n{commandStr}\nError: {error}");
-            //    }
-            //}
-
-            //var fragments = renderedTemplatesPerCI.Select(t => new BulkCIAttributeDataLayerScope.Fragment("", t.attributeValue, t.ciid));
-            //await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments),
-            //    changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
-
-            //logger.LogDebug("Updated executed commands per monitored CI");
-
-            //// assign monitored cis to naemon instances
-            //var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
-            //var naemonInstancesCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSetAll, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold); // TODO: reduce attributes to trait relevant
-            //var naemonInstancesTS = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, naemonInstancesCIs, layerSetAll, trans, changesetProxy.TimeThreshold);
-            //foreach (var naemonInstanceTS in naemonInstancesTS)
-            //    foreach (var monitoredCI in monitoredCIs.Values)
-            //        if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value))
-            //            monitoredByCIIDFragments.Add(new BulkRelationDataPredicateScope.Fragment(monitoredCI.ID, naemonInstanceTS.Key));
-            //await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
-            //logger.LogDebug("Assigned CIs to naemon instances");
+            // prepare list of all monitoring modules
+            var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).ToHashSet();
+            if (monitoringModuleCIIDs.IsEmpty()) return true;
+            var monitoringModuleCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoringModuleCIIDs), layerSetMonitoringDefinitionsOnly, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold))
+                .ToDictionary(ci => ci.ID);
 
 
-            //logger.LogDebug("Writing final naemon config");
+            logger.LogDebug("Prep");
 
-            //// write final naemon config
-            //var naemonInstance2MonitoredCILookup = monitoredByCIIDFragments.GroupBy(t => t.To).ToDictionary(t => t.Key, t => t.Select(t => t.From));
-            //var monitoringConfigs = new List<BulkCIAttributeDataLayerScope.Fragment>();
+            // find and parse commands, insert into monitored CIs
+            var renderedTemplateSegments = new List<(Guid ciid, string? moduleName, string templateSegment)>();
+            foreach (var p in allHasMonitoringModuleRelations)
+            {
+                logger.LogDebug("Process mm relation...");
 
-            //foreach (var kv in naemonInstance2MonitoredCILookup)
-            //{
-            //    var naemonInstance = kv.Key;
-            //    var cis = kv.Value;
-            //    var templates = renderedTemplatesPerCI.Where(f => cis.Contains(f.ciid));
+                var monitoringModuleCI = monitoringModuleCIs[p.Relation.ToCIID];
 
-            //    // convert templates to naemon hosts, ready to serialize into json
-            //    var naemonHosts = templates.GroupBy(t => t.ciid)
-            //        .Select(t =>
-            //        {
-            //            var hostTemplate = t.SelectMany(t => t.hostTemplates).FirstOrDefault();
-            //            // look up contactgroups for host
-            //            string[] hostContactgroups = new string[0];
-            //            if (hostTemplate != null)
-            //                hostContactgroups = cgr.CalculateContactgroupsOfCI(hostTemplate.ContactgroupSource).ToArray();
-            //            var naemonHost = new NaemonHost(monitoredCIs[t.Key].CIName ?? "", hostContactgroups,
-            //                t.Key,
-            //                // we pick the first host command we can find
-            //                hostTemplate?.Command.ToFullCommandString() ?? "",
-            //                // TODO, HACK: handle duplicates in description
-            //                t.SelectMany(t => t.serviceTemplates).ToDictionary(t => t.Description, t =>
-            //                {
-            //                    return new NaemonService(
-            //                        t.Command.ToFullCommandString(),
-            //                        cgr.CalculateContactgroupsOfCI(t.ContactgroupSource).ToArray()
-            //                    );
-            //                })
-            //            );
-            //            return naemonHost;
-            //        }).ToList();
+                var monitoringModuleET = await traitModel.GetEffectiveTraitForCI(monitoringModuleCI, Traits.ModuleFlattened, layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
+                if (monitoringModuleET == null)
+                {
+                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{Traits.ModuleFlattened.ID}\"");
+                    LogError(monitoringModuleCI.ID, "error", $"Expected this CI to have trait \"{Traits.ModuleFlattened.ID}\"");
+                    continue;
+                }
+                logger.LogDebug("  Fetched effective traits");
+                var templateStr = (monitoringModuleET.TraitAttributes["template"].Attribute.Value as AttributeScalarValueText)?.Value;
 
-            //    monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeArrayValueJSON.BuildFromString(
-            //        naemonHosts.Select(t => JsonConvert.SerializeObject(t, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() })).ToArray()), naemonInstance));
+                // create template context based on monitored CI, so that the templates can access all the related variables
+                var context = ScribanVariableService.CreateComplexCIBasedTemplateContext(monitoredCIs[p.Relation.FromCIID], layerSetAll, changesetProxy.TimeThreshold, trans, ciModel, relationModel);
 
-            //    //var finalConfigYamlNode = new YamlMappingNode(
-            //    //    templates.Select(t => (ciName: monitoredCIs[t.ciid].Name, t.yamlValue))
-            //    //.GroupBy(t => t.ciName) // do this to work around duplicates in names, TODO: proper de-duplication
-            //    //.Select(tt => (ciName: tt.Key, tt.FirstOrDefault().yamlValue))
-            //    //.Select(t => KeyValuePair.Create<YamlNode, YamlNode>(new YamlScalarNode(t.ciName) { Style = ScalarStyle.DoubleQuoted }, t.yamlValue.Value.RootNode))
-            //    //);
-            //    //var finalConfig = new YamlDocument(finalConfigYamlNode);
+                logger.LogDebug("  Parse/Render config segments");
+                // template parsing and rendering
+                try
+                {
+                    logger.LogDebug($"  Parsing template:\n{templateStr}");
 
-            //    //monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeValueYAMLArray.Build(
-            //    //    templates.Select(t => t.yamlValue.Value).ToArray(), templates.Select(t => t.yamlValueStr).ToArray()), naemonInstance));
-            //}
-            //await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.config", targetLayer.ID, monitoringConfigs),
-            //    changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
+                    var template = Scriban.Template.Parse(templateStr);
+                    string templateSegment = template.Render(context);
+                    logger.LogDebug($"  Rendered template:\n{templateSegment}");
+                    renderedTemplateSegments.Add((p.Relation.FromCIID, monitoringModuleCI.CIName, templateSegment));
+                }
+                catch (Exception e)
+                {
+                    logger.LogError($"Error parsing or rendering command from monitoring module \"{monitoringModuleCI.ID}\": {e.Message}");
+                    LogError(monitoringModuleCI.ID, "error", $"Error parsing or rendering command: {e.Message}");
+                }
+                logger.LogDebug("  Processed mm relation");
+            }
+
+            var parseErrors = new List<(Guid ciid, string? template, string? error)>();
+            IEnumerable<(Guid ciid, AttributeArrayValueJSON attributeValue, IEnumerable<NaemonHostTemplate> hostTemplates, IEnumerable<NaemonServiceTemplate> serviceTemplates)>? renderedTemplatesPerCI = renderedTemplateSegments.GroupBy(t => t.ciid)
+                .Select(tt =>
+                {
+                    var fragments = tt.SelectMany(ttt =>
+                    {
+                        try
+                        {
+                            var r = JsonConvert.DeserializeObject<INaemonFragmentTemplate[]>(ttt.templateSegment);
+                            if (r == null) return new INaemonFragmentTemplate[0];
+                            return r;
+                        }
+                        catch (Exception e)
+                        {
+                            parseErrors.Add((ciid: tt.Key, ttt.templateSegment, error: $"Could not parse service template: {e.Message}"));
+                            return new INaemonFragmentTemplate[0];
+                        }
+                    }).Where(ttt => ttt != null).ToList();
+
+                    var values = tt.Select(ttt => ttt.templateSegment).ToArray();
+                    try
+                    {
+                        var attributeValue = AttributeArrayValueJSON.BuildFromString(values);
+                        return (ciid: tt.Key, attributeValue,
+                            hostTemplates: fragments.Select(t => t as NaemonHostTemplate).WhereNotNull(),
+                            serviceTemplates: fragments.Select(t => t as NaemonServiceTemplate).WhereNotNull());
+                    }
+                    catch (Exception e)
+                    {
+                        parseErrors.Add((ciid: tt.Key, string.Join(',', values), error: e.Message));
+                        return default;
+                    }
+                }).Where(tt => tt.attributeValue != null).ToList();
+
+            if (parseErrors.Count > 0)
+            {
+                foreach (var (ciid, commandStr, error) in parseErrors)
+                {
+                    logger.LogError($"Error parsing the following command fragment:\n{commandStr}\nError: {error}");
+                    LogError(ciid, "error", $"Error parsing the following command fragment:\n{commandStr}\nError: {error}");
+                }
+            }
+
+            var fragments = renderedTemplatesPerCI.Select(t => new BulkCIAttributeDataLayerScope.Fragment("", t.attributeValue, t.ciid));
+            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments),
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
+
+            logger.LogDebug("Updated executed commands per monitored CI");
+
+            // assign monitored cis to naemon instances
+            var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
+            var naemonInstancesCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSetAll, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold); // TODO: reduce attributes to trait relevant
+            var naemonInstancesTS = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, naemonInstancesCIs, layerSetAll, trans, changesetProxy.TimeThreshold);
+            foreach (var naemonInstanceTS in naemonInstancesTS)
+                foreach (var monitoredCI in monitoredCIs.Values)
+                    if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value))
+                        monitoredByCIIDFragments.Add(new BulkRelationDataPredicateScope.Fragment(monitoredCI.ID, naemonInstanceTS.Key));
+            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
+            logger.LogDebug("Assigned CIs to naemon instances");
+
+
+            logger.LogDebug("Writing final naemon config");
+
+            // write final naemon config
+            var naemonInstance2MonitoredCILookup = monitoredByCIIDFragments.GroupBy(t => t.To).ToDictionary(t => t.Key, t => t.Select(t => t.From));
+            var monitoringConfigs = new List<BulkCIAttributeDataLayerScope.Fragment>();
+
+            foreach (var kv in naemonInstance2MonitoredCILookup)
+            {
+                var naemonInstance = kv.Key;
+                var cis = kv.Value;
+                var templates = renderedTemplatesPerCI.Where(f => cis.Contains(f.ciid));
+
+                // convert templates to naemon hosts, ready to serialize into json
+                var naemonHosts = templates.GroupBy(t => t.ciid)
+                    .Select(t =>
+                    {
+                        var hostTemplate = t.SelectMany(t => t.hostTemplates).FirstOrDefault();
+                        // look up contactgroups for host
+                        string[] hostContactgroups = new string[0];
+                        if (hostTemplate != null)
+                            hostContactgroups = cgr.CalculateContactgroupsOfCI(hostTemplate.ContactgroupSource).ToArray();
+                        var naemonHost = new NaemonHost(monitoredCIs[t.Key].CIName ?? "", hostContactgroups,
+                            t.Key,
+                            // we pick the first host command we can find
+                            hostTemplate?.Command.ToFullCommandString() ?? "",
+                            // TODO, HACK: handle duplicates in description
+                            t.SelectMany(t => t.serviceTemplates).ToDictionary(t => t.Description, t =>
+                            {
+                                return new NaemonService(
+                                    t.Command.ToFullCommandString(),
+                                    cgr.CalculateContactgroupsOfCI(t.ContactgroupSource).ToArray()
+                                );
+                            })
+                        );
+                        return naemonHost;
+                    }).ToList();
+
+                monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeArrayValueJSON.BuildFromString(
+                    naemonHosts.Select(t => JsonConvert.SerializeObject(t, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() })).ToArray()), naemonInstance));
+
+                //var finalConfigYamlNode = new YamlMappingNode(
+                //    templates.Select(t => (ciName: monitoredCIs[t.ciid].Name, t.yamlValue))
+                //.GroupBy(t => t.ciName) // do this to work around duplicates in names, TODO: proper de-duplication
+                //.Select(tt => (ciName: tt.Key, tt.FirstOrDefault().yamlValue))
+                //.Select(t => KeyValuePair.Create<YamlNode, YamlNode>(new YamlScalarNode(t.ciName) { Style = ScalarStyle.DoubleQuoted }, t.yamlValue.Value.RootNode))
+                //);
+                //var finalConfig = new YamlDocument(finalConfigYamlNode);
+
+                //monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeValueYAMLArray.Build(
+                //    templates.Select(t => t.yamlValue.Value).ToArray(), templates.Select(t => t.yamlValueStr).ToArray()), naemonInstance));
+            }
+            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.config", targetLayer.ID, monitoringConfigs),
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
 
             logger.LogDebug("End clbMonitoring");
             return true;
