@@ -29,12 +29,12 @@ namespace Tests.Integration
         private AutofacServiceProvider? serviceProvider;
 
         protected bool enableModelCaching;
-        protected Mock<ICurrentUserService> currentUserServiceMock;
+        protected Mock<ICurrentUserAccessor> currentUserServiceMock;
 
         protected DIServicedTestBase(bool enableModelCaching)
         {
             this.enableModelCaching = enableModelCaching;
-            currentUserServiceMock = new Mock<ICurrentUserService>();
+            currentUserServiceMock = new Mock<ICurrentUserAccessor>();
         }
 
         [SetUp]
@@ -68,7 +68,7 @@ namespace Tests.Integration
             ServiceRegistration.RegisterLogging(builder);
             ServiceRegistration.RegisterDB(builder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(builder);
-            ServiceRegistration.RegisterModels(builder, enableModelCaching, true, false, false);
+            ServiceRegistration.RegisterModels(builder, enableModelCaching, true, false, false, false);
             ServiceRegistration.RegisterServices(builder);
             ServiceRegistration.RegisterGraphQL(builder);
 
@@ -98,7 +98,7 @@ namespace Tests.Integration
             builder.Register<IConfiguration>((sp) => new Mock<IConfiguration>().Object).SingleInstance();
 
             // override user service
-            builder.Register<ICurrentUserService>((sp) => currentUserServiceMock.Object).SingleInstance();
+            builder.Register<ICurrentUserAccessor>((sp) => currentUserServiceMock.Object).SingleInstance();
             builder.Register<ILogger<DataPartitionService>>((sp) => NullLogger<DataPartitionService>.Instance).SingleInstance();
 
             // override authorization

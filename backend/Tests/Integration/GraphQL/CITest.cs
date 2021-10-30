@@ -34,9 +34,10 @@ namespace Tests.Integration.GraphQL
             var layer1 = await layerModel.UpsertLayer("layer_1", trans);
             var layerID2 = await layerModel.UpsertLayer("layer_2", trans);
             var user = new AuthenticatedUser(await userModel.UpsertUser(username, username, userGUID, UserType.Robot, trans), 
-                new HashSet<string>() { 
-                    PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),
-                    PermissionUtils.GetLayerReadPermission(layerID2), PermissionUtils.GetLayerWritePermission(layerID2)
+                new AuthRole[]
+                {
+                    new AuthRole("ar1", new string[] { PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1) }),
+                    new AuthRole("ar2", new string[] { PermissionUtils.GetLayerReadPermission(layerID2), PermissionUtils.GetLayerWritePermission(layerID2) }),
                 });
             var changeset = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueInteger(3), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);

@@ -79,7 +79,7 @@ namespace Tests.Integration.Controller
             }
 
             // setup user with all permissions
-            var user = new AuthenticatedUser(userInDatabase, await PermissionUtils.GetAllAvailablePermissions(layerModel, ModelContextBuilder.BuildImmediate()));
+            var user = new AuthenticatedUser(userInDatabase, new AuthRole[] { await PermissionUtils.GetSuperUserAuthRole(layerModel, ModelContextBuilder.BuildImmediate()) });
             currentUserServiceMock.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
             var cfg1 = new GridViewConfiguration(

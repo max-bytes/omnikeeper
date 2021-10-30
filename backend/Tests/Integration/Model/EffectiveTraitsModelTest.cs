@@ -105,7 +105,7 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel);
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var layerModel = new LayerModel();
-            var traitModel = new EffectiveTraitModel(relationModel, NullLogger<EffectiveTraitModel>.Instance);
+            var traitModel = new EffectiveTraitModel(relationModel);
 
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);

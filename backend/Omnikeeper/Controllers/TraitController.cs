@@ -23,14 +23,14 @@ namespace Omnikeeper.Controllers
     {
         private readonly IEffectiveTraitModel traitModel;
         private readonly ITraitsProvider traitsProvider;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly ICIModel ciModel;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public TraitController(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService, ICIModel ciModel,
-            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserService currentUserService)
+            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserAccessor currentUserService)
         {
             this.traitModel = traitModel;
             this.traitsProvider = traitsProvider;

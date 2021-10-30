@@ -23,14 +23,14 @@ namespace Omnikeeper.Controllers.Ingest
     public class ActiveDirectoryXMLIngestController : ControllerBase
     {
         private readonly IngestDataService ingestDataService;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly ILayerModel layerModel;
         private readonly ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService authorizationService;
         private readonly ILogger<ActiveDirectoryXMLIngestController> logger;
 
-        public ActiveDirectoryXMLIngestController(IngestDataService ingestDataService, ICurrentUserService currentUserService, ILayerModel layerModel, ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService,
+        public ActiveDirectoryXMLIngestController(IngestDataService ingestDataService, ICurrentUserAccessor currentUserService, ILayerModel layerModel, ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService,
             IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger)
         {
             this.ingestDataService = ingestDataService;

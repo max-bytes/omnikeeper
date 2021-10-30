@@ -25,13 +25,13 @@ namespace Omnikeeper.Controllers.Ingest
     public class ManageContextController : ControllerBase
     {
         private readonly GenericTraitEntityModel<Context, string> contextModel;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly IChangesetModel changesetModel;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly IMetaConfigurationModel metaConfigurationModel;
 
-        public ManageContextController(GenericTraitEntityModel<Context, string> contextModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService,
+        public ManageContextController(GenericTraitEntityModel<Context, string> contextModel, ICurrentUserAccessor currentUserService, IManagementAuthorizationService managementAuthorizationService,
             IChangesetModel changesetModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel)
         {
             this.contextModel = contextModel;

@@ -25,11 +25,6 @@ namespace Omnikeeper.Model
             this.ciidModel = ciidModel;
         }
 
-        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await _GetAttribute(name, ciid, layerID, trans, atTime, true);
-        }
-
         private async Task<CIAttribute?> _GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary)
         {
             NpgsqlCommand command;
@@ -243,6 +238,12 @@ namespace Omnikeeper.Model
                     var att = new CIAttribute(id, name, CIID, av, changesetID);
                     yield return (att, layerID);
             }
+        }
+
+
+        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            return await _GetAttribute(name, ciid, layerID, trans, atTime, true);
         }
 
         // NOTE: returns a full array (one item for each layer), even when layer contains no attributes

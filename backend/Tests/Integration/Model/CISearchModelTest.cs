@@ -31,7 +31,7 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
             var traitsProvider = new MockedTraitsProvider();
-            var traitModel = new EffectiveTraitModel(relationModel, NullLogger<EffectiveTraitModel>.Instance);
+            var traitModel = new EffectiveTraitModel(relationModel);
             var searchModel = new CISearchModel(attributeModel, baseAttributeModel, ciModel, traitModel, NullLogger<CISearchModel>.Instance);
             var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             Guid ciid1;

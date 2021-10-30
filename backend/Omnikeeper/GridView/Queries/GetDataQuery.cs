@@ -51,11 +51,11 @@ namespace Omnikeeper.GridView.Queries
             private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
-            private readonly ICurrentUserService currentUserService;
+            private readonly ICurrentUserAccessor currentUserService;
 
             public GetDataQueryHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IEffectiveTraitModel effectiveTraitModel, IRelationModel relationModel, ICIModel ciModel,
                 ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
-                ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserService currentUserService)
+                ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserAccessor currentUserService)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.effectiveTraitModel = effectiveTraitModel;

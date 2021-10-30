@@ -174,13 +174,13 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly IngestDataService ingestDataService;
         private readonly ILayerModel layerModel;
         private readonly ILogger<PassiveFilesController> logger;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly GenericTraitEntityModel<Context, string> contextModel;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
-        public PassiveFilesController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService,
+        public PassiveFilesController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserAccessor currentUserService,
             GenericTraitEntityModel<Context, string> contextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
             ILayerBasedAuthorizationService authorizationService, ILogger<PassiveFilesController> logger)
         {

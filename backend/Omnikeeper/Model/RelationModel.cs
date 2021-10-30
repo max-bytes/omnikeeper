@@ -63,6 +63,7 @@ namespace Omnikeeper.Model
             return MergeRelations(relations, layerset);
         }
 
+        // TODO: remove, is just a special case; then also remove baseRelationModel.GetRelation()
         public async Task<MergedRelation?> GetMergedRelation(Guid fromCIID, Guid toCIID, string predicateID, LayerSet layerset, IModelContext trans, TimeThreshold atTime)
         {
             if (layerset.IsEmpty)

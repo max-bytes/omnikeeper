@@ -17,12 +17,18 @@ namespace Omnikeeper.Base.Utils
 
         public static string GetManagementPermission() => $"ok.management";
 
-        public static async Task<ISet<string>> GetAllAvailablePermissions(ILayerModel layerModel, IModelContext trans)
+        public static async Task<AuthRole> GetSuperUserAuthRole(ILayerModel layerModel, IModelContext trans)
+        {
+            var permissions = await GetAllAvailablePermissions(layerModel, trans);
+            return new AuthRole("__ok_superuser", permissions);
+        }
+
+        public static async Task<string[]> GetAllAvailablePermissions(ILayerModel layerModel, IModelContext trans)
         {
             var allLayers = await layerModel.GetLayers(trans);
             return new string[] { GetManagementPermission() }
                 .Concat(allLayers.SelectMany(l => new string[] { GetLayerReadPermission(l), GetLayerWritePermission(l) }))
-                .ToHashSet()
+                .ToArray()
             ;
         }
     }

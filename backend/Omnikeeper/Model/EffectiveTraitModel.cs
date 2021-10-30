@@ -18,12 +18,10 @@ namespace Omnikeeper.Model
     public class EffectiveTraitModel : IEffectiveTraitModel
     {
         private readonly IRelationModel relationModel;
-        private readonly ILogger<EffectiveTraitModel> logger;
 
-        public EffectiveTraitModel(IRelationModel relationModel, ILogger<EffectiveTraitModel> logger)
+        public EffectiveTraitModel(IRelationModel relationModel)
         {
             this.relationModel = relationModel;
-            this.logger = logger;
         }
 
         public async Task<IEnumerable<MergedCI>> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
@@ -37,14 +35,6 @@ namespace Omnikeeper.Model
         public async Task<IEnumerable<MergedCI>> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             return await CanResolve(trait, cis, true, layers, trans, atTime);
-        }
-
-        public async Task<EffectiveTrait?> GetEffectiveTraitForCI(MergedCI ci, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            var t = await Resolve(trait, new MergedCI[] { ci }, layers, trans, atTime);
-            if (t.TryGetValue(ci.ID, out var outValue))
-                return outValue;
-            return null;
         }
 
         public async Task<IDictionary<Guid, EffectiveTrait>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)

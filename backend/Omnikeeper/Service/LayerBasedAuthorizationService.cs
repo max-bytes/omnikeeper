@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Autofac;
+using Microsoft.Extensions.Configuration;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Utils;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,33 +13,75 @@ namespace Omnikeeper.Service
     public class LayerBasedAuthorizationService : ILayerBasedAuthorizationService
     {
         private readonly bool debugAllowAll;
+        private readonly IAuthRolePermissionChecker authRolePermissionChecker;
 
-        public LayerBasedAuthorizationService(IConfiguration configuration)
+        public LayerBasedAuthorizationService(IConfiguration configuration, IAuthRolePermissionChecker authRolePermissionChecker)
         {
             debugAllowAll = configuration.GetSection("Authorization").GetValue("debugAllowAll", false);
+            this.authRolePermissionChecker = authRolePermissionChecker;
         }
-
 
         public bool CanUserReadFromLayer(AuthenticatedUser user, Layer layer) => CanUserReadFromLayer(user, layer.ID);
-        public bool CanUserReadFromLayer(AuthenticatedUser user, string layerID) => debugAllowAll || CanReadFromLayer(user.Permissions, layerID);
+        public bool CanUserReadFromLayer(AuthenticatedUser user, string layerID) => debugAllowAll || CanReadFromLayers(user.AuthRoles, new string[] { layerID });
         public bool CanUserReadFromAllLayers(AuthenticatedUser user, IEnumerable<string> layerIDs) =>
-            debugAllowAll || layerIDs.All(l => CanReadFromLayer(user.Permissions, l));
+            debugAllowAll || CanReadFromLayers(user.AuthRoles, layerIDs);
 
         public bool CanUserWriteToLayer(AuthenticatedUser user, Layer layer) => CanUserWriteToLayer(user, layer.ID);
-        public bool CanUserWriteToLayer(AuthenticatedUser user, string layerID) => debugAllowAll || CanWriteToLayer(user.Permissions, layerID);
+        public bool CanUserWriteToLayer(AuthenticatedUser user, string layerID) => debugAllowAll || CanWriteToLayers(user.AuthRoles, new string[] { layerID });
 
         public bool CanUserWriteToAllLayers(AuthenticatedUser user, IEnumerable<string> layerIDs) =>
-            debugAllowAll || layerIDs.All(l => CanWriteToLayer(user.Permissions, l));
+            debugAllowAll || CanWriteToLayers(user.AuthRoles, layerIDs);
 
-
-        private bool CanReadFromLayer(ISet<string> permissions, string layerID)
+        private bool CanReadFromLayers(AuthRole[] authRoles, IEnumerable<string> layerIDs)
         {
-            return permissions.Contains(PermissionUtils.GetLayerReadPermission(layerID));
+            var toCheckLayerIDs = new List<string>(layerIDs);
+            foreach (var ar in authRoles)
+            {
+                for(int i = toCheckLayerIDs.Count - 1;i >= 0;i--)
+                {
+                    var layerID = toCheckLayerIDs[i];
+                    if (authRolePermissionChecker.DoesAuthRoleGivePermission(ar, PermissionUtils.GetLayerReadPermission(layerID)))
+                    {
+                        toCheckLayerIDs.RemoveAt(i);
+                    }
+                }
+
+                if (toCheckLayerIDs.IsEmpty())
+                    return true;
+            }
+            return false;
         }
-        private bool CanWriteToLayer(ISet<string> permissions, string layerID)
+        private bool CanWriteToLayers(AuthRole[] authRoles, IEnumerable<string> layerIDs)
         {
-            // writing to a layer also requires read permissions
-            return permissions.Contains(PermissionUtils.GetLayerReadPermission(layerID)) && permissions.Contains(PermissionUtils.GetLayerWritePermission(layerID));
+            var toCheckLayerIDs = new List<string>(layerIDs);
+            for (int i = toCheckLayerIDs.Count - 1; i >= 0; i--)
+            {
+                var layerID = toCheckLayerIDs[i];
+                var readAllowed = false;
+                var writeAllowed = false;
+                foreach (var ar in authRoles)
+                {
+                    if (!readAllowed && authRolePermissionChecker.DoesAuthRoleGivePermission(ar, PermissionUtils.GetLayerReadPermission(layerID)))
+                    {
+                        readAllowed = true;
+                    }
+
+                    if (!writeAllowed && authRolePermissionChecker.DoesAuthRoleGivePermission(ar, PermissionUtils.GetLayerWritePermission(layerID)))
+                    {
+                        writeAllowed = true;
+                    }
+                }
+                // writing to a layer also requires read permissions
+                if (!readAllowed || !writeAllowed)
+                    break;
+                else
+                    toCheckLayerIDs.RemoveAt(i);
+            }
+
+            if (toCheckLayerIDs.IsEmpty())
+                return true;
+
+            return false;
         }
     }
 }

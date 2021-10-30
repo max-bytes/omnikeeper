@@ -1,7 +1,15 @@
-﻿using GraphQL;
+﻿using Autofac;
+using Autofac.Core.Lifetime;
+using Autofac.Extensions.DependencyInjection;
+using Autofac.Extras.DynamicProxy;
+using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.Types;
+using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
+using Omnikeeper.Base.CLB;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
@@ -12,11 +20,13 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.GraphQL;
+using Omnikeeper.GridView.Entity;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
+using Omnikeeper.Utils.Decorators;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,11 +34,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
-using GraphQL.DataLoader;
-using Omnikeeper.Base.Entity;
-using Omnikeeper.GridView.Entity;
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
 
 namespace Omnikeeper.Startup
 {
@@ -159,8 +164,14 @@ namespace Omnikeeper.Startup
             builder.RegisterType<DataPartitionService>().As<IDataPartitionService>().SingleInstance();
             builder.RegisterType<MarkedForDeletionService>().SingleInstance();
             builder.RegisterType<IngestDataService>().InstancePerLifetimeScope(); // TODO: make singleton
-            builder.RegisterType<CurrentUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
             builder.RegisterType<ReactiveLogReceiver>().SingleInstance();
+
+            builder.RegisterType<AuthRolePermissionChecker>().As<IAuthRolePermissionChecker>().SingleInstance();
+            builder.RegisterType<CurrentUserAccessor>().As<ICurrentUserAccessor>().SingleInstance(); // TODO: remove, use ScopedLifetimeAccessor directly?
+            builder.RegisterType<CurrentAuthorizedHttpUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
+
+            builder.RegisterType<ScopedLifetimeAccessor>().SingleInstance();
+
         }
 
         public static void RegisterLogging(ContainerBuilder builder)
@@ -168,7 +179,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<NpgsqlLoggingProvider>().SingleInstance();
         }
 
-        public static void RegisterModels(ContainerBuilder builder, bool enableModelCaching, bool enableEffectiveTraitCaching, bool enableOIA, bool enabledGenerators)
+        public static void RegisterModels(ContainerBuilder builder, bool enableModelCaching, bool enableEffectiveTraitCaching, bool enableOIA, bool enabledGenerators, bool enableUsageTracking)
         {
             builder.RegisterType<CISearchModel>().As<ICISearchModel>().SingleInstance();
             builder.RegisterType<CIModel>().As<ICIModel>().SingleInstance();
@@ -197,6 +208,17 @@ namespace Omnikeeper.Startup
             builder.RegisterType<GenericTraitEntityModel<Predicate, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<RecursiveTrait, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<GridViewContext, string>>().SingleInstance(); // TODO: ok this way?
+
+            if (enableUsageTracking)
+            {
+                builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
+                builder.RegisterType<UsageDataAccumulator>().As<IUsageDataAccumulator>().SingleInstance();
+
+                builder.RegisterDecorator<UsageTrackingEffectiveTraitModel, IEffectiveTraitModel>();
+                builder.RegisterDecorator<UsageTrackingBaseAttributeModel, IBaseAttributeModel>();
+                builder.RegisterDecorator<UsageTrackingBaseRelationModel, IBaseRelationModel>();
+                builder.RegisterDecorator<UsageTrackingAuthRolePermissionChecker, IAuthRolePermissionChecker>();
+            }
 
             // these aren't real models, but we keep them here because they are closely related to models
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();
@@ -242,12 +264,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<SpanJSONDocumentWriter>().As<IDocumentWriter>().SingleInstance();
             builder.RegisterType<DataLoaderContextAccessor>().As<IDataLoaderContextAccessor>().SingleInstance();
             builder.RegisterType<DataLoaderDocumentListener>().SingleInstance();
-
-            // required for Autofac
-            builder
-              .Register(c => new FuncServiceProvider(c.Resolve<IComponentContext>().Resolve))
-              .As<IServiceProvider>()
-              .InstancePerDependency();
         }
     }
 }
