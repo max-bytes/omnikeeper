@@ -5,6 +5,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Service;
+using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
 
@@ -19,7 +20,7 @@ namespace Tests.Integration.Service
                 .AddInMemoryCollection(new Dictionary<string, string>() { { "Authorization:debugAllowAll", "false"} })
                 .Build();
 
-            var lbas = new LayerBasedAuthorizationService(configuration, new Mock<IUsageTrackingService>().Object);
+            var lbas = new LayerBasedAuthorizationService(configuration, new AuthRolePermissionChecker());
 
             var userInDatabase1 = new UserInDatabase(1L, Guid.NewGuid(), "user1", "User1", UserType.Robot, DateTimeOffset.UtcNow);
             var user1 = new AuthenticatedUser(userInDatabase1, new AuthRole[] { 

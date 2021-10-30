@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Utils;
 using System.Linq;
 
 namespace Omnikeeper.Service
@@ -12,11 +13,13 @@ namespace Omnikeeper.Service
     {
         private readonly bool debugAllowAll;
         private readonly ILayerBasedAuthorizationService lbas;
+        private readonly IAuthRolePermissionChecker authRolePermissionChecker;
 
-        public ManagementAuthorizationService(IConfiguration configuration, ILayerBasedAuthorizationService lbas)
+        public ManagementAuthorizationService(IConfiguration configuration, ILayerBasedAuthorizationService lbas, IAuthRolePermissionChecker authRolePermissionChecker)
         {
             debugAllowAll = configuration.GetSection("Authorization").GetValue("debugAllowAll", false);
             this.lbas = lbas;
+            this.authRolePermissionChecker = authRolePermissionChecker;
         }
 
         public bool HasManagementPermission(AuthenticatedUser user)
@@ -26,8 +29,7 @@ namespace Omnikeeper.Service
 
             foreach(var ar in user.AuthRoles)
             {
-                if (ar.Permissions.Contains(PermissionUtils.GetManagementPermission()))
-                    // TODO: count usages
+                if (authRolePermissionChecker.DoesAuthRoleGivePermission(ar, PermissionUtils.GetManagementPermission()))
                     return true;
             }
             return false;

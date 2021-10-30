@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Autofac;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -17,24 +18,45 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Service
 {
-    public class CurrentUserService : ICurrentUserService
+    public class CurrentUserAccessor : ICurrentUserAccessor
     {
-        public CurrentUserService(IHttpContextAccessor httpContextAccessor, CLBContextAccessor clbContextAccessor,
-            CurrentHTTPUserService httpService, CurrentCLBUserService clbService, ILayerModel layerModel, IMetaConfigurationModel metaConfigurationModel, 
+        private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
+
+        public CurrentUserAccessor(ScopedLifetimeAccessor scopedLifetimeAccessor)
+        {
+            this.scopedLifetimeAccessor = scopedLifetimeAccessor;
+        }
+
+        public Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
+        {
+            var scope = scopedLifetimeAccessor.GetLifetimeScope();
+            if (scope == null)
+                throw new Exception("Cannot get current user: not in proper scope");
+            return scope.Resolve<ICurrentUserService>().GetCurrentUser(trans);
+        }
+    }
+
+    public class CurrentAuthorizedHttpUserService : ICurrentUserService
+    {
+        public CurrentAuthorizedHttpUserService(IHttpContextAccessor httpContextAccessor, 
+            ILayerModel layerModel, IMetaConfigurationModel metaConfigurationModel,
+            IUserInDatabaseModel userModel, IConfiguration configuration, ILogger<CurrentAuthorizedHttpUserService> logger,
             GenericTraitEntityModel<AuthRole, string> authRoleModel)
         {
             HttpContextAccessor = httpContextAccessor;
-            this.clbContextAccessor = clbContextAccessor;
-            this.httpService = httpService;
-            this.clbService = clbService;
             LayerModel = layerModel;
             MetaConfigurationModel = metaConfigurationModel;
+            this.userModel = userModel;
+            this.configuration = configuration;
+            this.logger = logger;
             AuthRoleModel = authRoleModel;
         }
 
-        private readonly CLBContextAccessor clbContextAccessor;
-        private readonly CurrentHTTPUserService httpService;
-        private readonly CurrentCLBUserService clbService;
+        private readonly IUserInDatabaseModel userModel;
+        private readonly IConfiguration configuration;
+        private readonly ILogger<CurrentAuthorizedHttpUserService> logger;
+
+        private AuthenticatedUser? cached = null;
 
         private GenericTraitEntityModel<AuthRole, string> AuthRoleModel { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
@@ -43,98 +65,78 @@ namespace Omnikeeper.Service
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
-            if (clbContextAccessor.CLBContext != null)
+            if (cached == null)
             {
-                // CLBs implicitly have all permissions
+                cached = await _GetCurrentUser(trans);
+            }
+            return cached;
+        }
+
+        private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
+        {
+            var httpUser = HttpUserUtils.CreateUserFromHttpContext(HttpContextAccessor.HttpContext, configuration, logger);
+            var userInDatabase = await userModel.UpsertUser(httpUser.Username, httpUser.DisplayName, httpUser.UserID, httpUser.UserType, trans);
+
+            if (httpUser.ClientRoles.Contains("__ok_superuser"))
+            {
                 var suar = await PermissionUtils.GetSuperUserAuthRole(LayerModel, trans);
-                var user = await clbService.CreateAndGetCurrentUser(clbContextAccessor.CLBContext, trans);
-                return new AuthenticatedUser(user, new AuthRole[] { suar });
+                return new AuthenticatedUser(userInDatabase, new AuthRole[] { suar });
             }
-            else if (HttpContextAccessor.HttpContext != null)
+            else
             {
-                // TODO: caching
-                var (userInDatabase, httpUser) = await httpService.CreateAndGetCurrentUser(HttpContextAccessor.HttpContext, trans);
+                var metaConfiguration = await MetaConfigurationModel.GetConfigOrDefault(trans);
 
-                if (httpUser.ClientRoles.Contains("__ok_superuser"))
+                var allAuthRoles = await AuthRoleModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+
+                var activeAuthRoles = new List<AuthRole>();
+                foreach (var role in httpUser.ClientRoles)
                 {
-                    var suar = await PermissionUtils.GetSuperUserAuthRole(LayerModel, trans);
-                    return new AuthenticatedUser(userInDatabase, new AuthRole[] { suar });
-                }
-                else
-                {
-                    var metaConfiguration = await MetaConfigurationModel.GetConfigOrDefault(trans);
-
-                    var allAuthRoles = await AuthRoleModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
-
-                    var activeAuthRoles = new List<AuthRole>();
-                    foreach (var role in httpUser.ClientRoles)
+                    if (allAuthRoles.TryGetValue(role, out var authRole))
                     {
-                        if (allAuthRoles.TryGetValue(role, out var authRole))
-                        {
-                            activeAuthRoles.Add(authRole);
-                        }
+                        activeAuthRoles.Add(authRole);
                     }
-
-                    // order auth roles of user by ID, so they are consistent
-                    activeAuthRoles.Sort((a, b) => a.ID.CompareTo(b.ID));
-
-                    return new AuthenticatedUser(userInDatabase, activeAuthRoles.ToArray());
                 }
 
-            }
-            else
-            {
-                throw new Exception("Could not get current user: executing in unknown context");
-            }
-        }
-    }
+                // order auth roles of user by ID, so they are consistent
+                activeAuthRoles.Sort((a, b) => a.ID.CompareTo(b.ID));
 
-    public class CurrentUserInDatabaseService : ICurrentUserInDatabaseService
-    {
-        public CurrentUserInDatabaseService(IHttpContextAccessor httpContextAccessor, CLBContextAccessor clbContextAccessor, CurrentHTTPUserService httpService, CurrentCLBUserService clbService)
-        {
-            this.httpContextAccessor = httpContextAccessor;
-            this.clbContextAccessor = clbContextAccessor;
-            this.httpService = httpService;
-            this.clbService = clbService;
-        }
-
-        private readonly CLBContextAccessor clbContextAccessor;
-        private readonly CurrentHTTPUserService httpService;
-        private readonly CurrentCLBUserService clbService;
-
-        private readonly IHttpContextAccessor httpContextAccessor;
-
-        public async Task<UserInDatabase> CreateAndGetCurrentUser(IModelContext trans)
-        {
-            if (clbContextAccessor.CLBContext != null)
-            {
-                return await clbService.CreateAndGetCurrentUser(clbContextAccessor.CLBContext, trans);
-            }
-            else if (httpContextAccessor.HttpContext != null)
-            {
-                var (userInDatabase, _) = await httpService.CreateAndGetCurrentUser(httpContextAccessor.HttpContext, trans);
-
-                return userInDatabase;
-            }
-            else
-            {
-                throw new Exception("Could not get current user: executing in unknown context");
+                return new AuthenticatedUser(userInDatabase, activeAuthRoles.ToArray());
             }
         }
     }
 
-    public class CurrentCLBUserService
+
+    public class CurrentAuthorizedCLBUserService : ICurrentUserService
     {
+        public CurrentAuthorizedCLBUserService(CLBContext clbContext, IUserInDatabaseModel userModel, ILayerModel layerModel, IMetaConfigurationModel metaConfigurationModel)
+        {
+            this.clbContext = clbContext;
+            this.userModel = userModel;
+            LayerModel = layerModel;
+            MetaConfigurationModel = metaConfigurationModel;
+        }
+
+        public ILayerModel LayerModel { get; }
+        public IMetaConfigurationModel MetaConfigurationModel { get; }
+        private readonly CLBContext clbContext;
         private readonly IUserInDatabaseModel userModel;
 
-        public CurrentCLBUserService(IUserInDatabaseModel userModel)
+        private AuthenticatedUser? cached = null;
+
+        public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
-            this.userModel = userModel;
+            if (cached == null)
+            {
+                cached = await _GetCurrentUser(trans);
+            }
+            return cached;
         }
 
-        public async Task<UserInDatabase> CreateAndGetCurrentUser(CLBContext clbContext, IModelContext trans)
+        private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
         {
+            // CLBs implicitly have all permissions
+            var suar = await PermissionUtils.GetSuperUserAuthRole(LayerModel, trans);
+
             // upsert user
             var username = $"__cl.{clbContext.Brain.Name}"; // make username the same as CLB name
             var displayName = username;
@@ -142,30 +144,8 @@ namespace Omnikeeper.Service
             var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
             var guid = GuidUtility.Create(clbUserGuidNamespace, clbContext.Brain.Name);
             var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, trans);
-            return user;
-        }
-    }
 
-    public class CurrentHTTPUserService
-    {
-        public CurrentHTTPUserService(IUserInDatabaseModel userModel, IConfiguration configuration, ILogger<CurrentHTTPUserService> logger)
-        {
-            UserModel = userModel;
-            Configuration = configuration;
-            Logger = logger;
-        }
-
-        private IConfiguration Configuration { get; }
-        public ILogger<CurrentHTTPUserService> Logger { get; }
-        private IUserInDatabaseModel UserModel { get; }
-
-        public async Task<(UserInDatabase userInDatabase, HttpUser httpUser)> CreateAndGetCurrentUser(HttpContext httpContext, IModelContext trans)
-        {
-            // TODO: caching?
-            var httpUser = HttpUserUtils.CreateUserFromHttpContext(httpContext, Configuration, Logger);
-            var userInDatabase = await UserModel.UpsertUser(httpUser.Username, httpUser.DisplayName, httpUser.UserID, httpUser.UserType, trans);
-
-            return (userInDatabase, httpUser);
+            return new AuthenticatedUser(user, new AuthRole[] { suar });
         }
     }
 

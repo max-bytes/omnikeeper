@@ -42,11 +42,11 @@ namespace Omnikeeper.Controllers.OData
         private readonly IChangesetModel changesetModel;
         private readonly IODataAPIContextModel oDataAPIContextModel;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
         public RelationsController(IRelationModel relationModel, ICIModel ciModel, IChangesetModel changesetModel, IODataAPIContextModel oDataAPIContextModel,
-            ICurrentUserService currentUserService, ILayerBasedAuthorizationService authorizationService, IModelContextBuilder modelContextBuilder)
+            ICurrentUserAccessor currentUserService, ILayerBasedAuthorizationService authorizationService, IModelContextBuilder modelContextBuilder)
         {
             this.relationModel = relationModel;
             this.ciModel = ciModel;

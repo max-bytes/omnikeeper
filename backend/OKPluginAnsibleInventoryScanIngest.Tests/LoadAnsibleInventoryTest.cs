@@ -71,7 +71,7 @@ namespace Tests.Ingest
             Layer layer1 = await layerModel.UpsertLayer("inventory_scan", mc);
 
             // mock the current user service
-            var mockCurrentUserService = new Mock<ICurrentUserService>();
+            var mockCurrentUserService = new Mock<ICurrentUserAccessor>();
             var user = new AuthenticatedUser(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, mc), new AuthRole[] { new AuthRole("ar1", new string[] { PermissionUtils.GetLayerWritePermission(layer1) }) });
             mockCurrentUserService.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 

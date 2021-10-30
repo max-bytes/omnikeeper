@@ -63,11 +63,11 @@ namespace Omnikeeper.Controllers.OData
         private readonly ICISearchModel ciSearchModel;
         private readonly IODataAPIContextModel oDataAPIContextModel;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
         public AttributesController(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, ICISearchModel ciSearchModel, IODataAPIContextModel oDataAPIContextModel,
-            ICurrentUserService currentUserService, ILayerBasedAuthorizationService authorizationService, IModelContextBuilder modelContextBuilder)
+            ICurrentUserAccessor currentUserService, ILayerBasedAuthorizationService authorizationService, IModelContextBuilder modelContextBuilder)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;

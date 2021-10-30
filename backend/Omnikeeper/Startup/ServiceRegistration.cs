@@ -1,9 +1,11 @@
 ﻿using Autofac;
+using Autofac.Core.Lifetime;
 using Autofac.Extensions.DependencyInjection;
 using Autofac.Extras.DynamicProxy;
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Types;
+using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
 using Omnikeeper.Base.CLB;
@@ -24,6 +26,7 @@ using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
+using Omnikeeper.Utils.Decorators;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -163,10 +166,8 @@ namespace Omnikeeper.Startup
             builder.RegisterType<IngestDataService>().InstancePerLifetimeScope(); // TODO: make singleton
             builder.RegisterType<ReactiveLogReceiver>().SingleInstance();
 
-            builder.RegisterType<CurrentUserInDatabaseService>().As<ICurrentUserInDatabaseService>().SingleInstance();
-            builder.RegisterType<CurrentUserService>().As<ICurrentUserService>().SingleInstance();
-            builder.RegisterType<CurrentHTTPUserService>().SingleInstance();
-            builder.RegisterType<CurrentCLBUserService>().SingleInstance();
+            builder.RegisterType<CurrentUserAccessor>().As<ICurrentUserAccessor>().SingleInstance(); // TODO: remove, use ScopedLifetimeAccessor directly?
+            builder.RegisterType<CurrentAuthorizedHttpUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
 
             builder.RegisterType<CLBContextAccessor>().SingleInstance();
         }
@@ -206,13 +207,18 @@ namespace Omnikeeper.Startup
             builder.RegisterType<GenericTraitEntityModel<RecursiveTrait, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<GridViewContext, string>>().SingleInstance(); // TODO: ok this way?
 
+            builder.RegisterType<AuthRolePermissionChecker>().As<IAuthRolePermissionChecker>().SingleInstance();
+
             if (enableUsageTracking)
             {
-                //effectiveTraitModel.EnableInterfaceInterceptors().InterceptedBy(typeof(EffectiveTraitModelUsageTrackingInterceptor));
-                //builder.RegisterType<EffectiveTraitModelUsageTrackingInterceptor>().SingleInstance();
                 builder.RegisterDecorator<UsageTrackingEffectiveTraitModel, IEffectiveTraitModel>();
-                builder.RegisterType<UsageTrackingService>().As<IUsageTrackingService>().SingleInstance(); // TODO: some need a working instance of this class even when usage tracking is off
+                builder.RegisterDecorator<UsageTrackingBaseAttributeModel, IBaseAttributeModel>();
+                builder.RegisterDecorator<UsageTrackingAuthRolePermissionChecker, IAuthRolePermissionChecker>();
+
+                builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
             }
+
+            builder.RegisterType<ScopedLifetimeAccessor>().SingleInstance();
 
             // these aren't real models, but we keep them here because they are closely related to models
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();

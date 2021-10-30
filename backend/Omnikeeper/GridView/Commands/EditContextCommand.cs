@@ -47,12 +47,12 @@ namespace Omnikeeper.GridView.Commands
         {
             private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
-            private readonly ICurrentUserService currentUserService;
+            private readonly ICurrentUserAccessor currentUserService;
             private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly IChangesetModel changesetModel;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
-            public EditContextCommandHandler(IModelContextBuilder modelContextBuilder, GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, ICurrentUserService currentUserService,
+            public EditContextCommandHandler(IModelContextBuilder modelContextBuilder, GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, ICurrentUserAccessor currentUserService,
                 IMetaConfigurationModel metaConfigurationModel, IChangesetModel changesetModel, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.modelContextBuilder = modelContextBuilder;

@@ -26,11 +26,11 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly IngestDataService ingestDataService;
         private readonly ILayerModel layerModel;
         private readonly ILogger<AnsibleInventoryScanIngestController> logger;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
-        public AnsibleInventoryScanIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService,
+        public AnsibleInventoryScanIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserAccessor currentUserService,
             IModelContextBuilder modelContextBuilder,
             ILayerBasedAuthorizationService authorizationService, ILogger<AnsibleInventoryScanIngestController> logger)
         {

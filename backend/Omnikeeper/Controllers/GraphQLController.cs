@@ -29,9 +29,9 @@ namespace Omnikeeper.Controllers
         private readonly DataLoaderDocumentListener dataLoaderDocumentListener;
         private readonly IEnumerable<IValidationRule> _validationRules;
         private readonly IWebHostEnvironment _env;
-        private readonly ICurrentUserService _currentUserService;
+        private readonly ICurrentUserAccessor _currentUserService;
 
-        public GraphQLController(ISchema schema, ICurrentUserService currentUserService,
+        public GraphQLController(ISchema schema, ICurrentUserAccessor currentUserService,
             IDocumentExecuter documentExecuter, IDocumentWriter documentWriter,
             IModelContextBuilder modelContextBuilder, DataLoaderDocumentListener dataLoaderDocumentListener,
             IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env)

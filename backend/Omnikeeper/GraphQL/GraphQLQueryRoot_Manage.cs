@@ -215,7 +215,7 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var httpContextAccessor = context.RequestServices!.GetRequiredService<IHttpContextAccessor>();
-                    var currentAuthenticatedUserService = context.RequestServices!.GetRequiredService<ICurrentUserService>();
+                    var currentAuthenticatedUserService = context.RequestServices!.GetRequiredService<ICurrentUserAccessor>();
                     var claims = httpContextAccessor.HttpContext.User.Claims.Select(c => (c.Type, c.Value));
 
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
