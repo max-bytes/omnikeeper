@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
@@ -20,13 +21,15 @@ namespace Omnikeeper.Base.Service
         private readonly ILogger<ScopedUsageTracker> logger;
         private readonly ICurrentUserService currentUserService;
         private readonly IModelContextBuilder modelContextBuilder;
+        private readonly IUsageDataAccumulator usageDataAccumulator;
         private readonly ISet<(string elementType, string elementName)> usages = new HashSet<(string elementType, string elementName)>();
 
-        public ScopedUsageTracker(ILogger<ScopedUsageTracker> logger, ICurrentUserService currentUserService, IModelContextBuilder modelContextBuilder)
+        public ScopedUsageTracker(ILogger<ScopedUsageTracker> logger, ICurrentUserService currentUserService, IModelContextBuilder modelContextBuilder, IUsageDataAccumulator usageDataAccumulator)
         {
             this.logger = logger;
             this.currentUserService = currentUserService;
             this.modelContextBuilder = modelContextBuilder;
+            this.usageDataAccumulator = usageDataAccumulator;
         }
 
         public const string ElementTypeTrait = "trait";
@@ -66,9 +69,11 @@ namespace Omnikeeper.Base.Service
 
                 foreach (var (elementType, elementName) in usages)
                 {
-                    // TODO: do more
                     logger.LogTrace($"Usage tracked: type: {elementType}, name: {elementName}, user: {user.Username}");
                 }
+
+                var timestamp = DateTimeOffset.Now;
+                usageDataAccumulator.Add(user.Username, timestamp, usages);
             }
         }
     }

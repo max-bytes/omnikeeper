@@ -1,0 +1,9 @@
+﻿CREATE TABLE public.usage_stats
+(
+    element_type text NOT NULL,
+    element_name text NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
+    username text NOT NULL
+);
+
+CREATE INDEX ON public.usage_stats USING btree ("timestamp" ASC NULLS LAST);

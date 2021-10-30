@@ -212,6 +212,7 @@ namespace Omnikeeper.Startup
             if (enableUsageTracking)
             {
                 builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
+                builder.RegisterType<UsageDataAccumulator>().As<IUsageDataAccumulator>().SingleInstance();
 
                 builder.RegisterDecorator<UsageTrackingEffectiveTraitModel, IEffectiveTraitModel>();
                 builder.RegisterDecorator<UsageTrackingBaseAttributeModel, IBaseAttributeModel>();
