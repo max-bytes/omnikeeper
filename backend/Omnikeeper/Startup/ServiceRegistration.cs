@@ -166,10 +166,12 @@ namespace Omnikeeper.Startup
             builder.RegisterType<IngestDataService>().InstancePerLifetimeScope(); // TODO: make singleton
             builder.RegisterType<ReactiveLogReceiver>().SingleInstance();
 
+            builder.RegisterType<AuthRolePermissionChecker>().As<IAuthRolePermissionChecker>().SingleInstance();
             builder.RegisterType<CurrentUserAccessor>().As<ICurrentUserAccessor>().SingleInstance(); // TODO: remove, use ScopedLifetimeAccessor directly?
             builder.RegisterType<CurrentAuthorizedHttpUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
 
             builder.RegisterType<ScopedLifetimeAccessor>().SingleInstance();
+
         }
 
         public static void RegisterLogging(ContainerBuilder builder)
@@ -195,7 +197,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<ChangesetModel>().As<IChangesetModel>().SingleInstance();
             builder.RegisterType<CacheModel>().As<ICacheModel>().SingleInstance();
             builder.RegisterType<ODataAPIContextModel>().As<IODataAPIContextModel>().SingleInstance();
-            var effectiveTraitModel = builder.RegisterType<EffectiveTraitModel>().As<IEffectiveTraitModel>().SingleInstance();
+            builder.RegisterType<EffectiveTraitModel>().As<IEffectiveTraitModel>().SingleInstance();
             builder.RegisterType<BaseConfigurationModel>().As<IBaseConfigurationModel>().SingleInstance();
             builder.RegisterType<MetaConfigurationModel>().As<IMetaConfigurationModel>().SingleInstance();
             builder.RegisterType<OIAContextModel>().As<IOIAContextModel>().SingleInstance();
@@ -207,8 +209,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<GenericTraitEntityModel<RecursiveTrait, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<GridViewContext, string>>().SingleInstance(); // TODO: ok this way?
 
-            builder.RegisterType<AuthRolePermissionChecker>().As<IAuthRolePermissionChecker>().SingleInstance();
-
             if (enableUsageTracking)
             {
                 builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
@@ -219,7 +219,6 @@ namespace Omnikeeper.Startup
                 builder.RegisterDecorator<UsageTrackingBaseRelationModel, IBaseRelationModel>();
                 builder.RegisterDecorator<UsageTrackingAuthRolePermissionChecker, IAuthRolePermissionChecker>();
             }
-
 
             // these aren't real models, but we keep them here because they are closely related to models
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();

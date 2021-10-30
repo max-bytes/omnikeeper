@@ -79,6 +79,7 @@
 
   <ItemGroup>
     <Folder Include="Logs\" />
+    <Folder Include="OKPlugins\extracted\" />
   </ItemGroup>
 
   <ItemGroup>
