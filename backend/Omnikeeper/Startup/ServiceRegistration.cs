@@ -169,7 +169,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<CurrentUserAccessor>().As<ICurrentUserAccessor>().SingleInstance(); // TODO: remove, use ScopedLifetimeAccessor directly?
             builder.RegisterType<CurrentAuthorizedHttpUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<CLBContextAccessor>().SingleInstance();
+            builder.RegisterType<ScopedLifetimeAccessor>().SingleInstance();
         }
 
         public static void RegisterLogging(ContainerBuilder builder)
@@ -211,14 +211,14 @@ namespace Omnikeeper.Startup
 
             if (enableUsageTracking)
             {
+                builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
+
                 builder.RegisterDecorator<UsageTrackingEffectiveTraitModel, IEffectiveTraitModel>();
                 builder.RegisterDecorator<UsageTrackingBaseAttributeModel, IBaseAttributeModel>();
+                builder.RegisterDecorator<UsageTrackingBaseRelationModel, IBaseRelationModel>();
                 builder.RegisterDecorator<UsageTrackingAuthRolePermissionChecker, IAuthRolePermissionChecker>();
-
-                builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
             }
 
-            builder.RegisterType<ScopedLifetimeAccessor>().SingleInstance();
 
             // these aren't real models, but we keep them here because they are closely related to models
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();
