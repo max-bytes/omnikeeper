@@ -36,7 +36,7 @@ namespace Tests.Integration.Model
         }
     }
 
-    class GenericTraitEntity1ModelTest : GenericTraitEntityModelTestBase<TestEntity1, string>
+    class GenericTraitEntityWithStringIDModelTest : GenericTraitEntityModelTestBase<TestEntity1, string>
     {
 
         [Test]
@@ -101,10 +101,10 @@ namespace Tests.Integration.Model
         }
     }
 
-    class GenericTraitEntity2ModelTest : GenericTraitEntityModelTestBase<TestEntity2, long>
+    class GenericTraitEntityWithLongIDModelTest : GenericTraitEntityModelTestBase<TestEntity2, long>
     {
         [Test]
-        public async Task TestOptionalAttributeHandling()
+        public async Task TestLongBasedID()
         {
             var (model, layerset, writeLayerID, changesetBuilder) = await SetupModel();
 
@@ -149,6 +149,83 @@ namespace Tests.Integration.Model
             // ensure that the optional attribute is now gone again as well
             var byDataID3 = await model.GetSingleByDataID(1L, layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             byDataID3.entity.Should().BeEquivalentTo(e1);
+        }
+    }
+
+
+    [TraitEntity("test_entity1", TraitOriginType.Data)]
+    class TestEntity3 : TraitEntity
+    {
+        [TraitAttribute("id1", "id1")]
+        [TraitEntityID]
+        public readonly long ID1;
+        [TraitAttribute("id2", "id2")]
+        [TraitEntityID]
+        public readonly string ID2;
+
+        [TraitAttribute("test_attribute_a", "test_attribute_a", optional: true)]
+        public readonly string? TestAttributeA;
+
+        public TestEntity3()
+        {
+            ID1 = 0L;
+            ID2 = "";
+            TestAttributeA = "";
+        }
+
+        public TestEntity3(long id1, string id2, string? testAttributeA)
+        {
+            ID1 = id1;
+            ID2 = id2;
+            TestAttributeA = testAttributeA;
+        }
+    }
+
+    class GenericTraitEntityWithTupleIDModelTest : GenericTraitEntityModelTestBase<TestEntity3, Tuple<long, string>>
+    {
+        [Test]
+        public async Task TestTupleBasedID()
+        {
+            var (model, layerset, writeLayerID, changesetBuilder) = await SetupModel();
+
+            var e1 = new TestEntity3(1L, "id1", null);
+            var e12 = new TestEntity3(1L, "id2", "set");
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                await model.InsertOrUpdate(e1, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                await model.InsertOrUpdate(e12, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                trans.Commit();
+            }
+
+            var byDataID1 = await model.GetSingleByDataID(Tuple.Create(1L, "id1"), layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            byDataID1.entity.Should().BeEquivalentTo(e1);
+
+            // get all in a dictionary
+            var allByDataID1 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            allByDataID1.Should().BeEquivalentTo(new Dictionary<Tuple<long, string>, TestEntity3>()
+            {
+                {Tuple.Create(1L, "id1"),new TestEntity3(1L, "id1", null) },
+                {Tuple.Create(1L, "id2"),new TestEntity3(1L, "id2", "set") },
+            });
+        }
+
+        [Test]
+        public async Task TestGenericOperations()
+        {
+            await TestGenericModelOperations(
+                () => new TestEntity3(1L, "test_auth_role01", "foo"),
+                () => new TestEntity3(2L, "test_auth_role02", null),
+                Tuple.Create(1L, "test_auth_role01"), Tuple.Create(2L, "test_auth_role02"), Tuple.Create(1L, "non_existant")
+                );
+        }
+        [Test]
+        public async Task TestGetByDataID()
+        {
+            await TestGenericModelGetByDataID(
+                () => new TestEntity3(1L, "test_auth_role01", "foo"),
+                () => new TestEntity3(2L, "test_auth_role02", null),
+                Tuple.Create(1L, "test_auth_role01"), Tuple.Create(2L, "test_auth_role02"), Tuple.Create(1L, "non_existant")
+                );
         }
     }
 }

@@ -12,7 +12,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using static Omnikeeper.Base.Model.TraitEntityHelper;
 
 namespace Omnikeeper.Base.Model
 {
@@ -27,9 +29,7 @@ namespace Omnikeeper.Base.Model
         private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
         private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
-        private readonly FieldInfo idFieldInfo;
-        private readonly string idAttributeName;
-        private readonly AttributeValueType idAttributeValueType;
+        private readonly IIDAttributeInfos<T, ID> idAttributeInfos;
 
         private static readonly MyJSONSerializer<object> DefaultSerializer = new MyJSONSerializer<object>(() =>
         {
@@ -53,7 +53,7 @@ namespace Omnikeeper.Base.Model
 
             (_, attributeFieldInfos, relationFieldInfos) = TraitEntityHelper.ExtractFieldInfos<T>();
 
-            (idFieldInfo, idAttributeName, idAttributeValueType) = TraitEntityHelper.ExtractIDAttributeInfos<T>();
+            idAttributeInfos = TraitEntityHelper.ExtractIDAttributeInfos<T, ID>();
         }
 
         private async Task<(T entity, Guid ciid)> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
@@ -68,12 +68,8 @@ namespace Omnikeeper.Base.Model
 
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            IAttributeValue idAttributeValue = AttributeValueBuilder.BuildFromTypeAndObject(idAttributeValueType, id);
-            var cisWithIDAttribute = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(idAttributeName), layerSet, trans, timeThreshold);
-            var foundCIID = cisWithIDAttribute.Where(t => t.Value[idAttributeName].Attribute.Value.Equals(idAttributeValue))
-                .Select(t => t.Key)
-                .OrderBy(t => t) // we order by GUID to stay consistent even when multiple CIs would match
-                .FirstOrDefault();
+            var cisWithIDAttribute = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), idAttributeInfos.GetAttributeSelectionForID(), layerSet, trans, timeThreshold);
+            var foundCIID = idAttributeInfos.FilterCIAttributesWithMatchingID(id, cisWithIDAttribute);
 
             if (foundCIID == default)
             { // no fitting entity found
@@ -104,9 +100,7 @@ namespace Omnikeeper.Base.Model
             var ret = new Dictionary<ID, T>();
             foreach (var dc in all)
             {
-                var id = (ID)idFieldInfo.GetValue(dc.entity);
-                if (id == null)
-                    throw new Exception(); // TODO: error message
+                var id = idAttributeInfos.ExtractIDFromEntity(dc.entity);
                 if (!ret.ContainsKey(id))
                 {
                     ret[id] = dc.entity;
@@ -117,9 +111,7 @@ namespace Omnikeeper.Base.Model
 
         public async Task<(T dc, bool changed)> InsertOrUpdate(T t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            var id = (ID)idFieldInfo.GetValue(t);
-            if (id == null)
-                throw new Exception(); // TODO
+            var id = idAttributeInfos.ExtractIDFromEntity(t);
 
             var current = await GetSingleByDataID(id, layerSet, trans, changesetProxy.TimeThreshold);
 
@@ -331,20 +323,132 @@ namespace Omnikeeper.Base.Model
             return (ta, attributeFieldInfos, relationFieldInfos);
         }
 
-        public static (FieldInfo idField, string attributeName, AttributeValueType attributeValueType) ExtractIDAttributeInfos<C>() where C : TraitEntity, new()
+        public interface IIDAttributeInfos<T, ID> where T : TraitEntity, new() where ID : notnull
+        {
+            IAttributeSelection GetAttributeSelectionForID();
+            Guid FilterCIAttributesWithMatchingID(ID id, IDictionary<Guid, IDictionary<string, MergedCIAttribute>> ciAttributes);
+            ID ExtractIDFromEntity(T entity);
+        }
+
+        public class SingleFieldIDAttributeInfos<T, ID> : IIDAttributeInfos<T,ID> where T : TraitEntity, new() where ID : notnull
+        {
+            private readonly FieldInfo idFieldInfo;
+            private readonly string idAttributeName;
+            private readonly AttributeValueType idAttributeValueType;
+
+            public SingleFieldIDAttributeInfos(FieldInfo idFieldInfo, string idAttributeName, AttributeValueType idAttributeValueType)
+            {
+                this.idFieldInfo = idFieldInfo;
+                this.idAttributeName = idAttributeName;
+                this.idAttributeValueType = idAttributeValueType;
+            }
+
+            public IAttributeSelection GetAttributeSelectionForID()
+            {
+                return NamedAttributesSelection.Build(idAttributeName);
+            }
+
+            public Guid FilterCIAttributesWithMatchingID(ID id, IDictionary<Guid, IDictionary<string, MergedCIAttribute>> ciAttributes)
+            {
+                IAttributeValue idAttributeValue = AttributeValueBuilder.BuildFromTypeAndObject(idAttributeValueType, id);
+                var foundCIID = ciAttributes.Where(t => t.Value[idAttributeName].Attribute.Value.Equals(idAttributeValue))
+                    .Select(t => t.Key)
+                    .OrderBy(t => t) // we order by GUID to stay consistent even when multiple CIs would match
+                    .FirstOrDefault();
+                return foundCIID;
+            }
+
+            public ID ExtractIDFromEntity(T entity)
+            {
+                var id = (ID)idFieldInfo.GetValue(entity);
+                if (id == null)
+                    throw new Exception(); // TODO: error message
+                return id;
+            }
+        }
+
+        public class TupleBasedIDAttributeInfos<T, ID> : IIDAttributeInfos<T, ID> where T : TraitEntity, new() where ID : notnull
+        {
+            private readonly IEnumerable<(FieldInfo idFieldInfo, string idAttributeName, AttributeValueType idAttributeValueType)> fields;
+
+            public TupleBasedIDAttributeInfos(IEnumerable<(FieldInfo idFieldInfo, string idAttributeName, AttributeValueType idAttributeValueType)> f)
+            {
+                fields = f;
+            }
+
+            public IAttributeSelection GetAttributeSelectionForID()
+            {
+                return NamedAttributesSelection.Build(fields.Select(f => f.idAttributeName).ToHashSet());
+            }
+
+            public Guid FilterCIAttributesWithMatchingID(ID id, IDictionary<Guid, IDictionary<string, MergedCIAttribute>> ciAttributes)
+            {
+                var tupleID = (ITuple)id;
+                if (tupleID == null)
+                    throw new Exception(); // TODO
+                if (tupleID.Length != fields.Count())
+                    throw new Exception(); // TODO
+                (string name, IAttributeValue value)[] idAttributeValues = fields.Select((f, index) => {
+                    var subIndex = tupleID[index];
+                    if (subIndex == null)
+                        throw new Exception(); // TODO
+                    return (f.idAttributeName, AttributeValueBuilder.BuildFromTypeAndObject(f.idAttributeValueType, subIndex));
+                }).ToArray();
+                var foundCIID = ciAttributes.Where(t =>
+                {
+                    return idAttributeValues.All(nameValue => t.Value[nameValue.name].Attribute.Value.Equals(nameValue.value));
+                })
+                    .Select(t => t.Key)
+                    .OrderBy(t => t) // we order by GUID to stay consistent even when multiple CIs would match
+                    .FirstOrDefault();
+                return foundCIID;
+            }
+
+            public ID ExtractIDFromEntity(T entity)
+            {
+                var genericTuple = fields.Count() switch
+                {
+                    0 => throw new Exception("Must not happen"),
+                    1 => throw new Exception("Must not happen"),
+                    2 => typeof(Tuple<,>),
+                    3 => typeof(Tuple<,,>),
+                    4 => typeof(Tuple<,,,>),
+                    5 => typeof(Tuple<,,,,>),
+                    6 => typeof(Tuple<,,,,,>),
+                    7 => typeof(Tuple<,,,,,,>),
+                    8 => typeof(Tuple<,,,,,,,>),
+                    _ => throw new Exception("Not supported")
+                };
+                var constructedTuple = genericTuple.MakeGenericType(fields.Select(f => f.idFieldInfo.FieldType).ToArray());
+                var t = Activator.CreateInstance(constructedTuple, fields.Select(f => f.idFieldInfo.GetValue(entity)).ToArray());
+                if (t == null)
+                    throw new Exception(""); // TODO
+                return (ID)t;
+            }
+        }
+
+        public static IIDAttributeInfos<C, ID> ExtractIDAttributeInfos<C, ID>() where C : TraitEntity, new() where ID : notnull
         {
             Type type = typeof(C);
-            var idField = type.GetFields().FirstOrDefault(f => Attribute.IsDefined(f, typeof(TraitEntityIDAttribute)));
-            if (idField == null)
+            var idFields = type.GetFields().Where(f => Attribute.IsDefined(f, typeof(TraitEntityIDAttribute)));
+            if (idFields.Count() == 0)
                 throw new Exception("Cannot get trait entity by data ID: class does not specify a TraitEntityID attribute");
-            var taa = Attribute.GetCustomAttribute(idField, typeof(TraitAttributeAttribute)) as TraitAttributeAttribute;
-            if (taa == null)
-                throw new Exception($"Trait class {type.Name}: field without TraitAttribute attribute detected: {idField.Name}");
 
-            var idAttributeName = taa.aName;
-            var (attributeValueType, _) = Type2AttributeValueType(idField, taa);
+            var outFields = new List<(FieldInfo idFieldInfo, string idAttributeName, AttributeValueType idAttributeValueType)>();
+            foreach (var idField in idFields)
+            {
+                var taa = Attribute.GetCustomAttribute(idField, typeof(TraitAttributeAttribute)) as TraitAttributeAttribute;
+                if (taa == null)
+                    throw new Exception($"Trait class {type.Name}: field without TraitAttribute attribute detected: {idField.Name}");
 
-            return (idField, taa.aName, attributeValueType);
+                var idAttributeName = taa.aName;
+                var (attributeValueType, _) = Type2AttributeValueType(idField, taa);
+                outFields.Add((idField, taa.aName, attributeValueType));
+            }
+            if (outFields.Count == 1)
+                return new SingleFieldIDAttributeInfos<C, ID>(outFields[0].idFieldInfo, outFields[0].idAttributeName, outFields[0].idAttributeValueType);
+            else
+                return new TupleBasedIDAttributeInfos<C, ID>(outFields);
         }
 
         public static C EffectiveTrait2Object<C>(EffectiveTrait et, MyJSONSerializer<object> jsonSerializer) where C : TraitEntity, new()

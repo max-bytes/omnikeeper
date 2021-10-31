@@ -139,9 +139,6 @@ namespace Tests.Integration.Model
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
             var relationModel = ServiceProvider.GetRequiredService<IRelationModel>();
-            //var metaConfigurationModel = ServiceProvider.GetRequiredService<IMetaConfigurationModel>();
-
-            //var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(ModelContextBuilder.BuildImmediate());
 
             var model = new GenericTraitEntityModel<T, ID>(effectiveTraitModel, ciModel, attributeModel, relationModel);
 
