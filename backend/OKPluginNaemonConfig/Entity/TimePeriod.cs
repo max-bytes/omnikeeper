@@ -17,25 +17,25 @@ namespace OKPluginNaemonConfig.Entity
         [TraitAttribute("alias", "naemon_timeperiod.alias")]
         public readonly string Alias;
 
-        [TraitAttribute("span_mon", "naemon_timeperiod.span_mon")]
+        [TraitAttribute("span_mon", "naemon_timeperiod.span_mon", optional: true)]
         public readonly string SpanMon;
 
-        [TraitAttribute("span_tue", "naemon_timeperiod.span_tue")]
+        [TraitAttribute("span_tue", "naemon_timeperiod.span_tue", optional: true)]
         public readonly string SpanTue;
 
-        [TraitAttribute("span_wed", "naemon_timeperiod.span_wed")]
+        [TraitAttribute("span_wed", "naemon_timeperiod.span_wed", optional: true)]
         public readonly string SpanWed;
 
-        [TraitAttribute("span_thu", "naemon_timeperiod.span_thu")]
+        [TraitAttribute("span_thu", "naemon_timeperiod.span_thu", optional: true)]
         public readonly string SpanThu;
 
-        [TraitAttribute("span_fri", "naemon_timeperiod.span_fri")]
+        [TraitAttribute("span_fri", "naemon_timeperiod.span_fri", optional: true)]
         public readonly string SpanFri;
 
-        [TraitAttribute("span_sat", "naemon_timeperiod.span_sat")]
+        [TraitAttribute("span_sat", "naemon_timeperiod.span_sat", optional: true)]
         public readonly string SpanSat;
 
-        [TraitAttribute("span_sun", "naemon_timeperiod.span_sun")]
+        [TraitAttribute("span_sun", "naemon_timeperiod.span_sun", optional: true)]
         public readonly string SpanSun;
 
         public TimePeriod()

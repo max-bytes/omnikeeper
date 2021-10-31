@@ -13,16 +13,16 @@ namespace OKPluginNaemonConfig.Entity
         [TraitEntityID]
         public readonly string Name;
 
-        [TraitAttribute("reftype", "naemon_variable.reftype")]
-        public readonly string RefType;
-
         [TraitAttribute("type", "naemon_variable.type")]
         public readonly string Type;
 
-        [TraitAttribute("value", "naemon_variable.value")]
+        [TraitAttribute("reftype", "naemon_variable.reftype", optional: true)]
+        public readonly string RefType;
+
+        [TraitAttribute("value", "naemon_variable.value", optional: true)]
         public readonly string Value;
 
-        [TraitAttribute("issecret", "naemon_variable.issecret")]
+        [TraitAttribute("issecret", "naemon_variable.issecret", optional: true)]
         public readonly long IsSecret;
 
         public Variable()

@@ -14,31 +14,31 @@ namespace OKPluginNaemonConfig.Entity
         [TraitEntityID]
         public readonly string Name;
 
-        [TraitAttribute("exec", "naemon_command.exec")]
+        [TraitAttribute("exec", "naemon_command.exec", optional: true)]
         public readonly string Exec;
 
-        [TraitAttribute("desc_arg1", "naemon_command.desc_arg1")]
+        [TraitAttribute("desc_arg1", "naemon_command.desc_arg1", optional: true)]
         public readonly string DescArg1;
 
-        [TraitAttribute("desc_arg2", "naemon_command.desc_arg2")]
+        [TraitAttribute("desc_arg2", "naemon_command.desc_arg2", optional: true)]
         public readonly string DescArg2;
 
-        [TraitAttribute("desc_arg3", "naemon_command.desc_arg3")]
+        [TraitAttribute("desc_arg3", "naemon_command.desc_arg3", optional: true)]
         public readonly string DescArg3;
 
-        [TraitAttribute("desc_arg4", "naemon_command.desc_arg4")]
+        [TraitAttribute("desc_arg4", "naemon_command.desc_arg4", optional: true)]
         public readonly string DescArg4;
 
-        [TraitAttribute("desc_arg5", "naemon_command.desc_arg5")]
+        [TraitAttribute("desc_arg5", "naemon_command.desc_arg5", optional: true)]
         public readonly string DescArg5;
 
-        [TraitAttribute("desc_arg6", "naemon_command.desc_arg6")]
+        [TraitAttribute("desc_arg6", "naemon_command.desc_arg6", optional: true)]
         public readonly string DescArg6;
 
-        [TraitAttribute("desc_arg7", "naemon_command.desc_arg7")]
+        [TraitAttribute("desc_arg7", "naemon_command.desc_arg7", optional: true)]
         public readonly string DescArg7;
 
-        [TraitAttribute("desc_arg8", "naemon_command.desc_arg8")]
+        [TraitAttribute("desc_arg8", "naemon_command.desc_arg8", optional: true)]
         public readonly string DescArg8;
 
         public Command()

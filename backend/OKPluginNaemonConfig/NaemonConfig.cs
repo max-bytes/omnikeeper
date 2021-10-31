@@ -38,7 +38,7 @@ namespace OKPluginNaemonConfig
         private readonly GenericTraitEntityModel<ServiceStatic, string> serviceStaticModel;
         private readonly GenericTraitEntityModel<Module, string> moduleModel;
         public NaemonConfig(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
-                           IChangesetModel changesetModel, IUserInDatabaseModel userModel, 
+                           IChangesetModel changesetModel, IUserInDatabaseModel userModel,
                            GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel,
                            GenericTraitEntityModel<Service, string> serviceModel,
                            GenericTraitEntityModel<HostCategory, string> hostsCategoryModel,
@@ -86,29 +86,23 @@ namespace OKPluginNaemonConfig
             {
                 cfg = config.ToObject<Configuration>();
             }
-            catch (System.Exception)
+            catch (Exception ex)
             {
-                //TODO throw an error here
-                throw;
+                logger.LogError("An error ocurred while creating configuration instance.", ex);
+                return false;
             }
 
             var layersetCMDB = await layerModel.BuildLayerSet(new[] { cfg!.CMDBLayerId }, trans);
             var layersetMonman = await layerModel.BuildLayerSet(new[] { cfg!.MonmanLayerId }, trans);
             var layersetNaemonConfig = await layerModel.BuildLayerSet(new[] { cfg!.NaemonConfigLayerId }, trans);
 
-            var allCIsCMDB = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetCMDB, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
-            var allCIsMonman = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetMonman, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
+            //var allCIsCMDB = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetCMDB, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
+            //var allCIsMonman = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetMonman, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
 
 
             // load all naemons
-
-
-
-            // load naemonInstances
-            var naemonInstances = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstanceFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
-            
-            var nInstances = await naemonInstanceModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
-            var naemonIds = nInstances.Select(el => el.Value.Id).ToList();
+            var naemonInstances = await naemonInstanceModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            //var naemonIds = naemonInstances.Select(el => el.Value.Id).ToList();
 
 
             // a list with all CI from database
@@ -124,6 +118,8 @@ namespace OKPluginNaemonConfig
                     Id = ciItem.Value.Id,
                     Name = ciItem.Value.Name,
                     Status = ciItem.Value.Status,
+                    Address = "", // This should be taken from HMONIPADDRESS field
+                    Port = 0, // This should be taken from HMONIPPORT field
                 });
             }
 
@@ -139,6 +135,8 @@ namespace OKPluginNaemonConfig
                     Name = ciItem.Value.Name,
                     Status = ciItem.Value.Status,
                     Environment = ciItem.Value.Environment,
+                    Address = "", // This should be taken from SVCMONIPADDRESS field
+                    Port = 0, // This should be taken from SVCMONIPPORT field
                 });
             }
 
@@ -225,6 +223,12 @@ namespace OKPluginNaemonConfig
                             Cmd = ciItem.Value.Cmd,
                             CmdUser = ciItem.Value.CmdUser,
                         };
+
+                        /* override address from hostactions */
+                        if (ciItem.Value.Type.ToUpper() == "MONITORING")
+                        {
+                            el.Address = ciItem.Value.Cmd;
+                        }
                     }
                 });
             }
@@ -252,128 +256,31 @@ namespace OKPluginNaemonConfig
             #endregion
 
             // add normalized ci data from interfaces
+            // we should load interfaces, currently only one column is loaded from this table into omnikeeper
 
-            var interfaces = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.InterfacesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var interfaces = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.InterfacesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
-            foreach (var ciItem in interfaces)
-            {
-                /*
-                         'ID' => $interface[$fieldPrefix.'IFID'],
-            'TYPE' => $interface[$fieldPrefix.'IFTYPE'],
-            'LANTYPE' => $interface[$fieldPrefix.'IFLANTYPE'],
-            'NAME' => $interface[$fieldPrefix.'IFNAME'],
-            'IP' => $interface[$fieldPrefix.'IFIP'],
+            //foreach (var ciItem in interfaces)
+            //{
+            /*
+                     'ID' => $interface[$fieldPrefix.'IFID'],
+        'TYPE' => $interface[$fieldPrefix.'IFTYPE'],
+        'LANTYPE' => $interface[$fieldPrefix.'IFLANTYPE'],
+        'NAME' => $interface[$fieldPrefix.'IFNAME'],
+        'IP' => $interface[$fieldPrefix.'IFIP'],
 //                        'IPVERSION' => $interface['IFIPVERSION'],
 //                        'GATEWAY' => $interface['IFGATEWAY'],
-            'DNSNAME' => $interface[$fieldPrefix.'IFDNS'],
-            'VLAN' => $interface[$fieldPrefix.'IFVLAN'],
- */
-                //var obj = new Interfaces();
-                //foreach (var attribute in collection)
-                //{
+        'DNSNAME' => $interface[$fieldPrefix.'IFDNS'],
+        'VLAN' => $interface[$fieldPrefix.'IFVLAN'],
+*/
+            //var obj = new Interfaces();
+            //foreach (var attribute in collection)
+            //{
 
-                //}
-            }
+            //}
+            //}
 
-            #region build CapabilityMap
-            //getCapabilityMap - NaemonInstancesTagsFlattened
-            var naemonInstancesTags = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstancesTagsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
-            var capMap = new Dictionary<string, List<string>>();
-
-            foreach (var ciItem in naemonInstancesTags)
-            {
-                var s = ciItem.MergedAttributes.TryGetValue("naemon_instance_tag.tag", out MergedCIAttribute? instanceTagAttribute);
-
-                if (!s)
-                {
-                    continue;
-                }
-
-                var tag = instanceTagAttribute!.Attribute.Value.Value2String();
-
-                if (tag.StartsWith("cap_"))
-                {
-                    var ss = ciItem.MergedAttributes.TryGetValue("naemon_instance_tag.id", out MergedCIAttribute? instanceIdAttribute);
-                    if (!ss)
-                    {
-                        continue;
-                    }
-
-                    if (capMap.ContainsKey(tag))
-                    {
-                        capMap[tag].Add(instanceIdAttribute!.Attribute.Value.Value2String());
-                    }
-                    else
-                    {
-                        capMap.Add(tag, new List<string> { instanceIdAttribute!.Attribute.Value.Value2String() });
-                    }
-                }
-            }
-
-            var naemonProfiles = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonProfilesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-
-            var profileFromDbNaemons = new List<string>();
-
-            foreach (var ciItem in naemonInstances)
-            {
-                // we need to check here if isNaemonProfileFromDbEnabled 
-                var s = ciItem.MergedAttributes.TryGetValue("naemon_instance.name", out MergedCIAttribute? instanceNameAttribute);
-
-                if (!s)
-                {
-                    continue;
-                }
-
-                var instanceName = instanceNameAttribute!.Attribute.Value.Value2String();
-
-                if (cfg!.NaemonsConfigGenerateprofiles.Contains(instanceName))
-                {
-                    // monman-instance.id
-                    var ss = ciItem.MergedAttributes.TryGetValue("naemon_instance.id", out MergedCIAttribute? instanceIdAttribute);
-
-                    if (!ss)
-                    {
-                        continue;
-                    }
-
-                    profileFromDbNaemons.Add(instanceIdAttribute!.Attribute.Value.Value2String());
-                }
-            }
-
-            /* extend capMap */
-
-            if (profileFromDbNaemons.Count > 0)
-            {
-                foreach (var ciItem in naemonProfiles)
-                {
-                    var s = ciItem.MergedAttributes.TryGetValue("naemon_profile.name", out MergedCIAttribute? profileNameAttribute);
-
-                    if (!s)
-                    {
-                        continue;
-                    }
-
-                    var cap = "cap_lp_" + profileNameAttribute!.Attribute.Value.Value2String();
-
-                    if (!capMap.ContainsKey(cap))
-                    {
-                        capMap.Add(cap, profileFromDbNaemons);
-                    }
-                    else
-                    {
-                        capMap[cap] = (List<string>)profileFromDbNaemons.Concat(capMap[cap]);
-                    }
-                }
-            }
-
-            // new capmap
-            var nInstancesTag = await naemonInstancesTagModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
-            var nProfiles = await naemonProfileModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
-            // NOTE we will move to use this when the nInstanceTag are fetched correctlly 
-            var capMapNew = Helper.CIData.BuildCapMap(nInstancesTag, nProfiles, nInstances, cfg!.NaemonsConfigGenerateprofiles);
-
-            #endregion  
 
             #region process core data
 
@@ -381,28 +288,192 @@ namespace OKPluginNaemonConfig
             Helper.CIData.UpdateProfileField(ciData, cfg!.CMDBMonprofilePrefix);
 
             // updateNormalizedCiDataFieldAddress
-            foreach (var ciItem in ciData)
-            {
-                if (ciItem.Type == "HOST")
-                {
-
-                }
-            }
+            // NOTE: this part is done directly when selecting hosts and serices
 
             // updateNormalizedCiData_addGenericCmdbCapTags
             Helper.CIData.AddGenericCmdbCapTags(ciData);
 
             // updateNormalizedCiData_addRelationData
-            var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runsOn"), layersetCMDB, trans, changesetProxy.TimeThreshold);
+            var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runs_on"), layersetCMDB, trans, changesetProxy.TimeThreshold);
+
+            var cmdbRelationsBySrc = new Dictionary<string, (string, string)>();
+
+            foreach (var item in allRunsOnRelations)
+            {
+
+                var fromCI = await ciModel.GetMergedCI(item!.Relation.FromCIID, layersetCMDB!, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
+
+                var fromCIID = (fromCI.MergedAttributes["cmdb.id"].Attribute.Value as AttributeScalarValueText)?.Value;
+
+                var cfgObj = ciData.Where(el => el.Type == "SERVICE" && el.Id == fromCIID).FirstOrDefault();
+
+                if (cfgObj != null)
+                {
+                    var targetCI = await ciModel.GetMergedCI(item.Relation.ToCIID, layersetCMDB!, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
+
+                    var targetCIID = (fromCI.MergedAttributes["cmdb.id"].Attribute.Value as AttributeScalarValueText)?.Value;
+
+                    if (!cfgObj.Relations.ContainsKey("OUT"))
+                    {
+                        cfgObj.Relations.Add("OUT", new KeyValuePair<string, string>(item.Relation.PredicateID, targetCIID!));
+                    }
+                    else
+                    {
+                        cfgObj.Relations["OUT"] = new KeyValuePair<string, string>(item.Relation.PredicateID, targetCIID!);
+                    }
+
+                    // 
+                    if (!cmdbRelationsBySrc.ContainsKey(fromCIID!))
+                    {
+                        cmdbRelationsBySrc.Add(fromCIID!, (item.Relation.PredicateID, targetCIID!));
+                    }
+                    else
+                    {
+                        cmdbRelationsBySrc[fromCIID!] = (item.Relation.PredicateID, targetCIID!);
+                    }
+
+                    // write incoming relations if CI exists
+
+                    var targetCfgObj = ciData.Where(el => el.Id == targetCIID).FirstOrDefault();
+
+                    if (targetCfgObj != null)
+                    {
+
+                        if (!targetCfgObj.Relations.ContainsKey("IN"))
+                        {
+                            targetCfgObj.Relations.Add("IN", new KeyValuePair<string, string>(item.Relation.PredicateID, fromCIID!));
+                        }
+                        else
+                        {
+                            targetCfgObj.Relations["IN"] = new KeyValuePair<string, string>(item.Relation.PredicateID, fromCIID!);
+                        }
+                    }
+                }
+            }
 
             foreach (var ciItem in ciData)
             {
-                // Relations
-                // 
+                // add effective host for ci
+
+                //$ciDataRef[$id]['RELATIONS']['EFFECTIVEHOSTCI'] = '';
+
+                ciItem.EffectiveHostCI = "";
+
+                if (ciItem.Id.StartsWith("H"))
+                {
+                    ciItem.EffectiveHostCI = ciItem.Id;
+                }
+                else
+                {
+
+                }
+
             }
             #endregion
 
+
+            #region build CapabilityMap
+            //getCapabilityMap - NaemonInstancesTagsFlattened
+            //var naemonInstancesTags = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstancesTagsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+
+            //var capMap = new Dictionary<string, List<string>>();
+
+            //foreach (var ciItem in naemonInstancesTags)
+            //{
+            //    var s = ciItem.MergedAttributes.TryGetValue("naemon_instance_tag.tag", out MergedCIAttribute? instanceTagAttribute);
+
+            //    if (!s)
+            //    {
+            //        continue;
+            //    }
+
+            //    var tag = instanceTagAttribute!.Attribute.Value.Value2String();
+
+            //    if (tag.StartsWith("cap_"))
+            //    {
+            //        var ss = ciItem.MergedAttributes.TryGetValue("naemon_instance_tag.id", out MergedCIAttribute? instanceIdAttribute);
+            //        if (!ss)
+            //        {
+            //            continue;
+            //        }
+
+            //        if (capMap.ContainsKey(tag))
+            //        {
+            //            capMap[tag].Add(instanceIdAttribute!.Attribute.Value.Value2String());
+            //        }
+            //        else
+            //        {
+            //            capMap.Add(tag, new List<string> { instanceIdAttribute!.Attribute.Value.Value2String() });
+            //        }
+            //    }
+            //}
+
+            //var naemonProfiles = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonProfilesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+
+            //var profileFromDbNaemons = new List<string>();
+
+            //foreach (var ciItem in naemonInstances)
+            //{
+            //    // we need to check here if isNaemonProfileFromDbEnabled 
+            //    var s = ciItem.MergedAttributes.TryGetValue("naemon_instance.name", out MergedCIAttribute? instanceNameAttribute);
+
+            //    if (!s)
+            //    {
+            //        continue;
+            //    }
+
+            //    var instanceName = instanceNameAttribute!.Attribute.Value.Value2String();
+
+            //    if (cfg!.NaemonsConfigGenerateprofiles.Contains(instanceName))
+            //    {
+            //        // monman-instance.id
+            //        var ss = ciItem.MergedAttributes.TryGetValue("naemon_instance.id", out MergedCIAttribute? instanceIdAttribute);
+
+            //        if (!ss)
+            //        {
+            //            continue;
+            //        }
+
+            //        profileFromDbNaemons.Add(instanceIdAttribute!.Attribute.Value.Value2String());
+            //    }
+            //}
+
+            /* extend capMap */
+
+            //if (profileFromDbNaemons.Count > 0)
+            //{
+            //    foreach (var ciItem in naemonProfiles)
+            //    {
+            //        var s = ciItem.MergedAttributes.TryGetValue("naemon_profile.name", out MergedCIAttribute? profileNameAttribute);
+
+            //        if (!s)
+            //        {
+            //            continue;
+            //        }
+
+            //        var cap = "cap_lp_" + profileNameAttribute!.Attribute.Value.Value2String();
+
+            //        if (!capMap.ContainsKey(cap))
+            //        {
+            //            capMap.Add(cap, profileFromDbNaemons);
+            //        }
+            //        else
+            //        {
+            //            capMap[cap] = (List<string>)profileFromDbNaemons.Concat(capMap[cap]);
+            //        }
+            //    }
+            //}
+
+            // new capmap
+            var nInstancesTag = await naemonInstancesTagModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            var nProfiles = await naemonProfileModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            // NOTE we will move to use this when the nInstanceTag are fetched correctlly 
+            var capMap = Helper.CIData.BuildCapMap(nInstancesTag, nProfiles, naemonInstances, cfg!.NaemonsConfigGenerateprofiles);
+
+            #endregion
+
             /* test compatibility of naemons and add NAEMONSAVAIL */
+            var naemonIds = naemonInstances.Select(el => el.Value.Id).ToList();
             Helper.CIData.AddNaemonsAvailField(ciData, naemonIds, capMap);
 
             var configObjs = new List<ConfigObj>();
@@ -419,7 +490,7 @@ namespace OKPluginNaemonConfig
 
             var timeperiods = await timePeriodModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
             Helper.ConfigObjects.GetFromTimeperiods(configObjs, timeperiods);
-            
+
             #endregion
 
 
@@ -452,33 +523,33 @@ namespace OKPluginNaemonConfig
 
             // getNaemonConfigObjectsFromLegacyProfiles_modules
 
-            var serviceLayers = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.ServiceLayersFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
-            
-            var layersById = new Dictionary<string, MergedCI>();
-            foreach (var ciItem in serviceLayers)
-            {
-                var layerId = ciItem.MergedAttributes["naemon_service_layer.id"]!.Attribute.Value.Value2String();
+            //var serviceLayers = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.ServiceLayersFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
 
-                layersById.Add(layerId, ciItem);
-            }
+            //var layersById = new Dictionary<string, MergedCI>();
+            //foreach (var ciItem in serviceLayers)
+            //{
+            //    var layerId = ciItem.MergedAttributes["naemon_service_layer.id"]!.Attribute.Value.Value2String();
+
+            //    layersById.Add(layerId, ciItem);
+            //}
 
 
             // getCommands -> We need only command ids here
 
-            var commands = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.CommandsFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
-            
-            var commandsById = new Dictionary<string, MergedCI>();
-            foreach (var ciItem in commands)
-            {
-                var commandId = ciItem.MergedAttributes["naemon_command.id"]!.Attribute.Value.Value2String();
+            //var commands = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.CommandsFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
 
-                commandsById.Add(commandId, ciItem);
-            }
+            //var commandsById = new Dictionary<string, MergedCI>();
+            //foreach (var ciItem in commands)
+            //{
+            //    var commandId = ciItem.MergedAttributes["naemon_command.id"]!.Attribute.Value.Value2String();
+
+            //    commandsById.Add(commandId, ciItem);
+            //}
 
             // getTimeperiods -> We need a list with timeperiod ids
 
             //var timeperiodsById = new Dictionary<string, MergedCI>();
-            var timeperiodsById = timeperiods;
+            //var timeperiodsById = timeperiods;
 
 
             //foreach (var ciItem in timeperiods)
@@ -491,334 +562,333 @@ namespace OKPluginNaemonConfig
             // prepare services
             // get SERVICES_STATIC
 
-            var servicesStatic = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.ServicesStaticFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
-            var servicesStaticById = new Dictionary<string, MergedCI>();
-            var servicesByModulesId = new Dictionary<string, List<MergedCI>>();
-            foreach (var ciItem in servicesStatic)
-            {
-                var id = ciItem.MergedAttributes["naemon_services_static.id"]!.Attribute.Value.Value2String();
+            //var servicesStatic = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.ServicesStaticFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
+            //var servicesStaticById = new Dictionary<string, MergedCI>();
+            //var servicesByModulesId = new Dictionary<string, List<MergedCI>>();
+            //foreach (var ciItem in servicesStatic)
+            //{
+            //    var id = ciItem.MergedAttributes["naemon_services_static.id"]!.Attribute.Value.Value2String();
 
-                servicesStaticById.Add(id, ciItem);
+            //    servicesStaticById.Add(id, ciItem);
 
-                var module = ciItem.MergedAttributes["naemon_services_static.module"]!.Attribute.Value.Value2String();
+            //    var module = ciItem.MergedAttributes["naemon_services_static.module"]!.Attribute.Value.Value2String();
 
-                if (servicesByModulesId.ContainsKey(module))
-                {
-                    servicesByModulesId[module].Add(ciItem);
-                }
-                else
-                {
-                    servicesByModulesId[module] = new List<MergedCI> { ciItem };
-                }
-            }
+            //    if (servicesByModulesId.ContainsKey(module))
+            //    {
+            //        servicesByModulesId[module].Add(ciItem);
+            //    }
+            //    else
+            //    {
+            //        servicesByModulesId[module] = new List<MergedCI> { ciItem };
+            //    }
+            //}
 
-            var modules = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonModulesFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
+            //var modules = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonModulesFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
 
-            foreach (var ciItem in modules)
-            {
-                var moduleName = ciItem.MergedAttributes["naemon_module.name"]!.Attribute.Value.Value2String().ToLower();
+            //foreach (var ciItem in modules)
+            //{
+            //    var moduleName = ciItem.MergedAttributes["naemon_module.name"]!.Attribute.Value.Value2String().ToLower();
 
-                configObjs.Add(new ConfigObj
-                {
-                    Type = "host",
-                    Attributes = new Dictionary<string, string>
-                    {
-                        ["name"] = "mod-" + moduleName,
-                        ["hostgroups"] = "+" + moduleName,
-                    },
-                });
+            //    configObjs.Add(new ConfigObj
+            //    {
+            //        Type = "host",
+            //        Attributes = new Dictionary<string, string>
+            //        {
+            //            ["name"] = "mod-" + moduleName,
+            //            ["hostgroups"] = "+" + moduleName,
+            //        },
+            //    });
 
-                configObjs.Add(new ConfigObj
-                {
-                    Type = "hostgroup",
-                    Attributes = new Dictionary<string, string>
-                    {
-                        ["hostgroup_name"] = moduleName,
-                        ["alias"] = moduleName,
-                    },
-                });
+            //    configObjs.Add(new ConfigObj
+            //    {
+            //        Type = "hostgroup",
+            //        Attributes = new Dictionary<string, string>
+            //        {
+            //            ["hostgroup_name"] = moduleName,
+            //            ["alias"] = moduleName,
+            //        },
+            //    });
 
-                var moduleId = ciItem.MergedAttributes["naemon_module.id"]!.Attribute.Value.Value2String().ToLower();
+            //    var moduleId = ciItem.MergedAttributes["naemon_module.id"]!.Attribute.Value.Value2String().ToLower();
 
-                if (servicesByModulesId.ContainsKey(moduleId))
-                {
-                    foreach (var service in servicesByModulesId[moduleId])
-                    {
-                        // goto next if service is disabled
-                        var disabled = (service.MergedAttributes["naemon_services_static.disabled"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        if (disabled > 0)
-                        {
-                            continue;
-                        }
+            //    if (servicesByModulesId.ContainsKey(moduleId))
+            //    {
+            //        foreach (var service in servicesByModulesId[moduleId])
+            //        {
+            //            // goto next if service is disabled
+            //            var disabled = (service.MergedAttributes["naemon_services_static.disabled"].Attribute.Value as AttributeScalarValueInteger)?.Value;
+            //            if (disabled > 0)
+            //            {
+            //                continue;
+            //            }
 
-                        var attributes = new Dictionary<string, string>();
-                        var vars = new Dictionary<string, string>();
+            //            var attributes = new Dictionary<string, string>();
+            //            var vars = new Dictionary<string, string>();
 
-                        var serviceTemplates = new List<string> { "tsa-generic-service" };
+            //            var serviceTemplates = new List<string> { "tsa-generic-service" };
 
-                        var perf = (service.MergedAttributes["naemon_services_static.perf"].Attribute.Value as AttributeScalarValueInteger)?.Value;
+            //            var perf = (service.MergedAttributes["naemon_services_static.perf"].Attribute.Value as AttributeScalarValueInteger)?.Value;
 
-                        if (perf == 1)
-                        {
-                            serviceTemplates.Add("service-pnp");
-                        }
+            //            if (perf == 1)
+            //            {
+            //                serviceTemplates.Add("service-pnp");
+            //            }
 
-                        attributes["use"] = string.Join(",", serviceTemplates);
-                        attributes["hostgroup_name"] = moduleName;
+            //            attributes["use"] = string.Join(",", serviceTemplates);
+            //            attributes["hostgroup_name"] = moduleName;
 
-                        // $layersById[$service['LAYER']]['NUM'] . ' ' . $service['SERVICENAME'];
+            //            // $layersById[$service['LAYER']]['NUM'] . ' ' . $service['SERVICENAME'];
 
-                        var svcLayer = (service.MergedAttributes["naemon_services_static.layer"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        var layerNum = (layersById[svcLayer.ToString()].MergedAttributes["naemon_service_layer.num"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        var svcName = (service.MergedAttributes["naemon_services_static.servicename"].Attribute.Value as AttributeScalarValueText)?.Value;
-                        attributes["service_description"] = layerNum + " " + svcName;
+            //            var svcLayer = (service.MergedAttributes["naemon_services_static.layer"].Attribute.Value as AttributeScalarValueInteger)?.Value;
+            //            var layerNum = (layersById[svcLayer.ToString()].MergedAttributes["naemon_service_layer.num"].Attribute.Value as AttributeScalarValueInteger)?.Value;
+            //            var svcName = (service.MergedAttributes["naemon_services_static.servicename"].Attribute.Value as AttributeScalarValueText)?.Value;
+            //            attributes["service_description"] = layerNum + " " + svcName;
 
-                        var svcCheckCommand = (service.MergedAttributes["naemon_services_static.checkcommand"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        var commandName = (commandsById[svcCheckCommand.ToString()].MergedAttributes["naemon_command.name"].Attribute.Value as AttributeScalarValueText)?.Value;
-                        var commandParts = new List<string> { commandName };
+            //            var svcCheckCommand = (service.MergedAttributes["naemon_services_static.checkcommand"].Attribute.Value as AttributeScalarValueInteger)?.Value;
+            //            var commandName = (commandsById[svcCheckCommand.ToString()].MergedAttributes["naemon_command.name"].Attribute.Value as AttributeScalarValueText)?.Value;
+            //            var commandParts = new List<string> { commandName };
 
-                        for (int i = 1; i <= 8; i++)
-                        {
-                            var k = $"naemon_services_static.arg{i}";
+            //            for (int i = 1; i <= 8; i++)
+            //            {
+            //                var k = $"naemon_services_static.arg{i}";
 
-                            if (service.MergedAttributes.TryGetValue(k, out MergedCIAttribute? attr))
-                            {
-                                var arg = (attr.Attribute.Value as AttributeScalarValueText)?.Value;
+            //                if (service.MergedAttributes.TryGetValue(k, out MergedCIAttribute? attr))
+            //                {
+            //                    var arg = (attr.Attribute.Value as AttributeScalarValueText)?.Value;
 
-                                if (arg.Length > 0)
-                                {
-                                    if (arg.Substring(0, 1) == "$")
-                                    {
-                                        arg = "$HOST" + arg.Substring(1, arg.Length - 1) + "$";
-                                    }
+            //                    if (arg.Length > 0)
+            //                    {
+            //                        if (arg.Substring(0, 1) == "$")
+            //                        {
+            //                            arg = "$HOST" + arg.Substring(1, arg.Length - 1) + "$";
+            //                        }
 
-                                    commandParts.Add(arg);
-                                }
-                            }
-                        }
+            //                        commandParts.Add(arg);
+            //                    }
+            //                }
+            //            }
 
-                        attributes["check_command"] = string.Join("!", commandParts);
+            //            attributes["check_command"] = string.Join("!", commandParts);
 
-                        /* add other attributes */
+            //            /* add other attributes */
 
-                        var freshnesThreshold = GetAttributeValueInt("naemon_services_static.freshness_threshold", service.MergedAttributes);
+            //            var freshnesThreshold = GetAttributeValueInt("naemon_services_static.freshness_threshold", service.MergedAttributes);
 
-                        if (freshnesThreshold != null)
-                        {
-                            attributes["check_freshness"] = "1";
-                            attributes["freshness_threshold"] = freshnesThreshold.ToString();
-                        }
-
-
-                        var passive = GetAttributeValueInt("naemon_services_static.passive", service.MergedAttributes);
-                        if (passive != null && passive == 1)
-                        {
-                            attributes["passive_checks_enabled"] = "1";
-                            attributes["active_checks_enabled"] = "0";
-                        }
-
-                        var checkInterval = GetAttributeValueInt("naemon_services_static.check_interval", service.MergedAttributes);
-                        if (checkInterval != null && checkInterval != 0)
-                        {
-                            attributes["active_checks_enabled"] = checkInterval.ToString();
-                        }
-
-                        var maxCheckAttempts = GetAttributeValueInt("naemon_services_static.max_check_attempts", service.MergedAttributes);
-                        if (maxCheckAttempts != null && maxCheckAttempts != 0)
-                        {
-                            attributes["max_check_attempts"] = maxCheckAttempts.ToString();
-                        }
-
-                        var retryInterval = GetAttributeValueInt("naemon_services_static.retry_interval", service.MergedAttributes);
-                        if (retryInterval != null && retryInterval != 0)
-                        {
-                            attributes["retry_interval"] = retryInterval.ToString();
-                        }
-
-                        //var timeperiodCheck = GetAttributeValueInt("naemon_services_static.timeperiod_check", service.MergedAttributes);
-                        //if (timeperiodCheck != null && timeperiodsById.ContainsKey(timeperiodCheck.ToString()))
-                        //{
-                        //    var tName = (timeperiodsById[timeperiodCheck.ToString()].MergedAttributes["naemon_timeperiod.name"].Attribute.Value as AttributeScalarValueText)?.Value;
-
-                        //    attributes["check_period"] = tName;
-                        //}
-
-                        //var timeperiodNotify = GetAttributeValueInt("naemon_services_static.timeperiod_notify", service.MergedAttributes);
-                        //if (timeperiodNotify != null && timeperiodsById.ContainsKey(timeperiodNotify.ToString()))
-                        //{
-                        //    var tName = (timeperiodsById[timeperiodNotify.ToString()].MergedAttributes["naemon_timeperiod.name"].Attribute.Value as AttributeScalarValueText)?.Value;
-
-                        //    attributes["notification_period"] = tName;
-                        //}
-
-                        /* fill variables */
-                        var target = (service.MergedAttributes["naemon_services_static.target"].Attribute.Value as AttributeScalarValueText)?.Value;
-                        vars["Tickettarget"] = target;
-
-                        var checkPrio = (service.MergedAttributes["naemon_services_static.checkprio"].Attribute.Value as AttributeScalarValueText)?.Value;
-                        vars["Fehlerart"] = checkPrio;
-
-                        /* customer cockpit vars */
-                        var visibility = GetAttributeValueInt("naemon_services_static.monview_visibility", service.MergedAttributes);
-                        if (visibility != null)
-                        {
-                            vars["Visibility"] = visibility.ToString();
-                        }
-
-                        var kpiType = GetAttributeValueInt("naemon_services_static.kpi_avail", service.MergedAttributes);
-                        if (kpiType != null)
-                        {
-                            vars["kpi_type"] = kpiType.ToString();
-                        }
-
-                        var metricName = (service.MergedAttributes["naemon_services_static.metric_name"].Attribute.Value as AttributeScalarValueText)?.Value;
-                        vars["metric_name"] = metricName;
-
-                        var metricType = (service.MergedAttributes["naemon_services_static.metric_type"].Attribute.Value as AttributeScalarValueText)?.Value;
-                        vars["metric_type"] = metricType;
-
-                        var metricMin = GetAttributeValueInt("naemon_services_static.metric_min", service.MergedAttributes);
-                        if (metricMin != null)
-                        {
-                            vars["metric_min"] = metricMin.ToString();
-                        }
-
-                        var metricMax = GetAttributeValueInt("naemon_services_static.metric_max", service.MergedAttributes);
-                        if (metricMax != null)
-                        {
-                            vars["metric_max"] = metricMax.ToString();
-
-                        }
-
-                        var metricPerfkey = (service.MergedAttributes["naemon_services_static.metric_perfkey"].Attribute.Value as AttributeScalarValueText)?.Value;
-                        vars["metric_perfkey"] = metricPerfkey;
-
-                        var metricPerfunit = (service.MergedAttributes["naemon_services_static.metric_perfunit"].Attribute.Value as AttributeScalarValueText)?.Value;
-                        vars["metric_perfunit"] = metricPerfunit;
-
-                        var monviewWarn = (service.MergedAttributes["naemon_services_static.monview_warn"].Attribute.Value as AttributeScalarValueText)?.Value;
-                        vars["monview_warn"] = monviewWarn;
-
-                        var monviewCrit = (service.MergedAttributes["naemon_services_static.monview_crit"].Attribute.Value as AttributeScalarValueText)?.Value;
-                        vars["monview_crit"] = monviewCrit;
-
-                        /* add variables to attributes */
-                        foreach (var var in vars)
-                        {
-                            var (key, value) = var;
-                            var k = "_" + key.ToUpper();
-                            attributes[k] = value ?? "";
-                        }
-
-                        /* push service to config */
-                        configObjs.Add(new ConfigObj { Type = "service", Attributes = attributes });
-
-                        /* add servicedependency objects */
-                        var mastersvcCheck = GetAttributeValueInt("naemon_services_static.mastersvc_check", service.MergedAttributes);
-                        if (mastersvcCheck != null && servicesStaticById.ContainsKey(mastersvcCheck.ToString()))
-                        {
-                            var masterService = servicesStaticById[mastersvcCheck.ToString()];
-                            var masterSvcName = (masterService.MergedAttributes["naemon_services_static.servicename"].Attribute.Value as AttributeScalarValueText)?.Value;
-
-                            configObjs.Add(new ConfigObj
-                            {
-                                Type = "servicedependency",
-                                Attributes = new Dictionary<string, string>
-                                {
-                                    ["hostgroup_name"] = moduleName,
-                                    ["service_description"] = layerNum + " " + masterSvcName,
-                                    ["dependent_service_description"] = layerNum + " " + svcName,
-                                    ["inherits_parent"] = "1",
-                                    ["execution_failure_criteria"] = "w,u,c",
-                                }
-                            });
-                        }
-
-                        var mastersvcNotify = GetAttributeValueInt("naemon_services_static.mastersvc_notify", service.MergedAttributes);
-                        if (mastersvcNotify != null && servicesStaticById.ContainsKey(mastersvcNotify.ToString()))
-                        {
-                            var masterService = servicesStaticById[mastersvcNotify.ToString()];
-                            var masterSvcName = (masterService.MergedAttributes["naemon_services_static.servicename"].Attribute.Value as AttributeScalarValueText)?.Value;
-
-                            configObjs.Add(new ConfigObj
-                            {
-                                Type = "servicedependency",
-                                Attributes = new Dictionary<string, string>
-                                {
-                                    ["hostgroup_name"] = moduleName,
-                                    ["service_description"] = layerNum + " " + masterSvcName,
-                                    ["dependent_service_description"] = layerNum + " " + svcName,
-                                    ["inherits_parent"] = "1",
-                                    ["execution_failure_criteria"] = "w,u,c",
-                                }
-                            });
-                        }
-                    }
-                }
+            //            if (freshnesThreshold != null)
+            //            {
+            //                attributes["check_freshness"] = "1";
+            //                attributes["freshness_threshold"] = freshnesThreshold.ToString();
+            //            }
 
 
+            //            var passive = GetAttributeValueInt("naemon_services_static.passive", service.MergedAttributes);
+            //            if (passive != null && passive == 1)
+            //            {
+            //                attributes["passive_checks_enabled"] = "1";
+            //                attributes["active_checks_enabled"] = "0";
+            //            }
 
-            }
+            //            var checkInterval = GetAttributeValueInt("naemon_services_static.check_interval", service.MergedAttributes);
+            //            if (checkInterval != null && checkInterval != 0)
+            //            {
+            //                attributes["active_checks_enabled"] = checkInterval.ToString();
+            //            }
+
+            //            var maxCheckAttempts = GetAttributeValueInt("naemon_services_static.max_check_attempts", service.MergedAttributes);
+            //            if (maxCheckAttempts != null && maxCheckAttempts != 0)
+            //            {
+            //                attributes["max_check_attempts"] = maxCheckAttempts.ToString();
+            //            }
+
+            //            var retryInterval = GetAttributeValueInt("naemon_services_static.retry_interval", service.MergedAttributes);
+            //            if (retryInterval != null && retryInterval != 0)
+            //            {
+            //                attributes["retry_interval"] = retryInterval.ToString();
+            //            }
+
+            //            //var timeperiodCheck = GetAttributeValueInt("naemon_services_static.timeperiod_check", service.MergedAttributes);
+            //            //if (timeperiodCheck != null && timeperiodsById.ContainsKey(timeperiodCheck.ToString()))
+            //            //{
+            //            //    var tName = (timeperiodsById[timeperiodCheck.ToString()].MergedAttributes["naemon_timeperiod.name"].Attribute.Value as AttributeScalarValueText)?.Value;
+
+            //            //    attributes["check_period"] = tName;
+            //            //}
+
+            //            //var timeperiodNotify = GetAttributeValueInt("naemon_services_static.timeperiod_notify", service.MergedAttributes);
+            //            //if (timeperiodNotify != null && timeperiodsById.ContainsKey(timeperiodNotify.ToString()))
+            //            //{
+            //            //    var tName = (timeperiodsById[timeperiodNotify.ToString()].MergedAttributes["naemon_timeperiod.name"].Attribute.Value as AttributeScalarValueText)?.Value;
+
+            //            //    attributes["notification_period"] = tName;
+            //            //}
+
+            //            /* fill variables */
+            //            var target = (service.MergedAttributes["naemon_services_static.target"].Attribute.Value as AttributeScalarValueText)?.Value;
+            //            vars["Tickettarget"] = target;
+
+            //            var checkPrio = (service.MergedAttributes["naemon_services_static.checkprio"].Attribute.Value as AttributeScalarValueText)?.Value;
+            //            vars["Fehlerart"] = checkPrio;
+
+            //            /* customer cockpit vars */
+            //            var visibility = GetAttributeValueInt("naemon_services_static.monview_visibility", service.MergedAttributes);
+            //            if (visibility != null)
+            //            {
+            //                vars["Visibility"] = visibility.ToString();
+            //            }
+
+            //            var kpiType = GetAttributeValueInt("naemon_services_static.kpi_avail", service.MergedAttributes);
+            //            if (kpiType != null)
+            //            {
+            //                vars["kpi_type"] = kpiType.ToString();
+            //            }
+
+            //            var metricName = (service.MergedAttributes["naemon_services_static.metric_name"].Attribute.Value as AttributeScalarValueText)?.Value;
+            //            vars["metric_name"] = metricName;
+
+            //            var metricType = (service.MergedAttributes["naemon_services_static.metric_type"].Attribute.Value as AttributeScalarValueText)?.Value;
+            //            vars["metric_type"] = metricType;
+
+            //            var metricMin = GetAttributeValueInt("naemon_services_static.metric_min", service.MergedAttributes);
+            //            if (metricMin != null)
+            //            {
+            //                vars["metric_min"] = metricMin.ToString();
+            //            }
+
+            //            var metricMax = GetAttributeValueInt("naemon_services_static.metric_max", service.MergedAttributes);
+            //            if (metricMax != null)
+            //            {
+            //                vars["metric_max"] = metricMax.ToString();
+
+            //            }
+
+            //            var metricPerfkey = (service.MergedAttributes["naemon_services_static.metric_perfkey"].Attribute.Value as AttributeScalarValueText)?.Value;
+            //            vars["metric_perfkey"] = metricPerfkey;
+
+            //            var metricPerfunit = (service.MergedAttributes["naemon_services_static.metric_perfunit"].Attribute.Value as AttributeScalarValueText)?.Value;
+            //            vars["metric_perfunit"] = metricPerfunit;
+
+            //            var monviewWarn = (service.MergedAttributes["naemon_services_static.monview_warn"].Attribute.Value as AttributeScalarValueText)?.Value;
+            //            vars["monview_warn"] = monviewWarn;
+
+            //            var monviewCrit = (service.MergedAttributes["naemon_services_static.monview_crit"].Attribute.Value as AttributeScalarValueText)?.Value;
+            //            vars["monview_crit"] = monviewCrit;
+
+            //            /* add variables to attributes */
+            //            foreach (var var in vars)
+            //            {
+            //                var (key, value) = var;
+            //                var k = "_" + key.ToUpper();
+            //                attributes[k] = value ?? "";
+            //            }
+
+            //            /* push service to config */
+            //            configObjs.Add(new ConfigObj { Type = "service", Attributes = attributes });
+
+            //            /* add servicedependency objects */
+            //            var mastersvcCheck = GetAttributeValueInt("naemon_services_static.mastersvc_check", service.MergedAttributes);
+            //            if (mastersvcCheck != null && servicesStaticById.ContainsKey(mastersvcCheck.ToString()))
+            //            {
+            //                var masterService = servicesStaticById[mastersvcCheck.ToString()];
+            //                var masterSvcName = (masterService.MergedAttributes["naemon_services_static.servicename"].Attribute.Value as AttributeScalarValueText)?.Value;
+
+            //                configObjs.Add(new ConfigObj
+            //                {
+            //                    Type = "servicedependency",
+            //                    Attributes = new Dictionary<string, string>
+            //                    {
+            //                        ["hostgroup_name"] = moduleName,
+            //                        ["service_description"] = layerNum + " " + masterSvcName,
+            //                        ["dependent_service_description"] = layerNum + " " + svcName,
+            //                        ["inherits_parent"] = "1",
+            //                        ["execution_failure_criteria"] = "w,u,c",
+            //                    }
+            //                });
+            //            }
+
+            //            var mastersvcNotify = GetAttributeValueInt("naemon_services_static.mastersvc_notify", service.MergedAttributes);
+            //            if (mastersvcNotify != null && servicesStaticById.ContainsKey(mastersvcNotify.ToString()))
+            //            {
+            //                var masterService = servicesStaticById[mastersvcNotify.ToString()];
+            //                var masterSvcName = (masterService.MergedAttributes["naemon_services_static.servicename"].Attribute.Value as AttributeScalarValueText)?.Value;
+
+            //                configObjs.Add(new ConfigObj
+            //                {
+            //                    Type = "servicedependency",
+            //                    Attributes = new Dictionary<string, string>
+            //                    {
+            //                        ["hostgroup_name"] = moduleName,
+            //                        ["service_description"] = layerNum + " " + masterSvcName,
+            //                        ["dependent_service_description"] = layerNum + " " + svcName,
+            //                        ["inherits_parent"] = "1",
+            //                        ["execution_failure_criteria"] = "w,u,c",
+            //                    }
+            //                });
+            //            }
+            //        }
+            //    }
+
+
+
+            //}
 
 
             // We can use this part only when optional attributes are selected correctly
-            var serviceLayers1 = await serviceLayerModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
-            var commands1 = await commandModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
-            var servicesStatic1 = await serviceStaticModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
-            var modules1 = await moduleModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            var serviceLayers = await serviceLayerModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            var commands = await commandModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            var servicesStatic = await serviceStaticModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            var modules = await moduleModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
 
-            Helper.ConfigObjects.GetNaemonConfigObjectsFromLegacyProfilesModules(configObjs, serviceLayers1, commands1, timeperiods, servicesStatic1, modules1);
+            Helper.ConfigObjects.GetNaemonConfigObjectsFromLegacyProfilesModules(configObjs, serviceLayers, commands, timeperiods, servicesStatic, modules);
 
 
 
 
             // getNaemonConfigObjectsFromLegacyProfiles_commands
-            //foreach (var command in commands)
-            //{
-            //    var commandName = (command.MergedAttributes["naemon_command.name"].Attribute.Value as AttributeScalarValueText)?.Value;
-            //    var commandLine = (command.MergedAttributes["naemon_command.exec"].Attribute.Value as AttributeScalarValueText)?.Value;
-
-            //    configObjs.Add(new ConfigObj
-            //    {
-            //        Type = "command",
-            //        Attributes = new Dictionary<string, string>
-            //        {
-            //            ["command_name"] = commandName,
-            //            ["command_line"] = commandLine,
-            //        },
-            //    });
-            //}
-
-            Helper.ConfigObjects.GetNaemonConfigObjectsFromLegacyProfilesCommands(configObjs, commands1);
+            Helper.ConfigObjects.GetNaemonConfigObjectsFromLegacyProfilesCommands(configObjs, commands);
 
             #endregion
 
             //TODO getNaemonConfigObjectsFromLegacyProfiles_hostcommands
 
             #region get cis for naemons
+
+            // NOTE remove the commented part below
+            //foreach (var item in naemonInstances)
+            //{
+
+            //    var s = item.MergedAttributes.TryGetValue("naemon_instance.id", out MergedCIAttribute? instanceId);
+
+            //    if (!s)
+            //    {
+            //        // log error here
+            //    }
+
+            //    var id = instanceId!.Attribute.Value.Value2String();
+
+            //    // get only configuration items for this naemon
+            //    //var thisNaemonCis = new List<dynamic>();
+
+            //    naemonsCis.Add(id, new List<ConfigurationItem>());
+            //    foreach (var ciItem in ciData)
+            //    {
+            //        if (ciItem.NaemonsAvail.Contains(id))
+            //        {
+            //            //thisNaemonCis.Add(ciItem);
+            //            naemonsCis[id].Add(ciItem);
+            //        }
+            //    }
+            //}
+
+            // NEW 
             var naemonsCis = new Dictionary<string, List<ConfigurationItem>>();
             foreach (var item in naemonInstances)
             {
-
-                var s = item.MergedAttributes.TryGetValue("naemon_instance.id", out MergedCIAttribute? instanceId);
-
-                if (!s)
-                {
-                    // log error here
-                }
-
-                var id = instanceId!.Attribute.Value.Value2String();
-
-                // get only configuration items for this naemon
-                //var thisNaemonCis = new List<dynamic>();
-
-                naemonsCis.Add(id, new List<ConfigurationItem>());
+                naemonsCis.Add(item.Value.Id, new List<ConfigurationItem>());
                 foreach (var ciItem in ciData)
                 {
-                    if (ciItem.NaemonsAvail.Contains(id))
+                    if (ciItem.NaemonsAvail.Contains(item.Value.Id))
                     {
-                        //thisNaemonCis.Add(ciItem);
-                        naemonsCis[id].Add(ciItem);
+                        naemonsCis[item.Value.Id].Add(ciItem);
                     }
                 }
             }
@@ -902,19 +972,6 @@ namespace OKPluginNaemonConfig
             return true;
         }
 
-        // NOTE this will be removed
-        private long? GetAttributeValueInt(string key, IDictionary<string, MergedCIAttribute> attributes)
-        {
-            var success = attributes.TryGetValue(key, out MergedCIAttribute? attributeValue);
-
-            if (!success)
-            {
-                return null;
-            }
-
-            return (attributeValue.Attribute.Value as AttributeScalarValueInteger).Value;
-        }
-
         public class ConfigObj
         {
             [JsonProperty("type")]
@@ -941,8 +998,9 @@ namespace OKPluginNaemonConfig
                 Environment = "";
                 Profile = "";
                 Address = "";
+                EffectiveHostCI = "";
                 Interfaces = new Interfaces();
-                Relations = new Dictionary<string, Dictionary<string, string>>();
+                Relations = new Dictionary<string, KeyValuePair<string, string>>();
                 Categories = new Dictionary<string, List<Category>>();
                 Actions = new Actions();
                 Categories = new Dictionary<string, List<Category>>();
@@ -957,13 +1015,15 @@ namespace OKPluginNaemonConfig
             public string Environment { get; set; }
             public string Profile { get; set; }
             public string Address { get; set; }
+            public int Port { get; set; }
             public List<string> ProfileOrg { get; set; }
             public List<string> NaemonsAvail { get; set; }
             public Dictionary<string, List<Category>> Categories { get; set; }
             public List<string> Tags { get; set; }
             public Actions Actions { get; set; }
             public Interfaces Interfaces { get; set; }
-            public Dictionary<string, Dictionary<string, string>> Relations { get; set; }
+            public Dictionary<string, KeyValuePair<string, string>> Relations { get; set; }
+            public string EffectiveHostCI { get; set; }
         }
 
         public class Category

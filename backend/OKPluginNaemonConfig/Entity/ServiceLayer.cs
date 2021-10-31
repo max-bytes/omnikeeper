@@ -8,8 +8,7 @@ namespace OKPluginNaemonConfig.Entity
         [TraitAttribute("id", "naemon_service_layer.id")]
         public readonly long Id;
 
-        [TraitAttribute("name", "naemon_service_layer.name")]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
+        [TraitAttribute("name", "naemon_service_layer.name", optional: true)]
         [TraitEntityID]
         public readonly string Name;
 
