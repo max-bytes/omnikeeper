@@ -96,20 +96,17 @@ namespace OKPluginNaemonConfig
             var layersetMonman = await layerModel.BuildLayerSet(new[] { cfg!.MonmanLayerId }, trans);
             var layersetNaemonConfig = await layerModel.BuildLayerSet(new[] { cfg!.NaemonConfigLayerId }, trans);
 
-            //var allCIsCMDB = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetCMDB, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
-            //var allCIsMonman = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetMonman, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
-
-
             // load all naemons
             var naemonInstances = await naemonInstanceModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
-            //var naemonIds = naemonInstances.Select(el => el.Value.Id).ToList();
+            logger.LogInformation("Loaded all naemon instances.");
 
 
+            logger.LogInformation("Started creating configuration items.");
             // a list with all CI from database
             var ciData = new List<ConfigurationItem>();
 
             var hosts = await hostModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
-
+            logger.LogInformation("Loaded all hosts.");
             foreach (var ciItem in hosts)
             {
                 ciData.Add(new ConfigurationItem
@@ -120,11 +117,17 @@ namespace OKPluginNaemonConfig
                     Status = ciItem.Value.Status,
                     Address = "", // This should be taken from HMONIPADDRESS field
                     Port = 0, // This should be taken from HMONIPPORT field
+                    Cust = "", // Add customer for this ci,
+                    Criticality = "", // Add Criticality for this ci,
+                    SuppOS = "", // Add SuppOS for this ci,
+                    SuppApp = "", // Add SuppApp for this ci,
+
                 });
             }
 
             // get services
             var services = await serviceModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
+            logger.LogInformation("Loaded all services.");
 
             foreach (var ciItem in services)
             {
@@ -137,6 +140,11 @@ namespace OKPluginNaemonConfig
                     Environment = ciItem.Value.Environment,
                     Address = "", // This should be taken from SVCMONIPADDRESS field
                     Port = 0, // This should be taken from SVCMONIPPORT field
+                    Cust = "", // Add customer for this ci
+                    Criticality = "", // Add Criticality for this ci,
+                    SuppOS = "", // Add SuppOS for this ci,
+                    SuppApp = "", // Add SuppApp for this ci,
+
                 });
             }
 
@@ -284,14 +292,19 @@ namespace OKPluginNaemonConfig
 
             #region process core data
 
+            logger.LogInformation("Started processing core data.");
+
             // UpdateNormalizedCiDataFieldProfile
             Helper.CIData.UpdateProfileField(ciData, cfg!.CMDBMonprofilePrefix);
+            logger.LogInformation("Finished updating profile field => UpdateNormalizedCiDataFieldProfile.");
+
 
             // updateNormalizedCiDataFieldAddress
             // NOTE: this part is done directly when selecting hosts and serices
 
             // updateNormalizedCiData_addGenericCmdbCapTags
             Helper.CIData.AddGenericCmdbCapTags(ciData);
+            logger.LogInformation("Finished adding cap tags => updateNormalizedCiData_addGenericCmdbCapTags.");
 
             // updateNormalizedCiData_addRelationData
             var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runs_on"), layersetCMDB, trans, changesetProxy.TimeThreshold);
@@ -369,102 +382,53 @@ namespace OKPluginNaemonConfig
                 }
 
             }
+
+            logger.LogInformation("Finished adding relation data => updateNormalizedCiData_addRelationData.");
+
+
+            /* update data, mainly vars stuff */
+            // updateNormalizedCiData_preProcessVars
+
+            foreach (var ciItem in ciData)
+            {
+                // NOTE should we update resultRef[$id]['VARS']['ALERTS'] = 'OFF' ?
+                if (!ciItem.Vars.ContainsKey("HASNRPE"))
+                {
+                    ciItem.Vars.Add("HASNRPE", "YES");
+                }
+
+                if (!ciItem.Vars.ContainsKey("DYNAMICADD"))
+                {
+                    ciItem.Vars.Add("DYNAMICADD", "NO");
+                }
+
+                if (!ciItem.Vars.ContainsKey("DYNAMICMODULES"))
+                {
+                    ciItem.Vars.Add("DYNAMICMODULES", "YES");
+                }
+            }
+
+            logger.LogInformation("Finished updating pre process vars => updateNormalizedCiData_preProcessVars.");
+
+            // updateNormalizedCiData_varsFromDatabase
+
+
+            // updateNormalizedCiData_varsByExpression
+
+            // run at last or at least after vars engine to ensure overwriting of internal vars
+            // updateNormalizedCiData_postProcessVars
+
+            Helper.CIData.UpdateNormalizedCiDataPostProcessVars(ciData);
+            logger.LogInformation("Finished updating post process cars => updateNormalizedCiData_postProcessVars.");
+
+            // updateNormalizedCiData_updateLocationField
+
             #endregion
 
 
             #region build CapabilityMap
             //getCapabilityMap - NaemonInstancesTagsFlattened
-            //var naemonInstancesTags = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstancesTagsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
-            //var capMap = new Dictionary<string, List<string>>();
-
-            //foreach (var ciItem in naemonInstancesTags)
-            //{
-            //    var s = ciItem.MergedAttributes.TryGetValue("naemon_instance_tag.tag", out MergedCIAttribute? instanceTagAttribute);
-
-            //    if (!s)
-            //    {
-            //        continue;
-            //    }
-
-            //    var tag = instanceTagAttribute!.Attribute.Value.Value2String();
-
-            //    if (tag.StartsWith("cap_"))
-            //    {
-            //        var ss = ciItem.MergedAttributes.TryGetValue("naemon_instance_tag.id", out MergedCIAttribute? instanceIdAttribute);
-            //        if (!ss)
-            //        {
-            //            continue;
-            //        }
-
-            //        if (capMap.ContainsKey(tag))
-            //        {
-            //            capMap[tag].Add(instanceIdAttribute!.Attribute.Value.Value2String());
-            //        }
-            //        else
-            //        {
-            //            capMap.Add(tag, new List<string> { instanceIdAttribute!.Attribute.Value.Value2String() });
-            //        }
-            //    }
-            //}
-
-            //var naemonProfiles = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonProfilesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-
-            //var profileFromDbNaemons = new List<string>();
-
-            //foreach (var ciItem in naemonInstances)
-            //{
-            //    // we need to check here if isNaemonProfileFromDbEnabled 
-            //    var s = ciItem.MergedAttributes.TryGetValue("naemon_instance.name", out MergedCIAttribute? instanceNameAttribute);
-
-            //    if (!s)
-            //    {
-            //        continue;
-            //    }
-
-            //    var instanceName = instanceNameAttribute!.Attribute.Value.Value2String();
-
-            //    if (cfg!.NaemonsConfigGenerateprofiles.Contains(instanceName))
-            //    {
-            //        // monman-instance.id
-            //        var ss = ciItem.MergedAttributes.TryGetValue("naemon_instance.id", out MergedCIAttribute? instanceIdAttribute);
-
-            //        if (!ss)
-            //        {
-            //            continue;
-            //        }
-
-            //        profileFromDbNaemons.Add(instanceIdAttribute!.Attribute.Value.Value2String());
-            //    }
-            //}
-
-            /* extend capMap */
-
-            //if (profileFromDbNaemons.Count > 0)
-            //{
-            //    foreach (var ciItem in naemonProfiles)
-            //    {
-            //        var s = ciItem.MergedAttributes.TryGetValue("naemon_profile.name", out MergedCIAttribute? profileNameAttribute);
-
-            //        if (!s)
-            //        {
-            //            continue;
-            //        }
-
-            //        var cap = "cap_lp_" + profileNameAttribute!.Attribute.Value.Value2String();
-
-            //        if (!capMap.ContainsKey(cap))
-            //        {
-            //            capMap.Add(cap, profileFromDbNaemons);
-            //        }
-            //        else
-            //        {
-            //            capMap[cap] = (List<string>)profileFromDbNaemons.Concat(capMap[cap]);
-            //        }
-            //    }
-            //}
-
-            // new capmap
             var nInstancesTag = await naemonInstancesTagModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
             var nProfiles = await naemonProfileModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
             // NOTE we will move to use this when the nInstanceTag are fetched correctlly 
@@ -999,6 +963,10 @@ namespace OKPluginNaemonConfig
                 Profile = "";
                 Address = "";
                 EffectiveHostCI = "";
+                Cust = "";
+                Criticality = "";
+                SuppApp = "";
+                SuppOS = "";
                 Interfaces = new Interfaces();
                 Relations = new Dictionary<string, KeyValuePair<string, string>>();
                 Categories = new Dictionary<string, List<Category>>();
@@ -1007,6 +975,8 @@ namespace OKPluginNaemonConfig
                 Tags = new List<string>();
                 ProfileOrg = new List<string>();
                 NaemonsAvail = new List<string>();
+                Vars = new Dictionary<string, string>();
+                CmdbData = new Dictionary<string, string>();
             }
             public string Type { get; set; }
             public string Id { get; set; }
@@ -1016,6 +986,10 @@ namespace OKPluginNaemonConfig
             public string Profile { get; set; }
             public string Address { get; set; }
             public int Port { get; set; }
+            public string Cust { get; set; }
+            public string Criticality { get; set; }
+            public string SuppApp { get; set; }
+            public string SuppOS { get; set; }
             public List<string> ProfileOrg { get; set; }
             public List<string> NaemonsAvail { get; set; }
             public Dictionary<string, List<Category>> Categories { get; set; }
@@ -1024,6 +998,10 @@ namespace OKPluginNaemonConfig
             public Interfaces Interfaces { get; set; }
             public Dictionary<string, KeyValuePair<string, string>> Relations { get; set; }
             public string EffectiveHostCI { get; set; }
+            public Dictionary<string, string> Vars { get; set; }
+
+            // NOTE fill this data with all columns from database
+            public Dictionary<string, string> CmdbData { get; set; }
         }
 
         public class Category
