@@ -2,7 +2,7 @@
   "profiles": {
     "DBMigrate": {
       "commandName": "Project",
-      "commandLineArgs": "\"Server=localhost;Port=15432;User Id=postgres; Password=postgres;Database=omnikeeper;Pooling=true;Keepalive=300;Timeout=300;CommandTimeout=300\""
+      "commandLineArgs": "\"Server=localhost;Port=5432;User Id=postgres; Password=postgres;Database=omnikeeper;Pooling=true;Keepalive=300;Timeout=300;CommandTimeout=300\""
     }
   }
 }
