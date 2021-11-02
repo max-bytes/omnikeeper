@@ -308,14 +308,16 @@ namespace OKPluginNaemonConfig
 
             // updateNormalizedCiData_addRelationData
             var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runs_on"), layersetCMDB, trans, changesetProxy.TimeThreshold);
+            var fromCIIDs = allRunsOnRelations.Select(relation => relation.Relation.FromCIID).ToHashSet();
+            var fromCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(fromCIIDs), layersetCMDB!, false, NamedAttributesSelection.Build("cmdb.id"), trans, changesetProxy.TimeThreshold)).ToDictionary(ci => ci.ID);
 
             var cmdbRelationsBySrc = new Dictionary<string, (string, string)>();
 
             foreach (var item in allRunsOnRelations)
             {
 
-                var fromCI = await ciModel.GetMergedCI(item!.Relation.FromCIID, layersetCMDB!, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
-
+                //var fromCI = await ciModel.GetMergedCI(item!.Relation.FromCIID, layersetCMDB!, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
+                var fromCI = fromCIs[item!.Relation.FromCIID];
                 var fromCIID = (fromCI.MergedAttributes["cmdb.id"].Attribute.Value as AttributeScalarValueText)?.Value;
 
                 var cfgObj = ciData.Where(el => el.Type == "SERVICE" && el.Id == fromCIID).FirstOrDefault();
