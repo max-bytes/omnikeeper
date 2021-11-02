@@ -311,12 +311,14 @@ namespace OKPluginNaemonConfig
             var fromCIIDs = allRunsOnRelations.Select(relation => relation.Relation.FromCIID).ToHashSet();
             var fromCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(fromCIIDs), layersetCMDB!, false, NamedAttributesSelection.Build("cmdb.id"), trans, changesetProxy.TimeThreshold)).ToDictionary(ci => ci.ID);
 
+            var toCIIds = allRunsOnRelations.Select(relation => relation.Relation.ToCIID).ToHashSet();
+            var toCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(toCIIds), layersetCMDB!, false, NamedAttributesSelection.Build("cmdb.id"), trans, changesetProxy.TimeThreshold)).ToDictionary(ci => ci.ID);
+
             var cmdbRelationsBySrc = new Dictionary<string, (string, string)>();
 
             foreach (var item in allRunsOnRelations)
             {
 
-                //var fromCI = await ciModel.GetMergedCI(item!.Relation.FromCIID, layersetCMDB!, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
                 var fromCI = fromCIs[item!.Relation.FromCIID];
                 var fromCIID = (fromCI.MergedAttributes["cmdb.id"].Attribute.Value as AttributeScalarValueText)?.Value;
 
@@ -324,8 +326,8 @@ namespace OKPluginNaemonConfig
 
                 if (cfgObj != null)
                 {
-                    var targetCI = await ciModel.GetMergedCI(item.Relation.ToCIID, layersetCMDB!, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
-
+                    //var targetCI = await ciModel.GetMergedCI(item.Relation.ToCIID, layersetCMDB!, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
+                    var targetCI = toCIs[item!.Relation.FromCIID];
                     var targetCIID = (fromCI.MergedAttributes["cmdb.id"].Attribute.Value as AttributeScalarValueText)?.Value;
 
                     if (!cfgObj.Relations.ContainsKey("OUT"))
