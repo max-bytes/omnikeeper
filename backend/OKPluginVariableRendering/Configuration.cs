@@ -18,7 +18,14 @@ namespace OKPluginVariableRendering
 
         [JsonProperty("base_ci", Required = Required.Always)]
         public BaseCI BaseCI { get; set; }
-
+        
+        public Configuration()
+        {
+            InputLayerSet = new List<string>();
+            InputWhitelist = new List<string>();
+            InputWhitelist = new List<string>();
+            BaseCI = new BaseCI();
+        }
     }
 
     public class BaseCI
@@ -34,12 +41,25 @@ namespace OKPluginVariableRendering
 
         [JsonProperty("follow_relations", Required = Required.Always)]
         public List<FollowRelation> FollowRelations { get; set; }
+
+        public BaseCI()
+        {
+            RequiredTrait = "";
+            InputWhitelist = new List<string>();
+            AttributeMapping = new List<AttributeMapping>();
+            FollowRelations = new List<FollowRelation>();
+        }
     }
 
     public class FollowRelation
     {
         [JsonProperty("follow")]
         public List<Follow> Follow { get; set; }
+
+        public FollowRelation()
+        {
+            Follow = new List<Follow>();
+        }
     }
 
     public class Follow
@@ -55,7 +75,17 @@ namespace OKPluginVariableRendering
 
         [JsonProperty("attribute_mapping")]
         public List<AttributeMapping> AttributeMapping { get; set; }
+
+        public Follow()
+        {
+            Predicate = "";
+            RequiredTrait = "";
+            InputBlacklist = new List<string>();
+            InputBlacklist = new List<string>();
+            AttributeMapping = new List<AttributeMapping>();
+        }
     }
+
     public class AttributeMapping
     {
         [JsonProperty("source")]
@@ -63,5 +93,11 @@ namespace OKPluginVariableRendering
 
         [JsonProperty("target")]
         public string Target { get; set; }
+
+        public AttributeMapping()
+        {
+            Source = "*"; // NOTE this mean that all attributes should be taken into account.
+            Target = "";
+        }
     }
 }
