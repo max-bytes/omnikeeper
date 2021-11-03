@@ -43,8 +43,18 @@ export default function Changeset(props) {
         </pre>
     } else if (data && visibleLayers && dataPredicates) {
 
-        const groupedAttributesByCIID = _.groupBy(data.changeset.attributes, a => a.ciid);
-        const groupedRemovedAttributesByCIID = _.groupBy(data.changeset.removedAttributes, a => a.ciid);
+        const groupedAttributesByCIID = _.values(_.mapValues(_.groupBy(data.changeset.attributes, a => a.ciid), (attributes, ciid) => {
+            return {
+                ciid: ciid,
+                attributes: attributes
+            };
+        }));
+        const groupedRemovedAttributesByCIID = _.values(_.mapValues(_.groupBy(data.changeset.removedAttributes, a => a.ciid), (attributes, ciid) => {
+            return {
+                ciid: ciid,
+                attributes: attributes
+            };
+        }));
 
         var defaultActiveTab = undefined;
         if (data.changeset.attributes.length > 0) 
@@ -56,51 +66,53 @@ export default function Changeset(props) {
         else if (data.changeset.removedRelations.length > 0) 
             defaultActiveTab = "removedRelations";
 
-        const NewRelationItem = ({ index, style }) => {
-            const r = data.changeset.relations[index];
-            return <div style={style}>
-                <Relation predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />
-            </div>;
-        };
-        const RemovedRelationItem = ({ index, style }) => {
-            const r = data.changeset.removedRelations[index];
-            return <div style={style}>
-                <Relation removed={true} predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />
-            </div>;
+        const NewAttributeItem = (index) => {
+            const {ciid, attributes} = groupedAttributesByCIID[index];
+            return <div>
+                <Title level={5} style={{marginBottom: 0}}>CI <CIID id={ciid} link={true} /></Title>
+                {attributes.map(a => {
+                    return <Attribute attribute={a} layerStack={[data.changeset.layer]} isEditable={false} visibleLayers={visibleLayers} hideNameLabel={false} controlIdSuffix="" key={a.id} />;
+                })}
+            </div>
         };
 
-        return <div style={{marginTop: '1rem', flex: '1', display: 'flex', flexDirection: 'column'}}>
-            <Descriptions title="Changeset" bordered column={2}>
+        const RemovedAttributeItem = (index) => {
+            const {ciid, attributes} = groupedRemovedAttributesByCIID[index];
+            return <div>
+                <Title level={5} style={{marginBottom: 0}}>CI <CIID id={ciid} link={true} /></Title>
+                {attributes.map(a => {
+                    return <Attribute removed={true} attribute={a} layerStack={[data.changeset.layer]} isEditable={false} visibleLayers={visibleLayers} hideNameLabel={false} controlIdSuffix="" key={a.id} />;
+                })}
+            </div>
+        };
+        
+        const NewRelationItem = (index) => {
+            const r = data.changeset.relations[index];
+            return <Relation predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />;
+        };
+        const RemovedRelationItem = (index) => {
+            const r = data.changeset.removedRelations[index];
+            return <Relation removed={true} predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />;
+        };
+
+        return <div style={{marginTop: '1rem', flex: '1', display: 'flex', flexDirection: 'row', gap: '20px'}}>
+            <Descriptions title="Changeset" bordered column={1} style={{ flexBasis: '35%'}}>
                 <Descriptions.Item label="User"><UserTypeIcon userType={data.changeset.user.type} /> {data.changeset.user.displayName}</Descriptions.Item>
                 <Descriptions.Item label="Timestamp">{formatTimestamp(data.changeset.timestamp)}</Descriptions.Item>
                 <Descriptions.Item label="Layer"><LayerIcon layer={data.changeset.layer} /> {data.changeset.layer.id}</Descriptions.Item>
                 <Descriptions.Item label="Origin-Type">{data.changeset.dataOrigin.type}</Descriptions.Item>
-                <Descriptions.Item label="Changeset-ID" span={2}><ChangesetID id={data.changeset.id} link={false} /></Descriptions.Item>
+                <Descriptions.Item label="Changeset-ID"><ChangesetID id={data.changeset.id} link={false} /></Descriptions.Item>
             </Descriptions>
-            <Tabs defaultActiveKey={defaultActiveTab} style={{paddingTop: "1rem", flex: '1'}}>
+            <Tabs defaultActiveKey={defaultActiveTab} style={{paddingTop: "1rem", flexBasis: '65%'}}>
                 <TabPane 
-                 tab={<CountBadge count={data.changeset.attributes.length}>New Attributes</CountBadge>}
-                 key="newAttributes" disabled={data.changeset.attributes.length === 0}>
-                    {_.values(_.mapValues(groupedAttributesByCIID, (attributes, ciid) => {
-                        return <div key={ciid} style={{marginTop: '1.5rem'}}>
-                            <Title level={5} style={{marginBottom: 0}}>CI <CIID id={ciid} link={true} /></Title>
-                            {attributes.map(a => {
-                                return <Attribute attribute={a} layerStack={[data.changeset.layer]} isEditable={false} visibleLayers={visibleLayers} hideNameLabel={false} controlIdSuffix="" key={a.id} />;
-                            })}
-                        </div>;
-                    }))}
+                 tab={<CountBadge count={groupedAttributesByCIID.length}>New Attributes</CountBadge>}
+                 key="newAttributes" disabled={groupedAttributesByCIID.length === 0}>
+                    <AutoSizedList itemCount={groupedAttributesByCIID.length} item={NewAttributeItem} />
                 </TabPane>
                 <TabPane 
-                 tab={<CountBadge count={data.changeset.removedAttributes.length}>Removed Attributes</CountBadge>}
-                 key="removedAttributes" disabled={data.changeset.removedAttributes.length === 0}>
-                    {_.values(_.mapValues(groupedRemovedAttributesByCIID, (attributes, ciid) => {
-                        return <div key={ciid} style={{marginTop: '1.5rem'}}>
-                            <Title level={5} style={{marginBottom: 0}}>CI <CIID id={ciid} link={true} /></Title>
-                            {attributes.map(a => {
-                                return <Attribute removed={true} attribute={a} layerStack={[data.changeset.layer]} isEditable={false} visibleLayers={visibleLayers} hideNameLabel={false} controlIdSuffix="" key={a.id} />;
-                            })}
-                        </div>;
-                    }))}
+                 tab={<CountBadge count={groupedRemovedAttributesByCIID.length}>Removed Attributes</CountBadge>}
+                 key="removedAttributes" disabled={groupedRemovedAttributesByCIID.length === 0}>
+                    <AutoSizedList itemCount={groupedRemovedAttributesByCIID.length} item={RemovedAttributeItem} />
                 </TabPane>
                 <TabPane 
                  tab={<CountBadge count={data.changeset.relations.length}>New Relations</CountBadge>}
@@ -110,7 +122,7 @@ export default function Changeset(props) {
                 <TabPane 
                  tab={<CountBadge count={data.changeset.removedRelations.length}>Removed Relations</CountBadge>}
                  key="removedRelations" disabled={data.changeset.removedRelations.length === 0}>
-                     <AutoSizedList itemCount={data.changeset.removedRelations.length} item={RemovedRelationItem} />
+                    <AutoSizedList itemCount={data.changeset.removedRelations.length} item={RemovedRelationItem} />
                 </TabPane>
             </Tabs>
         </div>;
