@@ -8,9 +8,9 @@ export function SearchResults(props) {
 
     const {cis} = props;
 
-    const Row = ({ index, style }) => {
+    const Row = (index) => {
         const result = cis[index];
-        return <Link key={result.id} to={`/explorer/${result.id}`} style={style}>
+        return <Link key={result.id} to={`/explorer/${result.id}`}>
             <div
                 style={{
                     display: "flex",
