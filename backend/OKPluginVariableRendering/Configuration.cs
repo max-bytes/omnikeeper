@@ -10,20 +10,12 @@ namespace OKPluginVariableRendering
         [JsonProperty("input_layerset", Required = Required.Always)]
         public List<string> InputLayerSet { get; set; }
 
-        [JsonProperty("input_whitelist", Required = Required.Always)]
-        public List<string> InputWhitelist { get; set; }
-
-        [JsonProperty("input_blacklist", Required = Required.Always)]
-        public List<string> InputBlacklist { get; set; }
-
         [JsonProperty("base_ci", Required = Required.Always)]
         public BaseCI BaseCI { get; set; }
         
         public Configuration()
         {
             InputLayerSet = new List<string>();
-            InputWhitelist = new List<string>();
-            InputWhitelist = new List<string>();
             BaseCI = new BaseCI();
         }
     }
@@ -33,8 +25,11 @@ namespace OKPluginVariableRendering
         [JsonProperty("required_trait", Required = Required.Always)]
         public string RequiredTrait { get; set; }
 
-        [JsonProperty("input_whitelist", Required = Required.Always)]
+        [JsonProperty("input_whitelist")]
         public List<string> InputWhitelist { get; set; }
+
+        [JsonProperty("input_blacklist")]
+        public List<string> InputBlacklist { get; set; }
 
         [JsonProperty("attribute_mapping", Required = Required.Always)]
         public List<AttributeMapping> AttributeMapping { get; set; }
@@ -46,6 +41,7 @@ namespace OKPluginVariableRendering
         {
             RequiredTrait = "";
             InputWhitelist = new List<string>();
+            InputBlacklist = new List<string>();
             AttributeMapping = new List<AttributeMapping>();
             FollowRelations = new List<FollowRelation>();
         }
@@ -73,6 +69,9 @@ namespace OKPluginVariableRendering
         [JsonProperty("input_blacklist")]
         public List<string> InputBlacklist { get; set; }
 
+        [JsonProperty("input_whitelist")]
+        public List<string> InputWhitelist { get; set; }
+
         [JsonProperty("attribute_mapping")]
         public List<AttributeMapping> AttributeMapping { get; set; }
 
@@ -81,7 +80,7 @@ namespace OKPluginVariableRendering
             Predicate = "";
             RequiredTrait = "";
             InputBlacklist = new List<string>();
-            InputBlacklist = new List<string>();
+            InputWhitelist = new List<string>();
             AttributeMapping = new List<AttributeMapping>();
         }
     }
