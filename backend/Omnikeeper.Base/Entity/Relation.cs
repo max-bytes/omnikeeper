@@ -29,7 +29,7 @@ namespace Omnikeeper.Base.Entity
 
         // information hash: 
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
-        public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
+        public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => predicateID + fromCIID + toCIID;
 
         public Relation(Guid id, Guid fromCIID, Guid toCIID, string predicateID, Guid changesetID)
         {

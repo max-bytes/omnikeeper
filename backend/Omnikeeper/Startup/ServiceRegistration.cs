@@ -172,6 +172,8 @@ namespace Omnikeeper.Startup
 
             builder.RegisterType<ScopedLifetimeAccessor>().SingleInstance();
 
+            builder.RegisterType<DiffingCIService>().SingleInstance();
+
         }
 
         public static void RegisterLogging(ContainerBuilder builder)

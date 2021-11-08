@@ -23,13 +23,31 @@ namespace Omnikeeper.GraphQL
         {
             get
             {
+                CheckDisabledThrow();
+
                 TryGetValue("TimeThreshold", out var ls);
                 if (ls == null) return TimeThreshold.BuildLatest();
                 return (TimeThreshold)ls;
             }
             set
             {
+                CheckDisabledThrow();
+
                 Add("TimeThreshold", value);
+            }
+        }
+
+        public bool PartlyDisabled
+        {
+            get
+            {
+                TryGetValue("Disabled", out var disabled);
+                if (disabled == null) return false;
+                return (bool)disabled;
+            }
+            set
+            {
+                Add("Disabled", value);
             }
         }
 
@@ -51,12 +69,16 @@ namespace Omnikeeper.GraphQL
         {
             get
             {
+                CheckDisabledThrow();
+
                 TryGetValue("LayerSet", out var ls);
                 if (ls == null) throw new System.Exception("Expected layerset to be set");
                 return (LayerSet)ls;
             }
             set
             {
+                CheckDisabledThrow();
+
                 Add("LayerSet", value);
             }
         }
@@ -87,6 +109,11 @@ namespace Omnikeeper.GraphQL
             Transaction.Commit();
             var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
             Transaction = f(modelContextBuilder);
+        }
+
+        private void CheckDisabledThrow()
+        {
+            if (PartlyDisabled) throw new Exception("Cannot use UserContext in this setting, it was disabled");
         }
     }
 }

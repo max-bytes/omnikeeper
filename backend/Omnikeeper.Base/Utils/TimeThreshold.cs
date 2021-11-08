@@ -27,5 +27,10 @@ namespace Omnikeeper.Base.Utils
         {
             return new TimeThreshold(true, time);
         }
+
+        public override string ToString()
+        {
+            return (IsLatest) ? "latest" : Time.ToString();
+        }
     }
 }
