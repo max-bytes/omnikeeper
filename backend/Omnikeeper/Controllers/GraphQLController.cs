@@ -91,7 +91,6 @@ namespace Omnikeeper.Controllers
             var ret = Content(json, "application/json");
             if (result.Errors?.Count > 0)
             {
-                
                 ret.StatusCode = 400;
             }
 

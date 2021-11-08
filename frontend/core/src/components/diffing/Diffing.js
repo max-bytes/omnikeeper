@@ -219,9 +219,6 @@ function Diffing(props) {
   const visibleRightLayerIDs = rightLayers.filter(l => l.visible).map(l => l.id);
 
   function compare() {
-      // loadLeftCI({ variables: {layers: visibleLeftLayerIDs, timeThreshold: leftTimeSettings?.timeThreshold, ciids: leftCIIDs}});
-      // loadRightCI({ variables: {layers: visibleRightLayerIDs, timeThreshold: rightTimeSettings?.timeThreshold, ciids: rightCIIDs}});
-
       loadDiffResults({ 
         variables: {
           leftLayers: visibleLeftLayerIDs, leftTimeThreshold: leftTimeSettings?.timeThreshold, leftCIIDs: leftCIIDs,
