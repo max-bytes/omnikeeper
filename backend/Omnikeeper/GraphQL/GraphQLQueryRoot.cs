@@ -9,9 +9,12 @@ using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Service;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using static Omnikeeper.Base.Model.IChangesetModel;
 
 namespace Omnikeeper.GraphQL
@@ -19,10 +22,12 @@ namespace Omnikeeper.GraphQL
     public partial class GraphQLQueryRoot : ObjectGraphType
     {
         private readonly ICIIDModel ciidModel;
-        private readonly ICIModel ciModel;
         private readonly IAttributeModel attributeModel;
-        private readonly IRelationModel relationModel;
         private readonly ILayerModel layerModel;
+        private readonly DiffingCIService diffingCIService;
+        private readonly ICIModel ciModel;
+        private readonly IRelationModel relationModel;
+        private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICISearchModel ciSearchModel;
         private readonly ITraitsProvider traitsProvider;
         private readonly IMetaConfigurationModel metaConfigurationModel;
@@ -41,7 +46,8 @@ namespace Omnikeeper.GraphQL
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
 
-        public GraphQLQueryRoot(ICIIDModel ciidModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
+        public GraphQLQueryRoot(ICIIDModel ciidModel, IAttributeModel attributeModel, ILayerModel layerModel, DiffingCIService diffingCIService, ICIModel ciModel,
+            IRelationModel relationModel, IEffectiveTraitModel effectiveTraitModel,
             ICISearchModel ciSearchModel, ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, GenericTraitEntityModel<Predicate, string> predicateModel,
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GenericTraitEntityModel<GeneratorV1, string> generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
@@ -49,10 +55,12 @@ namespace Omnikeeper.GraphQL
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.ciidModel = ciidModel;
-            this.ciModel = ciModel;
             this.attributeModel = attributeModel;
-            this.relationModel = relationModel;
             this.layerModel = layerModel;
+            this.diffingCIService = diffingCIService;
+            this.ciModel = ciModel;
+            this.relationModel = relationModel;
+            this.effectiveTraitModel = effectiveTraitModel;
             this.ciSearchModel = ciSearchModel;
             this.traitsProvider = traitsProvider;
             this.metaConfigurationModel = metaConfigurationModel;
@@ -120,8 +128,6 @@ namespace Omnikeeper.GraphQL
                     ICIIDSelection ciidSelection = new AllCIIDsSelection();
                     if (ciids != null)
                     {
-                        if (!ciBasedAuthorizationService.CanReadAllCIs(ciids, out var notAllowedCI))
-                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {notAllowedCI}");
                         ciidSelection = SpecificCIIDsSelection.Build(ciids);
                     }
 
@@ -168,12 +174,21 @@ namespace Omnikeeper.GraphQL
                         }
                     }
 
+                    bool preAuthzCheckedCIs = false;
+                    if (ciidSelection is SpecificCIIDsSelection specificCIIDsSelection)
+                    {
+                        if (!ciBasedAuthorizationService.CanReadAllCIs(specificCIIDsSelection.CIIDs, out var notAllowedCI))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {notAllowedCI}");
+                        preAuthzCheckedCIs = true;
+                    }
+
                     var requiredTraits = await traitsProvider.GetActiveTraitsByIDs(withEffectiveTraits, userContext.Transaction, userContext.TimeThreshold);
                     var requiredNonTraits = await traitsProvider.GetActiveTraitsByIDs(withoutEffectiveTraits, userContext.Transaction, userContext.TimeThreshold);
                     var cis = await ciSearchModel.FindMergedCIsByTraits(ciidSelection, attributeSelection, requiredTraits.Values, requiredNonTraits.Values, userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
 
                     // reduce CIs to those that are allowed
-                    cis = ciBasedAuthorizationService.FilterReadableCIs(cis, (ci) => ci.ID);
+                    if (!preAuthzCheckedCIs)
+                        cis = ciBasedAuthorizationService.FilterReadableCIs(cis, (ci) => ci.ID);
 
                     // sort by name, if requested
                     var sortByCIName = context.GetArgument<bool>("sortByCIName", false)!;
@@ -184,6 +199,18 @@ namespace Omnikeeper.GraphQL
                     }
 
                     return cis;
+                });
+
+            Field<DiffingResultType>("ciDiffing",
+                resolve: context =>
+                {
+                    // NOTE, HACK: we are explicitly disable the userContext here, because it cannot deal with this usecase of having multiple subtrees with different times/layers/...
+                    // TODO: work on that
+                    var userContext = context
+                        .SetupUserContext(partlyDisabled: true)
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+
+                    return new DiffingResult();
                 });
 
             FieldAsync<ListGraphType<PredicateType>>("predicates",

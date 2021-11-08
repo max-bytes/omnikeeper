@@ -8,19 +8,21 @@ import { MissingLabel, CompareLabel, EmptyLabel, stateBasedBackgroundColor } fro
 
 function DiffRelationList(props) {
 
-  const {areOutgoingRelations} = props;
+  const {relations, areOutgoingRelations} = props;
 
   if (_.size(props.relations) === 0)
     return EmptyLabel();
 
+  const keyGen = (relation) => `r_${relation.predicateID}_${(areOutgoingRelations) ? relation.toCIID : relation.fromCIID}`;
+
   return (<>
   <Row>
     <Col span={24}>
-      <Flipper flipKey={_.map(props.relations, r => r.key).join(' ')}>
-        {_.map(props.relations, r => {
-          var state = r.compareResult.state;
+      <Flipper flipKey={_.map(relations, r => keyGen(r)).join(' ')}>
+        {_.map(relations, r => {
+          var state = r.status;
           return (
-            <Flipped key={r.key} flipId={r.key} onAppear={onAppear} onExit={onExit}>
+            <Flipped key={keyGen(r)} flipId={keyGen(r)} onAppear={onAppear} onExit={onExit}>
               <div style={{ width: "100%" }}>
                 <Row style={{ backgroundColor: stateBasedBackgroundColor(state), display: "flex", justifyContent: "space-evenly" }}>
                     <Col>

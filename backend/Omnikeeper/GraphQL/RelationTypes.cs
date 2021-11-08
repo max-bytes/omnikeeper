@@ -4,6 +4,7 @@ using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,19 +27,33 @@ namespace Omnikeeper.GraphQL
             Field(x => x.ChangesetID);
 
             Field<StringGraphType>("fromCIName",
+                arguments: new QueryArguments(
+                    new QueryArgument<ListGraphType<StringGraphType>> { Name = "layers" },
+                    new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: (context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader("GetMergedCINames", 
-                        (IEnumerable<ICIIDSelection> ciidSelections) => FetchCINames(userContext, ciidSelections));
+                    var layers = context.GetArgument<string[]>("layers", null);
+                    var layerset = (layers == null) ? userContext.LayerSet : new LayerSet(layers);
+                    var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
+                    var timeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest(); // NOTE: this is - unfortunately - a problem TODO: describe that we cannot use usercontext.timethreshold
+                    var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader($"GetMergedCINames_{layerset}_{timeThreshold}",
+                        (IEnumerable<ICIIDSelection> ciidSelections) => FetchCINames(layerset, timeThreshold, ciidSelections, userContext.Transaction));
                     return loader.LoadAsync(SpecificCIIDsSelection.Build(context.Source!.FromCIID));
                 });
             Field<StringGraphType>("toCIName",
+                arguments: new QueryArguments(
+                    new QueryArgument<ListGraphType<StringGraphType>> { Name = "layers" },
+                    new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: (context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader("GetMergedCINames", 
-                        (IEnumerable<ICIIDSelection> ciidSelections) => FetchCINames(userContext, ciidSelections));
+                    var layers = context.GetArgument<string[]>("layers", null);
+                    var layerset = (layers == null) ? userContext.LayerSet : new LayerSet(layers);
+                    var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
+                    var timeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest(); // NOTE: this is - unfortunately - a problem TODO: describe
+                    var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader($"GetMergedCINames_{layerset}_{timeThreshold}", 
+                        (IEnumerable<ICIIDSelection> ciidSelections) => FetchCINames(layerset, timeThreshold, ciidSelections, userContext.Transaction));
                     return loader.LoadAsync(SpecificCIIDsSelection.Build(context.Source!.ToCIID));
                 });
             Field<MergedCIType>("toCI",
@@ -62,16 +77,16 @@ namespace Omnikeeper.GraphQL
             this.ciModel = ciModel;
         }
 
-        private async Task<IDictionary<ICIIDSelection, string?>> FetchCINames(OmnikeeperUserContext userContext, IEnumerable<ICIIDSelection> ciidSelections)
+        private async Task<IDictionary<ICIIDSelection, string?>> FetchCINames(LayerSet layerSet, TimeThreshold timeThreshold, IEnumerable<ICIIDSelection> ciidSelections, IModelContext trans)
         {
             var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
 
-            var combinedNames = await attributeModel.GetMergedCINames(combinedCIIDSelection, userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
+            var combinedNames = await attributeModel.GetMergedCINames(combinedCIIDSelection, layerSet, trans, timeThreshold);
 
             var ret = new Dictionary<ICIIDSelection, string?>(ciidSelections.Count());
             foreach(var ciidSelection in ciidSelections)
             {
-                var ciids = await ciidSelection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(userContext.Transaction));
+                var ciids = await ciidSelection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
                 var selectedNames = ciids.Where(combinedNames.ContainsKey).Select(ciid => combinedNames[ciid]);
                 ret.Add(ciidSelection, selectedNames.FirstOrDefault());
             }
