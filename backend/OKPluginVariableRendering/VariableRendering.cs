@@ -34,7 +34,7 @@ namespace OKPluginVariableRendering
 
             //return false;
 
-            Configuration cfg;  
+            Configuration cfg;
 
             try
             {
@@ -50,8 +50,6 @@ namespace OKPluginVariableRendering
 
             var layersetVariableRendering = await layerModel.BuildLayerSet(new[] { "variable_rendering" }, trans);
 
-            // TODO how to implement input_whitelist and input_blacklist
-
             var allCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetVariableRendering, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
 
             // TODO NOTE we should create traits dynamically based on configuration, how to do this??
@@ -62,15 +60,11 @@ namespace OKPluginVariableRendering
             // fetch all relations
             var allRelations = await relationModel.GetRelations(RelationSelectionAll.Instance, "variable_rendering", trans, changesetProxy.TimeThreshold);
 
-            
-
-
             // TODO: priority of each element should be taken into account
 
             foreach (var mainCI in mainCIs)
             {
                 var gatheredAttributes = new List<GatheredAttribute>();
-                //var gatheredAttributes = new Dictionary<string, (Guid, string)>(); // original name, ci, value
 
                 foreach (var followRelation in cfg.BaseCI.FollowRelations)
                 {
@@ -80,15 +74,7 @@ namespace OKPluginVariableRendering
                         // get the predicate remove the first char, first char defines the direction of relation
                         var predicate = follow.Predicate[1..];
 
-                        if (follow.Predicate[0] == '<')
-                        {
-                            var b = 9;
-                        }
-
-                        // NOTE first check input_blacklist and input_whitelist for this follow
-
                         // check outgoing relations
-
                         var r = allRelations.Where(r =>
                         {
                             if (follow.Predicate[0] == '>')
@@ -120,8 +106,6 @@ namespace OKPluginVariableRendering
                             {
                                 if (IsAttributeIncludedInSource(attribute.Attribute.Name, mapping.Source))
                                 {
-                                    // check 
-
                                     gatheredAttributes.Add(new GatheredAttribute
                                     {
                                         SourceCIID = targetCI.ID,
@@ -138,37 +122,41 @@ namespace OKPluginVariableRendering
 
                 // for all gathered attributes insert them to the main ci
 
-                foreach (var attribute in gatheredAttributes)
+                foreach (var mapping in cfg.BaseCI.AttributeMapping)
                 {
-                    // first we need to check input whitelist and blacklist
 
-                    if (!IsAttributeAllowed(attribute.NewName, cfg.BaseCI.InputWhitelist, cfg.BaseCI.InputBlacklist))
+                    foreach (var attribute in gatheredAttributes)
                     {
-                        continue;
+                        // first we need to check input whitelist and blacklist
+
+                        if (!IsAttributeAllowed(attribute.NewName, cfg.BaseCI.InputWhitelist, cfg.BaseCI.InputBlacklist))
+                        {
+                            continue;
+                        }
+
+                        // check base ci attribute mapping
+
+                        if (!IsAttributeIncludedInSource(attribute.NewName, mapping.Source))
+                        {
+                            continue;
+                        }
+
+                        var (_, changed) = await attributeModel.InsertAttribute(
+                            GetTargetName(attribute.NewName, mapping.Target),
+                            new AttributeScalarValueText(attribute.Value),
+                            mainCI.ID,
+                            "variable_rendering",
+                            changesetProxy,
+                            new DataOriginV1(DataOriginType.Manual),
+                            trans);
+
+                        if (!changed)
+                        {
+                            logger.LogError($"An error ocurred trying to insert attribute for CI with id={mainCI.ID}");
+                        }
                     }
 
-                    // check base ci attribute mapping
-
-                    if (!IsAttributeIncludedInSource(attribute.NewName, cfg.BaseCI.AttributeMapping[0].Source))
-                    {
-                        continue;
-                    }
-
-                    var (_, changed) = await attributeModel.InsertAttribute(
-                        GetTargetName(attribute.NewName, cfg.BaseCI.AttributeMapping[0].Target),
-                        new AttributeScalarValueText(attribute.Value), 
-                        mainCI.ID, 
-                        "variable_rendering", 
-                        changesetProxy, 
-                        new DataOriginV1(DataOriginType.Manual), 
-                        trans);
-
-                    if (!changed)
-                    {
-                        logger.LogError($"An error ocurred trying to insert attribute for CI with id={mainCI.ID}");
-                    }
                 }
-
             }
 
             return true;
