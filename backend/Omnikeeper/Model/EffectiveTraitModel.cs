@@ -184,7 +184,7 @@ namespace Omnikeeper.Model
                             }
                         }
 
-                        var resolvedET = new EffectiveTrait(tt, effectiveTraitAttributes, effectiveOutgoingTraitRelations, effectiveIncomingTraitRelations);
+                        var resolvedET = new EffectiveTrait(ci.ID, tt, effectiveTraitAttributes, effectiveOutgoingTraitRelations, effectiveIncomingTraitRelations);
                         ret.Add(ci.ID, resolvedET);
 
                         ENDOFCILOOP:
@@ -196,7 +196,7 @@ namespace Omnikeeper.Model
                 case TraitEmpty te:
                     foreach (var ci in cis)
                         if (ci.MergedAttributes.IsEmpty()) // NOTE: we do not check for relations
-                            ret.Add(ci.ID, new EffectiveTrait(te, new Dictionary<string, MergedCIAttribute>(), new Dictionary<string, IEnumerable<MergedRelation>>(), new Dictionary<string, IEnumerable<MergedRelation>>()));
+                            ret.Add(ci.ID, new EffectiveTrait(ci.ID, te, new Dictionary<string, MergedCIAttribute>(), new Dictionary<string, IEnumerable<MergedRelation>>(), new Dictionary<string, IEnumerable<MergedRelation>>()));
                     return ret;
                 default:
                     throw new Exception("Unknown trait encountered");

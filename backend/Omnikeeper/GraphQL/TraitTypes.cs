@@ -9,6 +9,7 @@ namespace Omnikeeper.GraphQL
     {
         public EffectiveTraitType()
         {
+            Field("ciid", x => x.CIID);
             Field(x => x.UnderlyingTrait, type: typeof(TraitType));
             Field("traitAttributes", x => x.TraitAttributes.Select(t => new EffectiveTraitAttribute(t.Key, t.Value)), type: typeof(ListGraphType<EffectiveTraitAttributeType>));
             Field("outgoingTraitRelations", x => x.OutgoingTraitRelations.Select(t => new EffectiveTraitRelation(t.Key, t.Value)), type: typeof(ListGraphType<EffectiveTraitRelationType>));

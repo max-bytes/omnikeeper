@@ -316,6 +316,45 @@ namespace Omnikeeper.GraphQL
                     return traits.Values.OrderBy(t => t.ID);
                 });
 
+            FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraitsForTrait",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "traitID" },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                    new QueryArgument<ListGraphType<GuidGraphType>> { Name = "ciids" }),
+                resolve: async context =>
+                {
+                    var layerStrings = context.GetArgument<string[]>("layers")!;
+                    var traitID = context.GetArgument<string>("traitID")!;
+                    var ciids = context.GetArgument<Guid[]?>("ciids", null);
+
+                    var userContext = await context.SetupUserContext()
+                        .WithTimeThreshold(() => TimeThreshold.BuildLatest())
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                        .WithLayerset(async trans => await layerModel.BuildLayerSet(layerStrings, trans));
+
+                    ICIIDSelection ciidSelection = new AllCIIDsSelection();
+                    if (ciids != null)
+                    {
+                        ciidSelection = SpecificCIIDsSelection.Build(ciids);
+                    }
+
+                    var trait = await traitsProvider.GetActiveTrait(traitID, userContext.Transaction, userContext.TimeThreshold);
+                    if (trait == null)
+                        throw new ExecutionError($"No trait with ID {traitID} found");
+
+                    var relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name)
+                        .Concat(
+                            trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name)
+                        ).ToHashSet();
+
+                    var cis = await ciModel.GetMergedCIs(ciidSelection, userContext.LayerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), userContext.Transaction, userContext.TimeThreshold);
+
+                    var ets = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, cis, userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
+
+                    return ets.Values;
+                });
+
+
             FieldAsync<StatisticsType>("statistics",
                 resolve: async context =>
                 {

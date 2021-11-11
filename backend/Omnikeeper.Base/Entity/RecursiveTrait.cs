@@ -35,8 +35,6 @@ namespace Omnikeeper.Base.Entity
         public readonly CIAttributeTemplate AttributeTemplate;
         public readonly string Identifier;
 
-        // TODO: implement anyOf(CIAttributeTemplate[])
-
         public TraitAttribute(string identifier, CIAttributeTemplate attributeTemplate)
         {
             Identifier = identifier;

@@ -11,6 +11,46 @@ namespace Omnikeeper.GraphQL
 {
     public static class DataLoaderUtils
     {
+        public static IDataLoader<MergedCI, IEnumerable<EffectiveTrait>> SetupEffectiveTraitLoader(IDataLoaderContextAccessor dataLoaderContextAccessor, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        {
+            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader("GetAllEffectiveTraits", async (IEnumerable<MergedCI> cis) =>
+            {
+                var traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
+
+                var tmp = new Dictionary<Guid, IList<EffectiveTrait>>();
+                var ciMap = cis.ToDictionary(ci => ci.ID);
+                foreach (var trait in traits)
+                {
+                    var etsPerTrait = await traitModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, timeThreshold);
+
+                    foreach (var kv in etsPerTrait)
+                    {
+                        tmp.AddOrUpdate(kv.Key, () => new List<EffectiveTrait>() { kv.Value }, (l) => { l.Add(kv.Value); return l; });
+                    }
+                }
+
+                var t = tmp.SelectMany(kv => kv.Value.Select(v => (ciid: kv.Key, et: v)));
+                return t.ToLookup(kv => ciMap[kv.ciid], kv => kv.et, new MergedCIComparer());
+            });
+            return loader;
+        }
+
+        private class MergedCIComparer : IEqualityComparer<MergedCI>
+        {
+            public bool Equals(MergedCI? x, MergedCI? y)
+            {
+                if (x == null && y == null) return true;
+                else if (x == null || y == null) return false;
+                else return x.ID.Equals(y.ID);
+            }
+
+            public int GetHashCode(MergedCI obj)
+            {
+                return obj.ID.GetHashCode();
+            }
+        }
+
+
         public static IDataLoaderResult<IEnumerable<MergedRelation>> SetupAndLoadRelation(IRelationSelection rs, IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             return rs switch
