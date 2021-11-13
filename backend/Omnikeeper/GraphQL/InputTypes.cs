@@ -252,4 +252,21 @@ namespace Omnikeeper.GraphQL
             Field(x => x.Config);
         }
     }
+
+    //public class CIAttributeTemplateInputType : InputObjectGraphType<CIAttributeTemplate>
+    //{
+    //    public CIAttributeTemplateInputType()
+    //    {
+    //        Field(x => x.Name);
+    //        Field(x => x.IsArray);
+    //        Field(x => x.Type, type: typeof(AttributeValueTypeType));
+    //        Field("valueConstraints", x => x.ValueConstraints, type: typeof(ListGraphType<CIAttributeValueConstraintType>));
+
+    //    }
+    //}
+
+    //public class CIAttributeValueConstraintType : InputObjectGraphType<ICIAttributeValueConstraint>
+    //{
+
+    //}
 }
