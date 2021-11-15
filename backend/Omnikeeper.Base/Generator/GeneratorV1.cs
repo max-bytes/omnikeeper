@@ -186,7 +186,9 @@ namespace Omnikeeper.Base.Generator
 
                     // NOTE: this is an important mechanism that prevents layers in the base configuration layerset form having effective generators
                     // this is necessary, because otherwise its very easy to get infinite loops of GetGenerators() -> GetAttributes() -> GetGenerators() -> ...
-                    metaConfiguration ??= await metaConfigurationModel.GetConfigOrDefault(trans); // TODO: get base configuration at the correct point in time, not the latest
+                    // NOTE: to be 100% consistent, we SHOULD get the base configuration at the correct point in time, not the latest... but the meta-configuration is not stored historically
+                    // so we have to live with this inconsistency; it's shouldn't affect much anyway, because changing the meta configuration is really rare in practice
+                    metaConfiguration ??= await metaConfigurationModel.GetConfigOrDefault(trans); 
                     if (metaConfiguration.ConfigLayerset.Contains(layerID))
                         continue;
 
