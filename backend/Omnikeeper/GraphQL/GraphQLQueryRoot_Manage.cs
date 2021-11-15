@@ -35,11 +35,12 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                        .WithTimeThreshold(() => TimeThreshold.BuildLatest());
 
                     CheckManagementPermissionThrow(userContext);
 
-                    var layers = await layerModel.GetLayers(userContext.Transaction);
+                    var layers = await layerModel.GetLayers(userContext.Transaction, userContext.TimeThreshold);
 
                     return layers;
                 });
@@ -50,11 +51,12 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                        .WithTimeThreshold(() => TimeThreshold.BuildLatest());
 
                     var layerID = context.GetArgument<string>("layerID")!;
 
-                    var layer = await layerModel.GetLayer(layerID, userContext.Transaction);
+                    var layer = await layerModel.GetLayer(layerID, userContext.Transaction, userContext.TimeThreshold);
                     if (layer == null)
                         throw new Exception($"Could not get layer with ID {layerID}");
 

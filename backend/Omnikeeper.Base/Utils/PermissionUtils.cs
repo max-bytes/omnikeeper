@@ -25,7 +25,7 @@ namespace Omnikeeper.Base.Utils
 
         public static async Task<string[]> GetAllAvailablePermissions(ILayerModel layerModel, IModelContext trans)
         {
-            var allLayers = await layerModel.GetLayers(trans);
+            var allLayers = await layerModel.GetLayers(trans, TimeThreshold.BuildLatest());
             return new string[] { GetManagementPermission() }
                 .Concat(allLayers.SelectMany(l => new string[] { GetLayerReadPermission(l), GetLayerWritePermission(l) }))
                 .ToArray()

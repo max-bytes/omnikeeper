@@ -21,7 +21,7 @@ namespace Omnikeeper.Service
 
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
-            foreach (var layer in await layerModel.GetLayers(trans))
+            foreach (var layer in await layerModel.GetLayers(trans, atTime))
             {
                 using var commandGetHistoric = new NpgsqlCommand($@"
                     select distinct on(ci_id, name) removed, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id FROM attribute 
@@ -127,7 +127,7 @@ namespace Omnikeeper.Service
             await commandTruncate.ExecuteNonQueryAsync();
 
             // rebuild
-            foreach (var layer in await layerModel.GetLayers(trans))
+            foreach (var layer in await layerModel.GetLayers(trans, atTime))
             {
                 var query = @"
                     insert into attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id)
@@ -170,7 +170,7 @@ namespace Omnikeeper.Service
             await commandTruncate.ExecuteNonQueryAsync();
 
             // rebuild
-            foreach (var layer in await layerModel.GetLayers(trans))
+            foreach (var layer in await layerModel.GetLayers(trans, atTime))
             {
                 var query = @"
                     insert into relation_latest (id, from_ci_id, to_ci_id, predicate_id, changeset_id, timestamp, layer_id)

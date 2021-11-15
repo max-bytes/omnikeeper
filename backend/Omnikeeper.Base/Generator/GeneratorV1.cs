@@ -166,9 +166,7 @@ namespace Omnikeeper.Base.Generator
 
         public async Task<IEnumerable<GeneratorV1>[]> GetEffectiveGenerators(string[] layerIDs, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold timeThreshold)
         {
-            // TODO, NOTE: we assume we get the layers back just as we queried for them, does this hold all the time?
-            // TODO: rewrite GetLayers() to return array
-            var layers = (await layerModel.GetLayers(layerIDs, trans)).ToDictionary(l => l.ID); // TODO: this should actually get the layers at the correct point in time, not the latest!
+            var layers = (await layerModel.GetLayers(layerIDs, trans, timeThreshold)).ToDictionary(l => l.ID);
 
             var ret = new IEnumerable<GeneratorV1>[layerIDs.Length];
             IDictionary<string, GeneratorV1>? availableGenerators = null;

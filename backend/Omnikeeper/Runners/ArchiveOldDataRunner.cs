@@ -60,7 +60,7 @@ namespace Omnikeeper.Runners
 
                logger.LogDebug($"Deleting outdated attributes and relations older than {threshold}");
 
-                var layerIDs = (await layerModel.GetLayers(trans)).Select(l => l.ID).ToArray();
+                var layerIDs = (await layerModel.GetLayers(trans, now)).Select(l => l.ID).ToArray();
                 var numDeletedAttributes = await baseAttributeRevisionistModel.DeleteOutdatedAttributesOlderThan(layerIDs, trans, threshold, now);
                 var numDeletedRelations = await baseRelationRevisionistModel.DeleteOutdatedRelationsOlderThan(layerIDs, trans, threshold, now);
                 if (numDeletedAttributes > 0)

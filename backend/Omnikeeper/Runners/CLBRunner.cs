@@ -51,7 +51,7 @@ namespace Omnikeeper.Runners
             logger.LogInformation("Start");
 
             var trans = modelContextBuilder.BuildImmediate();
-            var activeLayers = await layerModel.GetLayers(AnchorStateFilter.ActiveAndDeprecated, trans);
+            var activeLayers = await layerModel.GetLayers(AnchorStateFilter.ActiveAndDeprecated, trans, TimeThreshold.BuildLatest());
             var layersWithCLBs = activeLayers.Where(l => l.CLConfigID != "");
 
             if (!layersWithCLBs.IsEmpty()) {

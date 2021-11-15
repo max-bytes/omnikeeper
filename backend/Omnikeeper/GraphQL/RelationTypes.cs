@@ -125,7 +125,7 @@ namespace Omnikeeper.GraphQL
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source!.LayerStackIDs;
 
-                var loader = dataLoaderContextAccessor.Context.GetOrAddLoader("GetAllLayers", () => layerModel.GetLayers(userContext.Transaction));
+                var loader = dataLoaderContextAccessor.Context.GetOrAddLoader("GetAllLayers", () => layerModel.GetLayers(userContext.Transaction, userContext.TimeThreshold));
                 return loader.LoadAsync().Then(layers => layers
                         .Where(l => layerstackIDs.Contains(l.ID))
                         .OrderBy(l => layerstackIDs.IndexOf(l.ID))

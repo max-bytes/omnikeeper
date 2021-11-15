@@ -22,7 +22,7 @@ namespace Omnikeeper.Base.Inbound
 
         public async Task<bool> IsOnlineInboundLayer(string layerID, IModelContext trans)
         {
-            var layer = await layerModel.GetLayer(layerID, trans);
+            var layer = await layerModel.GetLayer(layerID, trans, TimeThreshold.BuildLatest());
             if (layer == null) return false;
             var adapterName = layer.OnlineInboundAdapterLink.AdapterName;
             return await pluginManager.IsValidOnlinePluginInstance(adapterName, trans);
@@ -30,7 +30,7 @@ namespace Omnikeeper.Base.Inbound
 
         public async Task<bool> ContainsOnlineInboundLayer(LayerSet layerset, IModelContext trans)
         {
-            var layers = await layerModel.GetLayers(layerset.LayerIDs, trans);
+            var layers = await layerModel.GetLayers(layerset.LayerIDs, trans, TimeThreshold.BuildLatest());
             foreach (var layer in layers)
             {
                 var adapterName = layer.OnlineInboundAdapterLink.AdapterName;
@@ -43,7 +43,7 @@ namespace Omnikeeper.Base.Inbound
         private async IAsyncEnumerable<(ILayerAccessProxy? proxy, Layer layer, int index)> GetAccessProxies(string[] layerIDs, IModelContext trans)
         {
             var i = 0;
-            foreach (var layer in await layerModel.GetLayers(layerIDs, trans))
+            foreach (var layer in await layerModel.GetLayers(layerIDs, trans, TimeThreshold.BuildLatest()))
             {
                 var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
                 if (plugin != null)
@@ -75,7 +75,7 @@ namespace Omnikeeper.Base.Inbound
 
         public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
         {
-            var layer = await layerModel.GetLayer(layerID, trans);
+            var layer = await layerModel.GetLayer(layerID, trans, atTime);
             if (layer == null)
                 throw new Exception($"Could not find layer with ID {layerID}");
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
@@ -87,7 +87,7 @@ namespace Omnikeeper.Base.Inbound
 
         public async IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
         {
-            var layer = await layerModel.GetLayer(layerID, trans);
+            var layer = await layerModel.GetLayer(layerID, trans, atTime);
             if (layer == null)
                 throw new Exception($"Could not find layer with ID {layerID}");
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
@@ -100,7 +100,7 @@ namespace Omnikeeper.Base.Inbound
 
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, string layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
         {
-            var layer = await layerModel.GetLayer(layerID, trans);
+            var layer = await layerModel.GetLayer(layerID, trans, atTime);
             if (layer == null)
                 throw new Exception($"Could not find layer with ID {layerID}");
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);

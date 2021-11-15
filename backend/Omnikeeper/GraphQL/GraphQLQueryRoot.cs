@@ -214,7 +214,9 @@ namespace Omnikeeper.GraphQL
                 });
 
             FieldAsync<ListGraphType<PredicateType>>("predicates",
-                arguments: new QueryArguments(),
+                arguments: new QueryArguments(
+                    new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }
+                    ),
                 resolve: async context =>
                 {
                     var userContext = context.SetupUserContext()
@@ -228,12 +230,16 @@ namespace Omnikeeper.GraphQL
                 });
 
             FieldAsync<ListGraphType<LayerType>>("layers",
+                arguments: new QueryArguments(
+                    new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }
+                    ),
                 resolve: async context =>
                 {
                     var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                        .WithTimeThreshold(() => context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()));
 
-                    var layers = await layerModel.GetLayers(userContext.Transaction);
+                    var layers = await layerModel.GetLayers(userContext.Transaction, userContext.TimeThreshold);
 
                     // authz filter
                     layers = layers.Where(l => layerBasedAuthorizationService.CanUserReadFromLayer(userContext.User, l));
@@ -364,7 +370,7 @@ namespace Omnikeeper.GraphQL
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
 
-                    var layers = await layerModel.GetLayers(userContext.Transaction); // TODO: we only need count, implement more efficient model method
+                    var layers = await layerModel.GetLayers(userContext.Transaction, userContext.TimeThreshold); // TODO: we only need count, implement more efficient model method
                     var ciids = await ciidModel.GetCIIDs(userContext.Transaction);
                     var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold);
                     var predicates = await predicateModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold); // TODO: implement PredicateProvider
