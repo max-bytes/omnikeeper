@@ -19,6 +19,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [3.0.0] - 2021-11-15
+
+### Added
+- initial implementation of usage stats tracking for effective traits, layers and auth-roles
+- implementation of GenericTraitEntities and usage of them for all core traits such as base configuration, predicates and traits themselves
+- added support for tuples as ID for GenericTraitEntities
+- initial implementation of attribute value type "mask"
+- implemented CI diffing in backend, offered GraphQL interface, made technical frontend differ use backend implementation
+- added REST endpoint /.well-known/openid-configuration to help clients with authentication
+- gridview: support for ag-grid enterprice license (via environment variable)
+- gridview: support for copy/paste (when using ag-grid enterprise)
+- gridview: support for excel export (when using ag-grid enterprise)
+
+### Changed
+- performance improvements to CI search
+- performance improvements to relation querying
+- performance improvements to attribute mutations: use postgres copy inserts
+- performance improvements when querying MergedCIs
+- performance improvements to Generic JSON Ingest
+- marked some REST APIs obsolete, prefer GraphQL use instead
+- usage of Autofac DI instead of Core DI, removed scrutor
+
+### Fixed
+- technical frontend: fixed performance issues in various parts of the frontend when displaying larged numbers of attributes/relations/changesets/CIs
+- fixed order of layers in layerStack array when returned by GraphQL
+- re-added display of stacktrace in GraphQL error response objects
+- technical frontend: inreased CLBrain Config cell editor maximum length
+- gridview: bugfix for [not-set] issue
+- lots of smaller bugfixes
+
 ## [2.0.0] - 2021-10-09
  
 ### Added
