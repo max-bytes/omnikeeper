@@ -27,10 +27,18 @@ namespace Omnikeeper.GraphQL
 
     public class SpanJSONDocumentWriter : IDocumentWriter
     {
+        private readonly IErrorInfoProvider errorInfoProvider;
+
+        public SpanJSONDocumentWriter(IErrorInfoProvider errorInfoProvider)
+        {
+            this.errorInfoProvider = errorInfoProvider;
+        }
         public async Task WriteAsync<T>(Stream stream, T value, CancellationToken cancellationToken = default)
         {
             try
             {
+                // HACK: this is a really weird way to "inject" the errorInfoProvider into the formatter, but with SpanJSON, there seems to be no other way
+                ExecutionResultFormatter.Default.ErrorInfoProvider = errorInfoProvider;
                 await JsonSerializer.Generic.Utf8.SerializeAsync<ExecutionResult, Resolver<byte>>((value as ExecutionResult)!, stream, cancellationToken);
             } catch (Exception e)
             {
@@ -45,7 +53,7 @@ namespace Omnikeeper.GraphQL
 
         public object? Arguments { get; set; }
 
-        private ErrorInfoProvider errorInfoProvider = new ErrorInfoProvider(); // TODO: make configurable?
+        public IErrorInfoProvider? ErrorInfoProvider;// = new ErrorInfoProvider(); // TODO: make configurable?
 
         public void Serialize(ref JsonWriter<byte> writer, ExecutionResult value)
         {
@@ -184,7 +192,7 @@ namespace Omnikeeper.GraphQL
             var separated = false;
             foreach (var error in errors)
             {
-                var info = errorInfoProvider.GetInfo(error);
+                var info = ErrorInfoProvider!.GetInfo(error);
 
                 if (separated) writer.WriteUtf8ValueSeparator();
 
