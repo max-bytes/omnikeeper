@@ -62,8 +62,6 @@ namespace Omnikeeper.Base.Entity
             public IAttributeValue Value { get; private set; }
             public Guid CIID { get; private set; }
 
-            //public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}", "");
-
             public Fragment(string name, IAttributeValue value, Guid ciid)
             {
                 Name = name;

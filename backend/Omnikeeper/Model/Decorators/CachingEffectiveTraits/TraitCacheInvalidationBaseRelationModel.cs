@@ -2,10 +2,8 @@
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,37 +62,6 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             }
             return t;
         }
-
-        //public async Task<bool> BulkUpdateRelations(IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> d, bool outgoing, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        //{
-        //    var changed = await model.BulkUpdateRelations(d, outgoing, layerID, changesetProxy, origin, trans);
-        //    if (changed)
-        //    {
-        //        cache.AddCIIDs(d.SelectMany(dd => dd.otherCIIDs), layerID);
-        //        cache.AddCIIDs(d.Select(dd => dd.thisCIID), layerID);
-        //    }
-        //    return changed;
-        //}
-
-        //public async Task<bool> BulkReplaceOutgoingRelations(Guid fromCIID, string predicateID, IEnumerable<Guid> toCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        //{
-        //    var changed = await model.BulkReplaceOutgoingRelations(fromCIID, predicateID, toCIIDs, layerID, changesetProxy, origin, trans);
-        //    if (changed)
-        //    {
-        //        cache.AddCIIDs(toCIIDs.Concat(fromCIID), layerID);
-        //    }
-        //    return changed;
-        //}
-
-        //public async Task<bool> BulkReplaceIncomingRelations(Guid toCIID, string predicateID, IEnumerable<Guid> fromCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        //{
-        //    var changed = await model.BulkReplaceIncomingRelations(toCIID, predicateID, fromCIIDs, layerID, changesetProxy, origin, trans);
-        //    if (changed)
-        //    {
-        //        cache.AddCIIDs(fromCIIDs.Concat(toCIID), layerID);
-        //    }
-        //    return changed;
-        //}
 
         public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
         {
