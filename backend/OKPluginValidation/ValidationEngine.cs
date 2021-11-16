@@ -3,9 +3,9 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,7 +59,7 @@ namespace OKPluginValidation.Validation
 
             // perform validation of rules, producing an updated set of issues
             var newIssues = new Dictionary<string, ValidationIssue>();
-            foreach (var (validationName, validation) in validations)
+            foreach (var (validationID, validation) in validations)
             {
                 var ruleName = validation.RuleName;
 
@@ -88,18 +88,8 @@ namespace OKPluginValidation.Validation
             {
                 using var trans = modelContextBuilder.BuildDeferred();
                 var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
-                var oldValidationIssues = await validationIssueModel.GetAllByDataID(validationWriteLayerset, trans, timeThreshold);
 
-                // TODO: implement a bulk update instead of updating each item separately
-                foreach (var (_, newIssue) in newIssues)
-                    await validationIssueModel.InsertOrUpdate(newIssue, validationWriteLayerset, validationWriteLayerID,
-                        new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans);
-
-                var outdatedIssues = oldValidationIssues.Where(kv => !newIssues.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
-
-                foreach (var (_, outdatedIssue) in outdatedIssues)
-                    await validationIssueModel.TryToDelete(outdatedIssue.ID, validationWriteLayerset, validationWriteLayerID,
-                        new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans);
+                await validationIssueModel.BulkReplace(newIssues, validationWriteLayerset, validationWriteLayerID, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans);
 
                 // TODO: add relations from validation issue to validation
 

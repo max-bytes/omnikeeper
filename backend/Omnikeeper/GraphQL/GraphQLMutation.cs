@@ -12,6 +12,7 @@ using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.GraphQL
 {

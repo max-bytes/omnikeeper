@@ -6,6 +6,7 @@ using Omnikeeper.Base.Plugins;
 using Omnikeeper.Controllers.Ingest;
 using System;
 using System.Collections.Generic;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace OKPluginGenericJSONIngest
 {

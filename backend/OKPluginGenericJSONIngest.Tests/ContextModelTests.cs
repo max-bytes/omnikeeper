@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tests.Integration.Model;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace OKPluginGenericJSONIngest
 {
