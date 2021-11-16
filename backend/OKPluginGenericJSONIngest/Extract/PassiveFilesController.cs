@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Http;
 using OKPluginGenericJSONIngest.Extract;
 using Omnikeeper.Base.Model.Config;
 using System.Text;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Controllers.Ingest
 {

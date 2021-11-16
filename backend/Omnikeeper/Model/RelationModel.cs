@@ -106,14 +106,19 @@ namespace Omnikeeper.Model
             return await baseModel.BulkReplaceRelations(data, changesetProxy, origin, trans);
         }
 
-        public async Task<bool> BulkReplaceOutgoingRelations(Guid fromCIID, string predicateID, IEnumerable<Guid> toCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            return await baseModel.BulkReplaceOutgoingRelations(fromCIID, predicateID, toCIIDs, layerID, changesetProxy, origin, trans);
-        }
+        //public async Task<bool> BulkUpdateRelations(IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> d, bool outgoing, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        //{
+        //    return await baseModel.BulkUpdateRelations(d, outgoing, layerID, changesetProxy, origin, trans);
+        //}
 
-        public async Task<bool> BulkReplaceIncomingRelations(Guid toCIID, string predicateID, IEnumerable<Guid> fromCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            return await baseModel.BulkReplaceIncomingRelations(toCIID, predicateID, fromCIIDs, layerID, changesetProxy, origin, trans);
-        }
+        //public async Task<bool> BulkReplaceOutgoingRelations(Guid fromCIID, string predicateID, IEnumerable<Guid> toCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        //{
+        //    return await baseModel.BulkReplaceOutgoingRelations(fromCIID, predicateID, toCIIDs, layerID, changesetProxy, origin, trans);
+        //}
+
+        //public async Task<bool> BulkReplaceIncomingRelations(Guid toCIID, string predicateID, IEnumerable<Guid> fromCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        //{
+        //    return await baseModel.BulkReplaceIncomingRelations(toCIID, predicateID, fromCIIDs, layerID, changesetProxy, origin, trans);
+        //}
     }
 }

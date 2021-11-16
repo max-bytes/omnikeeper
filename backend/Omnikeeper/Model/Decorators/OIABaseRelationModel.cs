@@ -69,18 +69,25 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetRelationsOfChangeset(changesetID, getRemoved, trans);
         }
 
-        public async Task<bool> BulkReplaceOutgoingRelations(Guid fromCIID, string predicateID, IEnumerable<Guid> toCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
+        //public async Task<bool> BulkUpdateRelations(IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> d, bool outgoing, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        //{
+        //    if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
-            return await model.BulkReplaceOutgoingRelations(fromCIID, predicateID, toCIIDs, layerID, changesetProxy, origin, trans);
-        }
+        //    return await model.BulkUpdateRelations(d, outgoing, layerID, changesetProxy, origin, trans);
+        //}
 
-        public async Task<bool> BulkReplaceIncomingRelations(Guid toCIID, string predicateID, IEnumerable<Guid> fromCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
+        //public async Task<bool> BulkReplaceOutgoingRelations(Guid fromCIID, string predicateID, IEnumerable<Guid> toCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        //{
+        //    if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
-            return await model.BulkReplaceIncomingRelations(toCIID, predicateID, fromCIIDs, layerID, changesetProxy, origin, trans);
-        }
+        //    return await model.BulkReplaceOutgoingRelations(fromCIID, predicateID, toCIIDs, layerID, changesetProxy, origin, trans);
+        //}
+
+        //public async Task<bool> BulkReplaceIncomingRelations(Guid toCIID, string predicateID, IEnumerable<Guid> fromCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        //{
+        //    if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
+
+        //    return await model.BulkReplaceIncomingRelations(toCIID, predicateID, fromCIIDs, layerID, changesetProxy, origin, trans);
+        //}
     }
 }

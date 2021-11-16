@@ -6,6 +6,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Validation.Rules;
 using System.Collections.Generic;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace OKPluginValidation
 {

@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.Base.Model
+namespace Omnikeeper.Base.Model.TraitBased
 {
     // TODO: refactor to be more like GenericTraitEntityModel
     public abstract class SingletonTraitDataConfigBaseModel<T> where T : TraitEntity, new()

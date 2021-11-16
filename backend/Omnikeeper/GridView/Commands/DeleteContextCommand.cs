@@ -8,6 +8,7 @@ using Omnikeeper.GridView.Entity;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.GridView.Commands
 {

@@ -18,10 +18,11 @@ namespace Omnikeeper.Base.Model
         // mutations
         Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans);
         Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans);
+
         Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans);
 
-        Task<bool> BulkReplaceOutgoingRelations(Guid fromCIID, string predicateID, IEnumerable<Guid> toCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans);
-        Task<bool> BulkReplaceIncomingRelations(Guid toCIID, string predicateID, IEnumerable<Guid> fromCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans);
+        // NOTE: unlike BulkReplaceRelations(), this only affects "thisCIID"s, not the whole layer
+        //Task<bool> BulkUpdateRelations(IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> d, bool outgoing, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans);
     }
 
     public interface IBaseRelationRevisionistModel

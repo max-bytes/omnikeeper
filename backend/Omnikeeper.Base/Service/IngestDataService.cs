@@ -103,11 +103,11 @@ namespace Omnikeeper.Base.Service
                 relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID));
             }
             var bulkRelationData = new BulkRelationDataLayerScope(writeLayer.ID, relationFragments.ToArray());
-            await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans);
+            var affectedRelations = await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans);
 
             trans.Commit();
 
-            return (affectedCIs.Count(), bulkRelationData.Fragments.Length);
+            return (affectedCIs.Count(), affectedRelations.Count());
         }
     }
 

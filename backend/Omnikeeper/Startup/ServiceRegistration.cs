@@ -34,6 +34,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Startup
 {
