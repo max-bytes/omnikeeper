@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+
+## [3.0.0] - 2021-11-18
+
+
 ## [3.0.0] - 2021-11-15
 
 ### Added
@@ -105,7 +109,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - bugfix in CI search regarding empty trait
 - lots of small bugfixes
 
-## [1.5.1] - 2021-09-20
+## [1.3.1] - 2021-09-20
+
+### Added
+- implemented bulk replace for trait entities
+- added support for historical querying of layers
+
+### Fixes
+- technical frontend: bugfix for error when editing generators in layer management
+- bugfix for swagger API generation error related to AuthRedirectController
 
 ### Added
 - gridview: support for columns from related CI attributes via `sourceAttributePath`. F.e, specify `sourceAttributePath: [">", "runs_on"]` in addition to `sourceAttributeName` to show attribute of CI related via a forward relation with predicate `runs_on`
