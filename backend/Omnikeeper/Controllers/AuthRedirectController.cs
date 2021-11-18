@@ -15,6 +15,7 @@ namespace Omnikeeper.Controllers
             this.configuration = configuration;
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
             var baseURL = configuration.GetSection("Authentication")["Authority"];
