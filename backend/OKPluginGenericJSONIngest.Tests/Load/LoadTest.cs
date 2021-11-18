@@ -28,7 +28,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                 relations = new List<GenericInboundRelation> { }
             };
 
-            var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"));
+            var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), NullLogger.Instance);
 
             ingestData.Should().BeEquivalentTo(
                 new IngestData(
@@ -70,7 +70,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                 relations = new List<GenericInboundRelation> { }
             };
 
-            var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"));
+            var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), NullLogger.Instance);
 
             var jsonValue = ingestData.CICandidates.ToList().First().Attributes.Fragments.First().Value;
             jsonValue.Should().BeEquivalentTo(AttributeArrayValueJSON.BuildFromString(new string[] { }), options => options.WithStrictOrdering());
@@ -109,7 +109,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                 }
             };
 
-            Assert.Throws<Exception>(() => loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2")));
+            Assert.Throws<Exception>(() => loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), NullLogger.Instance));
         }
     }
 }
