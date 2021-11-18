@@ -337,34 +337,42 @@ namespace Omnikeeper.Startup
             app.UsePathBase(Configuration.GetValue<string>("BaseURL"));
 
             // make application properly consider headers (and populate httprequest object) when behind reverse proxy
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            var forwardedHeaderOptions = new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-            });
+            };
 
-            // debug to log all requests and their headers
-            app.Use(async (context, next) =>
-            {
-                // Request method, scheme, and path
-                logger.LogInformation("Request Method: {Method}", context.Request.Method);
-                logger.LogInformation("Request Scheme: {Scheme}", context.Request.Scheme);
-                logger.LogInformation("Request Path: {Path}", context.Request.Path);
+            // NOTE, HACK: we should not do this because this has the potential of opening up IP spoofing attacks
+            // but, it's otherwise really hard to correctly know the IP-ranges of possible proxies, so we disable whitelisting (for now)
+            // see https://github.com/dotnet/AspNetCore.Docs/issues/2384 for a discussion
+            forwardedHeaderOptions.KnownNetworks.Clear();
+            forwardedHeaderOptions.KnownProxies.Clear();
 
-                // Headers
-                foreach (var header in context.Request.Headers)
-                {
-                    logger.LogInformation("Header: {Key}: {Value}", header.Key, header.Value);
-                }
+            app.UseForwardedHeaders(forwardedHeaderOptions);
 
-                // Connection: RemoteIp
-                logger.LogInformation("Request RemoteIp: {RemoteIpAddress}",
-                    context.Connection.RemoteIpAddress);
+            //// debug to log all requests and their headers
+            //app.Use(async (context, next) =>
+            //{
+            //    // Request method, scheme, and path
+            //    logger.LogInformation("Request Method: {Method}", context.Request.Method);
+            //    logger.LogInformation("Request Scheme: {Scheme}", context.Request.Scheme);
+            //    logger.LogInformation("Request Path: {Path}", context.Request.Path);
 
-                logger.LogInformation("Known proxies: {KnownProxies}", (object)(new ForwardedHeadersOptions().KnownProxies));
-                logger.LogInformation("Known proxies: {KnownNetworks}", (object)(new ForwardedHeadersOptions().KnownNetworks));
+            //    // Headers
+            //    foreach (var header in context.Request.Headers)
+            //    {
+            //        logger.LogInformation("Header: {Key}: {Value}", header.Key, header.Value);
+            //    }
 
-                await next();
-            });
+            //    // Connection: RemoteIp
+            //    logger.LogInformation("Request RemoteIp: {RemoteIpAddress}",
+            //        context.Connection.RemoteIpAddress);
+
+            //    logger.LogInformation("Known proxies: {KnownProxies}", (object)(new ForwardedHeadersOptions().KnownProxies));
+            //    logger.LogInformation("Known proxies: {KnownNetworks}", (object)(new ForwardedHeadersOptions().KnownNetworks));
+
+            //    await next();
+            //});
 
             app.UseStaticFiles();
 
