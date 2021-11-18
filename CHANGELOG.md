@@ -19,9 +19,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [3.1.0] - 2021-11-18
+
+### Added
+- generic JSON Ingest: graceful error handling for missing relation ends
+
+### Fixes
+- better handling of x-forwarded-proto in certain environments (nginx SSL frontloading+docker)
 
 ## [3.0.0] - 2021-11-18
 
+### Added
+- implemented bulk replace for trait entities
+- added support for historical querying of layers
+
+### Fixes
+- technical frontend: bugfix for error when editing generators in layer management
+- bugfix for swagger API generation error related to AuthRedirectController
 
 ## [3.0.0] - 2021-11-15
 
@@ -109,15 +123,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - bugfix in CI search regarding empty trait
 - lots of small bugfixes
 
-## [1.3.1] - 2021-09-20
-
-### Added
-- implemented bulk replace for trait entities
-- added support for historical querying of layers
-
-### Fixes
-- technical frontend: bugfix for error when editing generators in layer management
-- bugfix for swagger API generation error related to AuthRedirectController
+## [1.5.1] - 2021-09-20
 
 ### Added
 - gridview: support for columns from related CI attributes via `sourceAttributePath`. F.e, specify `sourceAttributePath: [">", "runs_on"]` in addition to `sourceAttributeName` to show attribute of CI related via a forward relation with predicate `runs_on`

@@ -52,22 +52,28 @@ namespace OKPluginGenericJSONIngest.Load
                 if (!tempCIIDMapping.TryGetValue(r.from, out var tempFromGuid))
                 {
                     if (gracefulFromErrorHandling)
+                    {
                         logger.LogWarning($"From-ci \"{r.from}\" of relation could not be resolved");
+                        return null;
+                    }
                     else
                         throw new Exception($"From-ci \"{r.from}\" of relation could not be resolved");
                 }
                 if (!tempCIIDMapping.TryGetValue(r.to, out var tempToGuid))
                 {
                     if (gracefulToErrorHandling)
+                    {
                         logger.LogWarning($"To-ci \"{r.to}\" of relation could not be resolved");
+                        return null;
+                    }
                     else
                         throw new Exception($"To-ci \"{r.to}\" of relation could not be resolved");
                 }
                 return new RelationCandidate(
                     CIIdentificationMethodByTemporaryCIID.Build(tempFromGuid),
                     CIIdentificationMethodByTemporaryCIID.Build(tempToGuid), r.predicate);
-            }).ToList(); // NOTE: we force linq evaluation here
-            return new IngestData(ciCandidates, relationCandidates);
+            }).Where(d => d != null).ToList(); // NOTE: we force linq evaluation here
+            return new IngestData(ciCandidates, relationCandidates!);
         }
 
         //public async Task Load(IngestData ingestData, Layer writeLayer, AuthenticatedUser user, IngestDataService ingestDataService)
