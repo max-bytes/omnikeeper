@@ -39,6 +39,7 @@ namespace OKPluginVariableRendering
             try
             {
                 cfg = config.ToObject<Configuration>();
+                logger.LogDebug("Parsed configuration for VariableRendering.");
             }
             catch (Exception ex)
             {
@@ -46,116 +47,157 @@ namespace OKPluginVariableRendering
                 return false;
             }
 
-            // TODO NOTE loop through defined layers
 
-            var layersetVariableRendering = await layerModel.BuildLayerSet(new[] { "variable_rendering" }, trans);
-
-            var allCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetVariableRendering, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
-
-            // TODO NOTE we should create traits dynamically based on configuration, how to do this??
-            //var mainCIs = await traitModel.FilterCIsWithTrait(allCIs, Traits.ServicesStaticFlattened, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
-
-            var mainCIs = allCIs.Where(ci => ci.MergedAttributes.ContainsKey(cfg.BaseCI.RequiredTrait)).ToList();
-
-            // fetch all relations
-            var allRelations = await relationModel.GetRelations(RelationSelectionAll.Instance, "variable_rendering", trans, changesetProxy.TimeThreshold);
-
-            // TODO: priority of each element should be taken into account
-
-            foreach (var mainCI in mainCIs)
+            foreach (var layer in cfg.InputLayerSet)
             {
-                var gatheredAttributes = new List<GatheredAttribute>();
+                logger.LogDebug($"Started rendering variables for layer {layer}");
 
-                foreach (var followRelation in cfg.BaseCI.FollowRelations)
-                {
-                    var prevCI = mainCI;
-                    foreach (var follow in followRelation.Follow)
+                var layersetVariableRendering = await layerModel.BuildLayerSet(new[] { layer }, trans);
+
+                var allCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetVariableRendering, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
+
+                var mainCIs = allCIs.Where(ci => ci.MergedAttributes.ContainsKey(cfg.BaseCI.RequiredTrait)).ToList();
+                //var mainCIs = allCIs.Where(ci => ci.ID == new Guid("c2f7e21f-128a-4adc-8c63-b9bcd804026e")).ToList();
+
+                // select only the realtions that are defined in configuration
+                var relations = new List<string>();
+
+                cfg.BaseCI.FollowRelations.ForEach(r => {
+                    r.Follow.ForEach(f =>
                     {
-                        // get the predicate remove the first char, first char defines the direction of relation
-                        var predicate = follow.Predicate[1..];
-
-                        // check outgoing relations
-                        var r = allRelations.Where(r =>
+                        if (relations.IndexOf(f.Predicate[1..]) == -1)
                         {
-                            if (follow.Predicate[0] == '>')
-                            {
-                                return r.FromCIID == prevCI.ID && r.PredicateID == predicate;
-                            }
-                            else
-                            {
-                                return r.ToCIID == prevCI.ID && r.PredicateID == predicate;
-                            }
-                        }).FirstOrDefault();
-
-
-                        if (r == null)
-                        {
-                            // NOTE: does this mean that we should break the loop, because there aren't more nodes?? 
-                            break;
+                            relations.Add(f.Predicate[1..]);
                         }
+                    });
+                });
 
-                        var targetCI = allCIs.Where(ci => ci.ID == r.ToCIID).FirstOrDefault();
+                // TODO check if selection with specific predicates is possible than use the relations array created earlier
+                var allRelations = await relationModel.GetRelations(RelationSelectionAll.Instance, layer, trans, changesetProxy.TimeThreshold);
 
-                        prevCI = targetCI;
+                // TODO: priority of each element should be taken into account
 
-                        var targetCIAttributes = targetCI.MergedAttributes.Where(a => IsAttributeAllowed(a.Value.Attribute.Name, follow.InputWhitelist, follow.InputBlacklist)).ToList();
+                foreach (var mainCI in mainCIs)
+                {
+                    var gatheredAttributes = new List<GatheredAttribute>();
 
-                        foreach (var mapping in follow.AttributeMapping)
+                    foreach (var followRelation in cfg.BaseCI.FollowRelations)
+                    {
+                        var prevCI = mainCI;
+                        foreach (var follow in followRelation.Follow)
                         {
-                            foreach (var (_, attribute) in targetCIAttributes)
+                            // get the predicate remove the first char, first char defines the direction of relation
+                            var predicate = follow.Predicate[1..];
+
+                            // check relation direction
+                            var r = allRelations.Where(r =>
                             {
-                                if (IsAttributeIncludedInSource(attribute.Attribute.Name, mapping.Source))
+                                if (follow.Predicate[0] == '>')
                                 {
-                                    gatheredAttributes.Add(new GatheredAttribute
+                                    return r.FromCIID == prevCI.ID && r.PredicateID == predicate;
+                                }
+                                else
+                                {
+                                    return r.ToCIID == prevCI.ID && r.PredicateID == predicate;
+                                }
+                            }).FirstOrDefault();
+
+
+                            if (r == null)
+                            {
+                                // NOTE: does this mean that we should break the loop, because there aren't more nodes?? 
+                                break;
+                            }
+
+                            var targetCI = allCIs.Where(ci => ci.ID == r.ToCIID).FirstOrDefault();
+
+                            prevCI = targetCI;
+
+                            var targetCIAttributes = targetCI.MergedAttributes.Where(a => IsAttributeAllowed(a.Value.Attribute.Name, follow.InputWhitelist, follow.InputBlacklist)).ToList();
+
+                            // NOTE check realtion required trait
+                            if (targetCIAttributes.Where(a => a.Key == follow.RequiredTrait).ToList().Count == 0)
+                            {
+                                continue;
+                            }
+
+                            var allCIAttributes = targetCIAttributes.Select(a => new GatheredAttribute { SourceCIID = targetCI.ID, Name = a.Key, RequiredTrait = follow.RequiredTrait, Value = a.Value.Attribute.Value.ToString() }).ToList();
+
+
+                            var tmpCIAttributes = new List<GatheredAttribute>();
+                            // new way 
+                            foreach (var mapping in follow.AttributeMapping)
+                            {
+                                foreach (var attribute in allCIAttributes)
+                                {
+                                    if (IsAttributeIncludedInSource(attribute.Name, mapping.Source))
                                     {
-                                        SourceCIID = targetCI.ID,
-                                        OriginalName = attribute.Attribute.Name,
-                                        NewName = GetTargetName(attribute.Attribute.Name, mapping.Target),
-                                        Value = attribute.Attribute.Value.Value2String(),
-                                        RequiredTrait = follow.RequiredTrait,
-                                    });
+                                        var a = new GatheredAttribute
+                                        {
+                                            SourceCIID = targetCI.ID,
+                                            Name = GetTargetName(attribute.Name, mapping.Target),
+                                            Value = attribute.Value,
+                                            RequiredTrait = follow.RequiredTrait,
+                                        };
+
+                                        var i = tmpCIAttributes.FindIndex(e => e.Name == attribute.Name);
+
+                                        if (i != -1)
+                                        {
+                                            tmpCIAttributes.RemoveAt(i);
+                                            tmpCIAttributes.Add(a);
+                                        } else
+                                        {
+                                            tmpCIAttributes.Add(a);
+                                        }
+
+                                        attribute.Name = a.Name;
+                                        attribute.Value = a.Value;
+                                    }
                                 }
                             }
+
+                            gatheredAttributes.AddRange(tmpCIAttributes);
                         }
                     }
-                }
 
-                // for all gathered attributes insert them to the main ci
+                    // for all gathered attributes insert them to the main ci
 
-                foreach (var mapping in cfg.BaseCI.AttributeMapping)
-                {
-
-                    foreach (var attribute in gatheredAttributes)
+                    foreach (var mapping in cfg.BaseCI.AttributeMapping)
                     {
-                        // first we need to check input whitelist and blacklist
 
-                        if (!IsAttributeAllowed(attribute.NewName, cfg.BaseCI.InputWhitelist, cfg.BaseCI.InputBlacklist))
+                        foreach (var attribute in gatheredAttributes)
                         {
-                            continue;
+                            // first we need to check input whitelist and blacklist
+
+                            if (!IsAttributeAllowed(attribute.Name, cfg.BaseCI.InputWhitelist, cfg.BaseCI.InputBlacklist))
+                            {
+                                continue;
+                            }
+
+                            // check base ci attribute mapping
+
+                            if (!IsAttributeIncludedInSource(attribute.Name, mapping.Source))
+                            {
+                                continue;
+                            }
+
+                            var (_, changed) = await attributeModel.InsertAttribute(
+                                GetTargetName(attribute.Name, mapping.Target),
+                                new AttributeScalarValueText(attribute.Value),
+                                mainCI.ID,
+                                layer,
+                                changesetProxy,
+                                new DataOriginV1(DataOriginType.Manual),
+                                trans);
+
+                            if (!changed)
+                            {
+                                logger.LogError($"An error ocurred trying to insert attribute for CI with id={mainCI.ID}");
+                            }
                         }
 
-                        // check base ci attribute mapping
-
-                        if (!IsAttributeIncludedInSource(attribute.NewName, mapping.Source))
-                        {
-                            continue;
-                        }
-
-                        var (_, changed) = await attributeModel.InsertAttribute(
-                            GetTargetName(attribute.NewName, mapping.Target),
-                            new AttributeScalarValueText(attribute.Value),
-                            mainCI.ID,
-                            "variable_rendering",
-                            changesetProxy,
-                            new DataOriginV1(DataOriginType.Manual),
-                            trans);
-
-                        if (!changed)
-                        {
-                            logger.LogError($"An error ocurred trying to insert attribute for CI with id={mainCI.ID}");
-                        }
                     }
-
                 }
             }
 
@@ -205,7 +247,7 @@ namespace OKPluginVariableRendering
             {
                 result = true;
             }
-            else if (attribute.StartsWith(source[..1]))
+            else if (attribute.StartsWith(source[..^1]))
             {
                 result = true;
             }
@@ -221,15 +263,19 @@ namespace OKPluginVariableRendering
         internal class GatheredAttribute
         {
             public Guid SourceCIID { get; set; }
-            public string OriginalName { get; set; }
+            //public string OriginalName { get; set; }
             public string RequiredTrait { get; set; }
-            public string NewName { get; set; }
+            // TODO depricate this
+            //public string NewName { get; set; }
+
+            public string Name { get; set; }
             public string Value { get; set; }
 
             public GatheredAttribute()
             {
-                OriginalName = "";
-                NewName = "";
+                //OriginalName = "";
+                //NewName = "";
+                Name = "";
                 Value = "";
                 RequiredTrait = "";
             }
