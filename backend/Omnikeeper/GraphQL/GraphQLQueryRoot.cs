@@ -200,15 +200,70 @@ namespace Omnikeeper.GraphQL
                     return cis;
                 });
 
-            Field<DiffingResultType>("ciDiffing",
-                resolve: context =>
+            FieldAsync<DiffingResultType>("ciDiffing",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "leftLayers" },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "rightLayers" },
+                    new QueryArgument<DateTimeOffsetGraphType> { Name = "leftTimeThreshold" },
+                    new QueryArgument<DateTimeOffsetGraphType> { Name = "rightTimeThreshold" },
+                    new QueryArgument<ListGraphType<GuidGraphType>> { Name = "leftCIIDs" },
+                    new QueryArgument<ListGraphType<GuidGraphType>> { Name = "rightCIIDs" },
+                    new QueryArgument<ListGraphType<StringGraphType>> { Name = "leftAttributes" },
+                    new QueryArgument<ListGraphType<StringGraphType>> { Name = "rightAttributes" },
+                    new QueryArgument<BooleanGraphType> { Name = "showEqual" }
+                    ),
+                resolve: async context =>
                 {
-                    // NOTE: because many sub-resolvers of ciDiffing depend on whether they are "left" or "right", we set some parts of the user context (layerset, timethreshold) depending on that later
                     var userContext = context
                         .SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                    return new DiffingResult();
+                    var leftLayers = await layerModel.BuildLayerSet(context.GetArgument<string[]>($"leftLayers")!, userContext.Transaction);
+                    var rightLayers = await layerModel.BuildLayerSet(context.GetArgument<string[]>($"rightLayers")!, userContext.Transaction);
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, leftLayers))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', leftLayers.LayerIDs)}");
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, rightLayers))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', rightLayers.LayerIDs)}");
+                    
+                    var leftTimeThresholdDTO = context.GetArgument<DateTimeOffset?>($"leftTimeThreshold");
+                    var leftTimeThreshold = (!leftTimeThresholdDTO.HasValue) ? TimeThreshold.BuildLatest() : TimeThreshold.BuildAtTime(leftTimeThresholdDTO.Value);
+                    var rightTimeThresholdDTO = context.GetArgument<DateTimeOffset?>($"rightTimeThreshold");
+                    var rightTimeThreshold = (!rightTimeThresholdDTO.HasValue) ? TimeThreshold.BuildLatest() : TimeThreshold.BuildAtTime(rightTimeThresholdDTO.Value);
+                    
+                    var leftCIIDs = context.GetArgument<Guid[]?>($"leftCIIDs", null);
+                    var rightCIIDs = context.GetArgument<Guid[]?>($"rightCIIDs", null);
+                    
+                    var leftAttributes = context.GetArgument<string[]?>($"leftAttributes", null);
+                    var rightAttributes = context.GetArgument<string[]?>($"rightAttributes", null);
+                    IAttributeSelection leftAttributeSelection = AllAttributeSelection.Instance;
+                    if (leftAttributes != null) leftAttributeSelection = NamedAttributesSelection.Build(leftAttributes);
+                    IAttributeSelection rightAttributeSelection = AllAttributeSelection.Instance;
+                    if (rightAttributes != null) rightAttributeSelection = NamedAttributesSelection.Build(rightAttributes);
+
+                    ICIIDSelection leftCIIDSelection = (leftCIIDs != null) ? SpecificCIIDsSelection.Build(leftCIIDs) : new AllCIIDsSelection();
+                    ICIIDSelection rightCIIDSelection = (rightCIIDs != null) ? SpecificCIIDsSelection.Build(rightCIIDs) : new AllCIIDsSelection();
+                    var showEqual = context.GetArgument<bool?>($"showEqual").GetValueOrDefault(true);
+
+                    // NOTE: because many sub-resolvers of ciDiffing depend on whether they are "left" or "right", we set some parts of the user context (layerset, timethreshold) depending on that
+                    // create sub contexts for left and right branches of graphql query
+                    userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "cis", "left" }));
+                    userContext.WithTimeThreshold(rightTimeThreshold, context.Path.Concat(new List<object>() { "cis", "right" }));
+                    userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "cis", "left" }));
+                    userContext.WithLayerset(rightLayers, context.Path.Concat(new List<object>() { "cis", "right" }));
+                    userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "cis", "attributeComparisons", "left" }));
+                    userContext.WithTimeThreshold(rightTimeThreshold, context.Path.Concat(new List<object>() { "cis", "attributeComparisons", "right" }));
+                    userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "cis", "attributeComparisons", "left" }));
+                    userContext.WithLayerset(rightLayers, context.Path.Concat(new List<object>() { "cis", "attributeComparisons", "right" }));
+                    userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "outgoingRelations", "relationComparisons", "left" }));
+                    userContext.WithTimeThreshold(rightTimeThreshold, context.Path.Concat(new List<object>() { "outgoingRelations", "relationComparisons", "right" }));
+                    userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "outgoingRelations", "relationComparisons", "left" }));
+                    userContext.WithLayerset(rightLayers, context.Path.Concat(new List<object>() { "outgoingRelations", "relationComparisons", "right" }));
+                    userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "incomingRelations", "relationComparisons", "left" }));
+                    userContext.WithTimeThreshold(rightTimeThreshold, context.Path.Concat(new List<object>() { "incomingRelations", "relationComparisons", "right" }));
+                    userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "incomingRelations", "relationComparisons", "left" }));
+                    userContext.WithLayerset(rightLayers, context.Path.Concat(new List<object>() { "incomingRelations", "relationComparisons", "right" }));
+
+                    return new DiffingResult(leftCIIDSelection, rightCIIDSelection, leftAttributeSelection, rightAttributeSelection, leftLayers, rightLayers, leftTimeThreshold, rightTimeThreshold, showEqual);
                 });
 
             FieldAsync<ListGraphType<PredicateType>>("predicates",

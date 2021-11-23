@@ -153,12 +153,12 @@ function Diffing(props) {
       $leftTimeThreshold: DateTimeOffset, $rightTimeThreshold: DateTimeOffset,
       $leftAttributes: [String], $rightAttributes: [String],
       $showEqual: Boolean!) {
-      ciDiffing {
-        cis(leftLayers: $leftLayers, rightLayers: $rightLayers, 
-          leftAttributes: $leftAttributes, rightAttributes: $rightAttributes,
-          leftCIIDs: $leftCIIDs, rightCIIDs: $rightCIIDs,
-          leftTimeThreshold: $leftTimeThreshold, rightTimeThreshold: $rightTimeThreshold,
-          showEqual: $showEqual) {
+      ciDiffing(leftLayers: $leftLayers, rightLayers: $rightLayers, 
+        leftAttributes: $leftAttributes, rightAttributes: $rightAttributes,
+        leftCIIDs: $leftCIIDs, rightCIIDs: $rightCIIDs,
+        leftTimeThreshold: $leftTimeThreshold, rightTimeThreshold: $rightTimeThreshold,
+        showEqual: $showEqual) {
+        cis {
           ciid
           left {
             name
@@ -177,25 +177,15 @@ function Diffing(props) {
             status
           }
         }
-        outgoingRelations(leftLayers: $leftLayers, rightLayers: $rightLayers, 
-          leftCIIDs: $leftCIIDs, rightCIIDs: $rightCIIDs,
-          leftTimeThreshold: $leftTimeThreshold, rightTimeThreshold: $rightTimeThreshold,
-          showEqual: $showEqual) {
+        outgoingRelations {
             ciid
             ${buildRelationComparisonGQLString(true)}
         }
-        incomingRelations(leftLayers: $leftLayers, rightLayers: $rightLayers, 
-          leftCIIDs: $leftCIIDs, rightCIIDs: $rightCIIDs,
-          leftTimeThreshold: $leftTimeThreshold, rightTimeThreshold: $rightTimeThreshold,
-          showEqual: $showEqual) {
+        incomingRelations {
             ciid
             ${buildRelationComparisonGQLString(false)}
         }
-        effectiveTraits(leftLayers: $leftLayers, rightLayers: $rightLayers, 
-          leftAttributes: $leftAttributes, rightAttributes: $rightAttributes,
-          leftCIIDs: $leftCIIDs, rightCIIDs: $rightCIIDs,
-          leftTimeThreshold: $leftTimeThreshold, rightTimeThreshold: $rightTimeThreshold,
-          showEqual: $showEqual) {
+        effectiveTraits {
             ciid
             effectiveTraitComparisons {
               traitID
