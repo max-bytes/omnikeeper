@@ -114,8 +114,11 @@ namespace Omnikeeper.GraphQL
 
                     var withEffectiveTraits = context.GetArgument<string[]>("withEffectiveTraits", new string[0])!;
                     var withoutEffectiveTraits = context.GetArgument<string[]>("withoutEffectiveTraits", new string[0])!;
-                    
-                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
+
+                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                    var layerSet = userContext.GetLayerSet(context.Path);
+
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerSet))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
 
                     // use ciids list to reduce the CIIDSelection
@@ -137,7 +140,7 @@ namespace Omnikeeper.GraphQL
                         }
                         else
                         {
-                            var ciNames = await attributeModel.GetMergedCINames(ciidSelection, userContext.GetLayerSet(context.Path), userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                            var ciNames = await attributeModel.GetMergedCINames(ciidSelection, layerSet, userContext.Transaction, timeThreshold);
                             var foundCIIDs = ciNames.Where(kv => CultureInfo.InvariantCulture.CompareInfo.IndexOf(kv.Value, searchString, CompareOptions.IgnoreCase) >= 0).Select(kv => kv.Key).ToHashSet();
                             if (foundCIIDs.IsEmpty())
                                 return new MergedCI[0];
@@ -178,9 +181,9 @@ namespace Omnikeeper.GraphQL
                         preAuthzCheckedCIs = true;
                     }
 
-                    var requiredTraits = await traitsProvider.GetActiveTraitsByIDs(withEffectiveTraits, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-                    var requiredNonTraits = await traitsProvider.GetActiveTraitsByIDs(withoutEffectiveTraits, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-                    var cis = await ciSearchModel.FindMergedCIsByTraits(ciidSelection, attributeSelection, requiredTraits.Values, requiredNonTraits.Values, userContext.GetLayerSet(context.Path), userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    var requiredTraits = await traitsProvider.GetActiveTraitsByIDs(withEffectiveTraits, userContext.Transaction, timeThreshold);
+                    var requiredNonTraits = await traitsProvider.GetActiveTraitsByIDs(withoutEffectiveTraits, userContext.Transaction, timeThreshold);
+                    var cis = await ciSearchModel.FindMergedCIsByTraits(ciidSelection, attributeSelection, requiredTraits.Values, requiredNonTraits.Values, layerSet, userContext.Transaction, timeThreshold);
 
                     // reduce CIs to those that are allowed
                     if (!preAuthzCheckedCIs)
