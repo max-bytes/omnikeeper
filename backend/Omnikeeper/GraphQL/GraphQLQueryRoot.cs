@@ -309,6 +309,7 @@ namespace Omnikeeper.GraphQL
                     var layerStrings = context.GetArgument<string[]>("layers")!;
 
                     var userContext = await context.SetupUserContext()
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
