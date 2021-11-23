@@ -105,13 +105,13 @@ export default function Changeset(props) {
             </Descriptions>
             <Tabs defaultActiveKey={defaultActiveTab} style={{paddingTop: "1rem", flexBasis: '65%'}}>
                 <TabPane 
-                 tab={<CountBadge count={groupedAttributesByCIID.length}>New Attributes</CountBadge>}
-                 key="newAttributes" disabled={groupedAttributesByCIID.length === 0}>
+                 tab={<CountBadge count={data.changeset.attributes.length}>New Attributes</CountBadge>}
+                 key="newAttributes" disabled={data.changeset.attributes.length === 0}>
                     <AutoSizedList itemCount={groupedAttributesByCIID.length} item={NewAttributeItem} />
                 </TabPane>
                 <TabPane 
-                 tab={<CountBadge count={groupedRemovedAttributesByCIID.length}>Removed Attributes</CountBadge>}
-                 key="removedAttributes" disabled={groupedRemovedAttributesByCIID.length === 0}>
+                 tab={<CountBadge count={data.changeset.removedAttributes.length}>Removed Attributes</CountBadge>}
+                 key="removedAttributes" disabled={data.changeset.removedAttributes.length === 0}>
                     <AutoSizedList itemCount={groupedRemovedAttributesByCIID.length} item={RemovedAttributeItem} />
                 </TabPane>
                 <TabPane 
