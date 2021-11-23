@@ -13,7 +13,7 @@ namespace Omnikeeper.GraphQL
     {
         public static IDataLoader<MergedCI, IEnumerable<EffectiveTrait>> SetupEffectiveTraitLoader(IDataLoaderContextAccessor dataLoaderContextAccessor, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader("GetAllEffectiveTraits", async (IEnumerable<MergedCI> cis) =>
+            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetAllEffectiveTraits_{layerSet}_{timeThreshold}", async (IEnumerable<MergedCI> cis) =>
             {
                 var traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
 

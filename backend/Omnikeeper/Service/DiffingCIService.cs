@@ -372,6 +372,16 @@ namespace Omnikeeper.Service
                     ICIIDSelection rightCIIDSelection = (rightCIIDs != null) ? SpecificCIIDsSelection.Build(rightCIIDs) : new AllCIIDsSelection();
                     var showEqual = GetShowEqual(context);
 
+                    // create sub contexts for left and right branches of graphql query
+                    userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "left" }));
+                    userContext.WithTimeThreshold(rightTimeThreshold, context.Path.Concat(new List<object>() { "right" }));
+                    userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "left" }));
+                    userContext.WithLayerset(rightLayers, context.Path.Concat(new List<object>() { "right" }));
+                    userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "attributeComparisons", "left" }));
+                    userContext.WithTimeThreshold(rightTimeThreshold, context.Path.Concat(new List<object>() { "attributeComparisons", "right" }));
+                    userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "attributeComparisons", "left" }));
+                    userContext.WithLayerset(rightLayers, context.Path.Concat(new List<object>() { "attributeComparisons", "right" }));
+
                     // TODO: use dataloader?
                     var leftCIs = await ciModel.GetMergedCIs(leftCIIDSelection, leftLayers, false, leftAttributes, userContext.Transaction, leftTimeThreshold);
                     var rightCIs = await ciModel.GetMergedCIs(rightCIIDSelection, rightLayers, false, rightAttributes, userContext.Transaction, rightTimeThreshold);
@@ -396,6 +406,12 @@ namespace Omnikeeper.Service
                 if (!outgoing) srb = (ciids) => RelationSelectionTo.Build(ciids);
                 IRelationSelection leftRelationSelection = (leftCIIDs != null) ? srb(leftCIIDs.ToHashSet()) : RelationSelectionAll.Instance;
                 IRelationSelection rightRelationSelection = (rightCIIDs != null) ? srb(rightCIIDs.ToHashSet()) : RelationSelectionAll.Instance;
+
+                // create sub contexts for left and right branches of graphql query
+                userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "relationComparisons", "left" }));
+                userContext.WithTimeThreshold(rightTimeThreshold, context.Path.Concat(new List<object>() { "relationComparisons", "right" }));
+                userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "relationComparisons", "left" }));
+                userContext.WithLayerset(rightLayers, context.Path.Concat(new List<object>() { "relationComparisons", "right" }));
 
                 var leftLoaded = DataLoaderUtils.SetupAndLoadRelation(leftRelationSelection, dataLoaderContextAccessor, relationModel, leftLayers, leftTimeThreshold, userContext.Transaction);
                 var leftRelations = await leftLoaded.GetResultAsync();
