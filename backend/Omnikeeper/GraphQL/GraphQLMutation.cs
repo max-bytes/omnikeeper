@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Omnikeeper.Base.Model.TraitBased;
+using Omnikeeper.Base.Plugins;
 
 namespace Omnikeeper.GraphQL
 {
@@ -40,6 +41,7 @@ namespace Omnikeeper.GraphQL
             GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
             IManagementAuthorizationService managementAuthorizationService, GenericTraitEntityModel<CLConfigV1, string> clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
+            IEnumerable<IPluginRegistration> plugins,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
@@ -186,6 +188,16 @@ namespace Omnikeeper.GraphQL
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
 
             CreateManage();
+            CreatePlugin(plugins);
+        }
+
+
+        private void CreatePlugin(IEnumerable<IPluginRegistration> plugins)
+        {
+            foreach (var plugin in plugins)
+            {
+                plugin.RegisterGraphqlMutations(this);
+            }
         }
     }
 }

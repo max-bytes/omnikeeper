@@ -1,22 +1,20 @@
 ﻿using GraphQL;
 using GraphQL.Language.AST;
 using GraphQL.Types;
-using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
+using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 using static Omnikeeper.Base.Model.IChangesetModel;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.GraphQL
 {
@@ -50,6 +48,7 @@ namespace Omnikeeper.GraphQL
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GenericTraitEntityModel<GeneratorV1, string> generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
             GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
+            IEnumerable<IPluginRegistration> plugins,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.ciidModel = ciidModel;
@@ -75,8 +74,8 @@ namespace Omnikeeper.GraphQL
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
 
             CreateMain();
-
             CreateManage();
+            CreatePlugin(plugins);
         }
 
         private void CreateMain()
@@ -438,6 +437,14 @@ namespace Omnikeeper.GraphQL
 
                     return new Statistics(ciids.Count(), numActiveAttributes, numActiveRelations, numChangesets, numAttributeChanges, numRelationChanges, layers.Count(), traits.Count(), predicates.Count(), generators.Count());
                 });
+        }
+
+        private void CreatePlugin(IEnumerable<IPluginRegistration> plugins)
+        {
+            foreach(var plugin in plugins)
+            {
+                plugin.RegisterGraphqlQueries(this);
+            }
         }
     }
 }
