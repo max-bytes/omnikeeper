@@ -37,8 +37,9 @@ namespace Omnikeeper.GraphQL
             resolve: (context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var layerID = context.Source!.LayerID;
-                var loader = dataLoaderContextAccessor.Context.GetOrAddLoader("GetAllLayers", () => layerModel.GetLayers(userContext.Transaction, userContext.TimeThreshold));
+                var layerID = context.Source!.LayerID; 
+                var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                var loader = dataLoaderContextAccessor.Context.GetOrAddLoader($"GetAllLayers_{timeThreshold}", () => layerModel.GetLayers(userContext.Transaction, timeThreshold));
                 return loader.LoadAsync().Then(layers => layers.FirstOrDefault(l => l.ID == layerID));
             });
             FieldAsync<ChangesetStatisticsType>("statistics",

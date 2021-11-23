@@ -44,7 +44,7 @@ namespace Omnikeeper.GraphQL
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
-                new QueryArgument<ListGraphType<StringGraphType>> { Name = "layers" },
+                new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                 new QueryArgument<ListGraphType<InsertCIAttributeInputType>> { Name = "InsertAttributes" },
                 new QueryArgument<ListGraphType<RemoveCIAttributeInputType>> { Name = "RemoveAttributes" },
                 new QueryArgument<ListGraphType<InsertRelationInputType>> { Name = "InsertRelations" },
@@ -52,7 +52,7 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
-                    var layers = context.GetArgument<string[]?>("layers", null);
+                    var layers = context.GetArgument<string[]>("layers")!;
                     var insertAttributes = context.GetArgument("InsertAttributes", new List<InsertCIAttributeInput>());
                     var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>());
                     var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>())!;
@@ -60,8 +60,8 @@ namespace Omnikeeper.GraphQL
 
                     var userContext = await context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
-                        .WithTimeThreshold(() => TimeThreshold.BuildLatest())
-                        .WithLayerset(async trans => layers != null ? await layerModel.BuildLayerSet(layers, trans) : null);
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                        .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layers, trans), context.Path);
 
                     var writeLayerIDs = insertAttributes.Select(a => a.LayerID)
                     .Concat(removeAttributes.Select(a => a.LayerID))
@@ -79,7 +79,7 @@ namespace Omnikeeper.GraphQL
                     if (!ciBasedAuthorizationService.CanWriteToAllCIs(writeCIIDs, out var notAllowedCI))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to CI {notAllowedCI}");
 
-                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
+                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
                     var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
                     var insertedAttributes = new List<CIAttribute>();
@@ -123,17 +123,14 @@ namespace Omnikeeper.GraphQL
                         removedRelations.Add(r);
                     }
 
-                    IEnumerable<MergedCI> affectedCIs = new List<MergedCI>(); ;
-                    if (userContext.LayerSet != null)
-                    {
-                        var affectedCIIDs = removedAttributes.Select(r => r.CIID)
-                        .Concat(insertedAttributes.Select(i => i.CIID))
-                        .Concat(insertedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
-                        .Concat(removedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
-                        .ToHashSet();
-                        if (!affectedCIIDs.IsEmpty())
-                            affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.LayerSet, true, AllAttributeSelection.Instance, userContext.Transaction, userContext.TimeThreshold);
-                    }
+                    IEnumerable<MergedCI> affectedCIs = new List<MergedCI>();
+                    var affectedCIIDs = removedAttributes.Select(r => r.CIID)
+                    .Concat(insertedAttributes.Select(i => i.CIID))
+                    .Concat(insertedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
+                    .Concat(removedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
+                    .ToHashSet();
+                    if (!affectedCIIDs.IsEmpty())
+                        affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.GetLayerSet(context.Path), true, AllAttributeSelection.Instance, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
 
                     userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -150,13 +147,13 @@ namespace Omnikeeper.GraphQL
 
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
-                        .WithTimeThreshold(() => TimeThreshold.BuildLatest());
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
 
                     if (!layerBasedAuthorizationService.CanUserWriteToAllLayers(userContext.User, createCIs.Select(ci => ci.LayerIDForName)))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', createCIs.Select(ci => ci.LayerIDForName))}");
                     // NOTE: a newly created CI cannot be checked with CIBasedAuthorizationService yet. That's why we don't do a .CanWriteToCI() check here
 
-                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
+                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
                     var createdCIIDs = new List<Guid>();
                     foreach (var ci in createCIs)

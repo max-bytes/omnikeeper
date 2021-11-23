@@ -113,7 +113,7 @@ function Diffing(props) {
           id
           fromCIID
           toCIID
-          ${(outgoing) ? "toCIName(layers: $leftLayers, timeThreshold: $leftTimeThreshold)" : "fromCIName(layers: $leftLayers, timeThreshold: $leftTimeThreshold)"}
+          ${(outgoing) ? "toCIName" : "fromCIName"}
           predicateID
           changesetID
         }
@@ -130,7 +130,7 @@ function Diffing(props) {
           id
           fromCIID
           toCIID
-          ${(outgoing) ? "toCIName(layers: $leftLayers, timeThreshold: $leftTimeThreshold)" : "fromCIName(layers: $leftLayers, timeThreshold: $leftTimeThreshold)"}
+          ${(outgoing) ? "toCIName" : "fromCIName"}
           predicateID
           changesetID
         }

@@ -17,9 +17,6 @@ namespace Omnikeeper.GraphQL
     // TODO: ci- and layer-based authorization!
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        private readonly IEffectiveTraitModel traitModel;
-        private readonly ITraitsProvider traitsProvider;
-
         public MergedCIType(IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel,
             IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider)
         {
@@ -50,7 +47,7 @@ namespace Omnikeeper.GraphQL
                 var CIIdentity = context.Source!.ID;
                 var requiredPredicateID = context.GetArgument<string?>("requiredPredicateID", null);
 
-                var loaded = DataLoaderUtils.SetupAndLoadRelation(RelationSelectionFrom.Build(CIIdentity), dataLoaderContextAccessor, relationModel, userContext.LayerSet, userContext.TimeThreshold, userContext.Transaction);
+                var loaded = DataLoaderUtils.SetupAndLoadRelation(RelationSelectionFrom.Build(CIIdentity), dataLoaderContextAccessor, relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return loaded.Then(ret =>
                 { // TODO: move predicateID filtering into fetch and RelationSelection
                     if (requiredPredicateID != null)
@@ -67,7 +64,7 @@ namespace Omnikeeper.GraphQL
                 var CIIdentity = context.Source!.ID;
                 var requiredPredicateID = context.GetArgument<string?>("requiredPredicateID", null);
 
-                var loaded = DataLoaderUtils.SetupAndLoadRelation(RelationSelectionTo.Build(CIIdentity), dataLoaderContextAccessor, relationModel, userContext.LayerSet, userContext.TimeThreshold, userContext.Transaction);
+                var loaded = DataLoaderUtils.SetupAndLoadRelation(RelationSelectionTo.Build(CIIdentity), dataLoaderContextAccessor, relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return loaded.Then(ret =>
                 { // TODO: move predicateID filtering into fetch and RelationSelection
                     if (requiredPredicateID != null)
@@ -83,11 +80,9 @@ namespace Omnikeeper.GraphQL
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var ci = context.Source!;
 
-                var loader = DataLoaderUtils.SetupEffectiveTraitLoader(dataLoaderContextAccessor, traitModel, traitsProvider, userContext.LayerSet, userContext.TimeThreshold, userContext.Transaction);
+                var loader = DataLoaderUtils.SetupEffectiveTraitLoader(dataLoaderContextAccessor, traitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return loader.LoadAsync(ci);
             });
-            this.traitModel = traitModel;
-            this.traitsProvider = traitsProvider;
         }
     }
 
@@ -104,7 +99,8 @@ namespace Omnikeeper.GraphQL
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source!.LayerStackIDs;
 
-                var loader = dataLoaderContextAccessor.Context.GetOrAddLoader("GetAllLayers", () => layerModel.GetLayers(userContext.Transaction, userContext.TimeThreshold));
+                var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                var loader = dataLoaderContextAccessor.Context.GetOrAddLoader($"GetAllLayers_{timeThreshold}", () => layerModel.GetLayers(userContext.Transaction, timeThreshold));
                 return loader.LoadAsync().Then(layers => layers
                         .Where(l => layerstackIDs.Contains(l.ID))
                         .OrderBy(l => layerstackIDs.IndexOf(l.ID))

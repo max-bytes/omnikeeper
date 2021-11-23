@@ -4,6 +4,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL
@@ -13,42 +14,85 @@ namespace Omnikeeper.GraphQL
         public AuthenticatedUser User { get; private set; }
         public IServiceProvider ServiceProvider { get; }
 
+        private class ScopedContext
+        {
+            public TimeThreshold? timeThreshold;
+            public LayerSet? layerSet;
+
+            public IDictionary<string, ScopedContext>? subContexts;
+        }
+
+        private readonly ScopedContext scopedContexts = new ScopedContext();
+
+        private ScopedContext FindScopedContext(IList<object> contextPath, int skipFirstN, ScopedContext currentScopedContext)
+        {
+            if (skipFirstN >= contextPath.Count)
+                return currentScopedContext;
+
+            if (currentScopedContext.subContexts == null)
+                return currentScopedContext;
+
+            var t = contextPath[skipFirstN];
+            if (t is string tt)
+            {
+                if (currentScopedContext.subContexts.TryGetValue(tt, out var subScopedContext))
+                    return FindScopedContext(contextPath, skipFirstN + 1, subScopedContext);
+                else
+                    return currentScopedContext;
+            } else
+            {
+                return FindScopedContext(contextPath, skipFirstN + 1, currentScopedContext);
+            }
+        }
+
+        private ScopedContext FindOrCreateScopedContext(IList<object> contextPath, int skipFirstN, ScopedContext currentScopedContext)
+        {
+            if (skipFirstN >= contextPath.Count)
+                return currentScopedContext;
+
+            if (currentScopedContext.subContexts == null)
+                currentScopedContext.subContexts = new Dictionary<string, ScopedContext>();
+
+            var t = contextPath[skipFirstN];
+            if (t is string tt)
+            {
+                if (currentScopedContext.subContexts.TryGetValue(tt, out var subScopedContext))
+                    return FindOrCreateScopedContext(contextPath, skipFirstN + 1, subScopedContext);
+                else
+                {
+                    currentScopedContext.subContexts[tt] = new ScopedContext();
+                    return FindOrCreateScopedContext(contextPath, skipFirstN + 1, currentScopedContext.subContexts[tt]);
+                }
+            }
+            else
+            {
+                return FindOrCreateScopedContext(contextPath, skipFirstN + 1, currentScopedContext);
+            }
+        }
+
+
         public OmnikeeperUserContext(AuthenticatedUser user, IServiceProvider sp)
         {
             User = user;
             ServiceProvider = sp;
         }
 
-        public TimeThreshold TimeThreshold
+        public TimeThreshold GetTimeThreshold(IEnumerable<object> contextPath)
         {
-            get
-            {
-                CheckDisabledThrow();
-
-                TryGetValue("TimeThreshold", out var ls);
-                if (ls == null) return TimeThreshold.BuildLatest();
-                return (TimeThreshold)ls;
-            }
-            set
-            {
-                CheckDisabledThrow();
-
-                Add("TimeThreshold", value);
-            }
+            var foundContext = FindScopedContext(contextPath.ToList(), 0, scopedContexts);
+            if (!foundContext.timeThreshold.HasValue)
+                throw new Exception("TimeThreshold not set in current user context"); // throw exception, demand explicit setting
+            else
+                return foundContext.timeThreshold.Value;
         }
 
-        public bool PartlyDisabled
+        public LayerSet GetLayerSet(IEnumerable<object> contextPath)
         {
-            get
-            {
-                TryGetValue("Disabled", out var disabled);
-                if (disabled == null) return false;
-                return (bool)disabled;
-            }
-            set
-            {
-                Add("Disabled", value);
-            }
+            var foundContext = FindScopedContext(contextPath.ToList(), 0, scopedContexts);
+            if (foundContext.layerSet == null)
+                throw new Exception("LayerSet not set in current user context"); // throw exception, demand explicit setting
+            else
+                return foundContext.layerSet;
         }
 
         public IModelContext Transaction
@@ -65,24 +109,6 @@ namespace Omnikeeper.GraphQL
             }
         }
 
-        public LayerSet LayerSet
-        {
-            get
-            {
-                CheckDisabledThrow();
-
-                TryGetValue("LayerSet", out var ls);
-                if (ls == null) throw new System.Exception("Expected layerset to be set");
-                return (LayerSet)ls;
-            }
-            set
-            {
-                CheckDisabledThrow();
-
-                Add("LayerSet", value);
-            }
-        }
-
         internal OmnikeeperUserContext WithTransaction(Func<IModelContextBuilder, IModelContext> f)
         {
             var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
@@ -90,17 +116,25 @@ namespace Omnikeeper.GraphQL
             return this;
         }
 
-        internal OmnikeeperUserContext WithTimeThreshold(Func<TimeThreshold> f)
+        internal OmnikeeperUserContext WithTimeThreshold(TimeThreshold ts, IEnumerable<object> contextPath)
         {
-            TimeThreshold = f();
+            var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, scopedContexts);
+            foundContext.timeThreshold = ts;
             return this;
         }
 
-        internal async Task<OmnikeeperUserContext> WithLayerset(Func<IModelContext, Task<LayerSet?>> f)
+        internal async Task<OmnikeeperUserContext> WithLayersetAsync(Func<IModelContext, Task<LayerSet>> f, IEnumerable<object> contextPath)
         {
+            var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, scopedContexts);
             var ls = await f(Transaction);
-            if (ls != null)
-                LayerSet = ls;
+            foundContext.layerSet = ls;
+            return this;
+        }
+
+        internal OmnikeeperUserContext WithLayerset(LayerSet ls, IEnumerable<object> contextPath)
+        {
+            var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, scopedContexts);
+            foundContext.layerSet = ls;
             return this;
         }
 
@@ -109,11 +143,6 @@ namespace Omnikeeper.GraphQL
             Transaction.Commit();
             var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
             Transaction = f(modelContextBuilder);
-        }
-
-        private void CheckDisabledThrow()
-        {
-            if (PartlyDisabled) throw new Exception("Cannot use UserContext in this setting, it was disabled");
         }
     }
 }
