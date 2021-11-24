@@ -19,17 +19,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [5.0.0] - 2021-11-24
+
+### Added
+- (breaking) support for optionally referenced attributes in generators. The decision whether or not a generator creates an attribute for a CI is made by the generator template: if it evaluates to `null`, no attribute is generated.
+
 ## [4.0.1] - 2021-11-24
 
 ### Fixes
-- Build process for backend
+- build process for backend
 
 ## [4.0.0] - 2021-11-24
 
 ### Added
-- (Potential Breaking) Upgrade to .Net 5.0
-- (Breaking) Reworked GraphQL API for CI diffing
-- Ability for plugins to define their own GraphQL queries and mutations
+- (potential breaking) upgrade to .Net 5.0
+- (breaking) reworked GraphQL API for CI diffing
+- ability for plugins to define their own GraphQL queries and mutations
 
 ### Changed
 - performance improvement to maintenance task of archiving unused attributes/relations
