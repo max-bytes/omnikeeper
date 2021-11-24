@@ -31,8 +31,8 @@ namespace Omnikeeper.Model
             using var commandPartitionEntry = new NpgsqlCommand(@$"
             INSERT INTO public.partition(partition_index) VALUES('{partitionIndexValue}'::timestamptz) RETURNING partition_index", trans.DBConnection, trans.DBTransaction);
             //commandPartitionEntry.Parameters.AddWithValue("timestamp", timeThreshold.Time);
-            var newPartitionIndex = (DateTime)await commandPartitionEntry.ExecuteScalarAsync();
-            if (newPartitionIndex == null)
+            var newPartitionIndex = (DateTime?)await commandPartitionEntry.ExecuteScalarAsync();
+            if (!newPartitionIndex.HasValue)
                 throw new Exception($"Could not insert new partition entry with partition_index {timeThreshold.Time}");
 
             var partitionTableSuffix = timeThreshold.Time.ToUniversalTime().ToString("yyyy_MM_dd_HH_mm_ss");
@@ -56,7 +56,7 @@ namespace Omnikeeper.Model
             WHERE attribute.id = sub.id", trans.DBConnection, trans.DBTransaction);
             commandMoveAttributes.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
             commandMoveAttributes.Parameters.AddWithValue("old_partition_index", oldPartitionIndex);
-            commandMoveAttributes.Parameters.AddWithValue("new_partition_index", newPartitionIndex.ToUniversalTime());
+            commandMoveAttributes.Parameters.AddWithValue("new_partition_index", newPartitionIndex.Value.ToUniversalTime());
             await commandMoveAttributes.ExecuteNonQueryAsync();
 
             // create partition table for relations
@@ -78,7 +78,7 @@ namespace Omnikeeper.Model
             WHERE relation.id = sub.id", trans.DBConnection, trans.DBTransaction);
             commandMoveRelations.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
             commandMoveRelations.Parameters.AddWithValue("old_partition_index", oldPartitionIndex);
-            commandMoveRelations.Parameters.AddWithValue("new_partition_index", newPartitionIndex.ToUniversalTime());
+            commandMoveRelations.Parameters.AddWithValue("new_partition_index", newPartitionIndex.Value.ToUniversalTime());
             await commandMoveRelations.ExecuteNonQueryAsync();
         }
     }

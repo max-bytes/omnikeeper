@@ -78,7 +78,7 @@ namespace Omnikeeper.Model
                 BulkCIAttributeDataCIScope d => await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, new string[] { data.LayerID }, trans: trans, atTime: readTS),
                 BulkCIAttributeDataCIAndAttributeNameScope a =>
                     await GetAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), new string[] { data.LayerID }, trans, readTS),
-                _ => null
+                _ => throw new Exception("Unknown scope")
             }).SelectMany(t => t.Values.SelectMany(tt => tt.Values)).ToDictionary(a => a.InformationHash); // TODO: slow?
             
             var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)>();

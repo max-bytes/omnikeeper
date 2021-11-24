@@ -251,7 +251,7 @@ namespace Omnikeeper.Model
                 BulkRelationDataPredicateScope p => (await GetRelations(RelationSelectionWithPredicate.Build(p.PredicateID), data.LayerID, trans, changesetProxy.TimeThreshold)),
                 BulkRelationDataLayerScope l => (await GetRelations(RelationSelectionAll.Instance, data.LayerID, trans, changesetProxy.TimeThreshold)),
                 BulkRelationDataCIAndPredicateScope cp => await GetOutdatedRelationsFromCIAndPredicateScope(cp, trans, changesetProxy.TimeThreshold),
-                _ => null
+                _ => throw new Exception("Unknown scope")
             }).ToDictionary(r => r.InformationHash);
 
             var actualInserts = new List<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)>();
