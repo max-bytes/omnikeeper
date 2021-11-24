@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [4.0.1] - 2021-11-24
+
+### Fixes
+- Build process for backend
+
 ## [4.0.0] - 2021-11-24
 
 ### Added
