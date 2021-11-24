@@ -48,6 +48,10 @@ namespace Omnikeeper.Model.Decorators
             var effectiveGeneratorProvider = sp.GetRequiredService<IEffectiveGeneratorProvider>(); // use serviceProvider to avoid circular dependency
             var egis = await effectiveGeneratorProvider.GetEffectiveGenerators(layerIDs, generatorSelection, attributeSelection, trans, atTime);
 
+            // bail early if there are no egis
+            if (egis.All(egi => egi.IsEmpty()))
+                return @base;
+
             // we need to potentially extend the attributeSelection so that it contains all attributes necessary to resolve the generated attributes
             // the caller is allowed to not know or care about generated attributes and their requirements, so we need to extend here
             // and also (for the return structure) ignore any additionally fetched attributes that were only fetched to calculate the generated attributes
