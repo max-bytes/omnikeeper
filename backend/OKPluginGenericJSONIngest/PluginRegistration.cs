@@ -14,8 +14,8 @@ namespace OKPluginGenericJSONIngest
         public override void RegisterServices(IServiceCollection sc)
         {
             sc.AddSingleton<GenericTraitEntityModel<Context, string>>();
-            sc.AddTransient<PassiveFilesController>();
-            sc.AddTransient<ManageContextController>();
+            sc.AddSingleton<PassiveFilesController>();
+            sc.AddSingleton<ManageContextController>();
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => new List<RecursiveTrait>() {
