@@ -222,8 +222,6 @@ namespace Omnikeeper.Base.Generator
             try
             {
                 var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? new CIAttribute[0]).Where(a => generator.Template.UsedAttributeNames.Contains(a.Name)).ToList();
-                //if (relevantAttributes.Count == generator.Template.UsedAttributeNames.Count) 
-                //{
                 var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes);
 
                 object evaluated = generator.Template.Template.Evaluate(context);
@@ -244,10 +242,6 @@ namespace Omnikeeper.Base.Generator
                     // TODO: better error handling, not supported return detected
                     return null;
                 }
-                //} else
-                //{
-                //    return null; // TODO: better error handling
-                //}
             }
             catch (Exception)
             {
