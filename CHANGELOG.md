@@ -19,6 +19,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [4.0.0] - 2021-11-24
+
+### Added
+- (Potential Breaking) Upgrade to .Net 5.0
+- (Breaking) Reworked GraphQL API for CI diffing
+- Ability for plugins to define their own GraphQL queries and mutations
+
+### Changed
+- performance improvement to maintenance task of archiving unused attributes/relations
+
+### Fixes
+- technical frontend: fixed wrong badge counts for added and removed attributes in changeset view
+- fixed CI diffing GraphQL resolve error
+
 ## [3.1.0] - 2021-11-18
 
 ### Added
