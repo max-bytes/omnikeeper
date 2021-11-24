@@ -55,8 +55,8 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var layers = context.GetArgument<string[]>("layers")!;
-                    var insertAttributes = context.GetArgument("InsertAttributes", new List<InsertCIAttributeInput>());
-                    var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>());
+                    var insertAttributes = context.GetArgument("InsertAttributes", new List<InsertCIAttributeInput>())!;
+                    var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>())!;
                     var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>())!;
                     var removeRelations = context.GetArgument("RemoveRelations", new List<RemoveRelationInput>())!;
 

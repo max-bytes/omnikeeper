@@ -35,15 +35,9 @@ namespace Omnikeeper.GraphQL
         }
         public async Task WriteAsync<T>(Stream stream, T value, CancellationToken cancellationToken = default)
         {
-            try
-            {
                 // HACK: this is a really weird way to "inject" the errorInfoProvider into the formatter, but with SpanJSON, there seems to be no other way
                 ExecutionResultFormatter.Default.ErrorInfoProvider = errorInfoProvider;
                 await JsonSerializer.Generic.Utf8.SerializeAsync<ExecutionResult, Resolver<byte>>((value as ExecutionResult)!, stream, cancellationToken);
-            } catch (Exception e)
-            {
-                throw e;
-            }
         }
     }
 

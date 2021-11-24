@@ -361,6 +361,11 @@ namespace Omnikeeper.Service
                 var rightLoaded = DataLoaderUtils.SetupAndLoadRelation(rightRelationSelection, dataLoaderContextAccessor, relationModel, d.rightLayers, d.rightTimeThreshold, userContext.Transaction);
                 var rightRelations = await rightLoaded.GetResultAsync();
 
+                if (leftRelations == null)
+                    throw new Exception("Could not load left relations");
+                if (rightRelations == null)
+                    throw new Exception("Could not load right relations");
+
                 // ci-based authorization
                 leftRelations = leftRelations.Where(r => ciBasedAuthorizationService.CanReadCI(r.Relation.FromCIID) && ciBasedAuthorizationService.CanReadCI(r.Relation.ToCIID));
                 rightRelations = rightRelations.Where(r => ciBasedAuthorizationService.CanReadCI(r.Relation.FromCIID) && ciBasedAuthorizationService.CanReadCI(r.Relation.ToCIID));
