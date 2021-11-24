@@ -74,7 +74,7 @@ namespace Omnikeeper.Model.Config
             catch (Exception e)
             {
                 logger.LogError(e, $"Could not deserialize OIA config \"{name}\"");
-                throw e;
+                throw;
             }
         }
 
@@ -84,7 +84,7 @@ namespace Omnikeeper.Model.Config
             using var command = new NpgsqlCommand(@"INSERT INTO config.onlineinboundadapter_context (name, config) VALUES (@name, @config) RETURNING id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("name", name);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
-            var id = (long)await command.ExecuteScalarAsync();
+            var id = ((long?)await command.ExecuteScalarAsync())!.Value;
             return OIAContext.Build(name, id, config);
         }
 
@@ -116,7 +116,7 @@ namespace Omnikeeper.Model.Config
             catch (Exception e)
             {
                 logger.LogError(e, $"Could not deserialize OIA config \"{name}\"");
-                throw e;
+                throw;
             }
         }
     }

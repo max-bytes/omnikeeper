@@ -46,7 +46,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public ID ExtractIDFromEntity(T entity)
         {
-            var id = (ID)idFieldInfo.GetValue(entity);
+            var id = (ID?)idFieldInfo.GetValue(entity);
             if (id == null)
                 throw new Exception(); // TODO: error message
             return id;

@@ -38,7 +38,12 @@ namespace OKPluginOIASharepoint
                         var identifiableFragments = new List<CICandidateAttributeData.Fragment>();
                         foreach (var (columnName, attributeName) in lc.identifiableColumnsAttributeTuples)
                         {
-                            if (!((IDictionary<string, object>)data).TryGetValue(columnName, out var value))
+                            if (data == null)
+                            {
+                                logger.LogWarning($"Invalid list");
+                                continue;
+                            }
+                            if (!((IDictionary<string, object>)data!).TryGetValue(columnName, out var value))
                             {
                                 logger.LogWarning($"Could not get (supposedly identifiable) column \"{columnName}\" in list \"{lc.listID}\"");
                                 continue;
@@ -69,7 +74,7 @@ namespace OKPluginOIASharepoint
                 catch (Exception e)
                 {
                     logger.LogWarning($"Unable to get external IDs for sharepoint list {lc.listID}", e);
-                    throw e; // we must fail and throw, so that we don't run the ExternalIDManager with an empty set of external IDs
+                    throw; // we must fail and throw, so that we don't run the ExternalIDManager with an empty set of external IDs
                 }
             }
             return r;

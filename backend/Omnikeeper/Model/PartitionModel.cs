@@ -14,7 +14,7 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(@"SELECT max(partition_index) FROM partition WHERE partition_index <= @timestamp", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("timestamp", timeThreshold.Time);
             command.Prepare();
-            var pi = (DateTime)await command.ExecuteScalarAsync();
+            var pi = ((DateTime?)await command.ExecuteScalarAsync())!.Value;
             return pi;
         }
 

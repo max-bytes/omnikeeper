@@ -60,7 +60,7 @@ namespace Omnikeeper.Base.Generator
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Name;
 
-        public static Guid StaticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
+        public static readonly Guid StaticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
 
         public override bool Equals(object? obj) => Equals(obj as GeneratorV1);
         public bool Equals(GeneratorV1? other)
@@ -220,7 +220,7 @@ namespace Omnikeeper.Base.Generator
             try
             {
                 var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? new CIAttribute[0]).Where(a => generator.Template.UsedAttributeNames.Contains(a.Name)).ToList();
-                if (relevantAttributes.Count() == generator.Template.UsedAttributeNames.Count()) 
+                if (relevantAttributes.Count == generator.Template.UsedAttributeNames.Count) 
                 {
                     var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes);
 
@@ -237,7 +237,7 @@ namespace Omnikeeper.Base.Generator
                     return null; // TODO: better error handling
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return null; // TODO: better error handling
             }

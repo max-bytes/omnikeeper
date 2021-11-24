@@ -243,8 +243,8 @@ namespace Omnikeeper.Model
         {
             using var command = new NpgsqlCommand(@"SELECT count(*) FROM changeset c", trans.DBConnection, trans.DBTransaction);
             command.Prepare();
-            var num = (long)await command.ExecuteScalarAsync();
-            return num;
+            var ret = (long?)await command.ExecuteScalarAsync();
+            return ret!.Value;
         }
     }
 }

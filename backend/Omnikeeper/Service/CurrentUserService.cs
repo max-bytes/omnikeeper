@@ -75,7 +75,7 @@ namespace Omnikeeper.Service
 
         private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
         {
-            var httpUser = HttpUserUtils.CreateUserFromHttpContext(HttpContextAccessor.HttpContext, configuration, logger);
+            var httpUser = HttpUserUtils.CreateUserFromHttpContext(HttpContextAccessor.HttpContext!, configuration, logger);
             var userInDatabase = await userModel.UpsertUser(httpUser.Username, httpUser.DisplayName, httpUser.UserID, httpUser.UserType, trans);
 
             if (httpUser.ClientRoles.Contains("__ok_superuser"))
