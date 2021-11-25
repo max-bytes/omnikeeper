@@ -6,6 +6,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL
 {
@@ -48,6 +49,27 @@ namespace Omnikeeper.GraphQL
             {
                 return obj.ID.GetHashCode();
             }
+        }
+
+        public static IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IDataLoaderContextAccessor dataLoaderContextAccessor, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        {
+            var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader<ICIIDSelection, IDictionary<Guid, string>>($"GetMergedCINames_{layerSet}_{timeThreshold}",
+                async (IEnumerable<ICIIDSelection> ciidSelections) =>
+                {
+                    var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
+
+                    var combinedNames = await attributeModel.GetMergedCINames(combinedCIIDSelection, layerSet, trans, timeThreshold);
+
+                    var ret = new Dictionary<ICIIDSelection, IDictionary<Guid, string>>(ciidSelections.Count());
+                    foreach (var ciidSelection in ciidSelections)
+                    {
+                        var ciids = await ciidSelection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
+                        var selectedNames = ciids.Where(combinedNames.ContainsKey).ToDictionary(ciid => ciid, ciid => combinedNames[ciid]);
+                        ret.Add(ciidSelection, selectedNames);
+                    }
+                    return ret;
+                });
+            return loader.LoadAsync(ciidSelection);
         }
 
 

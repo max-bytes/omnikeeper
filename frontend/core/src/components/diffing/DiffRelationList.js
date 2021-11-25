@@ -16,7 +16,7 @@ function DiffRelationList(props) {
   const keyGen = (relation) => `r_${relation.predicateID}_${(areOutgoingRelations) ? relation.toCIID : relation.fromCIID}`;
 
   return (<>
-  <Row>
+  <Row wrap={false}>
     <Col span={24}>
       <Flipper flipKey={_.map(relations, r => keyGen(r)).join(' ')}>
         {_.map(relations, r => {
@@ -25,14 +25,14 @@ function DiffRelationList(props) {
             <Flipped key={keyGen(r)} flipId={keyGen(r)} onAppear={onAppear} onExit={onExit}>
               <div style={{ width: "100%" }}>
                 <Row style={{ backgroundColor: stateBasedBackgroundColor(state), display: "flex", justifyContent: "space-evenly" }}>
-                    <Col>
-                        {r.left && <RelatedCI mergedRelation={r.left} isOutgoingRelation={areOutgoingRelations} alignRight></RelatedCI>}
+                    <Col flex="1 1 0">
+                        {r.left && <RelatedCI mergedRelation={r.left} isOutgoingRelation={areOutgoingRelations}></RelatedCI>}
                         {!r.left && <MissingLabel /> }
                     </Col>
                     <Col>
                         <CompareLabel state={state} />
                     </Col>
-                    <Col>
+                    <Col flex="1 1 0">
                         {r.right && <RelatedCI mergedRelation={r.right} isOutgoingRelation={areOutgoingRelations}></RelatedCI>}
                         {!r.right && <MissingLabel /> }
                     </Col>

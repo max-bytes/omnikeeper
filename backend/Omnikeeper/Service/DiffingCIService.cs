@@ -16,6 +16,17 @@ namespace Omnikeeper.Service
 {
     public class DiffingCIService
     {
+        public IDictionary<Guid, CIAttributesComparison> DiffCross2CIs(MergedCI left, MergedCI right, bool showEqual, CrossCIDiffingSettings crossCIDiffingSettings)
+        {
+            var attributeComparison = CompareAttributesOf2CIs(left, right, showEqual);
+
+            var ciid = crossCIDiffingSettings.leftCIID; // NOTE: we take the left CIID as convention for the key
+            return new Dictionary<Guid, CIAttributesComparison>()
+            {
+                { ciid, new CIAttributesComparison(crossCIDiffingSettings.leftCIID, crossCIDiffingSettings.rightCIID, left.CIName, right.CIName, attributeComparison) }
+            };
+        }
+
         public IDictionary<Guid, CIAttributesComparison> DiffCIs(IEnumerable<MergedCI> left, IEnumerable<MergedCI> right, bool showEqual)
         {
             var allCIIDs = new HashSet<Guid>();
@@ -31,35 +42,44 @@ namespace Omnikeeper.Service
                 {
                     var rightCI = rightDictionary[ciid];
                     var attributes = rightCI.MergedAttributes.Select(a => new AttributeComparison(a.Key, null, a.Value, ComparisonStatus.Unequal));
-                    ciComparisons.Add(ciid, new CIAttributesComparison(ciid, null, rightCI, attributes));
+                    ciComparisons.Add(ciid, new CIAttributesComparison(ciid, ciid, null, rightCI.CIName, attributes));
                 } else if (!rightDictionary.TryGetValue(ciid, out var rightCI))
                 {
                     var attributes = leftCI.MergedAttributes.Select(a => new AttributeComparison(a.Key, a.Value, null, ComparisonStatus.Unequal));
-                    ciComparisons.Add(ciid, new CIAttributesComparison(ciid, leftCI, null, attributes));
+                    ciComparisons.Add(ciid, new CIAttributesComparison(ciid, ciid, leftCI.CIName, null, attributes));
                 } else
                 {
-                    var allNames = new HashSet<string>();
-                    allNames.UnionWith(leftCI.MergedAttributes.Keys);
-                    allNames.UnionWith(rightCI.MergedAttributes.Keys);
-                    var attributes = allNames.Select(name => {
-                        if (!leftCI.MergedAttributes.TryGetValue(name, out var leftAttribute))
-                        {
-                            return new AttributeComparison(name, null, rightCI.MergedAttributes[name], ComparisonStatus.Unequal);
-                        } else if (!rightCI.MergedAttributes.TryGetValue(name, out var rightAttribute))
-                        {
-                            return new AttributeComparison(name, leftCI.MergedAttributes[name], null, ComparisonStatus.Unequal);
-                        } else
-                        {
-                            var status = (leftAttribute.Attribute.Value.Equals(rightAttribute.Attribute.Value)) ? ComparisonStatus.Equal : ComparisonStatus.Unequal;
-                            return new AttributeComparison(name, leftAttribute, rightAttribute, status);
-                        }
-                    }).Where(a => showEqual || a.status != ComparisonStatus.Equal);
+                    IEnumerable<AttributeComparison> attributes = CompareAttributesOf2CIs(leftCI, rightCI, showEqual);
                     if (showEqual || !attributes.IsEmpty())
-                        ciComparisons.Add(ciid, new CIAttributesComparison(ciid, leftCI, rightCI, attributes));
+                        ciComparisons.Add(ciid, new CIAttributesComparison(ciid, ciid, leftCI.CIName, rightCI.CIName, attributes));
                 }
             }
 
             return ciComparisons;
+        }
+
+        private static IEnumerable<AttributeComparison> CompareAttributesOf2CIs(MergedCI leftCI, MergedCI rightCI, bool showEqual)
+        {
+            var allNames = new HashSet<string>();
+            allNames.UnionWith(leftCI.MergedAttributes.Keys);
+            allNames.UnionWith(rightCI.MergedAttributes.Keys);
+            var attributes = allNames.Select(name =>
+            {
+                if (!leftCI.MergedAttributes.TryGetValue(name, out var leftAttribute))
+                {
+                    return new AttributeComparison(name, null, rightCI.MergedAttributes[name], ComparisonStatus.Unequal);
+                }
+                else if (!rightCI.MergedAttributes.TryGetValue(name, out var rightAttribute))
+                {
+                    return new AttributeComparison(name, leftCI.MergedAttributes[name], null, ComparisonStatus.Unequal);
+                }
+                else
+                {
+                    var status = (leftAttribute.Attribute.Value.Equals(rightAttribute.Attribute.Value)) ? ComparisonStatus.Equal : ComparisonStatus.Unequal;
+                    return new AttributeComparison(name, leftAttribute, rightAttribute, status);
+                }
+            }).Where(a => showEqual || a.status != ComparisonStatus.Equal);
+            return attributes;
         }
 
         public IEnumerable<CIRelationsComparison> DiffRelations(IEnumerable<MergedRelation> leftRelations, IEnumerable<MergedRelation> rightRelations, bool outgoing, bool showEqual)
@@ -95,36 +115,114 @@ namespace Omnikeeper.Service
                 }
             }
 
-            var ret = dict.Select(kv => new CIRelationsComparison(kv.Key, kv.Value));
+            var ret = dict.Select(kv => new CIRelationsComparison(kv.Key, kv.Key, kv.Value));
             return ret;
         }
 
-        public IEnumerable<CIEffectiveTraitsComparison> DiffEffectiveTraits(ISet<(Guid ciid, string traitID)> left, ISet<(Guid ciid, string traitID)> right, bool showEqual)
+        public IEnumerable<CIRelationsComparison> DiffRelationsOf2CIs(IEnumerable<MergedRelation> leftRelations, IEnumerable<MergedRelation> rightRelations, bool outgoing, bool showEqual, CrossCIDiffingSettings crossCIDiffingSetting)
         {
-            var dict = new Dictionary<Guid, IList<EffectiveTraitComparison>>();
-            foreach (var l in left)
+            // NOTE: this should succeed because there must only be one "this"CIID on both left and right relations, so we can exclude "this"CIID from the dict key generation
+            var left = leftRelations.ToDictionary(r => r.Relation.PredicateID + ((outgoing) ? r.Relation.ToCIID : r.Relation.FromCIID));
+            var right = rightRelations.ToDictionary(r => r.Relation.PredicateID + ((outgoing) ? r.Relation.ToCIID : r.Relation.FromCIID));
+
+            var allKeys = new HashSet<string>();
+            allKeys.UnionWith(left.Keys);
+            allKeys.UnionWith(right.Keys);
+            var list = new List<RelationComparison>();
+            foreach (var key in allKeys)
             {
-                if (right.Contains(l))
+                if (!left.TryGetValue(key, out var leftRelation))
                 {
-                    right.Remove(l);
+                    var rightRelation = right[key];
+                    var rc = new RelationComparison(rightRelation.Relation.PredicateID, rightRelation.Relation.FromCIID, rightRelation.Relation.ToCIID, null, rightRelation, ComparisonStatus.Unequal);
+                    list.Add(rc);
+
+                }
+                else if (!right.TryGetValue(key, out var rightRelation))
+                {
+                    var rc = new RelationComparison(leftRelation.Relation.PredicateID, leftRelation.Relation.FromCIID, leftRelation.Relation.ToCIID, leftRelation, null, ComparisonStatus.Unequal);
+                    list.Add(rc);
+                }
+                else
+                {
                     if (showEqual)
                     {
-                        var et = new EffectiveTraitComparison(l.traitID, true, true);
-                        dict.AddOrUpdate(l.ciid, () => new List<EffectiveTraitComparison>() { et }, (l) => { l.Add(et); return l; });
+                        var rc = new RelationComparison(leftRelation.Relation.PredicateID, leftRelation.Relation.FromCIID, leftRelation.Relation.ToCIID, leftRelation, rightRelation, ComparisonStatus.Equal);
+                        list.Add(rc);
                     }
-                } else
-                {
-                    var et = new EffectiveTraitComparison(l.traitID,true, false);
-                    dict.AddOrUpdate(l.ciid, () => new List<EffectiveTraitComparison>() { et }, (l) => { l.Add(et); return l; });
                 }
             }
-            foreach (var r in right)
+
+            // NOTE: by convention, we try to extract the "this"CIID from the left side first
+            //var representativeRelation = leftRelations.FirstOrDefault()?.Relation ?? rightRelations.FirstOrDefault()?.Relation ?? null;
+            //if (representativeRelation == null)
+            //    return new List<CIRelationsComparison>() { };
+            return new List<CIRelationsComparison>() { new CIRelationsComparison(crossCIDiffingSetting.leftCIID, crossCIDiffingSetting.rightCIID, list) };
+        }
+
+        public IEnumerable<CIEffectiveTraitsComparison> DiffEffectiveTraits(IDictionary<Guid, (ISet<string> traitIDs, string? ciName)> left, IDictionary<Guid, (ISet<string> traitIDs, string? ciName)> right, bool showEqual)
+        {
+            var allCIIDs = new HashSet<Guid>();
+            allCIIDs.UnionWith(left.Keys);
+            allCIIDs.UnionWith(right.Keys);
+            var dict = new List<CIEffectiveTraitsComparison>(allCIIDs.Count);
+            foreach (var ciid in allCIIDs)
             {
-                var et = new EffectiveTraitComparison(r.traitID, false, true);
-                dict.AddOrUpdate(r.ciid, () => new List<EffectiveTraitComparison>() { et }, (l) => { l.Add(et); return l; });
+                if (!left.TryGetValue(ciid, out var leftT))
+                {
+                    var rightT = right[ciid];
+                    dict.Add(new CIEffectiveTraitsComparison(ciid, ciid, null, rightT.ciName, rightT.traitIDs.Select(traitID => new EffectiveTraitComparison(traitID, false, true)).ToList()));
+                }
+                else if (!right.TryGetValue(ciid, out var rightT))
+                {
+                    dict.Add(new CIEffectiveTraitsComparison(ciid, ciid, leftT.ciName, null, leftT.traitIDs.Select(traitID => new EffectiveTraitComparison(traitID, true, false)).ToList()));
+                }
+                else
+                {
+                    var onlyInLeft = leftT.traitIDs.Except(rightT.traitIDs);
+                    var onlyInRight = rightT.traitIDs.Except(leftT.traitIDs);
+
+                    var inBoth = (showEqual) ? leftT.traitIDs.Intersect(rightT.traitIDs) : Array.Empty<string>();
+
+                    var all = onlyInLeft.Select(traitID => new EffectiveTraitComparison(traitID, true, false))
+                        .Concat(onlyInRight.Select(traitID => new EffectiveTraitComparison(traitID, false, true)))
+                        .Concat(inBoth.Select(traitID => new EffectiveTraitComparison(traitID, true, true)));
+                    dict.Add(new CIEffectiveTraitsComparison(ciid, ciid, leftT.ciName, rightT.ciName, all.ToList()));
+                }
+            }
+            return dict;
+        }
+
+        public IEnumerable<CIEffectiveTraitsComparison> DiffEffectiveTraitsOf2CIs(IDictionary<Guid, (ISet<string> traitIDs, string? ciName)> left, IDictionary<Guid, (ISet<string> traitIDs, string? ciName)> right, bool showEqual, CrossCIDiffingSettings crossCIDiffingSetting)
+        {
+            var leftT = left.GetValueOrDefault(crossCIDiffingSetting.leftCIID, () => (new HashSet<string>(), null));
+            var rightT = right.GetValueOrDefault(crossCIDiffingSetting.rightCIID, () => (new HashSet<string>(), null));
+
+            var list = new List<EffectiveTraitComparison>();
+            foreach (var l in leftT.traitIDs)
+            {
+                if (rightT.traitIDs.Contains(l))
+                {
+                    rightT.traitIDs.Remove(l); // NOTE, HACK: watch out, we are modifying the passed in collection!
+                    if (showEqual)
+                    {
+                        var et = new EffectiveTraitComparison(l, true, true);
+                        list.Add(et);
+                    }
+                }
+                else
+                {
+                    var et = new EffectiveTraitComparison(l, true, false);
+                    list.Add(et);
+                }
+            }
+            foreach (var r in rightT.traitIDs)
+            {
+                var et = new EffectiveTraitComparison(r, false, true);
+                list.Add(et);
             }
 
-            return dict.Select(kv => new CIEffectiveTraitsComparison(kv.Key, kv.Value));
+            return new List<CIEffectiveTraitsComparison>() { new CIEffectiveTraitsComparison(crossCIDiffingSetting.leftCIID, crossCIDiffingSetting.rightCIID, leftT.ciName, rightT.ciName, list) };
         }
     }
 
@@ -137,17 +235,19 @@ namespace Omnikeeper.Service
 
     public class CIAttributesComparison
     {
-        public readonly Guid ciid;
-        public readonly MergedCI? left;
-        public readonly MergedCI? right;
+        public readonly Guid leftCIID;
+        public readonly Guid rightCIID;
+        public readonly string? leftCIName;
+        public readonly string? rightCIName;
 
         public readonly IEnumerable<AttributeComparison> attributes;
 
-        public CIAttributesComparison(Guid ciid, MergedCI? left, MergedCI? right, IEnumerable<AttributeComparison> attributes)
+        public CIAttributesComparison(Guid leftCIID, Guid rightCIID, string? leftCIName, string? rightCIName, IEnumerable<AttributeComparison> attributes)
         {
-            this.ciid = ciid;
-            this.left = left;
-            this.right = right;
+            this.leftCIID = leftCIID;
+            this.rightCIID = rightCIID;
+            this.leftCIName = leftCIName;
+            this.rightCIName = rightCIName;
             this.attributes = attributes;
         }
     }
@@ -171,12 +271,14 @@ namespace Omnikeeper.Service
 
     public class CIRelationsComparison
     {
-        public readonly Guid ciid;
+        public readonly Guid leftCIID;
+        public readonly Guid rightCIID;
         public readonly IEnumerable<RelationComparison> relations;
 
-        public CIRelationsComparison(Guid ciid, IEnumerable<RelationComparison> relations)
+        public CIRelationsComparison(Guid leftCIID, Guid rightCIID, IEnumerable<RelationComparison> relations)
         {
-            this.ciid = ciid;
+            this.leftCIID = leftCIID;
+            this.rightCIID = rightCIID;
             this.relations = relations;
         }
     }
@@ -204,13 +306,19 @@ namespace Omnikeeper.Service
 
     public class CIEffectiveTraitsComparison
     {
-        public readonly Guid ciid;
+        public readonly Guid leftCIID;
+        public readonly Guid rightCIID;
+        public readonly string? leftCIName;
+        public readonly string? rightCIName;
 
         public readonly IEnumerable<EffectiveTraitComparison> effectiveTraits;
 
-        public CIEffectiveTraitsComparison(Guid ciid, IEnumerable<EffectiveTraitComparison> effectiveTraits)
+        public CIEffectiveTraitsComparison(Guid leftCIID, Guid rightCIID, string? leftCIName, string? rightCIName, IEnumerable<EffectiveTraitComparison> effectiveTraits)
         {
-            this.ciid = ciid;
+            this.leftCIID = leftCIID;
+            this.rightCIID = rightCIID;
+            this.leftCIName = leftCIName;
+            this.rightCIName = rightCIName;
             this.effectiveTraits = effectiveTraits;
         }
     }
@@ -249,18 +357,40 @@ namespace Omnikeeper.Service
     {
         public CIAttributesComparisonType()
         {
-            Field("ciid", x => x.ciid);
-            Field("left", x => x.left, type: typeof(MergedCIType));
-            Field("right", x => x.right, type: typeof(MergedCIType));
+            Field("leftCIID", x => x.leftCIID);
+            Field("rightCIID", x => x.rightCIID);
+            Field("leftCIName", x => x.leftCIName, type: typeof(StringGraphType));
+            Field("rightCIName", x => x.rightCIName, type: typeof(StringGraphType));
             Field("attributeComparisons", x => x.attributes, type: typeof(ListGraphType<AttributeComparisonType>));
         }
     }
 
     public class CIRelationsComparisonType : ObjectGraphType<CIRelationsComparison>
     {
-        public CIRelationsComparisonType()
+        public CIRelationsComparisonType(IDataLoaderContextAccessor dataLoaderContextAccessor, IAttributeModel attributeModel, ICIIDModel ciidModel)
         {
-            Field("ciid", x => x.ciid);
+            Field("leftCIID", x => x.leftCIID);
+            Field<StringGraphType>("leftCIName",
+                resolve: (context) =>
+                {
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var layerset = userContext.GetLayerSet(context.Path);
+                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                    var ciid = context.Source!.leftCIID;
+                    return DataLoaderUtils.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), dataLoaderContextAccessor, attributeModel, ciidModel, layerset, timeThreshold, userContext.Transaction)
+                        .Then(rr => rr.GetOrWithClass(ciid, null));
+                });
+            Field("rightCIID", x => x.rightCIID);
+            Field<StringGraphType>("rightCIName",
+                resolve: (context) =>
+                {
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var layerset = userContext.GetLayerSet(context.Path);
+                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                    var ciid = context.Source!.rightCIID;
+                    return DataLoaderUtils.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), dataLoaderContextAccessor, attributeModel, ciidModel, layerset, timeThreshold, userContext.Transaction)
+                        .Then(rr => rr.GetOrWithClass(ciid, null));
+                });
             Field("relationComparisons", x => x.relations, type: typeof(ListGraphType<RelationComparisonType>));
         }
     }
@@ -269,7 +399,10 @@ namespace Omnikeeper.Service
     {
         public CIEffectiveTraitsComparisonType()
         {
-            Field("ciid", x => x.ciid);
+            Field("leftCIID", x => x.leftCIID);
+            Field("rightCIID", x => x.rightCIID);
+            Field("leftCIName", x => x.leftCIName, type: typeof(StringGraphType));
+            Field("rightCIName", x => x.rightCIName, type: typeof(StringGraphType));
             Field("effectiveTraitComparisons", x => x.effectiveTraits, type: typeof(ListGraphType<EffectiveTraitComparisonType>));
         }
     }
@@ -298,6 +431,18 @@ namespace Omnikeeper.Service
         }
     }
 
+    public class CrossCIDiffingSettings
+    {
+        public readonly Guid leftCIID;
+        public readonly Guid rightCIID;
+
+        public CrossCIDiffingSettings(Guid leftCIID, Guid rightCIID)
+        {
+            this.leftCIID = leftCIID;
+            this.rightCIID = rightCIID;
+        }
+    }
+
     public class DiffingResult
     {
         public readonly ICIIDSelection leftCIIDSelection;
@@ -309,8 +454,10 @@ namespace Omnikeeper.Service
         public readonly TimeThreshold leftTimeThreshold;
         public readonly TimeThreshold rightTimeThreshold;
         public readonly bool showEqual;
+        public readonly CrossCIDiffingSettings? crossCIDiffingSettings;
 
-        public DiffingResult(ICIIDSelection leftCIIDSelection, ICIIDSelection rightCIIDSelection, IAttributeSelection leftAttributes, IAttributeSelection rightAttributes, LayerSet leftLayers, LayerSet rightLayers, TimeThreshold leftTimeThreshold, TimeThreshold rightTimeThreshold, bool showEqual)
+        public DiffingResult(ICIIDSelection leftCIIDSelection, ICIIDSelection rightCIIDSelection, IAttributeSelection leftAttributes, IAttributeSelection rightAttributes, LayerSet leftLayers, LayerSet rightLayers, 
+            TimeThreshold leftTimeThreshold, TimeThreshold rightTimeThreshold, bool showEqual, CrossCIDiffingSettings? crossCIDiffingSettings)
         {
             this.leftCIIDSelection = leftCIIDSelection;
             this.rightCIIDSelection = rightCIIDSelection;
@@ -321,13 +468,14 @@ namespace Omnikeeper.Service
             this.leftTimeThreshold = leftTimeThreshold;
             this.rightTimeThreshold = rightTimeThreshold;
             this.showEqual = showEqual;
+            this.crossCIDiffingSettings = crossCIDiffingSettings;
         }
     }
 
     public class DiffingResultType : ObjectGraphType<DiffingResult>
     {
-        public DiffingResultType(IDataLoaderContextAccessor dataLoaderContextAccessor, DiffingCIService diffingCIService, ILayerModel layerModel, ICIModel ciModel, IRelationModel relationModel, IEffectiveTraitModel effectiveTraitModel,
-            ITraitsProvider traitsProvider, ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService)
+        public DiffingResultType(IDataLoaderContextAccessor dataLoaderContextAccessor, DiffingCIService diffingCIService, ICIModel ciModel, IRelationModel relationModel, IEffectiveTraitModel effectiveTraitModel,
+            ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService)
         {
             FieldAsync<ListGraphType<CIAttributesComparisonType>>("cis",
                 resolve: async (context) =>
@@ -343,7 +491,9 @@ namespace Omnikeeper.Service
                     leftCIs = ciBasedAuthorizationService.FilterReadableCIs(leftCIs, (ci) => ci.ID);
                     rightCIs = ciBasedAuthorizationService.FilterReadableCIs(rightCIs, (ci) => ci.ID);
 
-                    var comparisons = diffingCIService.DiffCIs(leftCIs, rightCIs, d.showEqual);
+                    var comparisons = (d.crossCIDiffingSettings != null) ? 
+                        diffingCIService.DiffCross2CIs(leftCIs.First(), rightCIs.First(), d.showEqual, d.crossCIDiffingSettings) : 
+                        diffingCIService.DiffCIs(leftCIs, rightCIs, d.showEqual);
                     return comparisons.Values;
                 });
 
@@ -370,7 +520,9 @@ namespace Omnikeeper.Service
                 leftRelations = leftRelations.Where(r => ciBasedAuthorizationService.CanReadCI(r.Relation.FromCIID) && ciBasedAuthorizationService.CanReadCI(r.Relation.ToCIID));
                 rightRelations = rightRelations.Where(r => ciBasedAuthorizationService.CanReadCI(r.Relation.FromCIID) && ciBasedAuthorizationService.CanReadCI(r.Relation.ToCIID));
 
-                return diffingCIService.DiffRelations(leftRelations, rightRelations, outgoing, d.showEqual);
+                return (d.crossCIDiffingSettings != null) ? 
+                    diffingCIService.DiffRelationsOf2CIs(leftRelations, rightRelations, outgoing, d.showEqual, d.crossCIDiffingSettings) : 
+                    diffingCIService.DiffRelations(leftRelations, rightRelations, outgoing, d.showEqual);
             }
 
             FieldAsync<ListGraphType<CIRelationsComparisonType>>("outgoingRelations",
@@ -400,20 +552,26 @@ namespace Omnikeeper.Service
 
                     var leftTraits = (await traitsProvider.GetActiveTraits(userContext.Transaction, d.leftTimeThreshold)).Values;
                     var rightTraits = (await traitsProvider.GetActiveTraits(userContext.Transaction, d.rightTimeThreshold)).Values;
-                    ISet<(Guid ciid, string traitID)> left = new HashSet<(Guid ciid, string traitID)>();
-                    ISet<(Guid ciid, string traitID)> right = new HashSet<(Guid ciid, string traitID)>();
+
+                    IDictionary<Guid, (ISet<string> traitIDs, string? ciName)> left = new Dictionary<Guid, (ISet<string> traitIDs, string? ciName)>();
+                    IDictionary<Guid, (ISet<string> traitIDs, string? ciName)> right = new Dictionary<Guid, (ISet<string> traitIDs, string? ciName)>();
+
                     foreach (var trait in leftTraits)
                     {
                         var leftCIsWithTrait = await effectiveTraitModel.FilterCIsWithTrait(leftCIs, trait, d.leftLayers, userContext.Transaction, d.leftTimeThreshold);
-                        left.UnionWith(leftCIsWithTrait.Select(ci => (ci.ID, trait.ID)));
+                        foreach (var ci in leftCIsWithTrait)
+                            left.AddOrUpdate(ci.ID, () => (new HashSet<string>() { trait.ID }, ci.CIName), (current) => { current.traitIDs.Add(trait.ID); return current; });
                     }
-                    foreach(var trait in rightTraits)
+                    foreach (var trait in rightTraits)
                     {
                         var rightCIsWithTrait = await effectiveTraitModel.FilterCIsWithTrait(rightCIs, trait, d.rightLayers, userContext.Transaction, d.rightTimeThreshold);
-                        right.UnionWith(rightCIsWithTrait.Select(ci => (ci.ID, trait.ID)));
+                        foreach (var ci in rightCIsWithTrait)
+                            right.AddOrUpdate(ci.ID, () => (new HashSet<string>() { trait.ID }, ci.CIName), (current) => { current.traitIDs.Add(trait.ID); return current; });
                     }
 
-                    var comparisons = diffingCIService.DiffEffectiveTraits(left, right, d.showEqual);
+                    var comparisons = (d.crossCIDiffingSettings != null) ? 
+                        diffingCIService.DiffEffectiveTraitsOf2CIs(left, right, d.showEqual, d.crossCIDiffingSettings) : 
+                        diffingCIService.DiffEffectiveTraits(left, right, d.showEqual);
                     return comparisons;
                 });
 

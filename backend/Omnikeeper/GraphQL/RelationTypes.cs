@@ -32,9 +32,9 @@ namespace Omnikeeper.GraphQL
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerset = userContext.GetLayerSet(context.Path);
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                    var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader($"GetMergedCINames_{layerset}_{timeThreshold}",
-                        (IEnumerable<ICIIDSelection> ciidSelections) => FetchCINames(layerset, timeThreshold, ciidSelections, userContext.Transaction));
-                    return loader.LoadAsync(SpecificCIIDsSelection.Build(context.Source!.FromCIID));
+                    var ciid = context.Source!.FromCIID;
+                    return DataLoaderUtils.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), dataLoaderContextAccessor, attributeModel, ciidModel, layerset, timeThreshold, userContext.Transaction)
+                        .Then(rr => rr.GetOrWithClass(ciid, null));
                 });
             Field<StringGraphType>("toCIName",
                 resolve: (context) =>
@@ -42,9 +42,9 @@ namespace Omnikeeper.GraphQL
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerset = userContext.GetLayerSet(context.Path);
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                    var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader($"GetMergedCINames_{layerset}_{timeThreshold}", 
-                        (IEnumerable<ICIIDSelection> ciidSelections) => FetchCINames(layerset, timeThreshold, ciidSelections, userContext.Transaction));
-                    return loader.LoadAsync(SpecificCIIDsSelection.Build(context.Source!.ToCIID));
+                    var ciid = context.Source!.ToCIID;
+                    return DataLoaderUtils.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), dataLoaderContextAccessor, attributeModel, ciidModel, layerset, timeThreshold, userContext.Transaction)
+                        .Then(rr => rr.GetOrWithClass(ciid, null));
                 });
             Field<MergedCIType>("toCI",
             resolve: (context) =>
@@ -52,6 +52,7 @@ namespace Omnikeeper.GraphQL
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
                 var layerSet = userContext.GetLayerSet(context.Path);
+                // TODO: move loading of merged CIs into DataLoaderUtils
                 var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedCIs_{layerSet}_{timeThreshold}", 
                     (IEnumerable<ICIIDSelection> ciidSelections) => FetchMergedCIs(ciidSelections, layerSet, timeThreshold, userContext.Transaction));
                 return loader.LoadAsync(SpecificCIIDsSelection.Build(context.Source!.ToCIID)).Then(t => t.First());
@@ -62,6 +63,7 @@ namespace Omnikeeper.GraphQL
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
                 var layerSet = userContext.GetLayerSet(context.Path);
+                // TODO: move loading of merged CIs into DataLoaderUtils
                 var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedCIs_{layerSet}_{timeThreshold}",
                     (IEnumerable<ICIIDSelection> ciidSelections) => FetchMergedCIs(ciidSelections, layerSet, timeThreshold, userContext.Transaction));
                 return loader.LoadAsync(SpecificCIIDsSelection.Build(context.Source!.FromCIID)).Then(t => t.First());
@@ -69,22 +71,6 @@ namespace Omnikeeper.GraphQL
             this.attributeModel = attributeModel;
             this.ciidModel = ciidModel;
             this.ciModel = ciModel;
-        }
-
-        private async Task<IDictionary<ICIIDSelection, string?>> FetchCINames(LayerSet layerSet, TimeThreshold timeThreshold, IEnumerable<ICIIDSelection> ciidSelections, IModelContext trans)
-        {
-            var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
-
-            var combinedNames = await attributeModel.GetMergedCINames(combinedCIIDSelection, layerSet, trans, timeThreshold);
-
-            var ret = new Dictionary<ICIIDSelection, string?>(ciidSelections.Count());
-            foreach(var ciidSelection in ciidSelections)
-            {
-                var ciids = await ciidSelection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
-                var selectedNames = ciids.Where(combinedNames.ContainsKey).Select(ciid => combinedNames[ciid]);
-                ret.Add(ciidSelection, selectedNames.FirstOrDefault());
-            }
-            return ret;
         }
 
         private async Task<ILookup<ICIIDSelection, MergedCI>> FetchMergedCIs(IEnumerable<ICIIDSelection> ciidSelections, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
@@ -119,6 +105,7 @@ namespace Omnikeeper.GraphQL
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source!.LayerStackIDs;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                // TODO: move loading of layers into DataLoaderUtils
                 var loader = dataLoaderContextAccessor.Context.GetOrAddLoader($"GetAllLayers_{timeThreshold}", () => layerModel.GetLayers(userContext.Transaction, timeThreshold));
                 return loader.LoadAsync().Then(layers => layers
                         .Where(l => layerstackIDs.Contains(l.ID))
