@@ -98,6 +98,7 @@ function Diffing(props) {
   var [ rightTimeSettings, setRightTimeSettings ] = useState(urlParams.rightTimeSettings);
   
   var [ showEqual, setShowEqual ] = useState(true);
+  var [ allowCrossCIDiffing, setAllowCrossCIDiffing ] = useState(true);
 
   // reset timesettings when ci changes TODO: this breaks url-based setting -> how to make this work?
   // useEffect(() => setLeftTimeSettings(null), [leftCIID]);
@@ -152,20 +153,17 @@ function Diffing(props) {
       $leftLayers: [String]!, $rightLayers: [String]!, 
       $leftTimeThreshold: DateTimeOffset, $rightTimeThreshold: DateTimeOffset,
       $leftAttributes: [String], $rightAttributes: [String],
-      $showEqual: Boolean!) {
+      $showEqual: Boolean!, $allowCrossCIDiffing: Boolean!) {
       ciDiffing(leftLayers: $leftLayers, rightLayers: $rightLayers, 
         leftAttributes: $leftAttributes, rightAttributes: $rightAttributes,
         leftCIIDs: $leftCIIDs, rightCIIDs: $rightCIIDs,
         leftTimeThreshold: $leftTimeThreshold, rightTimeThreshold: $rightTimeThreshold,
-        showEqual: $showEqual) {
+        showEqual: $showEqual, allowCrossCIDiffing: $allowCrossCIDiffing) {
         cis {
-          ciid
-          left {
-            name
-          }
-          right {
-            name
-          }
+          leftCIID
+          leftCIName
+          rightCIID
+          rightCIName
           attributeComparisons {
             name
             left {
@@ -178,21 +176,30 @@ function Diffing(props) {
           }
         }
         outgoingRelations {
-            ciid
-            ${buildRelationComparisonGQLString(true)}
+          leftCIID
+          leftCIName
+          rightCIID
+          rightCIName
+          ${buildRelationComparisonGQLString(true)}
         }
         incomingRelations {
-            ciid
-            ${buildRelationComparisonGQLString(false)}
+          leftCIID
+          leftCIName
+          rightCIID
+          rightCIName
+          ${buildRelationComparisonGQLString(false)}
         }
         effectiveTraits {
-            ciid
-            effectiveTraitComparisons {
-              traitID
-              leftHasTrait
-              rightHasTrait
-              status
-            }
+          leftCIID
+          leftCIName
+          rightCIID
+          rightCIName
+          effectiveTraitComparisons {
+            traitID
+            leftHasTrait
+            rightHasTrait
+            status
+          }
         }
       }
     }
@@ -213,7 +220,7 @@ function Diffing(props) {
         variables: {
           leftLayers: visibleLeftLayerIDs, leftTimeThreshold: leftTimeSettings?.timeThreshold, leftCIIDs: leftCIIDs,
           rightLayers: visibleRightLayerIDs, rightTimeThreshold: rightTimeSettings?.timeThreshold, rightCIIDs: rightCIIDs,
-          showEqual: showEqual
+          showEqual: showEqual, allowCrossCIDiffing: allowCrossCIDiffing
         }
       })
   }
@@ -264,14 +271,15 @@ function Diffing(props) {
           <Divider />
           <Row>
           <Col span={24}>
-            <div style={{display: 'flex', justifyContent: 'center'}}>
-              <Form initialValues={{ checkboxShowEqual: true }}>
-                <Form.Item name="checkboxShowEqual" valuePropName="checked" style={{ display: "inline-block", verticalAlign: "baseline", marginBottom: 0 }}>
-                  <Checkbox checked={showEqual} onChange={d => setShowEqual(d.target.checked)}>Show Equal</Checkbox>
-                </Form.Item>
-                <Button style={{ display: "inline-block", marginLeft: "8px" }} type="primary" size="large" onClick={() => compare()} disabled={(leftCIIDs && leftCIIDs.length === 0) || (rightCIIDs && rightCIIDs.length === 0)}>Compare</Button>
-              </Form>
-            </div>
+            <Form initialValues={{ checkboxShowEqual: true, checkboxAllowCrossCIDiffing: true }} style={{display: 'flex', justifyContent: 'center'}}>
+              <Form.Item name="checkboxShowEqual" valuePropName="checked" style={{ display: "inline-block", verticalAlign: "baseline", marginBottom: 0 }}>
+                <Checkbox checked={showEqual} onChange={d => setShowEqual(d.target.checked)}>Show Equal</Checkbox>
+              </Form.Item>
+              <Form.Item name="checkboxAllowCrossCIDiffing" valuePropName="checked" style={{ display: "inline-block", verticalAlign: "baseline", marginBottom: 0 }}>
+                <Checkbox checked={allowCrossCIDiffing} onChange={d => setAllowCrossCIDiffing(d.target.checked)}>Allow Cross-CI Diffing (if applicable)</Checkbox>
+              </Form.Item>
+              <Button style={{ display: "inline-block", marginLeft: "8px" }} type="primary" size="large" onClick={() => compare()} disabled={(leftCIIDs && leftCIIDs.length === 0) || (rightCIIDs && rightCIIDs.length === 0)}>Compare</Button>
+            </Form>
           </Col>
         </Row>
         </Card>

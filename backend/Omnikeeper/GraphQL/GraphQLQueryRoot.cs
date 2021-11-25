@@ -209,7 +209,8 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<ListGraphType<GuidGraphType>> { Name = "rightCIIDs" },
                     new QueryArgument<ListGraphType<StringGraphType>> { Name = "leftAttributes" },
                     new QueryArgument<ListGraphType<StringGraphType>> { Name = "rightAttributes" },
-                    new QueryArgument<BooleanGraphType> { Name = "showEqual" }
+                    new QueryArgument<BooleanGraphType> { Name = "showEqual" },
+                    new QueryArgument<BooleanGraphType> { Name = "allowCrossCIDiffing" }
                     ),
                 resolve: async context =>
                 {
@@ -241,10 +242,18 @@ namespace Omnikeeper.GraphQL
 
                     ICIIDSelection leftCIIDSelection = (leftCIIDs != null) ? SpecificCIIDsSelection.Build(leftCIIDs) : new AllCIIDsSelection();
                     ICIIDSelection rightCIIDSelection = (rightCIIDs != null) ? SpecificCIIDsSelection.Build(rightCIIDs) : new AllCIIDsSelection();
+
                     var showEqual = context.GetArgument<bool?>($"showEqual").GetValueOrDefault(true);
+
+                    // if it's allowed AND there's one CI on each side AND the CIs are different, switch to "crossCIDiffing"
+                    var allowCrossCIDiffing = context.GetArgument<bool?>($"allowCrossCIDiffing").GetValueOrDefault(true);
+                    var crossCIDiffingSettings = (allowCrossCIDiffing && leftCIIDs?.Length == 1 && rightCIIDs?.Length == 1 && leftCIIDs[0] != rightCIIDs[0]) ? 
+                        new CrossCIDiffingSettings(leftCIIDs[0], rightCIIDs[0]) :
+                        null;
 
                     // NOTE: because many sub-resolvers of ciDiffing depend on whether they are "left" or "right", we set some parts of the user context (layerset, timethreshold) depending on that
                     // create sub contexts for left and right branches of graphql query
+                    // TODO: simplify interface, allow multiple paths to be added in one call to With*()
                     userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "cis", "left" }));
                     userContext.WithTimeThreshold(rightTimeThreshold, context.Path.Concat(new List<object>() { "cis", "right" }));
                     userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "cis", "left" }));
@@ -262,7 +271,16 @@ namespace Omnikeeper.GraphQL
                     userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "incomingRelations", "relationComparisons", "left" }));
                     userContext.WithLayerset(rightLayers, context.Path.Concat(new List<object>() { "incomingRelations", "relationComparisons", "right" }));
 
-                    return new DiffingResult(leftCIIDSelection, rightCIIDSelection, leftAttributeSelection, rightAttributeSelection, leftLayers, rightLayers, leftTimeThreshold, rightTimeThreshold, showEqual);
+                    userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "outgoingRelations", "leftCIName" }));
+                    userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "outgoingRelations", "leftCIName" }));
+                    userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "incomingRelations", "leftCIName" }));
+                    userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "incomingRelations", "leftCIName" }));
+                    userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "outgoingRelations", "rightCIName" }));
+                    userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "outgoingRelations", "rightCIName" }));
+                    userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "incomingRelations", "rightCIName" }));
+                    userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "incomingRelations", "rightCIName" }));
+
+                    return new DiffingResult(leftCIIDSelection, rightCIIDSelection, leftAttributeSelection, rightAttributeSelection, leftLayers, rightLayers, leftTimeThreshold, rightTimeThreshold, showEqual, crossCIDiffingSettings);
                 });
 
             FieldAsync<ListGraphType<PredicateType>>("predicates",
