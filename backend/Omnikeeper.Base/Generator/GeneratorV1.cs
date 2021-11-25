@@ -43,6 +43,7 @@ namespace Omnikeeper.Base.Generator
         [TraitAttribute("attribute_value_template", "generator.attribute_value_template", multilineTextHint: true)]
         public readonly string TemplateString;
 
+        // TODO: better caching of templates, currently they are created new at each request
         private GeneratorAttributeValue? _template = null;
         public GeneratorAttributeValue Template
         {
@@ -231,6 +232,7 @@ namespace Omnikeeper.Base.Generator
                     var value = new AttributeScalarValueText(evaluatedString);
                     // create a deterministic, dependent guid from the ciid, layerID, attribute values; 
                     // we need to incorporate the dependent attributes, otherwise the attribute ID does not change when any of the dependent attributes change
+                    // TODO: I *think* we also need a hash of the generator template, because otherwise, changes there are not reflected as new IDs
                     var agGuid = GuidUtility.Create(ciid, $"{generator.AttributeName}-{layerID}-{string.Join("-", relevantAttributes.Select(a => a.ID))}");
                     var ag = new CIAttribute(agGuid, generator.AttributeName, ciid, value, GeneratorV1.StaticChangesetID);
                     return ag;
