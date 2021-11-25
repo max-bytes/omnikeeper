@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [6.0.0] - 2021-11-25
+
+### Added
+- (breaking) rework of CI diffing GraphQL API
+- added option to CI diffing: cross CI diffing for comparing 2 different CIs with each other
+
 ## [5.0.0] - 2021-11-24
 
 ### Added
