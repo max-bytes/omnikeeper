@@ -16,18 +16,15 @@ namespace Omnikeeper.Service
 {
     public class DiffingCIService
     {
-        public IDictionary<Guid, CIAttributesComparison> DiffCross2CIs(MergedCI left, MergedCI right, bool showEqual, CrossCIDiffingSettings crossCIDiffingSettings)
+        public IList<CIAttributesComparison> DiffCross2CIs(MergedCI left, MergedCI right, bool showEqual, CrossCIDiffingSettings crossCIDiffingSettings)
         {
             var attributeComparison = CompareAttributesOf2CIs(left, right, showEqual);
-
-            var ciid = crossCIDiffingSettings.leftCIID; // NOTE: we take the left CIID as convention for the key
-            return new Dictionary<Guid, CIAttributesComparison>()
-            {
-                { ciid, new CIAttributesComparison(crossCIDiffingSettings.leftCIID, crossCIDiffingSettings.rightCIID, left.CIName, right.CIName, attributeComparison) }
+            return new List<CIAttributesComparison>() {
+                new CIAttributesComparison(crossCIDiffingSettings.leftCIID, crossCIDiffingSettings.rightCIID, left.CIName, right.CIName, attributeComparison)
             };
         }
 
-        public IDictionary<Guid, CIAttributesComparison> DiffCIs(IEnumerable<MergedCI> left, IEnumerable<MergedCI> right, bool showEqual)
+        public IList<CIAttributesComparison> DiffCIs(IEnumerable<MergedCI> left, IEnumerable<MergedCI> right, bool showEqual)
         {
             var allCIIDs = new HashSet<Guid>();
             var leftDictionary = left.ToDictionary(ci => ci.ID);
@@ -35,23 +32,23 @@ namespace Omnikeeper.Service
             allCIIDs.UnionWith(leftDictionary.Keys);
             allCIIDs.UnionWith(rightDictionary.Keys);
 
-            var ciComparisons = new Dictionary<Guid, CIAttributesComparison>();
+            var ciComparisons = new List<CIAttributesComparison>();
             foreach (var ciid in allCIIDs)
             {
                 if (!leftDictionary.TryGetValue(ciid, out var leftCI))
                 {
                     var rightCI = rightDictionary[ciid];
                     var attributes = rightCI.MergedAttributes.Select(a => new AttributeComparison(a.Key, null, a.Value, ComparisonStatus.Unequal));
-                    ciComparisons.Add(ciid, new CIAttributesComparison(ciid, ciid, null, rightCI.CIName, attributes));
+                    ciComparisons.Add(new CIAttributesComparison(ciid, ciid, null, rightCI.CIName, attributes));
                 } else if (!rightDictionary.TryGetValue(ciid, out var rightCI))
                 {
                     var attributes = leftCI.MergedAttributes.Select(a => new AttributeComparison(a.Key, a.Value, null, ComparisonStatus.Unequal));
-                    ciComparisons.Add(ciid, new CIAttributesComparison(ciid, ciid, leftCI.CIName, null, attributes));
+                    ciComparisons.Add(new CIAttributesComparison(ciid, ciid, leftCI.CIName, null, attributes));
                 } else
                 {
                     IEnumerable<AttributeComparison> attributes = CompareAttributesOf2CIs(leftCI, rightCI, showEqual);
                     if (showEqual || !attributes.IsEmpty())
-                        ciComparisons.Add(ciid, new CIAttributesComparison(ciid, ciid, leftCI.CIName, rightCI.CIName, attributes));
+                        ciComparisons.Add(new CIAttributesComparison(ciid, ciid, leftCI.CIName, rightCI.CIName, attributes));
                 }
             }
 
@@ -153,10 +150,6 @@ namespace Omnikeeper.Service
                 }
             }
 
-            // NOTE: by convention, we try to extract the "this"CIID from the left side first
-            //var representativeRelation = leftRelations.FirstOrDefault()?.Relation ?? rightRelations.FirstOrDefault()?.Relation ?? null;
-            //if (representativeRelation == null)
-            //    return new List<CIRelationsComparison>() { };
             return new List<CIRelationsComparison>() { new CIRelationsComparison(crossCIDiffingSetting.leftCIID, crossCIDiffingSetting.rightCIID, list) };
         }
 
@@ -494,7 +487,7 @@ namespace Omnikeeper.Service
                     var comparisons = (d.crossCIDiffingSettings != null) ? 
                         diffingCIService.DiffCross2CIs(leftCIs.First(), rightCIs.First(), d.showEqual, d.crossCIDiffingSettings) : 
                         diffingCIService.DiffCIs(leftCIs, rightCIs, d.showEqual);
-                    return comparisons.Values;
+                    return comparisons;
                 });
 
             async Task<IEnumerable<CIRelationsComparison>> ResolveRelationComparisons(IResolveFieldContext context, bool outgoing, DiffingResult d)

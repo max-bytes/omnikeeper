@@ -29,14 +29,14 @@ function DiffEffectiveTraitsList(props) {
         <Flipped key={r.traitID} flipId={r.traitID} onAppear={onAppear} onExit={onExit}>
             <div style={{ width: "100%" }}>
             <Row style={{ backgroundColor: stateBasedBackgroundColor(state), display: "flex", justifyContent: "space-evenly" }} >
-                <Col>
+                <Col flex="1 1 0">
                     {r.leftHasTrait && <EffectiveTrait traitID={r.traitID} />}
                     {!r.leftHasTrait && <MissingLabel /> }
                 </Col>
-                <Col>
+                <Col> 
                     <CompareLabel state={state} />
                 </Col>
-                <Col>
+                <Col flex="1 1 0">
                     {r.rightHasTrait && <EffectiveTrait traitID={r.traitID} />}
                     {!r.rightHasTrait && <MissingLabel /> }
                 </Col>

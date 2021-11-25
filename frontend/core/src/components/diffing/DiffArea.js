@@ -24,14 +24,16 @@ export function DiffArea(props) {
 
     const CITitle = (props) => {
       const {leftCIName, leftCIID, rightCIName, rightCIID} = props;
-      const finalLeftCIName = leftCIName ?? "[UNNAMED]";
-      const finalRightCIName = rightCIName ?? "[UNNAMED]";
-      if (leftCIID === rightCIID)
-        return <Title level={5} style={{marginBottom: 0}}>{finalLeftCIName} - <CIID id={leftCIID} link={true} /></Title>;
-      else
+      if (leftCIID === rightCIID) {
+        const finalCIName = leftCIName ?? rightCIName ?? "[UNNAMED]";
+        return <Title level={5} style={{marginBottom: 0}}>{finalCIName} - <CIID id={leftCIID} link={true} /></Title>;
+      } else {
+        const finalLeftCIName = leftCIName ?? "[UNNAMED]";
+        const finalRightCIName = rightCIName ?? "[UNNAMED]";
         return <Title level={5} style={{marginBottom: 0}}>
           {finalLeftCIName} - <CIID id={leftCIID} link={true} /> vs. {finalRightCIName} - <CIID id={rightCIID} link={true} />
         </Title>;
+      }
     }
 
     const panes = (<>

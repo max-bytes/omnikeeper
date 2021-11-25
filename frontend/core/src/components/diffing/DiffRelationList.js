@@ -16,7 +16,7 @@ function DiffRelationList(props) {
   const keyGen = (relation) => `r_${relation.predicateID}_${(areOutgoingRelations) ? relation.toCIID : relation.fromCIID}`;
 
   return (<>
-  <Row wrap={false}>
+  <Row>
     <Col span={24}>
       <Flipper flipKey={_.map(relations, r => keyGen(r)).join(' ')}>
         {_.map(relations, r => {

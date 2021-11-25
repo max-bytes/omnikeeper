@@ -253,6 +253,7 @@ namespace Omnikeeper.GraphQL
 
                     // NOTE: because many sub-resolvers of ciDiffing depend on whether they are "left" or "right", we set some parts of the user context (layerset, timethreshold) depending on that
                     // create sub contexts for left and right branches of graphql query
+                    // TODO: simplify interface, allow multiple paths to be added in one call to With*()
                     userContext.WithTimeThreshold(leftTimeThreshold, context.Path.Concat(new List<object>() { "cis", "left" }));
                     userContext.WithTimeThreshold(rightTimeThreshold, context.Path.Concat(new List<object>() { "cis", "right" }));
                     userContext.WithLayerset(leftLayers, context.Path.Concat(new List<object>() { "cis", "left" }));
