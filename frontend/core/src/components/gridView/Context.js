@@ -77,6 +77,7 @@ export function Context(props) {
                     autoSizeAll={autoSizeAll}
                     save={save}
                     refreshData={() => refreshData(gridApi)}
+                    setQuickFilter = {(e) => gridApi.setQuickFilter(e)}
                     excelExport={() => {
                         aGGridEnterpriseActive &&
                         gridApi.exportDataAsExcel({
