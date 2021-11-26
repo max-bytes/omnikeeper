@@ -94,6 +94,7 @@ namespace Omnikeeper.Model.Decorators
                         var generatedAttribute = resolver.Resolve(existingCIAttributes.Values, additionals?.Values, ciid, layerID, egi);
                         if (generatedAttribute != null)
                         {
+                            // TODO: we are currently overwriting regular attributes with generated attributes... decide if that is the correct approach
                             existingCIAttributes[egi.AttributeName] = generatedAttribute;
                         }
                     }

@@ -150,11 +150,19 @@ export const queries = {
                     type
                 }
 
-                attributes {
-                    ...FullAttribute
+                ciAttributes {
+                    ciid
+                    ciName
+                    attributes {
+                        ...FullAttribute
+                    }
                 }
-                removedAttributes {
-                    ...FullAttribute
+                removedCIAttributes {
+                    ciid
+                    ciName
+                    attributes {
+                        ...FullAttribute
+                    }
                 }
                 relations {
                     id

@@ -6,6 +6,7 @@ import DiffEffectiveTraitsList from './DiffEffectiveTraitsList';
 import { Tabs, Typography } from 'antd'
 import { CIID } from 'utils/uuidRenderers';
 import CountBadge from 'components/CountBadge';
+import CITitle from 'utils/CITitle';
 
 const { TabPane } = Tabs;
 const { Title } = Typography;
@@ -22,11 +23,11 @@ export function DiffArea(props) {
     const incomingRelations = diffResults.incomingRelations;
     const effectiveTraits = diffResults.effectiveTraits;
 
-    const CITitle = (props) => {
+    const DualCITitle = (props) => {
       const {leftCIName, leftCIID, rightCIName, rightCIID} = props;
       if (leftCIID === rightCIID) {
-        const finalCIName = leftCIName ?? rightCIName ?? "[UNNAMED]";
-        return <Title level={5} style={{marginBottom: 0}}>{finalCIName} - <CIID id={leftCIID} link={true} /></Title>;
+        const finalCIName = leftCIName ?? rightCIName;
+        return <CITitle ciName={finalCIName} ciid={leftCIID} />;
       } else {
         const finalLeftCIName = leftCIName ?? "[UNNAMED]";
         const finalRightCIName = rightCIName ?? "[UNNAMED]";
@@ -42,7 +43,7 @@ export function DiffArea(props) {
           if (_.size(ci.attributeComparisons) === 0)
             return <div key={ci.leftCIID}></div>;
           return <div key={ci.leftCIID} style={{marginTop: '1.5rem'}}>
-            <CITitle leftCIName={ci.leftCIName} rightCIName={ci.rightCIName} leftCIID={ci.leftCIID} rightCIID={ci.rightCIID} />
+            <DualCITitle leftCIName={ci.leftCIName} rightCIName={ci.rightCIName} leftCIID={ci.leftCIID} rightCIID={ci.rightCIID} />
             <DiffAttributeList attributes={ci.attributeComparisons} />
           </div>;
         })}
@@ -52,7 +53,7 @@ export function DiffArea(props) {
           if (_.size(ci.relationComparisons) === 0)
             return <div key={ci.leftCIID}></div>;
           return <div key={ci.leftCIID} style={{marginTop: '1.5rem'}}>
-            <CITitle leftCIName={ci.leftCIName} rightCIName={ci.rightCIName} leftCIID={ci.leftCIID} rightCIID={ci.rightCIID} />
+            <DualCITitle leftCIName={ci.leftCIName} rightCIName={ci.rightCIName} leftCIID={ci.leftCIID} rightCIID={ci.rightCIID} />
             <DiffRelationList relations={ci.relationComparisons} areOutgoingRelations={true} />
           </div>;
         })}
@@ -62,7 +63,7 @@ export function DiffArea(props) {
           if (_.size(ci.relationComparisons) === 0)
             return <div key={ci.leftCIID}></div>;
           return <div key={ci.leftCIID} style={{marginTop: '1.5rem'}}>
-            <CITitle leftCIName={ci.leftCIName} rightCIName={ci.rightCIName} leftCIID={ci.leftCIID} rightCIID={ci.rightCIID} />
+            <DualCITitle leftCIName={ci.leftCIName} rightCIName={ci.rightCIName} leftCIID={ci.leftCIID} rightCIID={ci.rightCIID} />
             <DiffRelationList relations={ci.relationComparisons} areOutgoingRelations={false} />
           </div>;
         })}
@@ -72,7 +73,7 @@ export function DiffArea(props) {
           if (_.size(ci.effectiveTraitComparisons) === 0)
             return <div key={ci.leftCIID}></div>;
           return <div key={ci.leftCIID} style={{marginTop: '1.5rem'}}>
-            <CITitle leftCIName={ci.leftCIName} rightCIName={ci.rightCIName} leftCIID={ci.leftCIID} rightCIID={ci.rightCIID} />
+            <DualCITitle leftCIName={ci.leftCIName} rightCIName={ci.rightCIName} leftCIID={ci.leftCIID} rightCIID={ci.rightCIID} />
             <DiffEffectiveTraitsList effectiveTraits={ci.effectiveTraitComparisons} />
           </div>
         })}
