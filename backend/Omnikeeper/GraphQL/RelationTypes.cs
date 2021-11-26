@@ -14,7 +14,6 @@ namespace Omnikeeper.GraphQL
 {
     public class RelationType : ObjectGraphType<Relation>
     {
-        private readonly IAttributeModel attributeModel;
         private readonly ICIIDModel ciidModel;
         private readonly ICIModel ciModel;
 
@@ -68,7 +67,6 @@ namespace Omnikeeper.GraphQL
                     (IEnumerable<ICIIDSelection> ciidSelections) => FetchMergedCIs(ciidSelections, layerSet, timeThreshold, userContext.Transaction));
                 return loader.LoadAsync(SpecificCIIDsSelection.Build(context.Source!.FromCIID)).Then(t => t.First());
             });
-            this.attributeModel = attributeModel;
             this.ciidModel = ciidModel;
             this.ciModel = ciModel;
         }

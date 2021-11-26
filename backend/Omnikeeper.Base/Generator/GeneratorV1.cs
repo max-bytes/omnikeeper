@@ -222,7 +222,7 @@ namespace Omnikeeper.Base.Generator
         {
             try
             {
-                var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? new CIAttribute[0]).Where(a => generator.Template.UsedAttributeNames.Contains(a.Name)).ToList();
+                var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? Array.Empty<CIAttribute>()).Where(a => generator.Template.UsedAttributeNames.Contains(a.Name)).ToList();
                 var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes);
 
                 object evaluated = generator.Template.Template.Evaluate(context);

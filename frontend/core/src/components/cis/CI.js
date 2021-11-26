@@ -45,7 +45,7 @@ function CI(props) {
 
   return (
     <>
-      <h2>CI "{props.ci.name ?? "[UNNAMED]"}" <CIID id={props.ci.id} link={false} /></h2>
+      <h2>{props.ci.name ?? "[UNNAMED]"} - <CIID id={props.ci.id} link={false} /></h2>
       <Tabs defaultActiveKey={"attributes"} style={{flex: "1"}}>{panes}</Tabs>
     </>
   );
