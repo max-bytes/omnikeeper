@@ -25,8 +25,13 @@ namespace OKPluginNaemonConfig
         private readonly GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel;
         private readonly GenericTraitEntityModel<Host, string> hostModel;
         private readonly GenericTraitEntityModel<Service, string> serviceModel;
+
         private readonly GenericTraitEntityModel<HostCategory, string> hostsCategoryModel;
         private readonly GenericTraitEntityModel<ServiceCategory, string> servicesCategoryModel;
+
+        private readonly GenericTraitEntityModel<Entity.Category, string> categoryModel;
+
+
         private readonly GenericTraitEntityModel<HostAction, string> hostActionModel;
         private readonly GenericTraitEntityModel<ServiceAction, string> serviceActionModel;
         private readonly GenericTraitEntityModel<NaemonInstanceTag, string> naemonInstancesTagModel;
@@ -41,8 +46,12 @@ namespace OKPluginNaemonConfig
                            IChangesetModel changesetModel, IUserInDatabaseModel userModel,
                            GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel,
                            GenericTraitEntityModel<Service, string> serviceModel,
+
                            GenericTraitEntityModel<HostCategory, string> hostsCategoryModel,
                            GenericTraitEntityModel<ServiceCategory, string> servicesCategoryModel,
+
+                           GenericTraitEntityModel<Entity.Category, string> categoryModel,
+
                            GenericTraitEntityModel<HostAction, string> hostActionModel,
                            GenericTraitEntityModel<ServiceAction, string> serviceActionModel,
                            GenericTraitEntityModel<NaemonInstanceTag, string> naemonInstancesTagModel,
@@ -62,8 +71,12 @@ namespace OKPluginNaemonConfig
             this.naemonInstanceModel = naemonInstanceModel;
             this.hostModel = hostModel;
             this.serviceModel = serviceModel;
+
+            this.categoryModel = categoryModel;
+
             this.hostsCategoryModel = hostsCategoryModel;
             this.servicesCategoryModel = servicesCategoryModel;
+            
             this.hostActionModel = hostActionModel;
             this.serviceActionModel = serviceActionModel;
             this.naemonInstancesTagModel = naemonInstancesTagModel;
@@ -79,6 +92,8 @@ namespace OKPluginNaemonConfig
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start naemonConfig");
+
+            //return false;
 
             var cfg = new Configuration();
 
@@ -105,23 +120,49 @@ namespace OKPluginNaemonConfig
             // a list with all CI from database
             var ciData = new List<ConfigurationItem>();
 
+
+            // load all categories
+            var allCategories = await categoryModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
+
             var hosts = await hostModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
             logger.LogInformation("Loaded all hosts.");
+
             foreach (var ciItem in hosts)
             {
+                //var obj = new Category
+                //{
+                //    Id = ciItem.Value.Id,
+                //    Tree = ciItem.Value.CatTree,
+                //    Group = ciItem.Value.CatGroup,
+                //    Name = ciItem.Value.Category,
+                //    Desc = ciItem.Value.CatDesc,
+                //};
+
+                //if (!el.Categories.ContainsKey(obj.Group))
+                //{
+                //    el.Categories.Add(obj.Group, new List<Category> { obj });
+                //}
+                //else
+                //{
+                //    el.Categories[obj.Group].Add(obj);
+                //}
+
+
+                // return category ci id
+                var ciCategories = allCategories.Where(c => ciItem.Value.CategoriesIds.ToList().Contains(Guid.Parse(c.Value.Id))).ToList();
+
                 ciData.Add(new ConfigurationItem
                 {
                     Type = "HOST",
                     Id = ciItem.Value.Id,
                     Name = ciItem.Value.Name,
                     Status = ciItem.Value.Status,
-                    Address = "", // This should be taken from HMONIPADDRESS field
-                    Port = 0, // This should be taken from HMONIPPORT field
-                    Cust = "", // Add customer for this ci,
-                    Criticality = "", // Add Criticality for this ci,
+                    Address = ciItem.Value.Address,
+                    Port = int.Parse(ciItem.Value.Port),
+                    Cust = ciItem.Value.Cust, 
+                    Criticality = ciItem.Value.Criticality,
                     SuppOS = "", // Add SuppOS for this ci,
                     SuppApp = "", // Add SuppApp for this ci,
-
                 });
             }
 
@@ -138,10 +179,10 @@ namespace OKPluginNaemonConfig
                     Name = ciItem.Value.Name,
                     Status = ciItem.Value.Status,
                     Environment = ciItem.Value.Environment,
-                    Address = "", // This should be taken from SVCMONIPADDRESS field
-                    Port = 0, // This should be taken from SVCMONIPPORT field
-                    Cust = "", // Add customer for this ci
-                    Criticality = "", // Add Criticality for this ci,
+                    Address = ciItem.Value.Address,
+                    Port = int.Parse(ciItem.Value.Port),
+                    Cust = ciItem.Value.Cust,
+                    Criticality = ciItem.Value.Criticality,
                     SuppOS = "", // Add SuppOS for this ci,
                     SuppApp = "", // Add SuppApp for this ci,
 

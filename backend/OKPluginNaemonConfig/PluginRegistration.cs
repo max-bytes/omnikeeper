@@ -19,7 +19,11 @@ namespace OKPluginNaemonConfig
             sc.AddSingleton<GenericTraitEntityModel<Host, string>>();
             sc.AddSingleton<GenericTraitEntityModel<Service, string>>();
             sc.AddSingleton<GenericTraitEntityModel<HostCategory, string>>();
+            
             sc.AddSingleton<GenericTraitEntityModel<ServiceCategory, string>>();
+
+            sc.AddSingleton<GenericTraitEntityModel<Category, string>>();
+
             sc.AddSingleton<GenericTraitEntityModel<HostAction, string>>();
             sc.AddSingleton<GenericTraitEntityModel<ServiceAction, string>>();
             sc.AddSingleton<GenericTraitEntityModel<NaemonInstanceTag, string>>();
