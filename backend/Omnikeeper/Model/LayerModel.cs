@@ -28,6 +28,10 @@ namespace Omnikeeper.Model
 
             IDValidations.ValidateLayerIDThrow(id);
 
+            // sanitize generators
+            foreach (var generatorID in generators)
+                IDValidations.ValidateGeneratorIDThrow(generatorID);
+
             var current = await GetLayer(id, trans, TimeThreshold.BuildLatest());
 
             if (current == null)
@@ -214,6 +218,7 @@ namespace Omnikeeper.Model
                 var oilp = (r.IsDBNull(4)) ? DefaultOILP : OnlineInboundAdapterLink.Build(r.GetString(4));
                 var color = (r.IsDBNull(5)) ? DefaultColor : Color.FromArgb(r.GetInt32(5));
                 var generators = (r.IsDBNull(6)) ? new string[0] : r.GetFieldValue<string[]>(6);
+                generators = generators.Where(g => !string.IsNullOrEmpty(g)).ToArray(); // sanitize generators
                 layers.Add(Layer.Build(id, description, color, state, clConfig, oilp, generators));
             }
             return layers;
