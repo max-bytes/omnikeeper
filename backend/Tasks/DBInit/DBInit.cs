@@ -49,7 +49,7 @@ namespace Tasks.DBInit
             var traitModel = new GenericTraitEntityModel<RecursiveTrait, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var lbas = new Mock<ILayerBasedAuthorizationService>();
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
-            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
+            var modelContextBuilder = new ModelContextBuilder(conn, NullLogger<IModelContext>.Instance);
 
             var random = new Random(3);
 

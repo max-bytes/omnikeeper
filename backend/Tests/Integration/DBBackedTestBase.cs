@@ -21,7 +21,7 @@ namespace Tests.Integration
 
             var dbcb = new DBConnectionBuilder();
             conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
-            modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
+            modelContextBuilder = new ModelContextBuilder(conn, NullLogger<IModelContext>.Instance);
         }
 
         [TearDown]

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Model;
 
 namespace Omnikeeper.GraphQL
 {

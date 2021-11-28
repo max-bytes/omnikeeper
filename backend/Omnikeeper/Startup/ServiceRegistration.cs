@@ -182,7 +182,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<NpgsqlLoggingProvider>().SingleInstance();
         }
 
-        public static void RegisterModels(ContainerBuilder builder, bool enableModelCaching, bool enableEffectiveTraitCaching, bool enableOIA, bool enabledGenerators, bool enableUsageTracking)
+        public static void RegisterModels(ContainerBuilder builder, bool enablePerRequestModelCaching, bool enableEffectiveTraitCaching, bool enableOIA, bool enabledGenerators, bool enableUsageTracking)
         {
             builder.RegisterType<CISearchModel>().As<ICISearchModel>().SingleInstance();
             builder.RegisterType<CIModel>().As<ICIModel>().SingleInstance();
@@ -226,15 +226,13 @@ namespace Omnikeeper.Startup
             // these aren't real models, but we keep them here because they are closely related to models
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();
             builder.RegisterType<EffectiveGeneratorProvider>().As<IEffectiveGeneratorProvider>().SingleInstance();
-            builder.RegisterType<ProtoBufDataSerializer>().As<IDataSerializer>().SingleInstance();
 
-            if (enableModelCaching)
+            if (enablePerRequestModelCaching)
             {
+                builder.RegisterType<PerRequestLayerCache>().InstancePerLifetimeScope();
                 builder.RegisterDecorator<CachingLayerModel, ILayerModel>();
-                builder.RegisterDecorator<CachingODataAPIContextModel, IODataAPIContextModel>();
-                builder.RegisterDecorator<CachingBaseConfigurationModel, IBaseConfigurationModel>();
+                builder.RegisterType<PerRequestMetaConfigurationCache>().InstancePerLifetimeScope();
                 builder.RegisterDecorator<CachingMetaConfigurationModel, IMetaConfigurationModel>();
-                builder.RegisterDecorator<CachingPartitionModel, IPartitionModel>();
             }
 
             // TODO: rework or remove
