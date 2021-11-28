@@ -6,6 +6,7 @@ using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -22,6 +23,8 @@ namespace OKPluginNaemonConfig
         private readonly IRelationModel relationModel;
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel traitModel;
+        private readonly ILayerModel layerModel;
+        private readonly IAttributeModel attributeModel;
         private readonly GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel;
         private readonly GenericTraitEntityModel<Host, string> hostModel;
         private readonly GenericTraitEntityModel<Service, string> serviceModel;
@@ -42,8 +45,7 @@ namespace OKPluginNaemonConfig
         private readonly GenericTraitEntityModel<Command, string> commandModel;
         private readonly GenericTraitEntityModel<ServiceStatic, string> serviceStaticModel;
         private readonly GenericTraitEntityModel<Module, string> moduleModel;
-        public NaemonConfig(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
-                           IChangesetModel changesetModel, IUserInDatabaseModel userModel,
+        public NaemonConfig(ICIModel ciModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel, IAttributeModel attributeModel,
                            GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel,
                            GenericTraitEntityModel<Service, string> serviceModel,
 
@@ -63,11 +65,13 @@ namespace OKPluginNaemonConfig
                            GenericTraitEntityModel<ServiceStatic, string> serviceStaticModel,
                            GenericTraitEntityModel<Module, string> moduleModel,
                            GenericTraitEntityModel<Host, string> hostModel)
-            : base(atributeModel, layerModel, changesetModel, userModel)
         {
             this.ciModel = ciModel;
             this.relationModel = relationModel;
             this.traitModel = traitModel;
+            this.layerModel = layerModel;
+            this.attributeModel = attributeModel;
+
             this.naemonInstanceModel = naemonInstanceModel;
             this.hostModel = hostModel;
             this.serviceModel = serviceModel;
@@ -89,7 +93,7 @@ namespace OKPluginNaemonConfig
             this.moduleModel = moduleModel;
         }
 
-        public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
+        public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start naemonConfig");
 

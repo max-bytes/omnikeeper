@@ -2,11 +2,9 @@
 using OKPluginNaemonConfig.Entity;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace OKPluginNaemonConfig
 {
