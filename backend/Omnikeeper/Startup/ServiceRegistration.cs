@@ -35,6 +35,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
 using Omnikeeper.Base.Model.TraitBased;
+using Omnikeeper.Base.DataFlow;
 
 namespace Omnikeeper.Startup
 {
@@ -247,6 +248,10 @@ namespace Omnikeeper.Startup
                 //services.Decorate<IBaseRelationRevisionistModel, TraitCacheInvalidationBaseRelationRevisionistModel>();
                 //services.AddSingleton<EffectiveTraitCache>(); // TODO: create interface
             }
+
+            // data flow
+            builder.RegisterDecorator<DataFlowTriggeringBaseAttributeModel, IBaseAttributeModel>();
+            builder.RegisterType<DataFlowLatestAttributeKeeper>().SingleInstance();
 
             if (enableOIA)
             {
