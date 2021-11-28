@@ -58,7 +58,7 @@ namespace Omnikeeper.Model
         }
     }
 
-    public static class MetaConfiurationModelExtensions
+    public static class MetaConfigurationModelExtensions
     {
         public static async Task<bool> IsLayerPartOfMetaConfiguration(this IMetaConfigurationModel model, string layerID, IModelContext trans)
         {
