@@ -122,7 +122,7 @@ namespace OKPluginNaemonConfig
 
 
             // load all categories
-            var allCategories = await categoryModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var allCategories = await categoryModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
 
             var hosts = await hostModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
             logger.LogInformation("Loaded all hosts.");
@@ -149,7 +149,9 @@ namespace OKPluginNaemonConfig
 
 
                 // return category ci id
-                var ciCategories = allCategories.Where(c => ciItem.Value.CategoriesIds.ToList().Contains(Guid.Parse(c.Value.Id))).ToList();
+                //var ciCategories = allCategories.Where(c => ciItem.Value.CategoriesIds.ToList().Contains(Guid.Parse(c.Value.Id))).ToList();
+
+                //var ciCategories = categoryModel.get
 
                 ciData.Add(new ConfigurationItem
                 {
