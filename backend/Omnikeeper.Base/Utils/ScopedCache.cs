@@ -35,22 +35,35 @@ namespace Omnikeeper.Base.Utils
 
         public static async Task<T?> GetFromScopedCache<ConcreteScopedCache>(ScopedLifetimeAccessor scopedLifetimeAccessor, ILogger logger, Func<Task<T>> factory) where ConcreteScopedCache : ScopedCache<T>
         {
-            var cache = scopedLifetimeAccessor.GetLifetimeScope()?.Resolve<ConcreteScopedCache>();
-            if (cache == null)
+            var lifetimeScope = scopedLifetimeAccessor.GetLifetimeScope();
+            if (lifetimeScope == null)
             {
                 logger.LogDebug("Cannot use per request cache because we are not in a scoped lifetime context");
                 return null;
             }
-            return await cache.GetOrCreate(logger, factory);
+
+            if (lifetimeScope.TryResolve<ConcreteScopedCache>(out var cache))
+            {
+                return await cache.GetOrCreate(logger, factory);
+            } else
+            {
+                throw new Exception("No concrete scoped cache registered");
+            }
         }
 
         public static void ClearScopedCache<ConcreteScopedCache>(ScopedLifetimeAccessor scopedLifetimeAccessor, ILogger logger) where ConcreteScopedCache : ScopedCache<T>
         {
-            var cache = scopedLifetimeAccessor.GetLifetimeScope()?.Resolve<ConcreteScopedCache>();
-            if (cache != null)
+            var lifetimeScope = scopedLifetimeAccessor.GetLifetimeScope();
+            if (lifetimeScope != null)
             {
-                logger.LogDebug("Clearing cache");
-                cache.ClearCache();
+                if (lifetimeScope.TryResolve<ConcreteScopedCache>(out var cache))
+                {
+                    logger.LogDebug("Clearing cache");
+                    cache.ClearCache();
+                } else
+                {
+                    throw new Exception("No concrete scoped cache registered");
+                }
             }
         }
     }
