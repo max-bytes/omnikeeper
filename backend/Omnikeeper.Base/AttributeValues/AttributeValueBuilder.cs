@@ -22,7 +22,7 @@ namespace Omnikeeper.Base.AttributeValues
                             if (o == null)
                                 return new AttributeScalarValueText("", false);
                             else if (o.GetType().IsArray)
-                                return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), false);
+                                return AttributeArrayValueText.BuildFromString(((o as object[])!).OfType<string>().ToArray(), false);
                             else
                             {
                                 return new AttributeScalarValueText((o as string)!, false);
@@ -33,7 +33,7 @@ namespace Omnikeeper.Base.AttributeValues
                             if (o == null)
                                 return new AttributeScalarValueText("", true);
                             else if (o.GetType().IsArray)
-                                return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), true);
+                                return AttributeArrayValueText.BuildFromString(((o as object[])!).OfType<string>().ToArray(), true);
                             else
                                 return new AttributeScalarValueText((o as string)!, true);
                         }
@@ -42,7 +42,7 @@ namespace Omnikeeper.Base.AttributeValues
                             if (o == null)
                                 return new AttributeScalarValueInteger(0);
                             else if (o.GetType().IsArray)
-                                return AttributeArrayValueInteger.Build((o as object[]).OfType<long>().ToArray());
+                                return AttributeArrayValueInteger.Build(((o as object[])!).OfType<long>().ToArray());
                             else
                                 return new AttributeScalarValueInteger((o as long?)!.Value);
                         }
@@ -62,10 +62,12 @@ namespace Omnikeeper.Base.AttributeValues
                             if (o == null)
                                 return AttributeScalarValueYAML.Build(new YamlDocument(""));
                             else if (o.GetType().IsArray)
-                                return AttributeArrayValueYAML.BuildFromString((o as object[]).OfType<string>().ToArray());
+                                return AttributeArrayValueYAML.BuildFromString(((o as object[])!).OfType<string>().ToArray());
                             else
                                 return AttributeScalarValueYAML.BuildFromString((o as string)!);
                         }
+                    case AttributeValueType.Mask:
+                        return AttributeScalarValueMask.Instance;
                     case AttributeValueType.Image:
                         {
                             throw new Exception("Building AttributeValueImage from type and object not allowed");
@@ -89,6 +91,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(generic.Values),
                     AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(generic.Values),
                     AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(generic.Values),
+                    AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                     AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
                     _ => throw new Exception($"Unknown type {generic.Type} encountered"),
                 };
@@ -100,6 +103,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(generic.Values[0]),
                     AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(generic.Values[0]),
                     AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(generic.Values[0]),
+                    AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                     AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
                     _ => throw new Exception($"Unknown type {generic.Type} encountered"),
                 };
@@ -122,6 +126,7 @@ namespace Omnikeeper.Base.AttributeValues
                         AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(finalValues),
                         AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(finalValues),
                         AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(finalValues),
+                        AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                         _ => throw new Exception($"Unknown type {type} encountered"),
                     };
                 }
@@ -134,6 +139,7 @@ namespace Omnikeeper.Base.AttributeValues
                         AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(finalValue),
                         AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(finalValue),
                         AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(finalValue),
+                        AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                         _ => throw new Exception($"Unknown type {type} encountered"),
                     };
                 }
@@ -193,6 +199,10 @@ namespace Omnikeeper.Base.AttributeValues
                                 return AttributeArrayValueYAML.BuildFromString(UnmarshalStringArrayV2(valueText, valueControl));
                             else
                                 return AttributeScalarValueYAML.BuildFromString(UnmarshalStringV2(valueText, valueControl));
+                        }
+                    case AttributeValueType.Mask:
+                        {
+                            return AttributeScalarValueMask.Instance;
                         }
                     case AttributeValueType.Image:
                         {
@@ -264,6 +274,7 @@ namespace Omnikeeper.Base.AttributeValues
                 AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
                 AttributeScalarValueYAML a => MarshalStringV2((a.Value.ToString())!),
                 AttributeArrayValueYAML a => MarshalStringArrayV2(a.Values.Select(v => (v.Value.ToString())!)),
+                AttributeScalarValueMask a => MarshalStringV2(""),
                 AttributeScalarValueImage a => MarshalBinaryV2(a.Value),
                 AttributeArrayValueImage a => MarshalBinaryArrayV2(a.Values.Select(v => v.Value)),
 
@@ -305,7 +316,7 @@ namespace Omnikeeper.Base.AttributeValues
             if (hashes.Any(h => h.Length != 32))
                 throw new Exception("Hash of invalid length for binary attribute value encountered");
             var mimeTypeBytes = values.Select(v => Encoding.UTF8.GetBytes(v.MimeType)).ToArray();
-            var marshalled = values.SelectMany(v => v.FullData).ToArray();
+            var marshalled = values.SelectMany(v => v.FullData ?? Array.Empty<byte>()).ToArray();
             var controlHeader = new byte[]
             {
                                 0x02, // version

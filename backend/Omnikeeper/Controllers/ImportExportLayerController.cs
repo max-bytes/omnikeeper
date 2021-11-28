@@ -27,10 +27,10 @@ namespace Omnikeeper.Controllers
     [Authorize]
     public class ImportExportLayerController : ControllerBase
     {
-        private readonly IAttributeModel attributeModel;
+        private readonly IBaseAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly ILayerModel layerModel;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly ICIModel ciModel;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
@@ -38,7 +38,7 @@ namespace Omnikeeper.Controllers
         private readonly ILayerStatisticsModel layerStatisticsModel;
         private readonly IRelationModel relationModel;
 
-        public ImportExportLayerController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService, ICIModel ciModel,
+        public ImportExportLayerController(IBaseAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, ICIModel ciModel,
             ILayerBasedAuthorizationService layerBasedAuthorizationService, IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerModel layerModel, ILayerStatisticsModel layerStatisticsModel, IRelationModel relationModel)
         {
             this.modelContextBuilder = modelContextBuilder;
@@ -154,13 +154,16 @@ namespace Omnikeeper.Controllers
                     using var archive = new ZipArchive(stream, ZipArchiveMode.Read, false);
 
                     var dataFile = archive.GetEntry("data.json");
+                    if (dataFile == null)
+                        return BadRequest($"Invalid archive detected: no data.json found inside archive");
+
                     var dataStream = dataFile.Open();
 
                     var data = ExportedLayerDataV1.Serializer.Deserialize(dataStream);
 
                     var writeLayerID = overwriteLayerID ?? data.LayerID;
 
-                    var writeLayer = await layerModel.GetLayer(writeLayerID, trans);
+                    var writeLayer = await layerModel.GetLayer(writeLayerID, trans, timeThreshold);
                     if (writeLayer == null)
                     {
                         return BadRequest($"Cannot write to layer with ID {data.LayerID}: layer does not exist");

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ namespace Omnikeeper.Service
             var trans = modelContextBuilder.BuildImmediate();
 
             // try to delete marked layers
-            var toDeleteLayers = await layerModel.GetLayers(AnchorStateFilter.MarkedForDeletion, trans);
+            var toDeleteLayers = await layerModel.GetLayers(AnchorStateFilter.MarkedForDeletion, trans, TimeThreshold.BuildLatest());
             foreach (var d in toDeleteLayers)
             {
                 var wasDeleted = await layerModel.TryToDelete(d.ID, trans);

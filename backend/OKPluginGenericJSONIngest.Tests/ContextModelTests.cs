@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -12,24 +14,27 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tests.Integration.Model;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace OKPluginGenericJSONIngest
 {
     class ContextModelTests : GenericTraitEntityModelTestBase<Context, string>
     {
-        protected override void InitServices(IServiceCollection services)
+        protected override void InitServices(ContainerBuilder builder)
         {
-            base.InitServices(services);
+            base.InitServices(builder);
 
             // register plugin services
             var plugin = new PluginRegistration();
-            plugin.RegisterServices(services);
+            var serviceCollection = new ServiceCollection();
+            plugin.RegisterServices(serviceCollection);
+            builder.Populate(serviceCollection);
         }
 
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitBuilderFromClass.Class2RecursiveTrait<Context>();
+            var et = TraitEntityHelper.Class2RecursiveTrait<Context>();
 
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.config.gji_context", new TraitOriginV1(TraitOriginType.Plugin),

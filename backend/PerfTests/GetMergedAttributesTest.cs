@@ -62,7 +62,7 @@ namespace PerfTests
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
             attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
             using var mc = modelContextBuilder!.BuildImmediate();
-            var layers = await layerModel.GetLayers(mc);
+            var layers = await layerModel.GetLayers(mc, TimeThreshold.BuildLatest());
             layerset = layerModel!.BuildLayerSet(layers.Select(l => l.ID).ToArray(), mc).GetAwaiter().GetResult();
 
             var ciidModel = ServiceProvider.GetRequiredService<ICIIDModel>();

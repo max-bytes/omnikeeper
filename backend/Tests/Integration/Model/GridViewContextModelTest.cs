@@ -7,6 +7,7 @@ using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GridView.Entity;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Tests.Integration.Model
 {
@@ -15,7 +16,7 @@ namespace Tests.Integration.Model
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitBuilderFromClass.Class2RecursiveTrait<GridViewContext>();
+            var et = TraitEntityHelper.Class2RecursiveTrait<GridViewContext>();
                 
             et.Should().BeEquivalentTo(new RecursiveTrait("__meta.config.gridview_context", new TraitOriginV1(TraitOriginType.Core),
                     new List<TraitAttribute>() {

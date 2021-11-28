@@ -8,6 +8,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Base.Model
 {
@@ -21,11 +22,11 @@ namespace Omnikeeper.Base.Model
 
         public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { 
             Named,
-            TraitBuilderFromClass.Class2RecursiveTrait<BaseConfigurationV2>(),
-            TraitBuilderFromClass.Class2RecursiveTrait<RecursiveTrait>(),
-            TraitBuilderFromClass.Class2RecursiveTrait<Predicate>(),
-            TraitBuilderFromClass.Class2RecursiveTrait<AuthRole>(),
-            TraitBuilderFromClass.Class2RecursiveTrait<GeneratorV1>(),
+            TraitEntityHelper.Class2RecursiveTrait<BaseConfigurationV2>(),
+            TraitEntityHelper.Class2RecursiveTrait<RecursiveTrait>(),
+            TraitEntityHelper.Class2RecursiveTrait<Predicate>(),
+            TraitEntityHelper.Class2RecursiveTrait<AuthRole>(),
+            TraitEntityHelper.Class2RecursiveTrait<GeneratorV1>(),
             //TraitBuilderFromClass.Class2RecursiveTrait<GridViewContext>(), // TODO: add?
         };
     }

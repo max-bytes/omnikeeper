@@ -1,7 +1,15 @@
-﻿using GraphQL;
+﻿using Autofac;
+using Autofac.Core.Lifetime;
+using Autofac.Extensions.DependencyInjection;
+using Autofac.Extras.DynamicProxy;
+using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.Types;
+using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
+using Omnikeeper.Base.CLB;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
@@ -12,11 +20,13 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.GraphQL;
+using Omnikeeper.GridView.Entity;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
+using Omnikeeper.Utils.Decorators;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,34 +34,32 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
-using GraphQL.DataLoader;
-using Omnikeeper.Base.Entity;
-using Omnikeeper.GridView.Entity;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Startup
 {
     public static class ServiceRegistration
     {
-        public static void RegisterDB(IServiceCollection services, string connectionString, bool reloadTypes)
+        public static void RegisterDB(ContainerBuilder builder, string connectionString, bool reloadTypes)
         {
-            services.AddSingleton<DBConnectionBuilder>();
-            services.AddScoped((sp) =>
+            builder.RegisterType<DBConnectionBuilder>().SingleInstance();
+            builder.Register(c =>
             {
-                var dbcb = sp.GetRequiredService<DBConnectionBuilder>();
+                var dbcb = c.Resolve<DBConnectionBuilder>();
                 return dbcb.BuildFromConnectionString(connectionString, reloadTypes);
-            });
-            services.AddScoped<IModelContextBuilder, ModelContextBuilder>();
+            }).InstancePerLifetimeScope();
+            builder.RegisterType<ModelContextBuilder>().As<IModelContextBuilder>().InstancePerLifetimeScope();
         }
 
-        public static void RegisterOIABase(IServiceCollection services)
+        public static void RegisterOIABase(ContainerBuilder builder)
         {
-            services.AddSingleton<IOnlineAccessProxy, OnlineAccessProxy>();
-            services.AddSingleton<IExternalIDMapper, ExternalIDMapper>();
-            services.AddSingleton<IExternalIDMapPersister, ExternalIDMapPostgresPersister>();
-            services.AddSingleton<IInboundAdapterManager, InboundAdapterManager>();
+            builder.RegisterType<OnlineAccessProxy>().As<IOnlineAccessProxy>().SingleInstance();
+            builder.RegisterType<ExternalIDMapper>().As<IExternalIDMapper>().SingleInstance();
+            builder.RegisterType<ExternalIDMapPostgresPersister>().As<IExternalIDMapPersister>().SingleInstance();
+            builder.RegisterType<InboundAdapterManager>().As<IInboundAdapterManager>().SingleInstance();
         }
 
-        public static IEnumerable<Assembly> RegisterOKPlugins(IServiceCollection services, string pluginFolder)
+        public static IEnumerable<Assembly> RegisterOKPlugins(ContainerBuilder builder, string pluginFolder)
         {
             //services.AddSingleton<OKPluginGenericJSONIngest.IContextModel, OKPluginGenericJSONIngest.ContextModel>();
             //services.AddTransient<Controllers.Ingest.PassiveFilesController>();
@@ -119,21 +127,19 @@ namespace Omnikeeper.Startup
                             loadContext.AddResolverFromPath(finalDLLFile);
                             assembly = loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(finalDLLFile)));
 
-                            // we use a temporary service collection and service provider to extract the plugin registration, which then does the actual registration
-                            var tmpSC = new ServiceCollection();
-                            tmpSC.Scan(scan =>
-                                scan.FromAssemblies(assembly)
-                                    .AddClasses(classes => classes.AssignableTo<IPluginRegistration>())
-                                    .AsSelfWithInterfaces()
-                                    .WithSingletonLifetime()
-                            );
-                            var tmpSP = tmpSC.BuildServiceProvider();
-                            var pr = tmpSP.GetService<IPluginRegistration>();
-                            if (pr != null)
+                            // we use a temporary container to extract the plugin registration, which then does the actual registration
+                            var tmpBuilder = new ContainerBuilder();
+                            tmpBuilder.RegisterAssemblyTypes(assembly).Where(t => t.IsAssignableTo<IPluginRegistration>()).AsImplementedInterfaces().SingleInstance();
+                            using var tmpContainer = tmpBuilder.Build();
+                            var x = tmpContainer.ComponentRegistry.Registrations;
+                            if (tmpContainer.TryResolve<IPluginRegistration>(out var pr))
                             {
                                 // register plugin itself and its own services
-                                services.AddSingleton(pr);
-                                pr.RegisterServices(services);
+                                builder.RegisterInstance(pr);
+                                var serviceCollection = new ServiceCollection();
+                                pr.RegisterServices(serviceCollection);
+                                builder.Populate(serviceCollection);
+
                                 Console.WriteLine($"Loaded OKPlugin {pr.Name}, Version {pr.Version}"); // TODO: better logging
                             }
                             else
@@ -152,68 +158,85 @@ namespace Omnikeeper.Startup
             }
         }
 
-        public static void RegisterServices(IServiceCollection services)
+        public static void RegisterServices(ContainerBuilder builder)
         {
-            services.AddSingleton<CIMappingService, CIMappingService>();
-            services.AddSingleton<IManagementAuthorizationService, ManagementAuthorizationService>();
-            services.AddSingleton<ILayerBasedAuthorizationService, LayerBasedAuthorizationService>();
-            services.AddSingleton<ICIBasedAuthorizationService, CIBasedAuthorizationService>();
-            services.AddSingleton<IDataPartitionService, DataPartitionService>();
-            services.AddSingleton<MarkedForDeletionService>();
-            services.AddScoped<IngestDataService>(); // TODO: make singleton
+            builder.RegisterType<CIMappingService>().SingleInstance();
+            builder.RegisterType<ManagementAuthorizationService>().As<IManagementAuthorizationService>().SingleInstance();
+            builder.RegisterType<LayerBasedAuthorizationService>().As<ILayerBasedAuthorizationService>().SingleInstance();
+            builder.RegisterType<CIBasedAuthorizationService>().As<ICIBasedAuthorizationService>().SingleInstance();
+            builder.RegisterType<DataPartitionService>().As<IDataPartitionService>().SingleInstance();
+            builder.RegisterType<MarkedForDeletionService>().SingleInstance();
+            builder.RegisterType<IngestDataService>().InstancePerLifetimeScope(); // TODO: make singleton
+            builder.RegisterType<ReactiveLogReceiver>().SingleInstance();
 
-            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            builder.RegisterType<AuthRolePermissionChecker>().As<IAuthRolePermissionChecker>().SingleInstance();
+            builder.RegisterType<CurrentUserAccessor>().As<ICurrentUserAccessor>().SingleInstance(); // TODO: remove, use ScopedLifetimeAccessor directly?
+            builder.RegisterType<CurrentAuthorizedHttpUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
 
-            services.AddSingleton<ReactiveLogReceiver>();
+            builder.RegisterType<ScopedLifetimeAccessor>().SingleInstance();
+
+            builder.RegisterType<DiffingCIService>().SingleInstance();
+
         }
 
-        public static void RegisterLogging(IServiceCollection services)
+        public static void RegisterLogging(ContainerBuilder builder)
         {
-            services.AddSingleton<NpgsqlLoggingProvider>();
+            builder.RegisterType<NpgsqlLoggingProvider>().SingleInstance();
         }
 
-        public static void RegisterModels(IServiceCollection services, bool enableModelCaching, bool enableEffectiveTraitCaching, bool enableOIA, bool enabledGenerators)
+        public static void RegisterModels(ContainerBuilder builder, bool enableModelCaching, bool enableEffectiveTraitCaching, bool enableOIA, bool enabledGenerators, bool enableUsageTracking)
         {
-            services.AddSingleton<ICISearchModel, CISearchModel>();
-            services.AddSingleton<ICIModel, CIModel>();
-            services.AddSingleton<ICIIDModel, CIIDModel>();
-            services.AddSingleton<IAttributeModel, AttributeModel>();
-            services.AddSingleton<IBaseAttributeModel, BaseAttributeModel>();
-            services.AddSingleton<IBaseAttributeRevisionistModel, BaseAttributeRevisionistModel>();
-            services.AddSingleton<IBaseRelationRevisionistModel, BaseRelationRevisionistModel>();
-            services.AddSingleton<IUserInDatabaseModel, UserInDatabaseModel>();
-            services.AddSingleton<ILayerModel, LayerModel>();
-            services.AddSingleton<ILayerStatisticsModel, LayerStatisticsModel>();
-            services.AddSingleton<IChangesetStatisticsModel, ChangesetStatisticsModel>();
-            services.AddSingleton<IRelationModel, RelationModel>();
-            services.AddSingleton<IBaseRelationModel, BaseRelationModel>();
-            services.AddSingleton<IChangesetModel, ChangesetModel>();
-            services.AddSingleton<ICacheModel, CacheModel>();
-            services.AddSingleton<IODataAPIContextModel, ODataAPIContextModel>();
-            services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();
-            services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
-            services.AddSingleton<IMetaConfigurationModel, MetaConfigurationModel>();
-            services.AddSingleton<IOIAContextModel, OIAContextModel>();
-            services.AddSingleton<IPartitionModel, PartitionModel>();
-            services.AddSingleton<GenericTraitEntityModel<GeneratorV1, string>>(); // TODO: ok this way?
-            services.AddSingleton<GenericTraitEntityModel<CLConfigV1, string>>(); // TODO: ok this way?
-            services.AddSingleton<GenericTraitEntityModel<AuthRole, string>>(); // TODO: ok this way?
-            services.AddSingleton<GenericTraitEntityModel<Predicate, string>>(); // TODO: ok this way?
-            services.AddSingleton<GenericTraitEntityModel<RecursiveTrait, string>>(); // TODO: ok this way?
-            services.AddSingleton<GenericTraitEntityModel<GridViewContext, string>>(); // TODO: ok this way?
+            builder.RegisterType<CISearchModel>().As<ICISearchModel>().SingleInstance();
+            builder.RegisterType<CIModel>().As<ICIModel>().SingleInstance();
+            builder.RegisterType<CIIDModel>().As<ICIIDModel>().SingleInstance();
+            builder.RegisterType<AttributeModel>().As<IAttributeModel>().SingleInstance();
+            builder.RegisterType<BaseAttributeModel>().As<IBaseAttributeModel>().SingleInstance();
+            builder.RegisterType<BaseAttributeRevisionistModel>().As<IBaseAttributeRevisionistModel>().SingleInstance();
+            builder.RegisterType<BaseRelationRevisionistModel>().As<IBaseRelationRevisionistModel>().SingleInstance();
+            builder.RegisterType<UserInDatabaseModel>().As<IUserInDatabaseModel>().SingleInstance();
+            builder.RegisterType<LayerModel>().As<ILayerModel>().SingleInstance();
+            builder.RegisterType<LayerStatisticsModel>().As<ILayerStatisticsModel>().SingleInstance();
+            builder.RegisterType<ChangesetStatisticsModel>().As<IChangesetStatisticsModel>().SingleInstance();
+            builder.RegisterType<RelationModel>().As<IRelationModel>().SingleInstance();
+            builder.RegisterType<BaseRelationModel>().As<IBaseRelationModel>().SingleInstance();
+            builder.RegisterType<ChangesetModel>().As<IChangesetModel>().SingleInstance();
+            builder.RegisterType<CacheModel>().As<ICacheModel>().SingleInstance();
+            builder.RegisterType<ODataAPIContextModel>().As<IODataAPIContextModel>().SingleInstance();
+            builder.RegisterType<EffectiveTraitModel>().As<IEffectiveTraitModel>().SingleInstance();
+            builder.RegisterType<BaseConfigurationModel>().As<IBaseConfigurationModel>().SingleInstance();
+            builder.RegisterType<MetaConfigurationModel>().As<IMetaConfigurationModel>().SingleInstance();
+            builder.RegisterType<OIAContextModel>().As<IOIAContextModel>().SingleInstance();
+            builder.RegisterType<PartitionModel>().As<IPartitionModel>().SingleInstance();
+            builder.RegisterType<GenericTraitEntityModel<GeneratorV1, string>>().SingleInstance(); // TODO: ok this way?
+            builder.RegisterType<GenericTraitEntityModel<CLConfigV1, string>>().SingleInstance(); // TODO: ok this way?
+            builder.RegisterType<GenericTraitEntityModel<AuthRole, string>>().SingleInstance(); // TODO: ok this way?
+            builder.RegisterType<GenericTraitEntityModel<Predicate, string>>().SingleInstance(); // TODO: ok this way?
+            builder.RegisterType<GenericTraitEntityModel<RecursiveTrait, string>>().SingleInstance(); // TODO: ok this way?
+            builder.RegisterType<GenericTraitEntityModel<GridViewContext, string>>().SingleInstance(); // TODO: ok this way?
+
+            if (enableUsageTracking)
+            {
+                builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
+                builder.RegisterType<UsageDataAccumulator>().As<IUsageDataAccumulator>().SingleInstance();
+
+                builder.RegisterDecorator<UsageTrackingEffectiveTraitModel, IEffectiveTraitModel>();
+                builder.RegisterDecorator<UsageTrackingBaseAttributeModel, IBaseAttributeModel>();
+                builder.RegisterDecorator<UsageTrackingBaseRelationModel, IBaseRelationModel>();
+                builder.RegisterDecorator<UsageTrackingAuthRolePermissionChecker, IAuthRolePermissionChecker>();
+            }
 
             // these aren't real models, but we keep them here because they are closely related to models
-            services.AddSingleton<ITraitsProvider, TraitsProvider>();
-            services.AddSingleton<IEffectiveGeneratorProvider, EffectiveGeneratorProvider>();
-            services.AddSingleton<IDataSerializer, ProtoBufDataSerializer>();
+            builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();
+            builder.RegisterType<EffectiveGeneratorProvider>().As<IEffectiveGeneratorProvider>().SingleInstance();
+            builder.RegisterType<ProtoBufDataSerializer>().As<IDataSerializer>().SingleInstance();
 
             if (enableModelCaching)
             {
-                services.Decorate<ILayerModel, CachingLayerModel>();
-                services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
-                services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
-                services.Decorate<IMetaConfigurationModel, CachingMetaConfigurationModel>();
-                services.Decorate<IPartitionModel, CachingPartitionModel>();
+                builder.RegisterDecorator<CachingLayerModel, ILayerModel>();
+                builder.RegisterDecorator<CachingODataAPIContextModel, IODataAPIContextModel>();
+                builder.RegisterDecorator<CachingBaseConfigurationModel, IBaseConfigurationModel>();
+                builder.RegisterDecorator<CachingMetaConfigurationModel, IMetaConfigurationModel>();
+                builder.RegisterDecorator<CachingPartitionModel, IPartitionModel>();
             }
 
             // TODO: rework or remove
@@ -229,23 +252,23 @@ namespace Omnikeeper.Startup
 
             if (enableOIA)
             {
-                services.Decorate<IBaseAttributeModel, OIABaseAttributeModel>();
-                services.Decorate<IBaseRelationModel, OIABaseRelationModel>();
+                builder.RegisterDecorator<OIABaseAttributeModel, IBaseAttributeModel>();
+                builder.RegisterDecorator<OIABaseRelationModel, IBaseRelationModel>();
             }
 
             if (enabledGenerators)
             {
-                services.Decorate<IBaseAttributeModel, GeneratingBaseAttributeModel>();
+                builder.RegisterDecorator<GeneratingBaseAttributeModel, IBaseAttributeModel>();
             }
         }
 
-        public static void RegisterGraphQL(IServiceCollection services)
+        public static void RegisterGraphQL(ContainerBuilder builder)
         {
-            services.AddSingleton<ISchema, GraphQLSchema>();
-            services.AddSingleton<IDocumentExecuter, MyDocumentExecutor>(); // custom document executor that does serial queries, required by postgres
-            services.AddSingleton<IDocumentWriter, SpanJSONDocumentWriter>();
-            services.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>();
-            services.AddSingleton<DataLoaderDocumentListener>();
+            builder.RegisterType<GraphQLSchema>().As<ISchema>().SingleInstance();
+            builder.RegisterType<MyDocumentExecutor>().As<IDocumentExecuter>().SingleInstance(); // custom document executor that does serial queries, required by postgres
+            builder.RegisterType<SpanJSONDocumentWriter>().As<IDocumentWriter>().SingleInstance();
+            builder.RegisterType<DataLoaderContextAccessor>().As<IDataLoaderContextAccessor>().SingleInstance();
+            builder.RegisterType<DataLoaderDocumentListener>().SingleInstance();
         }
     }
 }

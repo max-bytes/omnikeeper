@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
@@ -15,13 +16,15 @@ namespace Omnikeeper.Model
     public class CISearchModel : ICISearchModel
     {
         private readonly IAttributeModel attributeModel;
+        private readonly IBaseAttributeModel baseAttributeModel;
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel traitModel;
         private readonly ILogger<CISearchModel> logger;
 
-        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILogger<CISearchModel> logger)
+        public CISearchModel(IAttributeModel attributeModel, IBaseAttributeModel baseAttributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILogger<CISearchModel> logger)
         {
             this.attributeModel = attributeModel;
+            this.baseAttributeModel = baseAttributeModel;
             this.ciModel = ciModel;
             this.traitModel = traitModel;
             this.logger = logger;
@@ -49,7 +52,7 @@ namespace Omnikeeper.Model
             if (emptyTraitIsRequired)
             {
                 // TODO: better performance possible if we get empty CIIDs and exclude those?
-                var nonEmptyCIIDs = await attributeModel.GetCIIDsWithAttributes(ciidSelection,layerSet.LayerIDs, trans, atTime);
+                var nonEmptyCIIDs = await baseAttributeModel.GetCIIDsWithAttributes(ciidSelection,layerSet.LayerIDs, trans, atTime);
                 var emptyCIIDSelection = ciidSelection.Except(SpecificCIIDsSelection.Build(nonEmptyCIIDs));
                 var emptyCIIDs = await emptyCIIDSelection.GetCIIDsAsync(async () => await ciModel.GetCIIDs(trans));
                 return emptyCIIDs.Select(ciid => new MergedCI(ciid, null, layerSet, atTime, ImmutableDictionary<string, MergedCIAttribute>.Empty));
@@ -62,19 +65,18 @@ namespace Omnikeeper.Model
 
             var finalAttributeSelection = attributeSelection.Union(NamedAttributesSelection.Build(relevantAttributesForTraits));
 
-            // special case: no traits are required or non-required, except maybe the empty trait
-            if (requiredTraits.IsEmpty() && requiredNonTraits.IsEmpty())
+            var workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, finalAttributeSelection, trans, atTime);
+
+            // in case the empty trait is non-required, we reduce the workCIs list by those CIs that are empty
+            // we could also have done this by reducing the CIIDSelection first, but this has worse performance for most typical use-cases
+            // because it produces a SpecificCIIDSelection with a huge list
+            if (emptyTraitIsNonRequired)
             {
-                if (emptyTraitIsNonRequired)
-                {
-                    return await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: false, finalAttributeSelection, trans, atTime);
-                } else
-                {
-                    return await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, finalAttributeSelection, trans, atTime);
-                }
+                // TODO: better performance possible if we get empty CIIDs and exclude those?
+                var nonEmptyCIIDs = await baseAttributeModel.GetCIIDsWithAttributes(ciidSelection, layerSet.LayerIDs, trans, atTime);
+                workCIs = workCIs.Where(ci => nonEmptyCIIDs.Contains(ci.ID));
             }
 
-            var workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: !emptyTraitIsNonRequired && requiredTraits.IsEmpty(), finalAttributeSelection, trans, atTime);
             foreach (var requiredTrait in requiredTraits)
             {
                 workCIs = await traitModel.FilterCIsWithTrait(workCIs, requiredTrait, layerSet, trans, atTime);
@@ -82,21 +84,7 @@ namespace Omnikeeper.Model
 
             foreach (var requiredNonTrait in requiredNonTraits)
             {
-                var cisToFilterOut = await traitModel.FilterCIsWithTrait(workCIs, requiredNonTrait, layerSet, trans, atTime);
-
-                // HACK: this relies on the order of cisToFilterOut to be the same as the passed in workCIs
-                var reduced = new List<MergedCI>();
-                foreach (var ci in workCIs)
-                {
-                    var ciToFilterOut = cisToFilterOut.FirstOrDefault();
-                    if (ciToFilterOut == null)
-                        reduced.Add(ci);
-                    else if (ciToFilterOut != ci)
-                        reduced.Add(ci);
-                    else
-                        cisToFilterOut = cisToFilterOut.Skip(1);
-                }
-                workCIs = reduced;
+                workCIs = await traitModel.FilterCIsWithoutTrait(workCIs, requiredNonTrait, layerSet, trans, atTime);
             }
 
             return workCIs;

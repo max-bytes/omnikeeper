@@ -5,6 +5,7 @@ using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Tests.Integration.Model
 {
@@ -13,7 +14,7 @@ namespace Tests.Integration.Model
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitBuilderFromClass.Class2RecursiveTrait<BaseConfigurationV2>();
+            var et = TraitEntityHelper.Class2RecursiveTrait<BaseConfigurationV2>();
 
             et.Should().BeEquivalentTo(
                     new RecursiveTrait("__meta.config.base", new TraitOriginV1(TraitOriginType.Core),

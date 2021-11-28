@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using FluentAssertions;
 using LandscapeRegistry.GridView;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -26,21 +28,23 @@ namespace Tests.Integration.Controller
 {
     class GridViewControllerTest : ControllerTestBase
     {
-        protected override void InitServices(IServiceCollection services)
+        protected override void InitServices(ContainerBuilder builder)
         {
-            base.InitServices(services);
+            base.InitServices(builder);
 
             // add controller
-            services.AddScoped<GridViewController>();
-            services.AddMediatR(typeof(Startup));
+            builder.RegisterType<GridViewController>().InstancePerLifetimeScope();
 
-            services.AddScoped<ITraitsProvider, MockedTraitsProvider>();
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddMediatR(typeof(Startup));
+            builder.Populate(serviceCollection);
+
+            builder.RegisterType<MockedTraitsProvider>().As<ITraitsProvider>().InstancePerLifetimeScope();
         }
 
         [Test]
         public async Task TestBasics()
         {
-            using var scope = ServiceProvider.CreateScope();
             var changesetModel = ServiceProvider.GetRequiredService<IChangesetModel>();
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
@@ -75,7 +79,7 @@ namespace Tests.Integration.Controller
             }
 
             // setup user with all permissions
-            var user = new AuthenticatedUser(userInDatabase, await PermissionUtils.GetAllAvailablePermissions(layerModel, ModelContextBuilder.BuildImmediate()));
+            var user = new AuthenticatedUser(userInDatabase, new AuthRole[] { await PermissionUtils.GetSuperUserAuthRole(layerModel, ModelContextBuilder.BuildImmediate()) });
             currentUserServiceMock.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
             var cfg1 = new GridViewConfiguration(

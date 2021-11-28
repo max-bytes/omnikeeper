@@ -6,6 +6,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Validation.Rules;
 using System.Collections.Generic;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace OKPluginValidation
 {
@@ -21,8 +22,8 @@ namespace OKPluginValidation
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => new RecursiveTrait[] {
-            TraitBuilderFromClass.Class2RecursiveTrait<Validation.Validation>(),
-            TraitBuilderFromClass.Class2RecursiveTrait<ValidationIssue>(),
+            TraitEntityHelper.Class2RecursiveTrait<Validation.Validation>(),
+            TraitEntityHelper.Class2RecursiveTrait<ValidationIssue>(),
         };
 
         public override void RegisterHangfireJobRunners()

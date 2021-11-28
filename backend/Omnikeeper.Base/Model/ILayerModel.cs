@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System.Collections.Generic;
 using System.Drawing;
@@ -14,9 +15,9 @@ namespace Omnikeeper.Base.Model
         Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, string clConfigID, OnlineInboundAdapterLink oilp, string[] generators, IModelContext trans);
         Task<bool> TryToDelete(string id, IModelContext trans);
 
-        Task<Layer?> GetLayer(string layerID, IModelContext trans);
-        Task<IEnumerable<Layer>> GetLayers(IEnumerable<string> layerIDs, IModelContext trans);
-        Task<IEnumerable<Layer>> GetLayers(IModelContext trans);
-        Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, IModelContext trans);
+        Task<Layer?> GetLayer(string layerID, IModelContext trans, TimeThreshold timeThreshold);
+        Task<IEnumerable<Layer>> GetLayers(IEnumerable<string> layerIDs, IModelContext trans, TimeThreshold timeThreshold);
+        Task<IEnumerable<Layer>> GetLayers(IModelContext trans, TimeThreshold timeThreshold);
+        Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, IModelContext trans, TimeThreshold timeThreshold);
     }
 }

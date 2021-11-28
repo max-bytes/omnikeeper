@@ -28,7 +28,11 @@ namespace Omnikeeper.Model
 
             IDValidations.ValidateLayerIDThrow(id);
 
-            var current = await GetLayer(id, trans);
+            // sanitize generators
+            foreach (var generatorID in generators)
+                IDValidations.ValidateGeneratorIDThrow(generatorID);
+
+            var current = await GetLayer(id, trans, TimeThreshold.BuildLatest());
 
             if (current == null)
             {
@@ -181,27 +185,28 @@ namespace Omnikeeper.Model
             return new LayerSet(ids);
         }
 
-        private async Task<IEnumerable<Layer>> _GetLayers(string whereClause, Action<NpgsqlParameterCollection> addParameters, IModelContext trans)
+        private async Task<IEnumerable<Layer>> _GetLayers(string whereClause, Action<NpgsqlParameterCollection> addParameters, IModelContext trans, TimeThreshold timeThreshold)
         {
             var layers = new List<Layer>();
             using var command = new NpgsqlCommand($@"SELECT l.id, l.description, ls.state, lclb.brainname, loilp.pluginname, lc.color, lg.generators FROM layer l
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC NULLS LAST) ls
+                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state WHERE timestamp <= @time_threshold ORDER BY layer_id, timestamp DESC NULLS LAST) ls
                     ON ls.layer_id = l.id
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC NULLS LAST) lclb
+                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain WHERE timestamp <= @time_threshold ORDER BY layer_id, timestamp DESC NULLS LAST) lclb
                     ON lclb.layer_id = l.id
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, pluginname FROM layer_onlineinboundlayerplugin ORDER BY layer_id, timestamp DESC NULLS LAST) loilp
+                    (SELECT DISTINCT ON (layer_id) layer_id, pluginname FROM layer_onlineinboundlayerplugin WHERE timestamp <= @time_threshold ORDER BY layer_id, timestamp DESC NULLS LAST) loilp
                     ON loilp.layer_id = l.id
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, color FROM layer_color ORDER BY layer_id, timestamp DESC NULLS LAST) lc
+                    (SELECT DISTINCT ON (layer_id) layer_id, color FROM layer_color WHERE timestamp <= @time_threshold ORDER BY layer_id, timestamp DESC NULLS LAST) lc
                     ON lc.layer_id = l.id
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, generators FROM layer_generators ORDER BY layer_id, timestamp DESC NULLS LAST) lg
+                    (SELECT DISTINCT ON (layer_id) layer_id, generators FROM layer_generators WHERE timestamp <= @time_threshold ORDER BY layer_id, timestamp DESC NULLS LAST) lg
                     ON lg.layer_id = l.id
                 WHERE {whereClause}", trans.DBConnection, trans.DBTransaction);
             addParameters(command.Parameters);
+            command.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
             command.Prepare();
             using var r = await command.ExecuteReaderAsync();
             while (await r.ReadAsync())
@@ -213,46 +218,47 @@ namespace Omnikeeper.Model
                 var oilp = (r.IsDBNull(4)) ? DefaultOILP : OnlineInboundAdapterLink.Build(r.GetString(4));
                 var color = (r.IsDBNull(5)) ? DefaultColor : Color.FromArgb(r.GetInt32(5));
                 var generators = (r.IsDBNull(6)) ? new string[0] : r.GetFieldValue<string[]>(6);
+                generators = generators.Where(g => !string.IsNullOrEmpty(g)).ToArray(); // sanitize generators
                 layers.Add(Layer.Build(id, description, color, state, clConfig, oilp, generators));
             }
             return layers;
         }
 
-        public async Task<Layer?> GetLayer(string id, IModelContext trans)
+        public async Task<Layer?> GetLayer(string id, IModelContext trans, TimeThreshold timeThreshold)
         {
             IDValidations.ValidateLayerIDThrow(id);
 
-            var layers = await _GetLayers("l.id = @id LIMIT 1", (p) => p.AddWithValue("id", id), trans);
+            var layers = await _GetLayers("l.id = @id LIMIT 1", (p) => p.AddWithValue("id", id), trans, timeThreshold);
             return layers.FirstOrDefault();
         }
 
 
-        public async Task<IEnumerable<Layer>> GetLayers(IEnumerable<string> layerIDs, IModelContext trans)
+        public async Task<IEnumerable<Layer>> GetLayers(IEnumerable<string> layerIDs, IModelContext trans, TimeThreshold timeThreshold)
         {
             if (layerIDs.IsEmpty()) return new List<Layer>();
 
             IDValidations.ValidateLayerIDsThrow(layerIDs);
 
-            var layers = (await _GetLayers("l.id = ANY(@layer_ids)", (p) => p.AddWithValue("layer_ids", layerIDs), trans)).ToList();
+            var layers = (await _GetLayers("l.id = ANY(@layer_ids)", (p) => p.AddWithValue("layer_ids", layerIDs), trans, timeThreshold)).ToList();
 
             // HACK, TODO: wonky re-sorting of layers according to input layerIDs
             return layerIDs.Select(id => layers.Find(l => l.ID == id)).WhereNotNull();
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans)
+        public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans, TimeThreshold timeThreshold)
         {
-            var layers = (await _GetLayers("1=1", (p) => { }, trans));
+            var layers = (await _GetLayers("1=1", (p) => { }, trans, timeThreshold));
             return layers;
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, IModelContext trans)
+        public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, IModelContext trans, TimeThreshold timeThreshold)
         {
             var layers = (await _GetLayers("ls.state = ANY(@states) OR (ls.state IS NULL AND @default_state = ANY(@states))",
                 (p) =>
                 {
                     p.AddWithValue("states", stateFilter.Filter2States());
                     p.AddWithValue("default_state", DefaultState);
-                }, trans));
+                }, trans, timeThreshold));
             return layers;
         }
     }

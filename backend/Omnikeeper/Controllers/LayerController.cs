@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -11,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers
 {
+    [Obsolete]
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
@@ -20,10 +23,10 @@ namespace Omnikeeper.Controllers
         private readonly ILayerModel layerModel;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
 
         public LayerController(ILayerModel layerModel, IModelContextBuilder modelContextBuilder,
-            ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserService currentUserService)
+            ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserAccessor currentUserService)
         {
             this.layerModel = layerModel;
             this.modelContextBuilder = modelContextBuilder;
@@ -41,7 +44,7 @@ namespace Omnikeeper.Controllers
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            return Ok((await layerModel.GetLayers(trans))
+            return Ok((await layerModel.GetLayers(trans, TimeThreshold.BuildLatest()))
                 .Where(l => layerBasedAuthorizationService.CanUserReadFromLayer(user, l)) // authz filter
                 .Select(l => LayerDTO.Build(l)));
         }
@@ -54,7 +57,7 @@ namespace Omnikeeper.Controllers
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
-            var layer = await layerModel.GetLayer(layerName, trans);
+            var layer = await layerModel.GetLayer(layerName, trans, TimeThreshold.BuildLatest());
 
             if (layer == null)
                 return NotFound($"Could not find layer with name {layerName}");
@@ -76,7 +79,7 @@ namespace Omnikeeper.Controllers
             // TODO: better performance: use GetLayers()
             foreach (var layerName in layerNames)
             {
-                var layer = await layerModel.GetLayer(layerName, trans);
+                var layer = await layerModel.GetLayer(layerName, trans, TimeThreshold.BuildLatest());
                 if (layer == null)
                     return NotFound($"Could not find layer with name {layerName}");
                 if (!layerBasedAuthorizationService.CanUserReadFromLayer(user, layer))

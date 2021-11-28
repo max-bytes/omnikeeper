@@ -23,13 +23,15 @@ namespace OKPluginCLBMonitoring
     {
         private readonly IRelationModel relationModel;
         private readonly ICIModel ciModel;
+        private readonly IAttributeModel attributeModel;
+        private readonly ILayerModel layerModel;
         private readonly IEffectiveTraitModel traitModel;
 
-        public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
-            IChangesetModel changesetModel, IUserInDatabaseModel userModel)
-            : base(atributeModel, layerModel, changesetModel, userModel)
+        public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel attributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel)
         {
             this.ciModel = ciModel;
+            this.attributeModel = attributeModel;
+            this.layerModel = layerModel;
             this.relationModel = relationModel;
             this.traitModel = traitModel;
         }
@@ -38,8 +40,12 @@ namespace OKPluginCLBMonitoring
         private readonly string isMonitoredByPredicate = "is_monitored_by";
         private readonly string belongsToNaemonContactgroup = "belongs_to_naemon_contactgroup";
 
+        private void LogError(Guid ciid, string name, string message)
+        {
+            // TODO
+        }
         
-        public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
+        public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start clbMonitoring");
 
@@ -52,7 +58,7 @@ namespace OKPluginCLBMonitoring
             var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
 
             // prepare contact groups
-            var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, errorHandler);
+            var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, (Guid ciid, string name, string message) => LogError(ciid, name, message));
             await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, Traits.ContactgroupFlattened, trans, changesetProxy.TimeThreshold);
 
             // prepare list of all monitored cis
@@ -82,7 +88,7 @@ namespace OKPluginCLBMonitoring
                 if (monitoringModuleET == null)
                 {
                     logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{Traits.ModuleFlattened.ID}\"");
-                    await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Expected this CI to have trait \"{Traits.ModuleFlattened.ID}\"");
+                    LogError(monitoringModuleCI.ID, "error", $"Expected this CI to have trait \"{Traits.ModuleFlattened.ID}\"");
                     continue;
                 }
                 logger.LogDebug("  Fetched effective traits");
@@ -105,7 +111,7 @@ namespace OKPluginCLBMonitoring
                 catch (Exception e)
                 {
                     logger.LogError($"Error parsing or rendering command from monitoring module \"{monitoringModuleCI.ID}\": {e.Message}");
-                    await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Error parsing or rendering command: {e.Message}");
+                    LogError(monitoringModuleCI.ID, "error", $"Error parsing or rendering command: {e.Message}");
                 }
                 logger.LogDebug("  Processed mm relation");
             }
@@ -149,7 +155,7 @@ namespace OKPluginCLBMonitoring
                 foreach (var (ciid, commandStr, error) in parseErrors)
                 {
                     logger.LogError($"Error parsing the following command fragment:\n{commandStr}\nError: {error}");
-                    await errorHandler.LogError(ciid, "error", $"Error parsing the following command fragment:\n{commandStr}\nError: {error}");
+                    LogError(ciid, "error", $"Error parsing the following command fragment:\n{commandStr}\nError: {error}");
                 }
             }
 
@@ -255,17 +261,17 @@ namespace OKPluginCLBMonitoring
             private readonly ICIModel ciModel;
             private readonly IEffectiveTraitModel traitModel;
             private readonly ILogger logger;
-            private readonly CLBErrorHandler errorHandler;
+            private readonly Action<Guid, string, string> logErrorF;
             private Dictionary<Guid, IEnumerable<MergedCI>> contactGroupsMap = new Dictionary<Guid, IEnumerable<MergedCI>>();
             private readonly Dictionary<Guid, string> contactGroupNames = new Dictionary<Guid, string>();
 
-            public ContactgroupResolver(IRelationModel relationModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILogger logger, CLBErrorHandler errorHandler)
+            public ContactgroupResolver(IRelationModel relationModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILogger logger, Action<Guid, string, string> logErrorF)
             {
                 this.relationModel = relationModel;
                 this.ciModel = ciModel;
                 this.traitModel = traitModel;
                 this.logger = logger;
-                this.errorHandler = errorHandler;
+                this.logErrorF = logErrorF;
             }
 
             public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, ITrait contactgroupTrait, IModelContext trans, TimeThreshold timeThreshold)
@@ -294,7 +300,7 @@ namespace OKPluginCLBMonitoring
                         else
                         {
                             logger.LogError($"Expected CI {ci.ID} to have trait \"{contactgroupTrait.ID}\"");
-                            await errorHandler.LogError(ci.ID, "error", $"Expected this CI to have trait \"{contactgroupTrait.ID}\"");
+                            logErrorF(ci.ID, "error", $"Expected this CI to have trait \"{contactgroupTrait.ID}\"");
                         }
                     }
                 }

@@ -25,12 +25,12 @@ namespace Omnikeeper.Controllers
     {
         private readonly IAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserService currentUserService, ILayerBasedAuthorizationService layerBasedAuthorizationService,
+        public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserAccessor currentUserService, ILayerBasedAuthorizationService layerBasedAuthorizationService,
             IModelContextBuilder modelContextBuilder, IChangesetModel changesetModel, ICIBasedAuthorizationService ciBasedAuthorizationService)
         {
             this.attributeModel = attributeModel;

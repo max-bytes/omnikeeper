@@ -56,7 +56,7 @@ namespace Omnikeeper.Runners
         public async Task RunAsync()
         {
             var trans = modelContextBuilder.BuildImmediate();
-            var activeLayers = await layerModel.GetLayers(Omnikeeper.Base.Entity.AnchorStateFilter.ActiveAndDeprecated, trans);
+            var activeLayers = await layerModel.GetLayers(Omnikeeper.Base.Entity.AnchorStateFilter.ActiveAndDeprecated, trans, TimeThreshold.BuildLatest());
             var layersWithOILPs = activeLayers.Where(l => l.OnlineInboundAdapterLink.AdapterName != ""); // TODO: better check for set oilp than name != ""
 
             var adapters = layersWithOILPs.Select(l => l.OnlineInboundAdapterLink.AdapterName)
@@ -66,7 +66,6 @@ namespace Omnikeeper.Runners
 
             foreach (var adapterName in adapters)
             {
-                lastRuns.TryGetValue(adapterName, out var lastRun);
 
                 // find oilp for layer
                 var plugin = await pluginManager.GetOnlinePluginInstance(adapterName, trans);
@@ -80,7 +79,8 @@ namespace Omnikeeper.Runners
 
                     usedPersisterScopes.Add(EIDManager.PersisterScope);
 
-                    if (lastRun == null || (DateTimeOffset.Now - lastRun) > EIDManager.PreferredUpdateRate)
+                    var foundLastRun = lastRuns.TryGetValue(adapterName, out var lastRun);
+                    if (!foundLastRun || (DateTimeOffset.Now - lastRun) > EIDManager.PreferredUpdateRate)
                     {
                         logger.LogInformation($"Running external ID update for OILP {adapterName}");
 

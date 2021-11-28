@@ -1,3 +1,5 @@
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using FluentValidation.AspNetCore;
 using GraphQL;
 using GraphQL.Server;
@@ -51,6 +53,8 @@ namespace Omnikeeper.Startup
 
     public partial class Startup
     {
+        private IMvcBuilder? mvcBuilder;
+
         public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
@@ -86,21 +90,8 @@ namespace Omnikeeper.Startup
 
             services.AddSignalR();
 
-            var pluginFolder = Path.Combine(Directory.GetCurrentDirectory(), "OKPlugins");
-            ServiceRegistration.RegisterLogging(services);
-            var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
-            ServiceRegistration.RegisterDB(services, cs, false);
-            ServiceRegistration.RegisterOIABase(services);
-            var enableModelCaching = false; // TODO: model caching seems to have a grave bug that keeps old attributes in the cache, so we disable caching (for now)
-            // TODO: think about per-request caching... which would at least fix issues when f.e. calling LayerModel.GetLayer(someLayerID) lots of times during a single request
-            // TODO: also think about graphql DataLoaders
-            var enabledEffectiveTraitCaching = true;
-            ServiceRegistration.RegisterModels(services, enableModelCaching, enabledEffectiveTraitCaching, true, true);
-            ServiceRegistration.RegisterServices(services);
-            ServiceRegistration.RegisterGraphQL(services);
-            var assemblies = ServiceRegistration.RegisterOKPlugins(services, pluginFolder);
-
-            var mvcBuilder = services.AddControllers();
+            // HACK: member is set here and used later
+            mvcBuilder = services.AddControllers();
 
             // add input and output formatters
             services.AddOptions<MvcOptions>()
@@ -121,11 +112,6 @@ namespace Omnikeeper.Startup
                     config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
                 });
 
-            // load controllers from plugins
-            foreach (var assembly in assemblies)
-            {
-                mvcBuilder.AddApplicationPart(assembly);
-            }
 
             services.AddGraphQL(x => { })
                 .AddErrorInfoProvider(opt => opt.ExposeExceptionStackTrace = CurrentEnvironment.IsDevelopment() || CurrentEnvironment.IsStaging())
@@ -163,8 +149,7 @@ namespace Omnikeeper.Startup
                     OnTokenValidated = c =>
                     {
                         var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerChallengeContext>>();
-                        var userService = c.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
-                        logger.LogInformation($"Validated token for user {userService.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
+                        logger.LogInformation($"Validated token for user {HttpUserUtils.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
                         return Task.CompletedTask;
                     },
                     OnAuthenticationFailed = c =>
@@ -309,10 +294,37 @@ namespace Omnikeeper.Startup
             }).AddFluentValidation();
         }
 
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            ServiceRegistration.RegisterLogging(builder);
+
+            var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
+            ServiceRegistration.RegisterDB(builder, cs, false);
+
+            var enableModelCaching = false; // TODO: model caching seems to have a grave bug that keeps old attributes in the cache, so we disable caching (for now)
+            // TODO: think about per-request caching... which would at least fix issues when f.e. calling LayerModel.GetLayer(someLayerID) lots of times during a single request
+            // TODO: also think about graphql DataLoaders
+            var enabledEffectiveTraitCaching = true;
+            ServiceRegistration.RegisterModels(builder, enableModelCaching, enabledEffectiveTraitCaching, true, true, true);
+
+            ServiceRegistration.RegisterGraphQL(builder);
+            ServiceRegistration.RegisterOIABase(builder);
+            ServiceRegistration.RegisterServices(builder);
+
+            // plugins
+            var pluginFolder = Path.Combine(Directory.GetCurrentDirectory(), "OKPlugins");
+            var assemblies = ServiceRegistration.RegisterOKPlugins(builder, pluginFolder);
+            // load controllers from plugins
+            foreach (var assembly in assemblies)
+            {
+                mvcBuilder.AddApplicationPart(assembly);
+            }
+        }
+
         private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory,
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, 
             ILogger<Startup> logger, IEnumerable<IPluginRegistration> plugins)
         {
             var version = VersionService.GetVersion();
@@ -325,10 +337,42 @@ namespace Omnikeeper.Startup
             app.UsePathBase(Configuration.GetValue<string>("BaseURL"));
 
             // make application properly consider headers (and populate httprequest object) when behind reverse proxy
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            var forwardedHeaderOptions = new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-            });
+            };
+
+            // NOTE, HACK: we should not do this because this has the potential of opening up IP spoofing attacks
+            // but, it's otherwise really hard to correctly know the IP-ranges of possible proxies, so we disable whitelisting (for now)
+            // see https://github.com/dotnet/AspNetCore.Docs/issues/2384 for a discussion
+            forwardedHeaderOptions.KnownNetworks.Clear();
+            forwardedHeaderOptions.KnownProxies.Clear();
+
+            app.UseForwardedHeaders(forwardedHeaderOptions);
+
+            //// debug to log all requests and their headers
+            //app.Use(async (context, next) =>
+            //{
+            //    // Request method, scheme, and path
+            //    logger.LogInformation("Request Method: {Method}", context.Request.Method);
+            //    logger.LogInformation("Request Scheme: {Scheme}", context.Request.Scheme);
+            //    logger.LogInformation("Request Path: {Path}", context.Request.Path);
+
+            //    // Headers
+            //    foreach (var header in context.Request.Headers)
+            //    {
+            //        logger.LogInformation("Header: {Key}: {Value}", header.Key, header.Value);
+            //    }
+
+            //    // Connection: RemoteIp
+            //    logger.LogInformation("Request RemoteIp: {RemoteIpAddress}",
+            //        context.Connection.RemoteIpAddress);
+
+            //    logger.LogInformation("Known proxies: {KnownProxies}", (object)(new ForwardedHeadersOptions().KnownProxies));
+            //    logger.LogInformation("Known proxies: {KnownNetworks}", (object)(new ForwardedHeadersOptions().KnownNetworks));
+
+            //    await next();
+            //});
 
             app.UseStaticFiles();
 
@@ -387,8 +431,7 @@ namespace Omnikeeper.Startup
             });
 
             // Configure hangfire to use the new JobActivator we defined.
-            GlobalConfiguration.Configuration
-                .UseActivator(new AspNetCoreJobActivator(serviceScopeFactory));
+            GlobalConfiguration.Configuration.UseAutofacActivator(app.ApplicationServices.GetAutofacRoot());
             app.UseHangfireServer();
             if (env.IsDevelopment() || env.IsStaging())
             { // TODO: also use in production, but fix auth first

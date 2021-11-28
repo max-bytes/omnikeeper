@@ -11,12 +11,14 @@ import LayerDropdown from "components/LayerDropdown";
 import { ErrorPopupButton } from "components/ErrorPopupButton";
 import { useExplorerLayers } from 'utils/layers';
 
+
+const initialAttribute = {name: '', type: 'TEXT', values: [''], isArray: false};
+
 function AddNewAttribute(props) {
   const [insertError, setInsertError] = useState(undefined);
   const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
   const { data: visibleLayers } = useExplorerLayers(true);
   const canBeEdited = props.isEditable && visibleAndWritableLayers.length > 0;
-  let initialAttribute = {name: '', type: 'TEXT', values: [''], isArray: false};
   const [selectedLayer, setSelectedLayer] = useState(visibleAndWritableLayers[0]);
   const [isOpen, setOpen] = useState(false);
   const [newAttribute, setNewAttribute] = useState(initialAttribute);
@@ -24,12 +26,14 @@ function AddNewAttribute(props) {
   var [hasErrors, setHasErrors] = useState(false);
   React.useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
 
-  React.useEffect(() => {if (props.prefilled) {
-    setOpen(true);
-    setSelectedLayer(s => s ?? props.prefilled.layer);
-    setNewAttribute({name: props.prefilled.name, type: props.prefilled.type, values: props.prefilled.values ?? [''], isArray: props.prefilled.isArray ?? false});
-    setValueAutofocussed(true);
-  }}, [props.prefilled]);
+  React.useEffect(() => {
+    if (props.prefilled) {
+      setOpen(true);
+      setSelectedLayer(s => s ?? props.prefilled.layer);
+      setNewAttribute({name: props.prefilled.name, type: props.prefilled.type, values: props.prefilled.values ?? [''], isArray: props.prefilled.isArray ?? false});
+      setValueAutofocussed(true);
+    }
+  }, [props.prefilled, setNewAttribute]);
 
   // TODO: loading
   const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE);
@@ -68,11 +72,11 @@ function AddNewAttribute(props) {
 
           <Row>
               <Col span={18}>
-                <Form.Item label="Type" name="type">
+                <Form.Item label="Type" name="type" initialValue={newAttribute.type}>
                     <Select style={{ width: "100%" }} placeholder='Select attribute type' showSearch value={newAttribute.type}
                         onChange={(e, data) => {
-                        // we'll clear the value, to be safe, TODO: better value migration between types
-                        setNewAttribute({...newAttribute, type: data.value, value: ''});
+                          // we'll clear the value, to be safe, TODO: better value migration between types
+                          setNewAttribute({...newAttribute, type: data.value, value: ''});
                         }}
                         options={AttributeTypes.map(at => { return {key: at.id, value: at.id, label: at.name }; })}
                     />

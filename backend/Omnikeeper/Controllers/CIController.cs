@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers
 {
+    [Obsolete]
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
@@ -21,12 +22,12 @@ namespace Omnikeeper.Controllers
     public class CIController : ControllerBase
     {
         private readonly ICIModel ciModel;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
-        public CIController(ICIModel ciModel, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserService currentUserService, IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService)
+        public CIController(ICIModel ciModel, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserAccessor currentUserService, IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.ciModel = ciModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;

@@ -1,3 +1,4 @@
+using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,7 +26,9 @@ namespace Omnikeeper
 
             AddAssemblyResolver();
 
-            var host = CreateHostBuilder(args).Build();
+            var host = CreateHostBuilder(args)
+                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                .Build();
 
             using (var scope = host.Services.CreateScope())
             {
@@ -51,7 +54,7 @@ namespace Omnikeeper
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
                 if (metaConfiguration.ConfigLayers.Contains("__okconfig") || metaConfiguration.ConfigWriteLayer == "__okconfig")
                 {
-                    var okConfigLayer = await layerModel.GetLayer("__okconfig", mc);
+                    var okConfigLayer = await layerModel.GetLayer("__okconfig", mc, TimeThreshold.BuildLatest());
                     if (okConfigLayer == null)
                     {
                         await layerModel.UpsertLayer("__okconfig", mc);

@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using Autofac;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -17,18 +18,17 @@ namespace Tests.Integration.Controller
 {
     class AttributeControllerTest : ControllerTestBase
     {
-        protected override void InitServices(IServiceCollection services)
+        protected override void InitServices(ContainerBuilder builder)
         {
-            base.InitServices(services);
+            base.InitServices(builder);
 
             // add controller
-            services.AddScoped<AttributeController>();
+            builder.RegisterType<AttributeController>().InstancePerLifetimeScope();
         }
 
         [Test]
         public async Task TestBasics()
         {
-            using var scope = ServiceProvider.CreateScope();
             var changesetModel = ServiceProvider.GetRequiredService<IChangesetModel>();
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();

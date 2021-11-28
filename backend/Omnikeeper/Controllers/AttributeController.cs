@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers
 {
+    [Obsolete]
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
@@ -23,12 +24,12 @@ namespace Omnikeeper.Controllers
     {
         private readonly IAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public AttributeController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService,
+        public AttributeController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserAccessor currentUserService,
             ILayerBasedAuthorizationService layerBasedAuthorizationService, IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService)
         {
             this.modelContextBuilder = modelContextBuilder;

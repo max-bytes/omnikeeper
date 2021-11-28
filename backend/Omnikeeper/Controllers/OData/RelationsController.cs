@@ -42,11 +42,11 @@ namespace Omnikeeper.Controllers.OData
         private readonly IChangesetModel changesetModel;
         private readonly IODataAPIContextModel oDataAPIContextModel;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
         public RelationsController(IRelationModel relationModel, ICIModel ciModel, IChangesetModel changesetModel, IODataAPIContextModel oDataAPIContextModel,
-            ICurrentUserService currentUserService, ILayerBasedAuthorizationService authorizationService, IModelContextBuilder modelContextBuilder)
+            ICurrentUserAccessor currentUserService, ILayerBasedAuthorizationService authorizationService, IModelContextBuilder modelContextBuilder)
         {
             this.relationModel = relationModel;
             this.ciModel = ciModel;
@@ -89,9 +89,9 @@ namespace Omnikeeper.Controllers.OData
         {
             if (relation == null)
                 return BadRequest($"Could not parse inserted relation");
-            if (relation.FromCIID == null)
+            if (relation.FromCIID == Guid.Empty)
                 return BadRequest($"Relation from CIID must be set");
-            if (relation.ToCIID == null)
+            if (relation.ToCIID == Guid.Empty)
                 return BadRequest($"Relation to CIID must be set");
             if (relation.Predicate == null || relation.Predicate == "")
                 return BadRequest($"Relation Predicate must be set");

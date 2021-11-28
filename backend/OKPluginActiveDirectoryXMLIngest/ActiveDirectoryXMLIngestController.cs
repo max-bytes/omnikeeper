@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Ingest.ActiveDirectoryXML;
 using System;
@@ -23,14 +24,14 @@ namespace Omnikeeper.Controllers.Ingest
     public class ActiveDirectoryXMLIngestController : ControllerBase
     {
         private readonly IngestDataService ingestDataService;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly ILayerModel layerModel;
         private readonly ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService authorizationService;
         private readonly ILogger<ActiveDirectoryXMLIngestController> logger;
 
-        public ActiveDirectoryXMLIngestController(IngestDataService ingestDataService, ICurrentUserService currentUserService, ILayerModel layerModel, ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService,
+        public ActiveDirectoryXMLIngestController(IngestDataService ingestDataService, ICurrentUserAccessor currentUserService, ILayerModel layerModel, ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService,
             IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
@@ -48,7 +49,7 @@ namespace Omnikeeper.Controllers.Ingest
         {
             var mc = modelContextBuilder.BuildImmediate();
 
-            var writeLayer = await layerModel.GetLayer(writeLayerID, mc);
+            var writeLayer = await layerModel.GetLayer(writeLayerID, mc, TimeThreshold.BuildLatest());
             if (writeLayer == null)
                 return BadRequest("Invalid write layer ID configured");
 

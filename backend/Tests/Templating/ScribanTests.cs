@@ -98,5 +98,19 @@ namespace Tests.Templating
             var r = template.Render(context);
             Console.WriteLine(r);
         }
+
+        [Test]
+        public void TestReturnNull()
+        {
+            var context = new TemplateContext
+            {
+                StrictVariables = true
+            };
+
+            var t = @"{{ null }}";
+            var template = Scriban.Template.Parse(t);
+            var r = template.Evaluate(context);
+            Assert.IsNull(r);
+        }
     }
 }

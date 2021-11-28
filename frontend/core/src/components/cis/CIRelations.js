@@ -3,12 +3,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import RelatedCI from './RelatedCI';
 import {Row, Col} from 'antd';
 import AddNewRelation from './AddNewRelation';
-import { Flipper, Flipped } from 'react-flip-toolkit'
-import { onAppear, onExit } from 'utils/animation';
 import { queries } from 'graphql/queries'
 import { mutations } from 'graphql/mutations'
 import { ErrorView } from 'components/ErrorView';
 import { useExplorerLayers } from 'utils/layers';
+import AutoSizedList from 'utils/AutoSizedList';
 
 function CIRelations(props) {
 
@@ -53,34 +52,34 @@ function CIRelations(props) {
   }, [mergedRelations, setSortedRelations, sortingFunc]);
 
   if (sortedRelations && dataPredicates) {
-    return (<>
-    <Row>
-      <Col span={24}>
-        <AddNewRelation isOutgoingRelation={areOutgoingRelations} isEditable={isEditable} visibleLayers={visibleLayers.map(l => l.id)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={ciIdentity}></AddNewRelation>
-      </Col>
-    </Row>
-    <Row>
-      <Col span={24}>
-        <Flipper flipKey={sortedRelations.map(r => r.layerStackIDs).join(' ')}>
-          {sortedRelations.map(r => {
-            const isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
 
-            const onRemove = (isEditable && isLayerWritable) ? 
-            (() => {
-              removeRelation({ variables: { fromCIID: r.relation.fromCIID, toCIID: r.relation.toCIID,
-                predicateID: r.relation.predicateID, layerID: r.layerID, layers: visibleLayers.map(l => l.id) } })
-              .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }}));
-            })
-            : null;
+    const Item = (index) => {
+      const r = sortedRelations[index];
+      const isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
 
-            return (<Flipped key={r.relation.predicateID + "_" + r.relation.fromCIID + "_" + r.relation.toCIID} flipId={r.relation.predicateID} onAppear={onAppear} onExit={onExit}>
-                <RelatedCI mergedRelation={r} predicates={dataPredicates.predicates} onRemove={onRemove} isOutgoingRelation={areOutgoingRelations} />
-              </Flipped>);
-          })}
-        </Flipper>
-      </Col>
-    </Row>
-    </>);
+      const onRemove = (isEditable && isLayerWritable) ? 
+      (() => {
+        removeRelation({ variables: { fromCIID: r.relation.fromCIID, toCIID: r.relation.toCIID,
+          predicateID: r.relation.predicateID, layerID: r.layerID, layers: visibleLayers.map(l => l.id) } })
+        .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }}));
+      })
+      : null;
+
+      return <RelatedCI mergedRelation={r} predicates={dataPredicates.predicates} onRemove={onRemove} isOutgoingRelation={areOutgoingRelations} />;
+    };
+
+    return (<div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
+      <Row>
+        <Col span={24}>
+          <AddNewRelation isOutgoingRelation={areOutgoingRelations} isEditable={isEditable} visibleLayers={visibleLayers.map(l => l.id)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={ciIdentity}></AddNewRelation>
+        </Col>
+      </Row>
+      <Row style={{flex: '1'}}>
+        <Col span={24} style={{display: 'flex'}}>
+          <AutoSizedList itemCount={sortedRelations?.length ?? 0} item={Item} />
+        </Col>
+      </Row>
+    </div>);
   }
   else if (loadingPredicates) return <p>Loading</p>;
   else if (errorPredicates) return <ErrorView error={errorPredicates}/>;

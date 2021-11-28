@@ -1,6 +1,7 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -15,7 +16,7 @@ namespace Omnikeeper.Base.Model.Config
     public class BaseConfigurationModel : SingletonTraitDataConfigBaseModel<BaseConfigurationV2>, IBaseConfigurationModel
     {
         public BaseConfigurationModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel) 
-            : base(RecursiveTraitService.FlattenSingleRecursiveTrait(TraitBuilderFromClass.Class2RecursiveTrait<BaseConfigurationV2>()), effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
+            : base(RecursiveTraitService.FlattenSingleRecursiveTrait(TraitEntityHelper.Class2RecursiveTrait<BaseConfigurationV2>()), effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         {
         }
 

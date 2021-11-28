@@ -9,19 +9,14 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL
 {
-
+    // TODO: ci- and layer-based authorization!
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        private readonly IRelationModel relationModel;
-        private readonly IEffectiveTraitModel traitModel;
-        private readonly ITraitsProvider traitsProvider;
-
         public MergedCIType(IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel,
             IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider)
         {
@@ -52,8 +47,8 @@ namespace Omnikeeper.GraphQL
                 var CIIdentity = context.Source!.ID;
                 var requiredPredicateID = context.GetArgument<string?>("requiredPredicateID", null);
 
-                var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader("GetMergedRelations", (IEnumerable<IRelationSelection> relationSelections) => FetchRelations(userContext, relationSelections));
-                return loader.LoadAsync(RelationSelectionFrom.Build(CIIdentity)).Then(ret =>
+                var loaded = DataLoaderUtils.SetupAndLoadRelation(RelationSelectionFrom.Build(CIIdentity), dataLoaderContextAccessor, relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                return loaded.Then(ret =>
                 { // TODO: move predicateID filtering into fetch and RelationSelection
                     if (requiredPredicateID != null)
                         return ret.Where(r => r.Relation.PredicateID == requiredPredicateID);
@@ -69,8 +64,8 @@ namespace Omnikeeper.GraphQL
                 var CIIdentity = context.Source!.ID;
                 var requiredPredicateID = context.GetArgument<string?>("requiredPredicateID", null);
 
-                var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader("GetMergedRelations", (IEnumerable<IRelationSelection> relationSelections) => FetchRelations(userContext, relationSelections));
-                return loader.LoadAsync(RelationSelectionTo.Build(CIIdentity)).Then(ret =>
+                var loaded = DataLoaderUtils.SetupAndLoadRelation(RelationSelectionTo.Build(CIIdentity), dataLoaderContextAccessor, relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                return loaded.Then(ret =>
                 { // TODO: move predicateID filtering into fetch and RelationSelection
                     if (requiredPredicateID != null)
                         return ret.Where(r => r.Relation.PredicateID == requiredPredicateID);
@@ -85,90 +80,9 @@ namespace Omnikeeper.GraphQL
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var ci = context.Source!;
 
-                var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader("GetEffectiveTraits", (IEnumerable<MergedCI> cis) => FetchEffectiveTraits(userContext, cis));
+                var loader = DataLoaderUtils.SetupEffectiveTraitLoader(dataLoaderContextAccessor, traitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return loader.LoadAsync(ci);
             });
-            this.relationModel = relationModel;
-            this.traitModel = traitModel;
-            this.traitsProvider = traitsProvider;
-        }
-
-        private async Task<ILookup<MergedCI, EffectiveTrait>> FetchEffectiveTraits(OmnikeeperUserContext userContext, IEnumerable<MergedCI> cis)
-        {
-            var traits = (await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold)).Values;
-
-            var tmp = new Dictionary<Guid, IList<EffectiveTrait>>();
-            var ciMap = cis.ToDictionary(ci => ci.ID);
-            foreach(var trait in traits)
-            {
-                var etsPerTrait = await traitModel.GetEffectiveTraitsForTrait(trait, cis, userContext.LayerSet!, userContext.Transaction, userContext.TimeThreshold);
-
-                foreach(var kv in etsPerTrait)
-                {
-                    tmp.AddOrUpdate(kv.Key, () => new List<EffectiveTrait>() { kv.Value }, (l) => { l.Add(kv.Value); return l; });
-                }
-            }
-
-            var t = tmp.SelectMany(kv => kv.Value.Select(v => (ciid: kv.Key, et: v)));
-            return t.ToLookup(kv => ciMap[kv.ciid], kv => kv.et, new MergedCIComparer());
-        }
-
-        private class MergedCIComparer : IEqualityComparer<MergedCI>
-        {
-            public bool Equals(MergedCI? x, MergedCI? y)
-            {
-                if (x == null && y == null) return true;
-                else if (x == null || y == null) return false;
-                else return x.ID.Equals(y.ID);
-            }
-
-            public int GetHashCode(MergedCI obj)
-            {
-                return obj.ID.GetHashCode();
-            }
-        }
-
-        private async Task<ILookup<IRelationSelection, MergedRelation>> FetchRelations(OmnikeeperUserContext userContext, IEnumerable<IRelationSelection> relationSelections)
-        {
-            var combinedRelationsTo = new HashSet<Guid>();
-            var combinedRelationsFrom = new HashSet<Guid>();
-            foreach (var rs in relationSelections)
-            {
-                switch (rs)
-                {
-                    case RelationSelectionTo t:
-                        combinedRelationsTo.UnionWith(t.ToCIIDs);
-                        break;
-                    case RelationSelectionFrom f:
-                        combinedRelationsFrom.UnionWith(f.FromCIIDs);
-                        break;
-                    default:
-                        throw new NotSupportedException("Not supported (yet)");
-                }
-            }
-
-            var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(combinedRelationsTo), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
-            var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(combinedRelationsFrom), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
-
-            var relationsToMap = relationsTo.ToLookup(t => t.Relation.ToCIID);
-            var relationsFromMap = relationsFrom.ToLookup(t => t.Relation.FromCIID);
-
-            var ret = new List<(IRelationSelection, MergedRelation)>();
-            foreach (var rs in relationSelections)
-            {
-                switch (rs)
-                {
-                    case RelationSelectionTo t:
-                        foreach (var ciid in t.ToCIIDs) ret.AddRange(relationsToMap[ciid].Select(t => (rs, t)));
-                        break;
-                    case RelationSelectionFrom f:
-                        foreach (var ciid in f.FromCIIDs) ret.AddRange(relationsFromMap[ciid].Select(t => (rs, t)));
-                        break;
-                    default:
-                        throw new NotSupportedException("Not supported (yet)");
-                }
-            }
-            return ret.ToLookup(t => t.Item1, t => t.Item2);
         }
     }
 
@@ -185,8 +99,12 @@ namespace Omnikeeper.GraphQL
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source!.LayerStackIDs;
 
-                var loader = dataLoaderContextAccessor.Context.GetOrAddLoader("GetAllLayers", () => layerModel.GetLayers(userContext.Transaction));
-                return loader.LoadAsync().Then(layers => layers.Where(l => layerstackIDs.Contains(l.ID)));
+                var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                var loader = dataLoaderContextAccessor.Context.GetOrAddLoader($"GetAllLayers_{timeThreshold}", () => layerModel.GetLayers(userContext.Transaction, timeThreshold));
+                return loader.LoadAsync().Then(layers => layers
+                        .Where(l => layerstackIDs.Contains(l.ID))
+                        .OrderBy(l => layerstackIDs.IndexOf(l.ID))
+                    );
             });
         }
     }

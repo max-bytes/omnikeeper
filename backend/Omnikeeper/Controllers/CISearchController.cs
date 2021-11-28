@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers
 {
+    [Obsolete]
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
@@ -23,11 +24,11 @@ namespace Omnikeeper.Controllers
         private readonly ICISearchModel ciSearchModel;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserService;
         private readonly ITraitsProvider traitsProvider;
 
         public CISearchController(ICISearchModel ciSearchModel,
-            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserService currentUserService, ITraitsProvider traitsProvider)
+            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserAccessor currentUserService, ITraitsProvider traitsProvider)
         {
             this.ciSearchModel = ciSearchModel;
             this.modelContextBuilder = modelContextBuilder;

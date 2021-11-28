@@ -35,19 +35,20 @@ namespace Omnikeeper.Utils
             var formatters = mvcOpt.InputFormatters;
             TextInputFormatter? formatter = null;
 
-            Endpoint endpoint = context.HttpContext.GetEndpoint();
-            if (endpoint.Metadata.GetMetadata<UseSpanJsonAttribute>() != null)
+            Endpoint? endpoint = context.HttpContext.GetEndpoint();
+            if (endpoint?.Metadata.GetMetadata<UseSpanJsonAttribute>() != null)
             {
                 formatter = formatters.OfType<SpanJsonInputFormatter<SpanJsonDefaultResolver<byte>>>().FirstOrDefault();
             }
             else
             {
-                formatter = (NewtonsoftJsonInputFormatter)(formatters
+                formatter = (NewtonsoftJsonInputFormatter?)(formatters
                     .Where(f => typeof(NewtonsoftJsonInputFormatter) == f.GetType())
                     .FirstOrDefault());
             }
-            var result = await formatter.ReadRequestBodyAsync(context, encoding);
-            return result;
+            if (formatter != null)
+                return await formatter.ReadRequestBodyAsync(context, encoding);
+            else throw new Exception("No suitable formatter found");
         }
     }
 
@@ -66,18 +67,20 @@ namespace Omnikeeper.Utils
             var formatters = mvcOpt.OutputFormatters;
             TextOutputFormatter? formatter = null;
 
-            Endpoint endpoint = context.HttpContext.GetEndpoint();
-            if (endpoint.Metadata.GetMetadata<UseSpanJsonAttribute>() != null)
+            Endpoint? endpoint = context.HttpContext.GetEndpoint();
+            if (endpoint?.Metadata.GetMetadata<UseSpanJsonAttribute>() != null)
             {
                 formatter = formatters.OfType<SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>>().FirstOrDefault();
             }
             else
             {
-                formatter = (NewtonsoftJsonOutputFormatter)(formatters
+                formatter = (NewtonsoftJsonOutputFormatter?)(formatters
                     .Where(f => typeof(NewtonsoftJsonOutputFormatter) == f.GetType())
                     .FirstOrDefault());
             }
-            await formatter.WriteResponseBodyAsync(context, selectedEncoding);
+            if (formatter != null)
+                await formatter.WriteResponseBodyAsync(context, selectedEncoding);
+            else throw new Exception("No suitable formatter found");
         }
     }
 }

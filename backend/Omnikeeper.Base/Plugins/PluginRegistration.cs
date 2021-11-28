@@ -1,4 +1,4 @@
-﻿using Hangfire.Server;
+﻿using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using System;
@@ -21,6 +21,9 @@ namespace Omnikeeper.Base.Plugins
         string InformationalVersion { get; }
 
         IEnumerable<RecursiveTrait> DefinedTraits { get; }
+
+        void RegisterGraphqlQueries(ObjectGraphType root);
+        void RegisterGraphqlMutations(ObjectGraphType root);
     }
 
     public abstract class PluginRegistrationBase : IPluginRegistration
@@ -58,5 +61,8 @@ namespace Omnikeeper.Base.Plugins
         public virtual void RegisterHangfireJobRunners() { }
 
         public virtual IEnumerable<RecursiveTrait> DefinedTraits { get; } = new RecursiveTrait[0];
+
+        public virtual void RegisterGraphqlQueries(ObjectGraphType root) { }
+        public virtual void RegisterGraphqlMutations(ObjectGraphType root) { }
     }
 }

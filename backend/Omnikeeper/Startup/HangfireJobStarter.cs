@@ -35,6 +35,7 @@ namespace Omnikeeper.Startup
             RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(null), config.MarkedForDeletionRunnerInterval);
             RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(null), config.ExternalIDManagerRunnerInterval);
             RecurringJob.AddOrUpdate<ArchiveOldDataRunner>(s => s.Run(null), config.ArchiveOldDataRunnerInterval);
+            RecurringJob.AddOrUpdate<UsageDataWriteRunner>(s => s.Run(null), Cron.Minutely);
 
             // plugin hangfire jobs
             foreach (var plugin in plugins)

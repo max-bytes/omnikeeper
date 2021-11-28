@@ -54,27 +54,14 @@ namespace Tests.Integration.Model
             var cis2 = await traitModel.FilterCIsWithTrait(cis, testTrait2, layerset, trans, timeThreshold);
             Assert.AreEqual(2, cis2.Count());
             cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
-        }
 
-        [Test]
-        public async Task TestTraitWithNameAndValue()
-        {
-            var traitsProvider = new MockedTraitsProvider();
-            var (traitModel, ciModel, layerset, ciids) = await BaseSetup();
+            // test inverted filtering
+            var cis3 = await traitModel.FilterCIsWithoutTrait(cis, testTrait1, layerset, trans, timeThreshold);
+            Assert.AreEqual(0, cis3.Count());
 
-            var timeThreshold = TimeThreshold.BuildLatest();
-
-            var trans = ModelContextBuilder.BuildImmediate();
-
-            var testTrait1 = (await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold))!;
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
-            var et1 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(testTrait1, "a4", new AttributeScalarValueText("text41"), cis, layerset, trans, timeThreshold);
-            Assert.AreEqual(1, et1.Count());
-            Assert.AreEqual(ciids[0], et1.First().Key);
-
-            var et2 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(testTrait1, "a4", new AttributeScalarValueText("text42"), cis, layerset, trans, timeThreshold);
-            Assert.AreEqual(2, et2.Count());
-            et2.Select(e => e.Key).Should().BeEquivalentTo(new Guid[] { ciids[1], ciids[2] }, options => options.WithStrictOrdering());
+            var cis4 = await traitModel.FilterCIsWithoutTrait(cis, testTrait2, layerset, trans, timeThreshold);
+            Assert.AreEqual(1, cis4.Count());
+            cis4.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[1] }, options => options.WithStrictOrdering());
         }
 
         [Test]
@@ -118,7 +105,7 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel);
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var layerModel = new LayerModel();
-            var traitModel = new EffectiveTraitModel(relationModel, NullLogger<EffectiveTraitModel>.Instance);
+            var traitModel = new EffectiveTraitModel(relationModel);
 
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);

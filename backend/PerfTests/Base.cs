@@ -1,4 +1,6 @@
-﻿using BenchmarkDotNet.Running;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using BenchmarkDotNet.Running;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +21,7 @@ using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
 using Omnikeeper.Service;
 using Omnikeeper.Startup;
+using System;
 using Tests.Integration;
 
 namespace PerfTests
@@ -26,7 +29,7 @@ namespace PerfTests
     public class Base
     {
         private NpgsqlConnection? conn;
-        private ServiceProvider? serviceProvider;
+        private AutofacServiceProvider? serviceProvider;
 
         public virtual void Setup(bool enableModelCaching, bool enableEffectiveTraitCaching, bool setupDBSchema)
         {
@@ -39,7 +42,7 @@ namespace PerfTests
             conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
 
             var services = InitServices(enableModelCaching, enableEffectiveTraitCaching);
-            serviceProvider = services.BuildServiceProvider();
+            serviceProvider = new AutofacServiceProvider(services.Build());
         }
 
         public virtual void TearDown()
@@ -50,54 +53,54 @@ namespace PerfTests
                 serviceProvider.Dispose();
         }
 
-        protected virtual IServiceCollection InitServices(bool enableModelCaching, bool enableEffectiveTraitCaching)
+        protected virtual ContainerBuilder InitServices(bool enableModelCaching, bool enableEffectiveTraitCaching)
         {
-            var services = new ServiceCollection();
-            ServiceRegistration.RegisterLogging(services);
-            ServiceRegistration.RegisterDB(services, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
-            ServiceRegistration.RegisterOIABase(services);
-            ServiceRegistration.RegisterModels(services, enableModelCaching, enableEffectiveTraitCaching, false, false);
-            ServiceRegistration.RegisterServices(services);
-            ServiceRegistration.RegisterGraphQL(services);
+            var containerBuilder = new ContainerBuilder();
+            ServiceRegistration.RegisterLogging(containerBuilder);
+            ServiceRegistration.RegisterDB(containerBuilder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
+            ServiceRegistration.RegisterOIABase(containerBuilder);
+            ServiceRegistration.RegisterModels(containerBuilder, enableModelCaching, enableEffectiveTraitCaching, false, false, false);
+            ServiceRegistration.RegisterServices(containerBuilder);
+            ServiceRegistration.RegisterGraphQL(containerBuilder);
 
             if (enableModelCaching)
             {
-                services.AddSingleton<IDistributedCache>((sp) =>
+                containerBuilder.Register<IDistributedCache>((sp) =>
                 {
                     var opts = Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions());
                     return new MemoryDistributedCache(opts);
-                });
+                }).SingleInstance();
             }
             else
             {
-                services.AddSingleton<IDistributedCache>((sp) => new Mock<IDistributedCache>().Object);
+                containerBuilder.Register<IDistributedCache>((sp) => new Mock<IDistributedCache>().Object).SingleInstance();
             }
 
             // TODO: add generic?
-            services.AddSingleton<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance);
-            services.AddSingleton<ILogger<MetaConfigurationModel>>((sp) => NullLogger<MetaConfigurationModel>.Instance);
-            services.AddSingleton<ILogger<OIAContextModel>>((sp) => NullLogger<OIAContextModel>.Instance);
-            services.AddSingleton<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
-            services.AddSingleton<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance);
-            services.AddSingleton<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance);
-            services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
-            services.AddSingleton<ILogger<CISearchModel>>((sp) => NullLogger<CISearchModel>.Instance);
+            containerBuilder.Register<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance).SingleInstance();
+            containerBuilder.Register<ILogger<MetaConfigurationModel>>((sp) => NullLogger<MetaConfigurationModel>.Instance).SingleInstance();
+            containerBuilder.Register<ILogger<OIAContextModel>>((sp) => NullLogger<OIAContextModel>.Instance).SingleInstance();
+            containerBuilder.Register<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance).SingleInstance();
+            containerBuilder.Register<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance).SingleInstance();
+            containerBuilder.Register<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance).SingleInstance();
+            containerBuilder.RegisterType<NullLoggerFactory>().As<ILoggerFactory>().SingleInstance();
+            containerBuilder.Register<ILogger<CISearchModel>>((sp) => NullLogger<CISearchModel>.Instance).SingleInstance();
 
-            services.AddSingleton<IConfiguration>((sp) => new Mock<IConfiguration>().Object);
+            containerBuilder.Register<IConfiguration>((sp) => new Mock<IConfiguration>().Object).SingleInstance();
 
             // override user service
-            var currentUserService = new Mock<ICurrentUserService>();
-            services.AddSingleton<ICurrentUserService>((sp) => currentUserService.Object);
-            services.AddSingleton<ILogger<DataPartitionService>>((sp) => NullLogger<DataPartitionService>.Instance);
+            var currentUserService = new Mock<ICurrentUserAccessor>();
+            containerBuilder.Register<ICurrentUserAccessor>((sp) => currentUserService.Object).SingleInstance();
+            containerBuilder.Register<ILogger<DataPartitionService>>((sp) => NullLogger<DataPartitionService>.Instance).SingleInstance();
 
             // override authorization
-            services.AddSingleton((sp) => new Mock<IManagementAuthorizationService>().Object);
-            services.AddSingleton((sp) => new Mock<ILayerBasedAuthorizationService>().Object);
-            services.AddSingleton((sp) => new Mock<ICIBasedAuthorizationService>().Object);
+            containerBuilder.Register((sp) => new Mock<IManagementAuthorizationService>().Object).SingleInstance();
+            containerBuilder.Register((sp) => new Mock<ILayerBasedAuthorizationService>().Object).SingleInstance();
+            containerBuilder.Register((sp) => new Mock<ICIBasedAuthorizationService>().Object).SingleInstance();
 
-            return services;
+            return containerBuilder;
         }
 
-        protected ServiceProvider ServiceProvider => serviceProvider!;
+        protected IServiceProvider ServiceProvider => serviceProvider!;
     }
 }

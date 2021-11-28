@@ -43,10 +43,12 @@ function CI(props) {
     </TabPane>
   </>)
 
-  return (<div style={{margin: "10px 10px"}}>
-    <h2>CI "{props.ci.name ?? "[UNNAMED]"}" <CIID id={props.ci.id} link={false} /></h2>
-    <Tabs defaultActiveKey={"attributes"} style={{padding: "1rem"}}>{panes}</Tabs>
-  </div>);
+  return (
+    <>
+      <h2>{props.ci.name ?? "[UNNAMED]"} - <CIID id={props.ci.id} link={false} /></h2>
+      <Tabs defaultActiveKey={"attributes"} style={{flex: "1"}}>{panes}</Tabs>
+    </>
+  );
 }
 
 CI.propTypes = {

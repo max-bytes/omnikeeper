@@ -86,9 +86,9 @@ namespace Omnikeeper.Base.Inbound
                 int2ext.Add(ciid, externalID);
                 ext2int.Add(externalID, ciid);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                throw e;
+                throw;
             }
         }
 

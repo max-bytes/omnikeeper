@@ -44,12 +44,6 @@
 //            return await baseModel.GetEffectiveTraitForCI(ci, trait, layers, trans, atTime);
 //        }
 
-//        public async Task<IEnumerable<EffectiveTrait>> GetEffectiveTraitsForCI(IEnumerable<ITrait> traits, MergedCI ci, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-//        {
-//            // cannot cache well
-//            return await baseModel.GetEffectiveTraitsForCI(traits, ci, layers, trans, atTime);
-//        }
-
 //        public async Task<IEnumerable<MergedCI>> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
 //        {
 //            // cannot cache well
@@ -158,12 +152,6 @@
 //                    _ => allCIs.Where(ci => ciidSelection.Contains(ci.ID))
 //                };
 //            }
-//        }
-
-//        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> GetEffectiveTraitsWithTraitAttributeValue(ITrait trait, string traitAttributeIdentifier, IAttributeValue value, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
-//        {
-//            // cannot cache well
-//            return await baseModel.GetEffectiveTraitsWithTraitAttributeValue(trait, traitAttributeIdentifier, value, cis, layerSet, trans, atTime);
 //        }
 //    }
 //}

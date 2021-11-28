@@ -18,6 +18,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Tasks.DBInit
 {
@@ -40,7 +41,7 @@ namespace Tasks.DBInit
             var baseRelationModel = new BaseRelationModel(partitionModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
-            var effectiveTraitModel = new EffectiveTraitModel(relationModel, NullLogger<EffectiveTraitModel>.Instance);
+            var effectiveTraitModel = new EffectiveTraitModel(relationModel);
             var predicateModel = new GenericTraitEntityModel<Predicate, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
@@ -55,7 +56,7 @@ namespace Tasks.DBInit
 
             var mc = modelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, mc, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
-            var authenticatedUser = new AuthenticatedUser(user, new HashSet<string>() { });
+            var authenticatedUser = new AuthenticatedUser(user, new AuthRole[0]);
 
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
 

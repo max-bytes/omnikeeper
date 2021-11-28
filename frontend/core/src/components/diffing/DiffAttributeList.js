@@ -14,7 +14,7 @@ const { Panel } = Collapse;
 function DiffAttributeList(props) {
 
   // TODO: does not work with nested groups yet
-  const nestedAttributes = _.groupBy(_.map(props.attributes, (leftRight, name) => ({leftRight, name})), (t) => {
+  const nestedAttributes = _.groupBy(props.attributes, (t) => {
     const splits = t.name.split('.');
     if (splits.length <= 1) return "__base";
     else return splits.slice(0, -1).join(".");
@@ -40,7 +40,7 @@ function DiffAttributeList(props) {
         <Panel header={title} key={key}>
           <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
             {sortedAttributes.map((a, index) => {
-                const state = a.leftRight.compareResult.state;
+                const state = a.status;
                 return (<Flipped key={a.name} flipId={a.name} onAppear={onAppear} onExit={onExit}>
                 <div style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}}>
                 
@@ -53,8 +53,8 @@ function DiffAttributeList(props) {
                     </Col>
                     
                     <Col xs={14} lg={9}>
-                      {a.leftRight.left && <Attribute controlIdSuffix={'left'} attribute={a.leftRight.left.attribute} layerStack={a.leftRight.left.layerStack} hideNameLabel={true} isEditable={false} />}
-                      {!a.leftRight.left && <MissingLabel /> }
+                      {a.left && <Attribute controlIdSuffix={'left'} attribute={a.left.attribute} layerStack={a.left.layerStack} hideNameLabel={true} isEditable={false} />}
+                      {!a.left && <MissingLabel /> }
                     </Col>
                     
                     <Col xs={10} lg={1}>
@@ -62,8 +62,8 @@ function DiffAttributeList(props) {
                     </Col>
 
                     <Col xs={14} lg={9}>
-                      {a.leftRight.right && <Attribute controlIdSuffix={'right'} attribute={a.leftRight.right.attribute} layerStack={a.leftRight.right.layerStack} hideNameLabel={true} isEditable={false} />}
-                      {!a.leftRight.right && <MissingLabel /> }
+                      {a.right && <Attribute controlIdSuffix={'right'} attribute={a.right.attribute} layerStack={a.right.layerStack} hideNameLabel={true} isEditable={false} />}
+                      {!a.right && <MissingLabel /> }
                     </Col>      
                   </Row >
                 </div>

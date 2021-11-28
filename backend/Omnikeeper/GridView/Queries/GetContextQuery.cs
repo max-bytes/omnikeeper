@@ -10,6 +10,7 @@ using Omnikeeper.GridView.Response;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.GridView.Queries
 {
@@ -30,11 +31,11 @@ namespace Omnikeeper.GridView.Queries
             private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IMetaConfigurationModel metaConfigurationModel;
-            private readonly ICurrentUserService currentUserService;
+            private readonly ICurrentUserAccessor currentUserService;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
             public GetContextQueryHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IModelContextBuilder modelContextBuilder,
-                IMetaConfigurationModel metaConfigurationModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService)
+                IMetaConfigurationModel metaConfigurationModel, ICurrentUserAccessor currentUserService, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.modelContextBuilder = modelContextBuilder;

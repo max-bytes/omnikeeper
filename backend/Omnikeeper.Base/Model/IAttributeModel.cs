@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model
 {
-    public interface IAttributeModel : IBaseAttributeModel
+    public interface IAttributeModel : IBaseAttributeMutationModel
     {
         Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, IAttributeSelection attributeSelection, LayerSet layers, IModelContext trans, TimeThreshold atTime);
 

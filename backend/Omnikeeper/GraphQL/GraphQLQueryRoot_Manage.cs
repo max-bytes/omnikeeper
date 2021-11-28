@@ -1,5 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.Types;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
@@ -34,11 +35,12 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
 
                     CheckManagementPermissionThrow(userContext);
 
-                    var layers = await layerModel.GetLayers(userContext.Transaction);
+                    var layers = await layerModel.GetLayers(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
 
                     return layers;
                 });
@@ -49,11 +51,12 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
 
                     var layerID = context.GetArgument<string>("layerID")!;
 
-                    var layer = await layerModel.GetLayer(layerID, userContext.Transaction);
+                    var layer = await layerModel.GetLayer(layerID, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
                     if (layer == null)
                         throw new Exception($"Could not get layer with ID {layerID}");
 
@@ -105,13 +108,13 @@ namespace Omnikeeper.GraphQL
                 {
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(() => TimeThreshold.BuildLatest());
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
 
                     CheckManagementPermissionThrow(userContext);
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
 
-                    var cfg = await baseConfigurationModel.GetConfigOrDefault(metaConfiguration.ConfigLayerset, userContext.TimeThreshold, userContext.Transaction);
+                    var cfg = await baseConfigurationModel.GetConfigOrDefault(metaConfiguration.ConfigLayerset, userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                     return BaseConfigurationV2.Serializer.SerializeToString(cfg);
                 });
 
@@ -121,12 +124,12 @@ namespace Omnikeeper.GraphQL
                 {
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(() => TimeThreshold.BuildLatest());
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read predicates");
 
-                    var predicates = await predicateModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold);
+                    var predicates = await predicateModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
 
                     return predicates;
                 });
@@ -136,7 +139,7 @@ namespace Omnikeeper.GraphQL
                 {
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(() => TimeThreshold.BuildLatest());
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read traits");
@@ -152,7 +155,7 @@ namespace Omnikeeper.GraphQL
                 {
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(() => TimeThreshold.BuildLatest());
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read generators");
@@ -166,7 +169,7 @@ namespace Omnikeeper.GraphQL
                 {
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(() => TimeThreshold.BuildLatest());
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read auth roles");
@@ -180,7 +183,7 @@ namespace Omnikeeper.GraphQL
                 {
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(() => TimeThreshold.BuildLatest());
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read CL configs");
@@ -213,13 +216,14 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<StringGraphType>>("manage_debugCurrentUser",
                 resolve: async context =>
                 {
-                    var currentUserService = context.RequestServices!.GetRequiredService<ICurrentUserService>();
-                    var claims = currentUserService.DebugGetAllClaims();
+                    var httpContextAccessor = context.RequestServices!.GetRequiredService<IHttpContextAccessor>();
+                    var currentAuthenticatedUserService = context.RequestServices!.GetRequiredService<ICurrentUserAccessor>();
+                    var claims = httpContextAccessor.HttpContext.User.Claims.Select(c => (c.Type, c.Value));
 
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
-                    var user = await currentUserService.GetCurrentUser(modelContextBuilder.BuildImmediate());
-                    return claims.Select(kv => $"{kv.type}: {kv.value}")
-                        .Concat($"Permissions: {string.Join(", ", user.Permissions)}")
+                    var user = await currentAuthenticatedUserService.GetCurrentUser(modelContextBuilder.BuildImmediate());
+                    return claims.Select(kv => $"{kv.Type}: {kv.Value}")
+                        .Concat($"Permissions: {string.Join(", ", user.AuthRoles.SelectMany(ar => ar.Permissions).ToHashSet())}")
                         .Concat($"User-Type: {user.InDatabase.UserType}")
                     ;
                 });

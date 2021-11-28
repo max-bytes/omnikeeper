@@ -2,13 +2,15 @@ import React, {useState, useEffect} from 'react';
 import { DiffCISettings, DiffLayerSettings, DiffTimeSettings } from './DiffSettings';
 import { DiffArea } from './DiffArea';
 import { queries } from 'graphql/queries'
+import { Fragments } from 'graphql/fragments';
 import { useLocation } from 'react-router-dom'
 import { Card, Divider } from "antd";
 import { useQuery, useLazyQuery } from '@apollo/client';
 import { Form, Row, Col, Button, Checkbox } from "antd";
 import LoadingOverlay from 'react-loading-overlay'; // TODO: switch to antd spin
 import queryString from 'query-string';
-import { withRouter } from 'react-router-dom'
+import { withRouter } from 'react-router-dom';
+import gql from 'graphql-tag';
 import _ from 'lodash';
 
 function LeftLabel(props) {
@@ -96,17 +98,114 @@ function Diffing(props) {
   var [ rightTimeSettings, setRightTimeSettings ] = useState(urlParams.rightTimeSettings);
   
   var [ showEqual, setShowEqual ] = useState(true);
+  var [ allowCrossCIDiffing, setAllowCrossCIDiffing ] = useState(true);
 
   // reset timesettings when ci changes TODO: this breaks url-based setting -> how to make this work?
   // useEffect(() => setLeftTimeSettings(null), [leftCIID]);
   // useEffect(() => setRightTimeSettings(null), [rightCIID]);
 
-  const [loadLeftCI, { data: dataLeftCI, loading: loadingLeftCI }] = useLazyQuery(queries.FullCIs, {
-    variables: {}
-  });
-  const [loadRightCI, { data: dataRightCI, loading: loadingRightCI }] = useLazyQuery(queries.FullCIs, {
-    variables: {}
-  });
+  const buildRelationComparisonGQLString = (outgoing) => {
+    return `
+    relationComparisons {
+      predicateID
+      ${(outgoing) ? "toCIID" : "fromCIID"}
+      left {
+        relation {
+          id
+          fromCIID
+          toCIID
+          ${(outgoing) ? "toCIName" : "fromCIName"}
+          predicateID
+          changesetID
+        }
+        layerStackIDs
+        layerID
+        layerStack {
+            id
+            description
+            color
+        }
+      }
+      right {
+        relation {
+          id
+          fromCIID
+          toCIID
+          ${(outgoing) ? "toCIName" : "fromCIName"}
+          predicateID
+          changesetID
+        }
+        layerStackIDs
+        layerID
+        layerStack {
+            id
+            description
+            color
+        }
+      }
+      status
+    }
+    `
+  }
+
+  const [loadDiffResults, {data: dataDiffResults, loading: loadingDiffResults }] = useLazyQuery(gql`
+    query($leftCIIDs: [Guid], $rightCIIDs: [Guid], 
+      $leftLayers: [String]!, $rightLayers: [String]!, 
+      $leftTimeThreshold: DateTimeOffset, $rightTimeThreshold: DateTimeOffset,
+      $leftAttributes: [String], $rightAttributes: [String],
+      $showEqual: Boolean!, $allowCrossCIDiffing: Boolean!) {
+      ciDiffing(leftLayers: $leftLayers, rightLayers: $rightLayers, 
+        leftAttributes: $leftAttributes, rightAttributes: $rightAttributes,
+        leftCIIDs: $leftCIIDs, rightCIIDs: $rightCIIDs,
+        leftTimeThreshold: $leftTimeThreshold, rightTimeThreshold: $rightTimeThreshold,
+        showEqual: $showEqual, allowCrossCIDiffing: $allowCrossCIDiffing) {
+        cis {
+          leftCIID
+          leftCIName
+          rightCIID
+          rightCIName
+          attributeComparisons {
+            name
+            left {
+              ...FullMergedAttribute
+            }
+            right{
+              ...FullMergedAttribute
+            }
+            status
+          }
+        }
+        outgoingRelations {
+          leftCIID
+          leftCIName
+          rightCIID
+          rightCIName
+          ${buildRelationComparisonGQLString(true)}
+        }
+        incomingRelations {
+          leftCIID
+          leftCIName
+          rightCIID
+          rightCIName
+          ${buildRelationComparisonGQLString(false)}
+        }
+        effectiveTraits {
+          leftCIID
+          leftCIName
+          rightCIID
+          rightCIName
+          effectiveTraitComparisons {
+            traitID
+            leftHasTrait
+            rightHasTrait
+            status
+          }
+        }
+      }
+    }
+  ${Fragments.mergedAttribute}
+  ${Fragments.attribute}
+  `);
 
   useEffect(() => {
     const search = stringifyURLQuery(leftLayerSettings, rightLayerSettings, leftCIIDs, rightCIIDs, leftTimeSettings, rightTimeSettings);
@@ -117,10 +216,13 @@ function Diffing(props) {
   const visibleRightLayerIDs = rightLayers.filter(l => l.visible).map(l => l.id);
 
   function compare() {
-    // if (leftCIIDs)
-      loadLeftCI({ variables: {layers: visibleLeftLayerIDs, timeThreshold: leftTimeSettings?.timeThreshold, ciids: leftCIIDs}});
-    // if (rightCIIDs)
-      loadRightCI({ variables: {layers: visibleRightLayerIDs, timeThreshold: rightTimeSettings?.timeThreshold, ciids: rightCIIDs}});
+      loadDiffResults({ 
+        variables: {
+          leftLayers: visibleLeftLayerIDs, leftTimeThreshold: leftTimeSettings?.timeThreshold, leftCIIDs: leftCIIDs,
+          rightLayers: visibleRightLayerIDs, rightTimeThreshold: rightTimeSettings?.timeThreshold, rightCIIDs: rightCIIDs,
+          showEqual: showEqual, allowCrossCIDiffing: allowCrossCIDiffing
+        }
+      })
   }
 
   if (layerData) {
@@ -169,21 +271,22 @@ function Diffing(props) {
           <Divider />
           <Row>
           <Col span={24}>
-            <div style={{display: 'flex', justifyContent: 'center'}}>
-              <Form initialValues={{ checkboxShowEqual: true }}>
-                <Form.Item name="checkboxShowEqual" valuePropName="checked" style={{ display: "inline-block", verticalAlign: "baseline", marginBottom: 0 }}>
-                  <Checkbox checked={showEqual} onChange={d => setShowEqual(d.target.checked)}>Show Equal</Checkbox>
-                </Form.Item>
-                <Button style={{ display: "inline-block", marginLeft: "8px" }} type="primary" size="large" onClick={() => compare()} disabled={(leftCIIDs && leftCIIDs.length === 0) || (rightCIIDs && rightCIIDs.length === 0)}>Compare</Button>
-              </Form>
-            </div>
+            <Form initialValues={{ checkboxShowEqual: true, checkboxAllowCrossCIDiffing: true }} style={{display: 'flex', justifyContent: 'center'}}>
+              <Form.Item name="checkboxShowEqual" valuePropName="checked" style={{ display: "inline-block", verticalAlign: "baseline", marginBottom: 0 }}>
+                <Checkbox checked={showEqual} onChange={d => setShowEqual(d.target.checked)}>Show Equal</Checkbox>
+              </Form.Item>
+              <Form.Item name="checkboxAllowCrossCIDiffing" valuePropName="checked" style={{ display: "inline-block", verticalAlign: "baseline", marginBottom: 0 }}>
+                <Checkbox checked={allowCrossCIDiffing} onChange={d => setAllowCrossCIDiffing(d.target.checked)}>Allow Cross-CI Diffing (if applicable)</Checkbox>
+              </Form.Item>
+              <Button style={{ display: "inline-block", marginLeft: "8px" }} type="primary" size="large" onClick={() => compare()} disabled={(leftCIIDs && leftCIIDs.length === 0) || (rightCIIDs && rightCIIDs.length === 0)}>Compare</Button>
+            </Form>
           </Col>
         </Row>
         </Card>
         <Row>
           <Col span={24}>
-            <LoadingOverlay fadeSpeed={100} active={loadingLeftCI || loadingRightCI} spinner>
-              <DiffArea showEqual={showEqual} leftCIs={dataLeftCI?.cis} rightCIs={dataRightCI?.cis} />
+            <LoadingOverlay fadeSpeed={100} active={loadingDiffResults} spinner>
+              <DiffArea diffResults={dataDiffResults?.ciDiffing} />
             </LoadingOverlay>
           </Col>
         </Row>

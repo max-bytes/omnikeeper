@@ -34,6 +34,10 @@ export const AttributeTypes = [
         name: 'YAML'
     },
     {
+        id: 'MASK',
+        name: 'Mask'
+    },
+    {
         id: 'IMAGE',
         name: 'Image'
     }
@@ -106,6 +110,10 @@ export function InputControl(props) {
                 />
             </Form.Item>
         );
+    } else if (props.type === 'MASK') {
+        return <Form.Item style={{ marginBottom: 0 }} labelCol={props.hideNameLabel ? {} : { span: "4" }} name={props.name} label={props.hideNameLabel ? "" : props.name}>
+            [MASK]
+        </Form.Item>
     } else {
         // simple type, simple handling
         return (

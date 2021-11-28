@@ -11,6 +11,7 @@ using Omnikeeper.GridView.Request;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.GridView.Commands
 {
@@ -42,12 +43,12 @@ namespace Omnikeeper.GridView.Commands
         {
             private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
-            private readonly ICurrentUserService currentUserService;
+            private readonly ICurrentUserAccessor currentUserService;
             private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly IChangesetModel changesetModel;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
-            public AddContextHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IModelContextBuilder modelContextBuilder, ICurrentUserService currentUserService,
+            public AddContextHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IModelContextBuilder modelContextBuilder, ICurrentUserAccessor currentUserService,
                 IMetaConfigurationModel metaConfigurationModel, IChangesetModel changesetModel, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.gridViewContextModel = gridViewContextModel;

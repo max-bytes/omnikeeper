@@ -25,11 +25,6 @@ namespace Omnikeeper.Model
             this.ciidModel = ciidModel;
         }
 
-        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await _GetAttribute(name, ciid, layerID, trans, atTime, true);
-        }
-
         private async Task<CIAttribute?> _GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary)
         {
             NpgsqlCommand command;
@@ -245,8 +240,14 @@ namespace Omnikeeper.Model
             }
         }
 
+
+        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            return await _GetAttribute(name, ciid, layerID, trans, atTime, true);
+        }
+
         // NOTE: returns a full array (one item for each layer), even when layer contains no attributes
-        // NOTE: returns only entries for CIs and attributes where there actually are any attributes, disregarding if the selections specify them
+        // NOTE: returns only entries for CIs and attributes where there actually are any attributes, so it can contain less items than the CI selection specifies
         public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
             selection = await OptimizeCIIDSelection(selection, trans);

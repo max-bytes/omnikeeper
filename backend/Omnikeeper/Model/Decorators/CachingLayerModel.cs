@@ -26,7 +26,7 @@ namespace Omnikeeper.Model.Decorators
 
         public async Task<LayerSet> BuildLayerSet(string[] ids, IModelContext trans)
         {
-            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
+            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans, TimeThreshold.BuildLatest())).ToDictionary(l => l.ID));
 
             var selectedLayerIDs = ids.Select(id =>
             {
@@ -39,9 +39,9 @@ namespace Omnikeeper.Model.Decorators
             return new LayerSet(selectedLayerIDs);
         }
 
-        public async Task<Layer?> GetLayer(string layerID, IModelContext trans)
+        public async Task<Layer?> GetLayer(string layerID, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
+            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans, timeThreshold)).ToDictionary(l => l.ID));
 
             if (allLayers.TryGetValue(layerID, out var l))
                 return l;
@@ -49,9 +49,9 @@ namespace Omnikeeper.Model.Decorators
                 return null;
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(IEnumerable<string> layerIDs, IModelContext trans)
+        public async Task<IEnumerable<Layer>> GetLayers(IEnumerable<string> layerIDs, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
+            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans, timeThreshold)).ToDictionary(l => l.ID));
 
             var selectedLayers = layerIDs.Select(id =>
             {
@@ -64,16 +64,16 @@ namespace Omnikeeper.Model.Decorators
             return selectedLayers;
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans)
+        public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans, TimeThreshold timeThreshold)
         {
-            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
+            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans, timeThreshold)).ToDictionary(l => l.ID));
 
             return allLayers.Values;
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, IModelContext trans)
+        public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
+            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans, timeThreshold)).ToDictionary(l => l.ID));
 
             var selectedLayers = allLayers.Values.Where(layer =>
             {
