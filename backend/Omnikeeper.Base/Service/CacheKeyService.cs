@@ -6,7 +6,7 @@ namespace Omnikeeper.Base.Service
 {
     public static class CacheKeyService
     {
-        public static string MetaConfiguration() => $"metaConfiguration";
+        //public static string MetaConfiguration() => $"metaConfiguration";
 
         public static string BaseConfiguration() => $"baseConfiguration";
 
@@ -22,7 +22,7 @@ namespace Omnikeeper.Base.Service
 
         public static string Traits() => $"traits";
 
-        public static string AllLayersByID() => $"layers_all_byid";
+        //public static string AllLayersByID() => $"layers_all_byid";
 
         public static string CINames(string layerID) => $"cinames_{layerID}";
     }

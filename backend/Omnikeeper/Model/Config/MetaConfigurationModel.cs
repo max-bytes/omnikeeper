@@ -45,18 +45,6 @@ namespace Omnikeeper.Model
             );
         }
 
-        public async Task<bool> IsLayerPartOfMetaConfiguration(string layerID, IModelContext trans)
-        {
-            var metaConfiguration = await GetConfigOrDefault(trans);
-
-            if (metaConfiguration.ConfigWriteLayer == layerID)
-                return true;
-            foreach (var l in metaConfiguration.ConfigLayerset)
-                if (l == layerID)
-                    return true;
-            return false;
-        }
-
         public async Task<MetaConfiguration> SetConfig(MetaConfiguration config, IModelContext trans)
         {
             var configJO = MetaConfiguration.Serializer.SerializeToJObject(config);
@@ -67,6 +55,21 @@ namespace Omnikeeper.Model
             await command.ExecuteScalarAsync();
 
             return config;
+        }
+    }
+
+    public static class MetaConfiurationModelExtensions
+    {
+        public static async Task<bool> IsLayerPartOfMetaConfiguration(this IMetaConfigurationModel model, string layerID, IModelContext trans)
+        {
+            var metaConfiguration = await model.GetConfigOrDefault(trans);
+
+            if (metaConfiguration.ConfigWriteLayer == layerID)
+                return true;
+            foreach (var l in metaConfiguration.ConfigLayerset)
+                if (l == layerID)
+                    return true;
+            return false;
         }
     }
 }

@@ -301,11 +301,9 @@ namespace Omnikeeper.Startup
             var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
             ServiceRegistration.RegisterDB(builder, cs, false);
 
-            var enableModelCaching = false; // TODO: model caching seems to have a grave bug that keeps old attributes in the cache, so we disable caching (for now)
-            // TODO: think about per-request caching... which would at least fix issues when f.e. calling LayerModel.GetLayer(someLayerID) lots of times during a single request
-            // TODO: also think about graphql DataLoaders
+            var enablePerRequestModelCaching = true;
             var enabledEffectiveTraitCaching = true;
-            ServiceRegistration.RegisterModels(builder, enableModelCaching, enabledEffectiveTraitCaching, true, true, true);
+            ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching, enabledEffectiveTraitCaching, true, true, true);
 
             ServiceRegistration.RegisterGraphQL(builder);
             ServiceRegistration.RegisterOIABase(builder);
