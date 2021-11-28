@@ -226,7 +226,6 @@ namespace Omnikeeper.Startup
             // these aren't real models, but we keep them here because they are closely related to models
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();
             builder.RegisterType<EffectiveGeneratorProvider>().As<IEffectiveGeneratorProvider>().SingleInstance();
-            builder.RegisterType<ProtoBufDataSerializer>().As<IDataSerializer>().SingleInstance();
 
             if (enablePerRequestModelCaching)
             {

@@ -63,7 +63,7 @@ namespace Tests.Ingest
             var userModel = new UserInDatabaseModel();
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
-            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
+            var modelContextBuilder = new ModelContextBuilder(conn, NullLogger<IModelContext>.Instance);
             var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService(), modelContextBuilder, NullLogger<IngestDataService>.Instance);
 
             var mc = modelContextBuilder.BuildImmediate();
