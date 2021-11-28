@@ -28,9 +28,18 @@ namespace OKPluginVariableRendering
             this.layerModel = layerModel;
             this.attributeModel = attributeModel;
         }
+
+        const int moduleGroupPrio = 10;
+        const int customersGroupPrio = 100;
+        const int networkSegmentGroupPrio = 1000;
+        const int networkInterfaceGroupPrio = 2000;
+        const int assignmentGroupDefaultPrio = 10000;
+        const int ciPrio = 100000;
+         
+
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
-            logger.LogDebug("Start VariableRendering");
+             logger.LogDebug("Start VariableRendering");
 
             //return false;
 
@@ -57,7 +66,6 @@ namespace OKPluginVariableRendering
                 var allCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetVariableRendering, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
 
                 var mainCIs = allCIs.Where(ci => ci.MergedAttributes.ContainsKey(cfg.BaseCI.RequiredTrait)).ToList();
-                //var mainCIs = allCIs.Where(ci => ci.ID == new Guid("c2f7e21f-128a-4adc-8c63-b9bcd804026e")).ToList();
 
                 // select only the realtions that are defined in configuration
                 var relations = new List<string>();
@@ -109,17 +117,28 @@ namespace OKPluginVariableRendering
                                 break;
                             }
 
-                            var targetCI = allCIs.Where(ci => ci.ID == r.ToCIID).FirstOrDefault();
+                            var targetCI = allCIs.Where(ci => 
+                            {
+                                if (follow.Predicate[0] == '>')
+                                {
+                                    return r.ToCIID == ci.ID;
+                                }
+                                else
+                                {
+                                    return r.FromCIID == ci.ID;
+                                }
+                            }
+                            ).FirstOrDefault();
 
                             prevCI = targetCI;
 
                             var targetCIAttributes = targetCI.MergedAttributes.Where(a => IsAttributeAllowed(a.Value.Attribute.Name, follow.InputWhitelist, follow.InputBlacklist)).ToList();
 
                             // NOTE check realtion required trait
-                            if (targetCIAttributes.Where(a => a.Key == follow.RequiredTrait).ToList().Count == 0)
-                            {
-                                continue;
-                            }
+                            //if (targetCIAttributes.Where(a => a.Key == follow.RequiredTrait).ToList().Count == 0)
+                            //{
+                            //    continue;
+                            //}
 
                             var allCIAttributes = targetCIAttributes.Select(a => new GatheredAttribute { SourceCIID = targetCI.ID, Name = a.Key, RequiredTrait = follow.RequiredTrait, Value = a.Value.Attribute.Value.ToString() }).ToList();
 
@@ -132,20 +151,43 @@ namespace OKPluginVariableRendering
                                 {
                                     if (IsAttributeIncludedInSource(attribute.Name, mapping.Source))
                                     {
+                                        var prio = 0;
+
+                                        switch (predicate[1..])
+                                        {
+                                            case "belongs_to_customer":  prio = customersGroupPrio;
+                                                break;
+                                            case "has_network_interface": prio = networkInterfaceGroupPrio;
+                                                break;
+                                            case "is_attached_to": prio = networkSegmentGroupPrio;
+                                                break;
+                                            case "is_assigned_to": prio = moduleGroupPrio;
+                                                break;
+                                            case "belongs_to_assignment_group": prio = assignmentGroupDefaultPrio;
+                                                break;
+                                            default:
+                                                break;
+                                        }
+
                                         var a = new GatheredAttribute
                                         {
                                             SourceCIID = targetCI.ID,
                                             Name = GetTargetName(attribute.Name, mapping.Target),
                                             Value = attribute.Value,
                                             RequiredTrait = follow.RequiredTrait,
+                                            Priority = prio,
                                         };
 
                                         var i = tmpCIAttributes.FindIndex(e => e.Name == attribute.Name);
 
                                         if (i != -1)
                                         {
-                                            tmpCIAttributes.RemoveAt(i);
-                                            tmpCIAttributes.Add(a);
+                                            // check if current attribute has higher priority
+                                            if (tmpCIAttributes[i].Priority < a.Priority)
+                                            {
+                                                tmpCIAttributes.RemoveAt(i);
+                                                tmpCIAttributes.Add(a);
+                                            }
                                         } else
                                         {
                                             tmpCIAttributes.Add(a);
@@ -179,6 +221,14 @@ namespace OKPluginVariableRendering
 
                             if (!IsAttributeIncludedInSource(attribute.Name, mapping.Source))
                             {
+                                continue;
+                            }
+
+                            // check if attribute exists in base ci
+
+                            if (mainCI.MergedAttributes.ContainsKey(attribute.Name) && ciPrio < attribute.Priority)
+                            {
+                                // don't change this attribute since 
                                 continue;
                             }
 
@@ -263,18 +313,13 @@ namespace OKPluginVariableRendering
         internal class GatheredAttribute
         {
             public Guid SourceCIID { get; set; }
-            //public string OriginalName { get; set; }
             public string RequiredTrait { get; set; }
-            // TODO depricate this
-            //public string NewName { get; set; }
-
             public string Name { get; set; }
             public string Value { get; set; }
 
+            public int Priority { get; set; }
             public GatheredAttribute()
             {
-                //OriginalName = "";
-                //NewName = "";
                 Name = "";
                 Value = "";
                 RequiredTrait = "";
