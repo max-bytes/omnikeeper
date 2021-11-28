@@ -29,8 +29,8 @@ namespace Omnikeeper.Runners
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.clConfigModel = clConfigModel;
             this.metaConfigurationModel = metaConfigurationModel;
-            this.lifetimeScope = parentLifetimeScope;
             this.changesetModel = changesetModel;
+            this.lifetimeScope = parentLifetimeScope;
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
             this.layerModel = layerModel;
             this.logger = logger;
@@ -81,15 +81,15 @@ namespace Omnikeeper.Runners
                             {
                                 scopedLifetimeAccessor.SetLifetimeScope(scope);
 
-                                using var transUpsertUser = modelContextBuilder.BuildDeferred();
-                                var currentUserService = scope.Resolve<ICurrentUserService>();
-                                var user = await currentUserService.GetCurrentUser(transUpsertUser);
-                                transUpsertUser.Commit();
-
-                                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-
                                 try
                                 {
+                                    using var transUpsertUser = modelContextBuilder.BuildDeferred();
+                                    var currentUserService = scope.Resolve<ICurrentUserService>();
+                                    var user = await currentUserService.GetCurrentUser(transUpsertUser);
+                                    transUpsertUser.Commit();
+
+                                    var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
                                     logger.LogInformation($"Running CLB {clb.Name} on layer {l.ID}");
                                     Stopwatch stopWatch = new Stopwatch();
                                     stopWatch.Start();
