@@ -27,7 +27,8 @@ namespace OKPluginCLBMonitoring
         private readonly ILayerModel layerModel;
         private readonly IEffectiveTraitModel traitModel;
 
-        public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel attributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel)
+        public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel attributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
+            ILatestLayerChangeModel latestLayerChangeModel) : base(latestLayerChangeModel)
         {
             this.ciModel = ciModel;
             this.attributeModel = attributeModel;

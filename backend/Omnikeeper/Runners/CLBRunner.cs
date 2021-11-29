@@ -72,35 +72,45 @@ namespace Omnikeeper.Runners
                         }
                         else
                         {
-                            // create a lifetime scope per clb invocation (similar to a HTTP request lifetime)
-                            await using (var scope = lifetimeScope.BeginLifetimeScope(builder =>
+                            if (await clb.CanSkipRun(clConfig.CLBrainConfig, logger, modelContextBuilder))
                             {
-                                builder.Register(builder => new CLBContext(clb)).InstancePerLifetimeScope();
-                                builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
-                            }))
+                                logger.LogInformation($"Skipping run of CLB {clb.Name} on layer {l.ID}");
+                            }
+                            else
                             {
-                                scopedLifetimeAccessor.SetLifetimeScope(scope);
-
-                                try
+                                // create a lifetime scope per clb invocation (similar to a HTTP request lifetime)
+                                await using (var scope = lifetimeScope.BeginLifetimeScope(builder =>
                                 {
-                                    using var transUpsertUser = modelContextBuilder.BuildDeferred();
-                                    var currentUserService = scope.Resolve<ICurrentUserService>();
-                                    var user = await currentUserService.GetCurrentUser(transUpsertUser);
-                                    transUpsertUser.Commit();
-
-                                    var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-
-                                    logger.LogInformation($"Running CLB {clb.Name} on layer {l.ID}");
-                                    Stopwatch stopWatch = new Stopwatch();
-                                    stopWatch.Start();
-                                    await clb.Run(l, clConfig.CLBrainConfig, changesetProxy, modelContextBuilder, logger);
-                                    stopWatch.Stop();
-                                    TimeSpan ts = stopWatch.Elapsed;
-                                    string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                                    logger.LogInformation($"Done in {elapsedTime}");
-                                } finally
+                                    builder.Register(builder => new CLBContext(clb)).InstancePerLifetimeScope();
+                                    builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
+                                }))
                                 {
-                                    scopedLifetimeAccessor.ResetLifetimeScope();
+                                    scopedLifetimeAccessor.SetLifetimeScope(scope);
+
+                                    try
+                                    {
+                                        using var transUpsertUser = modelContextBuilder.BuildDeferred();
+                                        var currentUserService = scope.Resolve<ICurrentUserService>();
+                                        var user = await currentUserService.GetCurrentUser(transUpsertUser);
+                                        transUpsertUser.Commit();
+
+                                        var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                                        logger.LogInformation($"Running CLB {clb.Name} on layer {l.ID}");
+                                        Stopwatch stopWatch = new Stopwatch();
+                                        stopWatch.Start();
+                                        await clb.Run(l, clConfig.CLBrainConfig, changesetProxy, modelContextBuilder, logger);
+                                        stopWatch.Stop();
+                                        TimeSpan ts = stopWatch.Elapsed;
+                                        string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                                        logger.LogInformation($"Done in {elapsedTime}");
+
+                                        clb.SetLastRun(changesetProxy.TimeThreshold.Time);
+                                    }
+                                    finally
+                                    {
+                                        scopedLifetimeAccessor.ResetLifetimeScope();
+                                    }
                                 }
                             }
                         }
