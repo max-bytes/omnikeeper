@@ -58,6 +58,7 @@ namespace Omnikeeper.GraphQL
             Field("numActiveRelations", x => x.NumActiveRelations);
             Field("numRelationChangesHistory", x => x.NumRelationChangesHistory);
             Field("numLayerChangesetsHistory", x => x.NumLayerChangesetsHistory);
+            Field("latestChange", x => x.LatestChange, type: typeof(DateTimeOffsetGraphType));
             Field("layer", x => x.Layer, type: typeof(LayerType));
         }
     }

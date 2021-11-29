@@ -1,29 +1,26 @@
 ﻿using Autofac;
-using Autofac.Core.Lifetime;
 using Autofac.Extensions.DependencyInjection;
-using Autofac.Extras.DynamicProxy;
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Types;
-using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
-using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.GraphQL;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
+using Omnikeeper.Model.Decorators.CachingLatestLayerChange;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using Omnikeeper.Utils.Decorators;
@@ -34,7 +31,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Startup
 {
@@ -211,6 +207,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<GenericTraitEntityModel<Predicate, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<RecursiveTrait, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<GridViewContext, string>>().SingleInstance(); // TODO: ok this way?
+            builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
 
             if (enableUsageTracking)
             {
@@ -245,6 +242,15 @@ namespace Omnikeeper.Startup
                 //services.Decorate<IBaseRelationRevisionistModel, TraitCacheInvalidationBaseRelationRevisionistModel>();
                 //services.AddSingleton<EffectiveTraitCache>(); // TODO: create interface
             }
+
+            // latest layer change caching
+            builder.RegisterType<LatestLayerChangeCache>().SingleInstance();
+            builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
+            builder.RegisterDecorator<CachingLatestLayerChangeModel, ILatestLayerChangeModel>();
+            builder.RegisterDecorator<CachingLatestLayerChangeAttributeModel, IBaseAttributeModel>();
+            builder.RegisterDecorator<CachingLatestLayerChangeRelationModel, IBaseRelationModel>();
+            builder.RegisterDecorator<CachingLatestLayerChangeLayerModel, ILayerModel>();
+            
 
             if (enableOIA)
             {

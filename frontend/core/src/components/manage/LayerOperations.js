@@ -10,6 +10,7 @@ import useSwaggerClient from 'utils/useSwaggerClient';
 import download from 'downloadjs';
 import { UploadOutlined } from '@ant-design/icons';
 import MultiCISelect from 'components/MultiCISelect';
+import { formatTimestamp } from 'utils/datetime.js';
 const { Text } = Typography;
 
 export default function LayerOperations(props) {
@@ -91,6 +92,9 @@ export default function LayerOperations(props) {
         </Col>
         <Col span={4}>
           <Statistic title="Layer Changesets" value={data.manage_layerStatistics.numLayerChangesetsHistory} />
+        </Col>
+        <Col span={4}>
+          <Statistic title="Latest Change" value={data.manage_layerStatistics.latestChange} formatter={(value) => (value) ? formatTimestamp(value) : "Unknown" } />
         </Col>
       </Row>
       <Text italic>Note: showing statistics for stored data only, not showing data from online inbound adapters or generators</Text>
