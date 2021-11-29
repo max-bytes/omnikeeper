@@ -39,6 +39,7 @@ namespace Omnikeeper.GraphQL
         private readonly GenericTraitEntityModel<CLConfigV1, string> clConfigModel;
         private readonly GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
+        private readonly ILatestLayerChangeModel latestLayerChangeModel;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
@@ -48,7 +49,7 @@ namespace Omnikeeper.GraphQL
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GenericTraitEntityModel<GeneratorV1, string> generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
             GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
-            IEnumerable<IPluginRegistration> plugins,
+            IEnumerable<IPluginRegistration> plugins, ILatestLayerChangeModel latestLayerChangeModel,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.ciidModel = ciidModel;
@@ -70,6 +71,7 @@ namespace Omnikeeper.GraphQL
             this.clConfigModel = clConfigModel;
             this.recursiveDataTraitModel = recursiveDataTraitModel;
             this.managementAuthorizationService = managementAuthorizationService;
+            this.latestLayerChangeModel = latestLayerChangeModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
 
