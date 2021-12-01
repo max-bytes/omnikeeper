@@ -5,10 +5,9 @@ using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using Hangfire;
-using Hangfire.AspNetCore;
 using Hangfire.Console;
 using Hangfire.Dashboard;
-using Hangfire.MemoryStorage;
+using Hangfire.PostgreSql;
 using MediatR;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
@@ -35,7 +34,6 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using SpanJson.AspNetCore.Formatter;
@@ -171,8 +169,10 @@ namespace Omnikeeper.Startup
 
             services.AddHangfire(config =>
             {
-                //var cs = Configuration.GetConnectionString("HangfireConnection");
-                config.UseMemoryStorage();
+                // re-using main DB connection
+                var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
+                //config.UseMemoryStorage();
+                config.UsePostgreSqlStorage(cs);
                 config.UseFilter(new AutomaticRetryAttribute() { Attempts = 0 });
                 config.UseConsole(); //TODO
             });
