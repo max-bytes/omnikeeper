@@ -10,10 +10,12 @@ namespace Omnikeeper.Model
     public class LatestLayerChangeModel : ILatestLayerChangeModel
     {
         private readonly IOnlineAccessProxy onlineAccessProxy;
+        private readonly IChangesetModel changesetModel;
 
-        public LatestLayerChangeModel(IOnlineAccessProxy onlineAccessProxy)
+        public LatestLayerChangeModel(IOnlineAccessProxy onlineAccessProxy, IChangesetModel changesetModel)
         {
             this.onlineAccessProxy = onlineAccessProxy;
+            this.changesetModel = changesetModel;
         }
 
         public async Task<DateTimeOffset?> GetLatestChangeInLayer(string layerID, IModelContext trans)
@@ -25,27 +27,10 @@ namespace Omnikeeper.Model
             }
             else
             {
-                var queryAttributes = "select max(timestamp) from attribute_latest where layer_id = @layer_id";
-                using var commandAttributes = new NpgsqlCommand(queryAttributes, trans.DBConnection, trans.DBTransaction);
-                commandAttributes.Parameters.AddWithValue("layer_id", layerID);
-                commandAttributes.Prepare();
-                var rawAttributes = await commandAttributes.ExecuteScalarAsync();
-                var latestChangeInAttributes = (rawAttributes == null || rawAttributes == DBNull.Value) ? null : (DateTime?)rawAttributes;
-
-                var queryRelations = "select max(timestamp) from relation_latest where layer_id = @layer_id";
-                using var commandRelations = new NpgsqlCommand(queryRelations, trans.DBConnection, trans.DBTransaction);
-                commandRelations.Parameters.AddWithValue("layer_id", layerID);
-                commandRelations.Prepare();
-                var rawRelations = await commandRelations.ExecuteScalarAsync();
-                var latestChangeInRelations = (rawRelations == null || rawRelations == DBNull.Value) ? null : (DateTime?)rawRelations;
-
-                DateTimeOffset? finalLatestChange = null;
-                if (latestChangeInAttributes.HasValue)
-                    finalLatestChange = latestChangeInAttributes.Value;
-                if (latestChangeInRelations.HasValue && latestChangeInRelations.Value > finalLatestChange)
-                    finalLatestChange = latestChangeInRelations.Value;
-
-                return finalLatestChange;
+                var latestChangeset = await changesetModel.GetLatestChangesetForLayer(layerID, trans);
+                if (latestChangeset == null)
+                    return null;
+                return latestChangeset.Timestamp;
             }
         }
     }
