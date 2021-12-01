@@ -16,10 +16,6 @@ namespace OKPluginNaemonConfig
             sc.AddSingleton<GenericTraitEntityModel<NaemonInstance, string>>();
             sc.AddSingleton<GenericTraitEntityModel<Host, string>>();
             sc.AddSingleton<GenericTraitEntityModel<Service, string>>();
-            sc.AddSingleton<GenericTraitEntityModel<HostCategory, string>>();
-            
-            sc.AddSingleton<GenericTraitEntityModel<ServiceCategory, string>>();
-
             sc.AddSingleton<GenericTraitEntityModel<Category, string>>();
 
             sc.AddSingleton<GenericTraitEntityModel<HostAction, string>>();
@@ -30,7 +26,7 @@ namespace OKPluginNaemonConfig
             sc.AddSingleton<GenericTraitEntityModel<Variable, string>>();
             sc.AddSingleton<GenericTraitEntityModel<ServiceLayer, string>>();
             sc.AddSingleton<GenericTraitEntityModel<Command, string>>();
-            sc.AddSingleton<GenericTraitEntityModel<ServiceStatic, string>>();
+            sc.AddSingleton<GenericTraitEntityModel<ServiceStatic, long>>();
             sc.AddSingleton<GenericTraitEntityModel<Module, string>>();
             
         }

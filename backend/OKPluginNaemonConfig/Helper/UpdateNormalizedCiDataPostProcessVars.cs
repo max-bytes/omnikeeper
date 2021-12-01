@@ -33,28 +33,32 @@ namespace OKPluginNaemonConfig.Helper
                 * detect agent on OS in a simple manner
                 */
 
-                if (
-                    (ciItem.Profile == "NONE" || ciItem.Profile == "MULTIPLE") && ciItem.Type == "HOST" &&
-                    (
-                        Regex.IsMatch(ciItem.CmdbData["HOS"], "/^WIN/") ||
-                        Regex.IsMatch(ciItem.CmdbData["HOS"], "/^LINUX/") ||
-                        Regex.IsMatch(ciItem.CmdbData["HOS"], "/^XEN/") ||
-                        Regex.IsMatch(ciItem.CmdbData["HOS"], "/^SUNOS/")
-                        ) &&
-                    (
-                     Regex.IsMatch(ciItem.CmdbData["HPLATFORM"], "/^SRV_/")
-                    ) &&
-                    (
-                        Regex.IsMatch(ciItem.CmdbData["HSTATUS"], "/ACTIVE/") ||
-                        Regex.IsMatch(ciItem.CmdbData["HSTATUS"], "/INFOALERTING/") ||
-                        Regex.IsMatch(ciItem.CmdbData["HSTATUS"], "/BASE_INSTALLED/") ||
-                        Regex.IsMatch(ciItem.CmdbData["HSTATUS"], "/READY_FOR_SERVICE/")
-                    ) &&
-                    ciItem.Vars["DYNAMICADD"] == "YES"
-                    )
+                if (ciItem.CmdbData.ContainsKey("HOS") && ciItem.CmdbData.ContainsKey("HSTATUS"))
                 {
-                    ciItem.Profile = "dynamic-nrpe";
+                    if (
+                         (ciItem.Profile == "NONE" || ciItem.Profile == "MULTIPLE") && ciItem.Type == "HOST" &&
+                        (
+                            Regex.IsMatch(ciItem.CmdbData["HOS"], "/^WIN/") ||
+                            Regex.IsMatch(ciItem.CmdbData["HOS"], "/^LINUX/") ||
+                            Regex.IsMatch(ciItem.CmdbData["HOS"], "/^XEN/") ||
+                            Regex.IsMatch(ciItem.CmdbData["HOS"], "/^SUNOS/")
+                            ) &&
+                        (
+                         Regex.IsMatch(ciItem.CmdbData["HPLATFORM"], "/^SRV_/")
+                        ) &&
+                        (
+                            Regex.IsMatch(ciItem.CmdbData["HSTATUS"], "/ACTIVE/") ||
+                            Regex.IsMatch(ciItem.CmdbData["HSTATUS"], "/INFOALERTING/") ||
+                            Regex.IsMatch(ciItem.CmdbData["HSTATUS"], "/BASE_INSTALLED/") ||
+                            Regex.IsMatch(ciItem.CmdbData["HSTATUS"], "/READY_FOR_SERVICE/")
+                        ) &&
+                        ciItem.Vars["DYNAMICADD"] == "YES"
+                        )
+                    {
+                        ciItem.Profile = "dynamic-nrpe";
+                    }
                 }
+
 
 
                 /* update CI metavars to vars field and override meta fields */
@@ -62,7 +66,8 @@ namespace OKPluginNaemonConfig.Helper
                 if (!ciItem.Vars.ContainsKey("CIID"))
                 {
                     ciItem.Vars.Add("CIID", ciItem.Id);
-                } else
+                }
+                else
                 {
                     ciItem.Vars["CIID"] = ciItem.Id;
                 }

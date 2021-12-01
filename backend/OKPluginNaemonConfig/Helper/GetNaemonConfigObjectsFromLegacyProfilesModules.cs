@@ -13,7 +13,7 @@ namespace OKPluginNaemonConfig.Helper
             IDictionary<string, ServiceLayer> serviceLayers,
             IDictionary<string, Command> commands,
             IDictionary<string, TimePeriod> timeperiods, // ?? timeperiodsById
-            IDictionary<string, ServiceStatic> servicesStatic,
+            IDictionary<long, ServiceStatic> servicesStatic,
             IDictionary<string, Module> modules
 
             )
