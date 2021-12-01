@@ -12,6 +12,7 @@ namespace Omnikeeper.Base.Service
         void TrackUseLayer(string layerID);
         void TrackUseTrait(string traitID);
         void TrackUseAuthRole(string authRoleID);
+        void TrackUseGenerator(string generatorID);
 
         void TrackUse(string elementType, string elementName);
     }
@@ -35,6 +36,7 @@ namespace Omnikeeper.Base.Service
         public const string ElementTypeTrait = "trait";
         public const string ElementTypeAuthRole = "auth-role";
         public const string ElementTypeLayer = "layer";
+        public const string ElementTypeGenerator = "generator";
 
         public void TrackUseLayer(string layerID)
         {
@@ -49,6 +51,11 @@ namespace Omnikeeper.Base.Service
         public void TrackUseAuthRole(string authRoleID)
         {
             TrackUse(ElementTypeAuthRole, authRoleID);
+        }
+
+        public void TrackUseGenerator(string generatorID)
+        {
+            TrackUse(ElementTypeGenerator, generatorID);
         }
 
         public void TrackUse(string elementType, string elementName)

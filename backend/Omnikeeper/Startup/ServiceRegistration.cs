@@ -210,17 +210,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<GenericTraitEntityModel<GridViewContext, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
 
-            if (enableUsageTracking)
-            {
-                builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
-                builder.RegisterType<UsageDataAccumulator>().As<IUsageDataAccumulator>().SingleInstance();
-
-                builder.RegisterDecorator<UsageTrackingEffectiveTraitModel, IEffectiveTraitModel>();
-                builder.RegisterDecorator<UsageTrackingBaseAttributeModel, IBaseAttributeModel>();
-                builder.RegisterDecorator<UsageTrackingBaseRelationModel, IBaseRelationModel>();
-                builder.RegisterDecorator<UsageTrackingAuthRolePermissionChecker, IAuthRolePermissionChecker>();
-            }
-
             // these aren't real models, but we keep them here because they are closely related to models
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();
             builder.RegisterType<EffectiveGeneratorProvider>().As<IEffectiveGeneratorProvider>().SingleInstance();
@@ -263,6 +252,22 @@ namespace Omnikeeper.Startup
             if (enabledGenerators)
             {
                 builder.RegisterDecorator<GeneratingBaseAttributeModel, IBaseAttributeModel>();
+            }
+
+            if (enableUsageTracking)
+            {
+                builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
+                builder.RegisterType<UsageDataAccumulator>().As<IUsageDataAccumulator>().SingleInstance();
+
+                builder.RegisterDecorator<UsageTrackingEffectiveTraitModel, IEffectiveTraitModel>();
+                builder.RegisterDecorator<UsageTrackingBaseAttributeModel, IBaseAttributeModel>();
+                builder.RegisterDecorator<UsageTrackingBaseRelationModel, IBaseRelationModel>();
+                builder.RegisterDecorator<UsageTrackingAuthRolePermissionChecker, IAuthRolePermissionChecker>();
+
+                if (enabledGenerators)
+                {
+                    builder.RegisterDecorator<UsageTrackingEffectiveGeneratorProvider, IEffectiveGeneratorProvider>();
+                }
             }
         }
 
