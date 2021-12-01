@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Base.Generator
 {
@@ -42,6 +43,7 @@ namespace Omnikeeper.Base.Generator
         [TraitAttribute("attribute_value_template", "generator.attribute_value_template", multilineTextHint: true)]
         public readonly string TemplateString;
 
+        // TODO: better caching of templates, currently they are created new at each request
         private GeneratorAttributeValue? _template = null;
         public GeneratorAttributeValue Template
         {
@@ -59,7 +61,7 @@ namespace Omnikeeper.Base.Generator
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Name;
 
-        public static Guid StaticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
+        public static readonly Guid StaticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
 
         public override bool Equals(object? obj) => Equals(obj as GeneratorV1);
         public bool Equals(GeneratorV1? other)
@@ -166,9 +168,7 @@ namespace Omnikeeper.Base.Generator
 
         public async Task<IEnumerable<GeneratorV1>[]> GetEffectiveGenerators(string[] layerIDs, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold timeThreshold)
         {
-            // TODO, NOTE: we assume we get the layers back just as we queried for them, does this hold all the time?
-            // TODO: rewrite GetLayers() to return array
-            var layers = (await layerModel.GetLayers(layerIDs, trans)).ToDictionary(l => l.ID); // TODO: this should actually get the layers at the correct point in time, not the latest!
+            Dictionary<string, Layer>? layers = null;
 
             var ret = new IEnumerable<GeneratorV1>[layerIDs.Length];
             IDictionary<string, GeneratorV1>? availableGenerators = null;
@@ -179,17 +179,21 @@ namespace Omnikeeper.Base.Generator
                 var l = new List<GeneratorV1>();
                 ret[i++] = l;
 
+                // NOTE: this is an important mechanism that prevents layers in the base configuration layerset form having effective generators
+                // this is necessary, because otherwise its very easy to get infinite loops of GetGenerators() -> GetAttributes() -> GetGenerators() -> ...
+                // NOTE: to be 100% consistent, we SHOULD get the base configuration at the correct point in time, not the latest... but the meta-configuration is not stored historically
+                // so we have to live with this inconsistency; it's shouldn't affect much anyway, because changing the meta configuration is really rare in practice
+                metaConfiguration ??= await metaConfigurationModel.GetConfigOrDefault(trans);
+                if (metaConfiguration.ConfigLayerset.Contains(layerID))
+                    continue;
+
+                layers ??= (await layerModel.GetLayers(layerIDs, trans, timeThreshold)).ToDictionary(l => l.ID);
+
                 if (layers.TryGetValue(layerID, out var layer))
                 {
                     // check if this layer even has any active generators configured, if not -> return early
                     var activeGeneratorIDsForLayer = layer.Generators;
                     if (activeGeneratorIDsForLayer.IsEmpty())
-                        continue;
-
-                    // NOTE: this is an important mechanism that prevents layers in the base configuration layerset form having effective generators
-                    // this is necessary, because otherwise its very easy to get infinite loops of GetGenerators() -> GetAttributes() -> GetGenerators() -> ...
-                    metaConfiguration ??= await metaConfigurationModel.GetConfigOrDefault(trans); // TODO: get base configuration at the correct point in time, not the latest
-                    if (metaConfiguration.ConfigLayerset.Contains(layerID))
                         continue;
 
                     availableGenerators ??= await generatorModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, timeThreshold);
@@ -218,25 +222,30 @@ namespace Omnikeeper.Base.Generator
         {
             try
             {
-                var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? new CIAttribute[0]).Where(a => generator.Template.UsedAttributeNames.Contains(a.Name)).ToList();
-                if (relevantAttributes.Count() == generator.Template.UsedAttributeNames.Count()) 
+                var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? Array.Empty<CIAttribute>()).Where(a => generator.Template.UsedAttributeNames.Contains(a.Name)).ToList();
+                var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes);
+
+                object evaluated = generator.Template.Template.Evaluate(context);
+
+                if (evaluated is string evaluatedString)
                 {
-                    var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes);
-
-                    string templateSegment = generator.Template.Template.Render(context);
-
-                    var value = new AttributeScalarValueText(templateSegment);
+                    var value = new AttributeScalarValueText(evaluatedString);
                     // create a deterministic, dependent guid from the ciid, layerID, attribute values; 
                     // we need to incorporate the dependent attributes, otherwise the attribute ID does not change when any of the dependent attributes change
+                    // TODO: I *think* we also need a hash of the generator template, because otherwise, changes there are not reflected as new IDs
                     var agGuid = GuidUtility.Create(ciid, $"{generator.AttributeName}-{layerID}-{string.Join("-", relevantAttributes.Select(a => a.ID))}");
                     var ag = new CIAttribute(agGuid, generator.AttributeName, ciid, value, GeneratorV1.StaticChangesetID);
                     return ag;
+                } else if (evaluated is null)
+                {
+                    return null;
                 } else
                 {
-                    return null; // TODO: better error handling
+                    // TODO: better error handling, not supported return detected
+                    return null;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return null; // TODO: better error handling
             }

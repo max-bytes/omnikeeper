@@ -54,7 +54,7 @@ namespace Omnikeeper
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
                 if (metaConfiguration.ConfigLayers.Contains("__okconfig") || metaConfiguration.ConfigWriteLayer == "__okconfig")
                 {
-                    var okConfigLayer = await layerModel.GetLayer("__okconfig", mc);
+                    var okConfigLayer = await layerModel.GetLayer("__okconfig", mc, TimeThreshold.BuildLatest());
                     if (okConfigLayer == null)
                     {
                         await layerModel.UpsertLayer("__okconfig", mc);

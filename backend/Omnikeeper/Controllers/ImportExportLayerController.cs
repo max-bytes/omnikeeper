@@ -154,13 +154,16 @@ namespace Omnikeeper.Controllers
                     using var archive = new ZipArchive(stream, ZipArchiveMode.Read, false);
 
                     var dataFile = archive.GetEntry("data.json");
+                    if (dataFile == null)
+                        return BadRequest($"Invalid archive detected: no data.json found inside archive");
+
                     var dataStream = dataFile.Open();
 
                     var data = ExportedLayerDataV1.Serializer.Deserialize(dataStream);
 
                     var writeLayerID = overwriteLayerID ?? data.LayerID;
 
-                    var writeLayer = await layerModel.GetLayer(writeLayerID, trans);
+                    var writeLayer = await layerModel.GetLayer(writeLayerID, trans, timeThreshold);
                     if (writeLayer == null)
                     {
                         return BadRequest($"Cannot write to layer with ID {data.LayerID}: layer does not exist");

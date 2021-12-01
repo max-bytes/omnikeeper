@@ -175,6 +175,36 @@ namespace Omnikeeper.Model
             return ret;
         }
 
+        public async Task<Changeset?> GetLatestChangesetForLayer(string layerID, IModelContext trans)
+        {
+            using var command = new NpgsqlCommand(@"SELECT c.id, c.timestamp, c.user_id, c.origin_type, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c
+                LEFT JOIN ""user"" u ON c.user_id = u.id
+                WHERE c.layer_id = @layer_id
+                ORDER BY c.timestamp DESC
+                LIMIT 1", trans.DBConnection, trans.DBTransaction);
+
+            command.Parameters.AddWithValue("layer_id", layerID);
+            command.Prepare();
+            using var dr = await command.ExecuteReaderAsync();
+
+            if (!await dr.ReadAsync())
+                return null;
+
+            var id = dr.GetGuid(0);
+            var timestamp = dr.GetTimeStamp(1).ToDateTime();
+            var userID = dr.GetInt64(2);
+            var dataOriginType = dr.GetFieldValue<DataOriginType>(3);
+            var origin = new DataOriginV1(dataOriginType);
+            var username = dr.GetString(4);
+            var displayName = dr.GetString(5);
+            var keycloakUUID = dr.GetGuid(6);
+            var userType = dr.GetFieldValue<UserType>(7);
+            var userTimestamp = dr.GetTimeStamp(8).ToDateTime();
+
+            var user = new UserInDatabase(userID, keycloakUUID, username, displayName, userType, userTimestamp);
+            return new Changeset(id, user, layerID, origin, timestamp);
+        }
+
         public async Task<int> DeleteEmptyChangesets(IModelContext trans)
         {
             var query = @"delete from changeset c where c.id not in (
@@ -243,8 +273,8 @@ namespace Omnikeeper.Model
         {
             using var command = new NpgsqlCommand(@"SELECT count(*) FROM changeset c", trans.DBConnection, trans.DBTransaction);
             command.Prepare();
-            var num = (long)await command.ExecuteScalarAsync();
-            return num;
+            var ret = (long?)await command.ExecuteScalarAsync();
+            return ret!.Value;
         }
     }
 }

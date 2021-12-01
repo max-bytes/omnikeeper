@@ -22,7 +22,7 @@ namespace Omnikeeper.Model
                 commandActiveLayers.Parameters.AddWithValue("layer_id", layerID);
             commandActiveLayers.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
 
-            return (long)await commandActiveLayers.ExecuteScalarAsync();
+            return ((long?)await commandActiveLayers.ExecuteScalarAsync())!.Value;
         }
 
         public async Task<bool> IsLayerEmpty(string layerID, IModelContext trans)
@@ -48,7 +48,7 @@ namespace Omnikeeper.Model
                 command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
 
-            return (long)await command.ExecuteScalarAsync();
+            return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
 
         public async Task<long> GetActiveRelations(string? layerID, IModelContext trans)
@@ -64,7 +64,7 @@ namespace Omnikeeper.Model
                 command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
 
-            return (long)await command.ExecuteScalarAsync();
+            return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
 
         public async Task<long> GetRelationChangesHistory(string? layerID, IModelContext trans)
@@ -80,7 +80,7 @@ namespace Omnikeeper.Model
                 command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
 
-            return (long)await command.ExecuteScalarAsync();
+            return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
 
         public async Task<long> GetLayerChangesetsHistory(string layerID, IModelContext trans)
@@ -95,7 +95,7 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
 
-            return (long)await command.ExecuteScalarAsync();
+            return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
     }
 }

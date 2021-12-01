@@ -237,11 +237,8 @@ namespace Omnikeeper.Base.Entity
     public class CIAttributeTemplate
     {
         [ProtoMember(1)] public readonly string Name;
-        // TODO: descriptions
-        [ProtoMember(2)] public readonly AttributeValueType? Type; // TODO: could be more than one type allowed
+        [ProtoMember(2)] public readonly AttributeValueType? Type;
         [ProtoMember(3)] public readonly bool? IsArray;
-        // TODO: status: required(default, other statii: optional, not allowed)
-        // TODO: required layer (optional)
         [ProtoMember(4)] public readonly IEnumerable<ICIAttributeValueConstraint> ValueConstraints;
 
         public static CIAttributeTemplate BuildFromParams(string name, AttributeValueType? type, bool? isArray, params ICIAttributeValueConstraint[] valueConstraints)

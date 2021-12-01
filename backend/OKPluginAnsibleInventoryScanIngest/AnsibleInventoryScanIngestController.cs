@@ -9,6 +9,7 @@ using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
@@ -49,7 +50,7 @@ namespace Omnikeeper.Controllers.Ingest
             {
                 using var mc = modelContextBuilder.BuildImmediate();
                 var searchLayers = new LayerSet(searchLayerIDs);
-                var writeLayer = await layerModel.GetLayer(writeLayerID, mc);
+                var writeLayer = await layerModel.GetLayer(writeLayerID, mc, TimeThreshold.BuildLatest());
                 var user = await currentUserService.GetCurrentUser(mc);
 
                 if (writeLayer == null)
@@ -86,7 +87,7 @@ namespace Omnikeeper.Controllers.Ingest
 
 
                 var preparer = new Preparer();
-                var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers);
+                var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, logger);
 
                 var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
 

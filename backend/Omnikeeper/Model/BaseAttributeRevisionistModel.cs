@@ -30,7 +30,7 @@ namespace Omnikeeper.Model
             var query = @"DELETE FROM attribute a
                     USING (SELECT a2.id FROM attribute a2 WHERE a2.timestamp < @delete_threshold AND a2.layer_id = ANY(@layer_ids)
                         AND NOT EXISTS(
-                        SELECT * FROM attribute_latest l WHERE l.id = a2.id
+                        SELECT 1 FROM attribute_latest l WHERE l.id = a2.id
                     )) i
 	                WHERE i.id = a.id";
 

@@ -1,6 +1,7 @@
 ﻿
 using Omnikeeper.Base.Entity.DataOrigin;
 using System;
+using System.Collections.Generic;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -19,6 +20,18 @@ namespace Omnikeeper.Base.Entity
             LayerID = layerID;
             DataOrigin = dataOrigin;
             Timestamp = timestamp;
+        }
+    }
+
+    public class ChangesetCIAttributes
+    {
+        public Guid CIID { get; private set; }
+        public IEnumerable<CIAttribute> Attributes { get; private set; }
+
+        public ChangesetCIAttributes(Guid ciid, IEnumerable<CIAttribute> attributes)
+        {
+            CIID = ciid;
+            Attributes = attributes;
         }
     }
 }

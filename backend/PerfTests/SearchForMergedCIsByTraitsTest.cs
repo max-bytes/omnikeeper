@@ -21,7 +21,7 @@ namespace PerfTests
     public class SearchForMergedCIsByTraitsTest : Base
     {
         [GlobalSetup(Target = nameof(SearchForMergedCIsByTraits))]
-        public async Task Setup() => await SetupGeneric(WithModelCaching, WithEffectiveTraitCaching);
+        public async Task Setup() => await SetupGeneric(EnablePerRequestModelCaching);
 
         [Benchmark]
         public async Task SearchForMergedCIsByTraits()
@@ -52,11 +52,8 @@ namespace PerfTests
             //(5000, 50000, 4, 1),
         };
 
-        [Params(false)]
-        public bool WithModelCaching { get; set; }
-
         [Params(false, true)]
-        public bool WithEffectiveTraitCaching { get; set; }
+        public bool EnablePerRequestModelCaching { get; set; }
 
         [ParamsSource(nameof(RequiredTraitIDList))]
         public string[]? RequiredTraitIDs { get; set; }
@@ -65,9 +62,9 @@ namespace PerfTests
         [Params(false)]
         public bool SpecificCIs { get; set; }
 
-        public async Task SetupGeneric(bool enableModelCaching, bool enableEffectiveTraitCaching)
+        public async Task SetupGeneric(bool enablePerRequestModelCaching)
         {
-            Setup(enableModelCaching, enableEffectiveTraitCaching, true);
+            Setup(enablePerRequestModelCaching, true);
 
             var numCIs = AttributeCITuple.numCIs;
             var numLayers = AttributeCITuple.numLayers;

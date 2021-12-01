@@ -47,9 +47,8 @@ namespace Omnikeeper.Base.Entity
     public interface IBulkCIAttributeData<F>
     {
         Guid GetCIID(F f);
-        string NamePrefix { get; }
         string LayerID { get; }
-        public F[] Fragments { get; }
+        public IEnumerable<F> Fragments { get; }
 
         string GetFullName(F fragment);
         IAttributeValue GetValue(F fragment);
@@ -63,9 +62,6 @@ namespace Omnikeeper.Base.Entity
             public IAttributeValue Value { get; private set; }
             public Guid CIID { get; private set; }
 
-            public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}", "");
-
-
             public Fragment(string name, IAttributeValue value, Guid ciid)
             {
                 Name = name;
@@ -76,7 +72,7 @@ namespace Omnikeeper.Base.Entity
 
         public string NamePrefix { get; private set; }
         public string LayerID { get; private set; }
-        public Fragment[] Fragments { get; private set; }
+        public IEnumerable<Fragment> Fragments { get; private set; }
 
         public Guid GetCIID(Fragment f) => f.CIID;
         public string GetFullName(Fragment fragment) => $"{NamePrefix}{fragment.Name}";
@@ -86,7 +82,7 @@ namespace Omnikeeper.Base.Entity
         {
             NamePrefix = namePrefix;
             LayerID = layerID;
-            Fragments = fragments.ToArray();
+            Fragments = fragments;
         }
 
         public static BulkCIAttributeDataLayerScope BuildFromDTO(BulkCIAttributeLayerScopeDTO dto)
@@ -104,8 +100,6 @@ namespace Omnikeeper.Base.Entity
             public string Name { get; private set; }
             public IAttributeValue Value { get; private set; }
 
-            public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}", "");
-
             public Fragment(string name, IAttributeValue value)
             {
                 Name = name;
@@ -113,21 +107,55 @@ namespace Omnikeeper.Base.Entity
             }
         }
 
-        public string NamePrefix { get; private set; }
         public string LayerID { get; private set; }
         public Guid CIID { get; private set; }
-        public Fragment[] Fragments { get; private set; }
+        public IEnumerable<Fragment> Fragments { get; private set; }
 
         public Guid GetCIID(Fragment f) => CIID;
-        public string GetFullName(Fragment fragment) => $"{NamePrefix}{fragment.Name}";
+        public string GetFullName(Fragment fragment) => fragment.Name;
         public IAttributeValue GetValue(Fragment f) => f.Value;
 
-        public BulkCIAttributeDataCIScope(string namePrefix, string layerID, Guid ciid, IEnumerable<Fragment> fragments)
+        public BulkCIAttributeDataCIScope(string layerID, Guid ciid, IEnumerable<Fragment> fragments)
         {
-            NamePrefix = namePrefix;
             LayerID = layerID;
             CIID = ciid;
-            Fragments = fragments.ToArray();
+            Fragments = fragments;
+        }
+    }
+
+
+    public class BulkCIAttributeDataCIAndAttributeNameScope : IBulkCIAttributeData<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>
+    {
+        public ISet<Guid> RelevantCIs;
+
+        public class Fragment
+        {
+            public Guid CIID { get; private set; }
+            public string Name { get; private set; }
+            public IAttributeValue Value { get; private set; }
+
+            public Fragment(Guid ciid, string name, IAttributeValue value)
+            {
+                CIID = ciid;
+                Name = name;
+                Value = value;
+            }
+        }
+
+        public string LayerID { get; private set; }
+        public IEnumerable<Fragment> Fragments { get; private set; }
+        public ISet<string> RelevantAttributes { get; }
+
+        public Guid GetCIID(Fragment f) => f.CIID;
+        public string GetFullName(Fragment f) => f.Name;
+        public IAttributeValue GetValue(Fragment f) => f.Value;
+
+        public BulkCIAttributeDataCIAndAttributeNameScope(string layerID, IEnumerable<Fragment> fragments, ISet<Guid> relevantCIs, ISet<string> relevantAttributes)
+        {
+            LayerID = layerID;
+            Fragments = fragments;
+            RelevantCIs = relevantCIs;
+            RelevantAttributes = relevantAttributes;
         }
     }
 }

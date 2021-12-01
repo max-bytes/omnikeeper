@@ -34,12 +34,13 @@ namespace Omnikeeper.Base.Templating
         }
 
         // transform dots in variable name into corresponding object structure
-        private static void AddSimple(IDictionary<string, object> dict, string key, IAttributeValue value)
-        {
-            dict.Add(key, AttributeValue2VariableValue(value));
-        }
+        //private static void AddSimple(IDictionary<string, object> dict, string key, IAttributeValue value)
+        //{
+        //    dict.Add(key, AttributeValue2VariableValue(value));
+        //}
 
         // transform dots in variable name into corresponding object structure
+        [Obsolete]
         private static void AddNested(IDictionary<string, object> dict, string key, IAttributeValue value)
         {
             var split = key.Split(".", 2, StringSplitOptions.None);
@@ -87,6 +88,7 @@ namespace Omnikeeper.Base.Templating
             }
         }
 
+        [Obsolete]
         public class ScriptObjectComplexContext
         {
             public ScriptObjectComplexContext(LayerSet layerset, IModelContext trans, TimeThreshold atTime, ICIModel ciModel, IRelationModel relationModel)
@@ -124,6 +126,7 @@ namespace Omnikeeper.Base.Templating
         //    }
         //}
 
+        [Obsolete]
         public class ScriptObjectComplexCI : ScriptObject
         {
             public ScriptObjectComplexCI(MergedCI ci, ScriptObjectComplexContext context)
@@ -147,6 +150,7 @@ namespace Omnikeeper.Base.Templating
             }
         }
 
+        [Obsolete]
         public static TemplateContext CreateComplexCIBasedTemplateContext(MergedCI ci, LayerSet layerSet, TimeThreshold atTime, IModelContext trans, ICIModel ciModel, IRelationModel relationModel)
         {
             var so = new ScriptObjectComplexCI(ci, new ScriptObjectComplexContext(layerSet, trans, atTime, ciModel, relationModel));
@@ -159,7 +163,7 @@ namespace Omnikeeper.Base.Templating
             return context;
         }
 
-
+        [Obsolete]
         public class ScriptObjectSimpleCI : ScriptObject
         {
             public ScriptObjectSimpleCI(MergedCI ci)
@@ -176,6 +180,7 @@ namespace Omnikeeper.Base.Templating
                 }));
             }
         }
+        [Obsolete]
         public static TemplateContext CreateSimpleCIBasedTemplateContext(MergedCI ci)
         {
             var so = new ScriptObjectSimpleCI(ci);

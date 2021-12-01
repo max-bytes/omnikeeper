@@ -25,7 +25,7 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
-            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
+            var modelContextBuilder = new ModelContextBuilder(conn, NullLogger<IModelContext>.Instance);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             //var predicateModel = new CachingPredicateModel(new PredicateModel());
@@ -73,7 +73,7 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
-            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
+            var modelContextBuilder = new ModelContextBuilder(conn, NullLogger<IModelContext>.Instance);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));

@@ -30,7 +30,7 @@ export default function ManageLayers(props) {
     { headerName: "Online Inbound Adapter", field: "onlineInboundAdapterName" },
     { headerName: "Generators", field: "generators", 
       valueFormatter: (params) => params.value.join(','),
-      valueParser: (params) => params.newValue.split(','),
+      valueParser: (params) => (Array.isArray(params.newValue)) ? params.newValue : params.newValue.split(','),
     },
     { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {
         values: ['ACTIVE', 'DEPRECATED', 'INACTIVE', 'MARKED_FOR_DELETION'],

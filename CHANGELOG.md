@@ -19,6 +19,95 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [7.0.0] - 2021-12-01
+
+### Added
+- (breaking) implemented functionality for CLBs to skip their run under certain circumstances: when all of their dependent layers have not change since their last run
+- technical frontend: gridview: added full text search field to grid
+- technical frontend: show CI name in changeset view for attributes
+- technical frontend: check latest layer update time in layer statistics
+
+### Changed
+- performance improvements: per-request caching of various often-needed data such as layers and meta configuration
+
+## [6.0.0] - 2021-11-25
+
+### Added
+- (breaking) rework of CI diffing GraphQL API
+- added option to CI diffing: cross CI diffing for comparing 2 different CIs with each other
+
+## [5.0.0] - 2021-11-24
+
+### Added
+- (breaking) support for optionally referenced attributes in generators. The decision whether or not a generator creates an attribute for a CI is made by the generator template: if it evaluates to `null`, no attribute is generated.
+
+## [4.0.1] - 2021-11-24
+
+### Fixes
+- build process for backend
+
+## [4.0.0] - 2021-11-24
+
+### Added
+- (potential breaking) upgrade to .Net 5.0
+- (breaking) reworked GraphQL API for CI diffing
+- ability for plugins to define their own GraphQL queries and mutations
+
+### Changed
+- performance improvement to maintenance task of archiving unused attributes/relations
+
+### Fixes
+- technical frontend: fixed wrong badge counts for added and removed attributes in changeset view
+- fixed CI diffing GraphQL resolve error
+
+## [3.1.0] - 2021-11-18
+
+### Added
+- generic JSON Ingest: graceful error handling for missing relation ends
+
+### Fixes
+- better handling of x-forwarded-proto in certain environments (nginx SSL frontloading+docker)
+
+## [3.0.0] - 2021-11-18
+
+### Added
+- implemented bulk replace for trait entities
+- added support for historical querying of layers
+
+### Fixes
+- technical frontend: bugfix for error when editing generators in layer management
+- bugfix for swagger API generation error related to AuthRedirectController
+
+## [3.0.0] - 2021-11-15
+
+### Added
+- initial implementation of usage stats tracking for effective traits, layers and auth-roles
+- implementation of GenericTraitEntities and usage of them for all core traits such as base configuration, predicates and traits themselves
+- added support for tuples as ID for GenericTraitEntities
+- initial implementation of attribute value type "mask"
+- implemented CI diffing in backend, offered GraphQL interface, made technical frontend differ use backend implementation
+- added REST endpoint /.well-known/openid-configuration to help clients with authentication
+- gridview: support for ag-grid enterprice license (via environment variable)
+- gridview: support for copy/paste (when using ag-grid enterprise)
+- gridview: support for excel export (when using ag-grid enterprise)
+
+### Changed
+- performance improvements to CI search
+- performance improvements to relation querying
+- performance improvements to attribute mutations: use postgres copy inserts
+- performance improvements when querying MergedCIs
+- performance improvements to Generic JSON Ingest
+- marked some REST APIs obsolete, prefer GraphQL use instead
+- usage of Autofac DI instead of Core DI, removed scrutor
+
+### Fixed
+- technical frontend: fixed performance issues in various parts of the frontend when displaying larged numbers of attributes/relations/changesets/CIs
+- fixed order of layers in layerStack array when returned by GraphQL
+- re-added display of stacktrace in GraphQL error response objects
+- technical frontend: inreased CLBrain Config cell editor maximum length
+- gridview: bugfix for [not-set] issue
+- lots of smaller bugfixes
+
 ## [2.0.0] - 2021-10-09
  
 ### Added

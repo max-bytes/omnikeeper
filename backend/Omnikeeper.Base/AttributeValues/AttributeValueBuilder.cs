@@ -22,7 +22,7 @@ namespace Omnikeeper.Base.AttributeValues
                             if (o == null)
                                 return new AttributeScalarValueText("", false);
                             else if (o.GetType().IsArray)
-                                return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), false);
+                                return AttributeArrayValueText.BuildFromString(((o as object[])!).OfType<string>().ToArray(), false);
                             else
                             {
                                 return new AttributeScalarValueText((o as string)!, false);
@@ -33,7 +33,7 @@ namespace Omnikeeper.Base.AttributeValues
                             if (o == null)
                                 return new AttributeScalarValueText("", true);
                             else if (o.GetType().IsArray)
-                                return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), true);
+                                return AttributeArrayValueText.BuildFromString(((o as object[])!).OfType<string>().ToArray(), true);
                             else
                                 return new AttributeScalarValueText((o as string)!, true);
                         }
@@ -42,7 +42,7 @@ namespace Omnikeeper.Base.AttributeValues
                             if (o == null)
                                 return new AttributeScalarValueInteger(0);
                             else if (o.GetType().IsArray)
-                                return AttributeArrayValueInteger.Build((o as object[]).OfType<long>().ToArray());
+                                return AttributeArrayValueInteger.Build(((o as object[])!).OfType<long>().ToArray());
                             else
                                 return new AttributeScalarValueInteger((o as long?)!.Value);
                         }
@@ -62,7 +62,7 @@ namespace Omnikeeper.Base.AttributeValues
                             if (o == null)
                                 return AttributeScalarValueYAML.Build(new YamlDocument(""));
                             else if (o.GetType().IsArray)
-                                return AttributeArrayValueYAML.BuildFromString((o as object[]).OfType<string>().ToArray());
+                                return AttributeArrayValueYAML.BuildFromString(((o as object[])!).OfType<string>().ToArray());
                             else
                                 return AttributeScalarValueYAML.BuildFromString((o as string)!);
                         }
@@ -316,7 +316,7 @@ namespace Omnikeeper.Base.AttributeValues
             if (hashes.Any(h => h.Length != 32))
                 throw new Exception("Hash of invalid length for binary attribute value encountered");
             var mimeTypeBytes = values.Select(v => Encoding.UTF8.GetBytes(v.MimeType)).ToArray();
-            var marshalled = values.SelectMany(v => v.FullData).ToArray();
+            var marshalled = values.SelectMany(v => v.FullData ?? Array.Empty<byte>()).ToArray();
             var controlHeader = new byte[]
             {
                                 0x02, // version

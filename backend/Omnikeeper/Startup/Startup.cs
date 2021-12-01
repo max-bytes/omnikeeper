@@ -5,10 +5,9 @@ using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using Hangfire;
-using Hangfire.AspNetCore;
 using Hangfire.Console;
 using Hangfire.Dashboard;
-using Hangfire.MemoryStorage;
+using Hangfire.PostgreSql;
 using MediatR;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
@@ -35,7 +34,6 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using SpanJson.AspNetCore.Formatter;
@@ -171,8 +169,10 @@ namespace Omnikeeper.Startup
 
             services.AddHangfire(config =>
             {
-                //var cs = Configuration.GetConnectionString("HangfireConnection");
-                config.UseMemoryStorage();
+                // re-using main DB connection
+                var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
+                //config.UseMemoryStorage();
+                config.UsePostgreSqlStorage(cs);
                 config.UseFilter(new AutomaticRetryAttribute() { Attempts = 0 });
                 config.UseConsole(); //TODO
             });
@@ -301,11 +301,7 @@ namespace Omnikeeper.Startup
             var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
             ServiceRegistration.RegisterDB(builder, cs, false);
 
-            var enableModelCaching = false; // TODO: model caching seems to have a grave bug that keeps old attributes in the cache, so we disable caching (for now)
-            // TODO: think about per-request caching... which would at least fix issues when f.e. calling LayerModel.GetLayer(someLayerID) lots of times during a single request
-            // TODO: also think about graphql DataLoaders
-            var enabledEffectiveTraitCaching = true;
-            ServiceRegistration.RegisterModels(builder, enableModelCaching, enabledEffectiveTraitCaching, true, true, true);
+            ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching: true, true, true, true);
 
             ServiceRegistration.RegisterGraphQL(builder);
             ServiceRegistration.RegisterOIABase(builder);
@@ -337,10 +333,42 @@ namespace Omnikeeper.Startup
             app.UsePathBase(Configuration.GetValue<string>("BaseURL"));
 
             // make application properly consider headers (and populate httprequest object) when behind reverse proxy
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            var forwardedHeaderOptions = new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-            });
+            };
+
+            // NOTE, HACK: we should not do this because this has the potential of opening up IP spoofing attacks
+            // but, it's otherwise really hard to correctly know the IP-ranges of possible proxies, so we disable whitelisting (for now)
+            // see https://github.com/dotnet/AspNetCore.Docs/issues/2384 for a discussion
+            forwardedHeaderOptions.KnownNetworks.Clear();
+            forwardedHeaderOptions.KnownProxies.Clear();
+
+            app.UseForwardedHeaders(forwardedHeaderOptions);
+
+            //// debug to log all requests and their headers
+            //app.Use(async (context, next) =>
+            //{
+            //    // Request method, scheme, and path
+            //    logger.LogInformation("Request Method: {Method}", context.Request.Method);
+            //    logger.LogInformation("Request Scheme: {Scheme}", context.Request.Scheme);
+            //    logger.LogInformation("Request Path: {Path}", context.Request.Path);
+
+            //    // Headers
+            //    foreach (var header in context.Request.Headers)
+            //    {
+            //        logger.LogInformation("Header: {Key}: {Value}", header.Key, header.Value);
+            //    }
+
+            //    // Connection: RemoteIp
+            //    logger.LogInformation("Request RemoteIp: {RemoteIpAddress}",
+            //        context.Connection.RemoteIpAddress);
+
+            //    logger.LogInformation("Known proxies: {KnownProxies}", (object)(new ForwardedHeadersOptions().KnownProxies));
+            //    logger.LogInformation("Known proxies: {KnownNetworks}", (object)(new ForwardedHeadersOptions().KnownNetworks));
+
+            //    await next();
+            //});
 
             app.UseStaticFiles();
 

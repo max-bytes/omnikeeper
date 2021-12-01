@@ -18,7 +18,7 @@ namespace Omnikeeper.Base.Utils
 
         public const string GeneratorIDRegexString = "^[a-z0-9_.]+$";
         public const RegexOptions GeneratorIDRegexOptions = RegexOptions.None;
-        //private static Regex GeneratorIDRegex = new Regex(GeneratorIDRegexString, GeneratorIDRegexOptions);
+        private static Regex GeneratorIDRegex = new Regex(GeneratorIDRegexString, GeneratorIDRegexOptions);
 
         public const string CLConfigIDRegexString = "^[a-z0-9_.]+$";
         public const RegexOptions CLConfigIDRegexOptions = RegexOptions.None;
@@ -39,6 +39,11 @@ namespace Omnikeeper.Base.Utils
             return PredicateIDRegex.IsMatch(candidateID);
         }
 
+        public static bool ValidateGeneratorID(string candidateID)
+        {
+            return GeneratorIDRegex.IsMatch(candidateID);
+        }
+
         public static void ValidateLayerIDThrow(string candidateID)
         {
             if (!ValidateLayerID(candidateID))
@@ -54,6 +59,12 @@ namespace Omnikeeper.Base.Utils
         {
             if (!ValidatePredicateID(candidateID))
                 throw new Exception($"Invalid predicate ID \"{candidateID}\"");
+        }
+
+        public static void ValidateGeneratorIDThrow(string candidateID)
+        {
+            if (!ValidateGeneratorID(candidateID))
+                throw new Exception($"Invalid Generator ID \"{candidateID}\"");
         }
     }
 }

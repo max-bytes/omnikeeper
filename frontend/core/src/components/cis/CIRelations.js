@@ -53,7 +53,7 @@ function CIRelations(props) {
 
   if (sortedRelations && dataPredicates) {
 
-    const Item = ({ index, style }) => {
+    const Item = (index) => {
       const r = sortedRelations[index];
       const isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
 
@@ -65,9 +65,7 @@ function CIRelations(props) {
       })
       : null;
 
-      return <div style={style}>
-          <RelatedCI mergedRelation={r} predicates={dataPredicates.predicates} onRemove={onRemove} isOutgoingRelation={areOutgoingRelations} />
-        </div>;
+      return <RelatedCI mergedRelation={r} predicates={dataPredicates.predicates} onRemove={onRemove} isOutgoingRelation={areOutgoingRelations} />;
     };
 
     return (<div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>

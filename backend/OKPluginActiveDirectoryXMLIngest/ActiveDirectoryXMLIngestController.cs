@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Ingest.ActiveDirectoryXML;
 using System;
@@ -48,7 +49,7 @@ namespace Omnikeeper.Controllers.Ingest
         {
             var mc = modelContextBuilder.BuildImmediate();
 
-            var writeLayer = await layerModel.GetLayer(writeLayerID, mc);
+            var writeLayer = await layerModel.GetLayer(writeLayerID, mc, TimeThreshold.BuildLatest());
             if (writeLayer == null)
                 return BadRequest("Invalid write layer ID configured");
 

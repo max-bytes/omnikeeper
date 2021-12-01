@@ -7,6 +7,7 @@ using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GridView.Entity;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Tests.Integration.Model
 {

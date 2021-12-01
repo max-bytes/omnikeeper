@@ -13,7 +13,6 @@ namespace OKPluginValidation.Validation
 
         [TraitAttribute("message", "validation_issue.message")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        [TraitEntityID]
         public readonly string Message;
 
         [TraitAttribute("name", "__name", optional: true)]

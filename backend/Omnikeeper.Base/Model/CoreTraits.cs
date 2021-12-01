@@ -8,6 +8,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Base.Model
 {

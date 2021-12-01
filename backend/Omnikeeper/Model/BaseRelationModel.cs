@@ -185,69 +185,6 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<bool> BulkReplaceOutgoingRelations(Guid fromCIID, string predicateID, IEnumerable<Guid> toCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            var allRelations = await GetRelations(RelationSelectionFrom.Build(fromCIID), layerID, trans, TimeThreshold.BuildLatest()); // TODO: restrict to predicateID at fetch point
-            var outdatedRelations = allRelations.Where(r => r.PredicateID == predicateID).ToDictionary(r => r.InformationHash);
-
-            var toAdd = new List<Guid>();
-            var toRemove = new List<Guid>();
-            foreach (var otherCIID in toCIIDs)
-            {
-                var toCIID = otherCIID;
-                var hash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
-                if (!outdatedRelations.ContainsKey(hash))
-                    toAdd.Add(toCIID);
-                else
-                    outdatedRelations.Remove(hash);
-            }
-            toRemove.AddRange(outdatedRelations.Select(r => r.Value.ToCIID));
-
-            var changed = false;
-
-            // bulk update
-            var inserts = toAdd.Select(toCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())).ToList();
-            var removes = toRemove.Select(toCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())).ToList();
-            var (tmpChanged, _) = await _BulkUpdate(
-                inserts, removes,
-                layerID, origin, changesetProxy, trans);
-            changed = tmpChanged || changed;
-
-            return changed;
-        }
-
-        // TODO: refactor to be the same as Outgoing
-        public async Task<bool> BulkReplaceIncomingRelations(Guid toCIID, string predicateID, IEnumerable<Guid> fromCIIDs, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            var allRelations = await GetRelations(RelationSelectionTo.Build(toCIID), layerID, trans, TimeThreshold.BuildLatest()); // TODO: restrict to predicateID at fetch point
-            var outdatedRelations = allRelations.Where(r => r.PredicateID == predicateID).ToDictionary(r => r.InformationHash);
-
-            var toAdd = new List<Guid>();
-            var toRemove = new List<Guid>();
-            foreach (var otherCIID in fromCIIDs)
-            {
-                var fromCIID = otherCIID;
-                var hash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
-                if (!outdatedRelations.ContainsKey(hash))
-                    toAdd.Add(fromCIID);
-                else
-                    outdatedRelations.Remove(hash);
-            }
-            toRemove.AddRange(outdatedRelations.Select(r => r.Value.FromCIID));
-
-            var changed = false;
-
-            // bulk update
-            var inserts = toAdd.Select(fromCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())).ToList();
-            var removes = toRemove.Select(fromCIID => (fromCIID, toCIID, predicateID, Guid.NewGuid())).ToList();
-            var (tmpChanged, _) = await _BulkUpdate(
-                inserts, removes,
-                layerID, origin, changesetProxy, trans);
-            changed = tmpChanged || changed;
-
-            return changed;
-        }
-
         public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (fromCIID == toCIID)
@@ -300,11 +237,21 @@ namespace Omnikeeper.Model
         // the caller is responsible for making sure there are no duplicates
         public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
+            async Task<IEnumerable<Relation>> GetOutdatedRelationsFromCIAndPredicateScope(BulkRelationDataCIAndPredicateScope cp, IModelContext trans, TimeThreshold timeThreshold)
+            {
+                var dLookup = cp.Relevant.ToLookup(dd => dd.thisCIID, dd => dd.predicateID);
+                var relationSelection = (cp.Outgoing) ? RelationSelectionFrom.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet()) : RelationSelectionTo.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet());
+                var allRelations = await GetRelations(relationSelection, cp.LayerID, trans, timeThreshold); // TODO: restrict to relevant predicateIDs at fetch point
+                var outdatedRelations = allRelations.Where(r => dLookup[(cp.Outgoing) ? r.FromCIID : r.ToCIID].Contains(r.PredicateID));
+                return outdatedRelations;
+            }
+
             var outdatedRelations = (data switch
             {
                 BulkRelationDataPredicateScope p => (await GetRelations(RelationSelectionWithPredicate.Build(p.PredicateID), data.LayerID, trans, changesetProxy.TimeThreshold)),
                 BulkRelationDataLayerScope l => (await GetRelations(RelationSelectionAll.Instance, data.LayerID, trans, changesetProxy.TimeThreshold)),
-                _ => null
+                BulkRelationDataCIAndPredicateScope cp => await GetOutdatedRelationsFromCIAndPredicateScope(cp, trans, changesetProxy.TimeThreshold),
+                _ => throw new Exception("Unknown scope")
             }).ToDictionary(r => r.InformationHash);
 
             var actualInserts = new List<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)>();
@@ -341,6 +288,7 @@ namespace Omnikeeper.Model
             return actualInserts.Select(r => (r.fromCIID, r.toCIID, r.predicateID))
                 .Concat(outdatedRelations.Values.Select(r => (r.FromCIID, r.ToCIID, r.PredicateID)));
         }
+
 
         private async Task<(bool changed, Guid changesetID)> _BulkUpdate(
             IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)> inserts,

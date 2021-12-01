@@ -41,9 +41,9 @@ namespace OKPluginOIASharepoint
                 StreamReader itemReader = new StreamReader(itemResponse.GetResponseStream());
                 itemXml.LoadXml(await itemReader.ReadToEndAsync());
             }
-            catch (WebException e)
+            catch (WebException)
             {
-                throw e;
+                throw;
             }
 
             // TODO: rewrite to use XElement
@@ -86,9 +86,9 @@ namespace OKPluginOIASharepoint
                 StreamReader itemReader = new StreamReader(itemResponse.GetResponseStream());
                 itemXml.LoadXml(await itemReader.ReadToEndAsync());
             }
-            catch (WebException e)
+            catch (WebException)
             {
-                throw e;
+                throw;
             }
 
             // TODO: rewrite to use XElement
@@ -115,12 +115,12 @@ namespace OKPluginOIASharepoint
             return r;
         }
 
-        private ExpandoObject ParseXMLItemNode(XmlNode itemNode, string[] columns, XmlNamespaceManager xmlnspm)
+        private ExpandoObject ParseXMLItemNode(XmlNode? itemNode, string[] columns, XmlNamespaceManager xmlnspm)
         {
             var r = new ExpandoObject();
             foreach (var column in columns)
             {
-                var node = itemNode.SelectSingleNode($"d:{column}", xmlnspm);
+                var node = itemNode?.SelectSingleNode($"d:{column}", xmlnspm);
                 if (node != null)
                     r.TryAdd(column, node.InnerText);
             }

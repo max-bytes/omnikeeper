@@ -2,12 +2,9 @@
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace OKPluginGenericJSONIngest.Load
 {
@@ -19,7 +16,7 @@ namespace OKPluginGenericJSONIngest.Load
             return new CICandidateAttributeData.Fragment(a.name, value);
         }
 
-        public IngestData GenericInboundData2IngestData(GenericInboundData data, LayerSet searchLayers)
+        public IngestData GenericInboundData2IngestData(GenericInboundData data, LayerSet searchLayers, ILogger logger)
         {
             var tempCIIDMapping = new Dictionary<string, Guid>(); // maps tempIDs to temporary Guids
 
@@ -45,15 +42,35 @@ namespace OKPluginGenericJSONIngest.Load
 
             var relationCandidates = data.relations.Select(r =>
             {
+                // TODO: make configurable
+                var gracefulFromErrorHandling = true;
+                var gracefulToErrorHandling = true;
+
                 if (!tempCIIDMapping.TryGetValue(r.from, out var tempFromGuid))
-                    throw new Exception($"From-ci \"{r.from}\" of relation could not be resolved");
+                {
+                    if (gracefulFromErrorHandling)
+                    {
+                        logger.LogWarning($"From-ci \"{r.from}\" of relation could not be resolved");
+                        return null;
+                    }
+                    else
+                        throw new Exception($"From-ci \"{r.from}\" of relation could not be resolved");
+                }
                 if (!tempCIIDMapping.TryGetValue(r.to, out var tempToGuid))
-                    throw new Exception($"To-ci \"{r.to}\" of relation could not be resolved");
+                {
+                    if (gracefulToErrorHandling)
+                    {
+                        logger.LogWarning($"To-ci \"{r.to}\" of relation could not be resolved");
+                        return null;
+                    }
+                    else
+                        throw new Exception($"To-ci \"{r.to}\" of relation could not be resolved");
+                }
                 return new RelationCandidate(
                     CIIdentificationMethodByTemporaryCIID.Build(tempFromGuid),
                     CIIdentificationMethodByTemporaryCIID.Build(tempToGuid), r.predicate);
-            }).ToList(); // NOTE: we force linq evaluation here
-            return new IngestData(ciCandidates, relationCandidates);
+            }).Where(d => d != null).ToList(); // NOTE: we force linq evaluation here
+            return new IngestData(ciCandidates, relationCandidates!);
         }
 
         //public async Task Load(IngestData ingestData, Layer writeLayer, AuthenticatedUser user, IngestDataService ingestDataService)

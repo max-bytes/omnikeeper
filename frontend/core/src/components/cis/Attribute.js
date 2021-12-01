@@ -37,9 +37,6 @@ function Attribute(props) {
 
   let input;
 
-  const layerStackIDs = layerStack.map(l => l.id);
-  const layerID = layerStackIDs[0];
-
   const valueInput = <EditableAttributeValue hideNameLabel={hideNameLabel} name={attribute.name} controlIdSuffix={controlIdSuffix} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.value.type} isArray={isArray} ciid={attribute.ciid} />;
 
   const leftPart = (hideNameLabel) ? '' : <div style={{display: 'flex', minHeight: '38px', alignItems: 'center'}}>
@@ -55,6 +52,9 @@ function Attribute(props) {
   </div>;
 
   if (isEditable) {
+    const layerStackIDs = layerStack.map(l => l.id);
+    const layerID = layerStackIDs[0];
+  
     const removeButton = (
       <Button type="primary" danger onClick={e => {
         e.preventDefault();

@@ -1,11 +1,8 @@
 ﻿using Autofac;
-using Autofac.Core.Lifetime;
 using Autofac.Extensions.DependencyInjection;
-using Autofac.Extras.DynamicProxy;
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Types;
-using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
 using Omnikeeper.Base.CLB;
@@ -14,16 +11,17 @@ using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.GraphQL;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
+using Omnikeeper.Model.Decorators.CachingLatestLayerChange;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using Omnikeeper.Utils.Decorators;
@@ -177,6 +175,8 @@ namespace Omnikeeper.Startup
 
             builder.RegisterType<ScopedLifetimeAccessor>().SingleInstance();
 
+            builder.RegisterType<DiffingCIService>().SingleInstance();
+
         }
 
         public static void RegisterLogging(ContainerBuilder builder)
@@ -184,7 +184,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<NpgsqlLoggingProvider>().SingleInstance();
         }
 
-        public static void RegisterModels(ContainerBuilder builder, bool enableModelCaching, bool enableEffectiveTraitCaching, bool enableOIA, bool enabledGenerators, bool enableUsageTracking)
+        public static void RegisterModels(ContainerBuilder builder, bool enablePerRequestModelCaching, bool enableOIA, bool enabledGenerators, bool enableUsageTracking)
         {
             builder.RegisterType<CISearchModel>().As<ICISearchModel>().SingleInstance();
             builder.RegisterType<CIModel>().As<ICIModel>().SingleInstance();
@@ -213,42 +213,29 @@ namespace Omnikeeper.Startup
             builder.RegisterType<GenericTraitEntityModel<Predicate, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<RecursiveTrait, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<GridViewContext, string>>().SingleInstance(); // TODO: ok this way?
-
-            if (enableUsageTracking)
-            {
-                builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
-                builder.RegisterType<UsageDataAccumulator>().As<IUsageDataAccumulator>().SingleInstance();
-
-                builder.RegisterDecorator<UsageTrackingEffectiveTraitModel, IEffectiveTraitModel>();
-                builder.RegisterDecorator<UsageTrackingBaseAttributeModel, IBaseAttributeModel>();
-                builder.RegisterDecorator<UsageTrackingBaseRelationModel, IBaseRelationModel>();
-                builder.RegisterDecorator<UsageTrackingAuthRolePermissionChecker, IAuthRolePermissionChecker>();
-            }
+            builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
 
             // these aren't real models, but we keep them here because they are closely related to models
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();
             builder.RegisterType<EffectiveGeneratorProvider>().As<IEffectiveGeneratorProvider>().SingleInstance();
-            builder.RegisterType<ProtoBufDataSerializer>().As<IDataSerializer>().SingleInstance();
 
-            if (enableModelCaching)
+            if (enablePerRequestModelCaching)
             {
+                builder.RegisterType<PerRequestLayerCache>().InstancePerLifetimeScope();
                 builder.RegisterDecorator<CachingLayerModel, ILayerModel>();
-                builder.RegisterDecorator<CachingODataAPIContextModel, IODataAPIContextModel>();
-                builder.RegisterDecorator<CachingBaseConfigurationModel, IBaseConfigurationModel>();
+                builder.RegisterType<PerRequestMetaConfigurationCache>().InstancePerLifetimeScope();
                 builder.RegisterDecorator<CachingMetaConfigurationModel, IMetaConfigurationModel>();
-                builder.RegisterDecorator<CachingPartitionModel, IPartitionModel>();
             }
 
-            // TODO: rework or remove
-            if (enableEffectiveTraitCaching)
-            {
-                //services.Decorate<IEffectiveTraitModel, CachingEffectiveTraitModel>();
-                //services.Decorate<IBaseAttributeModel, TraitCacheInvalidationBaseAttributeModel>();
-                //services.Decorate<IBaseAttributeRevisionistModel, TraitCacheInvalidationBaseAttributeRevisionistModel>();
-                //services.Decorate<IBaseRelationModel, TraitCacheInvalidationBaseRelationModel>();
-                //services.Decorate<IBaseRelationRevisionistModel, TraitCacheInvalidationBaseRelationRevisionistModel>();
-                //services.AddSingleton<EffectiveTraitCache>(); // TODO: create interface
-            }
+            // latest layer change caching
+            builder.RegisterType<LatestLayerChangeCache>().SingleInstance();
+            builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
+            builder.RegisterDecorator<CachingLatestLayerChangeModel, ILatestLayerChangeModel>();
+            builder.RegisterDecorator<CachingLatestLayerChangeAttributeModel, IBaseAttributeModel>();
+            builder.RegisterDecorator<CachingLatestLayerChangeRelationModel, IBaseRelationModel>();
+            builder.RegisterDecorator<CachingLatestLayerChangeLayerModel, ILayerModel>();
+
+            builder.RegisterType<CLBLastRunCache>().SingleInstance();
 
             if (enableOIA)
             {
@@ -259,6 +246,22 @@ namespace Omnikeeper.Startup
             if (enabledGenerators)
             {
                 builder.RegisterDecorator<GeneratingBaseAttributeModel, IBaseAttributeModel>();
+            }
+
+            if (enableUsageTracking)
+            {
+                builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
+                builder.RegisterType<UsageDataAccumulator>().As<IUsageDataAccumulator>().SingleInstance();
+
+                builder.RegisterDecorator<UsageTrackingEffectiveTraitModel, IEffectiveTraitModel>();
+                builder.RegisterDecorator<UsageTrackingBaseAttributeModel, IBaseAttributeModel>();
+                builder.RegisterDecorator<UsageTrackingBaseRelationModel, IBaseRelationModel>();
+                builder.RegisterDecorator<UsageTrackingAuthRolePermissionChecker, IAuthRolePermissionChecker>();
+
+                if (enabledGenerators)
+                {
+                    builder.RegisterDecorator<UsageTrackingEffectiveGeneratorProvider, IEffectiveGeneratorProvider>();
+                }
             }
         }
 

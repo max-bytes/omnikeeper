@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Runners
 {
@@ -22,15 +23,16 @@ namespace Omnikeeper.Runners
     {
         public CLBRunner(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
             IMetaConfigurationModel metaConfigurationModel, ILifetimeScope parentLifetimeScope,
-            IChangesetModel changesetModel, ScopedLifetimeAccessor scopedLifetimeAccessor,
+            IChangesetModel changesetModel, ScopedLifetimeAccessor scopedLifetimeAccessor, CLBLastRunCache clbLastRunCache,
             ILayerModel layerModel, ILogger<CLBRunner> logger, IModelContextBuilder modelContextBuilder)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.clConfigModel = clConfigModel;
             this.metaConfigurationModel = metaConfigurationModel;
-            this.lifetimeScope = parentLifetimeScope;
             this.changesetModel = changesetModel;
+            this.lifetimeScope = parentLifetimeScope;
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
+            this.clbLastRunCache = clbLastRunCache;
             this.layerModel = layerModel;
             this.logger = logger;
             this.modelContextBuilder = modelContextBuilder;
@@ -51,7 +53,7 @@ namespace Omnikeeper.Runners
             logger.LogInformation("Start");
 
             var trans = modelContextBuilder.BuildImmediate();
-            var activeLayers = await layerModel.GetLayers(AnchorStateFilter.ActiveAndDeprecated, trans);
+            var activeLayers = await layerModel.GetLayers(AnchorStateFilter.ActiveAndDeprecated, trans, TimeThreshold.BuildLatest());
             var layersWithCLBs = activeLayers.Where(l => l.CLConfigID != "");
 
             if (!layersWithCLBs.IsEmpty()) {
@@ -71,35 +73,50 @@ namespace Omnikeeper.Runners
                         }
                         else
                         {
-                            // create a lifetime scope per clb invocation (similar to a HTTP request lifetime)
-                            await using (var scope = lifetimeScope.BeginLifetimeScope(builder =>
+                            var lastRunKey = $"{clb.Name}{l.CLConfigID}";
+                            DateTimeOffset? lastRun = null;
+                            if (clbLastRunCache.TryGetValue(lastRunKey, out var lr))
+                                lastRun = lr;
+
+                            if (await clb.CanSkipRun(lastRun, clConfig.CLBrainConfig, logger, modelContextBuilder))
                             {
-                                builder.Register(builder => new CLBContext(clb)).InstancePerLifetimeScope();
-                                builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
-                            }))
+                                logger.LogInformation($"Skipping run of CLB {clb.Name} on layer {l.ID}");
+                            }
+                            else
                             {
-                                scopedLifetimeAccessor.SetLifetimeScope(scope);
-
-                                using var transUpsertUser = modelContextBuilder.BuildDeferred();
-                                var currentUserService = scope.Resolve<ICurrentUserService>();
-                                var user = await currentUserService.GetCurrentUser(transUpsertUser);
-                                transUpsertUser.Commit();
-
-                                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-
-                                try
+                                // create a lifetime scope per clb invocation (similar to a HTTP request lifetime)
+                                await using (var scope = lifetimeScope.BeginLifetimeScope(builder =>
                                 {
-                                    logger.LogInformation($"Running CLB {clb.Name} on layer {l.ID}");
-                                    Stopwatch stopWatch = new Stopwatch();
-                                    stopWatch.Start();
-                                    await clb.Run(l, clConfig.CLBrainConfig, changesetProxy, modelContextBuilder, logger);
-                                    stopWatch.Stop();
-                                    TimeSpan ts = stopWatch.Elapsed;
-                                    string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                                    logger.LogInformation($"Done in {elapsedTime}");
-                                } finally
+                                    builder.Register(builder => new CLBContext(clb)).InstancePerLifetimeScope();
+                                    builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
+                                }))
                                 {
-                                    scopedLifetimeAccessor.ResetLifetimeScope();
+                                    scopedLifetimeAccessor.SetLifetimeScope(scope);
+
+                                    try
+                                    {
+                                        using var transUpsertUser = modelContextBuilder.BuildDeferred();
+                                        var currentUserService = scope.Resolve<ICurrentUserService>();
+                                        var user = await currentUserService.GetCurrentUser(transUpsertUser);
+                                        transUpsertUser.Commit();
+
+                                        var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                                        logger.LogInformation($"Running CLB {clb.Name} on layer {l.ID}");
+                                        Stopwatch stopWatch = new Stopwatch();
+                                        stopWatch.Start();
+                                        await clb.Run(l, clConfig.CLBrainConfig, changesetProxy, modelContextBuilder, logger);
+                                        stopWatch.Stop();
+                                        TimeSpan ts = stopWatch.Elapsed;
+                                        string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                                        logger.LogInformation($"Done in {elapsedTime}");
+
+                                        clbLastRunCache.UpdateCache(lastRunKey, changesetProxy.TimeThreshold.Time);
+                                    }
+                                    finally
+                                    {
+                                        scopedLifetimeAccessor.ResetLifetimeScope();
+                                    }
                                 }
                             }
                         }
@@ -116,6 +133,7 @@ namespace Omnikeeper.Runners
         private readonly ILifetimeScope lifetimeScope;
         private readonly IChangesetModel changesetModel;
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
+        private readonly CLBLastRunCache clbLastRunCache;
         private readonly ILayerModel layerModel;
         private readonly ILogger<CLBRunner> logger;
         private readonly IModelContextBuilder modelContextBuilder;

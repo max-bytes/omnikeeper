@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Http;
 using OKPluginGenericJSONIngest.Extract;
 using Omnikeeper.Base.Model.Config;
 using System.Text;
+using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Controllers.Ingest
 {
@@ -203,8 +204,10 @@ namespace Omnikeeper.Controllers.Ingest
             {
                 using var mc = modelContextBuilder.BuildImmediate();
 
+                var timeThreshold = TimeThreshold.BuildLatest();
+
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
-                var (ctx, _) = await contextModel.GetSingleByDataID(context, metaConfiguration.ConfigLayerset, mc, TimeThreshold.BuildLatest());
+                var (ctx, _) = await contextModel.GetSingleByDataID(context, metaConfiguration.ConfigLayerset, mc, timeThreshold);
                 if (ctx == null)
                     return BadRequest($"Context with name \"{context}\" not found");
                 if (!(ctx.ExtractConfig is ExtractConfigPassiveRESTFiles f))
@@ -213,7 +216,7 @@ namespace Omnikeeper.Controllers.Ingest
                     return BadRequest($"No files specified");
 
                 var searchLayers = new LayerSet(ctx.LoadConfig.SearchLayerIDs);
-                var writeLayer = await layerModel.GetLayer(ctx.LoadConfig.WriteLayerID, mc);
+                var writeLayer = await layerModel.GetLayer(ctx.LoadConfig.WriteLayerID, mc, timeThreshold);
                 if (writeLayer == null)
                 {
                     return BadRequest($"Cannot write to layer with ID {ctx.LoadConfig.WriteLayerID}: layer does not exist");
@@ -315,7 +318,7 @@ namespace Omnikeeper.Controllers.Ingest
                 }
 
                 var preparer = new Preparer();
-                var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers);
+                var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, logger);
 
                 var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
 

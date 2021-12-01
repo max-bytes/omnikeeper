@@ -89,9 +89,9 @@ namespace Omnikeeper.Controllers.OData
         {
             if (relation == null)
                 return BadRequest($"Could not parse inserted relation");
-            if (relation.FromCIID == null)
+            if (relation.FromCIID == Guid.Empty)
                 return BadRequest($"Relation from CIID must be set");
-            if (relation.ToCIID == null)
+            if (relation.ToCIID == Guid.Empty)
                 return BadRequest($"Relation to CIID must be set");
             if (relation.Predicate == null || relation.Predicate == "")
                 return BadRequest($"Relation Predicate must be set");
