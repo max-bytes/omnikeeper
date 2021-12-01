@@ -14,7 +14,6 @@ namespace Omnikeeper.Base.CLB
 
         Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContextBuilder modelContextBuilder, ILogger logger);
 
-        Task<bool> CanSkipRun(JObject config, ILogger logger, IModelContextBuilder modelContextBuilder);
-        void SetLastRun(DateTimeOffset lr);
+        Task<bool> CanSkipRun(DateTimeOffset? lastRun, JObject config, ILogger logger, IModelContextBuilder modelContextBuilder);
     }
 }

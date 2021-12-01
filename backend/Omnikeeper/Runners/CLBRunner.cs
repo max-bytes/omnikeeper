@@ -23,7 +23,7 @@ namespace Omnikeeper.Runners
     {
         public CLBRunner(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
             IMetaConfigurationModel metaConfigurationModel, ILifetimeScope parentLifetimeScope,
-            IChangesetModel changesetModel, ScopedLifetimeAccessor scopedLifetimeAccessor,
+            IChangesetModel changesetModel, ScopedLifetimeAccessor scopedLifetimeAccessor, CLBLastRunCache clbLastRunCache,
             ILayerModel layerModel, ILogger<CLBRunner> logger, IModelContextBuilder modelContextBuilder)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
@@ -32,6 +32,7 @@ namespace Omnikeeper.Runners
             this.changesetModel = changesetModel;
             this.lifetimeScope = parentLifetimeScope;
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
+            this.clbLastRunCache = clbLastRunCache;
             this.layerModel = layerModel;
             this.logger = logger;
             this.modelContextBuilder = modelContextBuilder;
@@ -72,7 +73,12 @@ namespace Omnikeeper.Runners
                         }
                         else
                         {
-                            if (await clb.CanSkipRun(clConfig.CLBrainConfig, logger, modelContextBuilder))
+                            var lastRunKey = $"{clb.Name}{l.CLConfigID}";
+                            DateTimeOffset? lastRun = null;
+                            if (clbLastRunCache.TryGetValue(lastRunKey, out var lr))
+                                lastRun = lr;
+
+                            if (await clb.CanSkipRun(lastRun, clConfig.CLBrainConfig, logger, modelContextBuilder))
                             {
                                 logger.LogInformation($"Skipping run of CLB {clb.Name} on layer {l.ID}");
                             }
@@ -105,7 +111,7 @@ namespace Omnikeeper.Runners
                                         string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
                                         logger.LogInformation($"Done in {elapsedTime}");
 
-                                        clb.SetLastRun(changesetProxy.TimeThreshold.Time);
+                                        clbLastRunCache.UpdateCache(lastRunKey, changesetProxy.TimeThreshold.Time);
                                     }
                                     finally
                                     {
@@ -127,6 +133,7 @@ namespace Omnikeeper.Runners
         private readonly ILifetimeScope lifetimeScope;
         private readonly IChangesetModel changesetModel;
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
+        private readonly CLBLastRunCache clbLastRunCache;
         private readonly ILayerModel layerModel;
         private readonly ILogger<CLBRunner> logger;
         private readonly IModelContextBuilder modelContextBuilder;

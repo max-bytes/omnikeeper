@@ -46,7 +46,7 @@ namespace Omnikeeper.Base.CLB
 
         protected virtual ISet<string>? GetDependentLayerIDs(JObject config, ILogger logger) => null;
 
-        public async Task<bool> CanSkipRun(JObject config, ILogger logger, IModelContextBuilder modelContextBuilder)
+        public async Task<bool> CanSkipRun(DateTimeOffset? lastRun, JObject config, ILogger logger, IModelContextBuilder modelContextBuilder)
         {
             if (lastRun == null)
             {
@@ -72,12 +72,5 @@ namespace Omnikeeper.Base.CLB
                 }
             }
         }
-
-        public virtual void SetLastRun(DateTimeOffset lr)
-        {
-            lastRun = lr;
-        }
-
-        private DateTimeOffset? lastRun = null;
     }
 }

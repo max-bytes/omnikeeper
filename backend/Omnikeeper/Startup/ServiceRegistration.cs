@@ -5,6 +5,7 @@ using GraphQL.DataLoader;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
+using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
@@ -250,7 +251,8 @@ namespace Omnikeeper.Startup
             builder.RegisterDecorator<CachingLatestLayerChangeAttributeModel, IBaseAttributeModel>();
             builder.RegisterDecorator<CachingLatestLayerChangeRelationModel, IBaseRelationModel>();
             builder.RegisterDecorator<CachingLatestLayerChangeLayerModel, ILayerModel>();
-            
+
+            builder.RegisterType<CLBLastRunCache>().SingleInstance();
 
             if (enableOIA)
             {
