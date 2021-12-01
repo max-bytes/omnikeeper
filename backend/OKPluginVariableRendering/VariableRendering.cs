@@ -20,7 +20,8 @@ namespace OKPluginVariableRendering
         private readonly IEffectiveTraitModel traitModel;
         private readonly ILayerModel layerModel;
         private readonly IAttributeModel attributeModel;
-        public VariableRendering(ICIModel ciModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel, IAttributeModel attributeModel)
+        public VariableRendering(ICIModel ciModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, 
+            IRelationModel relationModel, IAttributeModel attributeModel, ILatestLayerChangeModel latestLayerChangeModel) : base(latestLayerChangeModel)
         {
             this.relationModel = relationModel;
             this.ciModel = ciModel;
