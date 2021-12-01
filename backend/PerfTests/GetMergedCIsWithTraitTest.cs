@@ -25,7 +25,7 @@ namespace PerfTests
     public class GetMergedCIsWithTraitTest : Base
     {
         [GlobalSetup(Target = nameof(GetMergedCIsWithTrait))]
-        public async Task Setup() => await SetupGeneric(false, WithModelCaching, WithEffectiveTraitCaching);
+        public async Task Setup() => await SetupGeneric(false, EnablePerRequestModelCaching);
 
         [Benchmark]
         public async Task GetMergedCIsWithTrait()
@@ -66,14 +66,11 @@ namespace PerfTests
             //(100000, 1000000, 4, 1),
         };
 
-        [Params(false)]
-        public bool WithModelCaching { get; set; }
-
         [Params(false, true)]
         public bool UseLatestTable { get; set; }
 
         [Params(false, true)]
-        public bool WithEffectiveTraitCaching { get; set; }
+        public bool EnablePerRequestModelCaching { get; set; }
 
         [Params("host", "host_linux")]
         public string? TraitToFetch { get; set; }
@@ -81,9 +78,9 @@ namespace PerfTests
         [Params(false)]
         public bool SpecificCIs { get; set; }
 
-        public async Task SetupGeneric(bool runPartitioning, bool enableModelCaching, bool enableEffectiveTraitCaching)
+        public async Task SetupGeneric(bool runPartitioning, bool enablePerRequestModelCaching)
         {
-            Setup(enableModelCaching, enableEffectiveTraitCaching, true);
+            Setup(enablePerRequestModelCaching, true);
 
             var numCIs = AttributeCITuple.numCIs;
             var numLayers = AttributeCITuple.numLayers;
@@ -126,7 +123,7 @@ namespace PerfTests
         {
             TraitToFetch = "host";
             AttributeCITuple = AttributeCITuples.First();
-            await SetupGeneric(false, false, true);
+            await SetupGeneric(false, true);
             await GetMergedCIsWithTrait();
             TearDown();
         }

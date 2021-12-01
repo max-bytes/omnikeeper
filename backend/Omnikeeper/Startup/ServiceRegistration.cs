@@ -179,7 +179,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<NpgsqlLoggingProvider>().SingleInstance();
         }
 
-        public static void RegisterModels(ContainerBuilder builder, bool enablePerRequestModelCaching, bool enableEffectiveTraitCaching, bool enableOIA, bool enabledGenerators, bool enableUsageTracking)
+        public static void RegisterModels(ContainerBuilder builder, bool enablePerRequestModelCaching, bool enableOIA, bool enabledGenerators, bool enableUsageTracking)
         {
             builder.RegisterType<CISearchModel>().As<ICISearchModel>().SingleInstance();
             builder.RegisterType<CIModel>().As<ICIModel>().SingleInstance();
@@ -220,17 +220,6 @@ namespace Omnikeeper.Startup
                 builder.RegisterDecorator<CachingLayerModel, ILayerModel>();
                 builder.RegisterType<PerRequestMetaConfigurationCache>().InstancePerLifetimeScope();
                 builder.RegisterDecorator<CachingMetaConfigurationModel, IMetaConfigurationModel>();
-            }
-
-            // TODO: rework or remove
-            if (enableEffectiveTraitCaching)
-            {
-                //services.Decorate<IEffectiveTraitModel, CachingEffectiveTraitModel>();
-                //services.Decorate<IBaseAttributeModel, TraitCacheInvalidationBaseAttributeModel>();
-                //services.Decorate<IBaseAttributeRevisionistModel, TraitCacheInvalidationBaseAttributeRevisionistModel>();
-                //services.Decorate<IBaseRelationModel, TraitCacheInvalidationBaseRelationModel>();
-                //services.Decorate<IBaseRelationRevisionistModel, TraitCacheInvalidationBaseRelationRevisionistModel>();
-                //services.AddSingleton<EffectiveTraitCache>(); // TODO: create interface
             }
 
             // latest layer change caching

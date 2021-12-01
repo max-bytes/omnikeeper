@@ -1,5 +1,4 @@
 ﻿using PerfTests;
-using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,8 +21,6 @@ namespace PerfProfiling
         public async Task Run()
         {
             CIIDSelection = "specific";
-            WithModelCaching = false;
-            WithEffectiveTraitCaching = false;
             UseLatestTable = true;
             AttributeCITuple = AttributeCITuples.First();
             PreSetupData = SETUP_DATA;
