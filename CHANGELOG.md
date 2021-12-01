@@ -19,6 +19,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [7.0.0] - 2021-12-01
+
+### Added
+- (breaking) implemented functionality for CLBs to skip their run under certain circumstances: when all of their dependent layers have not change since their last run
+- technical frontend: gridview: added full text search field to grid
+- technical frontend: show CI name in changeset view for attributes
+- technical frontend: check latest layer update time in layer statistics
+
+### Changed
+- performance improvements: per-request caching of various often-needed data such as layers and meta configuration
+
 ## [6.0.0] - 2021-11-25
 
 ### Added
