@@ -72,6 +72,11 @@ namespace Omnikeeper.GraphQL
             return loader.LoadAsync(ciidSelection);
         }
 
+        public static IDataLoaderResult<IEnumerable<Layer>> SetupAndLoadAllLayers(IDataLoaderContextAccessor dataLoaderContextAccessor, ILayerModel layerModel, TimeThreshold timeThreshold, IModelContext trans)
+        {
+            var loader = dataLoaderContextAccessor.Context.GetOrAddLoader($"GetAllLayers_{timeThreshold}", () => layerModel.GetLayers(trans, timeThreshold));
+            return loader.LoadAsync();
+        }
 
         public static IDataLoaderResult<IEnumerable<MergedRelation>> SetupAndLoadRelation(IRelationSelection rs, IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
