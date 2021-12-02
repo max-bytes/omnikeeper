@@ -84,8 +84,6 @@ namespace OKPluginVariableRendering
                 // TODO check if selection with specific predicates is possible than use the relations array created earlier
                 var allRelations = await relationModel.GetRelations(RelationSelectionAll.Instance, layer, trans, changesetProxy.TimeThreshold);
 
-                // TODO: priority of each element should be taken into account
-
                 foreach (var mainCI in mainCIs)
                 {
                     var gatheredAttributes = new List<GatheredAttribute>();
@@ -114,7 +112,6 @@ namespace OKPluginVariableRendering
 
                             if (r == null)
                             {
-                                // NOTE: does this mean that we should break the loop, because there aren't more nodes?? 
                                 break;
                             }
 
@@ -136,16 +133,15 @@ namespace OKPluginVariableRendering
                             var targetCIAttributes = targetCI.MergedAttributes.Where(a => IsAttributeAllowed(a.Value.Attribute.Name, follow.InputWhitelist, follow.InputBlacklist)).ToList();
 
                             // NOTE check realtion required trait
-                            //if (targetCIAttributes.Where(a => a.Key == follow.RequiredTrait).ToList().Count == 0)
-                            //{
-                            //    continue;
-                            //}
+                            if (targetCIAttributes.Where(a => a.Key == follow.RequiredTrait).ToList().Count == 0)
+                            {
+                                continue;
+                            }
 
                             var allCIAttributes = targetCIAttributes.Select(a => new GatheredAttribute { SourceCIID = targetCI.ID, Name = a.Key, RequiredTrait = follow.RequiredTrait, Value = a.Value.Attribute.Value.ToString() }).ToList();
 
-
                             var tmpCIAttributes = new List<GatheredAttribute>();
-                            // new way 
+                            
                             foreach (var mapping in follow.AttributeMapping)
                             {
                                 foreach (var attribute in allCIAttributes)
