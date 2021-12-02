@@ -6,13 +6,19 @@ using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL
 {
-    public static class DataLoaderUtils
+    public class DataLoaderService : IDataLoaderService
     {
-        public static IDataLoader<MergedCI, IEnumerable<EffectiveTrait>> SetupEffectiveTraitLoader(IDataLoaderContextAccessor dataLoaderContextAccessor, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        private readonly IDataLoaderContextAccessor dataLoaderContextAccessor;
+
+        public DataLoaderService(IDataLoaderContextAccessor dataLoaderContextAccessor)
+        {
+            this.dataLoaderContextAccessor = dataLoaderContextAccessor;
+        }
+
+        public IDataLoader<MergedCI, IEnumerable<EffectiveTrait>> SetupEffectiveTraitLoader(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetAllEffectiveTraits_{layerSet}_{timeThreshold}", async (IEnumerable<MergedCI> cis) =>
             {
@@ -51,7 +57,7 @@ namespace Omnikeeper.GraphQL
             }
         }
 
-        public static IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, IDataLoaderContextAccessor dataLoaderContextAccessor, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedCIs_{layerSet}_{timeThreshold}",
                     async (IEnumerable<ICIIDSelection> ciidSelections) =>
@@ -73,7 +79,7 @@ namespace Omnikeeper.GraphQL
             return loader.LoadAsync(ciidSelection);
         }
 
-        public static IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IDataLoaderContextAccessor dataLoaderContextAccessor, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader<ICIIDSelection, IDictionary<Guid, string>>($"GetMergedCINames_{layerSet}_{timeThreshold}",
                 async (IEnumerable<ICIIDSelection> ciidSelections) =>
@@ -94,24 +100,24 @@ namespace Omnikeeper.GraphQL
             return loader.LoadAsync(ciidSelection);
         }
 
-        public static IDataLoaderResult<IEnumerable<Layer>> SetupAndLoadAllLayers(IDataLoaderContextAccessor dataLoaderContextAccessor, ILayerModel layerModel, TimeThreshold timeThreshold, IModelContext trans)
+        public IDataLoaderResult<IEnumerable<Layer>> SetupAndLoadAllLayers(ILayerModel layerModel, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddLoader($"GetAllLayers_{timeThreshold}", () => layerModel.GetLayers(trans, timeThreshold));
             return loader.LoadAsync();
         }
 
-        public static IDataLoaderResult<IEnumerable<MergedRelation>> SetupAndLoadRelation(IRelationSelection rs, IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public IDataLoaderResult<IEnumerable<MergedRelation>> SetupAndLoadRelation(IRelationSelection rs, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             return rs switch
             {
-                RelationSelectionFrom f => SetupRelationFetchingFrom(dataLoaderContextAccessor, relationModel, layerSet, timeThreshold, trans).LoadAsync(f),
-                RelationSelectionTo t => SetupRelationFetchingTo(dataLoaderContextAccessor, relationModel, layerSet, timeThreshold, trans).LoadAsync(t),
-                RelationSelectionAll a => SetupRelationFetchingAll(dataLoaderContextAccessor, relationModel, layerSet, timeThreshold, trans).LoadAsync(a),
+                RelationSelectionFrom f => SetupRelationFetchingFrom(relationModel, layerSet, timeThreshold, trans).LoadAsync(f),
+                RelationSelectionTo t => SetupRelationFetchingTo(relationModel, layerSet, timeThreshold, trans).LoadAsync(t),
+                RelationSelectionAll a => SetupRelationFetchingAll(relationModel, layerSet, timeThreshold, trans).LoadAsync(a),
                 _ => throw new Exception("Not support yet")
             };
         }
 
-        private static IDataLoader<RelationSelectionFrom, IEnumerable<MergedRelation>> SetupRelationFetchingFrom(IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        private IDataLoader<RelationSelectionFrom, IEnumerable<MergedRelation>> SetupRelationFetchingFrom(IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsFrom_{layerSet}_{timeThreshold}",
                 async (IEnumerable<RelationSelectionFrom> relationSelections) => {
@@ -130,7 +136,7 @@ namespace Omnikeeper.GraphQL
             return loader;
         }
 
-        private static IDataLoader<RelationSelectionTo, IEnumerable<MergedRelation>> SetupRelationFetchingTo(IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        private IDataLoader<RelationSelectionTo, IEnumerable<MergedRelation>> SetupRelationFetchingTo(IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsTo_{layerSet}_{timeThreshold}",
                 async (IEnumerable<RelationSelectionTo> relationSelections) => {
@@ -149,7 +155,7 @@ namespace Omnikeeper.GraphQL
             return loader;
         }
 
-        private static IDataLoader<RelationSelectionAll, IEnumerable<MergedRelation>> SetupRelationFetchingAll(IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        private IDataLoader<RelationSelectionAll, IEnumerable<MergedRelation>> SetupRelationFetchingAll(IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsAll_{layerSet}_{timeThreshold}",
                 async (IEnumerable<RelationSelectionAll> relationSelections) => {
@@ -158,5 +164,15 @@ namespace Omnikeeper.GraphQL
                 });
             return loader;
         }
+    }
+
+
+    public interface IDataLoaderService
+    {
+        IDataLoader<MergedCI, IEnumerable<EffectiveTrait>> SetupEffectiveTraitLoader(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
+        IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
+        IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
+        IDataLoaderResult<IEnumerable<Layer>> SetupAndLoadAllLayers(ILayerModel layerModel, TimeThreshold timeThreshold, IModelContext trans);
+        IDataLoaderResult<IEnumerable<MergedRelation>> SetupAndLoadRelation(IRelationSelection rs, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
     }
 }

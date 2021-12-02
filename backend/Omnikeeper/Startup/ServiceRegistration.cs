@@ -267,6 +267,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<SpanJSONDocumentWriter>().As<IDocumentWriter>().SingleInstance();
             builder.RegisterType<DataLoaderContextAccessor>().As<IDataLoaderContextAccessor>().SingleInstance();
             builder.RegisterType<DataLoaderDocumentListener>().SingleInstance();
+            builder.RegisterType<DataLoaderService>().As<IDataLoaderService>().SingleInstance();
         }
     }
 }

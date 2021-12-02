@@ -27,7 +27,7 @@ namespace Omnikeeper.GraphQL
 
     public class ChangesetType : ObjectGraphType<Changeset>
     {
-        public ChangesetType(IDataLoaderContextAccessor dataLoaderContextAccessor, ILayerModel layerModel)
+        public ChangesetType(IDataLoaderService dataLoaderService, ILayerModel layerModel)
         {
             Field("id", x => x.ID);
             Field(x => x.Timestamp);
@@ -40,7 +40,7 @@ namespace Omnikeeper.GraphQL
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerID = context.Source!.LayerID; 
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                    return DataLoaderUtils.SetupAndLoadAllLayers(dataLoaderContextAccessor, layerModel, timeThreshold, userContext.Transaction)
+                    return dataLoaderService.SetupAndLoadAllLayers(layerModel, timeThreshold, userContext.Transaction)
                         .Then(layers => layers.FirstOrDefault(l => l.ID == layerID));
                 });
             FieldAsync<ChangesetStatisticsType>("statistics",
@@ -129,7 +129,7 @@ namespace Omnikeeper.GraphQL
 
     public class ChangesetCIAttributesType : ObjectGraphType<ChangesetCIAttributes>
     {
-        public ChangesetCIAttributesType(IDataLoaderContextAccessor dataLoaderContextAccessor, IAttributeModel attributeModel, ICIIDModel ciidModel)
+        public ChangesetCIAttributesType(IDataLoaderService dataLoaderService, IAttributeModel attributeModel, ICIIDModel ciidModel)
         {
             Field("ciid", x => x.CIID);
             Field<StringGraphType>("ciName",
@@ -139,7 +139,7 @@ namespace Omnikeeper.GraphQL
                     var layerset = userContext.GetLayerSet(context.Path);
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
                     var ciid = context.Source!.CIID;
-                    return DataLoaderUtils.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), dataLoaderContextAccessor, attributeModel, ciidModel, layerset, timeThreshold, userContext.Transaction)
+                    return dataLoaderService.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), attributeModel, ciidModel, layerset, timeThreshold, userContext.Transaction)
                         .Then(rr => rr.GetOrWithClass(ciid, null));
                 });
             Field("attributes", x => x.Attributes, type: typeof(ListGraphType<CIAttributeType>));
