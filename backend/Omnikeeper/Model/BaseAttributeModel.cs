@@ -95,6 +95,7 @@ namespace Omnikeeper.Model
             return selection switch
             {
                 AllAttributeSelection _ => "1=1",
+                NoAttributesSelection _ => "1=0",
                 RegexAttributeSelection _ => "name ~ @name_regex",
                 NamedAttributesSelection _ => "name = ANY(@names)",
                 _ => throw new NotImplementedException("")
@@ -106,6 +107,8 @@ namespace Omnikeeper.Model
             switch (selection)
             {
                 case AllAttributeSelection _:
+                    break;
+                case NoAttributesSelection _:
                     break;
                 case RegexAttributeSelection r:
                     yield return new NpgsqlParameter("@name_regex", r.RegexStr);

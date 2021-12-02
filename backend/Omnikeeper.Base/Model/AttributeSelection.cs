@@ -59,9 +59,22 @@ namespace Omnikeeper.Base.Model
 
         public bool Contains(string attributeName) => true;
 
-        public override int GetHashCode() => 0;
+        public override int GetHashCode() => 1;
         public override bool Equals(object? obj) => Equals(obj as AllAttributeSelection);
         public bool Equals(AllAttributeSelection? other) => other != null;
+    }
+
+    public class NoAttributesSelection : IAttributeSelection, IEquatable<NoAttributesSelection>
+    {
+        private NoAttributesSelection() { }
+
+        public static NoAttributesSelection Instance = new NoAttributesSelection();
+
+        public bool Contains(string attributeName) => false;
+
+        public override int GetHashCode() => 0;
+        public override bool Equals(object? obj) => Equals(obj as NoAttributesSelection);
+        public bool Equals(NoAttributesSelection? other) => other != null;
     }
 
     public static class AttributeSelectionExtensions
@@ -71,6 +84,7 @@ namespace Omnikeeper.Base.Model
             return a switch
             {
                 AllAttributeSelection _ => a,
+                NoAttributesSelection _ => other,
                 NamedAttributesSelection n => n.Union(other),
                 RegexAttributeSelection r => r.Union(other),
                 _ => throw new NotImplementedException(),
@@ -82,8 +96,9 @@ namespace Omnikeeper.Base.Model
             return other switch
             {
                 AllAttributeSelection _ => other,
+                NoAttributesSelection _ => a,
                 NamedAttributesSelection n => NamedAttributesSelection.Build(a.AttributeNames.Union(n.AttributeNames).ToHashSet()), // union
-                RegexAttributeSelection r => throw new NotImplementedException(),
+                RegexAttributeSelection _ => throw new NotImplementedException(),
                 _ => throw new NotImplementedException(),
             };
         }
@@ -93,8 +108,9 @@ namespace Omnikeeper.Base.Model
             return other switch
             {
                 AllAttributeSelection _ => other,
-                NamedAttributesSelection n => throw new NotImplementedException(),
-                RegexAttributeSelection r => throw new NotImplementedException(),
+                NoAttributesSelection _ => a,
+                NamedAttributesSelection _ => throw new NotImplementedException(),
+                RegexAttributeSelection _ => throw new NotImplementedException(),
                 _ => throw new NotImplementedException(),
             };
         }

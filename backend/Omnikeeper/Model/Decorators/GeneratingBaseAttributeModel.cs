@@ -60,6 +60,7 @@ namespace Omnikeeper.Model.Decorators
                 NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
                 RegexAttributeSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
                 AllAttributeSelection _ => new HashSet<string>(), // we are fetching all attributes anyway, no need to add additional attributes
+                NoAttributesSelection _ => new HashSet<string>(), // no attributes necessary
                 _ => throw new Exception("Invalid attribute selection encountered"),
             };
             var additionalAttributes = (additionalAttributeNames.Count > 0) ? await model.GetAttributes(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerIDs, trans, atTime) : null;

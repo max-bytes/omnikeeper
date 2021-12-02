@@ -149,10 +149,23 @@ namespace Omnikeeper.GraphQL
                         }
                     }
 
+
+                    bool preAuthzCheckedCIs = false;
+                    if (ciidSelection is SpecificCIIDsSelection specificCIIDsSelection)
+                    {
+                        if (!ciBasedAuthorizationService.CanReadAllCIs(specificCIIDsSelection.CIIDs, out var notAllowedCI))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {notAllowedCI}");
+                        preAuthzCheckedCIs = true;
+                    }
+
+                    var requiredTraits = await traitsProvider.GetActiveTraitsByIDs(withEffectiveTraits, userContext.Transaction, timeThreshold);
+                    var requiredNonTraits = await traitsProvider.GetActiveTraitsByIDs(withoutEffectiveTraits, userContext.Transaction, timeThreshold);
+
                     // do a "forward" look into the graphql query to see which attributes we actually need to fetch to properly fulfill the request
                     // because we need to at least fetch a single attribute (due to internal reasons), we might as well fetch the name attribute and then don't care if it is requested or not
-                    IAttributeSelection attributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute);
-                    //var needsNameAttribute = context.SubFields?.ContainsKey("name") ?? false;
+                    IAttributeSelection baseAttributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute);
+                    IAttributeSelection attributeSelectionBecauseOfMergedAttributes = NoAttributesSelection.Instance;
+                    IAttributeSelection attributeSelectionBecauseOfTraits = NoAttributesSelection.Instance;
                     if (context.SubFields != null && context.SubFields.TryGetValue("mergedAttributes", out var mergedAttributesField))
                     {
                         // check whether or not the attributeNames parameter was set, in which case we can reduce the attributes to query for
@@ -166,25 +179,23 @@ namespace Omnikeeper.GraphQL
                                 return null;
                             }).Where(v => v != null).Select(v => v!).ToHashSet();
 
-                            attributeSelection = attributeSelection.Union(NamedAttributesSelection.Build(attributeNames));
+                            attributeSelectionBecauseOfMergedAttributes = NamedAttributesSelection.Build(attributeNames);
                         } else
                         {
                             // we need to query all attributes
-                            attributeSelection = AllAttributeSelection.Instance;
+                            attributeSelectionBecauseOfMergedAttributes = AllAttributeSelection.Instance;
                         }
                     }
-
-                    bool preAuthzCheckedCIs = false;
-                    if (ciidSelection is SpecificCIIDsSelection specificCIIDsSelection)
+                    if (context.SubFields != null && context.SubFields.TryGetValue("effectiveTraits", out var effectiveTraitsField))
                     {
-                        if (!ciBasedAuthorizationService.CanReadAllCIs(specificCIIDsSelection.CIIDs, out var notAllowedCI))
-                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {notAllowedCI}");
-                        preAuthzCheckedCIs = true;
+                        // TODO: we should be able to reduce the required attributes by checking the requested effective traits and respecting their required attributes
+                        // do not forget about the special handling for the empty trait
+                        attributeSelectionBecauseOfTraits = AllAttributeSelection.Instance;
                     }
+                    var finalAttributeSelection = baseAttributeSelection.Union(attributeSelectionBecauseOfMergedAttributes).Union(attributeSelectionBecauseOfTraits);
 
-                    var requiredTraits = await traitsProvider.GetActiveTraitsByIDs(withEffectiveTraits, userContext.Transaction, timeThreshold);
-                    var requiredNonTraits = await traitsProvider.GetActiveTraitsByIDs(withoutEffectiveTraits, userContext.Transaction, timeThreshold);
-                    var cis = await ciSearchModel.FindMergedCIsByTraits(ciidSelection, attributeSelection, requiredTraits.Values, requiredNonTraits.Values, layerSet, userContext.Transaction, timeThreshold);
+
+                    var cis = await ciSearchModel.FindMergedCIsByTraits(ciidSelection, finalAttributeSelection, requiredTraits.Values, requiredNonTraits.Values, layerSet, userContext.Transaction, timeThreshold);
 
                     // reduce CIs to those that are allowed
                     if (!preAuthzCheckedCIs)
