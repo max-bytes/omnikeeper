@@ -51,6 +51,28 @@ namespace Omnikeeper.GraphQL
             }
         }
 
+        public static IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, IDataLoaderContextAccessor dataLoaderContextAccessor, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        {
+            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedCIs_{layerSet}_{timeThreshold}",
+                    async (IEnumerable<ICIIDSelection> ciidSelections) =>
+                    {
+                        var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
+
+                        // TODO: implement attribute selection possibilities?
+                        var combinedCIs = (await ciModel.GetMergedCIs(combinedCIIDSelection, layerSet, true, AllAttributeSelection.Instance, trans, timeThreshold)).ToDictionary(ci => ci.ID);
+
+                        var ret = new List<(ICIIDSelection, MergedCI)>(); // NOTE: seems weird, cant lookup be created better?
+                        foreach (var ciidSelection in ciidSelections)
+                        {
+                            var ciids = await ciidSelection.GetCIIDsAsync(async () => await ciModel.GetCIIDs(trans));
+                            var selectedCIs = ciids.Where(combinedCIs.ContainsKey).Select(ciid => combinedCIs[ciid]);
+                            ret.AddRange(selectedCIs.Select(ci => (ciidSelection, ci)));
+                        }
+                        return ret.ToLookup(t => t.Item1, t => t.Item2);
+                    });
+            return loader.LoadAsync(ciidSelection);
+        }
+
         public static IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IDataLoaderContextAccessor dataLoaderContextAccessor, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader<ICIIDSelection, IDictionary<Guid, string>>($"GetMergedCINames_{layerSet}_{timeThreshold}",
