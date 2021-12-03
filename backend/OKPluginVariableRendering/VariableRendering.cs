@@ -42,6 +42,7 @@ namespace OKPluginVariableRendering
 
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
+
             logger.LogDebug("Start VariableRendering");
 
             //return false;
@@ -265,7 +266,7 @@ namespace OKPluginVariableRendering
                             GetTargetName(attribute.Name, mapping.Target),
                             new AttributeScalarValueText(attribute.Value),
                             mainCI.ID,
-                            cfg.TargetLayer,
+                            targetLayer.ID,
                             changesetProxy,
                             new DataOriginV1(DataOriginType.Manual),
                             trans);

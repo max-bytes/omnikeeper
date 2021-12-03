@@ -10,15 +10,11 @@ namespace OKPluginVariableRendering
         [JsonProperty("input_layerset", Required = Required.Always)]
         public List<string> InputLayerSet { get; set; }
 
-        [JsonProperty("target_layer", Required=Required.Always)]
-        public string TargetLayer { get; set; }
-
         [JsonProperty("base_ci", Required = Required.Always)]
         public BaseCI BaseCI { get; set; }
         
         public Configuration()
         {
-            TargetLayer = "";
             InputLayerSet = new List<string>();
             BaseCI = new BaseCI();
         }
