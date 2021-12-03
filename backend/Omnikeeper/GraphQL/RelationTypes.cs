@@ -1,4 +1,5 @@
 ﻿using GraphQL.DataLoader;
+using GraphQL.Language.AST;
 using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -44,7 +45,10 @@ namespace Omnikeeper.GraphQL
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
                 var layerSet = userContext.GetLayerSet(context.Path);
-                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.ToCIID), ciModel, layerSet, timeThreshold, userContext.Transaction)
+
+                IAttributeSelection attributeSelection = MergedCIType.ForwardInspectRequiredAttributes(context);
+
+                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.ToCIID), attributeSelection, ciModel, layerSet, timeThreshold, userContext.Transaction)
                     .Then(t => t.First());
             });
             Field<MergedCIType>("fromCI",
@@ -53,7 +57,10 @@ namespace Omnikeeper.GraphQL
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
                 var layerSet = userContext.GetLayerSet(context.Path);
-                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.FromCIID), ciModel, layerSet, timeThreshold, userContext.Transaction)
+
+                IAttributeSelection attributeSelection = MergedCIType.ForwardInspectRequiredAttributes(context);
+
+                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.FromCIID), attributeSelection, ciModel, layerSet, timeThreshold, userContext.Transaction)
                     .Then(t => t.First());
             });
         }

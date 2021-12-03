@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Omnikeeper.Base.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -35,12 +36,16 @@ namespace Omnikeeper.Base.Model
             AttributeNames = attributeNames;
         }
 
-        public static NamedAttributesSelection Build(params string[] attributeNames)
+        public static IAttributeSelection Build(params string[] attributeNames)
         {
+            if (attributeNames.IsEmpty())
+                return NoAttributesSelection.Instance;
             return new NamedAttributesSelection(attributeNames.ToHashSet());
         }
         public static IAttributeSelection Build(ISet<string> attributeNames)
         {
+            if (attributeNames.IsEmpty())
+                return NoAttributesSelection.Instance;
             return new NamedAttributesSelection(attributeNames);
         }
 
@@ -113,6 +118,27 @@ namespace Omnikeeper.Base.Model
                 RegexAttributeSelection _ => throw new NotImplementedException(),
                 _ => throw new NotImplementedException(),
             };
+        }
+
+        public static IAttributeSelection UnionAll(IEnumerable<IAttributeSelection> selections)
+        {
+            var specific = new HashSet<string>();
+            foreach (var selection in selections)
+            {
+                switch (selection)
+                {
+                    case AllAttributeSelection a:
+                        return a;
+                    case NamedAttributesSelection s:
+                        specific.UnionWith(s.AttributeNames);
+                        break;
+                    case NoAttributesSelection _:
+                        break;
+                    case RegexAttributeSelection _:
+                        throw new NotImplementedException();
+                }
+            }
+            return NamedAttributesSelection.Build(specific);
         }
     }
 }

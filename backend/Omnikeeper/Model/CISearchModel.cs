@@ -69,7 +69,7 @@ namespace Omnikeeper.Model
 
             // in case the empty trait is non-required, we reduce the workCIs list by those CIs that are empty
             // we could also have done this by reducing the CIIDSelection first, but this has worse performance for most typical use-cases
-            // because it produces a SpecificCIIDSelection with a huge list
+            // because it produces a SpecificCIIDSelection with a huge list <- TODO: is this still true, considering we are now using CTEs?
             if (emptyTraitIsNonRequired)
             {
                 // TODO: better performance possible if we get empty CIIDs and exclude those?

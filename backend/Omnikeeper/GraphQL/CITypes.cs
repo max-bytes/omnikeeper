@@ -1,5 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
+using GraphQL.Language.AST;
 using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
@@ -7,10 +8,7 @@ using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL
 {
@@ -83,6 +81,44 @@ namespace Omnikeeper.GraphQL
                 var loader = dataLoaderService.SetupEffectiveTraitLoader(traitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return loader.LoadAsync(ci);
             });
+        }
+
+        public static IAttributeSelection ForwardInspectRequiredAttributes(IResolveFieldContext context)
+        {
+            // do a "forward" look into the graphql query to see which attributes we actually need to fetch to properly fulfill the request
+            // because we need to at least fetch a single attribute (due to internal reasons), we might as well fetch the name attribute and then don't care if it is requested or not
+            IAttributeSelection baseAttributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute);
+            IAttributeSelection attributeSelectionBecauseOfMergedAttributes = NoAttributesSelection.Instance;
+            IAttributeSelection attributeSelectionBecauseOfTraits = NoAttributesSelection.Instance;
+            if (context.SubFields != null && context.SubFields.TryGetValue("mergedAttributes", out var mergedAttributesField))
+            {
+                // check whether or not the attributeNames parameter was set, in which case we can reduce the attributes to query for
+                var attributeNamesArgument = mergedAttributesField.Arguments?.FirstOrDefault(a => a.Name == "attributeNames");
+                if (attributeNamesArgument != null && attributeNamesArgument.Value is ListValue lv)
+                {
+                    var attributeNames = lv.Values.Select(v =>
+                    {
+                        if (v is StringValue sv)
+                            return sv.Value;
+                        return null;
+                    }).Where(v => v != null).Select(v => v!).ToHashSet();
+
+                    attributeSelectionBecauseOfMergedAttributes = NamedAttributesSelection.Build(attributeNames);
+                }
+                else
+                {
+                    // we need to query all attributes
+                    attributeSelectionBecauseOfMergedAttributes = AllAttributeSelection.Instance;
+                }
+            }
+            if (context.SubFields != null && context.SubFields.TryGetValue("effectiveTraits", out var effectiveTraitsField))
+            {
+                // TODO: we should be able to reduce the required attributes by checking the requested effective traits and respecting their required attributes
+                // do not forget about the special handling for the empty trait
+                attributeSelectionBecauseOfTraits = AllAttributeSelection.Instance;
+            }
+            var finalAttributeSelection = baseAttributeSelection.Union(attributeSelectionBecauseOfMergedAttributes).Union(attributeSelectionBecauseOfTraits);
+            return finalAttributeSelection;
         }
     }
 

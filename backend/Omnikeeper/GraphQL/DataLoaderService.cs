@@ -61,25 +61,29 @@ namespace Omnikeeper.GraphQL
             }
         }
 
-        public IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedCIs_{layerSet}_{timeThreshold}",
-                    async (IEnumerable<ICIIDSelection> ciidSelections) =>
+                    async (IEnumerable<(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection)> selections) =>
                     {
-                        var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
-                        // TODO: implement attribute selection possibilities?
-                        var combinedCIs = (await ciModel.GetMergedCIs(combinedCIIDSelection, layerSet, true, AllAttributeSelection.Instance, trans, timeThreshold)).ToDictionary(ci => ci.ID);
+                        var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(selections.Select(s => s.ciidSelection));
+                        var combinedAttributeSelection = AttributeSelectionExtensions.UnionAll(selections.Select(s => s.attributeSelection));
 
-                        var ret = new List<(ICIIDSelection, MergedCI)>(); // NOTE: seems weird, cant lookup be created better?
-                        foreach (var ciidSelection in ciidSelections)
+                        var includeEmptyCIs = true;
+                        var combinedCIs = (await ciModel.GetMergedCIs(combinedCIIDSelection, layerSet, includeEmptyCIs, combinedAttributeSelection, trans, timeThreshold)).ToDictionary(ci => ci.ID);
+
+                        var ret = new List<((ICIIDSelection ciidSelection, IAttributeSelection attributeSelection), MergedCI)>(); // NOTE: seems weird, cant lookup be created better?
+                        foreach (var s in selections)
                         {
-                            var ciids = await ciidSelection.GetCIIDsAsync(async () => await ciModel.GetCIIDs(trans));
-                            var selectedCIs = ciids.Where(combinedCIs.ContainsKey).Select(ciid => combinedCIs[ciid]);
-                            ret.AddRange(selectedCIs.Select(ci => (ciidSelection, ci)));
+                            var selectedCIs = s.ciidSelection.FilterDictionary(combinedCIs);
+
+                            // NOTE: we are NOT reducing the attributes again here, which means it's possible that this returns more attributes for some CIs than requested according to attributeSelection
+
+                            ret.AddRange(selectedCIs.Select(ci => (s, ci)));
                         }
                         return ret.ToLookup(t => t.Item1, t => t.Item2);
                     });
-            return loader.LoadAsync(ciidSelection);
+            return loader.LoadAsync((ciidSelection, attributeSelection));
         }
 
         public IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
@@ -173,7 +177,7 @@ namespace Omnikeeper.GraphQL
     public interface IDataLoaderService
     {
         IDataLoader<MergedCI, IEnumerable<EffectiveTrait>> SetupEffectiveTraitLoader(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
-        IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
+        IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IEnumerable<Layer>> SetupAndLoadAllLayers(ILayerModel layerModel, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IEnumerable<MergedRelation>> SetupAndLoadRelation(IRelationSelection rs, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);

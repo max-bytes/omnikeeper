@@ -1,6 +1,8 @@
-﻿using Omnikeeper.Base.Utils;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,6 +11,7 @@ namespace Omnikeeper.Base.Model
     public interface ICIIDSelection
     {
         public bool Contains(Guid ciid);
+        IEnumerable<MergedCI> FilterDictionary(IDictionary<Guid, MergedCI> cis);
     }
 
     public class SpecificCIIDsSelection : ICIIDSelection, IEquatable<SpecificCIIDsSelection>
@@ -20,6 +23,11 @@ namespace Omnikeeper.Base.Model
         }
 
         public bool Contains(Guid ciid) => CIIDs.Contains(ciid);
+
+        public IEnumerable<MergedCI> FilterDictionary(IDictionary<Guid, MergedCI> cis)
+        {
+            return CIIDs.Where(cis.ContainsKey).Select(ciid => cis[ciid]);
+        }
 
         public static ICIIDSelection Build(ISet<Guid> ciids)
         {
@@ -54,6 +62,10 @@ namespace Omnikeeper.Base.Model
         }
 
         public bool Contains(Guid ciid) => !ExceptCIIDs.Contains(ciid);
+        public IEnumerable<MergedCI> FilterDictionary(IDictionary<Guid, MergedCI> cis)
+        {
+            return cis.Where(kv => !ExceptCIIDs.Contains(kv.Key)).Select(kv => kv.Value);
+        }
 
         public static ICIIDSelection Build(ISet<Guid> ciids)
         {
@@ -82,6 +94,7 @@ namespace Omnikeeper.Base.Model
     public class AllCIIDsSelection : ICIIDSelection, IEquatable<AllCIIDsSelection>
     {
         public bool Contains(Guid ciid) => true;
+        public IEnumerable<MergedCI> FilterDictionary(IDictionary<Guid, MergedCI> cis) => cis.Values;
 
         public override int GetHashCode() => 0;
         public override bool Equals(object? obj) => Equals(obj as AllCIIDsSelection);
@@ -91,6 +104,7 @@ namespace Omnikeeper.Base.Model
     public class NoCIIDsSelection : ICIIDSelection, IEquatable<NoCIIDsSelection>
     {
         public bool Contains(Guid ciid) => false;
+        public IEnumerable<MergedCI> FilterDictionary(IDictionary<Guid, MergedCI> cis) => ImmutableList<MergedCI>.Empty;
 
         public override int GetHashCode() => 0;
         public override bool Equals(object? obj) => Equals(obj as NoCIIDsSelection);

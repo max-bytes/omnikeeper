@@ -161,41 +161,9 @@ namespace Omnikeeper.GraphQL
                     var requiredTraits = await traitsProvider.GetActiveTraitsByIDs(withEffectiveTraits, userContext.Transaction, timeThreshold);
                     var requiredNonTraits = await traitsProvider.GetActiveTraitsByIDs(withoutEffectiveTraits, userContext.Transaction, timeThreshold);
 
-                    // do a "forward" look into the graphql query to see which attributes we actually need to fetch to properly fulfill the request
-                    // because we need to at least fetch a single attribute (due to internal reasons), we might as well fetch the name attribute and then don't care if it is requested or not
-                    IAttributeSelection baseAttributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute);
-                    IAttributeSelection attributeSelectionBecauseOfMergedAttributes = NoAttributesSelection.Instance;
-                    IAttributeSelection attributeSelectionBecauseOfTraits = NoAttributesSelection.Instance;
-                    if (context.SubFields != null && context.SubFields.TryGetValue("mergedAttributes", out var mergedAttributesField))
-                    {
-                        // check whether or not the attributeNames parameter was set, in which case we can reduce the attributes to query for
-                        var attributeNamesArgument = mergedAttributesField.Arguments?.FirstOrDefault(a => a.Name == "attributeNames");
-                        if (attributeNamesArgument != null && attributeNamesArgument.Value is ListValue lv)
-                        {
-                            var attributeNames = lv.Values.Select(v =>
-                            {
-                                if (v is StringValue sv)
-                                    return sv.Value;
-                                return null;
-                            }).Where(v => v != null).Select(v => v!).ToHashSet();
+                    IAttributeSelection attributeSelection = MergedCIType.ForwardInspectRequiredAttributes(context);
 
-                            attributeSelectionBecauseOfMergedAttributes = NamedAttributesSelection.Build(attributeNames);
-                        } else
-                        {
-                            // we need to query all attributes
-                            attributeSelectionBecauseOfMergedAttributes = AllAttributeSelection.Instance;
-                        }
-                    }
-                    if (context.SubFields != null && context.SubFields.TryGetValue("effectiveTraits", out var effectiveTraitsField))
-                    {
-                        // TODO: we should be able to reduce the required attributes by checking the requested effective traits and respecting their required attributes
-                        // do not forget about the special handling for the empty trait
-                        attributeSelectionBecauseOfTraits = AllAttributeSelection.Instance;
-                    }
-                    var finalAttributeSelection = baseAttributeSelection.Union(attributeSelectionBecauseOfMergedAttributes).Union(attributeSelectionBecauseOfTraits);
-
-
-                    var cis = await ciSearchModel.FindMergedCIsByTraits(ciidSelection, finalAttributeSelection, requiredTraits.Values, requiredNonTraits.Values, layerSet, userContext.Transaction, timeThreshold);
+                    var cis = await ciSearchModel.FindMergedCIsByTraits(ciidSelection, attributeSelection, requiredTraits.Values, requiredNonTraits.Values, layerSet, userContext.Transaction, timeThreshold);
 
                     // reduce CIs to those that are allowed
                     if (!preAuthzCheckedCIs)
