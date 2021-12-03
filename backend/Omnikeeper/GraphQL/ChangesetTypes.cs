@@ -1,10 +1,13 @@
-﻿using GraphQL.DataLoader;
+﻿using Autofac;
+using GraphQL.DataLoader;
 using GraphQL.Types;
 using GraphQL.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System.Linq;
 
 namespace Omnikeeper.GraphQL
@@ -40,6 +43,7 @@ namespace Omnikeeper.GraphQL
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerID = context.Source!.LayerID; 
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
+
                     return dataLoaderService.SetupAndLoadAllLayers(layerModel, timeThreshold, userContext.Transaction)
                         .Then(layers => layers.FirstOrDefault(l => l.ID == layerID));
                 });

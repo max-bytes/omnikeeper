@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Model.TraitBased;
+using System.Collections.Immutable;
 
 namespace Omnikeeper.Model
 {
@@ -75,6 +76,9 @@ namespace Omnikeeper.Model
 
         public async Task<IDictionary<string, ITrait>> GetActiveTraitsByIDs(IEnumerable<string> IDs, IModelContext trans, TimeThreshold timeThreshold)
         {
+            if (IDs.IsEmpty())
+                return ImmutableDictionary<string, ITrait>.Empty;
+
             // TODO: can be done more efficiently?
             var ts = await GetActiveTraits(trans, timeThreshold);
 

@@ -1,6 +1,10 @@
-﻿using GraphQL.DataLoader;
+﻿using Autofac;
+using GraphQL.DataLoader;
+using Microsoft.Extensions.Logging.Abstractions;
+using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -63,7 +67,6 @@ namespace Omnikeeper.GraphQL
                     async (IEnumerable<ICIIDSelection> ciidSelections) =>
                     {
                         var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
-
                         // TODO: implement attribute selection possibilities?
                         var combinedCIs = (await ciModel.GetMergedCIs(combinedCIIDSelection, layerSet, true, AllAttributeSelection.Instance, trans, timeThreshold)).ToDictionary(ci => ci.ID);
 
