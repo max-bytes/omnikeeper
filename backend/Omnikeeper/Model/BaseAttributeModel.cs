@@ -227,19 +227,19 @@ namespace Omnikeeper.Model
 
             while (dr.Read())
             {
-                    var id = dr.GetGuid(0);
-                    var name = dr.GetString(1);
-                    var CIID = dr.GetGuid(2);
-                    var type = dr.GetFieldValue<AttributeValueType>(3);
-                    var valueText = dr.GetString(4);
-                    var valueBinary = dr.GetFieldValue<byte[]>(5);
-                    var valueControl = dr.GetFieldValue<byte[]>(6);
-                    var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
-                    var changesetID = dr.GetGuid(7);
-                    var layerID = dr.GetString(8);
+                var id = dr.GetGuid(0);
+                var name = dr.GetString(1);
+                var CIID = dr.GetGuid(2);
+                var type = dr.GetFieldValue<AttributeValueType>(3);
+                var valueText = dr.GetString(4);
+                var valueBinary = dr.GetFieldValue<byte[]>(5);
+                var valueControl = dr.GetFieldValue<byte[]>(6);
+                var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                var changesetID = dr.GetGuid(7);
+                var layerID = dr.GetString(8);
 
-                    var att = new CIAttribute(id, name, CIID, av, changesetID);
-                    yield return (att, layerID);
+                var att = new CIAttribute(id, name, CIID, av, changesetID);
+                yield return (att, layerID);
             }
         }
 
