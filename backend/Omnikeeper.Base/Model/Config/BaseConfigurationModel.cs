@@ -30,7 +30,7 @@ namespace Omnikeeper.Base.Model.Config
                     "*/15 * * * * *",
                     "*/5 * * * * *",
                     "* * * * *",
-                    "0 */15 * * * *"
+                    "0 0 1 * * *"
                 );
             } else
             {
