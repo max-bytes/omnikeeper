@@ -186,10 +186,13 @@ namespace Omnikeeper.Model
         private async IAsyncEnumerable<(CIAttribute attribute, string layerID)> _GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             NpgsqlCommand command;
+
+            var ciidSelection2CTEClause = CIIDSelection2CTEClause(selection);
+
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
                 command = new NpgsqlCommand($@"
-                    {CIIDSelection2CTEClause(selection)}
+                    {ciidSelection2CTEClause}
                     select id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute_latest a
                     {CIIDSelection2JoinClause(selection)}
                     where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY(@layer_ids)
@@ -203,7 +206,7 @@ namespace Omnikeeper.Model
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
                 command = new NpgsqlCommand($@"
-                    {CIIDSelection2CTEClause(selection)}
+                    {ciidSelection2CTEClause}
                     select id, name, ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id from (
                         select distinct on(a.ci_id, name, layer_id) removed, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
                         {CIIDSelection2JoinClause(selection)}
@@ -219,7 +222,8 @@ namespace Omnikeeper.Model
                     command.Parameters.Add(p);
             }
 
-            command.Prepare();
+            if (ciidSelection2CTEClause == "")
+                command.Prepare(); // NOTE: preparing only makes sense if the query is somewhat static, which it won't be when a highly dynamic CTE is involved
 
             using var dr = await command.ExecuteReaderAsync();
 
