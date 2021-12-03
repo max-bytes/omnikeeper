@@ -46,7 +46,8 @@ namespace Omnikeeper.GraphQL
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "readLayers" },
                 new QueryArgument<ListGraphType<InsertCIAttributeInputType>> { Name = "InsertAttributes" },
                 new QueryArgument<ListGraphType<RemoveCIAttributeInputType>> { Name = "RemoveAttributes" },
                 new QueryArgument<ListGraphType<InsertRelationInputType>> { Name = "InsertRelations" },
@@ -54,7 +55,8 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
-                    var layers = context.GetArgument<string[]>("layers")!;
+                    var writeLayerID = context.GetArgument<string>("writeLayer")!;
+                    var readLayerIDs = context.GetArgument<string[]>("readLayers")!;
                     var insertAttributes = context.GetArgument("InsertAttributes", new List<InsertCIAttributeInput>())!;
                     var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>())!;
                     var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>())!;
@@ -63,15 +65,12 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
                         .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                        .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layers, trans), context.Path);
+                        .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(readLayerIDs, trans), context.Path);
 
-                    var writeLayerIDs = insertAttributes.Select(a => a.LayerID)
-                    .Concat(removeAttributes.Select(a => a.LayerID))
-                    .Concat(insertRelations.Select(a => a.LayerID))
-                    .Concat(removeRelations.Select(a => a.LayerID))
-                    .Distinct();
-                    if (!layerBasedAuthorizationService.CanUserWriteToAllLayers(userContext.User, writeLayerIDs))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', writeLayerIDs)}");
+                    if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, readLayerIDs))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', readLayerIDs)}");
 
                     var writeCIIDs = insertAttributes.Select(a => a.CI)
                     .Concat(removeAttributes.Select(a => a.CI))
@@ -83,6 +82,8 @@ namespace Omnikeeper.GraphQL
 
                     var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
+                    // TODO: replace with bulk update
+
                     var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
                     var insertedAttributes = new List<CIAttribute>();
                     foreach (var attributeGroup in groupedInsertAttributes)
@@ -93,7 +94,7 @@ namespace Omnikeeper.GraphQL
                         {
                             var nonGenericAttributeValue = AttributeValueBuilder.BuildFromDTO(attribute.Value);
 
-                            var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                            var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                             insertedAttributes.Add(a);
                         }
                     }
@@ -106,7 +107,7 @@ namespace Omnikeeper.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, attribute.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                             removedAttributes.Add(a);
                         }
                     }
@@ -114,14 +115,14 @@ namespace Omnikeeper.GraphQL
                     var insertedRelations = new List<Relation>();
                     foreach (var insertRelation in insertRelations)
                     {
-                        var (r, changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                        var (r, changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                         insertedRelations.Add(r);
                     }
 
                     var removedRelations = new List<Relation>();
                     foreach (var removeRelation in removeRelations)
                     {
-                        var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                        var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                         removedRelations.Add(r);
                     }
 

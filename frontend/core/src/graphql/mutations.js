@@ -8,10 +8,9 @@ export const mutations = {
         {
           ci: $ciIdentity,
           name: $name,
-          layerID: $layerID,
           value: $value
         }
-      ], layers: $layers) {
+      ], writeLayer: $layerID, readLayers: $layers) {
         __typename
         affectedCIs {
           ...FullCI
@@ -29,10 +28,9 @@ export const mutations = {
       mutateCIs(removeAttributes: [
         {
           ci: $ciIdentity,
-          name: $name,
-          layerID: $layerID
+          name: $name
         }
-      ], layers: $layers) {
+      ], writeLayer: $layerID, readLayers: $layers) {
         affectedCIs {
           ...FullCI
         }
@@ -52,10 +50,9 @@ export const mutations = {
         {
           fromCIID: $fromCIID,
           toCIID: $toCIID,
-          predicateID: $predicateID,
-          layerID: $layerID
+          predicateID: $predicateID
         }
-      ], layers: $layers) {
+      ], writeLayer: $layerID, readLayers: $layers) {
         affectedCIs {
           ...FullCI
         }
@@ -74,10 +71,9 @@ export const mutations = {
       {
         fromCIID: $fromCIID,
         toCIID: $toCIID,
-        predicateID: $predicateID,
-        layerID: $layerID
+        predicateID: $predicateID
       }
-    ], layers: $layers) {
+    ], writeLayer: $layerID, readLayers: $layers) {
       affectedCIs {
         ...FullCI
       }
