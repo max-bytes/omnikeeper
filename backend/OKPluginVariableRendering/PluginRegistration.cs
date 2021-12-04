@@ -14,7 +14,5 @@ namespace OKPluginVariableRendering
         {
             sc.AddSingleton<IComputeLayerBrain, VariableRendering>();
         }
-
-        public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;
     }
 }

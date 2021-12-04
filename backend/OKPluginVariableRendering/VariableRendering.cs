@@ -72,8 +72,9 @@ namespace OKPluginVariableRendering
                 return false;
             }
 
+            //var mainCIs = await effectiveTraitModel.FilterCIsWithTrait(allCIs, activeTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
             var mainCIs = await effectiveTraitModel.FilterCIsWithTrait(allCIs, activeTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
-
+            mainCIs = mainCIs.ToList().Take(10);
             //TODO: select only the realtions that are defined in configuration
             //      check if selection with specific predicates is possible
             var relations = new List<string>();
@@ -97,6 +98,9 @@ namespace OKPluginVariableRendering
 
                 allRelations.AddRange(layerRelations);
             }
+
+
+            var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
 
             foreach (var mainCI in mainCIs)
             {
@@ -262,24 +266,32 @@ namespace OKPluginVariableRendering
                             continue;
                         }
 
-                        var (_, changed) = await attributeModel.InsertAttribute(
-                            GetTargetName(attribute.Name, mapping.Target),
-                            new AttributeScalarValueText(attribute.Value),
-                            mainCI.ID,
-                            targetLayer.ID,
-                            changesetProxy,
-                            new DataOriginV1(DataOriginType.Manual),
-                            trans);
+                        fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(GetTargetName(attribute.Name, mapping.Target), new AttributeScalarValueText(attribute.Value), mainCI.ID));
 
-                        if (!changed)
-                        {
-                            logger.LogError($"An error ocurred trying to insert attribute for CI with id={mainCI.ID}");
-                        }
+                        //var (_, changed) = await attributeModel.InsertAttribute(
+                        //    GetTargetName(attribute.Name, mapping.Target),
+                        //    new AttributeScalarValueText(attribute.Value),
+                        //    mainCI.ID,
+                        //    targetLayer.ID,
+                        //    changesetProxy,
+                        //    new DataOriginV1(DataOriginType.Manual),
+                        //    trans);
+
+                        //if (!changed)
+                        //{
+                        //    logger.LogError($"An error ocurred trying to insert attribute for CI with id={mainCI.ID}");
+                        //}
                     }
 
                 }
             }
 
+
+            await attributeModel.BulkReplaceAttributes(
+                new BulkCIAttributeDataLayerScope("", targetLayer.ID, fragments),
+                changesetProxy, 
+                new DataOriginV1(DataOriginType.ComputeLayer), 
+                trans);
 
 
             /*
@@ -518,6 +530,7 @@ namespace OKPluginVariableRendering
 
             if (attribute == "__name")
             {
+                result = true;
                 return result;
             }
 
