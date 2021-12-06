@@ -28,9 +28,10 @@ namespace OKPluginNaemonConfig
             sc.AddSingleton<GenericTraitEntityModel<Command, string>>();
             sc.AddSingleton<GenericTraitEntityModel<ServiceStatic, long>>();
             sc.AddSingleton<GenericTraitEntityModel<Module, string>>();
+            sc.AddSingleton<GenericTraitEntityModel<Interface, string>>();
             
         }
 
-        public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;
+        //public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;
     }
 }

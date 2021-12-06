@@ -6,7 +6,7 @@ namespace OKPluginNaemonConfig.Entity
     [TraitEntity("host", TraitOriginType.Core)]
     public class Host : TraitEntity
     {
-        [TraitAttribute("id", "cmdb.id")]
+        [TraitAttribute("id", "cmdb.host.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitEntityID]
         public readonly string Id;
@@ -14,20 +14,29 @@ namespace OKPluginNaemonConfig.Entity
         [TraitAttribute("name", "hostname")]
         public readonly string Name;
 
-        [TraitAttribute("status", "cmdb.status")]
+        [TraitAttribute("environment", "cmdb.host.environment")]
+        public readonly string Environment;
+
+        [TraitAttribute("status", "cmdb.host.status")]
         public readonly string Status;
 
-        [TraitAttribute("address", "cmdb.mon_ip_address")]
+        [TraitAttribute("platform", "cmdb.host.platform")]
+        public readonly string Platform;
+
+        [TraitAttribute("address", "cmdb.host.mon_ip_address")]
         public readonly string Address;
 
-        [TraitAttribute("port", "cmdb.mon_ip_port")]
+        [TraitAttribute("port", "cmdb.host.mon_ip_port")]
         public readonly string Port;
 
-        [TraitAttribute("cust", "cmdb.customer")]
+        [TraitAttribute("cust", "cmdb.host.customer")]
         public readonly string Cust;
 
-        [TraitAttribute("criticality", "cmdb.criticality")]
+        [TraitAttribute("criticality", "cmdb.host.criticality")]
         public readonly string Criticality;
+
+
+        // HSUP,HSUPAPP,HMONIPADDRESS,HMONIPPORT,HCRITICALITY,HCOMMENT,HINSTANCE,HCUST,HSERVICETIME,HOPERTIMEATTENDED,HOS,HLOCATION
 
         //NOTE currently not imported
         //[TraitAttribute("suppOS", "")]
@@ -40,16 +49,22 @@ namespace OKPluginNaemonConfig.Entity
         [TraitRelation("category", "has_category_member", false, 1, -1)]
         public readonly Guid[] CategoriesIds;
 
+        [TraitRelation("interface", "has_interface", true, 1, -1)]
+        public readonly Guid[] InterfacesIds;
+
         public Host()
         {
             Id = "";
             Name = "";
+            Environment = "";
             Status = "";
+            Platform = "";
             Address = "";
             Port = "";
             Cust = "";
             Criticality = "";
-            CategoriesIds = new Guid[0];
+            CategoriesIds = Array.Empty<Guid>();
+            InterfacesIds = Array.Empty<Guid>();
         }
 
     }

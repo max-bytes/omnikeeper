@@ -6,30 +6,30 @@ namespace OKPluginNaemonConfig.Entity
     [TraitEntity("service", TraitOriginType.Core)]
     public class Service : TraitEntity
     {
-        [TraitAttribute("id", "cmdb.id")]
+        [TraitAttribute("id", "cmdb.service.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitEntityID]
         public readonly string Id;
 
-        [TraitAttribute("name", "cmdb.name")]
+        [TraitAttribute("name", "cmdb.service.name")]
         public readonly string Name;
 
-        [TraitAttribute("status", "cmdb.status")]
+        [TraitAttribute("status", "cmdb.service.status")]
         public readonly string Status;
 
-        [TraitAttribute("environment", "cmdb.environment")]
+        [TraitAttribute("environment", "cmdb.service.environment")]
         public readonly string Environment;
 
-        [TraitAttribute("address", "cmdb.mon_ip_address")]
+        [TraitAttribute("address", "cmdb.service.mon_ip_address")]
         public readonly string Address;
 
-        [TraitAttribute("port", "cmdb.mon_ip_port")]
+        [TraitAttribute("port", "cmdb.service.mon_ip_port")]
         public readonly string Port;
 
-        [TraitAttribute("cust", "cmdb.customer")]
+        [TraitAttribute("cust", "cmdb.service.customer")]
         public readonly string Cust;
 
-        [TraitAttribute("criticality", "cmdb.criticality")]
+        [TraitAttribute("criticality", "cmdb.service.criticality")]
         public readonly string Criticality;
 
         //NOTE currently not imported
@@ -42,6 +42,9 @@ namespace OKPluginNaemonConfig.Entity
 
         [TraitRelation("category", "has_category_member", false, 1, -1)]
         public readonly Guid[] CategoriesIds;
+
+        [TraitRelation("interface", "has_interface", true, 1, -1)]
+        public readonly Guid[] InterfacesIds;
         public Service()
         {
             Id = "";
@@ -52,7 +55,8 @@ namespace OKPluginNaemonConfig.Entity
             Port = "";
             Cust = "";
             Criticality = "";
-            CategoriesIds = new Guid[0];
+            CategoriesIds = Array.Empty<Guid>();
+            InterfacesIds = Array.Empty<Guid>();
         }
     }
 }

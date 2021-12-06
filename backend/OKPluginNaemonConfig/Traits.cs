@@ -140,24 +140,24 @@ namespace OKPluginNaemonConfig
 
         public static readonly GenericTrait ServicesStaticFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(ServicesStatic);
 
-        public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() 
-        { 
-            HCis, 
-            ACis, 
-            HostsCategories, 
-            ServicesCategories, 
-            HostActions,
-            ServiceActions,
-            Interfaces,
-            NaemonInstance,
-            NaemonModules, 
-            NaemonProfiles, 
-            NaemonInstancesTags, 
-            Commands, 
-            TimePeriods,
-            Variables,
-            ServiceLayers,
-            ServicesStatic,
-        };
+        //public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() 
+        //{ 
+        //    HCis, 
+        //    ACis, 
+        //    HostsCategories, 
+        //    ServicesCategories, 
+        //    HostActions,
+        //    ServiceActions,
+        //    Interfaces,
+        //    NaemonInstance,
+        //    NaemonModules, 
+        //    NaemonProfiles, 
+        //    NaemonInstancesTags, 
+        //    Commands, 
+        //    TimePeriods,
+        //    Variables,
+        //    ServiceLayers,
+        //    ServicesStatic,
+        //};
     }
 }

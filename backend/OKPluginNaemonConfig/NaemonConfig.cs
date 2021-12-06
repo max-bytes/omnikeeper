@@ -40,6 +40,7 @@ namespace OKPluginNaemonConfig
         private readonly GenericTraitEntityModel<Command, string> commandModel;
         private readonly GenericTraitEntityModel<ServiceStatic, long> serviceStaticModel;
         private readonly GenericTraitEntityModel<Module, string> moduleModel;
+        private readonly GenericTraitEntityModel<Interface, string> interfaceModel;
         public NaemonConfig(ICIModel ciModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel, IAttributeModel attributeModel,
                            GenericTraitEntityModel<NaemonInstance, string> naemonInstanceModel,
                            GenericTraitEntityModel<Service, string> serviceModel,
@@ -54,6 +55,7 @@ namespace OKPluginNaemonConfig
                            GenericTraitEntityModel<Command, string> commandModel,
                            GenericTraitEntityModel<ServiceStatic, long> serviceStaticModel,
                            GenericTraitEntityModel<Module, string> moduleModel,
+                           GenericTraitEntityModel<Interface, string> interfaceModel,
                            GenericTraitEntityModel<Host, string> hostModel)
         {
             this.ciModel = ciModel;
@@ -78,6 +80,7 @@ namespace OKPluginNaemonConfig
             this.commandModel = commandModel;
             this.serviceStaticModel = serviceStaticModel;
             this.moduleModel = moduleModel;
+            this.interfaceModel = interfaceModel;
         }
 
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
@@ -86,11 +89,12 @@ namespace OKPluginNaemonConfig
 
             //return false;
 
-            var cfg = new Configuration();
+            Configuration cfg = new();
 
             try
             {
                 cfg = config.ToObject<Configuration>();
+                logger.LogDebug("Parsed successfully configuration for naemon config compute layer.");
             }
             catch (Exception ex)
             {
@@ -114,6 +118,9 @@ namespace OKPluginNaemonConfig
 
             // load all categories
             var allCategories = await categoryModel.GetAllByCIID(layersetCMDB, trans, changesetProxy.TimeThreshold);
+
+            // load all interfaces
+            var allInterfaces = await interfaceModel.GetAllByCIID(layersetCMDB, trans, changesetProxy.TimeThreshold);
 
             var hosts = await hostModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
             logger.LogInformation("Loaded all hosts.");
@@ -146,6 +153,24 @@ namespace OKPluginNaemonConfig
                     }
                 }
 
+                var ciInterfaces = allInterfaces.Where(c => ciItem.Value.InterfacesIds.ToList().Contains(c.Key)).ToList();
+                var interfaces = new List<InterfaceObj>();
+
+                foreach (var (_,item) in ciInterfaces)
+                {
+                    var obj = new InterfaceObj
+                    {
+                        DNSName = item.DNSName,
+                        Id = item.Id,
+                        IP = item.IP,
+                        LANType = item.LanType,
+                        Type = item.Type,
+                        Name = item.Name,
+                    };
+
+                    interfaces.Add(obj);
+                }
+
                 ciData.Add(new ConfigurationItem
                 {
                     Type = "HOST",
@@ -159,6 +184,7 @@ namespace OKPluginNaemonConfig
                     SuppOS = "", // Add SuppOS for this ci,
                     SuppApp = "", // Add SuppApp for this ci,W
                     Categories = cat,
+                    Interfaces = interfaces,
 
                 });
             }
@@ -193,6 +219,24 @@ namespace OKPluginNaemonConfig
                     }
                 }
 
+                var ciInterfaces = allInterfaces.Where(c => ciItem.Value.InterfacesIds.ToList().Contains(c.Key)).ToList();
+                var interfaces = new List<InterfaceObj>();
+
+                foreach (var (_, item) in ciInterfaces)
+                {
+                    var obj = new InterfaceObj
+                    {
+                        DNSName = item.DNSName,
+                        Id = item.Id,
+                        IP = item.IP,
+                        LANType = item.LanType,
+                        Type = item.Type,
+                        Name = item.Name,
+                    };
+
+                    interfaces.Add(obj);
+                }
+
                 ciData.Add(new ConfigurationItem
                 {
                     Type = "SERVICE",
@@ -207,6 +251,7 @@ namespace OKPluginNaemonConfig
                     SuppOS = "", // Add SuppOS for this ci,
                     SuppApp = "", // Add SuppApp for this ci,
                     Categories = cat,
+                    Interfaces = interfaces,
 
                 });
             }
@@ -263,41 +308,14 @@ namespace OKPluginNaemonConfig
 
             #endregion
 
-            // add normalized ci data from interfaces
-            // we should load interfaces, currently only one column is loaded from this table into omnikeeper
-
-            //var interfaces = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.InterfacesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-
-            //foreach (var ciItem in interfaces)
-            //{
-            /*
-                     'ID' => $interface[$fieldPrefix.'IFID'],
-        'TYPE' => $interface[$fieldPrefix.'IFTYPE'],
-        'LANTYPE' => $interface[$fieldPrefix.'IFLANTYPE'],
-        'NAME' => $interface[$fieldPrefix.'IFNAME'],
-        'IP' => $interface[$fieldPrefix.'IFIP'],
-//                        'IPVERSION' => $interface['IFIPVERSION'],
-//                        'GATEWAY' => $interface['IFGATEWAY'],
-        'DNSNAME' => $interface[$fieldPrefix.'IFDNS'],
-        'VLAN' => $interface[$fieldPrefix.'IFVLAN'],
-*/
-            //var obj = new Interfaces();
-            //foreach (var attribute in collection)
-            //{
-
-            //}
-            //}
-
-
 
             #region process core data
 
             logger.LogInformation("Started processing core data.");
 
-            // UpdateNormalizedCiDataFieldProfile
+            // Update normalized CiData field Profile
             Helper.CIData.UpdateProfileField(ciData, cfg!.CMDBMonprofilePrefix);
             logger.LogInformation("Finished updating profile field => UpdateNormalizedCiDataFieldProfile.");
-
 
             // updateNormalizedCiDataFieldAddress
             // NOTE: this part is done directly when selecting hosts and serices
@@ -318,9 +336,14 @@ namespace OKPluginNaemonConfig
 
             foreach (var item in allRunsOnRelations)
             {
+                MergedCI fromCI;
+                if (!fromCIs.ContainsKey(item!.Relation.FromCIID))
+                {
+                    continue;
+                }
+                fromCI = fromCIs[item!.Relation.FromCIID];
 
-                var fromCI = fromCIs[item!.Relation.FromCIID];
-                var fromCIID = (fromCI.MergedAttributes["cmdb.id"].Attribute.Value as AttributeScalarValueText)?.Value;
+                var fromCIID = (fromCI.MergedAttributes["cmdb.service.id"].Attribute.Value as AttributeScalarValueText)?.Value;
 
                 var cfgObj = ciData.Where(el => el.Type == "SERVICE" && el.Id == fromCIID).FirstOrDefault();
 
@@ -382,7 +405,10 @@ namespace OKPluginNaemonConfig
                 }
                 else
                 {
-
+                    if (cmdbRelationsBySrc.ContainsKey(ciItem.Id))
+                    {
+                       
+                    }
                 }
 
             }
@@ -524,7 +550,12 @@ namespace OKPluginNaemonConfig
 
             #region generate configs foreach naemon instance
             // first create new objects
+            // NOTE try to remove this 
             var naemonConfigObjs = new Dictionary<string, List<ConfigObj>>();
+
+
+            var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
+
             foreach (var item in naemonsCis)
             {
                 // deployed cis for this profile
@@ -597,6 +628,15 @@ namespace OKPluginNaemonConfig
                 //var (attribute, changed) = await attributeModel.InsertAttribute("config", AttributeScalarValueJSON.Build(ss), ci, "naemon_config", changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
             }
 
+            // save the created configurations to the target layer
+
+            
+
+            foreach (var naemonCfg in naemonConfigObjs)
+            {
+
+            }
+
             return true;
         }
 
@@ -617,31 +657,6 @@ namespace OKPluginNaemonConfig
 
         public class ConfigurationItem
         {
-            public ConfigurationItem()
-            {
-                Type = "";
-                Id = "";
-                Name = "";
-                Status = "";
-                Environment = "";
-                Profile = "";
-                Address = "";
-                EffectiveHostCI = "";
-                Cust = "";
-                Criticality = "";
-                SuppApp = "";
-                SuppOS = "";
-                Interfaces = new Interfaces();
-                Relations = new Dictionary<string, KeyValuePair<string, string>>();
-                Categories = new Dictionary<string, List<Category>>();
-                Actions = new Actions();
-                Categories = new Dictionary<string, List<Category>>();
-                Tags = new List<string>();
-                ProfileOrg = new List<string>();
-                NaemonsAvail = new List<string>();
-                Vars = new Dictionary<string, string>();
-                CmdbData = new Dictionary<string, string>();
-            }
             public string Type { get; set; }
             public string Id { get; set; }
             public string Name { get; set; }
@@ -659,13 +674,37 @@ namespace OKPluginNaemonConfig
             public Dictionary<string, List<Category>> Categories { get; set; }
             public List<string> Tags { get; set; }
             public Actions Actions { get; set; }
-            public Interfaces Interfaces { get; set; }
+            public List<InterfaceObj> Interfaces { get; set; }
             public Dictionary<string, KeyValuePair<string, string>> Relations { get; set; }
             public string EffectiveHostCI { get; set; }
             public Dictionary<string, string> Vars { get; set; }
 
             // NOTE fill this data with all columns from database
             public Dictionary<string, string> CmdbData { get; set; }
+            public ConfigurationItem()
+            {
+                Type = "";
+                Id = "";
+                Name = "";
+                Status = "";
+                Environment = "";
+                Profile = "";
+                Address = "";
+                EffectiveHostCI = "";
+                Cust = "";
+                Criticality = "";
+                SuppApp = "";
+                SuppOS = "";
+                Interfaces = new List<InterfaceObj>();
+                Relations = new Dictionary<string, KeyValuePair<string, string>>();
+                Categories = new Dictionary<string, List<Category>>();
+                Actions = new Actions();
+                Tags = new List<string>();
+                ProfileOrg = new List<string>();
+                NaemonsAvail = new List<string>();
+                Vars = new Dictionary<string, string>();
+                CmdbData = new Dictionary<string, string>();
+            }
         }
 
         public class Category
@@ -702,15 +741,26 @@ namespace OKPluginNaemonConfig
             }
         }
 
-        public class Interfaces
+        public class InterfaceObj
         {
-            public int Id { get; set; }
-            public int Type { get; set; }
-            public int LANType { get; set; }
-            public int Name { get; set; }
-            public int IP { get; set; }
-            public int DSNName { get; set; }
-            public int Vlan { get; set; }
+            public string Id { get; set; }
+            public string Type { get; set; }
+            public string LANType { get; set; }
+            public string Name { get; set; }
+            public string IP { get; set; }
+            public string DNSName { get; set; }
+            public string Vlan { get; set; }
+
+            public InterfaceObj()
+            {
+                Id = "";
+                Type = "";
+                LANType = "";
+                Name = "";
+                IP = "";
+                DNSName = "";
+                Vlan = "";
+            }
         }
 
         internal class Configuration

@@ -6,10 +6,7 @@ namespace OKPluginNaemonConfig.Helper
 {
     public static partial class CIData
     {
-        public static void UpdateProfileField(
-            List<ConfigurationItem> ciData,
-            List<string> cmdbMonprofilePrefix
-            )
+        public static void UpdateProfileField(List<ConfigurationItem> ciData, List<string> cmdbMonprofilePrefix)
         {
             foreach (var ciItem in ciData)
             {
