@@ -91,18 +91,6 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            if (layers.IsEmpty)
-                return ImmutableDictionary<Guid, MergedCIAttribute>.Empty; // return empty, an empty layer list can never produce any attributes
-
-            var attributes = await baseModel.GetAttributes(selection, NamedAttributesSelection.Build(name), layers.LayerIDs, trans, atTime);
-            var mergedAttributes = MergeAttributes(attributes, layers.LayerIDs);
-
-            // NOTE: because baseModel.GetAttributes() only return inner dictionaries for CIs that contain ANY attributes, we can safely access the attribute in the dictionary by []
-            return mergedAttributes.ToDictionary(t => t.Key, t => t.Value[name]);
-        }
-
         public async Task<IDictionary<Guid, string>> GetMergedCINames(ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             if (layers.IsEmpty)
