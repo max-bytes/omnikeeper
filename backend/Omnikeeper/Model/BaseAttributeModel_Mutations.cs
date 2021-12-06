@@ -61,6 +61,10 @@ namespace Omnikeeper.Model
             return (ret, true);
         }
 
+        // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":
+        // it is not possible to insert the "same" attribute (same ciid, name and layer) multiple times when using this preparation method
+        // if this operation detects a duplicate, an exception is thrown;
+        // the caller is responsible for making sure there are no duplicates
         public async Task<(
             IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
             IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes
@@ -232,24 +236,6 @@ namespace Omnikeeper.Model
             {
                 return (false, default);
             }
-        }
-
-        // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":
-        // it is not possible to insert the "same" attribute (same ciid, name and layer) multiple times
-        // if this operation detects a duplicate, an exception is thrown;
-        // the caller is responsible for making sure there are no duplicates
-        public async Task<(
-            IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
-            IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes
-            )> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            var (actualInserts, removes) = await PrepareForBulkUpdate(data, trans);
-
-            // perform updates in bulk
-            await BulkUpdate(actualInserts, removes, data.LayerID, origin, changesetProxy, trans);
-
-            // TODO: check what returned data is actually needed
-            return (actualInserts, removes);
         }
     }
 }
