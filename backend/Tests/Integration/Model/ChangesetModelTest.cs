@@ -1,20 +1,16 @@
-﻿using Microsoft.Extensions.Logging.Abstractions;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
-using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
-using Omnikeeper.Model.Decorators;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using static Omnikeeper.Base.Model.IChangesetModel;
-using static Omnikeeper.Model.AttributeModel;
 
 namespace Tests.Integration.Model
 {
@@ -27,8 +23,6 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel);
             var baseAttributeModel = new BaseAttributeModel(new PartitionModel(), new CIIDModel());
             var attributeModel = new AttributeModel(baseAttributeModel);
-            var baseRelationModel = new BaseRelationModel(new PartitionModel());
-            var relationModel = new RelationModel(baseRelationModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             //var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
             //var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);

@@ -4,22 +4,18 @@ using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
-using Omnikeeper.Model.Decorators;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
-using static Omnikeeper.Model.AttributeModel;
 
 namespace Tasks.DBInit
 {

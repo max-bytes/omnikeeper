@@ -1,21 +1,18 @@
 ﻿using GraphQL;
 using GraphQL.Types;
-using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
+using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Omnikeeper.Base.Model.TraitBased;
-using Omnikeeper.Base.Plugins;
-using Omnikeeper.Entity.AttributeValues;
-using static Omnikeeper.Model.AttributeModel;
 
 namespace Omnikeeper.GraphQL
 {
@@ -63,18 +60,6 @@ namespace Omnikeeper.GraphQL
                     var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>())!;
                     var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>())!;
                     var removeRelations = context.GetArgument("RemoveRelations", new List<RemoveRelationInput>())!;
-
-                    bool applyMaskAfterDeletion = true;
-                    var readLayersBelowWriteLayer = new string[0];
-                    if (applyMaskAfterDeletion)
-                    {
-                        var index = readLayerIDs.IndexOf(writeLayerID);
-                        if (index == -1)
-                        {
-                            throw new ExecutionError($"Cannot apply mask when write layer ID {writeLayerID} is not part of read layer IDs ({string.Join(',', readLayerIDs)})");
-                        }
-                        readLayersBelowWriteLayer = readLayerIDs.Skip(index + 1).ToArray();
-                    }
 
                     var userContext = await context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
