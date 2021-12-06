@@ -14,6 +14,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using static Omnikeeper.Base.Model.IChangesetModel;
+using static Omnikeeper.Model.AttributeModel;
 
 namespace Tests.Integration.Model
 {
@@ -251,7 +252,7 @@ namespace Tests.Integration.Model
             // delete attribute a2
             using var trans6 = ModelContextBuilder.BuildDeferred();
             var changeset5 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(250)), changesetModel);
-            await attributeModel.RemoveAttribute("a2", ciid1, layer1.ID, changeset5, new DataOriginV1(DataOriginType.Manual), trans6);
+            await attributeModel.RemoveAttribute("a2", ciid1, layer1.ID, changeset5, new DataOriginV1(DataOriginType.Manual), trans6, MaskHandlingForRemovalApplyNoMask.Instance);
             trans6.Commit();
 
             // changeset2 is now old "enough", and can be deleted

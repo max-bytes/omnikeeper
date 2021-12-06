@@ -4,7 +4,6 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -91,32 +90,73 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IDictionary<Guid, string>> GetMergedCINames(ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            if (layers.IsEmpty)
-                return ImmutableDictionary<Guid, string>.Empty; // return empty, an empty layer list can never produce anything
-
-            var attributes = await baseModel.GetAttributes(selection, NamedAttributesSelection.Build(ICIModel.NameAttribute), layers.LayerIDs, trans, atTime);
-            var mergedAttributes = MergeAttributes(attributes, layers.LayerIDs);
-            // NOTE: because baseModel.GetAttributes() only return inner dictionaries for CIs that contain ANY attributes, we can safely access the attribute in the dictionary by []
-            var ret = mergedAttributes.ToDictionary(t => t.Key, t => t.Value[ICIModel.NameAttribute].Attribute.Value.Value2String());
-
-            return ret;
-        }
-
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
             return await baseModel.InsertAttribute(name, value, ciid, layerID, changeset, origin, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
+            switch (maskHandling)
+            {
+                case MaskHandlingForRemovalApplyMaskIfNecessary n:
+                    var attributeRemaining = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), NamedAttributesSelection.Build(name), new LayerSet(n.ReadLayersBelowWriteLayer), trans, n.ReadTime);
+                    if (attributeRemaining.TryGetValue(ciid, out var aa) && aa.ContainsKey(name))
+                    { // attribute exists in lower layers, mask it
+                        // NOTE: if the current attribute is already a mask, the InsertAttribute detects this and the operation becomes a NO-OP
+                        return await baseModel.InsertAttribute(name, AttributeScalarValueMask.Instance, ciid, layerID, changeset, origin, trans);
+                    }
+                    else
+                    {
+                        // TODO: how should we handle the case when the attribute we try to delete is already a mask? -> NO-OP? or delete the mask? make it configurable?
+                        // currently any mask is removed as well
+                        return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
+                    }
+                case MaskHandlingForRemovalApplyNoMask _:
+                    return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
+                default:
+                    throw new Exception("Invalid mask handling");
+            }
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
+        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            return await baseModel.BulkReplaceAttributes(data, changeset, origin, trans);
+            var (inserts, removals) = await baseModel.PrepareForBulkUpdate(data, trans);
+
+            switch (maskHandling)
+            {
+                case MaskHandlingForRemovalApplyMaskIfNecessary n:
+
+                    // check removals, change them to a mask-insertion if necessary; necessary means that the same attribute (same ci, same name) is defined in a layer below and hence needs to be masked
+                    if (!n.ReadLayersBelowWriteLayer.IsEmpty())
+                    {
+                        var ciids = removals.Select(t => t.ciid).ToHashSet();
+                        var attributeNames = removals.Select(t => t.name).ToHashSet();
+                        var attributesRemaining = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciids), NamedAttributesSelection.Build(attributeNames), new LayerSet(n.ReadLayersBelowWriteLayer), trans, n.ReadTime);
+                        for (int i = removals.Count - 1;i >= 0;i--)
+                        {
+                            var (ciid, name, value, attributeID, newAttributeID) = removals[i];
+                            if (attributesRemaining.TryGetValue(ciid, out var aa) && aa.ContainsKey(name))
+                            {
+                                removals.RemoveAt(i);
+                                inserts.Add((ciid, name, AttributeScalarValueMask.Instance, attributeID, newAttributeID));
+                            }
+                        }
+                    }
+
+                    break;
+                case MaskHandlingForRemovalApplyNoMask _:
+                    // no operation necessary
+                    break;
+                default:
+                    throw new Exception("Invalid mask handling");
+            }
+
+
+            // perform updates in bulk
+            await baseModel.BulkUpdate(inserts, removals, data.LayerID, origin, changeset, trans);
+
+            return !inserts.IsEmpty() || !removals.IsEmpty();
         }
     }
 }

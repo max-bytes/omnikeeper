@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Omnikeeper.Model.AttributeModel;
 
 namespace Tests.Integration.Model
 {
@@ -77,7 +78,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                var r1 = await attributeModel.RemoveAttribute("a1", ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var r1 = await attributeModel.RemoveAttribute("a1", ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 Assert.AreEqual("a1", r1.attribute.Name);
 
                 var a2 = (await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest())).Values;
@@ -372,7 +373,7 @@ namespace Tests.Integration.Model
                 new BulkCIAttributeDataLayerScope.Fragment("a1", new AttributeScalarValueText("textNew"), ciid1),
                 new BulkCIAttributeDataLayerScope.Fragment("a4", new AttributeScalarValueText("textNew"), ciid2),
                 new BulkCIAttributeDataLayerScope.Fragment("a2", new AttributeScalarValueText("textNew"), ciid2),
-            }), changeset3, new DataOriginV1(DataOriginType.Manual), trans2);
+            }), changeset3, new DataOriginV1(DataOriginType.Manual), trans2, MaskHandlingForRemovalApplyNoMask.Instance);
             trans2.Commit();
 
             using var trans3 = ModelContextBuilder.BuildImmediate();
@@ -493,7 +494,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset3 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                await attributeModel.RemoveAttribute("a1", ciid1, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.RemoveAttribute("a1", ciid1, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 

@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Model.TraitBased;
+using static Omnikeeper.Model.AttributeModel;
 
 namespace Omnikeeper.GridView.Commands
 {
@@ -154,13 +155,15 @@ namespace Omnikeeper.GridView.Commands
                             {
                                 try
                                 {
+                                    // TODO: mask handling
                                     await attributeModel.RemoveAttribute(
                                         attributeName,
                                         row.Ciid,
                                         writeLayer,
                                         changesetProxy,
                                         new DataOriginV1(DataOriginType.Manual),
-                                        trans);
+                                        trans, 
+                                        MaskHandlingForRemovalApplyNoMask.Instance);
                                 }
                                 catch (Exception e)
                                 {

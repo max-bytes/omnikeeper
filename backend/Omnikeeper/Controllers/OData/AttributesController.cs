@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using static Omnikeeper.Model.AttributeModel;
 
 namespace Omnikeeper.Controllers.OData
 {
@@ -240,7 +241,7 @@ namespace Omnikeeper.Controllers.OData
                     return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
                 var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-                await attributeModel.RemoveAttribute(keyAttributeName, keyCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.RemoveAttribute(keyAttributeName, keyCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
             catch (Exception)

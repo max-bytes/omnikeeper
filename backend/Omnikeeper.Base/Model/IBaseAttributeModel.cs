@@ -13,7 +13,16 @@ namespace Omnikeeper.Base.Model
     {
         Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans);
         Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans);
-        Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans);
+
+        Task<(
+            IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
+            IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes
+            )> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans);
+
+        Task<(bool changed, Guid changesetID)> BulkUpdate(
+            IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
+            IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes,
+            string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans);
     }
 
     public interface IBaseAttributeModel : IBaseAttributeMutationModel
@@ -32,11 +41,5 @@ namespace Omnikeeper.Base.Model
     {
         Task<int> DeleteAllAttributes(string layerID, IModelContext trans);
         Task<int> DeleteOutdatedAttributesOlderThan(string[] layerIDs, IModelContext trans, DateTimeOffset threshold, TimeThreshold atTime);
-    }
-
-    public static class BaseAttributeModelExtensions
-    {
-        public static async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(this IBaseAttributeMutationModel baseAttributeModel, string nameValue, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-            => await baseAttributeModel.InsertAttribute(ICIModel.NameAttribute, new AttributeScalarValueText(nameValue), ciid, layerID, changesetProxy, origin, trans);
     }
 }

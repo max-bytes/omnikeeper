@@ -31,7 +31,7 @@ namespace Omnikeeper.Model
                 return (currentAttribute, false);
 
             var id = Guid.NewGuid();
-            var (_, changesetID) = await _BulkUpdate(
+            var (_, changesetID) = await BulkUpdate(
                 new (Guid, string, IAttributeValue, Guid?, Guid)[] { (ciid, name, value, currentAttribute?.ID, id) }, 
                 new (Guid, string, IAttributeValue, Guid, Guid)[0], 
                 layerID, origin, changesetProxy, trans);
@@ -51,7 +51,7 @@ namespace Omnikeeper.Model
             }
 
             var id = Guid.NewGuid();
-            var (_, changesetID) = await _BulkUpdate(
+            var (_, changesetID) = await BulkUpdate(
                 new (Guid, string, IAttributeValue, Guid?, Guid)[0],
                 new (Guid, string, IAttributeValue, Guid, Guid)[] { (ciid, name, currentAttribute.Value, currentAttribute.ID, id) },
                 layerID, origin, changesetProxy, trans);
@@ -61,11 +61,10 @@ namespace Omnikeeper.Model
             return (ret, true);
         }
 
-        // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":
-        // it is not possible to insert the "same" attribute (same ciid, name and layer) multiple times
-        // if this operation detects a duplicate, an exception is thrown;
-        // the caller is responsible for making sure there are no duplicates
-        public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(
+            IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
+            IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes
+            )> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
 
@@ -80,7 +79,7 @@ namespace Omnikeeper.Model
                     await GetAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), new string[] { data.LayerID }, trans, readTS),
                 _ => throw new Exception("Unknown scope")
             }).SelectMany(t => t.Values.SelectMany(tt => tt.Values)).ToDictionary(a => a.InformationHash); // TODO: slow?
-            
+
             var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)>();
             var informationHashesToInsert = new HashSet<string>();
             foreach (var fragment in data.Fragments)
@@ -106,30 +105,27 @@ namespace Omnikeeper.Model
                 actualInserts.Add((ciid, fullName, value, currentAttribute?.ID, Guid.NewGuid()));
             }
 
-            // perform updates in bulk
             var removes = outdatedAttributes.Values.Select(a => (a.CIID, a.Name, a.Value, a.ID, Guid.NewGuid())).ToList();
-            await _BulkUpdate(actualInserts, removes, data.LayerID, origin, changesetProxy, trans);
 
-            // TODO: check what returned data is actually needed
-            // return all attributes that have changed (their ciids and the attribute full names)
-            return actualInserts.Select(i => (i.ciid, i.fullName)).Concat(outdatedAttributes.Values.Select(i => (i.CIID, i.Name)));
+            return (actualInserts, removes);
         }
 
-        private async Task<(bool changed, Guid changesetID)> _BulkUpdate(
-            IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> actualInserts,
+        public async Task<(bool changed, Guid changesetID)> BulkUpdate(
+            IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
             IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes,
             string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            if (!actualInserts.IsEmpty() || !removes.IsEmpty())
+            if (!inserts.IsEmpty() || !removes.IsEmpty())
             {
                 Changeset changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
 
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
                 // historic
+                // inserts
                 // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
                 using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, removed, ""timestamp"", changeset_id, partition_index) FROM STDIN (FORMAT BINARY)");
-                foreach (var (ciid, fullName, value, _, newAttributeID) in actualInserts)
+                foreach (var (ciid, fullName, value, _, newAttributeID) in inserts)
                 {
                     var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
 
@@ -148,7 +144,7 @@ namespace Omnikeeper.Model
                     writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                 }
 
-                // remove outdated 
+                // removes 
                 foreach (var (ciid, name, value, _, newAttributeID) in removes)
                 {
                     var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
@@ -176,7 +172,7 @@ namespace Omnikeeper.Model
                 // NOTE: actual new inserts are only those that have isNew, which must be equivalent to NOT having an entry in the latest table
                 // that allows us to do COPY insertion, because we guarantee that there are no unique constraint violations
                 // should this ever throw a unique constraint violation, means there is a bug and _latest and _historic are out of sync
-                var actualNewInserts = actualInserts.Where(t => t.existingAttributeID == null);
+                var actualNewInserts = inserts.Where(t => t.existingAttributeID == null);
                 if (!actualNewInserts.IsEmpty())
                 {
                     using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
@@ -202,7 +198,7 @@ namespace Omnikeeper.Model
                 // updates (actual updates and removals)
                 // TODO: improve performance
                 // add index, use CTEs
-                var actualModified = actualInserts.Where(t => t.existingAttributeID != null);
+                var actualModified = inserts.Where(t => t.existingAttributeID != null);
                 foreach (var (ciid, fullName, value, existingAttributeID, newAttributeID) in actualModified)
                 {
                     using var commandUpdateLatest = new NpgsqlCommand(@"
@@ -236,6 +232,24 @@ namespace Omnikeeper.Model
             {
                 return (false, default);
             }
+        }
+
+        // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":
+        // it is not possible to insert the "same" attribute (same ciid, name and layer) multiple times
+        // if this operation detects a duplicate, an exception is thrown;
+        // the caller is responsible for making sure there are no duplicates
+        public async Task<(
+            IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
+            IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes
+            )> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        {
+            var (actualInserts, removes) = await PrepareForBulkUpdate(data, trans);
+
+            // perform updates in bulk
+            await BulkUpdate(actualInserts, removes, data.LayerID, origin, changesetProxy, trans);
+
+            // TODO: check what returned data is actually needed
+            return (actualInserts, removes);
         }
     }
 }

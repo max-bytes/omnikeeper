@@ -19,6 +19,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Model.TraitBased;
+using static Omnikeeper.Model.AttributeModel;
 
 namespace Tasks.DBInit
 {
@@ -199,7 +200,7 @@ namespace Tasks.DBInit
                     index++;
                 }
 
-                await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", cmdbLayerID, fragments), changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", cmdbLayerID, fragments), changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                 trans.Commit();
             }

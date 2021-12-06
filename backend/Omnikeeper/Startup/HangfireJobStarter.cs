@@ -37,11 +37,11 @@ namespace Omnikeeper.Startup
             RecurringJob.RemoveIfExists("ArchiveOldDataRunner");
             RecurringJob.RemoveIfExists("UsageDataWriteRunner");
 
-            RecurringJob.AddOrUpdate<CLBRunner>("CLBRunner", s => s.Run(null), config.CLBRunnerInterval);
-            RecurringJob.AddOrUpdate<MarkedForDeletionRunner>("MarkedForDeletionRunner", s => s.Run(null), config.MarkedForDeletionRunnerInterval);
-            RecurringJob.AddOrUpdate<ExternalIDManagerRunner>("ExternalIDManagerRunner", s => s.Run(null), config.ExternalIDManagerRunnerInterval);
-            RecurringJob.AddOrUpdate<ArchiveOldDataRunner>("ArchiveOldDataRunner", s => s.Run(null), config.ArchiveOldDataRunnerInterval);
-            RecurringJob.AddOrUpdate<UsageDataWriteRunner>("UsageDataWriteRunner", s => s.Run(null), Cron.Minutely);
+            //RecurringJob.AddOrUpdate<CLBRunner>("CLBRunner", s => s.Run(null), config.CLBRunnerInterval);
+            //RecurringJob.AddOrUpdate<MarkedForDeletionRunner>("MarkedForDeletionRunner", s => s.Run(null), config.MarkedForDeletionRunnerInterval);
+            //RecurringJob.AddOrUpdate<ExternalIDManagerRunner>("ExternalIDManagerRunner", s => s.Run(null), config.ExternalIDManagerRunnerInterval);
+            //RecurringJob.AddOrUpdate<ArchiveOldDataRunner>("ArchiveOldDataRunner", s => s.Run(null), config.ArchiveOldDataRunnerInterval);
+            //RecurringJob.AddOrUpdate<UsageDataWriteRunner>("UsageDataWriteRunner", s => s.Run(null), Cron.Minutely);
 
             // plugin hangfire jobs
             foreach (var plugin in plugins)

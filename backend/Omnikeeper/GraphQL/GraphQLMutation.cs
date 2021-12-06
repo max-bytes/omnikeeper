@@ -14,6 +14,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
+using Omnikeeper.Entity.AttributeValues;
+using static Omnikeeper.Model.AttributeModel;
 
 namespace Omnikeeper.GraphQL
 {
@@ -62,6 +64,18 @@ namespace Omnikeeper.GraphQL
                     var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>())!;
                     var removeRelations = context.GetArgument("RemoveRelations", new List<RemoveRelationInput>())!;
 
+                    bool applyMaskAfterDeletion = true;
+                    var readLayersBelowWriteLayer = new string[0];
+                    if (applyMaskAfterDeletion)
+                    {
+                        var index = readLayerIDs.IndexOf(writeLayerID);
+                        if (index == -1)
+                        {
+                            throw new ExecutionError($"Cannot apply mask when write layer ID {writeLayerID} is not part of read layer IDs ({string.Join(',', readLayerIDs)})");
+                        }
+                        readLayersBelowWriteLayer = readLayerIDs.Skip(index + 1).ToArray();
+                    }
+
                     var userContext = await context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
                         .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
@@ -107,7 +121,8 @@ namespace Omnikeeper.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                            // TODO: mask handling
+                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                             removedAttributes.Add(a);
                         }
                     }
@@ -124,6 +139,8 @@ namespace Omnikeeper.GraphQL
                     {
                         var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                         removedRelations.Add(r);
+
+                        // TODO: support for masking of relations
                     }
 
                     IEnumerable<MergedCI> affectedCIs = new List<MergedCI>();
