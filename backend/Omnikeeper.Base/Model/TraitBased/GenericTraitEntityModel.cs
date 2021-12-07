@@ -238,9 +238,9 @@ namespace Omnikeeper.Base.Model.TraitBased
             }
 
             var relevantAttributeNames = attributeFieldInfos.Select(afi => afi.TraitAttributeAttribute.aName).ToHashSet();
-            var changed = await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(writeLayer, fragments, relevantCIs, relevantAttributeNames), changesetProxy, dataOrigin, trans);
+            var changed = await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(writeLayer, fragments, relevantCIs, relevantAttributeNames), changesetProxy, dataOrigin, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
-            return !changed.IsEmpty();
+            return changed;
         }
 
         private async Task<bool> WriteRelations(IEnumerable<(T t, Guid ciid)> entities, 
@@ -312,7 +312,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             await attributeModel.BulkReplaceAttributes(
                 new BulkCIAttributeDataCIAndAttributeNameScope(writeLayerID, new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>(), 
                 new HashSet<Guid>() { ciid }, attributeFieldInfos.Select(afi => afi.TraitAttributeAttribute.aName).ToHashSet()), 
-                changesetProxy, dataOrigin, trans);
+                changesetProxy, dataOrigin, trans, MaskHandlingForRemovalApplyNoMask.Instance);
         }
 
         private async Task RemoveRelations(Guid ciid, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)

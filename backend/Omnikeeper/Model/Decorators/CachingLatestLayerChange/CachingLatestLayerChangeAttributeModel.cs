@@ -58,11 +58,16 @@ namespace Omnikeeper.Model.Decorators.CachingLatestLayerChange
             return t;
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
+        public async Task<(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes)> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans)
         {
-            var t = await model.BulkReplaceAttributes(data, changeset, origin, trans);
-            if (!t.IsEmpty())
-                cache.UpdateCache(data.LayerID, changeset.TimeThreshold.Time);
+            return await model.PrepareForBulkUpdate(data, trans);
+        }
+
+        public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes, string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)
+        {
+            var t = await model.BulkUpdate(inserts, removes, layerID, origin, changesetProxy, trans);
+            if (!inserts.IsEmpty() || !removes.IsEmpty())
+                cache.UpdateCache(layerID, changesetProxy.TimeThreshold.Time);
             return t;
         }
     }

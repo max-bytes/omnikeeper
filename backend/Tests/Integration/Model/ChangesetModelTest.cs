@@ -1,14 +1,11 @@
-﻿using Microsoft.Extensions.Logging.Abstractions;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
-using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
-using Omnikeeper.Model.Decorators;
 using System;
 using System.Linq;
 using System.Threading;
@@ -26,8 +23,6 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel);
             var baseAttributeModel = new BaseAttributeModel(new PartitionModel(), new CIIDModel());
             var attributeModel = new AttributeModel(baseAttributeModel);
-            var baseRelationModel = new BaseRelationModel(new PartitionModel());
-            var relationModel = new RelationModel(baseRelationModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             //var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
             //var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
@@ -251,7 +246,7 @@ namespace Tests.Integration.Model
             // delete attribute a2
             using var trans6 = ModelContextBuilder.BuildDeferred();
             var changeset5 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(250)), changesetModel);
-            await attributeModel.RemoveAttribute("a2", ciid1, layer1.ID, changeset5, new DataOriginV1(DataOriginType.Manual), trans6);
+            await attributeModel.RemoveAttribute("a2", ciid1, layer1.ID, changeset5, new DataOriginV1(DataOriginType.Manual), trans6, MaskHandlingForRemovalApplyNoMask.Instance);
             trans6.Commit();
 
             // changeset2 is now old "enough", and can be deleted

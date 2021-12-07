@@ -1,19 +1,18 @@
 ﻿using GraphQL;
 using GraphQL.Types;
-using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
+using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Omnikeeper.Base.Model.TraitBased;
-using Omnikeeper.Base.Plugins;
 
 namespace Omnikeeper.GraphQL
 {
@@ -107,7 +106,8 @@ namespace Omnikeeper.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                            // TODO: mask handling
+                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                             removedAttributes.Add(a);
                         }
                     }
@@ -124,6 +124,8 @@ namespace Omnikeeper.GraphQL
                     {
                         var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                         removedRelations.Add(r);
+
+                        // TODO: support for masking of relations
                     }
 
                     IEnumerable<MergedCI> affectedCIs = new List<MergedCI>();
