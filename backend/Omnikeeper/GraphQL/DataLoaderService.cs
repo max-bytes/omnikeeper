@@ -1,10 +1,7 @@
 ﻿using Autofac;
 using GraphQL.DataLoader;
-using Microsoft.Extensions.Logging.Abstractions;
-using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -22,42 +19,46 @@ namespace Omnikeeper.GraphQL
             this.dataLoaderContextAccessor = dataLoaderContextAccessor;
         }
 
-        public IDataLoader<MergedCI, IEnumerable<EffectiveTrait>> SetupEffectiveTraitLoader(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public IDataLoaderResult<IEnumerable<EffectiveTrait>> SetupAndLoadEffectiveTraitLoader(MergedCI ci, ITraitSelection traitSelection, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetAllEffectiveTraits_{layerSet}_{timeThreshold}", async (IEnumerable<MergedCI> cis) =>
+            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetAllEffectiveTraits_{layerSet}_{timeThreshold}", 
+                async (IEnumerable<(MergedCI ci, ITraitSelection traitSelection)> selections) =>
             {
                 var traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
 
-                var tmp = new Dictionary<Guid, IList<EffectiveTrait>>();
-                var ciMap = cis.ToDictionary(ci => ci.ID);
-                foreach (var trait in traits)
+                var requestedTraits = TraitSelectionExtensions.UnionAll(selections.Select(t => t.traitSelection));
+
+                var finalTraits = traits.Where(t => requestedTraits.Contains(t.ID));
+
+                var cis = selections.Select(t => t.ci).ToList();
+                var ciMap = selections.ToDictionary(t => t.ci.ID);
+
+                var tmp = new List<(Guid ciid, EffectiveTrait et)>(finalTraits.Count() * cis.Count);
+                foreach (var trait in finalTraits)
                 {
                     var etsPerTrait = await traitModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, timeThreshold);
 
                     foreach (var kv in etsPerTrait)
                     {
-                        tmp.AddOrUpdate(kv.Key, () => new List<EffectiveTrait>() { kv.Value }, (l) => { l.Add(kv.Value); return l; });
+                        tmp.Add((kv.Key, kv.Value));
                     }
                 }
 
-                var t = tmp.SelectMany(kv => kv.Value.Select(v => (ciid: kv.Key, et: v)));
-                return t.ToLookup(kv => ciMap[kv.ciid], kv => kv.et, new MergedCIComparer());
+                return tmp.ToLookup(kv => ciMap[kv.ciid], kv => kv.et, new MergedCIComparer());
             });
-            return loader;
+            return loader.LoadAsync((ci, traitSelection));
         }
 
-        private class MergedCIComparer : IEqualityComparer<MergedCI>
+        private class MergedCIComparer : IEqualityComparer<(MergedCI ci, ITraitSelection traitSelection)>
         {
-            public bool Equals(MergedCI? x, MergedCI? y)
+            public bool Equals((MergedCI ci, ITraitSelection traitSelection) x, (MergedCI ci, ITraitSelection traitSelection) y)
             {
-                if (x == null && y == null) return true;
-                else if (x == null || y == null) return false;
-                else return x.ID.Equals(y.ID);
+                return x.ci.ID.Equals(y.ci.ID) && x.traitSelection.Equals(y.traitSelection);
             }
 
-            public int GetHashCode(MergedCI obj)
+            public int GetHashCode((MergedCI ci, ITraitSelection traitSelection) obj)
             {
-                return obj.ID.GetHashCode();
+                return HashCode.Combine(obj.ci.ID.GetHashCode(), obj.traitSelection.GetHashCode());
             }
         }
 
@@ -176,7 +177,7 @@ namespace Omnikeeper.GraphQL
 
     public interface IDataLoaderService
     {
-        IDataLoader<MergedCI, IEnumerable<EffectiveTrait>> SetupEffectiveTraitLoader(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
+        IDataLoaderResult<IEnumerable<EffectiveTrait>> SetupAndLoadEffectiveTraitLoader(MergedCI ci, ITraitSelection traitSelection, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IEnumerable<Layer>> SetupAndLoadAllLayers(ILayerModel layerModel, TimeThreshold timeThreshold, IModelContext trans);

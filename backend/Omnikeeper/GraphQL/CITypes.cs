@@ -73,13 +73,19 @@ namespace Omnikeeper.GraphQL
             });
 
             Field<ListGraphType<EffectiveTraitType>>("effectiveTraits",
+            arguments: new QueryArguments(new QueryArgument<ListGraphType<StringGraphType>> { Name = "traitIDs" }),
             resolve: (context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var ci = context.Source!;
 
-                var loader = dataLoaderService.SetupEffectiveTraitLoader(traitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
-                return loader.LoadAsync(ci);
+                ITraitSelection traitSelection = AllTraitsSelection.Instance;
+                var traitIDs = context.GetArgument<string[]?>("traitIDs", null)?.ToHashSet();
+                if (traitIDs != null)
+                    traitSelection = NamedTraitsSelection.Build(traitIDs);
+
+                var ret = dataLoaderService.SetupAndLoadEffectiveTraitLoader(ci, traitSelection, traitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                return ret;
             });
         }
 
