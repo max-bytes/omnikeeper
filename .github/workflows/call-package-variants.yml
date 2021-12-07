@@ -15,5 +15,5 @@ jobs:
       uses: benc-uk/workflow-dispatch@v1
       with:
         workflow: package-variants
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT }}
         inputs: '{ "variantName": "internal", "baseVersion": "${{ github.event.inputs.baseVersion }}", "pluginsBackend": "OKPluginGenericJSONIngest:${{ github.event.inputs.baseVersion }};OKPluginActiveDirectoryXMLIngest:${{ github.event.inputs.baseVersion }};OKPluginAnsibleInventoryScanIngest:${{ github.event.inputs.baseVersion }};OKPluginOIAKeycloak:${{ github.event.inputs.baseVersion }};OKPluginOIAOmnikeeper:${{ github.event.inputs.baseVersion }};OKPluginOIASharepoint:${{ github.event.inputs.baseVersion }};", "pluginsFrontend": "@max-bytes/okplugin-generic-json-ingest@${{ github.event.inputs.baseVersion }}" }'
