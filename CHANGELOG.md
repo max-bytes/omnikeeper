@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
-## [8.0.0] - 2021-12-09
+## [9.0.0] - 2021-12-09
 
 ### Added
 - usage tracking for generators
@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixes
 - technical frontend: nginx bugfix for URLs containing a period
 - GraphQL server: when not selecting mergedAttributes, querying effectiveTraits only ever returned the __named effectiveTrait
+
+
+## [8.0.0] - 2021-12-09
+
+Internal release
 
 ## [7.0.0] - 2021-12-01
 
