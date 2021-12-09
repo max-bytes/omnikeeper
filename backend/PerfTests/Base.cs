@@ -84,7 +84,6 @@ namespace PerfTests
             containerBuilder.Register<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance).SingleInstance();
             containerBuilder.Register<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance).SingleInstance();
             containerBuilder.RegisterType<NullLoggerFactory>().As<ILoggerFactory>().SingleInstance();
-            containerBuilder.Register<ILogger<CISearchModel>>((sp) => NullLogger<CISearchModel>.Instance).SingleInstance();
 
             containerBuilder.Register<IConfiguration>((sp) => new Mock<IConfiguration>().Object).SingleInstance();
 

@@ -60,19 +60,17 @@ namespace Omnikeeper.Controllers.OData
         private readonly IAttributeModel attributeModel;
         private readonly ICIModel ciModel;
         private readonly IChangesetModel changesetModel;
-        private readonly ICISearchModel ciSearchModel;
         private readonly IODataAPIContextModel oDataAPIContextModel;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ICurrentUserAccessor currentUserService;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
-        public AttributesController(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, ICISearchModel ciSearchModel, IODataAPIContextModel oDataAPIContextModel,
+        public AttributesController(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, IODataAPIContextModel oDataAPIContextModel,
             ICurrentUserAccessor currentUserService, ILayerBasedAuthorizationService authorizationService, IModelContextBuilder modelContextBuilder)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;
             this.changesetModel = changesetModel;
-            this.ciSearchModel = ciSearchModel;
             this.oDataAPIContextModel = oDataAPIContextModel;
             this.currentUserService = currentUserService;
             this.authorizationService = authorizationService;
@@ -182,7 +180,10 @@ namespace Omnikeeper.Controllers.OData
             }
             else if (attribute.CIName != null && attribute.CIName != "")
             { // ciid not set, try to match using ci name, which is set
-                var foundCIIDs = (await ciSearchModel.FindCIIDsWithCIName(attribute.CIName, readLayerset, trans, timeThreshold)).ToList();
+
+                // TODO: performance improvements
+                var ciNamesFromNameAttributes = await attributeModel.GetMergedCINames(new AllCIIDsSelection(), readLayerset, trans, timeThreshold);
+                var foundCIIDs = ciNamesFromNameAttributes.Where(a => a.Value.Equals(attribute.CIName)).Select(a => a.Key).ToList();
                 if (foundCIIDs.Count == 0)
                 { // ok case, continue
                 }

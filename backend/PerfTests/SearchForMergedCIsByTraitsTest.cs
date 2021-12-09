@@ -28,16 +28,15 @@ namespace PerfTests
         {
             using var mc = modelContextBuilder!.BuildImmediate();
             var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
-            (await ciSearchModel!.FindMergedCIsByTraits(ciSelection!, AllAttributeSelection.Instance, requiredTraits!, Enumerable.Empty<ITrait>(), layerset!, mc, time)).Consume(consumer);
-
-            // should hit cache, second time
-            (await ciSearchModel!.FindMergedCIsByTraits(ciSelection!, AllAttributeSelection.Instance, requiredTraits!, Enumerable.Empty<ITrait>(), layerset!, mc, time)).Consume(consumer);
+            var workCIs1 = await ciModel!.GetMergedCIs(ciSelection!, layerset!, includeEmptyCIs: true, AllAttributeSelection.Instance, mc, time);
+            (await effectiveTraitModel!.FilterMergedCIsByTraits(workCIs1, requiredTraits!, Enumerable.Empty<ITrait>(), layerset!, mc, time)).Consume(consumer);
         }
 
         [GlobalCleanup(Target = nameof(SearchForMergedCIsByTraits))]
         public void TearDownT() => TearDown();
 
-        private ICISearchModel? ciSearchModel;
+        private IEffectiveTraitModel? effectiveTraitModel;
+        private ICIModel? ciModel;
         private IModelContextBuilder? modelContextBuilder;
         private LayerSet? layerset;
         private TimeThreshold time;
@@ -72,9 +71,9 @@ namespace PerfTests
             var numDataTransactions = AttributeCITuple.numDataTransactions;
 
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
-            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
-            ciSearchModel = ServiceProvider.GetRequiredService<ICISearchModel>();
+            effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
             var traitsProvider = ServiceProvider.GetRequiredService<ITraitsProvider>();
 
             using var mc = modelContextBuilder.BuildImmediate();
