@@ -71,6 +71,9 @@ namespace OKPluginVariableRendering
             }
 
             var mainCIs = await effectiveTraitModel.FilterCIsWithTrait(allCIs, activeTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
+
+            mainCIs = mainCIs.Take(10);
+
             //TODO: select only the realtions that are defined in configuration
             //      check if selection with specific predicates is possible
             var relations = new List<string>();
@@ -100,8 +103,6 @@ namespace OKPluginVariableRendering
 
             foreach (var mainCI in mainCIs)
             {
-                // NOTE use Dictionary instead list here ??
-                // NOTE check if there are other ways to add CI name??
                 var mainCIname = new GatheredAttribute { Name = "__name", Value = new AttributeScalarValueText(mainCI.CIName), SourceCIID = mainCI.ID };
                 var gatheredAttributes = new List<GatheredAttribute> { mainCIname };
 
@@ -147,7 +148,6 @@ namespace OKPluginVariableRendering
 
                         prevCI = targetCI;
 
-                        // NOTE check target CI required trait
                         var targetCIRequiredTrait = await traitsProvider.GetActiveTrait(follow.RequiredTrait, trans, changesetProxy.TimeThreshold);
 
                         if (targetCIRequiredTrait == null)
@@ -161,7 +161,6 @@ namespace OKPluginVariableRendering
 
                         if (aa.ToList().Count == 0)
                         {
-                            logger.LogInformation("");
                             continue;
                         }
 
@@ -169,7 +168,7 @@ namespace OKPluginVariableRendering
 
                         var allCIAttributes = targetCIAttributes.Select(a => new GatheredAttribute { SourceCIID = targetCI.ID, Name = a.Key, RequiredTrait = follow.RequiredTrait, Value = a.Value.Attribute.Value }).ToList();
 
-                        var tmpCIAttributes = new List<GatheredAttribute>();
+                        var tmpCIAttributes = new Dictionary<string, GatheredAttribute>(); 
 
                         foreach (var mapping in follow.AttributeMapping)
                         {
@@ -209,20 +208,16 @@ namespace OKPluginVariableRendering
                                         Priority = prio,
                                     };
 
-                                    var i = tmpCIAttributes.FindIndex(e => e.Name == attribute.Name);
-
-                                    if (i != -1)
+                                    if (tmpCIAttributes.ContainsKey(a.Name))
                                     {
                                         // check if current attribute has higher priority
-                                        if (tmpCIAttributes[i].Priority < a.Priority)
+                                        if (tmpCIAttributes[a.Name].Priority < a.Priority)
                                         {
-                                            tmpCIAttributes.RemoveAt(i);
-                                            tmpCIAttributes.Add(a);
+                                            tmpCIAttributes[a.Name] = a;
                                         }
-                                    }
-                                    else
+                                    } else
                                     {
-                                        tmpCIAttributes.Add(a);
+                                        tmpCIAttributes.Add(a.Name, a);
                                     }
 
                                     attribute.Name = a.Name;
@@ -231,26 +226,23 @@ namespace OKPluginVariableRendering
                             }
                         }
 
-                        gatheredAttributes.AddRange(tmpCIAttributes);
+                        gatheredAttributes.AddRange(tmpCIAttributes.Values);
                     }
                 }
 
                 // for all gathered attributes insert them to the main ci
-
                 foreach (var mapping in cfg.BaseCI.AttributeMapping)
                 {
 
                     foreach (var attribute in gatheredAttributes)
                     {
                         // first we need to check input whitelist and blacklist
-
                         if (!IsAttributeAllowed(attribute.Name, cfg.BaseCI.InputWhitelist, cfg.BaseCI.InputBlacklist))
                         {
                             continue;
                         }
 
                         // check base ci attribute mapping
-
                         if (attribute.Name == "__name")
                         {
 
@@ -261,7 +253,6 @@ namespace OKPluginVariableRendering
                         }
 
                         // check if attribute exists in base ci
-
                         if (mainCI.MergedAttributes.ContainsKey(attribute.Name) && ciPrio < attribute.Priority)
                         {
                             // don't change this attribute
