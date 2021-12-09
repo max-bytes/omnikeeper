@@ -7,8 +7,10 @@ using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL
 {
@@ -89,7 +91,7 @@ namespace Omnikeeper.GraphQL
             });
         }
 
-        public static IAttributeSelection ForwardInspectRequiredAttributes(IResolveFieldContext context)
+        public static async Task<IAttributeSelection> ForwardInspectRequiredAttributes(IResolveFieldContext context, ITraitsProvider traitsProvider, IModelContext trans, TimeThreshold timeThreshold)
         {
             // do a "forward" look into the graphql query to see which attributes we actually need to fetch to properly fulfill the request
             // because we need to at least fetch a single attribute (due to internal reasons), we might as well fetch the name attribute and then don't care if it is requested or not
@@ -119,9 +121,31 @@ namespace Omnikeeper.GraphQL
             }
             if (context.SubFields != null && context.SubFields.TryGetValue("effectiveTraits", out var effectiveTraitsField))
             {
-                // TODO: we should be able to reduce the required attributes by checking the requested effective traits and respecting their required attributes
-                // do not forget about the special handling for the empty trait
-                attributeSelectionBecauseOfTraits = AllAttributeSelection.Instance;
+                // reduce the required attributes by checking the requested effective traits and respecting their required and optional attributes
+                var traitIDsArgument = effectiveTraitsField.Arguments?.FirstOrDefault(a => a.Name == "traitIDs");
+                if (traitIDsArgument != null && traitIDsArgument.Value is ListValue lv)
+                {
+                    var requestedTraitIDs = lv.Values.Select(v =>
+                    {
+                        if (v is StringValue sv)
+                            return sv.Value;
+                        return null;
+                    }).Where(v => v != null).Select(v => v!).ToHashSet();
+
+                    var allTraits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
+                    var requestedTraits = allTraits.Where(t => requestedTraitIDs.Contains(t.ID));
+
+                    var relevantAttributesForTraits = requestedTraits.SelectMany(t => 
+                    t.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Union(
+                    t.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name))
+                    ).ToHashSet();
+
+                    attributeSelectionBecauseOfTraits = NamedAttributesSelection.Build(relevantAttributesForTraits);
+                }
+                else
+                {
+                    attributeSelectionBecauseOfTraits = AllAttributeSelection.Instance;
+                }
             }
             var finalAttributeSelection = baseAttributeSelection.Union(attributeSelectionBecauseOfMergedAttributes).Union(attributeSelectionBecauseOfTraits);
             return finalAttributeSelection;
