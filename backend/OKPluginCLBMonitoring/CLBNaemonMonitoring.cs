@@ -162,7 +162,7 @@ namespace OKPluginCLBMonitoring
 
             var fragments = renderedTemplatesPerCI.Select(t => new BulkCIAttributeDataLayerScope.Fragment("", t.attributeValue, t.ciid));
             await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments),
-                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
             logger.LogDebug("Updated executed commands per monitored CI");
 
@@ -230,7 +230,7 @@ namespace OKPluginCLBMonitoring
                 //    templates.Select(t => t.yamlValue.Value).ToArray(), templates.Select(t => t.yamlValueStr).ToArray()), naemonInstance));
             }
             await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.config", targetLayer.ID, monitoringConfigs),
-                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
             logger.LogDebug("End clbMonitoring");
             return true;

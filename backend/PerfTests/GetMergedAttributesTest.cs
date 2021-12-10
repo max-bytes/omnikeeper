@@ -172,7 +172,7 @@ namespace PerfTests
 
                 var data = new BulkCIAttributeDataLayerScope("", layer!.ID, fragments);
 
-                await attributeModel.BulkReplaceAttributes(data, changeset, new DataOriginV1(DataOriginType.Manual), mc);
+                await attributeModel.BulkReplaceAttributes(data, changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance);
             }
 
             mc.Commit();

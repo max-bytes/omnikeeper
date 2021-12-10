@@ -95,6 +95,7 @@ namespace Omnikeeper.Model
             return selection switch
             {
                 AllAttributeSelection _ => "1=1",
+                NoAttributesSelection _ => "1=0",
                 RegexAttributeSelection _ => "name ~ @name_regex",
                 NamedAttributesSelection _ => "name = ANY(@names)",
                 _ => throw new NotImplementedException("")
@@ -106,6 +107,8 @@ namespace Omnikeeper.Model
             switch (selection)
             {
                 case AllAttributeSelection _:
+                    break;
+                case NoAttributesSelection _:
                     break;
                 case RegexAttributeSelection r:
                     yield return new NpgsqlParameter("@name_regex", r.RegexStr);
@@ -183,10 +186,13 @@ namespace Omnikeeper.Model
         private async IAsyncEnumerable<(CIAttribute attribute, string layerID)> _GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             NpgsqlCommand command;
+
+            var ciidSelection2CTEClause = CIIDSelection2CTEClause(selection);
+
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
                 command = new NpgsqlCommand($@"
-                    {CIIDSelection2CTEClause(selection)}
+                    {ciidSelection2CTEClause}
                     select id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute_latest a
                     {CIIDSelection2JoinClause(selection)}
                     where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY(@layer_ids)
@@ -200,7 +206,7 @@ namespace Omnikeeper.Model
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
                 command = new NpgsqlCommand($@"
-                    {CIIDSelection2CTEClause(selection)}
+                    {ciidSelection2CTEClause}
                     select id, name, ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id from (
                         select distinct on(a.ci_id, name, layer_id) removed, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
                         {CIIDSelection2JoinClause(selection)}
@@ -216,7 +222,8 @@ namespace Omnikeeper.Model
                     command.Parameters.Add(p);
             }
 
-            command.Prepare();
+            if (ciidSelection2CTEClause == "")
+                command.Prepare(); // NOTE: preparing only makes sense if the query is somewhat static, which it won't be when a highly dynamic CTE is involved
 
             using var dr = await command.ExecuteReaderAsync();
 
@@ -224,19 +231,19 @@ namespace Omnikeeper.Model
 
             while (dr.Read())
             {
-                    var id = dr.GetGuid(0);
-                    var name = dr.GetString(1);
-                    var CIID = dr.GetGuid(2);
-                    var type = dr.GetFieldValue<AttributeValueType>(3);
-                    var valueText = dr.GetString(4);
-                    var valueBinary = dr.GetFieldValue<byte[]>(5);
-                    var valueControl = dr.GetFieldValue<byte[]>(6);
-                    var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
-                    var changesetID = dr.GetGuid(7);
-                    var layerID = dr.GetString(8);
+                var id = dr.GetGuid(0);
+                var name = dr.GetString(1);
+                var CIID = dr.GetGuid(2);
+                var type = dr.GetFieldValue<AttributeValueType>(3);
+                var valueText = dr.GetString(4);
+                var valueBinary = dr.GetFieldValue<byte[]>(5);
+                var valueControl = dr.GetFieldValue<byte[]>(6);
+                var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                var changesetID = dr.GetGuid(7);
+                var layerID = dr.GetString(8);
 
-                    var att = new CIAttribute(id, name, CIID, av, changesetID);
-                    yield return (att, layerID);
+                var att = new CIAttribute(id, name, CIID, av, changesetID);
+                yield return (att, layerID);
             }
         }
 

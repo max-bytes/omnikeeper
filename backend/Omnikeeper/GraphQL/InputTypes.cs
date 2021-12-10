@@ -49,7 +49,6 @@ namespace Omnikeeper.GraphQL
     {
         public Guid CI { get; private set; }
         public string Name { get; private set; }
-        public string LayerID { get; private set; }
         public AttributeValueDTO Value { get; private set; }
     }
     public class InsertCIAttributeInputType : InputObjectGraphType<InsertCIAttributeInput>
@@ -58,7 +57,6 @@ namespace Omnikeeper.GraphQL
         {
             Field("ci", x => x.CI, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.Name);
-            Field(x => x.LayerID);
             Field(x => x.Value, type: typeof(AttributeValueDTOInputType));
         }
     }
@@ -67,7 +65,6 @@ namespace Omnikeeper.GraphQL
     {
         public Guid CI { get; private set; }
         public string Name { get; private set; }
-        public string LayerID { get; private set; }
     }
     public class RemoveCIAttributeInputType : InputObjectGraphType<RemoveCIAttributeInput>
     {
@@ -75,7 +72,6 @@ namespace Omnikeeper.GraphQL
         {
             Field("ci", x => x.CI, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.Name);
-            Field(x => x.LayerID);
         }
     }
 
@@ -94,7 +90,6 @@ namespace Omnikeeper.GraphQL
         public Guid FromCIID { get; private set; }
         public Guid ToCIID { get; private set; }
         public string PredicateID { get; private set; }
-        public string LayerID { get; private set; }
     }
 
     public class InsertRelationInputType : InputObjectGraphType<InsertRelationInput>
@@ -104,7 +99,6 @@ namespace Omnikeeper.GraphQL
             Field(x => x.FromCIID, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.ToCIID, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.PredicateID);
-            Field(x => x.LayerID);
         }
     }
 
@@ -113,7 +107,6 @@ namespace Omnikeeper.GraphQL
         public Guid FromCIID { get; private set; }
         public Guid ToCIID { get; private set; }
         public string PredicateID { get; private set; }
-        public string LayerID { get; private set; }
     }
     public class RemoveRelationInputType : InputObjectGraphType<RemoveRelationInput>
     {
@@ -122,7 +115,6 @@ namespace Omnikeeper.GraphQL
             Field(x => x.FromCIID, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.ToCIID, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.PredicateID);
-            Field(x => x.LayerID);
         }
     }
     public class UpsertPredicateInput

@@ -1,16 +1,14 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
-using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,7 +30,6 @@ namespace Tests.Integration.Model
             var layerModel = new LayerModel();
             var traitsProvider = new MockedTraitsProvider();
             var traitModel = new EffectiveTraitModel(relationModel);
-            var searchModel = new CISearchModel(attributeModel, baseAttributeModel, ciModel, traitModel, NullLogger<CISearchModel>.Instance);
             var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             Guid ciid1;
             Guid ciid2;
@@ -75,12 +72,18 @@ namespace Tests.Integration.Model
 
             var all = await ciModel.GetMergedCIs(new AllCIIDsSelection(), new LayerSet(layerID1, layerID2), true, AllAttributeSelection.Instance, transI, tt);
 
+            async Task<IEnumerable<MergedCI>> FindMergedCIsByTraits(ICIModel ciModel, IEffectiveTraitModel traitModel, IEnumerable<ITrait> withEffectiveTraits, IEnumerable<ITrait> withoutEffectiveTraits, LayerSet layerSet, IModelContext transI)
+            {
+                var workCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, includeEmptyCIs: true, AllAttributeSelection.Instance, transI, tt);
+                return await traitModel.FilterMergedCIsByTraits(workCIs, withEffectiveTraits, withoutEffectiveTraits, new LayerSet(layerID1, layerID2), transI, tt);
+            }
+
             var activeTraits = await traitsProvider.GetActiveTraits(transI, tt);
-            (await searchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, Enumerable.Empty<ITrait>(), Enumerable.Empty<ITrait>(), new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all, options => options.WithStrictOrdering());
-            (await searchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, new ITrait[] { activeTraits["test_trait_3"] }, Enumerable.Empty<ITrait>(), new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.CIName == "ci1"), options => options.WithStrictOrdering());
-            (await searchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, new ITrait[] { activeTraits["test_trait_3"] }, Enumerable.Empty<ITrait>(), new LayerSet(layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<MergedCI>.Empty, options => options.WithStrictOrdering());
-            (await searchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, new ITrait[] { activeTraits["test_trait_4"] }, Enumerable.Empty<ITrait>(), new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<MergedCI>.Empty, options => options.WithStrictOrdering());
-            (await searchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, Enumerable.Empty<ITrait>(), new ITrait[] { activeTraits["test_trait_3"] }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.CIName != "ci1"), options => options.WithStrictOrdering());
+            (await FindMergedCIsByTraits(ciModel, traitModel, Enumerable.Empty<ITrait>(), Enumerable.Empty<ITrait>(), new LayerSet(layerID1, layerID2), transI)).Should().BeEquivalentTo(all, options => options.WithStrictOrdering());
+            (await FindMergedCIsByTraits(ciModel, traitModel, new ITrait[] { activeTraits["test_trait_3"] }, Enumerable.Empty<ITrait>(), new LayerSet(layerID1, layerID2), transI)).Should().BeEquivalentTo(all.Where(ci => ci.CIName == "ci1"), options => options.WithStrictOrdering());
+            (await FindMergedCIsByTraits(ciModel, traitModel, new ITrait[] { activeTraits["test_trait_3"] }, Enumerable.Empty<ITrait>(), new LayerSet(layerID2), transI)).Should().BeEquivalentTo(ImmutableArray<MergedCI>.Empty, options => options.WithStrictOrdering());
+            (await FindMergedCIsByTraits(ciModel, traitModel, new ITrait[] { activeTraits["test_trait_4"] }, Enumerable.Empty<ITrait>(), new LayerSet(layerID1, layerID2), transI)).Should().BeEquivalentTo(ImmutableArray<MergedCI>.Empty, options => options.WithStrictOrdering());
+            (await FindMergedCIsByTraits(ciModel, traitModel, Enumerable.Empty<ITrait>(), new ITrait[] { activeTraits["test_trait_3"] }, new LayerSet(layerID1, layerID2), transI)).Should().BeEquivalentTo(all.Where(ci => ci.CIName != "ci1"), options => options.WithStrictOrdering());
 
         }
     }

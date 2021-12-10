@@ -186,7 +186,6 @@ namespace Omnikeeper.Startup
 
         public static void RegisterModels(ContainerBuilder builder, bool enablePerRequestModelCaching, bool enableOIA, bool enabledGenerators, bool enableUsageTracking)
         {
-            builder.RegisterType<CISearchModel>().As<ICISearchModel>().SingleInstance();
             builder.RegisterType<CIModel>().As<ICIModel>().SingleInstance();
             builder.RegisterType<CIIDModel>().As<ICIIDModel>().SingleInstance();
             builder.RegisterType<AttributeModel>().As<IAttributeModel>().SingleInstance();
@@ -272,6 +271,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<SpanJSONDocumentWriter>().As<IDocumentWriter>().SingleInstance();
             builder.RegisterType<DataLoaderContextAccessor>().As<IDataLoaderContextAccessor>().SingleInstance();
             builder.RegisterType<DataLoaderDocumentListener>().SingleInstance();
+            builder.RegisterType<DataLoaderService>().As<IDataLoaderService>().SingleInstance();
         }
     }
 }

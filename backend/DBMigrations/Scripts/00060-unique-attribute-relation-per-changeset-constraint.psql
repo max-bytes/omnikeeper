@@ -1,0 +1,7 @@
+﻿-- NOTE: these unique constraints ensure that per changeset and layer, only a single change can be made to each attribute/relation
+
+ALTER TABLE public.attribute
+    ADD CONSTRAINT u_name_ci_layer_changeset_partition UNIQUE (name, ci_id, layer_id, changeset_id, partition_index);
+
+ALTER TABLE public.relation
+    ADD CONSTRAINT u_from_ci_to_ci_predicate_layer_changeset_partition UNIQUE (from_ci_id, to_ci_id, predicate_id, layer_id, changeset_id, partition_index);

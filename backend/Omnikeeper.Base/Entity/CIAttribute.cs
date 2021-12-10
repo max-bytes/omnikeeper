@@ -30,6 +30,7 @@ namespace Omnikeeper.Base.Entity
         [ProtoMember(5)] public readonly Guid ChangesetID;
 
         // information hash: 
+        // TODO: move into extension method
         public string InformationHash => CreateInformationHash(Name, CIID);
         public static string CreateInformationHash(string name, Guid ciid) => name + ciid;
 

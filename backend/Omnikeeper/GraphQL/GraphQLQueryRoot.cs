@@ -1,5 +1,4 @@
 ﻿using GraphQL;
-using GraphQL.Language.AST;
 using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
@@ -12,6 +11,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using static Omnikeeper.Base.Model.IChangesetModel;
@@ -25,7 +25,6 @@ namespace Omnikeeper.GraphQL
         private readonly ILayerModel layerModel;
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
-        private readonly ICISearchModel ciSearchModel;
         private readonly ITraitsProvider traitsProvider;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
@@ -40,16 +39,17 @@ namespace Omnikeeper.GraphQL
         private readonly GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly ILatestLayerChangeModel latestLayerChangeModel;
+        private readonly IBaseAttributeModel baseAttributeModel;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
 
         public GraphQLQueryRoot(ICIIDModel ciidModel, IAttributeModel attributeModel, ILayerModel layerModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel,
-            ICISearchModel ciSearchModel, ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, GenericTraitEntityModel<Predicate, string> predicateModel,
+            ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, GenericTraitEntityModel<Predicate, string> predicateModel,
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GenericTraitEntityModel<GeneratorV1, string> generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
             GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
-            IEnumerable<IPluginRegistration> plugins, ILatestLayerChangeModel latestLayerChangeModel,
+            IEnumerable<IPluginRegistration> plugins, ILatestLayerChangeModel latestLayerChangeModel, IBaseAttributeModel baseAttributeModel,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.ciidModel = ciidModel;
@@ -57,7 +57,6 @@ namespace Omnikeeper.GraphQL
             this.layerModel = layerModel;
             this.ciModel = ciModel;
             this.effectiveTraitModel = effectiveTraitModel;
-            this.ciSearchModel = ciSearchModel;
             this.traitsProvider = traitsProvider;
             this.metaConfigurationModel = metaConfigurationModel;
             this.baseConfigurationModel = baseConfigurationModel;
@@ -72,6 +71,7 @@ namespace Omnikeeper.GraphQL
             this.recursiveDataTraitModel = recursiveDataTraitModel;
             this.managementAuthorizationService = managementAuthorizationService;
             this.latestLayerChangeModel = latestLayerChangeModel;
+            this.baseAttributeModel = baseAttributeModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
 
@@ -144,33 +144,8 @@ namespace Omnikeeper.GraphQL
                             var ciNames = await attributeModel.GetMergedCINames(ciidSelection, layerSet, userContext.Transaction, timeThreshold);
                             var foundCIIDs = ciNames.Where(kv => CultureInfo.InvariantCulture.CompareInfo.IndexOf(kv.Value, searchString, CompareOptions.IgnoreCase) >= 0).Select(kv => kv.Key).ToHashSet();
                             if (foundCIIDs.IsEmpty())
-                                return new MergedCI[0];
+                                return Array.Empty<MergedCI>();
                             ciidSelection = ciidSelection.Intersect(SpecificCIIDsSelection.Build(foundCIIDs));
-                        }
-                    }
-
-                    // do a "forward" look into the graphql query to see which attributes we actually need to fetch to properly fulfill the request
-                    // because we need to at least fetch a single attribute (due to internal reasons), we might as well fetch the name attribute and then don't care if it is requested or not
-                    IAttributeSelection attributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute);
-                    //var needsNameAttribute = context.SubFields?.ContainsKey("name") ?? false;
-                    if (context.SubFields != null && context.SubFields.TryGetValue("mergedAttributes", out var mergedAttributesField))
-                    {
-                        // check whether or not the attributeNames parameter was set, in which case we can reduce the attributes to query for
-                        var attributeNamesArgument = mergedAttributesField.Arguments?.FirstOrDefault(a => a.Name == "attributeNames");
-                        if (attributeNamesArgument != null && attributeNamesArgument.Value is ListValue lv)
-                        {
-                            var attributeNames = lv.Values.Select(v =>
-                            {
-                                if (v is StringValue sv)
-                                    return sv.Value;
-                                return null;
-                            }).Where(v => v != null).Select(v => v!).ToHashSet();
-
-                            attributeSelection = attributeSelection.Union(NamedAttributesSelection.Build(attributeNames));
-                        } else
-                        {
-                            // we need to query all attributes
-                            attributeSelection = AllAttributeSelection.Instance;
                         }
                     }
 
@@ -184,21 +159,62 @@ namespace Omnikeeper.GraphQL
 
                     var requiredTraits = await traitsProvider.GetActiveTraitsByIDs(withEffectiveTraits, userContext.Transaction, timeThreshold);
                     var requiredNonTraits = await traitsProvider.GetActiveTraitsByIDs(withoutEffectiveTraits, userContext.Transaction, timeThreshold);
-                    var cis = await ciSearchModel.FindMergedCIsByTraits(ciidSelection, attributeSelection, requiredTraits.Values, requiredNonTraits.Values, layerSet, userContext.Transaction, timeThreshold);
+
+                    IAttributeSelection attributeSelection = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, userContext.Transaction, timeThreshold);
+
+
+                    // create shallow copy, because we potentially modify these lists
+                    IEnumerable<ITrait> requiredTraitsCopy = new List<ITrait>(requiredTraits.Values);
+                    IEnumerable<ITrait> requiredNonTraitsCopy = new List<ITrait>(requiredNonTraits.Values);
+                    if (effectiveTraitModel.ReduceTraitRequirements(ref requiredTraitsCopy, ref requiredNonTraitsCopy, out var emptyTraitIsRequired, out var emptyTraitIsNonRequired))
+                        return Array.Empty<MergedCI>(); // bail completely
+
+                    // special case: empty trait is required
+                    if (emptyTraitIsRequired)
+                    {
+                        // TODO: better performance possible if we get empty CIIDs and exclude those?
+                        var nonEmptyCIIDs = await baseAttributeModel.GetCIIDsWithAttributes(ciidSelection, layerSet.LayerIDs, userContext.Transaction, timeThreshold);
+                        var emptyCIIDSelection = ciidSelection.Except(SpecificCIIDsSelection.Build(nonEmptyCIIDs));
+                        var emptyCIIDs = await emptyCIIDSelection.GetCIIDsAsync(async () => await ciModel.GetCIIDs(userContext.Transaction));
+                        return emptyCIIDs.Select(ciid => new MergedCI(ciid, null, layerSet, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty));
+                    }
+
+                    // reduce attribute selection, where possible
+                    var relevantAttributesForTraits = requiredTraitsCopy.SelectMany(t => t.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name)).Concat(
+                        requiredNonTraitsCopy.SelectMany(t => t.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name))
+                        ).ToHashSet();
+
+                    // NOTE: the attributeSelection is supposed to determine what gets RETURNED, not what attributes are checked against when testing for trait memberships
+                    // NOTE: so, because it needs to check for traits it fetches more attributes, and hence this method may return more attributes than requested
+                    var finalAttributeSelection = attributeSelection.Union(NamedAttributesSelection.Build(relevantAttributesForTraits));
+
+                    var workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, finalAttributeSelection, userContext.Transaction, timeThreshold);
+
+                    // in case the empty trait is non-required, we reduce the workCIs list by those CIs that are empty
+                    // we could also have done this by reducing the CIIDSelection first, but this has worse performance for most typical use-cases
+                    // because it produces a SpecificCIIDSelection with a huge list
+                    if (emptyTraitIsNonRequired)
+                    {
+                        // TODO: better performance possible if we get empty CIIDs and exclude those?
+                        var nonEmptyCIIDs = await baseAttributeModel.GetCIIDsWithAttributes(ciidSelection, layerSet.LayerIDs, userContext.Transaction, timeThreshold);
+                        workCIs = workCIs.Where(ci => nonEmptyCIIDs.Contains(ci.ID));
+                    }
+
+                    var cisFilteredByTraits = await effectiveTraitModel.FilterMergedCIsByTraits(workCIs, requiredTraitsCopy, requiredNonTraitsCopy, layerSet, userContext.Transaction, timeThreshold);
 
                     // reduce CIs to those that are allowed
                     if (!preAuthzCheckedCIs)
-                        cis = ciBasedAuthorizationService.FilterReadableCIs(cis, (ci) => ci.ID);
+                        cisFilteredByTraits = ciBasedAuthorizationService.FilterReadableCIs(cisFilteredByTraits, (ci) => ci.ID);
 
                     // sort by name, if requested
                     var sortByCIName = context.GetArgument<bool>("sortByCIName", false)!;
                     if (sortByCIName)
                     {
                         // HACK, properly sort unnamed CIs
-                        cis = cis.OrderBy(t => t.CIName ?? "ZZZZZZZZZZZ");
+                        cisFilteredByTraits = cisFilteredByTraits.OrderBy(t => t.CIName ?? "ZZZZZZZZZZZ");
                     }
 
-                    return cis;
+                    return cisFilteredByTraits;
                 });
 
             FieldAsync<DiffingResultType>("ciDiffing",
