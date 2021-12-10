@@ -13,6 +13,8 @@ namespace Omnikeeper.Base.Model
         Task<IEnumerable<MergedCI>> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime);
         Task<IEnumerable<MergedCI>> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime);
 
+        Task<IEnumerable<MergedCI>> FilterCIsWithTraitSOP(IEnumerable<MergedCI> cis, (ITrait trait, bool negated)[][] traitSOP, LayerSet layers, IModelContext trans, TimeThreshold atTime);
+
         Task<IDictionary<Guid, EffectiveTrait>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime);
     }
 
@@ -29,18 +31,13 @@ namespace Omnikeeper.Base.Model
 
         public static async Task<IEnumerable<MergedCI>> FilterMergedCIsByTraits(this IEffectiveTraitModel model, IEnumerable<MergedCI> cis, IEnumerable<ITrait> withEffectiveTraits, IEnumerable<ITrait> withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
-            // TODO: potential performance improvements by batching together all required and non-required traits, resolving them together
-            foreach (var requiredTrait in withEffectiveTraits)
+            if (withEffectiveTraits.IsEmpty() && withoutEffectiveTraits.IsEmpty())
+                return await model.FilterCIsWithTraitSOP(cis, Array.Empty<(ITrait trait, bool negated)[]>(), layerSet, trans, atTime);
+            var traitSOP = new (ITrait trait, bool negated)[][]
             {
-                cis = await model.FilterCIsWithTrait(cis, requiredTrait, layerSet, trans, atTime);
-            }
-
-            foreach (var requiredNonTrait in withoutEffectiveTraits)
-            {
-                cis = await model.FilterCIsWithoutTrait(cis, requiredNonTrait, layerSet, trans, atTime);
-            }
-
-            return cis;
+                withEffectiveTraits.Select(t => (t, false)).Concat(withoutEffectiveTraits.Select(t => (t, true))).ToArray()
+            };
+            return await model.FilterCIsWithTraitSOP(cis, traitSOP, layerSet, trans, atTime);
         }
 
 

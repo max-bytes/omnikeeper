@@ -36,6 +36,15 @@ namespace Omnikeeper.Model.Decorators
             return await baseModel.FilterCIsWithTrait(cis, trait, layers, trans, atTime);
         }
 
+        public async Task<IEnumerable<MergedCI>> FilterCIsWithTraitSOP(IEnumerable<MergedCI> cis, (ITrait trait, bool negated)[][] traitSOP, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        {
+            foreach (var traitP in traitSOP)
+                foreach (var (trait, _) in traitP)
+                    TrackTraitUsage(trait);
+
+            return await baseModel.FilterCIsWithTraitSOP(cis, traitSOP, layers, trans, atTime);
+        }
+
         public async Task<IDictionary<Guid, EffectiveTrait>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             TrackTraitUsage(trait);

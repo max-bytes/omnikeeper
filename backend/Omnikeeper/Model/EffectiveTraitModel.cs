@@ -24,17 +24,55 @@ namespace Omnikeeper.Model
             this.relationModel = relationModel;
         }
 
+        /// <summary>
+        /// traitSOP is a sum of products of trait requirements
+        /// see https://en.wikipedia.org/wiki/Disjunctive_normal_form
+        /// </summary>
+        public async Task<IEnumerable<MergedCI>> FilterCIsWithTraitSOP(IEnumerable<MergedCI> cis, (ITrait trait, bool negated)[][] traitSOP, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        {
+            // return the full list if the traitSOP is empty
+            if (traitSOP.IsEmpty())
+                return cis;
+
+            var ret = new HashSet<MergedCI>();
+            for(var i = 0;i < traitSOP.Length;i++)
+            {
+                var traitP = traitSOP[i];
+
+                IEnumerable<MergedCI>? productResult = null;
+
+                for(var j = 0;j < traitP.Length;j++)
+                {
+                    var (trait, negated) = traitP[j];
+                    var (has, hasNot) = await CanResolve(trait, productResult ?? cis, layers, trans, atTime);
+                    if (negated)
+                        productResult = hasNot;
+                    else
+                        productResult = has;
+                }
+
+                if (productResult == null)
+                    throw new Exception("Invalid traitSOP: array of trait products must not be empty");
+
+                ret.UnionWith(productResult);
+            }
+
+            return ret;
+        }
+
         public async Task<IEnumerable<MergedCI>> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             if (layers.IsEmpty && !(trait is TraitEmpty))
                 return ImmutableList<MergedCI>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
 
-            return await CanResolve(trait, cis, false, layers, trans, atTime);
+            var (has, _) = await CanResolve(trait, cis, layers, trans, atTime);
+            return has;
         }
 
         public async Task<IEnumerable<MergedCI>> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
-            return await CanResolve(trait, cis, true, layers, trans, atTime);
+            var (_, hasNot) = await CanResolve(trait, cis, layers, trans, atTime);
+            return hasNot;
         }
 
         public async Task<IDictionary<Guid, EffectiveTrait>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
@@ -46,11 +84,12 @@ namespace Omnikeeper.Model
             return ets;
         }
 
-        private async Task<IEnumerable<MergedCI>> CanResolve(ITrait trait, IEnumerable<MergedCI> cis, bool invertResult, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        private async Task<(IEnumerable<MergedCI> has, IEnumerable<MergedCI> hasNot)> CanResolve(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: sanity check: make sure that MergedCIs contain the necessary attributes (in principle), otherwise resolving cannot work properly
 
-            var ret = new List<MergedCI>(cis.Count());
+            var has = new List<MergedCI>(cis.Count());
+            var hasNot = new List<MergedCI>(cis.Count());
             switch (trait)
             {
                 case GenericTrait tt:
@@ -73,10 +112,7 @@ namespace Omnikeeper.Model
                             var (_, errors) = TemplateCheckService.CalculateTemplateErrorsAttributeSimple(ci, ta.AttributeTemplate);
                             if (errors)
                             {
-                                if (invertResult)
-                                {
-                                    ret.Add(ci);
-                                }
+                                hasNot.Add(ci);
                                 goto ENDOFCILOOP;
                             }
                         };
@@ -85,29 +121,24 @@ namespace Omnikeeper.Model
                             var (_, errors) = TemplateCheckService.CalculateTemplateErrorsRelationSimple(fromRelations[ci.ID], toRelations[ci.ID], tr.RelationTemplate);
                             if (errors)
                             {
-                                if (invertResult)
-                                {
-                                    ret.Add(ci);
-                                }
+                                hasNot.Add(ci);
                                 goto ENDOFCILOOP;
                             }
                         }
 
-                        if (!invertResult)
-                        {
-                            ret.Add(ci);
-                        }
+                        has.Add(ci);
 
                         ENDOFCILOOP:
                         ;
                     }
-
-                    return ret;
+                    return (has, hasNot);
                 case TraitEmpty te:
                     foreach (var ci in cis)
-                        if (ci.MergedAttributes.IsEmpty() != invertResult) // NOTE: we do not check for relations
-                            ret.Add(ci);
-                    return ret;
+                        if (ci.MergedAttributes.IsEmpty()) // NOTE: we do not check for relations
+                            has.Add(ci);
+                        else
+                            hasNot.Add(ci);
+                    return (has, hasNot);
                 default:
                     throw new Exception("Unknown trait encountered");
             }
