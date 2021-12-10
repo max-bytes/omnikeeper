@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace OKPluginVariableRendering
 {
@@ -38,11 +39,10 @@ namespace OKPluginVariableRendering
         const int networkSegmentGroupPrio = 1000;
         const int networkInterfaceGroupPrio = 2000;
         const int assignmentGroupDefaultPrio = 10000;
-        const int ciPrio = 100000;
+        const int baseCIPrio = 100000;
 
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
-
             logger.LogDebug("Start VariableRendering");
 
             Configuration cfg;
@@ -72,8 +72,6 @@ namespace OKPluginVariableRendering
 
             var mainCIs = await effectiveTraitModel.FilterCIsWithTrait(allCIs, activeTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
 
-            mainCIs = mainCIs.Take(10);
-
             //TODO: select only the realtions that are defined in configuration
             //      check if selection with specific predicates is possible
             var relations = new List<string>();
@@ -98,13 +96,42 @@ namespace OKPluginVariableRendering
                 allRelations.AddRange(layerRelations);
             }
 
-
             var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
 
             foreach (var mainCI in mainCIs)
             {
-                var mainCIname = new GatheredAttribute { Name = "__name", Value = new AttributeScalarValueText(mainCI.CIName), SourceCIID = mainCI.ID };
-                var gatheredAttributes = new List<GatheredAttribute> { mainCIname };
+
+                var gatheredAttributes = new Dictionary<string, GatheredAttribute>();
+
+                foreach (var mapping in cfg.BaseCI.AttributeMapping)
+                {
+                    foreach (var (name, attribute) in mainCI.MergedAttributes)
+                    {
+                        if (IsAttributeIncludedInSource(name, mapping.Source))
+                        {
+                            var a = new GatheredAttribute
+                            {
+                                Name = GetTargetName(name, mapping.Target),
+                                Value = attribute.Attribute.Value,
+                                Priority = baseCIPrio,
+                            };
+
+                            if (gatheredAttributes.ContainsKey(a.Name))
+                            {
+                                // check priority of attributes
+                                if (gatheredAttributes[a.Name].Priority < a.Priority)
+                                {
+                                    gatheredAttributes[a.Name] = a;
+                                }
+                            }
+                            else
+                            {
+                                gatheredAttributes.Add(a.Name, a);
+                            }
+                        }
+                    }
+                }
+
 
                 foreach (var followRelation in cfg.BaseCI.FollowRelations)
                 {
@@ -166,13 +193,11 @@ namespace OKPluginVariableRendering
 
                         var targetCIAttributes = targetCI.MergedAttributes.Where(a => IsAttributeAllowed(a.Value.Attribute.Name, follow.InputWhitelist, follow.InputBlacklist)).ToList();
 
-                        var allCIAttributes = targetCIAttributes.Select(a => new GatheredAttribute { SourceCIID = targetCI.ID, Name = a.Key, RequiredTrait = follow.RequiredTrait, Value = a.Value.Attribute.Value }).ToList();
-
-                        var tmpCIAttributes = new Dictionary<string, GatheredAttribute>(); 
+                        var allRelatetCIAttributes = targetCIAttributes.Select(a => new GatheredAttribute { Name = a.Key, Value = a.Value.Attribute.Value }).ToList();
 
                         foreach (var mapping in follow.AttributeMapping)
                         {
-                            foreach (var attribute in allCIAttributes)
+                            foreach (var attribute in allRelatetCIAttributes)
                             {
                                 if (IsAttributeIncludedInSource(attribute.Name, mapping.Source))
                                 {
@@ -201,68 +226,33 @@ namespace OKPluginVariableRendering
 
                                     var a = new GatheredAttribute
                                     {
-                                        SourceCIID = targetCI.ID,
                                         Name = GetTargetName(attribute.Name, mapping.Target),
                                         Value = attribute.Value,
-                                        RequiredTrait = follow.RequiredTrait,
                                         Priority = prio,
                                     };
 
-                                    if (tmpCIAttributes.ContainsKey(a.Name))
+                                    if (gatheredAttributes.ContainsKey(a.Name))
                                     {
                                         // check if current attribute has higher priority
-                                        if (tmpCIAttributes[a.Name].Priority < a.Priority)
+                                        if (gatheredAttributes[a.Name].Priority < a.Priority)
                                         {
-                                            tmpCIAttributes[a.Name] = a;
+                                            gatheredAttributes[a.Name] = a;
                                         }
                                     } else
                                     {
-                                        tmpCIAttributes.Add(a.Name, a);
+                                        gatheredAttributes.Add(a.Name, a);
                                     }
 
-                                    attribute.Name = a.Name;
-                                    attribute.Value = a.Value;
                                 }
                             }
                         }
 
-                        gatheredAttributes.AddRange(tmpCIAttributes.Values);
                     }
                 }
 
-                // for all gathered attributes insert them to the main ci
-                foreach (var mapping in cfg.BaseCI.AttributeMapping)
+                foreach (var (name, attribute) in gatheredAttributes)
                 {
-
-                    foreach (var attribute in gatheredAttributes)
-                    {
-                        // first we need to check input whitelist and blacklist
-                        if (!IsAttributeAllowed(attribute.Name, cfg.BaseCI.InputWhitelist, cfg.BaseCI.InputBlacklist))
-                        {
-                            continue;
-                        }
-
-                        // check base ci attribute mapping
-                        if (attribute.Name == "__name")
-                        {
-
-                        }
-                        else if(!IsAttributeIncludedInSource(attribute.Name, mapping.Source))
-                        {
-                            continue;
-                        }
-
-                        // check if attribute exists in base ci
-                        if (mainCI.MergedAttributes.ContainsKey(attribute.Name) && ciPrio < attribute.Priority)
-                        {
-                            // don't change this attribute
-                            continue;
-                        }
-
-                        fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(GetTargetName(attribute.Name, mapping.Target), attribute.Value, mainCI.ID));
-
-                    }
-
+                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(name, attribute.Value, mainCI.ID));
                 }
             }
 
@@ -293,12 +283,13 @@ namespace OKPluginVariableRendering
                 result = true;
             }
 
-            if (attributeWhitelist.Where(a => attribute.StartsWith(a[..1])).ToList().Count > 0)
+            if (attributeWhitelist.Where(a => attribute.StartsWith(a[0..^1])).ToList().Count > 0)
             {
                 result = true;
             }
 
-            if (attributeBlacklist.Where(a => attribute.StartsWith(a[..1])).ToList().Count > 0)
+
+            if (attributeBlacklist.Where(a => attribute.StartsWith(a[0..^1])).ToList().Count > 0)
             {
                 result = false;
             }
@@ -312,7 +303,6 @@ namespace OKPluginVariableRendering
 
             if (attribute == "__name")
             {
-                //result = true;
                 return result;
             }
 
@@ -340,18 +330,12 @@ namespace OKPluginVariableRendering
 
         internal class GatheredAttribute
         {
-            public Guid SourceCIID { get; set; }
-            public string RequiredTrait { get; set; }
             public string Name { get; set; }
-            //public string Value { get; set; }
             public IAttributeValue Value { get; set; }
-
             public int Priority { get; set; }
             public GatheredAttribute()
             {
                 Name = "";
-                //Value = "";
-                RequiredTrait = "";
             }
         }
     }
