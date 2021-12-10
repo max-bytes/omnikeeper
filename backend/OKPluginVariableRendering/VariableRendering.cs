@@ -270,7 +270,8 @@ namespace OKPluginVariableRendering
                 new BulkCIAttributeDataLayerScope("", targetLayer.ID, fragments),
                 changesetProxy, 
                 new DataOriginV1(DataOriginType.ComputeLayer), 
-                trans);
+                trans,
+                MaskHandlingForRemovalApplyNoMask.Instance);
 
             return true;
         }
