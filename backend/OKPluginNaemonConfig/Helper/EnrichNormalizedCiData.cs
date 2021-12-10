@@ -1,4 +1,5 @@
 ﻿using OKPluginNaemonConfig.Entity;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +10,7 @@ namespace OKPluginNaemonConfig.Helper
         public static Dictionary<string, List<string>> BuildCapMap(
             IDictionary<string, NaemonInstanceTag> naemonInstancesTags, 
             IDictionary<string, NaemonProfile> naemonProfiles,
-            IDictionary<string, NaemonInstance> naemonInstances,
+            IDictionary<Guid, NaemonInstance> naemonInstances,
             List<string> naemonsConfigGenerateprofiles
             )
         {

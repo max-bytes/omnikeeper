@@ -56,7 +56,8 @@ namespace OKPluginNaemonConfig
                            GenericTraitEntityModel<ServiceStatic, long> serviceStaticModel,
                            GenericTraitEntityModel<Module, string> moduleModel,
                            GenericTraitEntityModel<Interface, string> interfaceModel,
-                           GenericTraitEntityModel<Host, string> hostModel)
+                           GenericTraitEntityModel<Host, string> hostModel,
+                           ILatestLayerChangeModel latestLayerChangeModel) : base(latestLayerChangeModel)
         {
             this.ciModel = ciModel;
             this.relationModel = relationModel;
@@ -107,7 +108,10 @@ namespace OKPluginNaemonConfig
             var layersetNaemonConfig = await layerModel.BuildLayerSet(new[] { cfg!.NaemonConfigLayerId }, trans);
 
             // load all naemons
-            var naemonInstances = await naemonInstanceModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+            //var naemonInstances = await naemonInstanceModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
+
+            var naemonInstances = await naemonInstanceModel.GetAllByCIID(layersetMonman, trans, changesetProxy.TimeThreshold);
+
             logger.LogInformation("Loaded all naemon instances.");
 
 
@@ -534,15 +538,15 @@ namespace OKPluginNaemonConfig
 
             #region get cis for naemons
 
-            var naemonsCis = new Dictionary<string, List<ConfigurationItem>>();
+            var naemonsCis = new Dictionary<Guid, List<ConfigurationItem>>();
             foreach (var item in naemonInstances) 
             {
-                naemonsCis.Add(item.Value.Id, new List<ConfigurationItem>());
+                naemonsCis.Add(item.Key, new List<ConfigurationItem>());
                 foreach (var ciItem in ciData)
                 {
                     if (ciItem.NaemonsAvail.Contains(item.Value.Id))
                     {
-                        naemonsCis[item.Value.Id].Add(ciItem);
+                        naemonsCis[item.Key].Add(ciItem);
                     }
                 }
             }
@@ -601,7 +605,9 @@ namespace OKPluginNaemonConfig
                     }
                 }
 
-                naemonConfigObjs.Add(item.Key, naemonObjs.Concat(configObjs).ToList());
+                //naemonConfigObjs.Add(item.Key, naemonObjs.Concat(configObjs).ToList());
+
+                fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("config", AttributeScalarValueJSON.Build(JArray.FromObject(naemonObjs.Concat(configObjs).ToList())), item.Key));
                 //naemonConfigObjs.Add(item.Key, configObjs);
 
                 // TODO: we also need to process deployed cis for this naemon, check applib-confgen-ci.php#74
@@ -609,33 +615,34 @@ namespace OKPluginNaemonConfig
             }
             #endregion
 
+
+            await attributeModel.BulkReplaceAttributes(
+                new BulkCIAttributeDataLayerScope("", targetLayer.ID, fragments),
+                changesetProxy,
+                new DataOriginV1(DataOriginType.ComputeLayer),
+                trans,
+                MaskHandlingForRemovalApplyNoMask.Instance);
+
             // convert into jobjects
 
-            var jobjects = new Dictionary<string, JObject>();
+            //var jobjects = new Dictionary<string, JObject>();
 
-            foreach (var item in naemonConfigObjs)
-            {
-                //var ci = await ciModel.CreateCI(trans);
+            //foreach (var item in naemonConfigObjs)
+            //{
+            //    //var ci = await ciModel.CreateCI(trans);
 
-                var s1 = JsonConvert.SerializeObject(item.Value);
-                var ss = JArray.FromObject(item.Value);
+            //    var s1 = JsonConvert.SerializeObject(item.Value);
+            //    var ss = JArray.FromObject(item.Value);
 
-                if (item.Key == "H12037680")
-                {
-                    var a = 5;
-                }
+            //    if (item.Key == "H12037680")
+            //    {
+            //        var a = 5;
+            //    }
 
-                //var (attribute, changed) = await attributeModel.InsertAttribute("config", AttributeScalarValueJSON.Build(ss), ci, "naemon_config", changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
-            }
+            //    //var (attribute, changed) = await attributeModel.InsertAttribute("config", AttributeScalarValueJSON.Build(ss), ci, "naemon_config", changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+            //}
 
             // save the created configurations to the target layer
-
-            
-
-            foreach (var naemonCfg in naemonConfigObjs)
-            {
-
-            }
 
             return true;
         }
