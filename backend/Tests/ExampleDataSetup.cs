@@ -98,8 +98,6 @@ namespace Tests
                 return (layer, dataTransaction, new BulkCIAttributeDataLayerScope.Fragment(name, value, ciid));
             }).GroupBy(t => t.dataTransaction, t => (t.layer, t.Item3));
 
-            var totalInserted = 0;
-
             foreach (var fg in fragments)
             {
                 var dataTransaction = fg.Key;
@@ -123,14 +121,10 @@ namespace Tests
                         finalFragments = filtered.Values;
                     }
 
-                    var inserted = await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", fl.Key, finalFragments), changeset, new DataOriginV1(DataOriginType.Manual), mc);
-                    totalInserted += inserted.Count();
-                    Console.WriteLine($"Inserted {inserted.Count()} attribute fragments @ layer {fl.Key}");
+                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", fl.Key, finalFragments), changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance);
                 }
                 mc.Commit();
             }
-
-            Console.WriteLine($"Inserted {totalInserted} attribute fragments in total");
 
             return layerNames;
         }

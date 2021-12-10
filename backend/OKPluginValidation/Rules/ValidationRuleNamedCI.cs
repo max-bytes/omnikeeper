@@ -14,7 +14,8 @@ namespace Omnikeeper.Validation.Rules
 {
     public class ValidationRuleNamedCI : IValidationRule
     {
-        private readonly ICISearchModel ciSearchModel;
+        private readonly ICIModel ciModel;
+        private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ITraitsProvider traitsProvider;
         private readonly IBaseAttributeModel baseAttributeModel;
 
@@ -40,11 +41,12 @@ namespace Omnikeeper.Validation.Rules
             });
         }
 
-        public ValidationRuleNamedCI(ICISearchModel ciSearchModel, ITraitsProvider traitsProvider, IBaseAttributeModel baseAttributeModel)
+        public ValidationRuleNamedCI(ITraitsProvider traitsProvider, IBaseAttributeModel baseAttributeModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel)
         {
-            this.ciSearchModel = ciSearchModel;
             this.traitsProvider = traitsProvider;
             this.baseAttributeModel = baseAttributeModel;
+            this.ciModel = ciModel;
+            this.effectiveTraitModel = effectiveTraitModel;
         }
 
         public async Task<IEnumerable<ValidationIssue>> PerformValidation(JObject config, IModelContext trans, TimeThreshold atTime)
@@ -64,7 +66,8 @@ namespace Omnikeeper.Validation.Rules
             var attributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute); // This is weird... it seems like we need to fetch at least ONE attribute otherwise, it's all empty.. which makes sense, but still...
 
             var traits = await traitsProvider.GetActiveTraitsByIDs(new string[] { CoreTraits.Named.ID }, trans, atTime);
-            var unnamedCIs = await ciSearchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), attributeSelection, Enumerable.Empty<ITrait>(), traits.Values, layerset, trans, atTime);
+            var workCIs = await ciModel!.GetMergedCIs(new AllCIIDsSelection(), layerset!, includeEmptyCIs: false, attributeSelection, trans, atTime);
+            var unnamedCIs = await effectiveTraitModel.FilterMergedCIsByTraits(workCIs, Enumerable.Empty<ITrait>(), traits.Values, layerset, trans, atTime);
 
             var unnamedCISelection = SpecificCIIDsSelection.Build(unnamedCIs.Select(ci => ci.ID).ToHashSet());
             var nonEmptyButUnnamedCIIDs = await baseAttributeModel.GetCIIDsWithAttributes(unnamedCISelection, layerset.LayerIDs, trans, atTime);

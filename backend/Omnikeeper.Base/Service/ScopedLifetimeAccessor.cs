@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
-namespace Omnikeeper.Service
+namespace Omnikeeper.Base.Service
 {
     public class ScopedLifetimeAccessor
     {

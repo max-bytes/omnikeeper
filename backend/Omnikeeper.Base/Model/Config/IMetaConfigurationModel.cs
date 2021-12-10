@@ -8,7 +8,5 @@ namespace Omnikeeper.Base.Model.Config
     {
         Task<MetaConfiguration> GetConfigOrDefault(IModelContext trans);
         Task<MetaConfiguration> SetConfig(MetaConfiguration config, IModelContext trans);
-
-        Task<bool> IsLayerPartOfMetaConfiguration(string layerID, IModelContext trans);
     }
 }

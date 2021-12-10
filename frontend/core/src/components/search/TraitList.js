@@ -47,11 +47,11 @@ function TraitList(props) {
         }
     }, [showMetaTraits, isMetaTraitID, setChecked, checked]);
 
-    // reset empty trait to "must not"/-1 when the show-empty-trait checkbox is unchecked
+    // reset empty trait to "may"/0 when the show-empty-trait checkbox is unchecked
     useEffect(() => {
         if (!showEmptyTrait) {
-            if (checked[emptyTraitID] !== -1) {
-                setChecked(oldChecked => {return {...oldChecked, [emptyTraitID]: -1}});
+            if (checked[emptyTraitID] !== 0) {
+                setChecked(oldChecked => {return {...oldChecked, [emptyTraitID]: 0}});
             }
         }
     }, [showEmptyTrait, emptyTraitID, setChecked, checked]);
@@ -90,7 +90,7 @@ function TraitList(props) {
                 })(effectiveTrait.origin.type);
 
                 return (
-                    <div key={index} style={styles.traitElement}>
+                    <div key={effectiveTrait.id} style={styles.traitElement}>
                         <span style={styles.traitsIcon}>
                             <FontAwesomeIcon icon={icon} style={{ marginRight: "0.5rem" }}/>
                         </span>

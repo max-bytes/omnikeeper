@@ -78,7 +78,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
 
 
         [Test]
-        public void TestInvalidRelation()
+        public void TestInvalidRelationIsSkipped()
         {
             var loader = new Preparer();
 
@@ -109,7 +109,9 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                 }
             };
 
-            Assert.Throws<Exception>(() => loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), NullLogger.Instance));
+            var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), NullLogger.Instance);
+            ingestData.Should().NotBeNull();
+            ingestData.RelationCandidates.Should().BeEmpty();
         }
     }
 }

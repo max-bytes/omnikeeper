@@ -1,16 +1,12 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -28,12 +24,12 @@ namespace Tests.Integration
     {
         private AutofacServiceProvider? serviceProvider;
 
-        protected bool enableModelCaching;
+        protected bool enablePerRequestModelCaching;
         protected Mock<ICurrentUserAccessor> currentUserServiceMock;
 
-        protected DIServicedTestBase(bool enableModelCaching)
+        protected DIServicedTestBase(bool enablePerRequestModelCaching)
         {
-            this.enableModelCaching = enableModelCaching;
+            this.enablePerRequestModelCaching = enablePerRequestModelCaching;
             currentUserServiceMock = new Mock<ICurrentUserAccessor>();
         }
 
@@ -68,32 +64,21 @@ namespace Tests.Integration
             ServiceRegistration.RegisterLogging(builder);
             ServiceRegistration.RegisterDB(builder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(builder);
-            ServiceRegistration.RegisterModels(builder, enableModelCaching, true, false, false, false);
+            ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching, false, false, false);
             ServiceRegistration.RegisterServices(builder);
             ServiceRegistration.RegisterGraphQL(builder);
-
-            if (enableModelCaching)
-            {
-                builder.Register<IDistributedCache>((sp) =>
-                {
-                    var opts = Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions());
-                    return new MemoryDistributedCache(opts);
-                }).SingleInstance();
-            }
-            else
-            {
-                builder.Register<IDistributedCache>((sp) => new Mock<IDistributedCache>().Object).SingleInstance();
-            }
 
             // TODO: add generic?
             builder.Register<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance).SingleInstance();
             builder.Register<ILogger<MetaConfigurationModel>>((sp) => NullLogger<MetaConfigurationModel>.Instance).SingleInstance();
             builder.Register<ILogger<OIAContextModel>>((sp) => NullLogger<OIAContextModel>.Instance).SingleInstance();
             builder.Register<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance).SingleInstance();
-            builder.Register<ILogger<CISearchModel>>((sp) => NullLogger<CISearchModel>.Instance).SingleInstance();
             builder.Register<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance).SingleInstance();
             builder.Register<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance).SingleInstance();
+            builder.Register<ILogger<CachingMetaConfigurationModel>>((sp) => NullLogger<CachingMetaConfigurationModel>.Instance).SingleInstance();
             builder.RegisterType<NullLoggerFactory>().As<ILoggerFactory>().SingleInstance();
+
+            builder.Register<IHttpContextAccessor>((sp) => new Mock<IHttpContextAccessor>().Object).SingleInstance();
 
             builder.Register<IConfiguration>((sp) => new Mock<IConfiguration>().Object).SingleInstance();
 

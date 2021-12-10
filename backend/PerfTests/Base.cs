@@ -31,7 +31,7 @@ namespace PerfTests
         private NpgsqlConnection? conn;
         private AutofacServiceProvider? serviceProvider;
 
-        public virtual void Setup(bool enableModelCaching, bool enableEffectiveTraitCaching, bool setupDBSchema)
+        public virtual void Setup(bool enablePerRequestModelCaching, bool setupDBSchema)
         {
             if (setupDBSchema)
             {
@@ -41,7 +41,7 @@ namespace PerfTests
             var dbcb = new DBConnectionBuilder();
             conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
 
-            var services = InitServices(enableModelCaching, enableEffectiveTraitCaching);
+            var services = InitServices(enablePerRequestModelCaching);
             serviceProvider = new AutofacServiceProvider(services.Build());
         }
 
@@ -53,28 +53,28 @@ namespace PerfTests
                 serviceProvider.Dispose();
         }
 
-        protected virtual ContainerBuilder InitServices(bool enableModelCaching, bool enableEffectiveTraitCaching)
+        protected virtual ContainerBuilder InitServices(bool enablePerRequestModelCaching)
         {
             var containerBuilder = new ContainerBuilder();
             ServiceRegistration.RegisterLogging(containerBuilder);
             ServiceRegistration.RegisterDB(containerBuilder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(containerBuilder);
-            ServiceRegistration.RegisterModels(containerBuilder, enableModelCaching, enableEffectiveTraitCaching, false, false, false);
+            ServiceRegistration.RegisterModels(containerBuilder, enablePerRequestModelCaching, false, false, false);
             ServiceRegistration.RegisterServices(containerBuilder);
             ServiceRegistration.RegisterGraphQL(containerBuilder);
 
-            if (enableModelCaching)
-            {
-                containerBuilder.Register<IDistributedCache>((sp) =>
-                {
-                    var opts = Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions());
-                    return new MemoryDistributedCache(opts);
-                }).SingleInstance();
-            }
-            else
-            {
-                containerBuilder.Register<IDistributedCache>((sp) => new Mock<IDistributedCache>().Object).SingleInstance();
-            }
+            //if (enableModelCaching)
+            //{
+            //    containerBuilder.Register<IDistributedCache>((sp) =>
+            //    {
+            //        var opts = Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions());
+            //        return new MemoryDistributedCache(opts);
+            //    }).SingleInstance();
+            //}
+            //else
+            //{
+            //    containerBuilder.Register<IDistributedCache>((sp) => new Mock<IDistributedCache>().Object).SingleInstance();
+            //}
 
             // TODO: add generic?
             containerBuilder.Register<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance).SingleInstance();
@@ -84,7 +84,6 @@ namespace PerfTests
             containerBuilder.Register<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance).SingleInstance();
             containerBuilder.Register<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance).SingleInstance();
             containerBuilder.RegisterType<NullLoggerFactory>().As<ILoggerFactory>().SingleInstance();
-            containerBuilder.Register<ILogger<CISearchModel>>((sp) => NullLogger<CISearchModel>.Instance).SingleInstance();
 
             containerBuilder.Register<IConfiguration>((sp) => new Mock<IConfiguration>().Object).SingleInstance();
 

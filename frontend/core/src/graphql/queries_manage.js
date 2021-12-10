@@ -81,6 +81,7 @@ export const queries = {
                 numActiveRelations
                 numRelationChangesHistory
                 numLayerChangesetsHistory
+                latestChange
                 layer {
                     id
                 }

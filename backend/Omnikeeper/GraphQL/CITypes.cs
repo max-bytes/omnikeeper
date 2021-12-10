@@ -1,14 +1,14 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
+using GraphQL.Language.AST;
 using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,7 +17,7 @@ namespace Omnikeeper.GraphQL
     // TODO: ci- and layer-based authorization!
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        public MergedCIType(IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel,
+        public MergedCIType(IDataLoaderService dataLoaderService, IRelationModel relationModel,
             IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider)
         {
             Field("id", x => x.ID);
@@ -47,7 +47,7 @@ namespace Omnikeeper.GraphQL
                 var CIIdentity = context.Source!.ID;
                 var requiredPredicateID = context.GetArgument<string?>("requiredPredicateID", null);
 
-                var loaded = DataLoaderUtils.SetupAndLoadRelation(RelationSelectionFrom.Build(CIIdentity), dataLoaderContextAccessor, relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                var loaded = dataLoaderService.SetupAndLoadRelation(RelationSelectionFrom.Build(CIIdentity), relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return loaded.Then(ret =>
                 { // TODO: move predicateID filtering into fetch and RelationSelection
                     if (requiredPredicateID != null)
@@ -64,7 +64,7 @@ namespace Omnikeeper.GraphQL
                 var CIIdentity = context.Source!.ID;
                 var requiredPredicateID = context.GetArgument<string?>("requiredPredicateID", null);
 
-                var loaded = DataLoaderUtils.SetupAndLoadRelation(RelationSelectionTo.Build(CIIdentity), dataLoaderContextAccessor, relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                var loaded = dataLoaderService.SetupAndLoadRelation(RelationSelectionTo.Build(CIIdentity), relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return loaded.Then(ret =>
                 { // TODO: move predicateID filtering into fetch and RelationSelection
                     if (requiredPredicateID != null)
@@ -75,20 +75,86 @@ namespace Omnikeeper.GraphQL
             });
 
             Field<ListGraphType<EffectiveTraitType>>("effectiveTraits",
+            arguments: new QueryArguments(new QueryArgument<ListGraphType<StringGraphType>> { Name = "traitIDs" }),
             resolve: (context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var ci = context.Source!;
 
-                var loader = DataLoaderUtils.SetupEffectiveTraitLoader(dataLoaderContextAccessor, traitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
-                return loader.LoadAsync(ci);
+                ITraitSelection traitSelection = AllTraitsSelection.Instance;
+                var traitIDs = context.GetArgument<string[]?>("traitIDs", null)?.ToHashSet();
+                if (traitIDs != null)
+                    traitSelection = NamedTraitsSelection.Build(traitIDs);
+
+                var ret = dataLoaderService.SetupAndLoadEffectiveTraitLoader(ci, traitSelection, traitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                return ret;
             });
+        }
+
+        public static async Task<IAttributeSelection> ForwardInspectRequiredAttributes(IResolveFieldContext context, ITraitsProvider traitsProvider, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            // do a "forward" look into the graphql query to see which attributes we actually need to fetch to properly fulfill the request
+            // because we need to at least fetch a single attribute (due to internal reasons), we might as well fetch the name attribute and then don't care if it is requested or not
+            IAttributeSelection baseAttributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute);
+            IAttributeSelection attributeSelectionBecauseOfMergedAttributes = NoAttributesSelection.Instance;
+            IAttributeSelection attributeSelectionBecauseOfTraits = NoAttributesSelection.Instance;
+            if (context.SubFields != null && context.SubFields.TryGetValue("mergedAttributes", out var mergedAttributesField))
+            {
+                // check whether or not the attributeNames parameter was set, in which case we can reduce the attributes to query for
+                var attributeNamesArgument = mergedAttributesField.Arguments?.FirstOrDefault(a => a.Name == "attributeNames");
+                if (attributeNamesArgument != null && attributeNamesArgument.Value is ListValue lv)
+                {
+                    var attributeNames = lv.Values.Select(v =>
+                    {
+                        if (v is StringValue sv)
+                            return sv.Value;
+                        return null;
+                    }).Where(v => v != null).Select(v => v!).ToHashSet();
+
+                    attributeSelectionBecauseOfMergedAttributes = NamedAttributesSelection.Build(attributeNames);
+                }
+                else
+                {
+                    // we need to query all attributes
+                    attributeSelectionBecauseOfMergedAttributes = AllAttributeSelection.Instance;
+                }
+            }
+            if (context.SubFields != null && context.SubFields.TryGetValue("effectiveTraits", out var effectiveTraitsField))
+            {
+                // reduce the required attributes by checking the requested effective traits and respecting their required and optional attributes
+                var traitIDsArgument = effectiveTraitsField.Arguments?.FirstOrDefault(a => a.Name == "traitIDs");
+                if (traitIDsArgument != null && traitIDsArgument.Value is ListValue lv)
+                {
+                    var requestedTraitIDs = lv.Values.Select(v =>
+                    {
+                        if (v is StringValue sv)
+                            return sv.Value;
+                        return null;
+                    }).Where(v => v != null).Select(v => v!).ToHashSet();
+
+                    var allTraits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
+                    var requestedTraits = allTraits.Where(t => requestedTraitIDs.Contains(t.ID));
+
+                    var relevantAttributesForTraits = requestedTraits.SelectMany(t => 
+                    t.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Union(
+                    t.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name))
+                    ).ToHashSet();
+
+                    attributeSelectionBecauseOfTraits = NamedAttributesSelection.Build(relevantAttributesForTraits);
+                }
+                else
+                {
+                    attributeSelectionBecauseOfTraits = AllAttributeSelection.Instance;
+                }
+            }
+            var finalAttributeSelection = baseAttributeSelection.Union(attributeSelectionBecauseOfMergedAttributes).Union(attributeSelectionBecauseOfTraits);
+            return finalAttributeSelection;
         }
     }
 
     public class MergedCIAttributeType : ObjectGraphType<MergedCIAttribute>
     {
-        public MergedCIAttributeType(IDataLoaderContextAccessor dataLoaderContextAccessor, ILayerModel layerModel)
+        public MergedCIAttributeType(IDataLoaderService dataLoaderService, ILayerModel layerModel)
         {
             Field(x => x.LayerStackIDs);
             Field(x => x.Attribute, type: typeof(CIAttributeType));
@@ -98,10 +164,10 @@ namespace Omnikeeper.GraphQL
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source!.LayerStackIDs;
-
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                var loader = dataLoaderContextAccessor.Context.GetOrAddLoader($"GetAllLayers_{timeThreshold}", () => layerModel.GetLayers(userContext.Transaction, timeThreshold));
-                return loader.LoadAsync().Then(layers => layers
+
+                return dataLoaderService.SetupAndLoadAllLayers(layerModel, timeThreshold, userContext.Transaction)
+                    .Then(layers => layers
                         .Where(l => layerstackIDs.Contains(l.ID))
                         .OrderBy(l => layerstackIDs.IndexOf(l.ID))
                     );

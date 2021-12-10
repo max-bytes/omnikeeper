@@ -37,10 +37,7 @@ namespace PerfTests
         public string? CIIDSelection { get; set; }
 
         [Params(false)]
-        public bool WithModelCaching { get; set; }
-
-        [Params(false)]
-        public bool WithEffectiveTraitCaching { get; set; }
+        public bool EnablePerRequestModelCaching { get; set; }
 
         [Params(false, true)]
         public bool UseLatestTable { get; set; }
@@ -51,7 +48,7 @@ namespace PerfTests
         [GlobalSetup(Target = nameof(GetMergedAttributes))]
         public async Task Setup()
         {
-            Setup(WithModelCaching, WithEffectiveTraitCaching, PreSetupData);
+            Setup(EnablePerRequestModelCaching, PreSetupData);
 
             if (PreSetupData)
             {
@@ -101,8 +98,7 @@ namespace PerfTests
         public async Task RunDebuggable()
         {
             CIIDSelection = "specific";
-            WithModelCaching = false;
-            WithEffectiveTraitCaching = false;
+            EnablePerRequestModelCaching = false;
             UseLatestTable = true;
             AttributeCITuple = AttributeCITuples.First();
             await Setup();
@@ -176,7 +172,7 @@ namespace PerfTests
 
                 var data = new BulkCIAttributeDataLayerScope("", layer!.ID, fragments);
 
-                await attributeModel.BulkReplaceAttributes(data, changeset, new DataOriginV1(DataOriginType.Manual), mc);
+                await attributeModel.BulkReplaceAttributes(data, changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance);
             }
 
             mc.Commit();

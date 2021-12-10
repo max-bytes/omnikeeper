@@ -21,23 +21,22 @@ namespace PerfTests
     public class SearchForMergedCIsByTraitsTest : Base
     {
         [GlobalSetup(Target = nameof(SearchForMergedCIsByTraits))]
-        public async Task Setup() => await SetupGeneric(WithModelCaching, WithEffectiveTraitCaching);
+        public async Task Setup() => await SetupGeneric(EnablePerRequestModelCaching);
 
         [Benchmark]
         public async Task SearchForMergedCIsByTraits()
         {
             using var mc = modelContextBuilder!.BuildImmediate();
             var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
-            (await ciSearchModel!.FindMergedCIsByTraits(ciSelection!, AllAttributeSelection.Instance, requiredTraits!, Enumerable.Empty<ITrait>(), layerset!, mc, time)).Consume(consumer);
-
-            // should hit cache, second time
-            (await ciSearchModel!.FindMergedCIsByTraits(ciSelection!, AllAttributeSelection.Instance, requiredTraits!, Enumerable.Empty<ITrait>(), layerset!, mc, time)).Consume(consumer);
+            var workCIs1 = await ciModel!.GetMergedCIs(ciSelection!, layerset!, includeEmptyCIs: true, AllAttributeSelection.Instance, mc, time);
+            (await effectiveTraitModel!.FilterMergedCIsByTraits(workCIs1, requiredTraits!, Enumerable.Empty<ITrait>(), layerset!, mc, time)).Consume(consumer);
         }
 
         [GlobalCleanup(Target = nameof(SearchForMergedCIsByTraits))]
         public void TearDownT() => TearDown();
 
-        private ICISearchModel? ciSearchModel;
+        private IEffectiveTraitModel? effectiveTraitModel;
+        private ICIModel? ciModel;
         private IModelContextBuilder? modelContextBuilder;
         private LayerSet? layerset;
         private TimeThreshold time;
@@ -52,11 +51,8 @@ namespace PerfTests
             //(5000, 50000, 4, 1),
         };
 
-        [Params(false)]
-        public bool WithModelCaching { get; set; }
-
         [Params(false, true)]
-        public bool WithEffectiveTraitCaching { get; set; }
+        public bool EnablePerRequestModelCaching { get; set; }
 
         [ParamsSource(nameof(RequiredTraitIDList))]
         public string[]? RequiredTraitIDs { get; set; }
@@ -65,9 +61,9 @@ namespace PerfTests
         [Params(false)]
         public bool SpecificCIs { get; set; }
 
-        public async Task SetupGeneric(bool enableModelCaching, bool enableEffectiveTraitCaching)
+        public async Task SetupGeneric(bool enablePerRequestModelCaching)
         {
-            Setup(enableModelCaching, enableEffectiveTraitCaching, true);
+            Setup(enablePerRequestModelCaching, true);
 
             var numCIs = AttributeCITuple.numCIs;
             var numLayers = AttributeCITuple.numLayers;
@@ -75,9 +71,9 @@ namespace PerfTests
             var numDataTransactions = AttributeCITuple.numDataTransactions;
 
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
-            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
-            ciSearchModel = ServiceProvider.GetRequiredService<ICISearchModel>();
+            effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
             var traitsProvider = ServiceProvider.GetRequiredService<ITraitsProvider>();
 
             using var mc = modelContextBuilder.BuildImmediate();

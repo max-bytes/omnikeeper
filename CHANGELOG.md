@@ -4,20 +4,44 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
- 
-<!--
-## [Unreleased] - 2021-09-03
- 
-### Added
-*Empty*
- 
-### Changed
-*Empty*
- 
-### Fixed
-*Empty*
 
--->
+
+## [9.0.0] - 2021-12-09
+
+### Added
+- usage tracking for generators
+- switched hangfire backend from memory backed to postgres
+- database: added unique constraint that ensures that per changeset and layer, only a single change can be made to each attribute/relation
+- GraphQL server: implemented possibility for graphql resolver of effective traits (of CI) to specify traitIDs
+
+### Changed
+- technical frontend: switched default empty-trait search behavior to "may" instead of "must not"
+- performance improvements: graphql-fetching EffectiveTraits of CIs -> fetching only relevant attribute from database
+- performance improvements: getting latest layer change
+- moved long-running archive old data default interval to once per day
+- better console output formatting
+- give hangfire jobs IDs so that the are properly stoppable; remove existing hangfire jobs on startup
+- internal changes and work to support attribute masks
+
+### Fixes
+- technical frontend: nginx bugfix for URLs containing a period
+- GraphQL server: when not selecting mergedAttributes, querying effectiveTraits only ever returned the __named effectiveTrait
+
+
+## [8.0.0] - 2021-12-09
+
+Internal release
+
+## [7.0.0] - 2021-12-01
+
+### Added
+- (breaking) implemented functionality for CLBs to skip their run under certain circumstances: when all of their dependent layers have not change since their last run
+- technical frontend: gridview: added full text search field to grid
+- technical frontend: show CI name in changeset view for attributes
+- technical frontend: check latest layer update time in layer statistics
+
+### Changed
+- performance improvements: per-request caching of various often-needed data such as layers and meta configuration
 
 ## [6.0.0] - 2021-11-25
 

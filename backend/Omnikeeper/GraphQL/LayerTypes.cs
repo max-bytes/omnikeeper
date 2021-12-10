@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Model;
 
 namespace Omnikeeper.GraphQL
 {
@@ -57,6 +58,7 @@ namespace Omnikeeper.GraphQL
             Field("numActiveRelations", x => x.NumActiveRelations);
             Field("numRelationChangesHistory", x => x.NumRelationChangesHistory);
             Field("numLayerChangesetsHistory", x => x.NumLayerChangesetsHistory);
+            Field("latestChange", x => x.LatestChange, type: typeof(DateTimeOffsetGraphType));
             Field("layer", x => x.Layer, type: typeof(LayerType));
         }
     }

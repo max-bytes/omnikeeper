@@ -67,6 +67,7 @@ namespace Omnikeeper.GraphQL
                     var numActiveRelations = await layerStatisticsModel.GetActiveRelations(layer.ID, userContext.Transaction);
                     var numRelationChangesHistory = await layerStatisticsModel.GetRelationChangesHistory(layer.ID, userContext.Transaction);
                     var numLayerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layer.ID, userContext.Transaction);
+                    var latestChange = await latestLayerChangeModel.GetLatestChangeInLayer(layer.ID, userContext.Transaction);
 
                     return new LayerStatistics(
                         layer,
@@ -74,7 +75,8 @@ namespace Omnikeeper.GraphQL
                         numAttributeChangesHistory,
                         numActiveRelations,
                         numRelationChangesHistory,
-                        numLayerChangesetsHistory);
+                        numLayerChangesetsHistory,
+                        latestChange);
                 });
 
             FieldAsync<ListGraphType<OIAContextType>>("manage_oiacontexts",

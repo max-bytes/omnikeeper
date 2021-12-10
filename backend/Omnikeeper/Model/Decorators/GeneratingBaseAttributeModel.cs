@@ -60,6 +60,7 @@ namespace Omnikeeper.Model.Decorators
                 NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
                 RegexAttributeSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
                 AllAttributeSelection _ => new HashSet<string>(), // we are fetching all attributes anyway, no need to add additional attributes
+                NoAttributesSelection _ => new HashSet<string>(), // no attributes necessary
                 _ => throw new Exception("Invalid attribute selection encountered"),
             };
             var additionalAttributes = (additionalAttributeNames.Count > 0) ? await model.GetAttributes(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerIDs, trans, atTime) : null;
@@ -133,9 +134,14 @@ namespace Omnikeeper.Model.Decorators
             return await model.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
+        public async Task<(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes)> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans)
         {
-            return await model.BulkReplaceAttributes(data, changeset, origin, trans);
+            return await model.PrepareForBulkUpdate(data, trans);
+        }
+
+        public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes, string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)
+        {
+            return await model.BulkUpdate(inserts, removes, layerID, origin, changesetProxy, trans);
         }
     }
 }
