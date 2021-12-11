@@ -267,7 +267,7 @@ namespace OKPluginVariableRendering
         }
 
 
-        private static bool IsAttributeAllowed(string attribute, List<string> attributeWhitelist, List<string> attributeBlacklist)
+        public static bool IsAttributeAllowed(string attribute, List<string> attributeWhitelist, List<string> attributeBlacklist)
         {
             var result = false;
 
@@ -297,7 +297,7 @@ namespace OKPluginVariableRendering
             return result;
         }
 
-        private static bool IsAttributeIncludedInSource(string attribute, string source)
+        public static bool IsAttributeIncludedInSource(string attribute, string source)
         {
             var result = false;
 
@@ -318,7 +318,7 @@ namespace OKPluginVariableRendering
             return result;
         }
 
-        private static string GetTargetName(string source, string target)
+        public static string GetTargetName(string source, string target)
         {
             if (source == "__name")
             {
