@@ -52,7 +52,7 @@ While an effective trait is computed from the underlying CI's data, its data is 
 Effective traits allow users and processes to work with omnikeeper's data in a structured way, just as they would work with the data in typical schema-driven applications that define fixed data types.  
 Effective traits are the reason why optional attributes/relations are useful. While optional attributes/relations do not have an effect on the filtering mechanism of a trait, they are part of the resulting effective traits just as their required counterparts are. The only difference: because the existance of their underlying attributes/relations is not mandatory, they MAY also NOT be present in the effective trait. Here is a diagram showing the construction of effective traits in a simple example:
 
-![Example for how effective traits are constructed](assets/drawio/traits-effective-traits-applied-Seite-1.svg)
+![Example for how effective traits are constructed](assets/drawio/traits-effective-traits-applied.svg)
 
 ## Traits vs. ...
 
