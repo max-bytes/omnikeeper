@@ -4,9 +4,9 @@ Generators are a way to create new attributes out of existing ones. Very similar
 
 Unlike regular attributes, generated attributes are not stored anywhere, but always calculated on-the-fly at the time they are being queried. They are always up-to-date and reference the currently existing attributes as the basis for their calculations. That means, when querying generated attributes in a historic context (i.e. at an earlier point in time), they read the attributes present at that point in time (=the point in time for which the data is queried), NOT the latest set of attributes.
 
-Generated attributes can not override existing attributes on the same layer. They can however hide attributes on the layers below, just like regular attributes can. 
-
 Using a generator is a two-step configuration process. First, you specify the generator itself in the management area of the technical frontend, giving the generator a unique ID, and specifying the attribute name and template. Secondly, you link the generator to one (or more) layers by its ID on the layer management page. A layer can be linked to any number of generators. The order of the links also defines the order in which the generators are "run". But(!), referencing other generated attributes inside a generator template is not fully supported yet, so do not rely on this for now, even when it might appear to work. Refer to [issue #88](https://github.com/max-bytes/omnikeeper/issues/88) for updates on the topic.
+
+Generated attributes will override existing regular attributes on the same layer. You may use this to override attributes, similar to layers. But, using generators to hide regular attributes is not recommended as it permanently hides them, with no way of accessing them anymore, unless the generator is removed again.
 
 Once a generator is linked to a layer, the generated attribute can(!) appear at CIs in the layer. However, linking alone is not enough. The generator's template needs to evaluate to a string. If the template evaluates to null, no generated attribute is created. Note that accessing a non-existant attribute in the base CI already evaluates to null, so if a template is defined as `attributes["potentially-existing-attribute"]`, it will only generate attributes for CIs that have an attribute with the name `potentially-existing-attribute`.
 
