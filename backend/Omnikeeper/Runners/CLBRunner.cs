@@ -6,6 +6,7 @@ using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -15,7 +16,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Runners
 {
@@ -40,6 +40,7 @@ namespace Omnikeeper.Runners
 
         [MaximumConcurrentExecutions(1, timeoutInSeconds: 120)]
         [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+        [SkipWhenPreviousJobIsRunning]
         public void Run(PerformContext? context)
         {
             using (HangfireConsoleLogger.InContext(context))
