@@ -219,6 +219,8 @@ namespace Omnikeeper.Startup
                 builder.RegisterDecorator<CachingLayerModel, ILayerModel>();
                 builder.RegisterType<PerRequestMetaConfigurationCache>().InstancePerLifetimeScope();
                 builder.RegisterDecorator<CachingMetaConfigurationModel, IMetaConfigurationModel>();
+                builder.RegisterType<PerRequestTraitsProviderCache>().InstancePerLifetimeScope();
+                builder.RegisterDecorator<CachingTraitsProvider, ITraitsProvider>();
             }
 
             // latest layer change caching
