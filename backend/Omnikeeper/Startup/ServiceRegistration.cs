@@ -161,7 +161,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<CIBasedAuthorizationService>().As<ICIBasedAuthorizationService>().SingleInstance();
             builder.RegisterType<DataPartitionService>().As<IDataPartitionService>().SingleInstance();
             builder.RegisterType<MarkedForDeletionService>().SingleInstance();
-            builder.RegisterType<IngestDataService>().InstancePerLifetimeScope(); // TODO: make singleton
+            builder.RegisterType<IngestDataService>().SingleInstance();
             builder.RegisterType<ReactiveLogReceiver>().SingleInstance();
 
             builder.RegisterType<AuthRolePermissionChecker>().As<IAuthRolePermissionChecker>().SingleInstance();
