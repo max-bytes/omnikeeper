@@ -7,13 +7,13 @@ A key feature for organizing the data in omnikeeper are layers. Layers have mul
 *   **Separation of Concerns** - layers are used to split data into manageable chunks, for example via their source, their purpose, their governing team, human vs. process, ...
 *   **Visibility** - Not every user must see every layer. Only the layers that are relevant need to be processed.
 *   **Authorization** - Not every user must be able to modify every layer.
-*   **Priority** - when there is conflicting information regarding the same thing on different layers, a layer ordering ensures the correct resolution. Layers with a higher priority overshadow (but never overwrite!) information on the layers below. This is a similar concept to layers in image editing software, such as photoshop
-*   **Change-Management** - a layer can be used as a RFC, detailing and documenting a potential change. (TODO: This is called a &quot;change layer&quot;. Change managers are able to review change layers, alter or reject them, and also merge them with other layers)
-*   **What-if Analysis** - Create a personal layer, only visible to you, that contains changes you would like to explore. Use tools like diff, to see what would happen if applied
+*   **Priority** - when there is conflicting information regarding the same thing on different layers, a layer ordering ensures the correct resolution. Layers with a higher priority overshadow (but never overwrite!) information on the layers below. This is a similar concept to layers in image editing software, such as Photoshop, where layers can be used to non-destructively override pixels by drawing onto a separate layer that sits above the base layer.
+*   **(In a future version) Change-Management** - a layer can be used as a RFC, detailing and documenting a potential change. This is called a &quot;change layer&quot;. Change managers are able to review change layers, alter or reject them, and also merge them with other layers
+*   **(In a future version) What-if Analysis** - Create a personal layer, only visible to you, that contains changes you would like to explore. Use tools like diff, to see what would happen if applied
 
 ## Layer Merging
 TODO: talk about how attributes and relations are merged when working with multiple layers: merging, layer priority, ...
- ![Layer Merging](assets/drawio/overview-layer-ci-attributes-Seite-1.svg)
+ ![Layer Merging](assets/drawio/overview-layer-ci-attributes.svg)
 
 ## Types of Layers
 
