@@ -24,4 +24,5 @@ Separating the compute layer configuration from the layer makes it possible to r
 
 ## Architecture Diagram
 The following diagram shows the relationship between layers, compute layer configurations and compute layer brains:
+
 ![Architecture Diagram of Compute Layers](assets/drawio/overview-compute-layers.svg)

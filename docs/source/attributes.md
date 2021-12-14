@@ -14,7 +14,7 @@ There is a mechanism to limit how long (outdated) attributes are stored. In the 
 
 The following diagram shows how attributes appear over time:
 
- ![Attributes over time](assets/drawio/overview-attributes-time-Seite-1.svg)
+ ![Attributes over time](assets/drawio/overview-attributes-time.svg)
 
 Depending on what timestamp is used for querying, a different set of attributes would be returned. When querying for the latest timestamp, the returned attribute values would be "1", "3", "7" and "5" (in order of diagram columns, left-to-right). But when querying for an earlier point in time, attributes added later would not appear in the result anymore and older attributes would show instead.
 
@@ -27,9 +27,18 @@ Because attributes are stored over time, but deleted when they become outdated a
 
 ## Attribute Name
 
-TODO: nomenclature
+Each attribute needs a name. To support as many usecases as possible, attribute names do no have any restrictions in terms of allowed characters or length (other than not being empty). Given that omnikeeper often needs to import foreign data, letting attributes have any name was an important goal to make integration as painless as possible. It allows importers to keep the original names intact, such as the column names of database tables or the keys/paths in a structured data format such as JSON or XML.
 
+However, if you do not value the ability to keep the original names but want to use a consistent naming convention, you might benefit from following these recommendations, even when there are no strictly enforced naming rules:
+- stick to lowercase characters and numbers, avoid uppercase or special characters.
+- underscores ("_") should be used to separate words.
+- dots (".") should be used as a hierarchy and grouping mechanism to pool similar attributes together. The dot does have a semantic meaning within omnikeeper's technical frontend. It will group attributes with the same prefix together and display them under a common group name.
+- in general, follow the [snake_case](https://en.wikipedia.org/wiki/Snake_case) convention.
 
 ## Attribute Value
+
+TODO
+
+### Attribute Value Types
 
 TODO
