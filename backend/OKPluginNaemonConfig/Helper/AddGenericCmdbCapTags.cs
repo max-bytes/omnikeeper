@@ -20,8 +20,7 @@ namespace OKPluginNaemonConfig.Helper
                 }
                 else
                 {
-                    // TODO check if we should add this
-                    //ciItem.Tags.Add("cap_default");
+                    ciItem.Tags.Add("cap_default");
                 }
             }
         }
