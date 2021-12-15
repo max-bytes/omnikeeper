@@ -31,19 +31,9 @@ namespace Omnikeeper.Model.Decorators
             return await Model.GetLayer(layerID, trans, timeThreshold);
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(IEnumerable<string> layerIDs, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            return await Model.GetLayers(layerIDs, trans, timeThreshold);
-        }
-
         public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans, TimeThreshold timeThreshold)
         {
             return await Model.GetLayers(trans, timeThreshold);
-        }
-
-        public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            return await Model.GetLayers(stateFilter, trans, timeThreshold);
         }
 
         public async Task<bool> TryToDelete(string id, IModelContext trans)
@@ -51,13 +41,6 @@ namespace Omnikeeper.Model.Decorators
             var succeeded = await Model.TryToDelete(id, trans);
             cache.RemoveFromCache(id);
             return succeeded;
-        }
-
-        public async Task<Layer> UpsertLayer(string id, IModelContext trans)
-        {
-            var layer = await Model.UpsertLayer(id, trans);
-            cache.RemoveFromCache(id);
-            return layer;
         }
 
         public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, string clConfigID, OnlineInboundAdapterLink oilp, string[] generators, IModelContext trans)

@@ -61,23 +61,6 @@ namespace Omnikeeper.Model.Decorators
                 return null;
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(IEnumerable<string> layerIDs, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            var allLayers = await _GetFromCache(trans);
-            if (allLayers == null)
-                return await Model.GetLayers(layerIDs, trans, timeThreshold);
-
-            var selectedLayers = layerIDs.Select(id =>
-            {
-                if (allLayers.TryGetValue(id, out var l))
-                    return l;
-                else
-                    return null;
-            }).WhereNotNull();
-
-            return selectedLayers;
-        }
-
         public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans, TimeThreshold timeThreshold)
         {
             var allLayers = await _GetFromCache(trans);
@@ -87,33 +70,11 @@ namespace Omnikeeper.Model.Decorators
             return allLayers.Values;
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            var allLayers = await _GetFromCache(trans);
-            if (allLayers == null)
-                return await Model.GetLayers(stateFilter, trans, timeThreshold);
-
-            var selectedLayers = allLayers.Values.Where(layer =>
-            {
-                return stateFilter.Filter2States().Contains(layer.State);
-
-            });
-
-            return selectedLayers;
-        }
-
         public async Task<bool> TryToDelete(string id, IModelContext trans)
         {
             var succeeded = await Model.TryToDelete(id, trans);
             _ClearCache();
             return succeeded;
-        }
-
-        public async Task<Layer> UpsertLayer(string id, IModelContext trans)
-        {
-            var layer = await Model.UpsertLayer(id, trans);
-            _ClearCache();
-            return layer;
         }
 
         public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, string clConfigID, OnlineInboundAdapterLink oilp, string[] generators, IModelContext trans)

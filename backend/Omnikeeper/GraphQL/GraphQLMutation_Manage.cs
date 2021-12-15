@@ -51,7 +51,7 @@ namespace Omnikeeper.GraphQL
                     string clConfigID = "";
                     if (upsertLayer.CLConfigID != null && upsertLayer.CLConfigID != "")
                         clConfigID = upsertLayer.CLConfigID;
-                    OnlineInboundAdapterLink oilp = LayerModel.DefaultOILP;
+                    OnlineInboundAdapterLink oilp = ILayerModel.DefaultOILP;
                     if (upsertLayer.OnlineInboundAdapterName != null && upsertLayer.OnlineInboundAdapterName != "")
                         oilp = OnlineInboundAdapterLink.Build(upsertLayer.OnlineInboundAdapterName);
                     var updatedLayer = await layerModel.UpsertLayer(upsertLayer.ID, upsertLayer.Description, Color.FromArgb(upsertLayer.Color), upsertLayer.State, clConfigID, oilp, upsertLayer.Generators, userContext.Transaction);

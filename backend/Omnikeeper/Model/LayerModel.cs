@@ -14,14 +14,6 @@ namespace Omnikeeper.Model
 {
     public class LayerModel : ILayerModel
     {
-        public static readonly OnlineInboundAdapterLink DefaultOILP = OnlineInboundAdapterLink.Build("");
-        private static readonly AnchorState DefaultState = AnchorState.Active;
-        private static readonly Color DefaultColor = Color.White;
-
-        public async Task<Layer> UpsertLayer(string id, IModelContext trans)
-        {
-            return await UpsertLayer(id, "", DefaultColor, DefaultState, "", DefaultOILP, new string[0], trans);
-        }
         public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, string clConfigID, OnlineInboundAdapterLink oilp, string[] generators, IModelContext trans)
         {
             Debug.Assert(oilp != null);
@@ -168,21 +160,28 @@ namespace Omnikeeper.Model
             }
         }
 
-        // TODO: performance improvements!
         public async Task<LayerSet> BuildLayerSet(string[] ids, IModelContext trans)
         {
             IDValidations.ValidateLayerIDsThrow(ids);
 
-            foreach (var id in ids)
+            using var command = new NpgsqlCommand(@"select id from layer where id = ANY(@layer_ids)", trans.DBConnection, trans.DBTransaction);
+            command.Parameters.AddWithValue("layer_ids", ids);
+            command.Prepare();
+            using var r = await command.ExecuteReaderAsync();
+            var found = new List<string>(ids.Length);
+            while (await r.ReadAsync())
             {
-                using var command = new NpgsqlCommand(@"select id from layer where id = @id LIMIT 1", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("id", id);
-                command.Prepare();
-                var s = await command.ExecuteScalarAsync();
-                if (s == null)
-                    throw new Exception(@$"Could not find layer with ID ""{id}""");
+                var id = r.GetString(0);
+                found.Add(id);
             }
-            return new LayerSet(ids);
+            if (found.Count < ids.Length)
+            {
+                var notFound = ids.Except(found);
+                throw new Exception(@$"Could not find layers with IDs ""{string.Join(",", notFound)}""");
+            } else
+            {
+                return new LayerSet(ids);
+            }
         }
 
         private async Task<IEnumerable<Layer>> _GetLayers(string whereClause, Action<NpgsqlParameterCollection> addParameters, IModelContext trans, TimeThreshold timeThreshold)
@@ -213,14 +212,20 @@ namespace Omnikeeper.Model
             {
                 var id = r.GetString(0);
                 var description = r.GetString(1);
-                var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
+                var state = (r.IsDBNull(2)) ? ILayerModel.DefaultState : r.GetFieldValue<AnchorState>(2);
                 var clConfig = (r.IsDBNull(3)) ? "" : r.GetString(3);
-                var oilp = (r.IsDBNull(4)) ? DefaultOILP : OnlineInboundAdapterLink.Build(r.GetString(4));
-                var color = (r.IsDBNull(5)) ? DefaultColor : Color.FromArgb(r.GetInt32(5));
+                var oilp = (r.IsDBNull(4)) ? ILayerModel.DefaultOILP : OnlineInboundAdapterLink.Build(r.GetString(4));
+                var color = (r.IsDBNull(5)) ? ILayerModel.DefaultColor : Color.FromArgb(r.GetInt32(5));
                 var generators = (r.IsDBNull(6)) ? new string[0] : r.GetFieldValue<string[]>(6);
                 generators = generators.Where(g => !string.IsNullOrEmpty(g)).ToArray(); // sanitize generators
                 layers.Add(Layer.Build(id, description, color, state, clConfig, oilp, generators));
             }
+            return layers;
+        }
+
+        public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans, TimeThreshold timeThreshold)
+        {
+            var layers = (await _GetLayers("1=1", (p) => { }, trans, timeThreshold));
             return layers;
         }
 
@@ -245,19 +250,13 @@ namespace Omnikeeper.Model
             return layerIDs.Select(id => layers.Find(l => l.ID == id)).WhereNotNull();
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans, TimeThreshold timeThreshold)
-        {
-            var layers = (await _GetLayers("1=1", (p) => { }, trans, timeThreshold));
-            return layers;
-        }
-
         public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, IModelContext trans, TimeThreshold timeThreshold)
         {
             var layers = (await _GetLayers("ls.state = ANY(@states) OR (ls.state IS NULL AND @default_state = ANY(@states))",
                 (p) =>
                 {
                     p.AddWithValue("states", stateFilter.Filter2States());
-                    p.AddWithValue("default_state", DefaultState);
+                    p.AddWithValue("default_state", ILayerModel.DefaultState);
                 }, trans, timeThreshold));
             return layers;
         }

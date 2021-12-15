@@ -23,6 +23,11 @@ TODO
 
 ### Attribute Value Arrays
 
+## Special attributes
+### __name
+
+TODO
+
 ## Attributes over time
 omnikeeper stores attributes with time in mind. In addition to accessing the currently active attributes, omnikeeper allows users to look at attributes at earlier points in time as well. This is made possible by storing all earlier "versions" of every attribute that omnikeeper knows about.
 
