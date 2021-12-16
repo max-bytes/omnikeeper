@@ -68,23 +68,24 @@ namespace Omnikeeper.GraphQL
 
     public class MergedRelationType : ObjectGraphType<MergedRelation>
     {
-        public MergedRelationType(IDataLoaderService dataLoaderService, ILayerModel layerModel)
+        public MergedRelationType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel)
         {
             Field(x => x.LayerStackIDs);
             Field(x => x.LayerID);
             Field(x => x.Relation, type: typeof(RelationType));
 
-            Field<ListGraphType<LayerType>>("layerStack",
+            Field<ListGraphType<LayerDataType>>("layerStack",
             resolve: (context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source!.LayerStackIDs;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
 
-                return dataLoaderService.SetupAndLoadAllLayers(layerModel, timeThreshold, userContext.Transaction)
+                return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, timeThreshold, userContext.Transaction)
                     .Then(layers => layers
-                        .Where(l => layerstackIDs.Contains(l.ID))
-                        .OrderBy(l => layerstackIDs.IndexOf(l.ID))
+                        .Where(kv => layerstackIDs.Contains(kv.Key))
+                        .OrderBy(kv => layerstackIDs.IndexOf(kv.Key))
+                        .Select(kv => kv.Value)
                     );
             });
         }

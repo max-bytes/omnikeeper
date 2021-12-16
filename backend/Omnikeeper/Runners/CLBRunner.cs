@@ -25,7 +25,7 @@ namespace Omnikeeper.Runners
         public CLBRunner(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
             IMetaConfigurationModel metaConfigurationModel, ILifetimeScope parentLifetimeScope,
             IChangesetModel changesetModel, ScopedLifetimeAccessor scopedLifetimeAccessor, CLBLastRunCache clbLastRunCache,
-            ILayerModel layerModel, ILogger<CLBRunner> logger, IModelContextBuilder modelContextBuilder)
+            ILayerModel layerModel, ILayerDataModel layerDataModel, ILogger<CLBRunner> logger, IModelContextBuilder modelContextBuilder)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.clConfigModel = clConfigModel;
@@ -35,6 +35,7 @@ namespace Omnikeeper.Runners
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
             this.clbLastRunCache = clbLastRunCache;
             this.layerModel = layerModel;
+            this.layerDataModel = layerDataModel;
             this.logger = logger;
             this.modelContextBuilder = modelContextBuilder;
         }
@@ -55,7 +56,7 @@ namespace Omnikeeper.Runners
             logger.LogInformation("Start");
 
             var trans = modelContextBuilder.BuildImmediate();
-            var activeLayers = await layerModel.GetLayers(AnchorStateFilter.ActiveAndDeprecated, trans, TimeThreshold.BuildLatest());
+            var activeLayers = await layerDataModel.GetLayerData(AnchorStateFilter.ActiveAndDeprecated, trans, TimeThreshold.BuildLatest());
             var layersWithCLBs = activeLayers.Where(l => l.CLConfigID != "");
 
             if (!layersWithCLBs.IsEmpty()) {
@@ -82,7 +83,7 @@ namespace Omnikeeper.Runners
 
                             if (await clb.CanSkipRun(lastRun, clConfig.CLBrainConfig, logger, modelContextBuilder))
                             {
-                                logger.LogInformation($"Skipping run of CLB {clb.Name} on layer {l.ID}");
+                                logger.LogInformation($"Skipping run of CLB {clb.Name} on layer {l.LayerID}");
                             }
                             else
                             {
@@ -104,10 +105,11 @@ namespace Omnikeeper.Runners
 
                                         var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                                        logger.LogInformation($"Running CLB {clb.Name} on layer {l.ID}");
+                                        logger.LogInformation($"Running CLB {clb.Name} on layer {l.LayerID}");
                                         Stopwatch stopWatch = new Stopwatch();
                                         stopWatch.Start();
-                                        await clb.Run(l, clConfig.CLBrainConfig, changesetProxy, modelContextBuilder, logger);
+                                        var layer = Layer.Build(l.LayerID); // HACK, TODO: either pass layer-ID or layer-data, not Layer object
+                                        await clb.Run(layer, clConfig.CLBrainConfig, changesetProxy, modelContextBuilder, logger);
                                         stopWatch.Stop();
                                         TimeSpan ts = stopWatch.Elapsed;
                                         string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
@@ -137,6 +139,7 @@ namespace Omnikeeper.Runners
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
         private readonly CLBLastRunCache clbLastRunCache;
         private readonly ILayerModel layerModel;
+        private readonly ILayerDataModel layerDataModel;
         private readonly ILogger<CLBRunner> logger;
         private readonly IModelContextBuilder modelContextBuilder;
     }

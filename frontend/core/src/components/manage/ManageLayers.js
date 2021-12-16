@@ -5,6 +5,7 @@ import { mutations } from '../../graphql/mutations_manage'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import AgGridCrud from './AgGridCrud';
+import CreateLayer from './CreateLayer';
 
 export default function ManageLayers(props) {
   var [rowData, setRowData] = useState([]);
@@ -19,12 +20,12 @@ export default function ManageLayers(props) {
       console.log(e);
     }
   });
-  const [upsertLayer] = useMutation(mutations.UPSERT_LAYER);
+  const [upsertLayer] = useMutation(mutations.UPSERT_LAYERDATA);
   const apolloClient = useApolloClient();
 
   const columnDefs = [
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
-    { headerName: "Description", field: "description", editable: (params) => params.data.isNew },
+    { headerName: "Description", field: "description" },
     { headerName: "Color", field: "color", width: 70, cellEditor: 'ARGBColorCellEditor', cellRenderer: 'layerColorCellRenderer' },
     { headerName: "Compute Layer Config ID", field: "clConfigID" },
     { headerName: "Online Inbound Adapter", field: "onlineInboundAdapterName" },
@@ -44,17 +45,15 @@ export default function ManageLayers(props) {
   return <>
     <h2>Layers</h2>
 
-    <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
+    <CreateLayer isEditable={true} onAfterCreation={refetch} />
+
+    <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} 
+      columnDefs={columnDefs} onRefresh={refetch} disableAddRow={true}
       saveRow={async row => {
           return upsertLayer({variables: { layer: { id: row.id, description: row.description, state: row.state, clConfigID: row.clConfigID, onlineInboundAdapterName: row.onlineInboundAdapterName, color: row.color, generators: row.generators ?? [] }}})
             .then(r => { apolloClient.resetStore(); return r; })
-            .then(r => ({result: r.data.manage_upsertLayer, id: row.id}))
+            .then(r => ({result: r.data.manage_upsertLayerData, id: row.id}))
             .catch(e => ({result: e, id: row.id }));
-      }} 
-      setupNewRowData={() => {
-        return {
-          generators: []
-        };
       }}
     />
   </>;

@@ -108,9 +108,9 @@ namespace Omnikeeper.GraphQL
             return loader.LoadAsync(ciidSelection);
         }
 
-        public IDataLoaderResult<IEnumerable<Layer>> SetupAndLoadAllLayers(ILayerModel layerModel, TimeThreshold timeThreshold, IModelContext trans)
+        public IDataLoaderResult<IDictionary<string, LayerData>> SetupAndLoadAllLayers(ILayerDataModel layerDataModel, TimeThreshold timeThreshold, IModelContext trans)
         {
-            var loader = dataLoaderContextAccessor.Context.GetOrAddLoader($"GetAllLayers_{timeThreshold}", () => layerModel.GetLayers(trans, timeThreshold));
+            var loader = dataLoaderContextAccessor.Context.GetOrAddLoader($"GetAllLayers_{timeThreshold}", () => layerDataModel.GetLayerData(trans, timeThreshold));
             return loader.LoadAsync();
         }
 
@@ -180,7 +180,7 @@ namespace Omnikeeper.GraphQL
         IDataLoaderResult<IEnumerable<EffectiveTrait>> SetupAndLoadEffectiveTraitLoader(MergedCI ci, ITraitSelection traitSelection, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
-        IDataLoaderResult<IEnumerable<Layer>> SetupAndLoadAllLayers(ILayerModel layerModel, TimeThreshold timeThreshold, IModelContext trans);
+        IDataLoaderResult<IDictionary<string, LayerData>> SetupAndLoadAllLayers(ILayerDataModel layerDataModel, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IEnumerable<MergedRelation>> SetupAndLoadRelation(IRelationSelection rs, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
     }
 }

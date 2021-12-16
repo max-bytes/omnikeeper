@@ -43,6 +43,7 @@ namespace Tasks.DBInit
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
+            var layerDataModel = new LayerDataModel(layerModel, metaConfigurationModel, new GenericTraitEntityModel<LayerData, string>(effectiveTraitModel, ciModel, attributeModel, relationModel));
             var traitModel = new GenericTraitEntityModel<RecursiveTrait, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var lbas = new Mock<ILayerBasedAuthorizationService>();
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
@@ -53,7 +54,7 @@ namespace Tasks.DBInit
 
             var mc = modelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, mc, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
-            var authenticatedUser = new AuthenticatedUser(user, new AuthRole[0]);
+            var authenticatedUser = new AuthenticatedUser(user, Array.Empty<AuthRole>());
 
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
 
@@ -136,14 +137,21 @@ namespace Tasks.DBInit
             string activeDirectoryLayerID;
             using (var trans = modelContextBuilder.BuildDeferred())
             {
-                var configWriteLayer = await layerModel.UpsertLayer("Config", "", Color.Blue, AnchorState.Active, "", OnlineInboundAdapterLink.Build(""), new string[0], trans);
-                var cmdbLayer = await layerModel.UpsertLayer("CMDB", "", Color.Blue, AnchorState.Active, "", OnlineInboundAdapterLink.Build(""), new string[0], trans);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var configWriteLayer = await layerModel.CreateLayerIfNotExists("Config", trans);
+                await layerDataModel.UpsertLayerData("Config", "", Color.Blue.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
+                var (cmdbLayer, _) = await layerModel.CreateLayerIfNotExists("CMDB", trans);
+                await layerDataModel.UpsertLayerData("CMDB", "", Color.Blue.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
                 cmdbLayerID = cmdbLayer.ID;
-                await layerModel.UpsertLayer("Inventory Scan", "", Color.Violet, AnchorState.Active, "", OnlineInboundAdapterLink.Build(""), new string[0], trans);
-                var monitoringDefinitionsLayer = await layerModel.UpsertLayer("Monitoring Definitions", "", Color.Orange, AnchorState.Active, "", OnlineInboundAdapterLink.Build(""), new string[0], trans);
+                await layerModel.CreateLayerIfNotExists("Inventory Scan", trans);
+                await layerDataModel.UpsertLayerData("Inventory Scan", "", Color.Violet.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
+                var (monitoringDefinitionsLayer, _) = await layerModel.CreateLayerIfNotExists("Monitoring Definitions", trans);
+                await layerDataModel.UpsertLayerData("Monitoring Definitions", "", Color.Orange.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
-                await layerModel.UpsertLayer("Monitoring", "", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, "", OnlineInboundAdapterLink.Build(""), new string[0], trans);
-                var automationLayer = await layerModel.UpsertLayer("Active Directory", "", Color.Cyan, AnchorState.Active, "", OnlineInboundAdapterLink.Build(""), new string[0], trans);
+                await layerModel.CreateLayerIfNotExists("Monitoring", trans);
+                await layerDataModel.UpsertLayerData("Monitoring", "", ColorTranslator.FromHtml("#FFE6CC").ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
+                var (automationLayer, _) = await layerModel.CreateLayerIfNotExists("Active Directory", trans);
+                await layerDataModel.UpsertLayerData("Active Directory", "", Color.Cyan.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
                 activeDirectoryLayerID = automationLayer.ID;
                 trans.Commit();
             }

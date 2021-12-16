@@ -23,6 +23,7 @@ namespace Omnikeeper.GraphQL
         private readonly ICIIDModel ciidModel;
         private readonly IAttributeModel attributeModel;
         private readonly ILayerModel layerModel;
+        private readonly ILayerDataModel layerDataModel;
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ITraitsProvider traitsProvider;
@@ -44,7 +45,7 @@ namespace Omnikeeper.GraphQL
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
 
-        public GraphQLQueryRoot(ICIIDModel ciidModel, IAttributeModel attributeModel, ILayerModel layerModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel,
+        public GraphQLQueryRoot(ICIIDModel ciidModel, IAttributeModel attributeModel, ILayerModel layerModel, ILayerDataModel layerDataModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel,
             ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, GenericTraitEntityModel<Predicate, string> predicateModel,
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GenericTraitEntityModel<GeneratorV1, string> generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
@@ -55,6 +56,7 @@ namespace Omnikeeper.GraphQL
             this.ciidModel = ciidModel;
             this.attributeModel = attributeModel;
             this.layerModel = layerModel;
+            this.layerDataModel = layerDataModel;
             this.ciModel = ciModel;
             this.effectiveTraitModel = effectiveTraitModel;
             this.traitsProvider = traitsProvider;
@@ -317,7 +319,7 @@ namespace Omnikeeper.GraphQL
                     return predicates.Values;
                 });
 
-            FieldAsync<ListGraphType<LayerType>>("layers",
+            FieldAsync<ListGraphType<LayerDataType>>("layers",
                 arguments: new QueryArguments(
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }
                     ),
@@ -327,12 +329,12 @@ namespace Omnikeeper.GraphQL
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                         .WithTimeThreshold(context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()), context.Path);
 
-                    var layers = await layerModel.GetLayers(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    var layers = (await layerDataModel.GetLayerData(userContext.Transaction, userContext.GetTimeThreshold(context.Path))).Values;
 
                     // authz filter
-                    layers = layers.Where(l => layerBasedAuthorizationService.CanUserReadFromLayer(userContext.User, l));
+                    var authedLayers = layers.Where(l => layerBasedAuthorizationService.CanUserReadFromLayer(userContext.User, l.LayerID));
 
-                    return layers;
+                    return authedLayers;
                 });
 
             FieldAsync<ChangesetType>("changeset",

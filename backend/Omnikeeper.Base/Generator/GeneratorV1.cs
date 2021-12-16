@@ -157,18 +157,18 @@ namespace Omnikeeper.Base.Generator
     {
         private readonly GenericTraitEntityModel<GeneratorV1, string> generatorModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
-        private readonly ILayerModel layerModel;
+        private readonly ILayerDataModel layerDataModel;
 
-        public EffectiveGeneratorProvider(GenericTraitEntityModel<GeneratorV1, string> generatorModel, IMetaConfigurationModel metaConfigurationModel, ILayerModel layerModel)
+        public EffectiveGeneratorProvider(GenericTraitEntityModel<GeneratorV1, string> generatorModel, IMetaConfigurationModel metaConfigurationModel, ILayerDataModel layerDataModel)
         {
             this.generatorModel = generatorModel;
             this.metaConfigurationModel = metaConfigurationModel;
-            this.layerModel = layerModel;
+            this.layerDataModel = layerDataModel;
         }
 
         public async Task<IEnumerable<GeneratorV1>[]> GetEffectiveGenerators(string[] layerIDs, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold timeThreshold)
         {
-            Dictionary<string, Layer>? layers = null;
+            IDictionary<string, LayerData>? layerData = null;
 
             var ret = new IEnumerable<GeneratorV1>[layerIDs.Length];
             IDictionary<string, GeneratorV1>? availableGenerators = null;
@@ -187,12 +187,12 @@ namespace Omnikeeper.Base.Generator
                 if (metaConfiguration.ConfigLayerset.Contains(layerID))
                     continue;
 
-                layers ??= (await layerModel.GetLayers(layerIDs, trans, timeThreshold)).ToDictionary(l => l.ID);
+                layerData ??= await layerDataModel.GetLayerData(trans, timeThreshold);
 
-                if (layers.TryGetValue(layerID, out var layer))
+                if (layerData.TryGetValue(layerID, out var ld))
                 {
                     // check if this layer even has any active generators configured, if not -> return early
-                    var activeGeneratorIDsForLayer = layer.Generators;
+                    var activeGeneratorIDsForLayer = ld.Generators;
                     if (activeGeneratorIDsForLayer.IsEmpty())
                         continue;
 

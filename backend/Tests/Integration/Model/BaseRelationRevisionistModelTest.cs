@@ -45,7 +45,7 @@ namespace Tests.Integration.Model
             string layerID1;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var layer1 = await layerModel.UpsertLayer("l1", trans);
+                var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
                 layerID1 = layer1.ID;
                 trans.Commit();
             }

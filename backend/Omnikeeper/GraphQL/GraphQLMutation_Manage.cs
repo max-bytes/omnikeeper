@@ -1,17 +1,12 @@
 ﻿using GraphQL;
 using GraphQL.Types;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Model;
 using System;
 using System.Drawing;
 using System.Linq;
@@ -34,9 +29,9 @@ namespace Omnikeeper.GraphQL
 
         public void CreateManage()
         {
-            FieldAsync<LayerType>("manage_upsertLayer",
+            FieldAsync<LayerDataType>("manage_upsertLayerData",
                 arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<UpsertLayerInputType>> { Name = "layer" }
+                new QueryArgument<NonNullGraphType<UpsertLayerInputDataType>> { Name = "layer" }
                 ),
                 resolve: async context =>
                 {
@@ -44,21 +39,50 @@ namespace Omnikeeper.GraphQL
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
                         .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
 
-                    var upsertLayer = context.GetArgument<UpsertLayerInput>("layer")!;
+                    var upsertLayer = context.GetArgument<UpsertLayerDataInput>("layer")!;
 
                     CheckManagementPermissionThrow(userContext, "modify layers");
 
                     string clConfigID = "";
                     if (upsertLayer.CLConfigID != null && upsertLayer.CLConfigID != "")
                         clConfigID = upsertLayer.CLConfigID;
-                    OnlineInboundAdapterLink oilp = ILayerModel.DefaultOILP;
+                    string oiaReference = "";
                     if (upsertLayer.OnlineInboundAdapterName != null && upsertLayer.OnlineInboundAdapterName != "")
-                        oilp = OnlineInboundAdapterLink.Build(upsertLayer.OnlineInboundAdapterName);
-                    var updatedLayer = await layerModel.UpsertLayer(upsertLayer.ID, upsertLayer.Description, Color.FromArgb(upsertLayer.Color), upsertLayer.State, clConfigID, oilp, upsertLayer.Generators, userContext.Transaction);
+                        oiaReference = upsertLayer.OnlineInboundAdapterName;
+                    var generators = upsertLayer.Generators.Where(g => !string.IsNullOrEmpty(g)).ToArray();
+                    var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                    var (updatedLayer, _) = await layerDataModel.UpsertLayerData(
+                        upsertLayer.ID, upsertLayer.Description, upsertLayer.Color, upsertLayer.State.ToString(), clConfigID, oiaReference, generators,
+                        new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.Transaction
+                        );
 
                     userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return updatedLayer;
+                });
+
+            FieldAsync<LayerDataType>("manage_createLayer",
+                arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
+                ),
+                resolve: async context =>
+                {
+                    var userContext = context.SetupUserContext()
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+
+                    var layerID = context.GetArgument<string>("id")!;
+
+                    CheckManagementPermissionThrow(userContext, "create layers");
+
+                    // check that layer exists
+                    var layer = await layerModel.CreateLayerIfNotExists(layerID, userContext.Transaction);
+
+                    var layerData = await layerDataModel.GetLayerData(layerID, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+
+                    userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+
+                    return layerData;
                 });
 
 

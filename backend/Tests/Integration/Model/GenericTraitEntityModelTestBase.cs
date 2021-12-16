@@ -239,13 +239,13 @@ namespace Tests.Integration.Model
         protected async Task<(GenericTraitEntityModel<T, ID> model, LayerSet layerset, string writeLayerID, Func<IChangesetProxy> changesetBuilder)> SetupModel()
         {
             var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
-            var layer = await ServiceProvider.GetRequiredService<ILayerModel>().UpsertLayer("testlayer", ModelContextBuilder.BuildImmediate());
             var userInDatabase = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
+            var (layer, _) = await ServiceProvider.GetRequiredService<ILayerModel>().CreateLayerIfNotExists("testlayer", ModelContextBuilder.BuildImmediate());
             var user = new AuthenticatedUser(userInDatabase,
                 new AuthRole[] { new AuthRole("ar1", new string[] {
                     PermissionUtils.GetLayerReadPermission(layer), PermissionUtils.GetLayerWritePermission(layer),
                 })
-                });
+            });
             currentUserServiceMock.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
             var effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();

@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -43,12 +44,21 @@ namespace Omnikeeper.Model.Decorators
             return succeeded;
         }
 
-        public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, string clConfigID, OnlineInboundAdapterLink oilp, string[] generators, IModelContext trans)
+        public async Task<(Layer layer, bool created)> CreateLayerIfNotExists(string id, IModelContext trans)
         {
-            var layer = await Model.UpsertLayer(id, description, color, state, clConfigID, oilp, generators, trans);
-            cache.RemoveFromCache(id);
-            return layer;
+            var t = await Model.CreateLayerIfNotExists(id, trans);
+            if (t.created)
+                cache.RemoveFromCache(id);
+            return t;
         }
+
+        //public async Task<(LayerData layerData, bool changed)> UpsertLayerData(string id, string description, Color color, AnchorState state, string clConfigID, string oiaReference, string[] generators, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        //{
+        //    var t = await Model.UpsertLayerData(id, description, color, state, clConfigID, oiaReference, generators, dataOrigin, changesetProxy, trans);
+        //    if (t.changed)
+        //        cache.RemoveFromCache(id);
+        //    return t;
+        //}
     }
 }
 

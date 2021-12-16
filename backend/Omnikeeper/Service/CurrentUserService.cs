@@ -109,16 +109,14 @@ namespace Omnikeeper.Service
 
     public class CurrentAuthorizedCLBUserService : ICurrentUserService
     {
-        public CurrentAuthorizedCLBUserService(CLBContext clbContext, IUserInDatabaseModel userModel, ILayerModel layerModel, IMetaConfigurationModel metaConfigurationModel)
+        public CurrentAuthorizedCLBUserService(CLBContext clbContext, IUserInDatabaseModel userModel, ILayerModel layerModel)
         {
             this.clbContext = clbContext;
             this.userModel = userModel;
-            LayerModel = layerModel;
-            MetaConfigurationModel = metaConfigurationModel;
+            this.layerModel = layerModel;
         }
 
-        public ILayerModel LayerModel { get; }
-        public IMetaConfigurationModel MetaConfigurationModel { get; }
+        private readonly ILayerModel layerModel;
         private readonly CLBContext clbContext;
         private readonly IUserInDatabaseModel userModel;
 
@@ -136,7 +134,7 @@ namespace Omnikeeper.Service
         private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
         {
             // CLBs implicitly have all permissions
-            var suar = await PermissionUtils.GetSuperUserAuthRole(LayerModel, trans);
+            var suar = await PermissionUtils.GetSuperUserAuthRole(layerModel, trans);
 
             // upsert user
             var username = $"__cl.{clbContext.Brain.Name}"; // make username the same as CLB name
@@ -145,6 +143,43 @@ namespace Omnikeeper.Service
             var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
             var guid = GuidUtility.Create(clbUserGuidNamespace, clbContext.Brain.Name);
             var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, trans);
+
+            return new AuthenticatedUser(user, new AuthRole[] { suar });
+        }
+    }
+
+    public class CurrentAuthorizedMarkedForDeletionUserService : ICurrentUserService
+    {
+        public CurrentAuthorizedMarkedForDeletionUserService(IUserInDatabaseModel userModel, ILayerModel layerModel)
+        {
+            this.userModel = userModel;
+            this.layerModel = layerModel;
+        }
+
+        private readonly ILayerModel layerModel;
+        private readonly IUserInDatabaseModel userModel;
+
+        private AuthenticatedUser? cached = null;
+
+        public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
+        {
+            if (cached == null)
+            {
+                cached = await _GetCurrentUser(trans);
+            }
+            return cached;
+        }
+
+        private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
+        {
+            // user implicitly has all permissions
+            var suar = await PermissionUtils.GetSuperUserAuthRole(layerModel, trans);
+
+            // upsert user
+            var username = $"__marked_for_deletion";
+            var displayName = username;
+            var userGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2");
+            var user = await userModel.UpsertUser(username, displayName, userGuid, UserType.Robot, trans);
 
             return new AuthenticatedUser(user, new AuthRole[] { suar });
         }

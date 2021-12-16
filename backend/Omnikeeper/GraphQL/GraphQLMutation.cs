@@ -26,6 +26,7 @@ namespace Omnikeeper.GraphQL
         private readonly IODataAPIContextModel odataAPIContextModel;
         private readonly GenericTraitEntityModel<AuthRole, string> authRoleModel;
         private readonly GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel;
+        private readonly ILayerDataModel layerDataModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly GenericTraitEntityModel<CLConfigV1, string> clConfigModel;
@@ -41,7 +42,7 @@ namespace Omnikeeper.GraphQL
             IManagementAuthorizationService managementAuthorizationService, GenericTraitEntityModel<CLConfigV1, string> clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             IEnumerable<IPluginRegistration> plugins,
-            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
+            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, ILayerDataModel layerDataModel)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -192,6 +193,7 @@ namespace Omnikeeper.GraphQL
 
             CreateManage();
             CreatePlugin(plugins);
+            this.layerDataModel = layerDataModel;
         }
 
 

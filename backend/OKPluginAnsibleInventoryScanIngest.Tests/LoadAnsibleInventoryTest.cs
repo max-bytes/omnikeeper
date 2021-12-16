@@ -68,7 +68,7 @@ namespace Tests.Ingest
 
             var mc = modelContextBuilder.BuildImmediate();
 
-            Layer layer1 = await layerModel.UpsertLayer("inventory_scan", mc);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("inventory_scan", mc);
 
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserAccessor>();

@@ -48,11 +48,11 @@ namespace Tests.Integration.Controller
             {
                 ciid1 = await ciModel.CreateCI(trans);
                 ciid2 = await ciModel.CreateCI(trans);
-                var layer1 = await layerModel.UpsertLayer("l1", trans);
-                var layer2 = await layerModel.UpsertLayer("l2", trans);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
+                var (layer2, _) = await layerModel.CreateLayerIfNotExists("l2", trans);
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 attribute1ID = attribute1.ID;
                 changesetID = attribute1.ChangesetID;

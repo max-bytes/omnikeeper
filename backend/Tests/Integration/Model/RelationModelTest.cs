@@ -39,7 +39,7 @@ namespace Tests.Integration.Model
                 ciid3 = await ciModel.CreateCI(trans);
                 var predicateID1 = "predicate1";
 
-                var layer1 = await layerModel.UpsertLayer("l1", trans);
+                var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
                 layerID1 = layer1.ID;
                 var layerset = new LayerSet(new string[] { layerID1 });
 
@@ -97,8 +97,8 @@ namespace Tests.Integration.Model
             //var (predicate1, changedP1) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
             var predicateID1 = "predicate1";
 
-            var layer1 = await layerModel.UpsertLayer("l1", trans);
-            var layer2 = await layerModel.UpsertLayer("l2", trans);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
+            var (layer2, _) = await layerModel.CreateLayerIfNotExists("l2", trans);
             var layerset = new LayerSet(new string[] { layer2.ID, layer1.ID });
 
             var (i1, c1) = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -136,7 +136,7 @@ namespace Tests.Integration.Model
             var predicateID1 = "predicate1";
             var predicateID2 = "predicate2";
 
-            var layer1 = await layerModel.UpsertLayer("l1", trans);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
             var layerset = new LayerSet(new string[] { layer1.ID });
 
             var i1 = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -164,8 +164,8 @@ namespace Tests.Integration.Model
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);
 
-            var layer1 = await layerModel.UpsertLayer("l1", transI);
-            var layer2 = await layerModel.UpsertLayer("l2", transI);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", transI);
+            var (layer2, _) = await layerModel.CreateLayerIfNotExists("l2", transI);
             var layerset = new LayerSet(new string[] { layer2.ID, layer1.ID });
             var ciid1 = await ciModel.CreateCI(transI);
             var ciid2 = await ciModel.CreateCI(transI);
@@ -228,7 +228,7 @@ namespace Tests.Integration.Model
             //var (predicateID1, changedP1) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
             var predicateID1 = "predicate1";
 
-            var layer1 = await layerModel.UpsertLayer("l1", trans);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
             var layerset = new LayerSet(new string[] { layer1.ID });
 
             var i1 = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);

@@ -1,14 +1,12 @@
-﻿using Autofac;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -77,13 +75,6 @@ namespace Omnikeeper.Model.Decorators
             return succeeded;
         }
 
-        public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, string clConfigID, OnlineInboundAdapterLink oilp, string[] generators, IModelContext trans)
-        {
-            var layer = await Model.UpsertLayer(id, description, color, state, clConfigID, oilp, generators, trans);
-            _ClearCache();
-            return layer;
-        }
-
         private async Task<IDictionary<string, Layer>?> _GetFromCache(IModelContext trans)
         {
             return await PerRequestLayerCache.GetFromScopedCache<PerRequestLayerCache>(scopedLifetimeAccessor, logger, async () => (await Model.GetLayers(trans, TimeThreshold.BuildLatest())).ToDictionary(l => l.ID));
@@ -93,6 +84,22 @@ namespace Omnikeeper.Model.Decorators
         {
             PerRequestLayerCache.ClearScopedCache<PerRequestLayerCache>(scopedLifetimeAccessor, logger);
         }
+
+        public async Task<(Layer layer, bool created)> CreateLayerIfNotExists(string id, IModelContext trans)
+        {
+            var t = await Model.CreateLayerIfNotExists(id, trans);
+            if (t.created)
+                _ClearCache();
+            return t;
+        }
+
+        //public async Task<(LayerData layerData, bool changed)> UpsertLayerData(string id, string description, Color color, AnchorState state, string clConfigID, string oiaReference, string[] generators, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        //{
+        //    var t = await Model.UpsertLayerData(id, description, color, state, clConfigID, oiaReference, generators, dataOrigin, changesetProxy, trans);
+        //    if (t.changed) 
+        //        _ClearCache();
+        //    return t;
+        //}
     }
 }
 
