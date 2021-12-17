@@ -1,10 +1,7 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model.Decorators
@@ -21,19 +18,9 @@ namespace Omnikeeper.Model.Decorators
             this.cache = cache;
         }
 
-        public async Task<LayerSet> BuildLayerSet(string[] ids, IModelContext trans)
+        public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans)
         {
-            return await Model.BuildLayerSet(ids, trans);
-        }
-
-        public async Task<Layer?> GetLayer(string layerID, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            return await Model.GetLayer(layerID, trans, timeThreshold);
-        }
-
-        public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans, TimeThreshold timeThreshold)
-        {
-            return await Model.GetLayers(trans, timeThreshold);
+            return await Model.GetLayers(trans);
         }
 
         public async Task<bool> TryToDelete(string id, IModelContext trans)
@@ -43,11 +30,12 @@ namespace Omnikeeper.Model.Decorators
             return succeeded;
         }
 
-        public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, string clConfigID, OnlineInboundAdapterLink oilp, string[] generators, IModelContext trans)
+        public async Task<(Layer layer, bool created)> CreateLayerIfNotExists(string id, IModelContext trans)
         {
-            var layer = await Model.UpsertLayer(id, description, color, state, clConfigID, oilp, generators, trans);
-            cache.RemoveFromCache(id);
-            return layer;
+            var t = await Model.CreateLayerIfNotExists(id, trans);
+            if (t.created)
+                cache.RemoveFromCache(id); // NOTE: a new layer shouldn't have a cache entry anyway, but we stay safe regardless
+            return t;
         }
     }
 }

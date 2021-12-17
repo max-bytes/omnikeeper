@@ -68,18 +68,19 @@ namespace Tests
             List<Layer> layers;
             using (var mc = modelContextBuilder.BuildDeferred())
             {
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+
                 // okconfig layer
-                layerModel.UpsertLayer("__okconfig", mc).GetAwaiter().GetResult();
+                layerModel.CreateLayerIfNotExists("__okconfig", mc).GetAwaiter().GetResult();
 
                 await ciModel.BulkCreateCIs(ciids, mc);
 
                 layers = layerNames.Select(identity =>
                 {
-                    return layerModel.UpsertLayer(identity, mc).GetAwaiter().GetResult();
+                    return (layerModel.CreateLayerIfNotExists(identity, mc).GetAwaiter().GetResult()).layer;
                 }).ToList();
 
                 var rts = Traits.Get();
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in rts)
                     await traitModel.InsertOrUpdate(rt,
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,

@@ -1,4 +1,5 @@
 ﻿using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
@@ -23,6 +24,7 @@ namespace Omnikeeper.GraphQL
         private readonly ICIIDModel ciidModel;
         private readonly IAttributeModel attributeModel;
         private readonly ILayerModel layerModel;
+        private readonly ILayerDataModel layerDataModel;
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ITraitsProvider traitsProvider;
@@ -42,19 +44,20 @@ namespace Omnikeeper.GraphQL
         private readonly IBaseAttributeModel baseAttributeModel;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+        private readonly IDataLoaderService dataLoaderService;
 
-
-        public GraphQLQueryRoot(ICIIDModel ciidModel, IAttributeModel attributeModel, ILayerModel layerModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel,
+        public GraphQLQueryRoot(ICIIDModel ciidModel, IAttributeModel attributeModel, ILayerModel layerModel, ILayerDataModel layerDataModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel,
             ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, GenericTraitEntityModel<Predicate, string> predicateModel,
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GenericTraitEntityModel<GeneratorV1, string> generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
             GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
             IEnumerable<IPluginRegistration> plugins, ILatestLayerChangeModel latestLayerChangeModel, IBaseAttributeModel baseAttributeModel,
-            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
+            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, IDataLoaderService dataLoaderService)
         {
             this.ciidModel = ciidModel;
             this.attributeModel = attributeModel;
             this.layerModel = layerModel;
+            this.layerDataModel = layerDataModel;
             this.ciModel = ciModel;
             this.effectiveTraitModel = effectiveTraitModel;
             this.traitsProvider = traitsProvider;
@@ -74,6 +77,7 @@ namespace Omnikeeper.GraphQL
             this.baseAttributeModel = baseAttributeModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+            this.dataLoaderService = dataLoaderService;
 
             CreateMain();
             CreateManage();
@@ -317,22 +321,22 @@ namespace Omnikeeper.GraphQL
                     return predicates.Values;
                 });
 
-            FieldAsync<ListGraphType<LayerType>>("layers",
+            Field<ListGraphType<LayerDataType>>("layers",
                 arguments: new QueryArguments(
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }
                     ),
-                resolve: async context =>
+                resolve: context =>
                 {
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                         .WithTimeThreshold(context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()), context.Path);
 
-                    var layers = await layerModel.GetLayers(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-
-                    // authz filter
-                    layers = layers.Where(l => layerBasedAuthorizationService.CanUserReadFromLayer(userContext.User, l));
-
-                    return layers;
+                    return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                        .Then(layersDict =>
+                        {
+                            // authz filter
+                            return layersDict.Values.Where(l => layerBasedAuthorizationService.CanUserReadFromLayer(userContext.User, l.LayerID));
+                        });
                 });
 
             FieldAsync<ChangesetType>("changeset",
@@ -459,7 +463,7 @@ namespace Omnikeeper.GraphQL
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
 
-                    var layers = await layerModel.GetLayers(userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: we only need count, implement more efficient model method
+                    var layers = await layerModel.GetLayers(userContext.Transaction); // TODO: we only need count, implement more efficient model method
                     var ciids = await ciidModel.GetCIIDs(userContext.Transaction);
                     var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
                     var predicates = await predicateModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement PredicateProvider

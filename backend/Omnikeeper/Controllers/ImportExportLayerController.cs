@@ -163,7 +163,7 @@ namespace Omnikeeper.Controllers
 
                     var writeLayerID = overwriteLayerID ?? data.LayerID;
 
-                    var writeLayer = await layerModel.GetLayer(writeLayerID, trans, timeThreshold);
+                    var writeLayer = await layerModel.GetLayer(writeLayerID, trans);
                     if (writeLayer == null)
                     {
                         return BadRequest($"Cannot write to layer with ID {data.LayerID}: layer does not exist");

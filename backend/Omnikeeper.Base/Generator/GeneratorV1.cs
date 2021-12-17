@@ -157,18 +157,18 @@ namespace Omnikeeper.Base.Generator
     {
         private readonly GenericTraitEntityModel<GeneratorV1, string> generatorModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
-        private readonly ILayerModel layerModel;
+        private readonly ILayerDataModel layerDataModel;
 
-        public EffectiveGeneratorProvider(GenericTraitEntityModel<GeneratorV1, string> generatorModel, IMetaConfigurationModel metaConfigurationModel, ILayerModel layerModel)
+        public EffectiveGeneratorProvider(GenericTraitEntityModel<GeneratorV1, string> generatorModel, IMetaConfigurationModel metaConfigurationModel, ILayerDataModel layerDataModel)
         {
             this.generatorModel = generatorModel;
             this.metaConfigurationModel = metaConfigurationModel;
-            this.layerModel = layerModel;
+            this.layerDataModel = layerDataModel;
         }
 
         public async Task<IEnumerable<GeneratorV1>[]> GetEffectiveGenerators(string[] layerIDs, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold timeThreshold)
         {
-            Dictionary<string, Layer>? layers = null;
+            IDictionary<string, LayerData>? layerData = null;
 
             var ret = new IEnumerable<GeneratorV1>[layerIDs.Length];
             IDictionary<string, GeneratorV1>? availableGenerators = null;
@@ -181,18 +181,18 @@ namespace Omnikeeper.Base.Generator
 
                 // NOTE: this is an important mechanism that prevents layers in the base configuration layerset form having effective generators
                 // this is necessary, because otherwise its very easy to get infinite loops of GetGenerators() -> GetAttributes() -> GetGenerators() -> ...
-                // NOTE: to be 100% consistent, we SHOULD get the base configuration at the correct point in time, not the latest... but the meta-configuration is not stored historically
+                // NOTE: to be 100% consistent, we SHOULD get the meta configuration at the correct point in time, not the latest... but the meta-configuration is not stored historically
                 // so we have to live with this inconsistency; it's shouldn't affect much anyway, because changing the meta configuration is really rare in practice
                 metaConfiguration ??= await metaConfigurationModel.GetConfigOrDefault(trans);
                 if (metaConfiguration.ConfigLayerset.Contains(layerID))
                     continue;
 
-                layers ??= (await layerModel.GetLayers(layerIDs, trans, timeThreshold)).ToDictionary(l => l.ID);
+                layerData ??= await layerDataModel.GetLayerData(trans, timeThreshold);
 
-                if (layers.TryGetValue(layerID, out var layer))
+                if (layerData.TryGetValue(layerID, out var ld))
                 {
                     // check if this layer even has any active generators configured, if not -> return early
-                    var activeGeneratorIDsForLayer = layer.Generators;
+                    var activeGeneratorIDsForLayer = ld.Generators;
                     if (activeGeneratorIDsForLayer.IsEmpty())
                         continue;
 

@@ -160,7 +160,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<LayerBasedAuthorizationService>().As<ILayerBasedAuthorizationService>().SingleInstance();
             builder.RegisterType<CIBasedAuthorizationService>().As<ICIBasedAuthorizationService>().SingleInstance();
             builder.RegisterType<DataPartitionService>().As<IDataPartitionService>().SingleInstance();
-            builder.RegisterType<MarkedForDeletionService>().SingleInstance();
             builder.RegisterType<IngestDataService>().SingleInstance();
             builder.RegisterType<ReactiveLogReceiver>().SingleInstance();
 
@@ -189,6 +188,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<BaseRelationRevisionistModel>().As<IBaseRelationRevisionistModel>().SingleInstance();
             builder.RegisterType<UserInDatabaseModel>().As<IUserInDatabaseModel>().SingleInstance();
             builder.RegisterType<LayerModel>().As<ILayerModel>().SingleInstance();
+            builder.RegisterType<LayerDataModel>().As<ILayerDataModel>().SingleInstance();
             builder.RegisterType<LayerStatisticsModel>().As<ILayerStatisticsModel>().SingleInstance();
             builder.RegisterType<ChangesetStatisticsModel>().As<IChangesetStatisticsModel>().SingleInstance();
             builder.RegisterType<RelationModel>().As<IRelationModel>().SingleInstance();
@@ -207,6 +207,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<GenericTraitEntityModel<Predicate, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<RecursiveTrait, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<GridViewContext, string>>().SingleInstance(); // TODO: ok this way?
+            builder.RegisterType<GenericTraitEntityModel<LayerData, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
 
             // these aren't real models, but we keep them here because they are closely related to models
@@ -233,11 +234,12 @@ namespace Omnikeeper.Startup
 
             builder.RegisterType<CLBLastRunCache>().SingleInstance();
 
-            if (enableOIA)
-            {
-                builder.RegisterDecorator<OIABaseAttributeModel, IBaseAttributeModel>();
-                builder.RegisterDecorator<OIABaseRelationModel, IBaseRelationModel>();
-            }
+            // HACK: are defunct due to circular dependeny regarding LayerDataModel and OnlineAccessProxy
+            //if (enableOIA)
+            //{
+            //    builder.RegisterDecorator<OIABaseAttributeModel, IBaseAttributeModel>();
+            //    builder.RegisterDecorator<OIABaseRelationModel, IBaseRelationModel>();
+            //}
 
             if (enabledGenerators)
             {

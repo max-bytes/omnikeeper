@@ -5,26 +5,27 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Model;
+using System;
 
 namespace Omnikeeper.GraphQL
 {
-    public class LayerType : ObjectGraphType<Layer>
+    public class LayerDataType : ObjectGraphType<LayerData>
     {
-        public LayerType()
+        public LayerDataType()
         {
-            Field(x => x.Description);
+            Field("description", x => x.Description);
             Field("clConfigID", x => x.CLConfigID);
-            Field("onlineInboundAdapterName", x => x.OnlineInboundAdapterLink.AdapterName);
-            Field("id", x => x.ID);
-            Field("color", x => x.Color.ToArgb());
+            Field("onlineInboundAdapterName", x => x.OIAReference);
+            Field("id", x => x.LayerID);
+            Field("color", x => x.Color);
             Field("generators", x => x.Generators);
-            Field(x => x.State, type: typeof(AnchorStateType));
+            Field("state", x => Enum.Parse<AnchorState>(x.State), type: typeof(AnchorStateType));
             Field<BooleanGraphType>("writable",
             resolve: (context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var lbas = context.RequestServices!.GetRequiredService<ILayerBasedAuthorizationService>();
-                var isWritable = lbas.CanUserWriteToLayer(userContext.User, context.Source!.ID);
+                var isWritable = lbas.CanUserWriteToLayer(userContext.User, context.Source!.LayerID);
                 return isWritable;
             });
             FieldAsync<BooleanGraphType>("isMetaConfigurationLayer",
@@ -34,7 +35,7 @@ namespace Omnikeeper.GraphQL
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                return await metaConfigurationModel.IsLayerPartOfMetaConfiguration(context.Source!.ID, userContext.Transaction);
+                return await metaConfigurationModel.IsLayerPartOfMetaConfiguration(context.Source!.LayerID, userContext.Transaction);
             });
 
         }
@@ -59,7 +60,7 @@ namespace Omnikeeper.GraphQL
             Field("numRelationChangesHistory", x => x.NumRelationChangesHistory);
             Field("numLayerChangesetsHistory", x => x.NumLayerChangesetsHistory);
             Field("latestChange", x => x.LatestChange, type: typeof(DateTimeOffsetGraphType));
-            Field("layer", x => x.Layer, type: typeof(LayerType));
+            Field("layer", x => x.LayerData, type: typeof(LayerDataType));
         }
     }
 }

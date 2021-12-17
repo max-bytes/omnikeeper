@@ -44,7 +44,7 @@ namespace OKPluginOIASharepoint.Tests
             var oia = new OnlineInboundAdapter.Builder().Build(config, new Mock<IConfiguration>().Object, new Mock<IScopedExternalIDMapper>().Object, NullLoggerFactory.Instance);
 
             // TODO: mock instead?
-            var layer = Layer.Build("testlayer", "0", Color.White, AnchorState.Active, "", OnlineInboundAdapterLink.Build(""), new string[0]);
+            var layer = Layer.Build("testlayer");
 
             var lap = (oia.CreateLayerAccessProxy(layer) as LayerAccessProxy)!;
 

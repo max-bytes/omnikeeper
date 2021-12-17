@@ -1,4 +1,5 @@
 ﻿using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,8 +32,8 @@ namespace Omnikeeper.GraphQL
 
         private void CreateManage()
         {
-            FieldAsync<ListGraphType<LayerType>>("manage_layers",
-                resolve: async context =>
+            Field<ListGraphType<LayerDataType>>("manage_layers",
+                resolve: context =>
                 {
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
@@ -40,9 +41,8 @@ namespace Omnikeeper.GraphQL
 
                     CheckManagementPermissionThrow(userContext);
 
-                    var layers = await layerModel.GetLayers(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-
-                    return layers;
+                    return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                        .Then(layersDict => layersDict.Values);
                 });
 
             FieldAsync<LayerStatisticsType>("manage_layerStatistics",
@@ -56,21 +56,21 @@ namespace Omnikeeper.GraphQL
 
                     var layerID = context.GetArgument<string>("layerID")!;
 
-                    var layer = await layerModel.GetLayer(layerID, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-                    if (layer == null)
+                    var layerData = await layerDataModel.GetLayerData(layerID, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    if (layerData == null)
                         throw new Exception($"Could not get layer with ID {layerID}");
 
                     CheckManagementPermissionThrow(userContext);
 
-                    var numActiveAttributes = await layerStatisticsModel.GetActiveAttributes(layer.ID, userContext.Transaction);
-                    var numAttributeChangesHistory = await layerStatisticsModel.GetAttributeChangesHistory(layer.ID, userContext.Transaction);
-                    var numActiveRelations = await layerStatisticsModel.GetActiveRelations(layer.ID, userContext.Transaction);
-                    var numRelationChangesHistory = await layerStatisticsModel.GetRelationChangesHistory(layer.ID, userContext.Transaction);
-                    var numLayerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layer.ID, userContext.Transaction);
-                    var latestChange = await latestLayerChangeModel.GetLatestChangeInLayer(layer.ID, userContext.Transaction);
+                    var numActiveAttributes = await layerStatisticsModel.GetActiveAttributes(layerData.LayerID, userContext.Transaction);
+                    var numAttributeChangesHistory = await layerStatisticsModel.GetAttributeChangesHistory(layerData.LayerID, userContext.Transaction);
+                    var numActiveRelations = await layerStatisticsModel.GetActiveRelations(layerData.LayerID, userContext.Transaction);
+                    var numRelationChangesHistory = await layerStatisticsModel.GetRelationChangesHistory(layerData.LayerID, userContext.Transaction);
+                    var numLayerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layerData.LayerID, userContext.Transaction);
+                    var latestChange = await latestLayerChangeModel.GetLatestChangeInLayer(layerData.LayerID, userContext.Transaction);
 
                     return new LayerStatistics(
-                        layer,
+                        layerData,
                         numActiveAttributes,
                         numAttributeChangesHistory,
                         numActiveRelations,
