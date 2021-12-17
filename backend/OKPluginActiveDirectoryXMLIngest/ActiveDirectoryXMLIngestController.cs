@@ -49,7 +49,7 @@ namespace Omnikeeper.Controllers.Ingest
         {
             var mc = modelContextBuilder.BuildImmediate();
 
-            var writeLayer = await layerModel.GetLayer(writeLayerID, mc, TimeThreshold.BuildLatest());
+            var writeLayer = await layerModel.GetLayer(writeLayerID, mc);
             if (writeLayer == null)
                 return BadRequest("Invalid write layer ID configured");
 

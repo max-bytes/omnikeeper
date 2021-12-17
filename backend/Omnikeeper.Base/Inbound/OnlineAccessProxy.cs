@@ -80,7 +80,7 @@ namespace Omnikeeper.Base.Inbound
                     ret[index] = attributes;
                 } else
                 {
-                    ret[index] = new CIAttribute[0];
+                    ret[index] = Array.Empty<CIAttribute>();
                 }
             }
             return ret;

@@ -1,4 +1,5 @@
 ﻿using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,8 +32,8 @@ namespace Omnikeeper.GraphQL
 
         private void CreateManage()
         {
-            FieldAsync<ListGraphType<LayerDataType>>("manage_layers",
-                resolve: async context =>
+            Field<ListGraphType<LayerDataType>>("manage_layers",
+                resolve: context =>
                 {
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
@@ -40,9 +41,8 @@ namespace Omnikeeper.GraphQL
 
                     CheckManagementPermissionThrow(userContext);
 
-                    var layers = await layerDataModel.GetLayerData(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-
-                    return layers.Values;
+                    return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                        .Then(layersDict => layersDict.Values);
                 });
 
             FieldAsync<LayerStatisticsType>("manage_layerStatistics",

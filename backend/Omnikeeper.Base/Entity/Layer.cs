@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Omnikeeper.Base.Utils;
+using System;
 
 namespace Omnikeeper.Base.Entity
 {
+    // TODO: make ID private and move away from strings as layer-IDs but instead only use this class
+    // TODO: rename Layer to LayerID
     public class Layer : IEquatable<Layer>
     {
         private Layer(string id)
@@ -17,6 +20,8 @@ namespace Omnikeeper.Base.Entity
 
         public static Layer Build(string id)
         {
+            IDValidations.ValidateLayerIDThrow(id);
+
             return new Layer(id);
         }
     }

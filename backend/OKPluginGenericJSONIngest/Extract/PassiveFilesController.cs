@@ -216,7 +216,7 @@ namespace Omnikeeper.Controllers.Ingest
                     return BadRequest($"No files specified");
 
                 var searchLayers = new LayerSet(ctx.LoadConfig.SearchLayerIDs);
-                var writeLayer = await layerModel.GetLayer(ctx.LoadConfig.WriteLayerID, mc, timeThreshold);
+                var writeLayer = await layerModel.GetLayer(ctx.LoadConfig.WriteLayerID, mc);
                 if (writeLayer == null)
                 {
                     return BadRequest($"Cannot write to layer with ID {ctx.LoadConfig.WriteLayerID}: layer does not exist");
