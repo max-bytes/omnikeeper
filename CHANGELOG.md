@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [10.0.0] - 2021-12-17
+
+### Added
+- ability to change layer description
+
+### Changed
+- (breaking) migrated layer-data from dedicated database tables into meta-config layer structure
+- (breaking) changed GraphQL API for creating layers and layer-data
+- technical frontend: changed layer modification UI in management
+- technical frontend: improved layer drawer visualization
+- improved hangfire concurrent job handling
+- performance improvement: per-request caching of traits
+
+### Fixes
+- technical frontend: layer drawer line break bug
+
 
 ## [9.0.0] - 2021-12-09
 
