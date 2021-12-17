@@ -78,6 +78,7 @@ namespace Omnikeeper.GraphQL
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.dataLoaderService = dataLoaderService;
+
             CreateMain();
             CreateManage();
             CreatePlugin(plugins);

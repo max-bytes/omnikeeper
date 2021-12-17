@@ -190,10 +190,10 @@ namespace Omnikeeper.GraphQL
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+            this.layerDataModel = layerDataModel;
 
             CreateManage();
             CreatePlugin(plugins);
-            this.layerDataModel = layerDataModel;
         }
 
 
