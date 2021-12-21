@@ -3,11 +3,9 @@
     {
       "tempID": "tempCIID>zone>mhx-consulting.at",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "id"
-        ],
-        "tempID": null
+        ]
       },
       "attributes": [
         {
@@ -25,11 +23,9 @@
     {
       "tempID": "tempCIID>zone>mhx.at",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "id"
-        ],
-        "tempID": null
+        ]
       },
       "attributes": [
         {
@@ -47,11 +43,9 @@
     {
       "tempID": "tempCIID>record>1569516122",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "id"
-        ],
-        "tempID": null
+        ]
       },
       "attributes": [
         {
@@ -84,11 +78,9 @@
     {
       "tempID": "tempCIID>record>1569516123",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "id"
-        ],
-        "tempID": null
+        ]
       },
       "attributes": [
         {
@@ -121,11 +113,9 @@
     {
       "tempID": "tempCIID>record>2569516148",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "id"
-        ],
-        "tempID": null
+        ]
       },
       "attributes": [
         {

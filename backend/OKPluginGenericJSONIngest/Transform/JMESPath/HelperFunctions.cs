@@ -37,7 +37,16 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             var value = args[1].Token;
             var type = AttributeValueType.Text.ToString();
             if (args.Length >= 3)
-                type = Enum.Parse<AttributeValueType>(args[2].Token.ToString()).ToString();
+            {
+                var typeStr = args[2].Token.ToString();
+                try
+                {
+                    type = Enum.Parse<AttributeValueType>(typeStr).ToString();
+                } catch (Exception e)
+                {
+                    throw new Exception($"Cannot parse type \"{typeStr}\" into enum for attribute {name} with value {value}", e);
+                }
+            }
             // TODO: consider how to handle null values
             //if (value is JValue jv && jv.Value == null)
             //{
@@ -70,10 +79,11 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             if (!(args[0].Token is JArray ja))
                 throw new Exception("Invalid attributes when constructing idMethodByData");
             var attributes = ja;
-            var method = "byData";
-            return JObject.FromObject(new { method, attributes });
+            var type = "byData";
+            return JObject.FromObject(new { type, attributes });
         }
     }
+
     public class IDMethodByTempIDFunc : JmesPathFunction
     {
         public IDMethodByTempIDFunc() : base("idMethodByTempID", 1) { }
@@ -83,8 +93,8 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             if (!(args[0].Token is JValue jv))
                 throw new Exception("Invalid attributes when constructing idMethodByTempID");
             var tempID = jv;
-            var method = "byTempID";
-            return JObject.FromObject(new { method, tempID });
+            var type = "byTempID";
+            return JObject.FromObject(new { type, tempID });
         }
     }
 

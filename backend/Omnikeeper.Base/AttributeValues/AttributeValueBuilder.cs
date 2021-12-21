@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using YamlDotNet.RepresentationModel;
 
 namespace Omnikeeper.Base.AttributeValues
 {
@@ -20,51 +19,70 @@ namespace Omnikeeper.Base.AttributeValues
                     case AttributeValueType.Text:
                         {
                             if (o == null)
-                                return new AttributeScalarValueText("", false);
-                            else if (o.GetType().IsArray)
+                                throw new Exception($"Expected object {o} to be string, found null");
+                            else if (o.GetType().IsArray) // TODO: stricter array null handling
                                 return AttributeArrayValueText.BuildFromString(((o as object[])!).OfType<string>().ToArray(), false);
                             else
                             {
-                                return new AttributeScalarValueText((o as string)!, false);
+                                if (o is not string t)
+                                    throw new Exception($"Expected object {o} to be string, found {o.GetType().Name}");
+                                return new AttributeScalarValueText(t, false);
                             }
                         }
                     case AttributeValueType.MultilineText:
                         {
                             if (o == null)
-                                return new AttributeScalarValueText("", true);
-                            else if (o.GetType().IsArray)
+                                throw new Exception($"Expected object {o} to be string, found null");
+                            else if (o.GetType().IsArray) // TODO: stricter array null handling
                                 return AttributeArrayValueText.BuildFromString(((o as object[])!).OfType<string>().ToArray(), true);
                             else
-                                return new AttributeScalarValueText((o as string)!, true);
+                            {
+                                if (o is not string t)
+                                    throw new Exception($"Expected object {o} to be string, found {o.GetType().Name}");
+                                return new AttributeScalarValueText(t, true);
+                            }
                         }
                     case AttributeValueType.Integer:
                         {
                             if (o == null)
-                                return new AttributeScalarValueInteger(0);
-                            else if (o.GetType().IsArray)
+                                throw new Exception($"Expected object {o} to be long, found null");
+                            else if (o.GetType().IsArray) // TODO: stricter array null handling
                                 return AttributeArrayValueInteger.Build(((o as object[])!).OfType<long>().ToArray());
                             else
-                                return new AttributeScalarValueInteger((o as long?)!.Value);
+                            {
+                                var t = o as long?;
+                                if (!t.HasValue)
+                                    throw new Exception($"Expected object {o} to be long, found {o.GetType().Name}");
+                                return new AttributeScalarValueInteger(t.Value);
+                            }
                         }
                     case AttributeValueType.JSON:
                         {
                             if (o == null)
-                                return AttributeScalarValueJSON.Build(new JObject());
-                            else if (o is JArray a)
+                                throw new Exception($"Expected object {o} to be JArray or JToken, found null");
+                            else if (o is JArray a) // TODO: stricter array null handling
                                 return AttributeArrayValueJSON.Build(a.Children().ToArray());
-                            else if (o is object[] oa)
+                            else if (o is object[] oa) // TODO: stricter array null handling
                                 return AttributeArrayValueJSON.Build(oa.Select(t => t as JToken)!.ToArray()!);
                             else
-                                return AttributeScalarValueJSON.Build((o as JToken)!);
+                            {
+                                if (o is not JToken t)
+                                    throw new Exception($"Expected object {o} to be JToken, found {o.GetType().Name}");
+                                return AttributeScalarValueJSON.Build(t);
+                            }
                         }
                     case AttributeValueType.YAML:
                         {
                             if (o == null)
-                                return AttributeScalarValueYAML.Build(new YamlDocument(""));
-                            else if (o.GetType().IsArray)
+                                throw new Exception($"Expected object {o} to be string, found null");
+                            else if (o.GetType().IsArray) // TODO: stricter array null handling
                                 return AttributeArrayValueYAML.BuildFromString(((o as object[])!).OfType<string>().ToArray());
                             else
-                                return AttributeScalarValueYAML.BuildFromString((o as string)!);
+                            {
+                                if (o is not string t)
+                                    throw new Exception($"Expected object {o} to be string, found {o.GetType().Name}");
+                                return AttributeScalarValueYAML.BuildFromString(t);
+                            }
                         }
                     case AttributeValueType.Mask:
                         return AttributeScalarValueMask.Instance;
@@ -76,9 +94,9 @@ namespace Omnikeeper.Base.AttributeValues
                         throw new Exception($"Unknown type {type} encountered");
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw new Exception($"Could not build attribute value of type {type} from object {o}");
+                throw new Exception($"Could not build attribute value of type {type} from object {o}", e);
             }
         }
         public static IAttributeValue BuildFromDTO(AttributeValueDTO generic)

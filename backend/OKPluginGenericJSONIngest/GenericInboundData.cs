@@ -1,9 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using JsonSubTypes;
+using Newtonsoft.Json;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Entity.AttributeValues;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 #pragma warning disable CS8618
 namespace OKPluginGenericJSONIngest
@@ -17,22 +16,43 @@ namespace OKPluginGenericJSONIngest
     public class GenericInboundCI
     {
         public string tempID;
-        public GenericInboundIDMethod idMethod;
+        public IInboundIDMethod idMethod;
         public IEnumerable<GenericInboundAttribute> attributes;
     }
 
-    public class GenericInboundIDMethod
+
+    [JsonConverter(typeof(JsonSubtypes), "type")]
+    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByData), "byData")]
+    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByTemporaryCIID), "byTempID")]
+    public interface IInboundIDMethod
     {
-        public string method; // TODO: should be made generic
-        public string[] attributes;
-        public string tempID;
+
+    }
+    public class InboundIDMethodByData : IInboundIDMethod
+    {
+        public readonly string[] attributes;
+
+        public InboundIDMethodByData(string[] attributes)
+        {
+            this.attributes = attributes;
+        }
+    }
+
+    public class InboundIDMethodByTemporaryCIID : IInboundIDMethod
+    {
+        public readonly string tempID;
+
+        public InboundIDMethodByTemporaryCIID(string tempID)
+        {
+            this.tempID = tempID;
+        }
     }
 
     public class GenericInboundAttribute
     {
         public string name;
         [JsonConverter(typeof(AttributeValueConverter<string>))]
-        public object value;
+        public object? value;
         public AttributeValueType type;
     }
 
