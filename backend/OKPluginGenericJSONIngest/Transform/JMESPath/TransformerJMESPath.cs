@@ -21,6 +21,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             jmes.FunctionRepository.Register("relation", new RelationFunc());
             jmes.FunctionRepository.Register("idMethodByData", new IDMethodByDataFunc());
             jmes.FunctionRepository.Register("idMethodByTempID", new IDMethodByTempIDFunc());
+            jmes.FunctionRepository.Register("idMethodByFirstOf", new IDMethodByFirstOfFunc());
             jmes.FunctionRepository.Register("idx", new IndexBuilder());
             jmes.FunctionRepository.Register("regexIsMatch", new RegexIsMatchFunc());
             jmes.FunctionRepository.Register("regexMatch", new RegexMatchFunc());

@@ -95,7 +95,7 @@ namespace Omnikeeper.Model
                 var informationHash = CIAttribute.CreateInformationHash(fullName, ciid);
                 if (informationHashesToInsert.Contains(informationHash))
                 {
-                    throw new Exception($"Duplicate attribute fragment detected! Bulk insertion does not support duplicate attributes; attribute name: {fullName}, ciid: {ciid}");
+                    throw new Exception($"Duplicate attribute fragment detected! Bulk insertion does not support duplicate attributes; attribute name: {fullName}, ciid: {ciid}, value: {value.Value2String()}");
                 }
                 informationHashesToInsert.Add(informationHash);
 

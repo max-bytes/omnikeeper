@@ -98,6 +98,20 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
         }
     }
 
+    public class IDMethodByFirstOfFunc : JmesPathFunction
+    {
+        public IDMethodByFirstOfFunc() : base("idMethodByFirstOf", 1) { }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            if (!(args[0].Token is JArray i))
+                throw new Exception("Invalid inner idMethods when constructing idMethodByFirstOf");
+            var inner = i;
+            var type = "byFirstOf";
+            return JObject.FromObject(new { type, inner });
+        }
+    }
+
     public class RegexIsMatchFunc : JmesPathFunction
     {
         public RegexIsMatchFunc() : base("regexIsMatch", 2)

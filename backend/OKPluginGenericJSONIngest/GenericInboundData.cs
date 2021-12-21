@@ -24,6 +24,7 @@ namespace OKPluginGenericJSONIngest
     [JsonConverter(typeof(JsonSubtypes), "type")]
     [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByData), "byData")]
     [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByTemporaryCIID), "byTempID")]
+    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByByFirstOf), "byFirstOf")]
     public interface IInboundIDMethod
     {
 
@@ -45,6 +46,16 @@ namespace OKPluginGenericJSONIngest
         public InboundIDMethodByTemporaryCIID(string tempID)
         {
             this.tempID = tempID;
+        }
+    }
+
+    public class InboundIDMethodByByFirstOf : IInboundIDMethod
+    {
+        public readonly IInboundIDMethod[] inner;
+
+        public InboundIDMethodByByFirstOf(IInboundIDMethod[] inner)
+        {
+            this.inner = inner;
         }
     }
 

@@ -45,12 +45,7 @@ namespace OKPluginGenericJSONIngest.Load
 
                 var attributes = new CICandidateAttributeData(fragments!);
 
-                ICIIdentificationMethod idMethod = ci.idMethod switch
-                {
-                    InboundIDMethodByData d => CIIdentificationMethodByData.BuildFromAttributes(d.attributes, attributes, searchLayers),
-                    InboundIDMethodByTemporaryCIID t => CIIdentificationMethodByTemporaryCIID.Build(tempCIIDMapping.GetValueOrDefault(t.tempID)),
-                    _ => throw new Exception($"unknown idMethod \"{ci.idMethod.GetType()}\" for ci candidate \"{ci.tempID}\" encountered")
-                };
+                ICIIdentificationMethod idMethod = BuildCIIDMethod(ci.idMethod, attributes, searchLayers, ci.tempID, tempCIIDMapping);
 
                 var tempGuid = Guid.NewGuid();
                 tempCIIDMapping.TryAdd(ci.tempID, tempGuid);
@@ -91,10 +86,15 @@ namespace OKPluginGenericJSONIngest.Load
             return new IngestData(ciCandidates, relationCandidates!);
         }
 
-        //public async Task Load(IngestData ingestData, Layer writeLayer, AuthenticatedUser user, IngestDataService ingestDataService)
-        //{
-        //    var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
-        //    // TODO: result
-        //}
+        private ICIIdentificationMethod BuildCIIDMethod(IInboundIDMethod idMethod, CICandidateAttributeData attributes, LayerSet searchLayers, string tempCIID, Dictionary<string, Guid> tempCIIDMapping)
+        {
+            return idMethod switch
+            {
+                InboundIDMethodByData d => CIIdentificationMethodByData.BuildFromAttributes(d.attributes, attributes, searchLayers),
+                InboundIDMethodByTemporaryCIID t => CIIdentificationMethodByTemporaryCIID.Build(tempCIIDMapping.GetValueOrDefault(t.tempID)),
+                InboundIDMethodByByFirstOf f => CIIdentificationMethodByFirstOf.Build(f.inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempCIID, tempCIIDMapping)).ToArray()),
+                _ => throw new Exception($"unknown idMethod \"{idMethod.GetType()}\" for ci candidate \"{tempCIID}\" encountered")
+            };
+        }
     }
 }

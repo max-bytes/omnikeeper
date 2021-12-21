@@ -36,6 +36,14 @@ namespace Omnikeeper.Base.Service
                     if (!ciMappingContext.TryGetMappedTemp2FinalCIID(t.CIID, out Guid ciid))
                         throw new Exception($"Could not find temporary CIID {t.CIID} while trying to match CICandidate {ciCandidateID}");
                     return new HashSet<Guid>() { ciid };
+                case CIIdentificationMethodByFirstOf f:
+                    foreach(var inner in f.Inner)
+                    {
+                        var r = await TryToMatch(ciCandidateID, inner, ciMappingContext, trans, logger);
+                        if (!r.IsEmpty())
+                            return r;
+                    }
+                    return new HashSet<Guid>() { };
                 case CIIdentificationMethodByCIID c:
                     return new HashSet<Guid>() { c.CIID };
                 case CIIdentificationMethodNoop _:
@@ -161,6 +169,15 @@ namespace Omnikeeper.Base.Service
             return new CIIdentificationMethodByTemporaryCIID() { CIID = ciid };
         }
         private CIIdentificationMethodByTemporaryCIID() { }
+    }
+    public class CIIdentificationMethodByFirstOf : ICIIdentificationMethod
+    {
+        public ICIIdentificationMethod[] Inner { get; private set; }
+        public static CIIdentificationMethodByFirstOf Build(ICIIdentificationMethod[] inner)
+        {
+            return new CIIdentificationMethodByFirstOf() { Inner = inner };
+        }
+        private CIIdentificationMethodByFirstOf() { Inner = Array.Empty<ICIIdentificationMethod>(); }
     }
     public class CIIdentificationMethodByCIID : ICIIdentificationMethod
     {
