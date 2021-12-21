@@ -1,0 +1,241 @@
+﻿{
+  "cis": [
+    {
+      "tempID": "tempCIID>H13524429",
+      "idMethod": {
+        "type": "byData",
+        "attributes": [
+          "cmdb.host.id"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "H13524429",
+          "type": "Text"
+        },
+        {
+          "name": "cmdb.host.id",
+          "value": "H13524429",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.scan_time",
+          "value": "2021-11-02 03:43:27",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.name",
+          "value": "Microsoft Windows Server 2019 Standard",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.servicepack",
+          "value": "",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.last_bootup_time",
+          "value": "2021-03-02 08:10:49",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.install_date",
+          "value": "2021-02-08 10:34:21",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.architecture",
+          "value": "64-bit",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.language",
+          "value": "English ��� United States",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.product_suite",
+          "value": "Unknown (Undocumented)",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.type",
+          "value": "WINNT",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.version",
+          "value": "10.0.17763",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.build_number",
+          "value": "17763",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.codeset",
+          "value": "1252",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.country_code",
+          "value": "1",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.timezone",
+          "value": "GMT +1",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.ntp_server",
+          "value": "time.windows.com,0x8",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.ntp_server_synchronisation_type",
+          "value": "NT5DS",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.dep_32_bit_applications",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.dep_available",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.dep_drivers",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.dep_support_policy",
+          "value": "Opt Out",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.sku",
+          "value": "Windows Server Standard Edition (Desktop Experience installation)",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.installation_type",
+          "value": "Server",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.ubr",
+          "value": "1757",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.edition_id",
+          "value": "ServerStandard",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.registered_organization",
+          "value": "",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.operating_system.registered_owner",
+          "value": "Windows User",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.fqdn",
+          "value": "svsmpctxddc002.smpresource.ads",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.machineinfo.manufacturer",
+          "value": "VMware, Inc.",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.machineinfo.product_name",
+          "value": "VMware Virtual Platform",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.machineinfo.identifying_number",
+          "value": "VMware-42 08 3f b3 25 23 53 78-61 69 a8 88 12 41 64 97",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.machineinfo.chassis",
+          "value": "Other",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.processors.physical_processors",
+          "value": 4,
+          "type": "Integer"
+        },
+        {
+          "name": "inv_scan.processors.logical_processors",
+          "value": 4,
+          "type": "Integer"
+        },
+        {
+          "name": "inv_scan.processors.total_cores",
+          "value": 4,
+          "type": "Integer"
+        },
+        {
+          "name": "inv_scan.processors.cores_per_cpu",
+          "value": 1,
+          "type": "Integer"
+        },
+        {
+          "name": "inv_scan.memory.total_size",
+          "value": 16383,
+          "type": "Integer"
+        },
+        {
+          "name": "inv_scan.os_configuration.computer_role",
+          "value": null,
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.os_configuration.domain_name",
+          "value": null,
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.os_configuration.domain_type",
+          "value": null,
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.system.name",
+          "value": "SVSMPCTXDDC002",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.system.netbios_hostname",
+          "value": "SVSMPCTXDDC002",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.system.dns_hostname",
+          "value": "svsmpctxddc002",
+          "type": "Text"
+        },
+        {
+          "name": "inv_scan.system.distinguished_name",
+          "value": "CN=SVSMPCTXDDC002,OU=Management,OU=Citrix,OU=RDS,OU=CES,OU=Server,OU=_T-Systems,DC=smpresource,DC=ads",
+          "type": "Text"
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

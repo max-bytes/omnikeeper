@@ -1,0 +1,78 @@
+{
+	cis: [
+		[?document == 'inventory_scan_windows'] | [0].data[].{
+			tempID: ciid(cmdbid),
+			idMethod: idMethodByData(['cmdb.host.id']),
+			attributes: [
+				attribute('__name', join(' - ', [cmdbid])),
+				
+				attribute('cmdb.host.id', cmdbid),
+
+				attribute('inv_scan.scan_time', report.scantime),
+
+				attribute('inv_scan.operating_system.name', report.operatingsystem.name),
+				attribute('inv_scan.operating_system.servicepack', report.operatingsystem.servicepack),
+				attribute('inv_scan.operating_system.last_bootup_time', report.operatingsystem.lastbootuptime),
+				attribute('inv_scan.operating_system.install_date', report.operatingsystem.installdate),
+				attribute('inv_scan.operating_system.architecture', report.operatingsystem.architecture),
+				attribute('inv_scan.operating_system.language', report.operatingsystem.language),
+				attribute('inv_scan.operating_system.product_suite', report.operatingsystem.productsuite),
+				attribute('inv_scan.operating_system.type', report.operatingsystem.type),
+				attribute('inv_scan.operating_system.version', report.operatingsystem.version),
+				attribute('inv_scan.operating_system.build_number', report.operatingsystem.buildnumber),
+				attribute('inv_scan.operating_system.codeset', report.operatingsystem.codeset),
+				attribute('inv_scan.operating_system.country_code', report.operatingsystem.countrycode),
+				attribute('inv_scan.operating_system.timezone', report.operatingsystem.timezone),
+				attribute('inv_scan.operating_system.ntp_server', report.operatingsystem.ntpserver),
+				attribute('inv_scan.operating_system.ntp_server_synchronisation_type', report.operatingsystem.ntpserverSynchronisationType),
+				attribute('inv_scan.operating_system.dep_32_bit_applications', to_string(report.operatingsystem.dep32bitapplications)),
+				attribute('inv_scan.operating_system.dep_available', to_string(report.operatingsystem.depAvailable)),
+				attribute('inv_scan.operating_system.dep_drivers', to_string(report.operatingsystem.depDrivers)),
+				attribute('inv_scan.operating_system.dep_support_policy', report.operatingsystem.depSupportpolicy),
+				attribute('inv_scan.operating_system.sku', report.operatingsystem.operatingsystemSku),
+				attribute('inv_scan.operating_system.installation_type', report.operatingsystem.installationType),
+				attribute('inv_scan.operating_system.ubr', report.operatingsystem.ubr),
+				attribute('inv_scan.operating_system.edition_id', report.operatingsystem.editionId),
+				attribute('inv_scan.operating_system.registered_organization', report.operatingsystem.registeredOrganization),
+				attribute('inv_scan.operating_system.registered_owner', report.operatingsystem.registeredOwner),
+
+				attribute('inv_scan.fqdn', report.fqdn),
+				
+				attribute('inv_scan.machineinfo.manufacturer', report.machineinfo.manufacturer),
+				attribute('inv_scan.machineinfo.product_name', report.machineinfo.productname),
+				attribute('inv_scan.machineinfo.identifying_number', report.machineinfo.identifyingnumber),
+				attribute('inv_scan.machineinfo.chassis', report.machineinfo.chassis),
+				
+				attribute('inv_scan.processors.physical_processors', report.processors.physicalProcessors, 'Integer'),
+				attribute('inv_scan.processors.logical_processors', report.processors.logicalProcessors, 'Integer'),
+				attribute('inv_scan.processors.total_cores', report.processors.totalCores, 'Integer'),
+				attribute('inv_scan.processors.cores_per_cpu', report.processors.coresPerCpu, 'Integer'),
+				
+				attribute('inv_scan.memory.total_size', report.memory.totalsize, 'Integer'),
+
+				attribute('inv_scan.os_configuration.computer_role', report.os_configuration.computerrole),
+				attribute('inv_scan.os_configuration.domain_name', report.os_configuration.domainname),
+				attribute('inv_scan.os_configuration.domain_type', report.os_configuration.domaintype),
+				
+				attribute('inv_scan.system.name', report.system.name),
+				attribute('inv_scan.system.netbios_hostname', report.system.netbiosHostname),
+				attribute('inv_scan.system.dns_hostname', report.system.dnsHostname),
+				attribute('inv_scan.system.distinguished_name', report.system.distinguishedName)
+
+			]
+		},
+		[?document == 'inventory_scan_windows'] | [0].data[].{
+			cmdbid: store('cmdbid', cmdbid),
+			tmp: report.network.adapter[].{
+				tempID: ciid(retrieve('cmdbid'), 'network_adapter', idx(join('_',[retrieve('cmdbid'),'network_adapter']))),
+				idMethod: idMethodByData(['inv_scan.network_adapter.mac_address']),
+				attributes: [
+					attribute('inv_scan.network_adapter.name', name),
+					attribute('inv_scan.network_adapter.description', description),
+					attribute('inv_scan.network_adapter.mac_address', macaddress)
+				]
+			}
+		} | [].tmp | []
+    ] | [],
+    relations: `[]`
+}
