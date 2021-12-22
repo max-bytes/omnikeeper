@@ -43,8 +43,9 @@ namespace OKPluginVariableRendering
 
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
+            //return false;
             logger.LogDebug("Start VariableRendering");
-
+            //return false;
             Configuration cfg;
 
             try
@@ -60,7 +61,8 @@ namespace OKPluginVariableRendering
 
             var layersetVariableRendering = await layerModel.BuildLayerSet(cfg.InputLayerSet.ToArray(), trans);
 
-            var allCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetVariableRendering, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
+            var mergedCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetVariableRendering, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
+            var allCIs = mergedCIs.ToDictionary(c => c.ID, c => c);
 
             var activeTrait = await traitsProvider.GetActiveTrait(cfg.BaseCI.RequiredTrait, trans, changesetProxy.TimeThreshold);
 
@@ -70,30 +72,40 @@ namespace OKPluginVariableRendering
                 return false;
             }
 
-            var mainCIs = await effectiveTraitModel.FilterCIsWithTrait(allCIs, activeTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
-
+            var mainCIs = await effectiveTraitModel.FilterCIsWithTrait(allCIs.Select(e => e.Value), activeTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
+            
             //TODO: select only the realtions that are defined in configuration
             //      check if selection with specific predicates is possible
-            var relations = new List<string>();
 
-            cfg.BaseCI.FollowRelations.ForEach(r =>
+            var allMergedRelations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
+
+            //var allFromRelations = allMergedRelations.ToDictionary(r => $"{r.Relation.PredicateID}-{r.Relation.FromCIID}", r => r);
+            //var allToRelations = allMergedRelations.ToDictionary(r => $"{r.Relation.PredicateID}-{r.Relation.ToCIID}", r => r);
+
+            Dictionary<string, List<MergedRelation>> allFromRelations = new();
+            Dictionary<string, List<MergedRelation>> allToRelations = new();
+
+            foreach (var r in allMergedRelations)
             {
-                r.Follow.ForEach(f =>
+                var fromKey = $"{r.Relation.PredicateID}-{r.Relation.FromCIID}";
+                var toKey = $"{r.Relation.PredicateID}-{r.Relation.ToCIID}";
+
+                if (allFromRelations.ContainsKey(fromKey))
                 {
-                    if (relations.IndexOf(f.Predicate[1..]) == -1)
-                    {
-                        relations.Add(f.Predicate[1..]);
-                    }
-                });
-            });
+                    allFromRelations[fromKey].Add(r);
+                } else
+                {
+                    allFromRelations.Add(fromKey, new List<MergedRelation> { r });
+                }
 
-            var allRelations = new List<Relation>();
-
-            foreach (var layer in cfg.InputLayerSet)
-            {
-                var layerRelations = await relationModel.GetRelations(RelationSelectionAll.Instance, layer, trans, changesetProxy.TimeThreshold);
-
-                allRelations.AddRange(layerRelations);
+                if (allToRelations.ContainsKey(toKey))
+                {
+                    allToRelations[toKey].Add(r);
+                }
+                else
+                {
+                    allToRelations.Add(toKey, new List<MergedRelation> { r });
+                }
             }
 
             var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
@@ -132,124 +144,165 @@ namespace OKPluginVariableRendering
                     }
                 }
 
-
                 foreach (var followRelation in cfg.BaseCI.FollowRelations)
                 {
-                    var prevCI = mainCI;
+                    MergedCI prevCI = mainCI;
+
+                    // save a list with ids for first level of realtions we will need this to check to the second
+                    var relationsCIIds = new Queue<MergedCI>();
+
                     foreach (var follow in followRelation.Follow)
                     {
+                        if (relationsCIIds.Any())
+                        {
+                            prevCI = relationsCIIds.Dequeue();
+                        }
+
                         // get the predicate remove the first char, first char defines the direction of relation
                         var predicate = follow.Predicate[1..];
 
-                        // check relation direction
-                        var r = allRelations.Where(r =>
-                        {
-                            if (follow.Predicate[0] == '>')
-                            {
-                                return r.FromCIID == prevCI.ID && r.PredicateID == predicate;
-                            }
-                            else
-                            {
-                                return r.ToCIID == prevCI.ID && r.PredicateID == predicate;
-                            }
-                        }).FirstOrDefault();
+                        // find CI relations with this predicate
+                        List<MergedRelation> mergedRelations = new();
 
-
-                        if (r == null)
+                        if (follow.Predicate[0] == '>')
                         {
-                            break;
-                        }
-
-                        var targetCI = allCIs.Where(ci =>
-                        {
-                            if (follow.Predicate[0] == '>')
+                            if (allFromRelations.ContainsKey($"{predicate}-{prevCI.ID}"))
                             {
-                                return r.ToCIID == ci.ID;
-                            }
-                            else
-                            {
-                                return r.FromCIID == ci.ID;
+                                mergedRelations = allFromRelations[$"{predicate}-{prevCI.ID}"];
                             }
                         }
-                        ).FirstOrDefault();
+                        else
+                        {
+                            if (allFromRelations.ContainsKey($"{predicate}-{prevCI.ID}"))
+                            {
+                                mergedRelations = allFromRelations[$"{predicate}-{prevCI.ID}"];
+                            }
+                        }
 
-                        prevCI = targetCI;
+                        if (!mergedRelations.Any())
+                        {
+                            continue;
+                        }
+
+                        var targetCIs = new List<MergedCI>();
+
+                        foreach (var r in mergedRelations)
+                        {
+                            var targetCI = follow.Predicate[0] == '>' ? allCIs[r.Relation.ToCIID] : allCIs[r.Relation.FromCIID];
+                            targetCIs.Add(targetCI);
+                        }
+
+                        //targetCIs = targetCIs.OrderByDescending(c => c.ID).ToList();
 
                         var targetCIRequiredTrait = await traitsProvider.GetActiveTrait(follow.RequiredTrait, trans, changesetProxy.TimeThreshold);
 
-                        if (targetCIRequiredTrait == null)
-                        {
-                            logger.LogError($"The required trait {follow.RequiredTrait} for follow realtions was not found!");
-                            continue;
-                        }
+                        // check the required trait for each CI
+                        var filteredCIsWithTrait = await effectiveTraitModel.FilterCIsWithTrait(targetCIs, targetCIRequiredTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
 
-                        // check if target CI has the required trait
-                        var aa = await effectiveTraitModel.FilterCIsWithTrait(new List<MergedCI> { targetCI }, targetCIRequiredTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
-
-                        if (aa.ToList().Count == 0)
+                        if (!filteredCIsWithTrait.Any())
                         {
                             continue;
                         }
 
-                        var targetCIAttributes = targetCI.MergedAttributes.Where(a => IsAttributeAllowed(a.Value.Attribute.Name, follow.InputWhitelist, follow.InputBlacklist)).ToList();
+                        //filteredCIsWithTrait = filteredCIsWithTrait.OrderBy(c => c.ID);
 
-                        var allRelatetCIAttributes = targetCIAttributes.Select(a => new GatheredAttribute { Name = a.Key, Value = a.Value.Attribute.Value }).ToList();
+                        var gatheredAttrRelationLevel = new Dictionary<string, GatheredAttribute>();
+
+                        // first merge all variables from filteredCIsWithTrait
+                        foreach (var CI in filteredCIsWithTrait)
+                        {
+                            var prio = 0;
+
+                            switch (predicate[1..])
+                            {
+                                case "belongs_to_customer":
+                                    prio = customersGroupPrio;
+                                    break;
+                                case "has_network_interface":
+                                    prio = networkInterfaceGroupPrio;
+                                    break;
+                                case "is_attached_to":
+                                    prio = networkSegmentGroupPrio;
+                                    break;
+                                case "is_assigned_to":
+                                    prio = moduleGroupPrio;
+                                    break;
+                                case "belongs_to_assignment_group":
+                                    prio = assignmentGroupDefaultPrio;
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            foreach (var a in CI.MergedAttributes)
+                            {
+                                if (!IsAttributeAllowed(a.Value.Attribute.Name, follow.InputWhitelist, follow.InputBlacklist))
+                                {
+                                    continue;
+                                }
+
+                                var attr = new GatheredAttribute
+                                {
+                                    Name = a.Value.Attribute.Name,
+                                    Value = a.Value.Attribute.Value,
+                                    //CIId = ,
+                                    Priority = prio,
+                                };
+
+                                if (gatheredAttrRelationLevel.ContainsKey(attr.Name))
+                                {
+                                    // check if current attribute has higher priority
+                                    if (gatheredAttrRelationLevel[attr.Name].Priority < prio)
+                                    {
+                                        gatheredAttrRelationLevel[attr.Name] = attr;
+                                    }
+
+                                    // if priorities are the same we shopuld sort based on CI id and take the latest
+                                    if (gatheredAttrRelationLevel[attr.Name].Priority == prio)
+                                    {
+                                        // sort by ID when deciding which one to take
+                                        // based on sorted data find the last ci that cont
+
+                                        //var aaa = gatheredAttrRelationLevel[attr.Name].CIId < CI.ID ? 
+
+                                        //gatheredAttrRelationLevel[attr.Name].Value = filteredCIsWithTrait.Last().MergedAttributes[]
+                                    }
+                                }
+                                else
+                                {
+                                    gatheredAttrRelationLevel.Add(attr.Name, attr);
+                                }
+
+                            }
+                        }
 
                         foreach (var mapping in follow.AttributeMapping)
                         {
-                            foreach (var attribute in allRelatetCIAttributes)
+                            foreach (var (_, attribute) in gatheredAttrRelationLevel)
                             {
                                 if (IsAttributeIncludedInSource(attribute.Name, mapping.Source))
                                 {
-                                    var prio = 0;
+                                    attribute.Name = GetTargetName(attribute.Name, mapping.Target);
 
-                                    switch (predicate[1..])
+                                    if (gatheredAttributes.ContainsKey(attribute.Name))
                                     {
-                                        case "belongs_to_customer":
-                                            prio = customersGroupPrio;
-                                            break;
-                                        case "has_network_interface":
-                                            prio = networkInterfaceGroupPrio;
-                                            break;
-                                        case "is_attached_to":
-                                            prio = networkSegmentGroupPrio;
-                                            break;
-                                        case "is_assigned_to":
-                                            prio = moduleGroupPrio;
-                                            break;
-                                        case "belongs_to_assignment_group":
-                                            prio = assignmentGroupDefaultPrio;
-                                            break;
-                                        default:
-                                            break;
-                                    }
-
-                                    var a = new GatheredAttribute
-                                    {
-                                        Name = GetTargetName(attribute.Name, mapping.Target),
-                                        Value = attribute.Value,
-                                        Priority = prio,
-                                    };
-
-                                    if (gatheredAttributes.ContainsKey(a.Name))
-                                    {
-                                        // check if current attribute has higher priority
-                                        if (gatheredAttributes[a.Name].Priority < a.Priority)
+                                        if (gatheredAttributes[attribute.Name].Priority > attribute.Priority)
                                         {
-                                            gatheredAttributes[a.Name] = a;
+                                            gatheredAttributes[attribute.Name] = attribute;
                                         }
-                                    } else
-                                    {
-                                        gatheredAttributes.Add(a.Name, a);
                                     }
-
+                                    else
+                                    {
+                                        gatheredAttributes.Add(attribute.Name, attribute);
+                                    }
                                 }
                             }
+
                         }
 
                     }
                 }
-
+                
                 foreach (var (name, attribute) in gatheredAttributes)
                 {
                     fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(name, attribute.Value, mainCI.ID));
@@ -301,11 +354,6 @@ namespace OKPluginVariableRendering
         {
             var result = false;
 
-            if (attribute == "__name")
-            {
-                return result;
-            }
-
             if (source == "*")
             {
                 result = true;
@@ -320,11 +368,6 @@ namespace OKPluginVariableRendering
 
         public static string GetTargetName(string source, string target)
         {
-            if (source == "__name")
-            {
-                return source;
-            }
-
             return target.Replace("{SOURCE}", source);
         }
 
@@ -333,9 +376,11 @@ namespace OKPluginVariableRendering
             public string Name { get; set; }
             public IAttributeValue Value { get; set; }
             public int Priority { get; set; }
+            public string CIId { get; set; }
             public GatheredAttribute()
             {
                 Name = "";
+                CIId = "";
             }
         }
     }
