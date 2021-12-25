@@ -43,9 +43,8 @@ namespace OKPluginVariableRendering
 
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
-            return false;
             logger.LogDebug("Start VariableRendering");
-            //return false;
+
             Configuration cfg;
 
             try
@@ -78,9 +77,6 @@ namespace OKPluginVariableRendering
             //      check if selection with specific predicates is possible
 
             var allMergedRelations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
-
-            //var allFromRelations = allMergedRelations.ToDictionary(r => $"{r.Relation.PredicateID}-{r.Relation.FromCIID}", r => r);
-            //var allToRelations = allMergedRelations.ToDictionary(r => $"{r.Relation.PredicateID}-{r.Relation.ToCIID}", r => r);
 
             Dictionary<string, List<MergedRelation>> allFromRelations = new();
             Dictionary<string, List<MergedRelation>> allToRelations = new();
@@ -152,8 +148,6 @@ namespace OKPluginVariableRendering
                     var relationsCIs = new Queue<MergedCI>();
                     relationsCIs.Enqueue(mainCI);
 
-
-
                     foreach (var follow in followRelation.Follow)
                     {
 
@@ -197,8 +191,6 @@ namespace OKPluginVariableRendering
                                 targetCIs.Add(targetCI);
                             }
 
-                            //targetCIs = targetCIs.OrderByDescending(c => c.ID).ToList();
-
                             var targetCIRequiredTrait = await traitsProvider.GetActiveTrait(follow.RequiredTrait, trans, changesetProxy.TimeThreshold);
 
                             // check the required trait for each CI
@@ -209,18 +201,15 @@ namespace OKPluginVariableRendering
                                 continue;
                             }
 
-                            //filteredCIsWithTrait = filteredCIsWithTrait.OrderBy(c => c.ID);
-
                             tmpRelationsCIs.AddRange(filteredCIsWithTrait);
 
                             var gatheredAttrRelationLevel = new Dictionary<string, GatheredAttribute>();
 
-                            // first merge all variables from filteredCIsWithTrait
                             foreach (var CI in filteredCIsWithTrait)
                             {
                                 var prio = 0;
 
-                                switch (predicate[1..])
+                                switch (predicate)
                                 {
                                     case "belongs_to_customer":
                                         prio = customersGroupPrio;
@@ -252,7 +241,6 @@ namespace OKPluginVariableRendering
                                     {
                                         Name = a.Value.Attribute.Name,
                                         Value = a.Value.Attribute.Value,
-                                        //CIId = ,
                                         Priority = prio,
                                     };
 
@@ -267,6 +255,7 @@ namespace OKPluginVariableRendering
                                         // if priorities are the same we shopuld sort based on CI id and take the latest
                                         if (gatheredAttrRelationLevel[attr.Name].Priority == prio)
                                         {
+                                            var asd = 5;
                                             // sort by ID when deciding which one to take
                                             // based on sorted data find the last ci that cont
 
@@ -329,7 +318,6 @@ namespace OKPluginVariableRendering
             return true;
         }
 
-
         public static bool IsAttributeAllowed(string attribute, List<string> attributeWhitelist, List<string> attributeBlacklist)
         {
             var result = false;
@@ -386,11 +374,9 @@ namespace OKPluginVariableRendering
             public string Name { get; set; }
             public IAttributeValue Value { get; set; }
             public int Priority { get; set; }
-            public string CIId { get; set; }
             public GatheredAttribute()
             {
                 Name = "";
-                CIId = "";
             }
         }
     }
