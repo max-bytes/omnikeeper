@@ -20,218 +20,218 @@
           "type": "Text"
         },
         {
-          "name": "inv_scan.scan_time",
-          "value": "2021-11-02 03:43:27",
+          "name": "ecm_inv_scan.win.scan_time",
+          "value": "2021-11-01 23:41:18",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.name",
+          "name": "ecm_inv_scan.win.operating_system.name",
           "value": "Microsoft Windows Server 2019 Standard",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.servicepack",
+          "name": "ecm_inv_scan.win.operating_system.servicepack",
           "value": "",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.last_bootup_time",
-          "value": "2021-03-02 08:10:49",
+          "name": "ecm_inv_scan.win.operating_system.last_bootup_time",
+          "value": "2021-08-21 19:54:29",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.install_date",
-          "value": "2021-02-08 10:34:21",
+          "name": "ecm_inv_scan.win.operating_system.install_date",
+          "value": "2020-10-08 15:40:01",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.architecture",
+          "name": "ecm_inv_scan.win.operating_system.architecture",
           "value": "64-bit",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.language",
+          "name": "ecm_inv_scan.win.operating_system.language",
           "value": "English ��� United States",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.product_suite",
+          "name": "ecm_inv_scan.win.operating_system.product_suite",
           "value": "Unknown (Undocumented)",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.type",
+          "name": "ecm_inv_scan.win.operating_system.type",
           "value": "WINNT",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.version",
+          "name": "ecm_inv_scan.win.operating_system.version",
           "value": "10.0.17763",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.build_number",
+          "name": "ecm_inv_scan.win.operating_system.build_number",
           "value": "17763",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.codeset",
+          "name": "ecm_inv_scan.win.operating_system.codeset",
           "value": "1252",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.country_code",
-          "value": "1",
+          "name": "ecm_inv_scan.win.operating_system.country_code",
+          "value": "43",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.timezone",
+          "name": "ecm_inv_scan.win.operating_system.timezone",
           "value": "GMT +1",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.ntp_server",
+          "name": "ecm_inv_scan.win.operating_system.ntp_server",
           "value": "time.windows.com,0x8",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.ntp_server_synchronisation_type",
+          "name": "ecm_inv_scan.win.operating_system.ntp_server_synchronisation_type",
           "value": "NT5DS",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.dep_32_bit_applications",
+          "name": "ecm_inv_scan.win.operating_system.dep_32_bit_applications",
           "value": "true",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.dep_available",
+          "name": "ecm_inv_scan.win.operating_system.dep_available",
           "value": "true",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.dep_drivers",
+          "name": "ecm_inv_scan.win.operating_system.dep_drivers",
           "value": "true",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.dep_support_policy",
+          "name": "ecm_inv_scan.win.operating_system.dep_support_policy",
           "value": "Opt Out",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.sku",
+          "name": "ecm_inv_scan.win.operating_system.sku",
           "value": "Windows Server Standard Edition (Desktop Experience installation)",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.installation_type",
+          "name": "ecm_inv_scan.win.operating_system.installation_type",
           "value": "Server",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.ubr",
-          "value": "1757",
+          "name": "ecm_inv_scan.win.operating_system.ubr",
+          "value": "2114",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.edition_id",
+          "name": "ecm_inv_scan.win.operating_system.edition_id",
           "value": "ServerStandard",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.registered_organization",
+          "name": "ecm_inv_scan.win.operating_system.registered_organization",
           "value": "",
           "type": "Text"
         },
         {
-          "name": "inv_scan.operating_system.registered_owner",
+          "name": "ecm_inv_scan.win.operating_system.registered_owner",
           "value": "Windows User",
           "type": "Text"
         },
         {
-          "name": "inv_scan.fqdn",
-          "value": "svsmpctxddc002.smpresource.ads",
+          "name": "ecm_inv_scan.win.fqdn",
+          "value": "saladvpsqlc1n2.salres.com",
           "type": "Text"
         },
         {
-          "name": "inv_scan.machineinfo.manufacturer",
-          "value": "VMware, Inc.",
+          "name": "ecm_inv_scan.win.machine_info.manufacturer",
+          "value": "Dell Inc.",
           "type": "Text"
         },
         {
-          "name": "inv_scan.machineinfo.product_name",
-          "value": "VMware Virtual Platform",
+          "name": "ecm_inv_scan.win.machine_info.product_name",
+          "value": "PowerEdge R740",
           "type": "Text"
         },
         {
-          "name": "inv_scan.machineinfo.identifying_number",
-          "value": "VMware-42 08 3f b3 25 23 53 78-61 69 a8 88 12 41 64 97",
+          "name": "ecm_inv_scan.win.machine_info.identifying_number",
+          "value": "7VN6K63",
           "type": "Text"
         },
         {
-          "name": "inv_scan.machineinfo.chassis",
-          "value": "Other",
+          "name": "ecm_inv_scan.win.machine_info.chassis",
+          "value": "Rack Mount Chassis",
           "type": "Text"
         },
         {
-          "name": "inv_scan.processors.physical_processors",
-          "value": 4,
-          "type": "Integer"
-        },
-        {
-          "name": "inv_scan.processors.logical_processors",
-          "value": 4,
-          "type": "Integer"
-        },
-        {
-          "name": "inv_scan.processors.total_cores",
-          "value": 4,
-          "type": "Integer"
-        },
-        {
-          "name": "inv_scan.processors.cores_per_cpu",
+          "name": "ecm_inv_scan.win.processors.physical_processors",
           "value": 1,
           "type": "Integer"
         },
         {
-          "name": "inv_scan.memory.total_size",
-          "value": 16383,
+          "name": "ecm_inv_scan.win.processors.logical_processors",
+          "value": 24,
           "type": "Integer"
         },
         {
-          "name": "inv_scan.os_configuration.computer_role",
-          "value": null,
+          "name": "ecm_inv_scan.win.processors.total_cores",
+          "value": 12,
+          "type": "Integer"
+        },
+        {
+          "name": "ecm_inv_scan.win.processors.cores_per_cpu",
+          "value": 12,
+          "type": "Integer"
+        },
+        {
+          "name": "ecm_inv_scan.win.memory.total_size",
+          "value": 785031,
+          "type": "Integer"
+        },
+        {
+          "name": "ecm_inv_scan.win.os_configuration.computer_role",
+          "value": "Member Server",
           "type": "Text"
         },
         {
-          "name": "inv_scan.os_configuration.domain_name",
-          "value": null,
+          "name": "ecm_inv_scan.win.os_configuration.domain_name",
+          "value": "salres.com",
           "type": "Text"
         },
         {
-          "name": "inv_scan.os_configuration.domain_type",
-          "value": null,
+          "name": "ecm_inv_scan.win.os_configuration.domain_type",
+          "value": "domain",
           "type": "Text"
         },
         {
-          "name": "inv_scan.system.name",
-          "value": "SVSMPCTXDDC002",
+          "name": "ecm_inv_scan.win.system.name",
+          "value": "SALADVPSQLC1N2",
           "type": "Text"
         },
         {
-          "name": "inv_scan.system.netbios_hostname",
-          "value": "SVSMPCTXDDC002",
+          "name": "ecm_inv_scan.win.system.netbios_hostname",
+          "value": "SALADVPSQLC1N2",
           "type": "Text"
         },
         {
-          "name": "inv_scan.system.dns_hostname",
-          "value": "svsmpctxddc002",
+          "name": "ecm_inv_scan.win.system.dns_hostname",
+          "value": "saladvpsqlc1n2",
           "type": "Text"
         },
         {
-          "name": "inv_scan.system.distinguished_name",
-          "value": "CN=SVSMPCTXDDC002,OU=Management,OU=Citrix,OU=RDS,OU=CES,OU=Server,OU=_T-Systems,DC=smpresource,DC=ads",
+          "name": "ecm_inv_scan.win.system.distinguished_name",
+          "value": "CN=SALADVPSQLC1N2,CN=Computers,DC=salres,DC=com",
           "type": "Text"
         }
       ]
@@ -239,29 +239,676 @@
     {
       "tempID": "tempCIID>H13524429>network_adapter>0",
       "idMethod": {
-        "type": "byData",
-        "attributes": [
-          "macaddress"
+        "type": "byIntersect",
+        "inner": [
+          {
+            "type": "byUnion",
+            "inner": [
+              {
+                "type": "byAttributes",
+                "attributes": [
+                  {
+                    "name": "cmdb.interface.hwaddress",
+                    "value": "E4:43:4B:F4:2B:FA",
+                    "type": "Text"
+                  }
+                ]
+              },
+              {
+                "type": "byAttributes",
+                "attributes": [
+                  {
+                    "name": "cmdb.interface.hwaddress",
+                    "value": "E4-43-4B-F4-2B-FA",
+                    "type": "Text"
+                  }
+                ]
+              },
+              {
+                "type": "byAttributes",
+                "attributes": [
+                  {
+                    "name": "cmdb.interface.ip",
+                    "value": "10.10.200.98",
+                    "type": "Text"
+                  }
+                ]
+              },
+              {
+                "type": "byData",
+                "attributes": [
+                  "ecm_inv_scan.win.network_adapter.mac_address",
+                  "ecm_inv_scan.win.network_adapter.device_id"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_interface"
+          }
         ]
       },
       "attributes": [
         {
-          "name": "inv_scan.network_adapter.name",
-          "value": "CustomerLan",
+          "name": "__name",
+          "value": "Windows Network Adapter - HB",
           "type": "Text"
         },
         {
-          "name": "inv_scan.network_adapter.description",
-          "value": "vmxnet3 Ethernet Adapter",
+          "name": "ecm_inv_scan.win.network_adapter.name",
+          "value": "HB",
           "type": "Text"
         },
         {
-          "name": "inv_scan.network_adapter.mac_address",
-          "value": "00:50:56:88:C3:FE",
+          "name": "ecm_inv_scan.win.network_adapter.description",
+          "value": "Intel(R) Gigabit 4P X550/I350 rNDC",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.mac_address",
+          "value": "E4:43:4B:F4:2B:FA",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.device_id",
+          "value": "4",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.ip",
+          "value": [
+            {
+              "address": "10.10.200.98",
+              "subnetmask": "255.255.255.240"
+            }
+          ],
+          "type": "JSON"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.dns_server",
+          "value": [],
+          "type": "JSON"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>network_adapter>1",
+      "idMethod": {
+        "type": "byIntersect",
+        "inner": [
+          {
+            "type": "byUnion",
+            "inner": [
+              {
+                "type": "byAttributes",
+                "attributes": [
+                  {
+                    "name": "cmdb.interface.hwaddress",
+                    "value": "B4:96:91:8F:A4:D2",
+                    "type": "Text"
+                  }
+                ]
+              },
+              {
+                "type": "byAttributes",
+                "attributes": [
+                  {
+                    "name": "cmdb.interface.hwaddress",
+                    "value": "B4-96-91-8F-A4-D2",
+                    "type": "Text"
+                  }
+                ]
+              },
+              {
+                "type": "byAttributes",
+                "attributes": [
+                  {
+                    "name": "cmdb.interface.ip",
+                    "value": "10.10.203.12",
+                    "type": "Text"
+                  }
+                ]
+              },
+              {
+                "type": "byData",
+                "attributes": [
+                  "ecm_inv_scan.win.network_adapter.mac_address",
+                  "ecm_inv_scan.win.network_adapter.device_id"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_interface"
+          }
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Network Adapter - Prod-Team",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.name",
+          "value": "Prod-Team",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.description",
+          "value": "Microsoft Network Adapter Multiplexor Driver",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.mac_address",
+          "value": "B4:96:91:8F:A4:D2",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.device_id",
+          "value": "16",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.ip",
+          "value": [
+            {
+              "address": "10.10.203.12",
+              "subnetmask": "255.255.255.0"
+            }
+          ],
+          "type": "JSON"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.dns_server",
+          "value": [
+            {
+              "address": "10.10.203.5",
+              "order": 0
+            },
+            {
+              "address": "10.10.203.4",
+              "order": 1
+            }
+          ],
+          "type": "JSON"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>network_adapter>2",
+      "idMethod": {
+        "type": "byIntersect",
+        "inner": [
+          {
+            "type": "byUnion",
+            "inner": [
+              {
+                "type": "byAttributes",
+                "attributes": [
+                  {
+                    "name": "cmdb.interface.hwaddress",
+                    "value": "02:6F:D7:4F:BA:0F",
+                    "type": "Text"
+                  }
+                ]
+              },
+              {
+                "type": "byAttributes",
+                "attributes": [
+                  {
+                    "name": "cmdb.interface.hwaddress",
+                    "value": "02-6F-D7-4F-BA-0F",
+                    "type": "Text"
+                  }
+                ]
+              },
+              {
+                "type": "byAttributes",
+                "attributes": [
+                  {
+                    "name": "cmdb.interface.ip",
+                    "value": "169.254.1.213",
+                    "type": "Text"
+                  }
+                ]
+              },
+              {
+                "type": "byAttributes",
+                "attributes": [
+                  {
+                    "name": "cmdb.interface.ip",
+                    "value": "fe80::64ca:3a9d:1382:c837",
+                    "type": "Text"
+                  }
+                ]
+              },
+              {
+                "type": "byData",
+                "attributes": [
+                  "ecm_inv_scan.win.network_adapter.mac_address",
+                  "ecm_inv_scan.win.network_adapter.device_id"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_interface"
+          }
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Network Adapter - ",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.name",
+          "value": null,
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.description",
+          "value": "Microsoft Failover Cluster Virtual Adapter",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.mac_address",
+          "value": "02:6F:D7:4F:BA:0F",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.device_id",
+          "value": "17",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.ip",
+          "value": [
+            {
+              "address": "169.254.1.213",
+              "subnetmask": "255.255.0.0"
+            },
+            {
+              "address": "fe80::64ca:3a9d:1382:c837",
+              "subnetmask": "64"
+            }
+          ],
+          "type": "JSON"
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.dns_server",
+          "value": [],
+          "type": "JSON"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>storage_drive>0",
+      "idMethod": {
+        "type": "byIntersect",
+        "inner": [
+          {
+            "type": "byData",
+            "attributes": [
+              "ecm_inv_scan.win.storage_drive.name",
+              "ecm_inv_scan.win.storage_drive.device_id",
+              "ecm_inv_scan.win.storage_drive.serial_number"
+            ]
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_storage_drive"
+          }
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.name",
+          "value": "HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.device_id",
+          "value": "\\\\.\\PHYSICALDRIVE3",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.serial_number",
+          "value": "50453394",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>storage_drive>1",
+      "idMethod": {
+        "type": "byIntersect",
+        "inner": [
+          {
+            "type": "byData",
+            "attributes": [
+              "ecm_inv_scan.win.storage_drive.name",
+              "ecm_inv_scan.win.storage_drive.device_id",
+              "ecm_inv_scan.win.storage_drive.serial_number"
+            ]
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_storage_drive"
+          }
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.name",
+          "value": "HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.device_id",
+          "value": "\\\\.\\PHYSICALDRIVE1",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.serial_number",
+          "value": "307365",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>storage_drive>2",
+      "idMethod": {
+        "type": "byIntersect",
+        "inner": [
+          {
+            "type": "byData",
+            "attributes": [
+              "ecm_inv_scan.win.storage_drive.name",
+              "ecm_inv_scan.win.storage_drive.device_id",
+              "ecm_inv_scan.win.storage_drive.serial_number"
+            ]
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_storage_drive"
+          }
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Storage Drive - H13524429 - DELL PERC H740P Mini SCSI Disk Device",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.name",
+          "value": "DELL PERC H740P Mini SCSI Disk Device",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.device_id",
+          "value": "\\\\.\\PHYSICALDRIVE0",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.serial_number",
+          "value": "00de454d4cd8da1127009afc52f0a7ce",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>storage_drive>3",
+      "idMethod": {
+        "type": "byIntersect",
+        "inner": [
+          {
+            "type": "byData",
+            "attributes": [
+              "ecm_inv_scan.win.storage_drive.name",
+              "ecm_inv_scan.win.storage_drive.device_id",
+              "ecm_inv_scan.win.storage_drive.serial_number"
+            ]
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_storage_drive"
+          }
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.name",
+          "value": "HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.device_id",
+          "value": "\\\\.\\PHYSICALDRIVE2",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.serial_number",
+          "value": "307365",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE1>partition>0",
+      "idMethod": {
+        "type": "byIntersect",
+        "inner": [
+          {
+            "type": "byData",
+            "attributes": [
+              "ecm_inv_scan.win.partition.name"
+            ]
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429>storage_drive>1",
+            "outgoingRelation": false,
+            "predicateID": "has_partition"
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition"
+          }
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Partition - H13524429 - E:",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.name",
+          "value": "E:",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>0",
+      "idMethod": {
+        "type": "byIntersect",
+        "inner": [
+          {
+            "type": "byData",
+            "attributes": [
+              "ecm_inv_scan.win.partition.name"
+            ]
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429>storage_drive>2",
+            "outgoingRelation": false,
+            "predicateID": "has_partition"
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition"
+          }
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Partition - H13524429 - C:",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.name",
+          "value": "C:",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>1",
+      "idMethod": {
+        "type": "byIntersect",
+        "inner": [
+          {
+            "type": "byData",
+            "attributes": [
+              "ecm_inv_scan.win.partition.name"
+            ]
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429>storage_drive>2",
+            "outgoingRelation": false,
+            "predicateID": "has_partition"
+          },
+          {
+            "type": "byRelatedTempID",
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition"
+          }
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Partition - H13524429 - S:",
+          "type": "Text"
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.name",
+          "value": "S:",
           "type": "Text"
         }
       ]
     }
   ],
-  "relations": []
+  "relations": [
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_interface",
+      "to": "tempCIID>H13524429>network_adapter>0"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_interface",
+      "to": "tempCIID>H13524429>network_adapter>1"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_interface",
+      "to": "tempCIID>H13524429>network_adapter>2"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_storage_drive",
+      "to": "tempCIID>H13524429>storage_drive>0"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_storage_drive",
+      "to": "tempCIID>H13524429>storage_drive>1"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_storage_drive",
+      "to": "tempCIID>H13524429>storage_drive>2"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_storage_drive",
+      "to": "tempCIID>H13524429>storage_drive>3"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE1>partition>0"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>0"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>1"
+    },
+    {
+      "from": "tempCIID>H13524429>storage_drive>1",
+      "predicate": "has_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE1>partition>0"
+    },
+    {
+      "from": "tempCIID>H13524429>storage_drive>2",
+      "predicate": "has_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>0"
+    },
+    {
+      "from": "tempCIID>H13524429>storage_drive>2",
+      "predicate": "has_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>1"
+    }
+  ]
 }

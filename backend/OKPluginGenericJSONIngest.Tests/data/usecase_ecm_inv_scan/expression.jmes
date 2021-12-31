@@ -8,71 +8,147 @@
 				
 				attribute('cmdb.host.id', cmdbid),
 
-				attribute('inv_scan.scan_time', report.scantime),
+				attribute('ecm_inv_scan.win.scan_time', report.scantime),
 
-				attribute('inv_scan.operating_system.name', report.operatingsystem.name),
-				attribute('inv_scan.operating_system.servicepack', report.operatingsystem.servicepack),
-				attribute('inv_scan.operating_system.last_bootup_time', report.operatingsystem.lastbootuptime),
-				attribute('inv_scan.operating_system.install_date', report.operatingsystem.installdate),
-				attribute('inv_scan.operating_system.architecture', report.operatingsystem.architecture),
-				attribute('inv_scan.operating_system.language', report.operatingsystem.language),
-				attribute('inv_scan.operating_system.product_suite', report.operatingsystem.productsuite),
-				attribute('inv_scan.operating_system.type', report.operatingsystem.type),
-				attribute('inv_scan.operating_system.version', report.operatingsystem.version),
-				attribute('inv_scan.operating_system.build_number', report.operatingsystem.buildnumber),
-				attribute('inv_scan.operating_system.codeset', report.operatingsystem.codeset),
-				attribute('inv_scan.operating_system.country_code', report.operatingsystem.countrycode),
-				attribute('inv_scan.operating_system.timezone', report.operatingsystem.timezone),
-				attribute('inv_scan.operating_system.ntp_server', report.operatingsystem.ntpserver),
-				attribute('inv_scan.operating_system.ntp_server_synchronisation_type', report.operatingsystem.ntpserverSynchronisationType),
-				attribute('inv_scan.operating_system.dep_32_bit_applications', to_string(report.operatingsystem.dep32bitapplications)),
-				attribute('inv_scan.operating_system.dep_available', to_string(report.operatingsystem.depAvailable)),
-				attribute('inv_scan.operating_system.dep_drivers', to_string(report.operatingsystem.depDrivers)),
-				attribute('inv_scan.operating_system.dep_support_policy', report.operatingsystem.depSupportpolicy),
-				attribute('inv_scan.operating_system.sku', report.operatingsystem.operatingsystemSku),
-				attribute('inv_scan.operating_system.installation_type', report.operatingsystem.installationType),
-				attribute('inv_scan.operating_system.ubr', report.operatingsystem.ubr),
-				attribute('inv_scan.operating_system.edition_id', report.operatingsystem.editionId),
-				attribute('inv_scan.operating_system.registered_organization', report.operatingsystem.registeredOrganization),
-				attribute('inv_scan.operating_system.registered_owner', report.operatingsystem.registeredOwner),
+				attribute('ecm_inv_scan.win.operating_system.name', report.operatingsystem.name),
+				attribute('ecm_inv_scan.win.operating_system.servicepack', report.operatingsystem.servicepack),
+				attribute('ecm_inv_scan.win.operating_system.last_bootup_time', report.operatingsystem.lastbootuptime),
+				attribute('ecm_inv_scan.win.operating_system.install_date', report.operatingsystem.installdate),
+				attribute('ecm_inv_scan.win.operating_system.architecture', report.operatingsystem.architecture),
+				attribute('ecm_inv_scan.win.operating_system.language', report.operatingsystem.language),
+				attribute('ecm_inv_scan.win.operating_system.product_suite', report.operatingsystem.productsuite),
+				attribute('ecm_inv_scan.win.operating_system.type', report.operatingsystem.type),
+				attribute('ecm_inv_scan.win.operating_system.version', report.operatingsystem.version),
+				attribute('ecm_inv_scan.win.operating_system.build_number', report.operatingsystem.buildnumber),
+				attribute('ecm_inv_scan.win.operating_system.codeset', report.operatingsystem.codeset),
+				attribute('ecm_inv_scan.win.operating_system.country_code', report.operatingsystem.countrycode),
+				attribute('ecm_inv_scan.win.operating_system.timezone', report.operatingsystem.timezone),
+				attribute('ecm_inv_scan.win.operating_system.ntp_server', report.operatingsystem.ntpserver),
+				attribute('ecm_inv_scan.win.operating_system.ntp_server_synchronisation_type', report.operatingsystem.ntpserverSynchronisationType),
+				attribute('ecm_inv_scan.win.operating_system.dep_32_bit_applications', to_string(report.operatingsystem.dep32bitapplications)),
+				attribute('ecm_inv_scan.win.operating_system.dep_available', to_string(report.operatingsystem.depAvailable)),
+				attribute('ecm_inv_scan.win.operating_system.dep_drivers', to_string(report.operatingsystem.depDrivers)),
+				attribute('ecm_inv_scan.win.operating_system.dep_support_policy', report.operatingsystem.depSupportpolicy),
+				attribute('ecm_inv_scan.win.operating_system.sku', report.operatingsystem.operatingsystemSku),
+				attribute('ecm_inv_scan.win.operating_system.installation_type', report.operatingsystem.installationType),
+				attribute('ecm_inv_scan.win.operating_system.ubr', report.operatingsystem.ubr),
+				attribute('ecm_inv_scan.win.operating_system.edition_id', report.operatingsystem.editionId),
+				attribute('ecm_inv_scan.win.operating_system.registered_organization', report.operatingsystem.registeredOrganization),
+				attribute('ecm_inv_scan.win.operating_system.registered_owner', report.operatingsystem.registeredOwner),
 
-				attribute('inv_scan.fqdn', report.fqdn),
+				attribute('ecm_inv_scan.win.fqdn', report.fqdn),
 				
-				attribute('inv_scan.machineinfo.manufacturer', report.machineinfo.manufacturer),
-				attribute('inv_scan.machineinfo.product_name', report.machineinfo.productname),
-				attribute('inv_scan.machineinfo.identifying_number', report.machineinfo.identifyingnumber),
-				attribute('inv_scan.machineinfo.chassis', report.machineinfo.chassis),
+				attribute('ecm_inv_scan.win.machine_info.manufacturer', report.machineinfo.manufacturer),
+				attribute('ecm_inv_scan.win.machine_info.product_name', report.machineinfo.productname),
+				attribute('ecm_inv_scan.win.machine_info.identifying_number', report.machineinfo.identifyingnumber),
+				attribute('ecm_inv_scan.win.machine_info.chassis', report.machineinfo.chassis),
 				
-				attribute('inv_scan.processors.physical_processors', report.processors.physicalProcessors, 'Integer'),
-				attribute('inv_scan.processors.logical_processors', report.processors.logicalProcessors, 'Integer'),
-				attribute('inv_scan.processors.total_cores', report.processors.totalCores, 'Integer'),
-				attribute('inv_scan.processors.cores_per_cpu', report.processors.coresPerCpu, 'Integer'),
+				attribute('ecm_inv_scan.win.processors.physical_processors', report.processors.physicalProcessors, 'Integer'),
+				attribute('ecm_inv_scan.win.processors.logical_processors', report.processors.logicalProcessors, 'Integer'),
+				attribute('ecm_inv_scan.win.processors.total_cores', report.processors.totalCores, 'Integer'),
+				attribute('ecm_inv_scan.win.processors.cores_per_cpu', report.processors.coresPerCpu, 'Integer'),
 				
-				attribute('inv_scan.memory.total_size', report.memory.totalsize, 'Integer'),
+				attribute('ecm_inv_scan.win.memory.total_size', report.memory.totalsize, 'Integer'),
 
-				attribute('inv_scan.os_configuration.computer_role', report.os_configuration.computerrole),
-				attribute('inv_scan.os_configuration.domain_name', report.os_configuration.domainname),
-				attribute('inv_scan.os_configuration.domain_type', report.os_configuration.domaintype),
+				attribute('ecm_inv_scan.win.os_configuration.computer_role', report.osconfiguration.computerrole),
+				attribute('ecm_inv_scan.win.os_configuration.domain_name', report.osconfiguration.domainname),
+				attribute('ecm_inv_scan.win.os_configuration.domain_type', report.osconfiguration.domaintype),
 				
-				attribute('inv_scan.system.name', report.system.name),
-				attribute('inv_scan.system.netbios_hostname', report.system.netbiosHostname),
-				attribute('inv_scan.system.dns_hostname', report.system.dnsHostname),
-				attribute('inv_scan.system.distinguished_name', report.system.distinguishedName)
-
+				attribute('ecm_inv_scan.win.system.name', report.system.name),
+				attribute('ecm_inv_scan.win.system.netbios_hostname', report.system.netbiosHostname),
+				attribute('ecm_inv_scan.win.system.dns_hostname', report.system.dnsHostname),
+				attribute('ecm_inv_scan.win.system.distinguished_name', report.system.distinguishedName)
 			]
 		},
 		[?document == 'inventory_scan_windows'] | [0].data[].{
 			cmdbid: store('cmdbid', cmdbid),
 			tmp: report.network.adapter[].{
 				tempID: ciid(retrieve('cmdbid'), 'network_adapter', idx(join('_',[retrieve('cmdbid'),'network_adapter']))),
-				idMethod: idMethodByData(['inv_scan.network_adapter.mac_address']),
+				idMethod: idMethodByIntersect([
+					idMethodByUnion([
+						[
+							idMethodByAttributes([ attribute('cmdb.interface.hwaddress', macaddress) ]),
+							idMethodByAttributes([ attribute('cmdb.interface.hwaddress', stringReplace(macaddress, ':', '-')) ])
+						],
+						map(&idMethodByAttributes([attribute('cmdb.interface.ip', address)]), ip[]),
+						[
+							idMethodByData(['ecm_inv_scan.win.network_adapter.mac_address', 'ecm_inv_scan.win.network_adapter.device_id'])
+						]
+					] | []),
+					idMethodByRelatedTempID(['<', 'has_interface'], ciid(retrieve('cmdbid')))
+				]),
 				attributes: [
-					attribute('inv_scan.network_adapter.name', name),
-					attribute('inv_scan.network_adapter.description', description),
-					attribute('inv_scan.network_adapter.mac_address', macaddress)
+					attribute('__name', join(' - ', ['Windows Network Adapter', name || ''])),
+					attribute('ecm_inv_scan.win.network_adapter.name', name),
+					attribute('ecm_inv_scan.win.network_adapter.description', description),
+					attribute('ecm_inv_scan.win.network_adapter.mac_address', macaddress),
+					attribute('ecm_inv_scan.win.network_adapter.device_id', deviceId),
+					
+					attribute('ecm_inv_scan.win.network_adapter.ip', ip, 'JSON'),
+					attribute('ecm_inv_scan.win.network_adapter.dns_server', dnsserver, 'JSON')
+					
 				]
 			}
+		} | [].tmp | [],
+		[?document == 'inventory_scan_windows'] | [0].data[].{
+			cmdbid: store('cmdbid', cmdbid),
+			tmp: report.storage.drives[].{
+				tempID: ciid(retrieve('cmdbid'), 'storage_drive', idx(join('_',[retrieve('cmdbid'),'storage_drive']))),
+				idMethod: idMethodByIntersect([
+					idMethodByData(['ecm_inv_scan.win.storage_drive.name', 'ecm_inv_scan.win.storage_drive.device_id', 'ecm_inv_scan.win.storage_drive.serial_number']),
+					idMethodByRelatedTempID(['<', 'has_storage_drive'], ciid(retrieve('cmdbid')))
+				]),
+				attributes: [
+					attribute('__name', join(' - ', ['Windows Storage Drive', retrieve('cmdbid'), name || ''])),
+					attribute('ecm_inv_scan.win.storage_drive.name', name),
+					attribute('ecm_inv_scan.win.storage_drive.device_id', deviceid),
+					attribute('ecm_inv_scan.win.storage_drive.serial_number', serialNumber || '')
+				]
+			}
+		} | [].tmp | [],
+		[?document == 'inventory_scan_windows'] | [0].data[].{
+			cmdbid: store('cmdbid', cmdbid),
+			tmp: report.storage.drives[].{
+				deviceid: store('deviceid', deviceid),
+				storageDriveTempID: store('storageDriveTempID', ciid(retrieve('cmdbid'), 'storage_drive', idx(join('_',[retrieve('cmdbid'),'storage_drive_redo_id'])))),
+				tmp: partition[].{
+					tempID: ciid(retrieve('cmdbid'), retrieve('deviceid'), 'partition', idx(join('_',[retrieve('cmdbid'), retrieve('deviceid'),'partition']))),
+					idMethod: idMethodByIntersect([
+						idMethodByData(['ecm_inv_scan.win.partition.name']),
+						idMethodByRelatedTempID(['<', 'has_partition'], retrieve('storageDriveTempID')),
+						idMethodByRelatedTempID(['<', 'has_mounted_partition'], ciid(retrieve('cmdbid')))
+					]),
+					attributes: [
+						attribute('__name', join(' - ', ['Windows Partition', retrieve('cmdbid'), name || ''])),
+						attribute('ecm_inv_scan.win.partition.name', name)
+					]
+				}
+			} | [].tmp | []
 		} | [].tmp | []
     ] | [],
-    relations: `[]`
+    relations: [
+		[?document == 'inventory_scan_windows'] | [0].data[].{
+			cmdbid: store('cmdbid', cmdbid),
+			tmp: map(&relation(ciid(retrieve('cmdbid')), 'has_interface', ciid(retrieve('cmdbid'), 'network_adapter', idx(join('_',[retrieve('cmdbid'),'network_adapter_redo'])))), report.network.adapter[])
+		} | [].tmp | [],
+		[?document == 'inventory_scan_windows'] | [0].data[].{
+			cmdbid: store('cmdbid', cmdbid),
+			tmp: map(&relation(ciid(retrieve('cmdbid')), 'has_storage_drive', ciid(retrieve('cmdbid'), 'storage_drive', idx(join('_',[retrieve('cmdbid'),'storage_drive_redo'])))), report.storage.drives[])
+		} | [].tmp | [],
+		[?document == 'inventory_scan_windows'] | [0].data[].{
+			cmdbid: store('cmdbid', cmdbid),
+			tmp: report.storage.drives[].{
+				deviceid: store('deviceid', deviceid),
+				tmp: map(&relation(ciid(retrieve('cmdbid')), 'has_mounted_partition', ciid(retrieve('cmdbid'), retrieve('deviceid'), 'partition', idx(join('_',[retrieve('cmdbid'), retrieve('deviceid'),'partition_redo'])))), partition[])
+			} | [].tmp | []
+		} | [].tmp | [],
+		[?document == 'inventory_scan_windows'] | [0].data[].{
+			cmdbid: store('cmdbid', cmdbid),
+			tmp: report.storage.drives[].{
+				deviceid: store('deviceid', deviceid),
+				storageDriveTempID: store('storageDriveTempID', ciid(retrieve('cmdbid'), 'storage_drive', idx(join('_',[retrieve('cmdbid'),'storage_drive_redo_2'])))),
+				tmp: map(&relation(retrieve('storageDriveTempID'), 'has_partition', ciid(retrieve('cmdbid'), retrieve('deviceid'), 'partition', idx(join('_',[retrieve('cmdbid'), retrieve('deviceid'),'partition_redo_2'])))), partition[])
+			} | [].tmp | []
+		} | [].tmp | []
+	] | []
 }

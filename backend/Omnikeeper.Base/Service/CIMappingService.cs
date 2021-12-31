@@ -13,66 +13,152 @@ namespace Omnikeeper.Base.Service
 {
     public class CIMappingService
     {
-        public async Task<ISet<Guid>> TryToMatch(string ciCandidateID, ICIIdentificationMethod method, CIMappingContext ciMappingContext, IModelContext trans, ILogger logger)
+        /// <summary>
+        /// returns a distinct list of matching CIIDs, sorted by preference
+        /// </summary>
+        public async Task<IList<Guid>> TryToMatch(ICIIdentificationMethod method, ICIMappingContext ciMappingContext, IModelContext trans, ILogger logger)
         {
             switch (method)
             {
                 case CIIdentificationMethodByData d: // use identifiable data for finding out CIID
-
-                    ISet<Guid> candidateCIIDs = new HashSet<Guid>();
-                    var isFirst = true;
-                    foreach (var f in d.IdentifiableFragments)
                     {
-                        var ciids = await ciMappingContext.GetMergedCIIDsByAttributeNameAndValue(f.Name, f.Value, d.SearchableLayers, trans);
-                        if (isFirst)
-                            candidateCIIDs.UnionWith(ciids);
-                        else
-                            candidateCIIDs.IntersectWith(ciids);
-                        isFirst = false;
-                    }
+                        ISet<Guid> candidateCIIDs = new HashSet<Guid>();
+                        var isFirst = true;
+                        foreach (var f in d.IdentifiableFragments)
+                        {
+                            var ciids = await ciMappingContext.GetMergedCIIDsByAttributeNameAndValue(f.Name, f.Value, d.SearchableLayers, trans);
+                            if (isFirst)
+                                candidateCIIDs.UnionWith(ciids);
+                            else
+                                candidateCIIDs.IntersectWith(ciids);
+                            isFirst = false;
+                        }
 
-                    return candidateCIIDs;
-                case CIIdentificationMethodByTemporaryCIID t:
-                    if (!ciMappingContext.TryGetMappedTemp2FinalCIID(t.CIID, out Guid ciid))
-                        throw new Exception($"Could not find temporary CIID {t.CIID} while trying to match CICandidate {ciCandidateID}");
-                    return new HashSet<Guid>() { ciid };
-                case CIIdentificationMethodByFirstOf f:
-                    foreach(var inner in f.Inner)
-                    {
-                        var r = await TryToMatch(ciCandidateID, inner, ciMappingContext, trans, logger);
-                        if (!r.IsEmpty())
-                            return r;
+                        return candidateCIIDs.OrderBy(ciid => ciid).ToList(); // order by ciid
                     }
-                    return new HashSet<Guid>() { };
+                case CIIdentificationMethodByRelatedTempCIID rt:
+                    {
+                        if (!ciMappingContext.TryGetMappedTemp2FinalCIID(rt.RelatedTempCIID, out Guid relatedCIID))
+                            throw new Exception($"Could not find related temporary CIID {rt.RelatedTempCIID}");
+
+                        var outgoing = !rt.OutgoingRelation; // NOTE: we invert the direction because we are coming from the related CI
+                        var candidateCIIDs = await ciMappingContext.GetMergedCIIDsByRelation(relatedCIID, outgoing, rt.PredicateID, rt.SearchableLayers, trans);
+                        return candidateCIIDs.OrderBy(ciid => ciid).ToList(); // order by ciid
+                    }
+                case CIIdentificationMethodByTempCIID t:
+                    {
+                        if (!ciMappingContext.TryGetMappedTemp2FinalCIID(t.CIID, out Guid ciid))
+                            throw new Exception($"Could not find temporary CIID {t.CIID}");
+                        return new List<Guid>() { ciid };
+                    }
+                case CIIdentificationMethodByIntersect a:
+                    {
+                        var ret = new List<Guid>();
+                        var isFirst = true;
+                        foreach (var inner in a.Inner)
+                        {
+                            var ciids = await TryToMatch(inner, ciMappingContext, trans, logger);
+                            if (isFirst)
+                            {
+                                ret.AddRange(ciids);
+                            }
+                            else
+                            {
+                                var tmpSet = ciids.ToHashSet();
+                                for (int i = ret.Count - 1; i >= 0; i--)
+                                {
+                                    if (!tmpSet.Contains(ret[i]))
+                                    {
+                                        ret.RemoveAt(i);
+                                    } else
+                                    {
+                                        tmpSet.Remove(ret[i]);
+                                    }
+                                }
+                            }
+                            isFirst = false;
+                        }
+                        return ret;
+                    }
+                case CIIdentificationMethodByUnion f:
+                    {
+                        var ret = new List<Guid>();
+                        var tmpSet = new HashSet<Guid>();
+                        foreach (var inner in f.Inner)
+                        {
+                            var r = await TryToMatch(inner, ciMappingContext, trans, logger);
+                            foreach(var rr in r)
+                            {
+                                if (!tmpSet.Contains(rr))
+                                {
+                                    ret.Add(rr);
+                                    tmpSet.Add(rr);
+                                }
+                            }
+                        }
+                        return ret;
+                    }
                 case CIIdentificationMethodByCIID c:
-                    return new HashSet<Guid>() { c.CIID };
+                    return new List<Guid>() { c.CIID };
                 case CIIdentificationMethodNoop _:
-                    return new HashSet<Guid>() { };
+                    return new List<Guid>() { };
                 default:
                     logger.LogWarning("Unknown CI Identification method detected");
-                    return new HashSet<Guid>() { };
+                    return new List<Guid>() { };
             }
         }
 
         /// <summary>
         /// class is used to store intermediate data while mapping multiple CIs, such as cached data
         /// </summary>
-        public class CIMappingContext
+        public interface ICIMappingContext
+        {
+            Task<IEnumerable<Guid>> GetMergedCIIDsByRelation(Guid startCIID, bool outgoing, string predicateID, LayerSet searchableLayers, IModelContext trans);
+            Task<IEnumerable<Guid>> GetMergedCIIDsByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, IModelContext trans);
+            bool TryGetMappedTemp2FinalCIID(Guid temp, out Guid final);
+            void AddTemp2FinallCIIDMapping(Guid temp, Guid final);
+        }
+
+        public class CIMappingContext : ICIMappingContext
         {
             private readonly IAttributeModel attributeModel;
+            private readonly IRelationModel relationModel;
             private readonly TimeThreshold atTime;
 
             private readonly IDictionary<string, ILookup<IAttributeValue, Guid>> attributeCache = new Dictionary<string, ILookup<IAttributeValue, Guid>>();
+            private readonly IDictionary<string, ILookup<Guid, Guid>> outgoingRelationsCache = new Dictionary<string, ILookup<Guid, Guid>>();
+            private readonly IDictionary<string, ILookup<Guid, Guid>> incomingRelationsCache = new Dictionary<string, ILookup<Guid, Guid>>();
+
             private readonly IDictionary<Guid, Guid> temp2finalCIIDMapping = new Dictionary<Guid, Guid>();
 
 
-            public CIMappingContext(IAttributeModel attributeModel, TimeThreshold atTime)
+            public CIMappingContext(IAttributeModel attributeModel, IRelationModel relationModel, TimeThreshold atTime)
             {
                 this.attributeModel = attributeModel;
+                this.relationModel = relationModel;
                 this.atTime = atTime;
             }
 
-            internal async Task<IEnumerable<Guid>> GetMergedCIIDsByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, IModelContext trans)
+            public async Task<IEnumerable<Guid>> GetMergedCIIDsByRelation(Guid startCIID, bool outgoing, string predicateID, LayerSet searchableLayers, IModelContext trans)
+            {
+                var cache = (outgoing) ? outgoingRelationsCache : incomingRelationsCache;
+                if (cache.TryGetValue(predicateID, out var rc))
+                {
+                    return rc[startCIID];
+                } else
+                {
+                    var allRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(predicateID), searchableLayers, trans, atTime);
+                    var outgoingCache = allRelations.ToLookup(r => r.Relation.FromCIID, r => r.Relation.ToCIID);
+                    outgoingRelationsCache[predicateID] = outgoingCache;
+                    var incomingCache = allRelations.ToLookup(r => r.Relation.ToCIID, r => r.Relation.FromCIID);
+                    incomingRelationsCache[predicateID] = incomingCache;
+
+                    var c = (outgoing) ? outgoingCache : incomingCache;
+                    return c[startCIID];
+                }
+            }
+
+            public async Task<IEnumerable<Guid>> GetMergedCIIDsByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, IModelContext trans)
             {
                 if (attributeCache.TryGetValue(name, out var ac))
                 {
@@ -161,23 +247,54 @@ namespace Omnikeeper.Base.Service
             return new CIIdentificationMethodByData(fragments.ToArray(), searchableLayers);
         }
     }
-    public class CIIdentificationMethodByTemporaryCIID : ICIIdentificationMethod
+
+    public class CIIdentificationMethodByRelatedTempCIID : ICIIdentificationMethod
+    {
+        public readonly Guid RelatedTempCIID;
+        public readonly bool OutgoingRelation;
+        public readonly string PredicateID;
+        public readonly LayerSet SearchableLayers;
+
+        private CIIdentificationMethodByRelatedTempCIID(Guid relatedTempCIID, bool outgoingRelation, string predicateID, LayerSet searchableLayers)
+        {
+            RelatedTempCIID = relatedTempCIID;
+            OutgoingRelation = outgoingRelation;
+            PredicateID = predicateID;
+            SearchableLayers = searchableLayers;
+        }
+
+        public static CIIdentificationMethodByRelatedTempCIID Build(Guid relatedTempCIID, bool outgoingRelation, string predicateID, LayerSet searchLayers)
+        {
+            return new CIIdentificationMethodByRelatedTempCIID(relatedTempCIID, outgoingRelation, predicateID, searchLayers);
+        }
+    }
+
+    public class CIIdentificationMethodByTempCIID : ICIIdentificationMethod
     {
         public Guid CIID { get; private set; }
-        public static CIIdentificationMethodByTemporaryCIID Build(Guid ciid)
+        public static CIIdentificationMethodByTempCIID Build(Guid ciid)
         {
-            return new CIIdentificationMethodByTemporaryCIID() { CIID = ciid };
+            return new CIIdentificationMethodByTempCIID() { CIID = ciid };
         }
-        private CIIdentificationMethodByTemporaryCIID() { }
+        private CIIdentificationMethodByTempCIID() { }
     }
-    public class CIIdentificationMethodByFirstOf : ICIIdentificationMethod
+    public class CIIdentificationMethodByUnion : ICIIdentificationMethod
     {
         public ICIIdentificationMethod[] Inner { get; private set; }
-        public static CIIdentificationMethodByFirstOf Build(ICIIdentificationMethod[] inner)
+        public static CIIdentificationMethodByUnion Build(ICIIdentificationMethod[] inner)
         {
-            return new CIIdentificationMethodByFirstOf() { Inner = inner };
+            return new CIIdentificationMethodByUnion() { Inner = inner };
         }
-        private CIIdentificationMethodByFirstOf() { Inner = Array.Empty<ICIIdentificationMethod>(); }
+        private CIIdentificationMethodByUnion() { Inner = Array.Empty<ICIIdentificationMethod>(); }
+    }
+    public class CIIdentificationMethodByIntersect : ICIIdentificationMethod
+    {
+        public ICIIdentificationMethod[] Inner { get; private set; }
+        public static CIIdentificationMethodByIntersect Build(ICIIdentificationMethod[] inner)
+        {
+            return new CIIdentificationMethodByIntersect() { Inner = inner };
+        }
+        private CIIdentificationMethodByIntersect() { Inner = Array.Empty<ICIIdentificationMethod>(); }
     }
     public class CIIdentificationMethodByCIID : ICIIdentificationMethod
     {

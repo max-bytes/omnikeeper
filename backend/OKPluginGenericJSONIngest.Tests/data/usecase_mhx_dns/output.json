@@ -5,7 +5,8 @@
       "idMethod": {
         "attributes": [
           "id"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -25,7 +26,8 @@
       "idMethod": {
         "attributes": [
           "id"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -45,7 +47,8 @@
       "idMethod": {
         "attributes": [
           "id"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -80,7 +83,8 @@
       "idMethod": {
         "attributes": [
           "id"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -115,7 +119,8 @@
       "idMethod": {
         "attributes": [
           "id"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {

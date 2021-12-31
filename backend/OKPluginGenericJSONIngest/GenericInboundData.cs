@@ -23,14 +23,18 @@ namespace OKPluginGenericJSONIngest
 
     [JsonConverter(typeof(JsonSubtypes), "type")]
     [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByData), "byData")]
+    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByAttributes), "byAttributes")]
+    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByRelatedTempID), "byRelatedTempID")]
     [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByTemporaryCIID), "byTempID")]
-    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByByFirstOf), "byFirstOf")]
-    public interface IInboundIDMethod
-    {
-
+    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByByUnion), "byUnion")]
+    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByIntersect), "byIntersect")]
+    public interface IInboundIDMethod {
+        string type { get; }
     }
+
     public class InboundIDMethodByData : IInboundIDMethod
     {
+        public string type { get; } = "byData";
         public readonly string[] attributes;
 
         public InboundIDMethodByData(string[] attributes)
@@ -38,9 +42,35 @@ namespace OKPluginGenericJSONIngest
             this.attributes = attributes;
         }
     }
+    public class InboundIDMethodByAttributes : IInboundIDMethod
+    {
+        public string type { get; } = "byAttributes";
+        public readonly GenericInboundAttribute[] attributes;
+
+        public InboundIDMethodByAttributes(GenericInboundAttribute[] attributes)
+        {
+            this.attributes = attributes;
+        }
+    }
+
+    public class InboundIDMethodByRelatedTempID : IInboundIDMethod
+    {
+        public string type { get; } = "byRelatedTempID";
+        public readonly string tempID;
+        public readonly bool outgoingRelation;
+        public readonly string predicateID;
+
+        public InboundIDMethodByRelatedTempID(string tempID, bool outgoingRelation, string predicateID)
+        {
+            this.tempID = tempID;
+            this.outgoingRelation = outgoingRelation;
+            this.predicateID = predicateID;
+        }
+    }
 
     public class InboundIDMethodByTemporaryCIID : IInboundIDMethod
     {
+        public string type { get; } = "byTempID";
         public readonly string tempID;
 
         public InboundIDMethodByTemporaryCIID(string tempID)
@@ -49,11 +79,22 @@ namespace OKPluginGenericJSONIngest
         }
     }
 
-    public class InboundIDMethodByByFirstOf : IInboundIDMethod
+    public class InboundIDMethodByByUnion : IInboundIDMethod
     {
+        public string type { get; } = "byUnion";
         public readonly IInboundIDMethod[] inner;
 
-        public InboundIDMethodByByFirstOf(IInboundIDMethod[] inner)
+        public InboundIDMethodByByUnion(IInboundIDMethod[] inner)
+        {
+            this.inner = inner;
+        }
+    }
+    public class InboundIDMethodByIntersect : IInboundIDMethod
+    {
+        public string type { get; } = "byIntersect";
+        public readonly IInboundIDMethod[] inner;
+
+        public InboundIDMethodByIntersect(IInboundIDMethod[] inner)
         {
             this.inner = inner;
         }

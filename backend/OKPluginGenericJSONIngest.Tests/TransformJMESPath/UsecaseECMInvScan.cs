@@ -46,6 +46,10 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
 
             //var tmp = JsonConvert.SerializeObject(result);
 
+            string resultJson = JsonConvert.SerializeObject(result, Formatting.Indented);
+            File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                "data", "usecase_ecm_inv_scan", "output.json"), resultJson);
+
             var settings = new JsonSerializerSettings
             {
                 DateParseHandling = DateParseHandling.None // TODO: move?
@@ -55,9 +59,6 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
 
             result.Should().BeEquivalentTo(expected, options => options.WithStrictOrdering());
 
-            string resultJson = JsonConvert.SerializeObject(result, Formatting.Indented);
-            File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                "data", "usecase_ecm_inv_scan", "output.json"), resultJson);
         }
     }
 }
