@@ -84,6 +84,41 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
         }
     }
 
+    public class IDMethodByAttributesFunc : JmesPathFunction
+    {
+        public IDMethodByAttributesFunc() : base("idMethodByAttributes", 1) { }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            if (!(args[0].Token is JArray ja))
+                throw new Exception("Invalid attributes when constructing idMethodByAttributes");
+            var attributes = ja;
+            var type = "byAttributes";
+            return JObject.FromObject(new { type, attributes });
+        }
+    }
+
+    public class IDMethodByRelatedTempIDFunc : JmesPathFunction
+    {
+        public IDMethodByRelatedTempIDFunc() : base("idMethodByRelatedTempID", 2) { }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            if (!(args[0].Token is JArray ra))
+                throw new Exception("Invalid relation path when constructing idMethodByRelatedData");
+            if (ra.Count != 2)
+                throw new Exception("Invalid relation path length (must be 2) when constructing idMethodByRelatedData");
+            if (!(args[1].Token is JValue jid))
+                throw new Exception("Invalid temp ID when constructing idMethodByRelatedData");
+            var tempID = jid;
+            var outgoingRelationStr = ra[0].ToString();
+            var outgoingRelation = outgoingRelationStr == ">";
+            var predicateID = ra[1].ToString();
+            var type = "byRelatedTempID";
+            return JObject.FromObject(new { type, tempID, outgoingRelation, predicateID });
+        }
+    }
+
     public class IDMethodByTempIDFunc : JmesPathFunction
     {
         public IDMethodByTempIDFunc() : base("idMethodByTempID", 1) { }
@@ -98,16 +133,29 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
         }
     }
 
-    public class IDMethodByFirstOfFunc : JmesPathFunction
+    public class IDMethodByUnionFunc : JmesPathFunction
     {
-        public IDMethodByFirstOfFunc() : base("idMethodByFirstOf", 1) { }
+        public IDMethodByUnionFunc() : base("idMethodByUnion", 1) { }
 
         public override JToken Execute(params JmesPathFunctionArgument[] args)
         {
             if (!(args[0].Token is JArray i))
-                throw new Exception("Invalid inner idMethods when constructing idMethodByFirstOf");
+                throw new Exception("Invalid inner idMethods when constructing idMethodByUnion");
             var inner = i;
-            var type = "byFirstOf";
+            var type = "byUnion";
+            return JObject.FromObject(new { type, inner });
+        }
+    }
+    public class IDMethodByIntersectFunc : JmesPathFunction
+    {
+        public IDMethodByIntersectFunc() : base("idMethodByIntersect", 1) { }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            if (!(args[0].Token is JArray i))
+                throw new Exception("Invalid inner idMethods when constructing idMethodByIntersect");
+            var inner = i;
+            var type = "byIntersect";
             return JObject.FromObject(new { type, inner });
         }
     }

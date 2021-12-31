@@ -5,7 +5,8 @@
       "idMethod": {
         "attributes": [
           "fqdn"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -148,7 +149,8 @@
           "__name",
           "device",
           "mount"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -235,7 +237,8 @@
           "__name",
           "device",
           "mount"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -320,7 +323,8 @@
       "idMethod": {
         "attributes": [
           "__name"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -355,7 +359,8 @@
       "idMethod": {
         "attributes": [
           "__name"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -390,7 +395,8 @@
       "idMethod": {
         "attributes": [
           "fqdn"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -532,7 +538,8 @@
           "__name",
           "device",
           "mount"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -619,7 +626,8 @@
           "__name",
           "device",
           "mount"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -704,7 +712,8 @@
       "idMethod": {
         "attributes": [
           "__name"
-        ]
+        ],
+        "type": "byData"
       },
       "attributes": [
         {
@@ -737,7 +746,8 @@
     {
       "tempID": "tempCIID>h1jmplx01.mhx.at>yum_installed",
       "idMethod": {
-        "tempID": "tempCIID>h1jmplx01.mhx.at"
+        "tempID": "tempCIID>h1jmplx01.mhx.at",
+        "type": "byTempID"
       },
       "attributes": [
         {
@@ -761,7 +771,8 @@
     {
       "tempID": "tempCIID>h1jmplx01.mhx.at>yum_repos",
       "idMethod": {
-        "tempID": "tempCIID>h1jmplx01.mhx.at"
+        "tempID": "tempCIID>h1jmplx01.mhx.at",
+        "type": "byTempID"
       },
       "attributes": [
         {
@@ -791,7 +802,8 @@
     {
       "tempID": "tempCIID>h1jmplx01.mhx.at>yum_updates",
       "idMethod": {
-        "tempID": "tempCIID>h1jmplx01.mhx.at"
+        "tempID": "tempCIID>h1jmplx01.mhx.at",
+        "type": "byTempID"
       },
       "attributes": [
         {

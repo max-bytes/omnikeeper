@@ -24,6 +24,7 @@ namespace Omnikeeper.Runners
         private readonly ICIModel ciModel;
         private readonly CIMappingService ciMappingService;
         private readonly IAttributeModel attributeModel;
+        private readonly IRelationModel relationModel;
         private readonly ILayerDataModel layerDataModel;
         private readonly IModelContextBuilder modelContextBuilder;
 
@@ -31,7 +32,7 @@ namespace Omnikeeper.Runners
         private static readonly IDictionary<string, DateTimeOffset> lastRuns = new ConcurrentDictionary<string, DateTimeOffset>();
 
         public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, IExternalIDMapPersister externalIDMapPersister, ICIModel ciModel, CIMappingService ciMappingService,
-            IAttributeModel attributeModel, ILayerDataModel layerDataModel, IModelContextBuilder modelContextBuilder, ILogger<ExternalIDManagerRunner> logger)
+            IAttributeModel attributeModel, IRelationModel relationModel, ILayerDataModel layerDataModel, IModelContextBuilder modelContextBuilder, ILogger<ExternalIDManagerRunner> logger)
         {
             this.logger = logger;
             this.pluginManager = pluginManager;
@@ -39,6 +40,7 @@ namespace Omnikeeper.Runners
             this.ciModel = ciModel;
             this.ciMappingService = ciMappingService;
             this.attributeModel = attributeModel;
+            this.relationModel = relationModel;
             this.layerDataModel = layerDataModel;
             this.modelContextBuilder = modelContextBuilder;
         }
@@ -90,7 +92,7 @@ namespace Omnikeeper.Runners
                         {
                             using var transD = modelContextBuilder.BuildDeferred();
 
-                            var (changes, successful) = await EIDManager.Update(ciModel, attributeModel, ciMappingService, transD, logger);
+                            var (changes, successful) = await EIDManager.Update(ciModel, attributeModel, relationModel, ciMappingService, transD, logger);
 
                             if (!successful)
                             {
