@@ -67,7 +67,7 @@ namespace Tests.Integration.Service
             });
 
             // return in random order, not sorted
-            ciMappingContext.Setup(x => x.GetMergedCIIDsByAttributeNameAndValue("cmdb.interface.hwaddress", targetInterfaceCmdbInterfaceHwaddress, searchLayers, trans.Object)).ReturnsAsync(new Guid[]
+            ciMappingContext.Setup(x => x.GetMergedCIIDsByAttributeNameAndValue("cmdb.interface.hwaddress", targetInterfaceCmdbInterfaceHwaddress, searchLayers, false, trans.Object)).ReturnsAsync(new Guid[]
             {
                 secondInterfaceFinalCIID,
                 thirdInterfaceFinalCIID,
@@ -76,7 +76,7 @@ namespace Tests.Integration.Service
 
             // return in random order, not sorted
             // does not contain the target interface CIID
-            ciMappingContext.Setup(x => x.GetMergedCIIDsByAttributeNameAndValue("inv_scan.network_adapter.mac_address", targetInterfaceCmdbInterfaceHwaddress, searchLayers, trans.Object)).ReturnsAsync(new Guid[]
+            ciMappingContext.Setup(x => x.GetMergedCIIDsByAttributeNameAndValue("inv_scan.network_adapter.mac_address", targetInterfaceCmdbInterfaceHwaddress, searchLayers, false, trans.Object)).ReturnsAsync(new Guid[]
             {
                 secondInterfaceFinalCIID,
                 targetInterfaceFinalCIID,

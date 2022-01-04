@@ -1,4 +1,6 @@
 using FluentAssertions;
+using FluentAssertions.Equivalency;
+using FluentAssertions.Equivalency.Tracing;
 using Microsoft.DotNet.InternalAbstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -6,6 +8,7 @@ using NUnit.Framework;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
@@ -27,7 +30,11 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
             var documents = new Dictionary<string, JToken>() {
                 {
                     "inventory_scan_windows", ParseJSONString(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                        "data", "usecase_ecm_inv_scan", "input.json")))
+                        "data", "usecase_ecm_inv_scan", "input_win.json")))
+                },
+                {
+                    "inventory_scan_linux", ParseJSONString(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                        "data", "usecase_ecm_inv_scan", "input_linux.json")))
                 },
             };
 
@@ -57,7 +64,10 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
             var expected = JsonConvert.DeserializeObject<GenericInboundData>(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                         "data", "usecase_ecm_inv_scan", "expected.json")), settings);
 
-            result.Should().BeEquivalentTo(expected, options => options.WithStrictOrdering());
+            //var traceWriter = new StringBuilderTraceWriter();
+            result.Should().BeEquivalentTo(expected, options => options.WithStrictOrdering().RespectingRuntimeTypes());//.WithTracing(traceWriter));
+            //string trace = traceWriter.ToString();
+            //Debug.WriteLine(trace);
 
         }
     }

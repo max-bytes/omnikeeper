@@ -47,7 +47,7 @@ namespace OKPluginGenericJSONIngest.Load
 
                     var attributes = new CICandidateAttributeData(fragments!);
 
-                    ICIIdentificationMethod idMethod = BuildCIIDMethod(ci.idMethod, attributes, searchLayers, ci.tempID, tempCIIDMapping);
+                    ICIIdentificationMethod idMethod = BuildCIIDMethod(ci.idMethod, attributes, searchLayers, ci.tempID, tempCIIDMapping, logger);
 
                     var tempGuid = Guid.NewGuid();
                     tempCIIDMapping.TryAdd(ci.tempID, tempGuid);
@@ -92,16 +92,27 @@ namespace OKPluginGenericJSONIngest.Load
             return new IngestData(ciCandidates, relationCandidates!);
         }
 
-        private ICIIdentificationMethod BuildCIIDMethod(IInboundIDMethod idMethod, CICandidateAttributeData attributes, LayerSet searchLayers, string tempCIID, Dictionary<string, Guid> tempCIIDMapping)
+        private ICIIdentificationMethod BuildCIIDMethod(IInboundIDMethod idMethod, CICandidateAttributeData attributes, LayerSet searchLayers, string tempCIID, Dictionary<string, Guid> tempCIIDMapping, ILogger logger)
         {
+            ICIIdentificationMethod attributeF(InboundIDMethodByAttribute a)
+            {
+                var fragment = GenericAttribute2Fragment(a.attribute);
+                if (fragment == null)
+                {
+                    logger.LogWarning($"Could not create fragment from generic attribute for idMethod CIIdentificationMethodByFragment using attribute name {a.attribute.name}");
+                    return CIIdentificationMethodNoop.Build();
+                }
+                return CIIdentificationMethodByFragment.Build(fragment, a.modifiers.caseInsensitive, searchLayers);
+            }
+
             return idMethod switch
             {
                 InboundIDMethodByData d => CIIdentificationMethodByData.BuildFromAttributes(d.attributes, attributes, searchLayers),
-                InboundIDMethodByAttributes a => CIIdentificationMethodByData.BuildFromFragments(a.attributes.Select(a => GenericAttribute2Fragment(a)).ToArray()!, searchLayers), // TODO: null-check
+                InboundIDMethodByAttribute a => attributeF(a),
                 InboundIDMethodByRelatedTempID rt => CIIdentificationMethodByRelatedTempCIID.Build(tempCIIDMapping.GetValueOrDefault(rt.tempID), rt.outgoingRelation, rt.predicateID, searchLayers),
                 InboundIDMethodByTemporaryCIID t => CIIdentificationMethodByTempCIID.Build(tempCIIDMapping.GetValueOrDefault(t.tempID)),
-                InboundIDMethodByByUnion f => CIIdentificationMethodByUnion.Build(f.inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempCIID, tempCIIDMapping)).ToArray()),
-                InboundIDMethodByIntersect a => CIIdentificationMethodByIntersect.Build(a.inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempCIID, tempCIIDMapping)).ToArray()),
+                InboundIDMethodByByUnion f => CIIdentificationMethodByUnion.Build(f.inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempCIID, tempCIIDMapping, logger)).ToArray()),
+                InboundIDMethodByIntersect a => CIIdentificationMethodByIntersect.Build(a.inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempCIID, tempCIIDMapping, logger)).ToArray()),
                 _ => throw new Exception($"unknown idMethod \"{idMethod.GetType()}\" for ci candidate \"{tempCIID}\" encountered")
             };
         }

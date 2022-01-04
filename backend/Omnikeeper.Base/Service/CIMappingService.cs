@@ -26,13 +26,19 @@ namespace Omnikeeper.Base.Service
                         var isFirst = true;
                         foreach (var f in d.IdentifiableFragments)
                         {
-                            var ciids = await ciMappingContext.GetMergedCIIDsByAttributeNameAndValue(f.Name, f.Value, d.SearchableLayers, trans);
+                            var ciids = await ciMappingContext.GetMergedCIIDsByAttributeNameAndValue(f.Name, f.Value, d.SearchableLayers, false, trans);
                             if (isFirst)
                                 candidateCIIDs.UnionWith(ciids);
                             else
                                 candidateCIIDs.IntersectWith(ciids);
                             isFirst = false;
                         }
+
+                        return candidateCIIDs.OrderBy(ciid => ciid).ToList(); // order by ciid
+                    }
+                case CIIdentificationMethodByFragment f:
+                    {
+                        var candidateCIIDs = await ciMappingContext.GetMergedCIIDsByAttributeNameAndValue(f.Fragment.Name, f.Fragment.Value, f.SearchableLayers, f.CaseInsensitive, trans);
 
                         return candidateCIIDs.OrderBy(ciid => ciid).ToList(); // order by ciid
                     }
@@ -114,7 +120,7 @@ namespace Omnikeeper.Base.Service
         public interface ICIMappingContext
         {
             Task<IEnumerable<Guid>> GetMergedCIIDsByRelation(Guid startCIID, bool outgoing, string predicateID, LayerSet searchableLayers, IModelContext trans);
-            Task<IEnumerable<Guid>> GetMergedCIIDsByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, IModelContext trans);
+            Task<IEnumerable<Guid>> GetMergedCIIDsByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, bool caseInsensitive, IModelContext trans);
             bool TryGetMappedTemp2FinalCIID(Guid temp, out Guid final);
             void AddTemp2FinallCIIDMapping(Guid temp, Guid final);
         }
@@ -125,7 +131,7 @@ namespace Omnikeeper.Base.Service
             private readonly IRelationModel relationModel;
             private readonly TimeThreshold atTime;
 
-            private readonly IDictionary<string, ILookup<IAttributeValue, Guid>> attributeCache = new Dictionary<string, ILookup<IAttributeValue, Guid>>();
+            private readonly IDictionary<string, ILookup<string, Guid>> attributeCache = new Dictionary<string, ILookup<string, Guid>>();
             private readonly IDictionary<string, ILookup<Guid, Guid>> outgoingRelationsCache = new Dictionary<string, ILookup<Guid, Guid>>();
             private readonly IDictionary<string, ILookup<Guid, Guid>> incomingRelationsCache = new Dictionary<string, ILookup<Guid, Guid>>();
 
@@ -158,17 +164,34 @@ namespace Omnikeeper.Base.Service
                 }
             }
 
-            public async Task<IEnumerable<Guid>> GetMergedCIIDsByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, IModelContext trans)
+            public async Task<IEnumerable<Guid>> GetMergedCIIDsByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, bool caseInsensitive, IModelContext trans)
             {
-                if (attributeCache.TryGetValue(name, out var ac))
+                if (value.IsArray)
+                    throw new Exception("Searching by attribue value that is array is not supported");
+
+                var valueKey = value.Value2String();
+
+                if (caseInsensitive)
                 {
-                    return ac[value];
+                    valueKey = valueKey.ToLower();
+                }
+
+                var cacheKey = name + caseInsensitive;
+
+                if (attributeCache.TryGetValue(cacheKey, out var ac))
+                {
+                    return ac[valueKey];
                 } else
                 {
                     var attributes = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), searchableLayers, trans, atTime);
-                    var attributesLookup = attributes.ToLookup(kv => kv.Value.Attribute.Value, kv => kv.Key);
-                    attributeCache[name] = attributesLookup;
-                    return attributesLookup[value];
+                    var attributesLookup = attributes.ToLookup(kv => {
+                        var v = kv.Value.Attribute.Value.Value2String();
+                        if (caseInsensitive)
+                            v = v.ToLower();
+                        return v;
+                    }, kv => kv.Key);
+                    attributeCache[cacheKey] = attributesLookup;
+                    return attributesLookup[valueKey];
                 }
             }
 
@@ -245,6 +268,25 @@ namespace Omnikeeper.Base.Service
         public static CIIdentificationMethodByData BuildFromFragments(IEnumerable<CICandidateAttributeData.Fragment> fragments, LayerSet searchableLayers)
         {
             return new CIIdentificationMethodByData(fragments.ToArray(), searchableLayers);
+        }
+    }
+
+    public class CIIdentificationMethodByFragment : ICIIdentificationMethod
+    {
+        private CIIdentificationMethodByFragment(CICandidateAttributeData.Fragment fragment, bool caseInsensitive, LayerSet searchableLayers)
+        {
+            Fragment = fragment;
+            SearchableLayers = searchableLayers;
+            CaseInsensitive = caseInsensitive;
+        }
+
+        public readonly CICandidateAttributeData.Fragment Fragment;
+        public readonly LayerSet SearchableLayers;
+        public readonly bool CaseInsensitive;
+
+        public static CIIdentificationMethodByFragment Build(CICandidateAttributeData.Fragment fragment, bool caseInsensitive, LayerSet searchableLayers)
+        {
+            return new CIIdentificationMethodByFragment(fragment, caseInsensitive, searchableLayers);
         }
     }
 

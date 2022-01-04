@@ -200,6 +200,7 @@ namespace Omnikeeper.Controllers.Ingest
         [RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
         public async Task<ActionResult> Ingest([FromQuery, Required]string context, [FromForm, Required] IEnumerable<IFormFile> files)
         {
+            logger.LogInformation($"Starting ingest at context {context}");
             try
             {
                 using var mc = modelContextBuilder.BuildImmediate();
@@ -238,6 +239,8 @@ namespace Omnikeeper.Controllers.Ingest
                    f.OpenReadStream(),
                    Path.GetFileName(f.FileName) // stripping path for security reasons: https://docs.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-3.1#upload-small-files-with-buffered-model-binding-to-physical-storage-1
                )).ToArray();
+
+                logger.LogInformation($"Transforming inbound data...");
 
                 GenericInboundData genericInboundData;
                 switch (ctx.TransformConfig)
@@ -317,8 +320,16 @@ namespace Omnikeeper.Controllers.Ingest
                         throw new Exception("Encountered unknown transform config");
                 }
 
+                logger.LogInformation($"Done transforming inbound data");
+
+                logger.LogInformation($"Converting to ingest data...");
+
                 var preparer = new Preparer();
                 var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, logger);
+
+                logger.LogInformation($"Done converting to ingest data");
+
+                logger.LogInformation($"Performing ingest...");
 
                 var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
 

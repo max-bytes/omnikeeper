@@ -53,6 +53,17 @@ namespace Omnikeeper.Base.Service
                     // find out if it's a new CI or an existing one
                     var foundCIIDs = await ciMappingService.TryToMatch(cic.IdentificationMethod, ciMappingContext, trans, logger);
 
+                    // already affected/mapped CIs must not be mapped again, so we remove them
+                    // if we wouldn't do that, the mapping process could map multiple candidates to the same target CI, which would result in an ingest error
+                    for (int i = foundCIIDs.Count - 1; i >= 0; i--)
+                    {
+                        if (affectedCIs.Contains(foundCIIDs[i]))
+                        {
+                            foundCIIDs.RemoveAt(i);
+                        }
+                    }
+
+
                     Guid finalCIID;
                     if (!foundCIIDs.IsEmpty())
                     {
@@ -87,7 +98,8 @@ namespace Omnikeeper.Base.Service
             }
 
             // batch process CI creation
-            await CIModel.BulkCreateCIs(cisToCreate, trans);
+            if (!cisToCreate.IsEmpty())
+                await CIModel.BulkCreateCIs(cisToCreate, trans);
 
             var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, data.CICandidates.SelectMany(cic =>
                 cic.Attributes.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, cic.TempCIID))

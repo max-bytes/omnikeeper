@@ -83,17 +83,27 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
         }
     }
 
-    public class IDMethodByAttributesFunc : JmesPathFunction
+    public class IDMethodByAttributeFunc : JmesPathFunction
     {
-        public IDMethodByAttributesFunc() : base("idMethodByAttributes", 1) { }
+        public IDMethodByAttributeFunc() : base("idMethodByAttribute", 1, true) { }
 
         public override JToken Execute(params JmesPathFunctionArgument[] args)
         {
-            if (!(args[0].Token is JArray ja))
-                throw new Exception("Invalid attributes when constructing idMethodByAttributes");
-            var attributes = ja;
-            var type = "byAttributes";
-            return JObject.FromObject(new { type, attributes });
+            if (!(args[0].Token is JObject ja))
+                throw new Exception("Invalid attribute when constructing idMethodByAttribute");
+
+            JObject modifiers = JObject.FromObject(new object());
+            if (args.Length >= 2)
+            {
+                if (!(args[1].Token is JObject jModifiers))
+                    throw new Exception("Invalid modifiers when constructing idMethodByAttribute, must be object");
+
+                modifiers = jModifiers;
+            }
+
+            var attribute = ja;
+            var type = "byAttribute";
+            return JObject.FromObject(new { type, attribute, modifiers });
         }
     }
 

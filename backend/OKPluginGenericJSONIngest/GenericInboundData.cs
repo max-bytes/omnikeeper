@@ -23,7 +23,7 @@ namespace OKPluginGenericJSONIngest
 
     [JsonConverter(typeof(JsonSubtypes), "type")]
     [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByData), "byData")]
-    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByAttributes), "byAttributes")]
+    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByAttribute), "byAttribute")]
     [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByRelatedTempID), "byRelatedTempID")]
     [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByTemporaryCIID), "byTempID")]
     [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByByUnion), "byUnion")]
@@ -42,14 +42,27 @@ namespace OKPluginGenericJSONIngest
             this.attributes = attributes;
         }
     }
-    public class InboundIDMethodByAttributes : IInboundIDMethod
-    {
-        public string type { get; } = "byAttributes";
-        public readonly GenericInboundAttribute[] attributes;
 
-        public InboundIDMethodByAttributes(GenericInboundAttribute[] attributes)
+    public class InboundIDMethodByAttributeModifiers
+    {
+        public readonly bool caseInsensitive;
+
+        public InboundIDMethodByAttributeModifiers(bool caseInsensitive)
         {
-            this.attributes = attributes;
+            this.caseInsensitive = caseInsensitive;
+        }
+    }
+
+    public class InboundIDMethodByAttribute : IInboundIDMethod
+    {
+        public string type { get; } = "byAttribute";
+        public readonly GenericInboundAttribute attribute;
+        public readonly InboundIDMethodByAttributeModifiers modifiers;
+
+        public InboundIDMethodByAttribute(GenericInboundAttribute attribute, InboundIDMethodByAttributeModifiers modifiers)
+        {
+            this.attribute = attribute;
+            this.modifiers = modifiers;
         }
     }
 
