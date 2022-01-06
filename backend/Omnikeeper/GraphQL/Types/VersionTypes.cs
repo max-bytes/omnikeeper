@@ -2,7 +2,7 @@
 using Omnikeeper.Base.Plugins;
 using System.Collections.Generic;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class VersionDTO
     {
