@@ -12,7 +12,7 @@ using Omnikeeper.Entity.AttributeValues;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     // TODO: ci- and layer-based authorization!
     public class MergedCIType : ObjectGraphType<MergedCI>

@@ -7,7 +7,7 @@ using Omnikeeper.Base.Utils;
 using System;
 using System.Linq;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class RelationType : ObjectGraphType<Relation>
     {

@@ -3,7 +3,7 @@ using Omnikeeper.Base.Entity;
 using System;
 using System.Collections.Generic;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class MutateReturn
     {

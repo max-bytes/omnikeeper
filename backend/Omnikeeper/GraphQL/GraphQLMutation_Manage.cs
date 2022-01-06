@@ -7,6 +7,7 @@ using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.GraphQL.Types;
 using System;
 using System.Drawing;
 using System.Linq;

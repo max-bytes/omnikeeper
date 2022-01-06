@@ -11,6 +11,7 @@ using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Service;
 using System;
 using System.Linq;

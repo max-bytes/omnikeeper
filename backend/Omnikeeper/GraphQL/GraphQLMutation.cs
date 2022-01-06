@@ -10,6 +10,7 @@ using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.GraphQL.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -5,7 +5,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using System;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class CreateCIInput
     {

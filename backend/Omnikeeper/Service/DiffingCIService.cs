@@ -6,6 +6,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL;
+using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Model;
 using System;
 using System.Collections.Generic;

@@ -10,7 +10,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System.Linq;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class UserTypeType : EnumerationGraphType<UserType>
     {

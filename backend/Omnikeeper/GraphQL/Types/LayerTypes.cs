@@ -7,7 +7,7 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Model;
 using System;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class LayerDataType : ObjectGraphType<LayerData>
     {
