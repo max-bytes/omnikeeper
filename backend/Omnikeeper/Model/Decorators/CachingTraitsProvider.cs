@@ -56,6 +56,7 @@ namespace Omnikeeper.Model.Decorators
 
         private async Task<IDictionary<string, ITrait>?> _GetFromCache(IModelContext trans)
         {
+            // TODO: we should not create a timethreshold instance in the factory
             return await PerRequestTraitsProviderCache.GetFromScopedCache<PerRequestTraitsProviderCache>(scopedLifetimeAccessor, logger, async () => await Provider.GetActiveTraits(trans, TimeThreshold.BuildLatest()));
         }
 
