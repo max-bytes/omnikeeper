@@ -444,7 +444,7 @@ namespace Omnikeeper.GraphQL
 
                     var relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name)
                         .Concat(
-                            trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name)
+                            trait.OptionalAttributes.Select(ra => ra.AttributeTemplate.Name)
                         ).ToHashSet();
 
                     var cis = await ciModel.GetMergedCIs(ciidSelection, userContext.GetLayerSet(context.Path), false, NamedAttributesSelection.Build(relevantAttributesForTrait), userContext.Transaction, userContext.GetTimeThreshold(context.Path));
@@ -478,6 +478,21 @@ namespace Omnikeeper.GraphQL
 
                     return new Statistics(ciids.Count(), numActiveAttributes, numActiveRelations, numChangesets, numAttributeChanges, numRelationChanges, layers.Count(), traits.Count(), predicates.Count(), generators.Count());
                 });
+
+            FieldAsync<TraitEntitiesType>("traitEntities",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
+                resolve: async context =>
+            {
+                var layerStrings = context.GetArgument<string[]>("layers")!;
+
+                var userContext = await context.SetupUserContext()
+                    .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                    .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                    .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                return new TraitEntities();
+            });
         }
 
         private void CreatePlugin(IEnumerable<IPluginRegistration> plugins)
