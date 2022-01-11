@@ -15,7 +15,7 @@ namespace OKPluginGenericJSONIngest.Load
         {
             if (a.value == null)
                 return null;
-            var value = AttributeValueBuilder.BuildFromTypeAndObject(a.type, a.value);
+            var value = AttributeValueHelper.BuildFromTypeAndObject(a.type, a.value);
             return new CICandidateAttributeData.Fragment(a.name, value);
         }
 

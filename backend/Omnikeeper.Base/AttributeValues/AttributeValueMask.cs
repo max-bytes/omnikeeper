@@ -17,6 +17,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public string[] ToRawDTOValues() => oArray;
         public object ToGenericObject() => o;
         public bool IsArray => false;
+        public object ToGraphQLValue() => o;
 
         public override string ToString() => $"AV-Mask";
 

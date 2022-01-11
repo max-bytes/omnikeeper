@@ -24,6 +24,7 @@ namespace Omnikeeper.Entity.AttributeValues
         }
         public object ToGenericObject() => Value;
         public bool IsArray => false;
+        public object ToGraphQLValue() => Value;
 
         public override string ToString() => $"AV-Image: {Value2String()}";
 

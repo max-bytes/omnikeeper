@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using GraphQL.Types;
+using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -8,7 +9,7 @@ using System.Text;
 
 namespace Omnikeeper.Base.AttributeValues
 {
-    public static class AttributeValueBuilder
+    public static class AttributeValueHelper
     {
         public static IAttributeValue BuildFromTypeAndObject(AttributeValueType type, object o)
         {
@@ -125,6 +126,25 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
                     _ => throw new Exception($"Unknown type {generic.Type} encountered"),
                 };
+        }
+
+        public static IGraphType AttributeValueType2GraphQLType(AttributeValueType type, bool isArray)
+        {
+            var graphType = type switch
+            {
+                AttributeValueType.Text => (IGraphType)new StringGraphType(),
+                AttributeValueType.MultilineText => new StringGraphType(),
+                AttributeValueType.Integer => new LongGraphType(),
+                AttributeValueType.JSON => new StringGraphType(),
+                AttributeValueType.YAML => new StringGraphType(),
+                AttributeValueType.Image => new StringGraphType(),
+                AttributeValueType.Mask => new StringGraphType(),
+                _ => throw new NotImplementedException(),
+            };
+            if (isArray)
+                graphType = new ListGraphType(graphType);
+
+            return graphType;
         }
 
         public static IAttributeValue Unmarshal(string valueText, byte[] valueBinary, byte[] valueControl, AttributeValueType type, bool fullBinary)

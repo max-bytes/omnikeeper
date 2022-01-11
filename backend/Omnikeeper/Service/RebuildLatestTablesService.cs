@@ -50,7 +50,7 @@ namespace Omnikeeper.Service
                             var valueText = dr.GetString(5);
                             var valueBinary = dr.GetFieldValue<byte[]>(6);
                             var valueControl = dr.GetFieldValue<byte[]>(7);
-                            var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                            var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, false);
                             var changesetID = dr.GetGuid(8);
 
                             var att = new CIAttribute(id, name, CIID, av, changesetID);
@@ -79,7 +79,7 @@ namespace Omnikeeper.Service
                         var valueText = dr.GetString(4);
                         var valueBinary = dr.GetFieldValue<byte[]>(5);
                         var valueControl = dr.GetFieldValue<byte[]>(6);
-                        var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                        var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, false);
                         var changesetID = dr.GetGuid(7);
 
                         var att = new CIAttribute(id, name, CIID, av, changesetID);

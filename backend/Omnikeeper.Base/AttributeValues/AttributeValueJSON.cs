@@ -25,6 +25,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public string[] ToRawDTOValues() => new string[] { valueStr };
         public object ToGenericObject() => Value;
         public bool IsArray => false;
+        public object ToGraphQLValue() => valueStr;
 
         public AttributeValueType Type => AttributeValueType.JSON;
 

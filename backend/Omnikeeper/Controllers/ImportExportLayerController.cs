@@ -189,7 +189,7 @@ namespace Omnikeeper.Controllers
                     var cisToCreate = cisToImport.Except(existingCIIDs);
                     await ciModel.BulkCreateCIs(cisToCreate, trans);
 
-                    var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataLayerScope.Fragment(t.Name, AttributeValueBuilder.BuildFromDTO(t.Value), t.CIID));
+                    var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataLayerScope.Fragment(t.Name, AttributeValueHelper.BuildFromDTO(t.Value), t.CIID));
                     var bulkUpdates = await attributeModel.PrepareForBulkUpdate(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), trans);
                     await attributeModel.BulkUpdate(bulkUpdates.inserts, bulkUpdates.removes, writeLayer.ID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
 

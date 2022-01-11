@@ -25,6 +25,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public string[] ToRawDTOValues() => new string[] { Value };
         public object ToGenericObject() => Value;
         public bool IsArray => false;
+        public object ToGraphQLValue() => Value;
 
         public override string ToString() => $"AV-Text: {Value2String()}";
 

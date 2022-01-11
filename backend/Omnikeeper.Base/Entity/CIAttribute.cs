@@ -90,7 +90,7 @@ namespace Omnikeeper.Base.Entity
         {
             return new BulkCIAttributeDataLayerScope(
                 dto.NamePrefix, dto.LayerID,
-                dto.Fragments.Select(f => new Fragment(f.Name, AttributeValueBuilder.BuildFromDTO(f.Value), f.CIID)));
+                dto.Fragments.Select(f => new Fragment(f.Name, AttributeValueHelper.BuildFromDTO(f.Value), f.CIID)));
         }
     }
 

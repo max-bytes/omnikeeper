@@ -72,7 +72,7 @@ namespace Omnikeeper.Model
             var valueText = dr.GetString(3);
             var valueBinary = dr.GetFieldValue<byte[]>(4);
             var valueControl = dr.GetFieldValue<byte[]>(5);
-            var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
+            var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
             var changesetID = dr.GetGuid(6);
             var att = new CIAttribute(id, name, CIID, av, changesetID);
             return att;
@@ -238,7 +238,7 @@ namespace Omnikeeper.Model
                 var valueText = dr.GetString(4);
                 var valueBinary = dr.GetFieldValue<byte[]>(5);
                 var valueControl = dr.GetFieldValue<byte[]>(6);
-                var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, false);
                 var changesetID = dr.GetGuid(7);
                 var layerID = dr.GetString(8);
 
@@ -351,7 +351,7 @@ namespace Omnikeeper.Model
                 var valueText = dr.GetString(4);
                 var valueBinary = dr.GetFieldValue<byte[]>(5);
                 var valueControl = dr.GetFieldValue<byte[]>(6);
-                var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, false);
 
                 var att = new CIAttribute(id, name, CIID, av, changesetID);
                 ret.Add(att);

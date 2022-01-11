@@ -220,7 +220,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                             }
                         }
 
-                        var value = AttributeValueBuilder.BuildFromTypeAndObject(taFieldInfo.AttributeValueType, entityValue);
+                        var value = AttributeValueHelper.BuildFromTypeAndObject(taFieldInfo.AttributeValueType, entityValue);
 
                         fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, attributeName, value));
                     }

@@ -11,6 +11,7 @@ using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Omnikeeper.GraphQL.Types.TraitEntitiesType;
 
@@ -29,23 +30,39 @@ namespace Omnikeeper.GraphQL.Types
             Field<StringGraphType>("placeholder", resolve: ctx => "placeholder");
         }
 
-        private static IGraphType TraitAttribute2GraphType(TraitAttribute ta)
+        private static readonly Regex AllowedNameRegex = new Regex("[^a-zA-Z0-9_]");
+        private static string SanitizeTypeName(string unsanitizedTypeName)
         {
-            var graphType = ta.AttributeTemplate.Type switch
-            {
-                AttributeValueType.Text => (IGraphType)new StringGraphType(),
-                AttributeValueType.MultilineText => new StringGraphType(),
-                AttributeValueType.Integer => new LongGraphType(),
-                AttributeValueType.JSON => new StringGraphType(),
-                AttributeValueType.YAML => new StringGraphType(),
-                AttributeValueType.Image => new StringGraphType(),
-                AttributeValueType.Mask => new StringGraphType(),
-                _ => throw new NotImplementedException(),
-            };
-            if (ta.AttributeTemplate.IsArray.GetValueOrDefault(false))
-                graphType = new ListGraphType(graphType);
+            var tmp = unsanitizedTypeName;
+            tmp = tmp.Replace(".", "__");
 
-            return graphType;
+            tmp = AllowedNameRegex.Replace(tmp, "");
+
+            if (tmp.StartsWith("__"))
+                tmp = "m" + tmp; // graphql does not support types starting with __, so we prefix it with an "m" (for meta)
+
+            if (Regex.IsMatch(tmp, "[0-9]"))
+                tmp = "m" + tmp; // graphql does not support types starting with a digit, so we prefix it with an "m" (for meta)
+
+            return tmp;
+        }
+        private static string SanitizeFieldName(string unsanitizedFieldName)
+        {
+            // NOTE: fields and types have same naming rules, so we can re-use
+            return SanitizeTypeName(unsanitizedFieldName);
+        }
+
+        private static string GenerateTraitEntityRootGraphTypeName(ITrait trait) => SanitizeTypeName("TERoot_" + trait.ID);
+        private static string GenerateTraitEntityWrapperGraphTypeName(ITrait trait) => SanitizeTypeName("TEWrapper_" + trait.ID);
+        private static string GenerateTraitEntityGraphTypeName(ITrait trait) => SanitizeTypeName("TE_" + trait.ID);
+        private static string GenerateTraitAttributeFieldName(TraitAttribute ta)
+        {
+            // TODO: what if two unsanitized field names map to the same sanitized field name? TODO: detect this and provide a work-around
+            return SanitizeFieldName(ta.Identifier);
+        }
+        public static string GenerateTraitIDFieldName(string traitID)
+        {
+            return SanitizeFieldName(traitID);
         }
 
         public class TraitEntityRootType : ObjectGraphType
@@ -53,7 +70,7 @@ namespace Omnikeeper.GraphQL.Types
             public TraitEntityRootType(ITrait at, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService, ITraitsProvider traitsProvider,
                 ObjectGraphType wrapperElementGraphType, InputObjectGraphType? idGraphType)
             {
-                Name = "TERoot_" + at.ID.Replace(".", "__");
+                Name = GenerateTraitEntityRootGraphTypeName(at);
 
                 // select only relevant attributes
                 var relevantAttributesForTrait = at.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name)
@@ -129,10 +146,7 @@ namespace Omnikeeper.GraphQL.Types
                                 // lookup value type based on input attribute name
                                 var idAttribute = at.RequiredAttributes.FirstOrDefault(ra =>
                                 {
-                                    // graphql field names may not contain ".", replace it
-                                    // TODO: enforce attribute identifier naming conventions
-                                    var convertedAttributeFieldName = ra.Identifier.Replace(".", "__");
-
+                                    var convertedAttributeFieldName = GenerateTraitAttributeFieldName(ra);
                                     return convertedAttributeFieldName == inputIDFieldName;
                                 });
 
@@ -140,7 +154,7 @@ namespace Omnikeeper.GraphQL.Types
                                     throw new Exception($"Invalid input field for trait entity ID detected: {inputIDFieldName}");
 
                                 var type = idAttribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
-                                IAttributeValue idAttributeValue = AttributeValueBuilder.BuildFromTypeAndObject(type, kv.Value);
+                                IAttributeValue idAttributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, kv.Value);
                                 return (idAttribute.AttributeTemplate.Name, idAttributeValue);
                             }).ToArray();
 
@@ -179,7 +193,7 @@ namespace Omnikeeper.GraphQL.Types
         {
             public ElementWrapperType(ITrait at, ObjectGraphType elementGraphType, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, ICIModel ciModel)
             {
-                Name = "TEWrapper_" + at.ID.Replace(".", "__");
+                Name = GenerateTraitEntityWrapperGraphTypeName(at);
                     
                 this.Field<GuidGraphType>("ciid", resolve: context =>
                 {
@@ -218,27 +232,13 @@ namespace Omnikeeper.GraphQL.Types
         {
             public ElementType(ITrait at)
             {
-                Name = "TE_" + at.ID.Replace(".", "__");
+                Name = GenerateTraitEntityGraphTypeName(at);
 
                 foreach (var ta in at.RequiredAttributes.Concat(at.OptionalAttributes))
                 {
-                    var graphType = TraitAttribute2GraphType(ta);
+                    var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
 
-                    var valueConverter = ta.AttributeTemplate.Type switch
-                    {
-                        AttributeValueType.Text => (Func<IAttributeValue, object>)(a => a.ToGenericObject()),
-                        AttributeValueType.MultilineText => (Func<IAttributeValue, object>)(a => a.ToGenericObject()),
-                        AttributeValueType.Integer => (Func<IAttributeValue, object>)(a => a.ToGenericObject()),
-                        AttributeValueType.JSON => (Func<IAttributeValue, object>)(a => (a.IsArray) ? a.ToRawDTOValues() : a.ToRawDTOValues()[0]),
-                        AttributeValueType.YAML => (Func<IAttributeValue, object>)(a => (a.IsArray) ? a.ToRawDTOValues() : a.ToRawDTOValues()[0]),
-                        AttributeValueType.Image => (Func<IAttributeValue, object>)(a => a.ToGenericObject()),
-                        AttributeValueType.Mask => (Func<IAttributeValue, object>)(a => a.ToGenericObject()),
-                        _ => throw new NotImplementedException(),
-                    };
-
-                    // graphql field names may not contain ".", replace it
-                    // TODO: enforce attribute identifier naming conventions
-                    var attributeFieldName = ta.Identifier.Replace(".", "__");
+                    var attributeFieldName = GenerateTraitAttributeFieldName(ta);
                     AddField(new FieldType()
                     {
                         Name = attributeFieldName,
@@ -254,7 +254,7 @@ namespace Omnikeeper.GraphQL.Types
                             var fn = ctx.FieldDefinition.Name;
                             if (o.TraitAttributes.TryGetValue(fn, out var v))
                             {
-                                return valueConverter(v.Attribute.Value);
+                                return v.Attribute.Value.ToGraphQLValue();
                             }
                             else return null;
                         })
@@ -273,11 +273,9 @@ namespace Omnikeeper.GraphQL.Types
 
                 foreach (var ta in at.RequiredAttributes)
                 {
-                    // graphql field names may not contain ".", replace it
-                    // TODO: enforce attribute identifier naming conventions
-                    var attributeFieldName = ta.Identifier.Replace(".", "__");
+                    var attributeFieldName = GenerateTraitAttributeFieldName(ta);
 
-                    var graphType = TraitAttribute2GraphType(ta);
+                    var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
 
                     if (ta.AttributeTemplate.IsID.GetValueOrDefault(false))
                     {
@@ -328,8 +326,6 @@ namespace Omnikeeper.GraphQL.Types
                 var traitID = at.Key;
                 if (traitID == TraitEmpty.StaticID) // ignore the empty trait
                     continue;
-                if (traitID.StartsWith("__"))
-                    traitID = "m" + traitID; // graphql does not support fields starting with __, so we prefix it with an "m" (for meta)
 
                 var tt = new ElementType(at.Value);
                 var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel);
@@ -338,8 +334,7 @@ namespace Omnikeeper.GraphQL.Types
 
                 schema.RegisterTypes(t, ttWrapper, tt);
 
-                // graphql field names may not contain ".", replace it
-                var fieldName = traitID.Replace(".", "__");
+                var fieldName = GenerateTraitIDFieldName(traitID);
 
                 tet.Field(fieldName, t, resolve: context => t);
             }

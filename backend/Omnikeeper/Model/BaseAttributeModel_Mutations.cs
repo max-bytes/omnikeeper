@@ -131,7 +131,7 @@ namespace Omnikeeper.Model
                 using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, removed, ""timestamp"", changeset_id, partition_index) FROM STDIN (FORMAT BINARY)");
                 foreach (var (ciid, fullName, value, _, newAttributeID) in inserts)
                 {
-                    var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
+                    var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(value);
 
                     writerHistoric.StartRow();
                     writerHistoric.Write(newAttributeID);
@@ -151,7 +151,7 @@ namespace Omnikeeper.Model
                 // removes 
                 foreach (var (ciid, name, value, _, newAttributeID) in removes)
                 {
-                    var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
+                    var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(value);
 
                     writerHistoric.StartRow();
                     writerHistoric.Write(newAttributeID);
@@ -182,7 +182,7 @@ namespace Omnikeeper.Model
                     using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
                     foreach (var (ciid, fullName, value, _, newAttributeID) in actualNewInserts)
                     {
-                        var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
+                        var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(value);
                         writerLatest.StartRow();
                         writerLatest.Write(newAttributeID);
                         writerLatest.Write(fullName);
@@ -209,7 +209,7 @@ namespace Omnikeeper.Model
                         UPDATE attribute_latest SET id = @id, type = @type, value_text = @value_text, value_binary = @value_binary, 
                         value_control = @value_control, ""timestamp"" = @timestamp, changeset_id = @changeset_id
                         WHERE id = @old_id", trans.DBConnection, trans.DBTransaction);
-                    var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
+                    var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(value);
                     commandUpdateLatest.Parameters.AddWithValue("id", newAttributeID);
                     commandUpdateLatest.Parameters.AddWithValue("old_id", existingAttributeID!);
                     commandUpdateLatest.Parameters.AddWithValue("type", value.Type);

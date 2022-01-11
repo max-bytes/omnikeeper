@@ -36,7 +36,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public Guid FilterCIAttributesWithMatchingID(ID id, IDictionary<Guid, IDictionary<string, MergedCIAttribute>> ciAttributes)
         {
-            IAttributeValue idAttributeValue = AttributeValueBuilder.BuildFromTypeAndObject(idAttributeValueType, id);
+            IAttributeValue idAttributeValue = AttributeValueHelper.BuildFromTypeAndObject(idAttributeValueType, id);
             var foundCIID = ciAttributes.Where(t => t.Value[idAttributeName].Attribute.Value.Equals(idAttributeValue))
                 .Select(t => t.Key)
                 .OrderBy(t => t) // we order by GUID to stay consistent even when multiple CIs would match
@@ -78,7 +78,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 var subIndex = tupleID[index];
                 if (subIndex == null)
                     throw new Exception(); // TODO
-                return (f.idAttributeName, AttributeValueBuilder.BuildFromTypeAndObject(f.idAttributeValueType, subIndex));
+                return (f.idAttributeName, AttributeValueHelper.BuildFromTypeAndObject(f.idAttributeValueType, subIndex));
             }).ToArray();
             var foundCIID = ciAttributes.Where(t =>
             {
