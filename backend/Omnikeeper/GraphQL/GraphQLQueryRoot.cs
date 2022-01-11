@@ -193,6 +193,7 @@ namespace Omnikeeper.GraphQL
                     // NOTE: so, because it needs to check for traits it fetches more attributes, and hence this method may return more attributes than requested
                     var finalAttributeSelection = attributeSelection.Union(NamedAttributesSelection.Build(relevantAttributesForTraits));
 
+                    // TODO: includeEmptyCIs is slow, and most often, not necessary: find way to get rid of it
                     var workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, finalAttributeSelection, userContext.Transaction, timeThreshold);
 
                     // in case the empty trait is non-required, we reduce the workCIs list by those CIs that are empty

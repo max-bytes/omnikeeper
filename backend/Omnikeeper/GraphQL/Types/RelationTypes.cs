@@ -48,7 +48,7 @@ namespace Omnikeeper.GraphQL.Types
 
                 IAttributeSelection attributeSelection = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, userContext.Transaction, timeThreshold);
 
-                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.ToCIID), attributeSelection, ciModel, layerSet, timeThreshold, userContext.Transaction)
+                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.ToCIID), attributeSelection, false, ciModel, layerSet, timeThreshold, userContext.Transaction)
                     .Then(t => t.First());
             });
             FieldAsync<MergedCIType>("fromCI",
@@ -60,7 +60,7 @@ namespace Omnikeeper.GraphQL.Types
 
                 IAttributeSelection attributeSelection = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, userContext.Transaction, timeThreshold);
 
-                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.FromCIID), attributeSelection, ciModel, layerSet, timeThreshold, userContext.Transaction)
+                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.FromCIID), attributeSelection, false, ciModel, layerSet, timeThreshold, userContext.Transaction)
                     .Then(t => t.First());
             });
         }

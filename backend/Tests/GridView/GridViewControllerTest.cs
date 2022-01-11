@@ -148,7 +148,7 @@ namespace Tests.Integration.Controller
                 new RecursiveTrait("test_trait_1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a1",
-                        CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)
+                        CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false, false)
                     )
                 }, new List<TraitAttribute>() { }, new List<TraitRelation>() { })
             };
