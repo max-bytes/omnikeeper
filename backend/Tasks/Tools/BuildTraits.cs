@@ -16,7 +16,7 @@ namespace Tasks.Tools
                     // hosts
                     new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                         new TraitAttribute("hostname",
-                            CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
                     //new RecursiveTrait("host_windows", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
@@ -87,21 +87,21 @@ namespace Tasks.Tools
                     new RecursiveTrait("tsa_cmdb_host", new TraitOriginV1(TraitOriginType.Data),
                         new List<TraitAttribute>() {
                             new TraitAttribute("hostid",
-                                CIAttributeTemplate.BuildFromParams("cmdb.hostid", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                                CIAttributeTemplate.BuildFromParams("cmdb.hostid", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
                         }
                     ),
                     new RecursiveTrait("tsa_cmdb_service", new TraitOriginV1(TraitOriginType.Data),
                         new List<TraitAttribute>() {
                             new TraitAttribute("svcid",
-                                CIAttributeTemplate.BuildFromParams("cmdb.svcid", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                                CIAttributeTemplate.BuildFromParams("cmdb.svcid", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
                         }
                     ),
                     new RecursiveTrait("tsa_cmdb_interface", new TraitOriginV1(TraitOriginType.Data),
                         new List<TraitAttribute>() {
                             new TraitAttribute("ifid",
-                                CIAttributeTemplate.BuildFromParams("cmdb.ifid", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                                CIAttributeTemplate.BuildFromParams("cmdb.ifid", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
                         }
                     ),

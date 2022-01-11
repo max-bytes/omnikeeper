@@ -38,12 +38,12 @@ namespace OKPluginValidation.Tests
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.validation.validation", new TraitOriginV1(TraitOriginType.Plugin),
                     new List<TraitAttribute>() {
-                                new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("validation.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-                                new TraitAttribute("rule_name", CIAttributeTemplate.BuildFromParams("validation.rule_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-                                new TraitAttribute("rule_config", CIAttributeTemplate.BuildFromParams("validation.rule_config", AttributeValueType.JSON, false)),
+                                new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("validation.id", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))),
+                                new TraitAttribute("rule_name", CIAttributeTemplate.BuildFromParams("validation.rule_name", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                                new TraitAttribute("rule_config", CIAttributeTemplate.BuildFromParams("validation.rule_config", AttributeValueType.JSON, false, false)),
                     },
                     new List<TraitAttribute>() {
-                                new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                                new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                     }
                 )
             );

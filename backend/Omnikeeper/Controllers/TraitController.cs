@@ -55,6 +55,7 @@ namespace Omnikeeper.Controllers
             var trait = await traitsProvider.GetActiveTrait(traitName, trans, timeThreshold);
             if (trait == null)
                 return BadRequest($"Trait with name \"{traitName}\" not found");
+            // TODO: reduce attribute selection
             var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset, includeEmptyCIs: trait is TraitEmpty, AllAttributeSelection.Instance, trans, timeThreshold);
             var traitSets = await traitModel.GetEffectiveTraitsForTrait(trait, cis, layerset, trans, timeThreshold);
             return Ok(traitSets

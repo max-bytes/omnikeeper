@@ -73,6 +73,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
+            // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code... maybe impossible
             var cisWithIDAttribute = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), idAttributeInfos.GetAttributeSelectionForID(), layerSet, trans, timeThreshold);
             var foundCIID = idAttributeInfos.FilterCIAttributesWithMatchingID(id, cisWithIDAttribute);
 
@@ -347,13 +348,15 @@ namespace Omnikeeper.Base.Model.TraitBased
         public readonly TraitAttributeAttribute TraitAttributeAttribute;
         public readonly AttributeValueType AttributeValueType;
         public readonly bool IsArray;
+        public readonly bool IsID;
 
-        public TraitAttributeFieldInfo(FieldInfo fieldInfo, TraitAttributeAttribute traitAttributeAttribute, AttributeValueType attributeValueType, bool isArray)
+        public TraitAttributeFieldInfo(FieldInfo fieldInfo, TraitAttributeAttribute traitAttributeAttribute, AttributeValueType attributeValueType, bool isArray, bool isID)
         {
             FieldInfo = fieldInfo;
             TraitAttributeAttribute = traitAttributeAttribute;
             AttributeValueType = attributeValueType;
             IsArray = isArray;
+            IsID = isID;
         }
     }
 

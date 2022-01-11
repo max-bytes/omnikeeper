@@ -240,18 +240,20 @@ namespace Omnikeeper.Base.Entity
         [ProtoMember(2)] public readonly AttributeValueType? Type;
         [ProtoMember(3)] public readonly bool? IsArray;
         [ProtoMember(4)] public readonly IEnumerable<ICIAttributeValueConstraint> ValueConstraints;
+        [ProtoMember(5)] public readonly bool? IsID;
 
-        public static CIAttributeTemplate BuildFromParams(string name, AttributeValueType? type, bool? isArray, params ICIAttributeValueConstraint[] valueConstraints)
+        public static CIAttributeTemplate BuildFromParams(string name, AttributeValueType? type, bool? isArray, bool? isID, params ICIAttributeValueConstraint[] valueConstraints)
         {
-            return new CIAttributeTemplate(name, type, isArray, valueConstraints);
+            return new CIAttributeTemplate(name, type, isArray, isID, valueConstraints);
         }
 
-        public CIAttributeTemplate(string name, AttributeValueType? type, bool? isArray, IEnumerable<ICIAttributeValueConstraint> valueConstraints)
+        public CIAttributeTemplate(string name, AttributeValueType? type, bool? isArray, bool? isID, IEnumerable<ICIAttributeValueConstraint> valueConstraints)
         {
             Name = name;
             Type = type;
             IsArray = isArray;
             ValueConstraints = valueConstraints;
+            IsID = isID;
         }
     }
 }
