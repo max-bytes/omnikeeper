@@ -55,6 +55,7 @@ namespace Omnikeeper.GraphQL.Types
         private static string GenerateTraitEntityRootGraphTypeName(ITrait trait) => SanitizeTypeName("TERoot_" + trait.ID);
         private static string GenerateTraitEntityWrapperGraphTypeName(ITrait trait) => SanitizeTypeName("TEWrapper_" + trait.ID);
         private static string GenerateTraitEntityGraphTypeName(ITrait trait) => SanitizeTypeName("TE_" + trait.ID);
+        private static string GenerateTraitEntityIDInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_ID_Input_" + trait.ID);
         private static string GenerateTraitAttributeFieldName(TraitAttribute ta)
         {
             // TODO: what if two unsanitized field names map to the same sanitized field name? TODO: detect this and provide a work-around
@@ -269,7 +270,7 @@ namespace Omnikeeper.GraphQL.Types
         {
             public IDInputType(ITrait at)
             {
-                Name = "TE_ID_Input_" + at.ID.Replace(".", "__");
+                Name = GenerateTraitEntityIDInputGraphTypeName(at);
 
                 foreach (var ta in at.RequiredAttributes)
                 {
