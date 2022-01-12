@@ -2,6 +2,7 @@
 using GraphQL.DataLoader;
 using GraphQL.Resolvers;
 using GraphQL.Types;
+using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -62,6 +63,7 @@ namespace Omnikeeper.GraphQL.Types
         private static string GenerateTraitEntityWrapperGraphTypeName(ITrait trait) => SanitizeTypeName("TEWrapper_" + trait.ID);
         private static string GenerateTraitEntityGraphTypeName(ITrait trait) => SanitizeTypeName("TE_" + trait.ID);
         private static string GenerateTraitEntityIDInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_ID_Input_" + trait.ID);
+        private static string GenerateUpsertTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Upsert_Input_" + trait.ID);
         public static string GenerateTraitAttributeFieldName(TraitAttribute ta)
         {
             // TODO: what if two unsanitized field names map to the same sanitized field name? TODO: detect this and provide a work-around
@@ -277,6 +279,34 @@ namespace Omnikeeper.GraphQL.Types
                 return new IDInputType(at);
             }
         }
+
+        public class UpsertInputType : InputObjectGraphType
+        {
+            public UpsertInputType(ITrait at)
+            {
+                Name = GenerateUpsertTraitEntityInputGraphTypeName(at);
+
+                foreach (var ta in at.RequiredAttributes)
+                {
+                    var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
+                    AddField(new FieldType()
+                    {
+                        Name = TraitEntitiesType.GenerateTraitAttributeFieldName(ta),
+                        ResolvedType = new NonNullGraphType(graphType)
+                    });
+                }
+                foreach (var ta in at.OptionalAttributes)
+                {
+                    var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
+                    AddField(new FieldType()
+                    {
+                        Name = TraitEntitiesType.GenerateTraitAttributeFieldName(ta),
+                        ResolvedType = graphType
+                    });
+                }
+                // TODO: add relations
+            }
+        }
     }
 
     public class TraitEntitiesQuerySchemaLoader
@@ -301,23 +331,63 @@ namespace Omnikeeper.GraphQL.Types
             this.dataLoaderService = dataLoaderService;
         }
 
-        public async Task Init(IModelContext trans, ISchema schema)
+        public class ElementTypesContainer
+        {
+            public readonly ITrait Trait;
+            public readonly ElementType Element;
+            public readonly ElementWrapperType ElementWrapper;
+            public readonly TraitEntityRootType RootQueryType;
+            public readonly IDInputType? IDInputType;
+            public readonly UpsertInputType UpsertInputType;
+
+            public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType, TraitEntityRootType rootQueryType, UpsertInputType upsertInputType)
+            {
+                Trait = trait;
+                Element = element;
+                ElementWrapper = elementWrapper;
+                IDInputType = iDInputType;
+                RootQueryType = rootQueryType;
+                UpsertInputType = upsertInputType;
+            }
+        }
+
+        public async Task<IEnumerable<ElementTypesContainer>> CreateTypes(IModelContext trans, ISchema schema, ILogger logger)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var activeTraits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
 
+            var ret = new List<ElementTypesContainer>();
             foreach (var at in activeTraits)
             {
-                var traitID = at.Key;
-                if (traitID == TraitEmpty.StaticID) // ignore the empty trait
+                if (at.Key == TraitEmpty.StaticID) // ignore the empty trait
                     continue;
 
-                var tt = new ElementType(at.Value);
-                var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel);
-                var idt = IDInputType.Build(at.Value);
-                var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, dataLoaderService, traitsProvider,  attributeModel, relationModel, ttWrapper, idt);
+                try
+                {
+                    var tt = new ElementType(at.Value);
+                    var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel);
+                    var idt = IDInputType.Build(at.Value);
+                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, dataLoaderService, traitsProvider, attributeModel, relationModel, ttWrapper, idt);
+                    var upsertInputType = new UpsertInputType(at.Value);
 
-                schema.RegisterTypes(t, ttWrapper, tt);
+                    schema.RegisterTypes(upsertInputType, t);
+
+                    ret.Add(new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType));
+                } catch(Exception e)
+                {
+                    logger.LogError(e, $"Could not create types for trait entity with trait ID {at.Key}");
+                }
+            }
+            return ret;
+        }
+
+        public void Init(IEnumerable<ElementTypesContainer> typesContainers)
+        {
+            foreach (var typeContainer in typesContainers)
+            {
+                var traitID = typeContainer.Trait.ID;
+
+                var t = typeContainer.RootQueryType;
 
                 var fieldName = GenerateTraitIDFieldName(traitID);
 

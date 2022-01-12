@@ -1,18 +1,15 @@
 ﻿using GraphQL;
 using GraphQL.Types;
-using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GraphQL.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using static Omnikeeper.GraphQL.Types.TraitEntitiesQuerySchemaLoader;
 using static Omnikeeper.GraphQL.Types.TraitEntitiesType;
 
 namespace Omnikeeper.GraphQL
@@ -27,88 +24,42 @@ namespace Omnikeeper.GraphQL
     public class TraitEntitiesMutationSchemaLoader
     {
         private readonly GraphQLMutation tet;
-        private readonly ITraitsProvider traitsProvider;
         private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
-        private readonly IDataLoaderService dataLoaderService;
         private readonly ILayerModel layerModel;
         private readonly IChangesetModel changesetModel;
 
-        public TraitEntitiesMutationSchemaLoader(GraphQLMutation tet, ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel,
-            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService, ILayerModel layerModel, IChangesetModel changesetModel)
+        public TraitEntitiesMutationSchemaLoader(GraphQLMutation tet, IAttributeModel attributeModel, IRelationModel relationModel,
+            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel)
         {
             this.tet = tet;
-            this.traitsProvider = traitsProvider;
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
-            this.dataLoaderService = dataLoaderService;
             this.layerModel = layerModel;
             this.changesetModel = changesetModel;
         }
 
-        private static string GenerateUpsertMutationName(string traitID) => "upsert_" + TraitEntitiesType.SanitizeMutationName(traitID);
-        private static string GenerateUpsertTraitEntityInputGraphTypeName(ITrait trait) => TraitEntitiesType.SanitizeTypeName("TE_Upsert_Input_" + trait.ID);
+        private static string GenerateUpsertMutationName(string traitID) => "upsert_" + SanitizeMutationName(traitID);
 
-        public class UpsertInputType : InputObjectGraphType
+        public void Init(IEnumerable<ElementTypesContainer> typesContainers)
         {
-            public UpsertInputType(ITrait at)
+            foreach (var typeContainer in typesContainers)
             {
-                Name = GenerateUpsertTraitEntityInputGraphTypeName(at);
-
-                foreach (var ta in at.RequiredAttributes)
-                {
-                    var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
-                    AddField(new FieldType()
-                    {
-                        Name = TraitEntitiesType.GenerateTraitAttributeFieldName(ta),
-                        ResolvedType = new NonNullGraphType(graphType)
-                    });
-                }
-                foreach (var ta in at.OptionalAttributes)
-                {
-                    var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
-                    AddField(new FieldType()
-                    {
-                        Name = TraitEntitiesType.GenerateTraitAttributeFieldName(ta),
-                        ResolvedType = graphType
-                    });
-                }
-                // TODO: add relations
-            }
-        }
-
-        public async Task Init(IModelContext trans, ISchema schema)
-        {
-            var timeThreshold = TimeThreshold.BuildLatest();
-            var activeTraits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
-
-            foreach (var at in activeTraits)
-            {
-                var traitID = at.Key;
-                if (traitID == TraitEmpty.StaticID) // ignore the empty trait
-                    continue;
-
-                var upsertInputType = new UpsertInputType(at.Value);
-
-                // TODO: we should re-use the types from the queries
-                var tt = new ElementType(at.Value);
-                var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel);
-
-                schema.RegisterTypes(upsertInputType, tt, ttWrapper);
+                var traitID = typeContainer.Trait.ID;
 
                 var upsertMutationName = GenerateUpsertMutationName(traitID);
 
-                var traitEntityModel = new TraitEntityModel(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel);
+                var traitEntityModel = new TraitEntityModel(typeContainer.Trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
 
-                tet.FieldAsync(upsertMutationName, ttWrapper,
+                tet.FieldAsync(upsertMutationName, typeContainer.ElementWrapper,
                     arguments: new QueryArguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                        new QueryArgument(new NonNullGraphType(upsertInputType)) { Name = "input" }),
+                        new QueryArgument(new NonNullGraphType(typeContainer.UpsertInputType)) { Name = "input" }),
                     resolve: async context =>
                     {
                         var layerStrings = context.GetArgument<string[]>("layers")!;
@@ -128,7 +79,7 @@ namespace Omnikeeper.GraphQL
                         if (upsertInputCollection == null)
                             throw new Exception("Invalid input object for upsert detected");
 
-                        var inputAttributeValues = TraitEntitiesType.InputDictionary2AttributeTuples(upsertInputCollection, at.Value);
+                        var inputAttributeValues = TraitEntitiesType.InputDictionary2AttributeTuples(upsertInputCollection, typeContainer.Trait);
                         var idAttributeValues = inputAttributeValues.Where(i => i.isID);
 
                         if (idAttributeValues.IsEmpty())
