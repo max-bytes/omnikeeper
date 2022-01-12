@@ -275,14 +275,16 @@ namespace Omnikeeper.Startup
 
             // NOTE: for now, we do not do per-request recreation of the trait entities, but instead require a restart
             // we do this to not reduce performance, and until we find a better way to to this
-            builder.RegisterType<TraitEntitiesTypeLoader>().SingleInstance();
+            builder.RegisterType<TraitEntitiesQuerySchemaLoader>().SingleInstance();
+            builder.RegisterType<TraitEntitiesMutationSchemaLoader>().SingleInstance();
             // HACK, NOTE: overwrite lifetime of the chain of parent graphql elements to instance-per-lifetime
             // this is necessary to ensure that the TraitEntitiesType is properly re-created on each request
             // otherwise, changes to traits can not be properly updated/reflected
             // TODO: once we do not Init() the TraitEntityTypes on every request anymore, we can maybe find a better way to do this
             //builder.RegisterType<GraphQLSchema>().As<ISchema>().InstancePerLifetimeScope();
             //builder.RegisterType<TraitEntitiesType>().InstancePerLifetimeScope();
-            //builder.RegisterType<TraitEntitiesTypeLoader>().InstancePerLifetimeScope();
+            //builder.RegisterType<TraitEntitiesQuerySchemaLoader>().InstancePerLifetimeScope();
+            //builder.RegisterType<TraitEntitiesMutationSchemaLoader>().InstancePerLifetimeScope();
         }
     }
 }

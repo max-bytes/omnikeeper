@@ -31,13 +31,15 @@ namespace Omnikeeper.Controllers
         private readonly DataLoaderDocumentListener dataLoaderDocumentListener;
         private readonly IEnumerable<IValidationRule> _validationRules;
         private readonly IWebHostEnvironment _env;
-        private readonly TraitEntitiesTypeLoader traitEntitiesTypeLoader;
+        private readonly TraitEntitiesQuerySchemaLoader traitEntitiesQuerySchemaLoader;
+        private readonly TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader;
         private readonly ICurrentUserAccessor _currentUserService;
 
         public GraphQLController(ISchema schema, ICurrentUserAccessor currentUserService,
             IDocumentExecuter documentExecuter, IDocumentWriter documentWriter,
             IModelContextBuilder modelContextBuilder, DataLoaderDocumentListener dataLoaderDocumentListener,
-            IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env, TraitEntitiesTypeLoader traitEntitiesTypeLoader)
+            IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env, 
+            TraitEntitiesQuerySchemaLoader traitEntitiesTypeLoader, TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader)
         {
             _currentUserService = currentUserService;
             _schema = schema;
@@ -47,7 +49,8 @@ namespace Omnikeeper.Controllers
             this.dataLoaderDocumentListener = dataLoaderDocumentListener;
             _validationRules = validationRules;
             _env = env;
-            this.traitEntitiesTypeLoader = traitEntitiesTypeLoader;
+            this.traitEntitiesQuerySchemaLoader = traitEntitiesTypeLoader;
+            this.traitEntitiesMutationSchemaLoader = traitEntitiesMutationSchemaLoader;
         }
 
         [HttpPost]
@@ -79,7 +82,10 @@ namespace Omnikeeper.Controllers
 
             // TODO: we should only call traitEntitiesTypeLoader.Init() on app startup and after trait changes... NOT on every request
             if (!_schema.Initialized)
-                await traitEntitiesTypeLoader.Init(trans, _schema);
+            {
+                await traitEntitiesQuerySchemaLoader.Init(trans, _schema);
+                await traitEntitiesMutationSchemaLoader.Init(trans, _schema);
+            }
 
             var inputs = query.Variables?.ToInputs();
             var result = await _documentExecuter.ExecuteAsync(options =>

@@ -31,7 +31,7 @@ namespace Omnikeeper.GraphQL.Types
         }
 
         private static readonly Regex AllowedNameRegex = new Regex("[^a-zA-Z0-9_]");
-        private static string SanitizeTypeName(string unsanitizedTypeName)
+        public static string SanitizeTypeName(string unsanitizedTypeName)
         {
             var tmp = unsanitizedTypeName;
             tmp = tmp.Replace(".", "__");
@@ -46,17 +46,22 @@ namespace Omnikeeper.GraphQL.Types
 
             return tmp;
         }
-        private static string SanitizeFieldName(string unsanitizedFieldName)
+        public static string SanitizeFieldName(string unsanitizedFieldName)
         {
             // NOTE: fields and types have same naming rules, so we can re-use
             return SanitizeTypeName(unsanitizedFieldName);
+        }
+        public static string SanitizeMutationName(string unsanitizedMutationName)
+        {
+            // NOTE: mutations and types have same naming rules, so we can re-use
+            return SanitizeTypeName(unsanitizedMutationName);
         }
 
         private static string GenerateTraitEntityRootGraphTypeName(ITrait trait) => SanitizeTypeName("TERoot_" + trait.ID);
         private static string GenerateTraitEntityWrapperGraphTypeName(ITrait trait) => SanitizeTypeName("TEWrapper_" + trait.ID);
         private static string GenerateTraitEntityGraphTypeName(ITrait trait) => SanitizeTypeName("TE_" + trait.ID);
         private static string GenerateTraitEntityIDInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_ID_Input_" + trait.ID);
-        private static string GenerateTraitAttributeFieldName(TraitAttribute ta)
+        public static string GenerateTraitAttributeFieldName(TraitAttribute ta)
         {
             // TODO: what if two unsanitized field names map to the same sanitized field name? TODO: detect this and provide a work-around
             return SanitizeFieldName(ta.Identifier);
@@ -64,6 +69,30 @@ namespace Omnikeeper.GraphQL.Types
         public static string GenerateTraitIDFieldName(string traitID)
         {
             return SanitizeFieldName(traitID);
+        }
+
+        public static (string name, IAttributeValue value, bool isID)[] InputDictionary2AttributeTuples(IDictionary<string, object> inputDict, ITrait trait)
+        {
+            (string name, IAttributeValue value, bool isID)[] attributeValues = inputDict.Select(kv =>
+            {
+                var inputFieldName = kv.Key;
+
+                // lookup value type based on input attribute name
+                var attribute = trait.RequiredAttributes.Concat(trait.OptionalAttributes).FirstOrDefault(ra =>
+                {
+                    var convertedAttributeFieldName = GenerateTraitAttributeFieldName(ra);
+                    return convertedAttributeFieldName == inputFieldName;
+                });
+
+                if (attribute == null)
+                    throw new Exception($"Invalid input field for trait {trait.ID}: {inputFieldName}");
+
+                var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
+                IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, kv.Value);
+                return (attribute.AttributeTemplate.Name, attributeValue, attribute.AttributeTemplate.IsID.GetValueOrDefault(false));
+            }).ToArray();
+
+            return attributeValues;
         }
 
         public class TraitEntityRootType : ObjectGraphType
@@ -140,24 +169,8 @@ namespace Omnikeeper.GraphQL.Types
                             if (idCollection == null)
                                 throw new Exception("Invalid input object for trait entity ID detected");
 
-                            (string name, IAttributeValue value)[] idAttributeValues = idCollection.Select(kv =>
-                            {
-                                var inputIDFieldName = kv.Key;
-
-                                // lookup value type based on input attribute name
-                                var idAttribute = at.RequiredAttributes.FirstOrDefault(ra =>
-                                {
-                                    var convertedAttributeFieldName = GenerateTraitAttributeFieldName(ra);
-                                    return convertedAttributeFieldName == inputIDFieldName;
-                                });
-
-                                if (idAttribute == null)
-                                    throw new Exception($"Invalid input field for trait entity ID detected: {inputIDFieldName}");
-
-                                var type = idAttribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
-                                IAttributeValue idAttributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, kv.Value);
-                                return (idAttribute.AttributeTemplate.Name, idAttributeValue);
-                            }).ToArray();
+                            var idAttributeValues = InputDictionary2AttributeTuples(idCollection, at)
+                                .Where(t => t.isID);
 
                             // NOTE: we already fetch all relevant attributes for the entities, not JUST the ones necessary for ID checking
                             var t = dataLoaderService.SetupAndLoadMergedCIs(new AllCIIDsSelection(), @as, false, ciModel, layerset, timeThreshold, trans)
@@ -243,7 +256,7 @@ namespace Omnikeeper.GraphQL.Types
                     AddField(new FieldType()
                     {
                         Name = attributeFieldName,
-                        ResolvedType = graphType,
+                        ResolvedType = graphType, // TODO: add new NonNullGraphType() wrap for required attributes
                         Resolver = new FuncFieldResolver<object>(ctx =>
                         {
                             var o = ctx.Source as EffectiveTrait;
@@ -283,7 +296,7 @@ namespace Omnikeeper.GraphQL.Types
                         this.AddField(new FieldType()
                         {
                             Name = attributeFieldName,
-                            ResolvedType = graphType
+                            ResolvedType = new NonNullGraphType(graphType)
                         });
                     }
                 }
@@ -299,7 +312,7 @@ namespace Omnikeeper.GraphQL.Types
         }
     }
 
-    public class TraitEntitiesTypeLoader
+    public class TraitEntitiesQuerySchemaLoader
     {
         private readonly TraitEntitiesType tet;
         private readonly ITraitsProvider traitsProvider;
@@ -307,7 +320,7 @@ namespace Omnikeeper.GraphQL.Types
         private readonly ICIModel ciModel;
         private readonly IDataLoaderService dataLoaderService;
 
-        public TraitEntitiesTypeLoader(TraitEntitiesType tet, ITraitsProvider traitsProvider,
+        public TraitEntitiesQuerySchemaLoader(TraitEntitiesType tet, ITraitsProvider traitsProvider,
             IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService)
         {
             this.tet = tet;

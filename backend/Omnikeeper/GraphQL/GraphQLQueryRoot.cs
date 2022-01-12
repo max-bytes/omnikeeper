@@ -167,7 +167,6 @@ namespace Omnikeeper.GraphQL
 
                     IAttributeSelection attributeSelection = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, userContext.Transaction, timeThreshold);
 
-
                     // create shallow copy, because we potentially modify these lists
                     IEnumerable<ITrait> requiredTraitsCopy = new List<ITrait>(requiredTraits.Values);
                     IEnumerable<ITrait> requiredNonTraitsCopy = new List<ITrait>(requiredNonTraits.Values);

@@ -48,7 +48,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (ta, attributeFieldInfos, relationFieldInfos);
         }
 
-        public static IIDAttributeInfos<C, ID> ExtractIDAttributeInfos<C, ID>() where C : TraitEntity, new() where ID : notnull
+        public static TraitEntityIDAttributeInfos<C, ID> ExtractIDAttributeInfos<C, ID>() where C : TraitEntity, new() where ID : notnull
         {
             Type type = typeof(C);
             var idFields = type.GetFields().Where(f => Attribute.IsDefined(f, typeof(TraitEntityIDAttribute)));
@@ -66,10 +66,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 var (attributeValueType, _) = Type2AttributeValueType(idField, taa);
                 outFields.Add((idField, taa.aName, attributeValueType));
             }
-            if (outFields.Count == 1)
-                return new SingleFieldIDAttributeInfos<C, ID>(outFields[0].idFieldInfo, outFields[0].idAttributeName, outFields[0].idAttributeValueType);
-            else
-                return new TupleBasedIDAttributeInfos<C, ID>(outFields);
+            return new TraitEntityIDAttributeInfos<C, ID>(outFields);
         }
 
         public static C EffectiveTrait2Object<C>(EffectiveTrait et, MyJSONSerializer<object> jsonSerializer) where C : TraitEntity, new()
@@ -235,6 +232,18 @@ namespace Omnikeeper.Base.Model.TraitBased
             }
 
             return (avt, isArray);
+        }
+
+        public static Guid FindMatchingCIIDViaAttributeValues((string name, IAttributeValue value)[] idAttributeValues, IDictionary<Guid, IDictionary<string, MergedCIAttribute>> ciAttributes)
+        {
+            var foundCIID = ciAttributes.Where(t =>
+            {
+                return idAttributeValues.All(nameValue => t.Value[nameValue.name].Attribute.Value.Equals(nameValue.value));
+            })
+                .Select(t => t.Key)
+                .OrderBy(t => t) // we order by GUID to stay consistent even when multiple CIs would match
+                .FirstOrDefault();
+            return foundCIID;
         }
     }
 

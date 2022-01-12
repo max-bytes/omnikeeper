@@ -27,7 +27,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
         private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
-        private readonly IIDAttributeInfos<T, ID> idAttributeInfos;
+        private readonly TraitEntityIDAttributeInfos<T, ID> idAttributeInfos;
 
         private static readonly MyJSONSerializer<object> DefaultSerializer = new MyJSONSerializer<object>(() =>
         {
@@ -94,22 +94,18 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public async Task<IDictionary<ID, T>> GetAllByDataID(IEnumerable<MergedCI> withinCIs, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var cisWithTrait = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, withinCIs, layerSet, trans, timeThreshold);
-            var all = new List<(T entity, Guid ciid)>();
-            foreach (var (ciid, et) in cisWithTrait.Select(kv => (kv.Key, kv.Value)))
-            {
-                var dc = TraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
-                all.Add((dc, ciid));
-            }
-            all.OrderBy(dc => dc.ciid); // we order by GUID to stay consistent even when multiple CIs would match
+            var cisWithTrait = (await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, withinCIs, layerSet, trans, timeThreshold))
+                .Values
+                .OrderBy(et => et.CIID); // we order by CIID to stay consistent even when multiple CIs would match
 
             var ret = new Dictionary<ID, T>();
-            foreach (var dc in all)
+            foreach (var et in cisWithTrait)
             {
-                var id = idAttributeInfos.ExtractIDFromEntity(dc.entity);
+                var dc = TraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
+                var id = idAttributeInfos.ExtractIDFromEntity(dc);
                 if (!ret.ContainsKey(id))
                 {
-                    ret[id] = dc.entity;
+                    ret[id] = dc;
                 }
             }
             return ret;

@@ -194,6 +194,7 @@ namespace Omnikeeper.GraphQL
             this.layerDataModel = layerDataModel;
 
             CreateManage();
+            CreateTraitEntities();
             CreatePlugin(plugins);
         }
 
