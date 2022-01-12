@@ -233,18 +233,6 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             return (avt, isArray);
         }
-
-        public static Guid FindMatchingCIIDViaAttributeValues((string name, IAttributeValue value)[] idAttributeValues, IDictionary<Guid, IDictionary<string, MergedCIAttribute>> ciAttributes)
-        {
-            var foundCIID = ciAttributes.Where(t =>
-            {
-                return idAttributeValues.All(nameValue => t.Value[nameValue.name].Attribute.Value.Equals(nameValue.value));
-            })
-                .Select(t => t.Key)
-                .OrderBy(t => t) // we order by GUID to stay consistent even when multiple CIs would match
-                .FirstOrDefault();
-            return foundCIID;
-        }
     }
 
 }

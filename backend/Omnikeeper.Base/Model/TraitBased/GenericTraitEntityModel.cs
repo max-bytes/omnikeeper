@@ -18,16 +18,13 @@ namespace Omnikeeper.Base.Model.TraitBased
 {
     public class GenericTraitEntityModel<T, ID> where T : TraitEntity, new() where ID : notnull
     {
-        private readonly IEffectiveTraitModel effectiveTraitModel;
         protected readonly ICIModel ciModel;
-        protected readonly IAttributeModel attributeModel;
-        protected readonly IRelationModel relationModel;
-        private readonly GenericTrait trait;
-        private readonly HashSet<string> relevantAttributesForTrait;
         private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
         private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
         private readonly TraitEntityIDAttributeInfos<T, ID> idAttributeInfos;
+
+        private readonly TraitEntityModel traitEntityModel;
 
         private static readonly MyJSONSerializer<object> DefaultSerializer = new MyJSONSerializer<object>(() =>
         {
@@ -41,67 +38,54 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
         {
-            this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
-            this.attributeModel = attributeModel;
-            this.relationModel = relationModel;
 
-            trait = RecursiveTraitService.FlattenSingleRecursiveTrait(TraitEntityHelper.Class2RecursiveTrait<T>());
-            relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Concat(trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet();
+            var trait = RecursiveTraitService.FlattenSingleRecursiveTrait(TraitEntityHelper.Class2RecursiveTrait<T>());
 
             (_, attributeFieldInfos, relationFieldInfos) = TraitEntityHelper.ExtractFieldInfos<T>();
 
             idAttributeInfos = TraitEntityHelper.ExtractIDAttributeInfos<T, ID>();
+
+            traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
         }
 
         private async Task<(T entity, Guid ciid)> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ci = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(ciid), layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold)).FirstOrDefault();
-            if (ci == null) return default;
-            var ciWithTrait = await effectiveTraitModel.GetEffectiveTraitForCI(ci, trait, layerSet, trans, timeThreshold);
-            if (ciWithTrait == null) return default;
-            var dc = TraitEntityHelper.EffectiveTrait2Object<T>(ciWithTrait, DefaultSerializer);
+            var et = await traitEntityModel.GetSingleByCIID(ciid, layerSet, trans, timeThreshold);
+            if (et == null)
+                return default;
+            var dc = TraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
             return (dc, ciid);
         }
 
         private async Task<IDictionary<Guid, T>> GetAllByCIID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold);
-            var cisWithTrait = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, timeThreshold);
-            return cisWithTrait.ToDictionary(kv => kv.Key, kv => TraitEntityHelper.EffectiveTrait2Object<T>(kv.Value, DefaultSerializer));
+            var ets = await traitEntityModel.GetAllByCIID(layerSet, trans, timeThreshold);
+            return ets.ToDictionary(kv => kv.Key, kv => TraitEntityHelper.EffectiveTrait2Object<T>(kv.Value, DefaultSerializer));
         }
 
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code... maybe impossible
-            var cisWithIDAttribute = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), idAttributeInfos.GetAttributeSelectionForID(), layerSet, trans, timeThreshold);
-            var foundCIID = idAttributeInfos.FilterCIAttributesWithMatchingID(id, cisWithIDAttribute);
+            var idAttributeValueTuples = idAttributeInfos.ExtractAttributeValueTuplesFromID(id);
+            var foundCIID = await traitEntityModel.GetSingleCIIDByAttributeValueTuples(idAttributeValueTuples, layerSet, trans, timeThreshold);
 
-            if (foundCIID == default)
-            { // no fitting entity found
+            if (!foundCIID.HasValue)
                 return default;
-            }
 
-            var ret = await GetSingleByCIID(foundCIID, layerSet, trans, timeThreshold);
+            var ret = await GetSingleByCIID(foundCIID.Value, layerSet, trans, timeThreshold);
             return ret;
         }
 
         public async Task<IDictionary<ID, T>> GetAllByDataID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold);
-            return await GetAllByDataID(cis, layerSet, trans, timeThreshold);
-        }
-
-        public async Task<IDictionary<ID, T>> GetAllByDataID(IEnumerable<MergedCI> withinCIs, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            var cisWithTrait = (await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, withinCIs, layerSet, trans, timeThreshold))
+            var ets = (await traitEntityModel.GetAllByDataID(layerSet, trans, timeThreshold))
                 .Values
                 .OrderBy(et => et.CIID); // we order by CIID to stay consistent even when multiple CIs would match
 
             var ret = new Dictionary<ID, T>();
-            foreach (var et in cisWithTrait)
+            foreach (var et in ets)
             {
-                var dc = TraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
+                var dc = TraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer); 
                 var id = idAttributeInfos.ExtractIDFromEntity(dc);
                 if (!ret.ContainsKey(id))
                 {
@@ -143,16 +127,11 @@ namespace Omnikeeper.Base.Model.TraitBased
                 return (kv.Value, ciid);
             });
 
-            var relevantCIIDs = newCIIDDictionary.Values.Union(outdated.Keys).ToHashSet();
-            var changed = await WriteAttributes(entities, relevantCIIDs, writeLayer, dataOrigin, changesetProxy, trans);
 
-            if (!relationFieldInfos.IsEmpty())
-            {
-                var relevantOutgoingRelations = relationFieldInfos.Where(rfi => rfi.TraitRelationAttribute.directionForward).SelectMany(rfi => relevantCIIDs.Select(ciid => (ciid, rfi.TraitRelationAttribute.predicateID))).ToHashSet();
-                var relevantIncomingRelations = relationFieldInfos.Where(rfi => !rfi.TraitRelationAttribute.directionForward).SelectMany(rfi => relevantCIIDs.Select(ciid => (ciid, rfi.TraitRelationAttribute.predicateID))).ToHashSet();
-                var tmpChanged = await WriteRelations(entities, relevantOutgoingRelations, relevantIncomingRelations, writeLayer, dataOrigin, changesetProxy, trans);
-                changed = changed || tmpChanged;
-            }
+            var relevantCIIDs = newCIIDDictionary.Values.Union(outdated.Keys).ToHashSet();
+            var attributeFragments = Entities2Fragments(entities);
+            var (outgoingRelations, incomingRelations) = Entities2RelationTuples(entities);
+            var changed = await traitEntityModel.BulkReplace(relevantCIIDs, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans);
 
             return changed;
         }
@@ -166,25 +145,16 @@ namespace Omnikeeper.Base.Model.TraitBased
             var ciid = (current != default) ? current.ciid : await ciModel.CreateCI(trans);
 
             var tuples = new (T t, Guid ciid)[] { (t, ciid) };
+            var attributeFragments = Entities2Fragments(tuples);
+            var (outgoingRelations, incomingRelations) = Entities2RelationTuples(tuples);
+            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans);
 
-            var relevantCIs = new HashSet<Guid>() { ciid };
-            var changed = await WriteAttributes(tuples, relevantCIs, writeLayer, dataOrigin, changesetProxy, trans);
+            var dc = TraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
 
-            if (!relationFieldInfos.IsEmpty())
-            {
-                var relevantOutgoingRelations = relationFieldInfos.Where(rfi => rfi.TraitRelationAttribute.directionForward).Select(rfi => (ciid, rfi.TraitRelationAttribute.predicateID)).ToHashSet();
-                var relevantIncomingRelations = relationFieldInfos.Where(rfi => !rfi.TraitRelationAttribute.directionForward).Select(rfi => (ciid, rfi.TraitRelationAttribute.predicateID)).ToHashSet();
-                var tmpChanged = await WriteRelations(tuples, relevantOutgoingRelations, relevantIncomingRelations, writeLayer, dataOrigin, changesetProxy, trans);
-                changed = changed || tmpChanged;
-            }
-
-            var dc = await GetSingleByCIID(ciid, layerSet, trans, changesetProxy.TimeThreshold);
-            if (dc == default)
-                throw new Exception("DC does not conform to trait requirements");
-            return (dc.entity, changed);
+            return (dc, changed);
         }
 
-        private async Task<bool> WriteAttributes(IEnumerable<(T t, Guid ciid)> entities, ISet<Guid> relevantCIs, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        private IList<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> Entities2Fragments(IEnumerable<(T t, Guid ciid)> entities)
         {
             var fragments = new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>();
             foreach (var taFieldInfo in attributeFieldInfos)
@@ -233,22 +203,15 @@ namespace Omnikeeper.Base.Model.TraitBased
                     }
                 }
             }
-
-            var relevantAttributeNames = attributeFieldInfos.Select(afi => afi.TraitAttributeAttribute.aName).ToHashSet();
-            var changed = await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(writeLayer, fragments, relevantCIs, relevantAttributeNames), changesetProxy, dataOrigin, trans, MaskHandlingForRemovalApplyNoMask.Instance);
-
-            return changed;
+            return fragments;
         }
 
-        private async Task<bool> WriteRelations(IEnumerable<(T t, Guid ciid)> entities, 
-            ISet<(Guid thisCIID, string predicateID)> relevantOutgoingRelations, ISet<(Guid thisCIID, string predicateID)> relevantIncomingRelations,
-            string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        private (IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> incomingRelations) Entities2RelationTuples(IEnumerable<(T t, Guid ciid)> entities)
         {
-            var changed = false;
+            var outgoingRelations = new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>();
+            var incomingRelations = new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>();
             if (!relationFieldInfos.IsEmpty())
             {
-                var outgoingRelations = new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>();
-                var incomingRelations = new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>();
                 foreach (var (t, ciid) in entities)
                 {
                     foreach (var trFieldInfo in relationFieldInfos)
@@ -277,64 +240,22 @@ namespace Omnikeeper.Base.Model.TraitBased
                         }
                     }
                 }
-
-                var tmpChanged = await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayer, outgoingRelations, relevantOutgoingRelations, true), changesetProxy, dataOrigin, trans);
-                changed = changed || !tmpChanged.IsEmpty();
-                tmpChanged = await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayer, incomingRelations, relevantIncomingRelations, false), changesetProxy, dataOrigin, trans);
-                changed = changed || !tmpChanged.IsEmpty();
             }
 
-            return changed;
+            return (outgoingRelations, incomingRelations);
         }
 
         public async Task<bool> TryToDelete(ID id, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             // TODO: we should actually not fetch a single, but instead ALL that match that ID and delete them
             // only then, the end result is that no CI matching the trait with that ID exists anymore, otherwise it's not guaranteed and deleting fails because there's still a matching ci afterwards
-            var dc = await GetSingleByDataID(id, layerSet, trans, changesetProxy.TimeThreshold);
-            if (dc == default)
+            var t = await GetSingleByDataID(id, layerSet, trans, changesetProxy.TimeThreshold);
+            if (t == default)
             {
                 return false; // no dc with this ID exists
             }
 
-            await RemoveAttributes(dc.ciid, writeLayerID, dataOrigin, changesetProxy, trans);
-            await RemoveRelations(dc.ciid, writeLayerID, dataOrigin, changesetProxy, trans);
-
-            var dcAfterDeletion = await GetSingleByCIID(dc.ciid, layerSet, trans, changesetProxy.TimeThreshold);
-            return (dcAfterDeletion == default); // return successful if dc does not exist anymore afterwards
-        }
-
-        private async Task RemoveAttributes(Guid ciid, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
-        {
-            await attributeModel.BulkReplaceAttributes(
-                new BulkCIAttributeDataCIAndAttributeNameScope(writeLayerID, new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>(), 
-                new HashSet<Guid>() { ciid }, attributeFieldInfos.Select(afi => afi.TraitAttributeAttribute.aName).ToHashSet()), 
-                changesetProxy, dataOrigin, trans, MaskHandlingForRemovalApplyNoMask.Instance);
-        }
-
-        private async Task RemoveRelations(Guid ciid, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
-        {
-            if (!relationFieldInfos.IsEmpty())
-            {
-                var outgoing = new HashSet<(Guid thisCIID, string predicateID)>();
-                var incoming = new HashSet<(Guid thisCIID, string predicateID)>();
-                foreach (var traitRelationField in relationFieldInfos)
-                {
-                    var predicateID = traitRelationField.TraitRelationAttribute.predicateID;
-                    var isOutgoing = traitRelationField.TraitRelationAttribute.directionForward;
-                    if (isOutgoing)
-                        outgoing.Add((ciid, predicateID));
-                    else
-                        incoming.Add((ciid, predicateID));
-                }
-
-                await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayerID, 
-                    new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>(),
-                    outgoing, true), changesetProxy, dataOrigin, trans);
-                await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayerID, 
-                    new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>(),
-                    incoming, false), changesetProxy, dataOrigin, trans);
-            }
+            return await traitEntityModel.TryToDelete(t.ciid, layerSet, writeLayerID, dataOrigin, changesetProxy, trans);
         }
     }
 

@@ -23,14 +23,13 @@ namespace Omnikeeper.Base.Model.TraitBased
             return NamedAttributesSelection.Build(fields.Select(f => f.idAttributeName).ToHashSet());
         }
 
-        public Guid FilterCIAttributesWithMatchingID(ID id, IDictionary<Guid, IDictionary<string, MergedCIAttribute>> ciAttributes)
+        public (string name, IAttributeValue value)[] ExtractAttributeValueTuplesFromID(ID id)
         {
-            (string name, IAttributeValue value)[] idAttributeValues;
             if (fields.Count() == 1)
             {
                 var (_, idAttributeName, idAttributeValueType) = fields.First();
                 IAttributeValue idAttributeValue = AttributeValueHelper.BuildFromTypeAndObject(idAttributeValueType, id);
-                idAttributeValues = new[] { (idAttributeName, idAttributeValue) };
+                return new[] { (idAttributeName, idAttributeValue) };
             }
             else
             {
@@ -39,7 +38,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     throw new Exception(); // TODO
                 if (tupleID.Length != fields.Count())
                     throw new Exception(); // TODO
-                idAttributeValues = fields.Select((f, index) =>
+                return fields.Select((f, index) =>
                 {
                     var subIndex = tupleID[index];
                     if (subIndex == null)
@@ -47,9 +46,13 @@ namespace Omnikeeper.Base.Model.TraitBased
                     return (f.idAttributeName, AttributeValueHelper.BuildFromTypeAndObject(f.idAttributeValueType, subIndex));
                 }).ToArray();
             }
-
-            return TraitEntityHelper.FindMatchingCIIDViaAttributeValues(idAttributeValues, ciAttributes);
         }
+
+        //public Guid FilterCIAttributesWithMatchingID(ID id, IDictionary<Guid, IDictionary<string, MergedCIAttribute>> ciAttributes)
+        //{
+        //    (string name, IAttributeValue value)[] idAttributeValues = Tmp(id, ciAttributes);
+        //    return TraitEntityHelper.FindMatchingCIIDViaAttributeValues(idAttributeValues, ciAttributes);
+        //}
 
         public ID ExtractIDFromEntity(T entity)
         {
