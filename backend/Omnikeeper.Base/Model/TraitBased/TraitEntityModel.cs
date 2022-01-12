@@ -16,11 +16,11 @@ namespace Omnikeeper.Base.Model.TraitBased
         protected readonly ICIModel ciModel;
         protected readonly IAttributeModel attributeModel;
         protected readonly IRelationModel relationModel;
-        private readonly GenericTrait trait;
+        private readonly ITrait trait;
         private readonly HashSet<string> relevantAttributesForTrait;
         private readonly bool hasRelations;
 
-        public TraitEntityModel(GenericTrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
+        public TraitEntityModel(ITrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
         {
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
