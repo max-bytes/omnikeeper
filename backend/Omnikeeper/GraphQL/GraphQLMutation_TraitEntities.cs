@@ -2,7 +2,9 @@
 using GraphQL.Types;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -11,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Omnikeeper.GraphQL.Types.TraitEntitiesType;
 
 namespace Omnikeeper.GraphQL
 {
@@ -26,50 +29,29 @@ namespace Omnikeeper.GraphQL
         private readonly GraphQLMutation tet;
         private readonly ITraitsProvider traitsProvider;
         private readonly IAttributeModel attributeModel;
+        private readonly IRelationModel relationModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
         private readonly IDataLoaderService dataLoaderService;
         private readonly ILayerModel layerModel;
+        private readonly IChangesetModel changesetModel;
 
-        public TraitEntitiesMutationSchemaLoader(GraphQLMutation tet, ITraitsProvider traitsProvider, IAttributeModel attributeModel,
-            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService, ILayerModel layerModel)
+        public TraitEntitiesMutationSchemaLoader(GraphQLMutation tet, ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel,
+            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService, ILayerModel layerModel, IChangesetModel changesetModel)
         {
             this.tet = tet;
             this.traitsProvider = traitsProvider;
             this.attributeModel = attributeModel;
+            this.relationModel = relationModel;
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.dataLoaderService = dataLoaderService;
             this.layerModel = layerModel;
+            this.changesetModel = changesetModel;
         }
 
         private static string GenerateUpsertMutationName(string traitID) => "upsert_" + TraitEntitiesType.SanitizeMutationName(traitID);
         private static string GenerateUpsertTraitEntityInputGraphTypeName(ITrait trait) => TraitEntitiesType.SanitizeTypeName("TE_Upsert_Input_" + trait.ID);
-
-        //private async Task<(T entity, Guid ciid)> GetSingleByDataID((string name, IAttributeValue value, bool isID)[] idAttributeValues, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
-        //{
-        //    // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code... maybe impossible
-        //    var @as = NamedAttributesSelection.Build(idAttributeValues.Select(i => i.name).ToHashSet());
-        //    var cisWithIDAttribute = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), @as, layerSet, trans, timeThreshold);
-        //    var foundCIID = idAttributeInfos.FilterCIAttributesWithMatchingID(id, cisWithIDAttribute);
-
-        //    if (foundCIID == default)
-        //    { // no fitting entity found
-        //        return default;
-        //    }
-
-        //    var ret = await GetSingleByCIID(foundCIID, layerSet, trans, timeThreshold);
-        //    return ret;
-        //}
-
-        //private async Task<(EffectiveTrait et, Guid ciid)> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
-        //{
-        //    var ci = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(ciid), layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold)).FirstOrDefault();
-        //    if (ci == null) return default;
-        //    var ciWithTrait = await effectiveTraitModel.GetEffectiveTraitForCI(ci, trait, layerSet, trans, timeThreshold);
-        //    if (ciWithTrait == null) return default;
-        //    return (ciWithTrait, ciid);
-        //}
 
         public class UpsertInputType : InputObjectGraphType
         {
@@ -112,20 +94,25 @@ namespace Omnikeeper.GraphQL
 
                 var upsertInputType = new UpsertInputType(at.Value);
 
-                schema.RegisterTypes(upsertInputType);
+                // TODO: we should re-use the types from the queries
+                var tt = new ElementType(at.Value);
+                var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel);
+
+                schema.RegisterTypes(upsertInputType, tt, ttWrapper);
 
                 var upsertMutationName = GenerateUpsertMutationName(traitID);
 
-                // attribute names that are relevant for this trait
-                var relevantAttributeNames = at.Value.RequiredAttributes.Select(a => a.AttributeTemplate.Name).Concat(at.Value.OptionalAttributes.Select(a => a.AttributeTemplate.Name)).ToHashSet();
+                var traitEntityModel = new TraitEntityModel(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel);
 
-                tet.FieldAsync<StringGraphType>(upsertMutationName, 
+                tet.FieldAsync(upsertMutationName, ttWrapper,
                     arguments: new QueryArguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                         new QueryArgument(new NonNullGraphType(upsertInputType)) { Name = "input" }),
                     resolve: async context =>
                     {
                         var layerStrings = context.GetArgument<string[]>("layers")!;
+                        var writeLayerID = context.GetArgument<string>("writeLayer")!;
 
                         var userContext = await context.SetupUserContext()
                             .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
@@ -144,17 +131,28 @@ namespace Omnikeeper.GraphQL
                         var inputAttributeValues = TraitEntitiesType.InputDictionary2AttributeTuples(upsertInputCollection, at.Value);
                         var idAttributeValues = inputAttributeValues.Where(i => i.isID);
 
+                        if (idAttributeValues.IsEmpty())
+                        {
+                            throw new Exception("Cannot mutate trait entity that does not have proper ID field(s)");
+                        }
 
-                        //var current = await GetSingleByDataID(id, layerSet, trans, changesetProxy.TimeThreshold);
+                        var currentCIID = await traitEntityModel.GetSingleCIIDByAttributeValueTuples(idAttributeValues.Select(i => (i.name, i.value)).ToArray(), layerset, trans, timeThreshold);
 
-                        //var ciid = (current != default) ? current.ciid : await ciModel.CreateCI(trans);
+                        var ciid = (currentCIID.HasValue) ? currentCIID.Value : await ciModel.CreateCI(trans);
 
-                        //var changed = await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(writeLayer, fragments, relevantCIs, relevantAttributeNames), changesetProxy, dataOrigin, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                        var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
+                        var attributeFragments = inputAttributeValues.Select(i => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, i.name, i.value));
 
+                        // TODO: relations
+                        IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> incomingRelations = new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>();
+                        IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> outgoingRelations = new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>();
+                        var t = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans);
 
-                        return "todo";
+                        return t.et;
                     });
+
+                // TODO: deletes
             }
         }
     }

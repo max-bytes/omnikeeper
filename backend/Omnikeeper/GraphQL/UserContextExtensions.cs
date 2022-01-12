@@ -9,5 +9,11 @@ namespace Omnikeeper.GraphQL
             var userContext = (rfc.UserContext as OmnikeeperUserContext)!;
             return userContext;
         }
+
+        public static OmnikeeperUserContext SetupUserContext(this IResolveFieldContext rfc)
+        {
+            var userContext = (rfc.UserContext as OmnikeeperUserContext)!;
+            return userContext;
+        }
     }
 }
