@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [11.0.0] - 2022-01-13
+
+### Added
+- Initial implementation of GraphQL API for trait entities:
+  - custom type-safe types for all traits
+  - querying all/singleByCIID/singleByDataID  
+  - mutations: upsert and remove
+    - unsupported: mutating trait relations
+
+### Changed
+- Big refactoring to the way trait entities and generic trait entities are handled in code
+- Generic JSON ingest plugin: 
+  - improved features on how to do ID matching: union/intersect nested matching, more matching options
+  - improved performance, logging and error handling
+
+### Fixes
+- GraphQL query for effective traits: did not return optional trait attributes properly
+
 ## [10.0.0] - 2021-12-17
 
 ### Added
@@ -20,7 +38,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixes
 - technical frontend: layer drawer line break bug
-
 
 ## [9.0.0] - 2021-12-09
 
