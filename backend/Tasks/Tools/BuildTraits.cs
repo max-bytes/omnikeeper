@@ -1,24 +1,29 @@
-﻿using NUnit.Framework;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Tasks.Tools
 {
-    public static class DefaultTraits
+    [Explicit]
+    public class BuildTraits
     {
-        public static IEnumerable<RecursiveTrait> Get()
+        [Test]
+        public void Build()
         {
             var traits = new RecursiveTrait[]
                 {
                     // hosts
-                    new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
-                        new TraitAttribute("hostname",
-                            CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                        )
-                    }),
+                    //new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
+                    //    new TraitAttribute("hostname",
+                    //        CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                    //    )
+                    //}),
                     //new RecursiveTrait("host_windows", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     //    new TraitAttribute("os_family",
                     //        CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
@@ -84,58 +89,52 @@ namespace Tasks.Tools
 
 
                     // TSA CMDB
-                    new RecursiveTrait("tsa_cmdb_host", new TraitOriginV1(TraitOriginType.Data),
+                    //new RecursiveTrait("tsa_cmdb_host", new TraitOriginV1(TraitOriginType.Data),
+                    //    new List<TraitAttribute>() {
+                    //        new TraitAttribute("hostid",
+                    //            CIAttributeTemplate.BuildFromParams("cmdb.hostid", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
+                    //        )
+                    //    }
+                    //),
+                    //new RecursiveTrait("tsa_cmdb_service", new TraitOriginV1(TraitOriginType.Data),
+                    //    new List<TraitAttribute>() {
+                    //        new TraitAttribute("svcid",
+                    //            CIAttributeTemplate.BuildFromParams("cmdb.svcid", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
+                    //        )
+                    //    }
+                    //),
+                    //new RecursiveTrait("tsa_cmdb_interface", new TraitOriginV1(TraitOriginType.Data),
+                    //    new List<TraitAttribute>() {
+                    //        new TraitAttribute("ifid",
+                    //            CIAttributeTemplate.BuildFromParams("cmdb.ifid", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
+                    //        )
+                    //    }
+                    //),
+
+                    new RecursiveTrait("trait_with_relation", new TraitOriginV1(TraitOriginType.Data),
                         new List<TraitAttribute>() {
                             new TraitAttribute("hostid",
-                                CIAttributeTemplate.BuildFromParams("cmdb.hostid", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
+                                CIAttributeTemplate.BuildFromParams("cmdb.host.id", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
+                            )
+                        },requiredRelations: new List<TraitRelation>()
+                        {
+                            new TraitRelation("interfaces",
+                                new RelationTemplate("has_interface", true, null, null)
                             )
                         }
                     ),
-                    new RecursiveTrait("tsa_cmdb_service", new TraitOriginV1(TraitOriginType.Data),
-                        new List<TraitAttribute>() {
-                            new TraitAttribute("svcid",
-                                CIAttributeTemplate.BuildFromParams("cmdb.svcid", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
-                            )
-                        }
-                    ),
-                    new RecursiveTrait("tsa_cmdb_interface", new TraitOriginV1(TraitOriginType.Data),
-                        new List<TraitAttribute>() {
-                            new TraitAttribute("ifid",
-                                CIAttributeTemplate.BuildFromParams("cmdb.ifid", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
-                            )
-                        }
-                    ),
-                    
-                    // timecontrol-timerecord
-                    //new RecursiveTrait("timecontrol-timerecord", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
-                    //    new TraitAttribute("date",
-                    //        CIAttributeTemplate.BuildFromParams("date", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                    //    ),
-                    //    new TraitAttribute("from",
-                    //        CIAttributeTemplate.BuildFromParams("from", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                    //    ),
-                    //    new TraitAttribute("to",
-                    //        CIAttributeTemplate.BuildFromParams("to", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                    //    ),
-                    //    new TraitAttribute("activity",
-                    //        CIAttributeTemplate.BuildFromParams("activity", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                    //    ),
-                    //    new TraitAttribute("openproject_id",
-                    //        CIAttributeTemplate.BuildFromParams("openproject_id", AttributeValueType.Integer, false)
-                    //    ),
-                    //    new TraitAttribute("location",
-                    //        CIAttributeTemplate.BuildFromParams("location", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                    //    ),
-                    //    new TraitAttribute("factor",
-                    //        CIAttributeTemplate.BuildFromParams("factor", AttributeValueType.Integer, false)
-                    //    ),
-                    //    new TraitAttribute("billable",
-                    //        CIAttributeTemplate.BuildFromParams("billable", AttributeValueType.Integer, false)
-                    //    ),
-                    //}),
                 };
 
-            return traits;
+            foreach(var trait in traits)
+            {
+                var s = new JsonSerializerSettings()
+                {
+                    TypeNameHandling = TypeNameHandling.Objects
+                };
+                s.Converters.Add(new StringEnumConverter());
+                Console.WriteLine(JsonConvert.SerializeObject(trait, Formatting.Indented, s));
+
+            }
         }
     }
 }
