@@ -206,10 +206,10 @@ namespace Omnikeeper.Base.Model.TraitBased
             return fragments;
         }
 
-        private (IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> incomingRelations) Entities2RelationTuples(IEnumerable<(T t, Guid ciid)> entities)
+        private (IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations) Entities2RelationTuples(IEnumerable<(T t, Guid ciid)> entities)
         {
-            var outgoingRelations = new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>();
-            var incomingRelations = new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>();
+            var outgoingRelations = new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>();
+            var incomingRelations = new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>();
             if (!relationFieldInfos.IsEmpty())
             {
                 foreach (var (t, ciid) in entities)

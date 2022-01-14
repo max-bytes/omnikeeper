@@ -127,7 +127,7 @@ namespace Omnikeeper.Base.Entity
 
         public string LayerID { get; private set; }
 
-        private readonly IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> Data;
+        private readonly IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> Data;
         public readonly bool Outgoing;
         public readonly ISet<(Guid thisCIID, string predicateID)> Relevant;
 
@@ -135,7 +135,7 @@ namespace Omnikeeper.Base.Entity
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
 
-        public BulkRelationDataCIAndPredicateScope(string layerID, IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> data, ISet<(Guid thisCIID, string predicateID)> relevant, bool outgoing)
+        public BulkRelationDataCIAndPredicateScope(string layerID, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> data, ISet<(Guid thisCIID, string predicateID)> relevant, bool outgoing)
         {
             LayerID = layerID;
             Data = data;

@@ -79,9 +79,12 @@ namespace Omnikeeper.GraphQL.Types
             return SanitizeFieldName(traitID);
         }
 
-        public static (string name, IAttributeValue value, bool isID)[] InputDictionary2AttributeTuples(IDictionary<string, object> inputDict, ITrait trait)
+        public static ((string name, IAttributeValue value, bool isID)[], (string predicateID, bool forward, Guid[] relatedCIIDs)[]) InputDictionary2AttributeAndRelationTuples(IDictionary<string, object> inputDict, ITrait trait)
         {
-            (string name, IAttributeValue value, bool isID)[] attributeValues = inputDict.Select(kv =>
+            var attributeValues = new List<(string name, IAttributeValue value, bool isID)>();
+            var relationValues = new List<(string predicateID, bool forward, Guid[] relatedCIIDs)>();
+            
+            foreach(var kv in inputDict)
             {
                 var inputFieldName = kv.Key;
 
@@ -93,14 +96,45 @@ namespace Omnikeeper.GraphQL.Types
                 });
 
                 if (attribute == null)
-                    throw new Exception($"Invalid input field for trait {trait.ID}: {inputFieldName}");
+                {
+                    // lookup relation
+                    var relation = trait.RequiredRelations.Concat(trait.OptionalRelations).FirstOrDefault(r =>
+                    {
+                        var convertedRelationFieldName = GenerateTraitRelationFieldName(r);
+                        return convertedRelationFieldName == inputFieldName;
+                    });
 
-                var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
-                IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, kv.Value);
-                return (attribute.AttributeTemplate.Name, attributeValue, attribute.AttributeTemplate.IsID.GetValueOrDefault(false));
-            }).ToArray();
+                    if (relation == null)
+                    {
+                        throw new Exception($"Invalid input field for trait {trait.ID}: {inputFieldName}");
+                    } else
+                    {
+                        var array = (object[])kv.Value;
+                        var relatedCIIDs = array.Select(a =>
+                        {
+                            var relatedCIID = (Guid)a;
+                            return relatedCIID;
+                        }).ToArray();
+                        relationValues.Add((relation.RelationTemplate.PredicateID, relation.RelationTemplate.DirectionForward, relatedCIIDs));
+                    }
+                } else
+                {
+                    var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
+                    IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, kv.Value);
+                    attributeValues.Add((attribute.AttributeTemplate.Name, attributeValue, attribute.AttributeTemplate.IsID.GetValueOrDefault(false)));
+                }
+            }
 
-            return attributeValues;
+            return (attributeValues.ToArray(), relationValues.ToArray());
+        }
+
+        public static (string name, IAttributeValue value)[] InputDictionary2IDAttributeTuples(IDictionary<string, object> inputDict, ITrait trait)
+        {
+            var (attributeValues, _) = InputDictionary2AttributeAndRelationTuples(inputDict, trait);
+
+            return attributeValues.Where(t => t.isID)
+                .Select(t => (t.name, t.value))
+                .ToArray();
         }
 
         public class TraitEntityRootType : ObjectGraphType
@@ -159,10 +193,7 @@ namespace Omnikeeper.GraphQL.Types
                             if (idCollection == null)
                                 throw new Exception("Invalid input object for trait entity ID detected");
 
-                            var idAttributeValues = InputDictionary2AttributeTuples(idCollection, at)
-                                .Where(t => t.isID)
-                                .Select(t => (t.name, t.value))
-                                .ToArray();
+                            var idAttributeValues = InputDictionary2IDAttributeTuples(idCollection, at);
 
                             // TODO: use data loader?
                             var foundCIID = await traitEntityModel.GetSingleCIIDByAttributeValueTuples(idAttributeValues, layerset, trans, timeThreshold);
@@ -336,7 +367,23 @@ namespace Omnikeeper.GraphQL.Types
                         ResolvedType = graphType
                     });
                 }
-                // TODO: add relations
+
+                foreach (var rr in at.RequiredRelations)
+                {
+                    AddField(new FieldType()
+                    {
+                        Name = TraitEntitiesType.GenerateTraitRelationFieldName(rr),
+                        ResolvedType = new NonNullGraphType(new ListGraphType(new GuidGraphType()))
+                    });
+                }
+                foreach (var rr in at.OptionalRelations)
+                {
+                    AddField(new FieldType()
+                    {
+                        Name = TraitEntitiesType.GenerateTraitRelationFieldName(rr),
+                        ResolvedType = new ListGraphType(new GuidGraphType())
+                    });
+                }
             }
         }
 
