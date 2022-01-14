@@ -242,6 +242,7 @@ namespace OKPluginVariableRendering
                                         Name = a.Value.Attribute.Name,
                                         Value = a.Value.Attribute.Value,
                                         Priority = prio,
+                                        CIID = CI.ID,
                                     };
 
                                     if (gatheredAttrRelationLevel.ContainsKey(attr.Name))
@@ -255,13 +256,7 @@ namespace OKPluginVariableRendering
                                         // if priorities are the same we shopuld sort based on CI id and take the latest
                                         if (gatheredAttrRelationLevel[attr.Name].Priority == prio)
                                         {
-                                            var asd = 5;
-                                            // sort by ID when deciding which one to take
-                                            // based on sorted data find the last ci that cont
-
-                                            //var aaa = gatheredAttrRelationLevel[attr.Name].CIId < CI.ID ? 
-
-                                            //gatheredAttrRelationLevel[attr.Name].Value = filteredCIsWithTrait.Last().MergedAttributes[]
+                                            gatheredAttrRelationLevel[attr.Name] = new List<GatheredAttribute> { gatheredAttrRelationLevel[attr.Name], attr }.OrderBy(e => e.CIID).Last();
                                         }
                                     }
                                     else
@@ -374,6 +369,7 @@ namespace OKPluginVariableRendering
             public string Name { get; set; }
             public IAttributeValue Value { get; set; }
             public int Priority { get; set; }
+            public Guid CIID { get; set; }
             public GatheredAttribute()
             {
                 Name = "";
