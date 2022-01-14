@@ -10,6 +10,7 @@ using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.GraphQL.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,7 @@ namespace Omnikeeper.GraphQL
         private readonly IODataAPIContextModel odataAPIContextModel;
         private readonly GenericTraitEntityModel<AuthRole, string> authRoleModel;
         private readonly GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel;
+        private readonly ILayerDataModel layerDataModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly GenericTraitEntityModel<CLConfigV1, string> clConfigModel;
@@ -41,7 +43,7 @@ namespace Omnikeeper.GraphQL
             IManagementAuthorizationService managementAuthorizationService, GenericTraitEntityModel<CLConfigV1, string> clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             IEnumerable<IPluginRegistration> plugins,
-            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
+            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, ILayerDataModel layerDataModel)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -91,7 +93,7 @@ namespace Omnikeeper.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            var nonGenericAttributeValue = AttributeValueBuilder.BuildFromDTO(attribute.Value);
+                            var nonGenericAttributeValue = AttributeValueHelper.BuildFromDTO(attribute.Value);
 
                             var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                             insertedAttributes.Add(a);
@@ -189,8 +191,10 @@ namespace Omnikeeper.GraphQL
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+            this.layerDataModel = layerDataModel;
 
             CreateManage();
+            CreateTraitEntities();
             CreatePlugin(plugins);
         }
 

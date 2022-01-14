@@ -1,7 +1,7 @@
 ﻿using GraphQL.Types;
 using Omnikeeper.Base.Generator;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class GeneratorType : ObjectGraphType<GeneratorV1>
     {

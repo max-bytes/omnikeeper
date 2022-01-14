@@ -112,7 +112,7 @@ namespace Tests.Integration.Model
             var ciid1 = await ciModel.CreateCI(transI);
             var ciid2 = await ciModel.CreateCI(transI);
             var ciid3 = await ciModel.CreateCI(transI);
-            var layer1 = await layerModel.UpsertLayer("l1", transI);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", transI);
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {

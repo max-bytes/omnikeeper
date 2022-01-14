@@ -2,6 +2,7 @@
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +11,11 @@ namespace OKPluginGenericJSONIngest.Load
 {
     public class Preparer
     {
-        private CICandidateAttributeData.Fragment GenericAttribute2Fragment(GenericInboundAttribute a)
+        private CICandidateAttributeData.Fragment? GenericAttribute2Fragment(GenericInboundAttribute a)
         {
-            var value = AttributeValueBuilder.BuildFromTypeAndObject(a.type, a.value);
+            if (a.value == null)
+                return null;
+            var value = AttributeValueHelper.BuildFromTypeAndObject(a.type, a.value);
             return new CICandidateAttributeData.Fragment(a.name, value);
         }
 
@@ -20,25 +23,41 @@ namespace OKPluginGenericJSONIngest.Load
         {
             var tempCIIDMapping = new Dictionary<string, Guid>(); // maps tempIDs to temporary Guids
 
-            // TODO: rewrite to for loop instead of select to explicitly model sideeffect of writing tempCIIDMapping
-            var ciCandidates = data.cis.Select(ci =>
+            var ciCandidates = new List<CICandidate>(data.cis.Count());
+            foreach(var ci in data.cis)
             {
-                var fragments = ci.attributes.Select(a => GenericAttribute2Fragment(a));
-                var attributes = new CICandidateAttributeData(fragments);
-
-                // id method, TODO: make proper, not via fields that have different meanings depending on .method
-                ICIIdentificationMethod idMethod = ci.idMethod.method switch
+                try
                 {
-                    "byData" => CIIdentificationMethodByData.BuildFromAttributes(ci.idMethod.attributes, attributes, searchLayers),
-                    "byTempID" => CIIdentificationMethodByTemporaryCIID.Build(tempCIIDMapping.GetValueOrDefault(ci.idMethod.tempID)),
-                    _ => throw new Exception($"Invalid idMethod \"{ci.idMethod.method}\" for ci candidate \"{ci.tempID}\" encountered")
-                };
+                    var fragments = ci.attributes.Select(a =>
+                    {
+                        try
+                        {
+                            return GenericAttribute2Fragment(a);
+                        }
+                        catch (Exception e)
+                        {
+                            throw new Exception($"Could not build attribute {a.name} with value {a.value} and type {a.type} for ci {ci.tempID}", e);
+                        }
+                    });
 
-                var tempGuid = Guid.NewGuid();
-                tempCIIDMapping.TryAdd(ci.tempID, tempGuid);
+                    // TODO: make configurable
+                    var gracefullNullHandling = true;
+                    if (gracefullNullHandling)
+                        fragments = fragments.WhereNotNull();
 
-                return new CICandidate(tempGuid, idMethod, attributes);
-            }).ToList();
+                    var attributes = new CICandidateAttributeData(fragments!);
+
+                    ICIIdentificationMethod idMethod = BuildCIIDMethod(ci.idMethod, attributes, searchLayers, ci.tempID, tempCIIDMapping, logger);
+
+                    var tempGuid = Guid.NewGuid();
+                    tempCIIDMapping.TryAdd(ci.tempID, tempGuid);
+
+                    ciCandidates.Add(new CICandidate(tempGuid, idMethod, attributes));
+                } catch (Exception e)
+                {
+                    logger.LogError(e, $"Could not create CI-candidate with temp ID {ci.tempID}");
+                }
+            }
 
             var relationCandidates = data.relations.Select(r =>
             {
@@ -67,16 +86,35 @@ namespace OKPluginGenericJSONIngest.Load
                         throw new Exception($"To-ci \"{r.to}\" of relation could not be resolved");
                 }
                 return new RelationCandidate(
-                    CIIdentificationMethodByTemporaryCIID.Build(tempFromGuid),
-                    CIIdentificationMethodByTemporaryCIID.Build(tempToGuid), r.predicate);
+                    CIIdentificationMethodByTempCIID.Build(tempFromGuid),
+                    CIIdentificationMethodByTempCIID.Build(tempToGuid), r.predicate);
             }).Where(d => d != null).ToList(); // NOTE: we force linq evaluation here
             return new IngestData(ciCandidates, relationCandidates!);
         }
 
-        //public async Task Load(IngestData ingestData, Layer writeLayer, AuthenticatedUser user, IngestDataService ingestDataService)
-        //{
-        //    var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
-        //    // TODO: result
-        //}
+        private ICIIdentificationMethod BuildCIIDMethod(IInboundIDMethod idMethod, CICandidateAttributeData attributes, LayerSet searchLayers, string tempCIID, Dictionary<string, Guid> tempCIIDMapping, ILogger logger)
+        {
+            ICIIdentificationMethod attributeF(InboundIDMethodByAttribute a)
+            {
+                var fragment = GenericAttribute2Fragment(a.attribute);
+                if (fragment == null)
+                {
+                    logger.LogWarning($"Could not create fragment from generic attribute for idMethod CIIdentificationMethodByFragment using attribute name {a.attribute.name}");
+                    return CIIdentificationMethodNoop.Build();
+                }
+                return CIIdentificationMethodByFragment.Build(fragment, a.modifiers.caseInsensitive, searchLayers);
+            }
+
+            return idMethod switch
+            {
+                InboundIDMethodByData d => CIIdentificationMethodByData.BuildFromAttributes(d.attributes, attributes, searchLayers),
+                InboundIDMethodByAttribute a => attributeF(a),
+                InboundIDMethodByRelatedTempID rt => CIIdentificationMethodByRelatedTempCIID.Build(tempCIIDMapping.GetValueOrDefault(rt.tempID), rt.outgoingRelation, rt.predicateID, searchLayers),
+                InboundIDMethodByTemporaryCIID t => CIIdentificationMethodByTempCIID.Build(tempCIIDMapping.GetValueOrDefault(t.tempID)),
+                InboundIDMethodByByUnion f => CIIdentificationMethodByUnion.Build(f.inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempCIID, tempCIIDMapping, logger)).ToArray()),
+                InboundIDMethodByIntersect a => CIIdentificationMethodByIntersect.Build(a.inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempCIID, tempCIIDMapping, logger)).ToArray()),
+                _ => throw new Exception($"unknown idMethod \"{idMethod.GetType()}\" for ci candidate \"{tempCIID}\" encountered")
+            };
+        }
     }
 }

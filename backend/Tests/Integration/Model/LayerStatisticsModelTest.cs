@@ -47,7 +47,7 @@ namespace Tests.Integration.Model
 
             //var (predicate, changed) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
 
-            var layer = await layerModel.UpsertLayer("test_layer", trans);
+            var (layer, _) = await layerModel.CreateLayerIfNotExists("test_layer", trans);
 
             await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
@@ -94,7 +94,7 @@ namespace Tests.Integration.Model
             //var (predicate, changed) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
             var predicateID1 = "predicate_1";
 
-            var layer = await layerModel.UpsertLayer("test_layer", trans);
+            var (layer, _) = await layerModel.CreateLayerIfNotExists("test_layer", trans);
 
             await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
             await relationModel.InsertRelation(ciid1, ciid3, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);

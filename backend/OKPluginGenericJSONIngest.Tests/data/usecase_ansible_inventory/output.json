@@ -3,11 +3,10 @@
     {
       "tempID": "tempCIID>h1jmplx01.mhx.at",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "fqdn"
         ],
-        "tempID": null
+        "type": "byData"
       },
       "attributes": [
         {
@@ -146,13 +145,12 @@
     {
       "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>0",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "__name",
           "device",
           "mount"
         ],
-        "tempID": null
+        "type": "byData"
       },
       "attributes": [
         {
@@ -235,13 +233,12 @@
     {
       "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>1",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "__name",
           "device",
           "mount"
         ],
-        "tempID": null
+        "type": "byData"
       },
       "attributes": [
         {
@@ -324,11 +321,10 @@
     {
       "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_interfaces>0",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "__name"
         ],
-        "tempID": null
+        "type": "byData"
       },
       "attributes": [
         {
@@ -361,11 +357,10 @@
     {
       "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_interfaces>1",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "__name"
         ],
-        "tempID": null
+        "type": "byData"
       },
       "attributes": [
         {
@@ -398,11 +393,10 @@
     {
       "tempID": "tempCIID>h1lscapet01.mhx.local",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "fqdn"
         ],
-        "tempID": null
+        "type": "byData"
       },
       "attributes": [
         {
@@ -540,13 +534,12 @@
     {
       "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>2",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "__name",
           "device",
           "mount"
         ],
-        "tempID": null
+        "type": "byData"
       },
       "attributes": [
         {
@@ -629,13 +622,12 @@
     {
       "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>3",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "__name",
           "device",
           "mount"
         ],
-        "tempID": null
+        "type": "byData"
       },
       "attributes": [
         {
@@ -718,11 +710,10 @@
     {
       "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>2",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "__name"
         ],
-        "tempID": null
+        "type": "byData"
       },
       "attributes": [
         {
@@ -755,9 +746,8 @@
     {
       "tempID": "tempCIID>h1jmplx01.mhx.at>yum_installed",
       "idMethod": {
-        "method": "byTempID",
-        "attributes": null,
-        "tempID": "tempCIID>h1jmplx01.mhx.at"
+        "tempID": "tempCIID>h1jmplx01.mhx.at",
+        "type": "byTempID"
       },
       "attributes": [
         {
@@ -781,9 +771,8 @@
     {
       "tempID": "tempCIID>h1jmplx01.mhx.at>yum_repos",
       "idMethod": {
-        "method": "byTempID",
-        "attributes": null,
-        "tempID": "tempCIID>h1jmplx01.mhx.at"
+        "tempID": "tempCIID>h1jmplx01.mhx.at",
+        "type": "byTempID"
       },
       "attributes": [
         {
@@ -813,9 +802,8 @@
     {
       "tempID": "tempCIID>h1jmplx01.mhx.at>yum_updates",
       "idMethod": {
-        "method": "byTempID",
-        "attributes": null,
-        "tempID": "tempCIID>h1jmplx01.mhx.at"
+        "tempID": "tempCIID>h1jmplx01.mhx.at",
+        "type": "byTempID"
       },
       "attributes": [
         {

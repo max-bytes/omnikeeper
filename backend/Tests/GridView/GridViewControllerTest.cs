@@ -64,12 +64,12 @@ namespace Tests.Integration.Controller
                 ciid1 = await ciModel.CreateCI(trans);
                 ciid2 = await ciModel.CreateCI(trans);
                 ciid3 = await ciModel.CreateCI(trans);
-                var layer1 = await layerModel.UpsertLayer("l1", trans);
-                var layer2 = await layerModel.UpsertLayer("l2", trans);
-                var layerOKConfig = await layerModel.UpsertLayer("__okconfig", trans);
-                layerID1 = layer1.ID;
-                layerID2 = layer2.ID;
                 var changeset = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), changesetModel);
+                var layer1 = await layerModel.CreateLayerIfNotExists("l1", trans);
+                var layer2 = await layerModel.CreateLayerIfNotExists("l2", trans);
+                var layerOKConfig = await layerModel.CreateLayerIfNotExists("__okconfig", trans);
+                layerID1 = layer1.layer.ID;
+                layerID2 = layer2.layer.ID;
                 var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 var (attribute2, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 var (attribute3, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -148,7 +148,7 @@ namespace Tests.Integration.Controller
                 new RecursiveTrait("test_trait_1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a1",
-                        CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)
+                        CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false, false)
                     )
                 }, new List<TraitAttribute>() { }, new List<TraitRelation>() { })
             };

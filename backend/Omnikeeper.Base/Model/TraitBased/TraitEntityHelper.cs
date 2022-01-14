@@ -26,12 +26,15 @@ namespace Omnikeeper.Base.Model.TraitBased
                 {
                     var taa = Attribute.GetCustomAttribute(fInfo, typeof(TraitAttributeAttribute)) as TraitAttributeAttribute;
                     var tra = Attribute.GetCustomAttribute(fInfo, typeof(TraitRelationAttribute)) as TraitRelationAttribute;
+
                     if (taa == null && tra == null)
                         throw new Exception($"Trait class {type.Name}: field with neither TraitAttribute nor TraitRelation attribute detected: {fInfo.Name}");
                     else if (taa != null)
                     {
+                        var isID = Attribute.GetCustomAttribute(fInfo, typeof(TraitEntityIDAttribute)) != null;
+
                         var (attributeValueType, isArray) = Type2AttributeValueType(fInfo, taa);
-                        attributeFieldInfos.Add(new TraitAttributeFieldInfo(fInfo, taa, attributeValueType, isArray));
+                        attributeFieldInfos.Add(new TraitAttributeFieldInfo(fInfo, taa, attributeValueType, isArray, isID));
                     } else if (tra != null)
                     {
                         relationFieldInfos.Add(new TraitRelationFieldInfo(fInfo, tra));
@@ -45,7 +48,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (ta, attributeFieldInfos, relationFieldInfos);
         }
 
-        public static IIDAttributeInfos<C, ID> ExtractIDAttributeInfos<C, ID>() where C : TraitEntity, new() where ID : notnull
+        public static TraitEntityIDAttributeInfos<C, ID> ExtractIDAttributeInfos<C, ID>() where C : TraitEntity, new() where ID : notnull
         {
             Type type = typeof(C);
             var idFields = type.GetFields().Where(f => Attribute.IsDefined(f, typeof(TraitEntityIDAttribute)));
@@ -63,10 +66,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 var (attributeValueType, _) = Type2AttributeValueType(idField, taa);
                 outFields.Add((idField, taa.aName, attributeValueType));
             }
-            if (outFields.Count == 1)
-                return new SingleFieldIDAttributeInfos<C, ID>(outFields[0].idFieldInfo, outFields[0].idAttributeName, outFields[0].idAttributeValueType);
-            else
-                return new TupleBasedIDAttributeInfos<C, ID>(outFields);
+            return new TraitEntityIDAttributeInfos<C, ID>(outFields);
         }
 
         public static C EffectiveTrait2Object<C>(EffectiveTrait et, MyJSONSerializer<object> jsonSerializer) where C : TraitEntity, new()
@@ -160,7 +160,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 var constraints = FieldInfo2AttributeValueConstraints(taFieldInfo.FieldInfo).ToList();
                 var taa = taFieldInfo.TraitAttributeAttribute;
                 var targetAttributeList = (taa.optional) ? optionalAttributes : requiredAttributes;
-                targetAttributeList.Add(new TraitAttribute(taa.taName, new CIAttributeTemplate(taa.aName, taFieldInfo.AttributeValueType, taFieldInfo.IsArray, constraints)));
+                targetAttributeList.Add(new TraitAttribute(taa.taName, new CIAttributeTemplate(taa.aName, taFieldInfo.AttributeValueType, taFieldInfo.IsArray, taFieldInfo.IsID, constraints)));
             }
 
             foreach (var trFieldInfo in relationFieldInfos)

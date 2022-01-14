@@ -69,5 +69,18 @@ namespace Omnikeeper.Base.Utils
             bool isSubset = !coll1.Except(coll2).Any();
             return isSubset;
         }
+
+        public static bool NullRespectingSequenceEqual<T>(this IEnumerable<T>? first, IEnumerable<T>? second)
+        {
+            if (first == null && second == null)
+            {
+                return true;
+            }
+            if (first == null || second == null)
+            {
+                return false;
+            }
+            return first.SequenceEqual(second);
+        }
     }
 }

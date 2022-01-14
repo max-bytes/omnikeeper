@@ -2,7 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Inbound;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class OIAContextType : ObjectGraphType<OIAContext>
     {

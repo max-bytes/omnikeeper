@@ -41,7 +41,10 @@ function Attribute(props) {
 
   const leftPart = (hideNameLabel) ? '' : <div style={{display: 'flex', minHeight: '38px', alignItems: 'center'}}>
     {/* TODO: according to ant design label should be part of control */}
-    <div className={"pr-1"} style={{whiteSpace: 'nowrap', flexGrow: 1, textAlign: 'right', paddingRight: '10px'}}>
+    {/* NOTE: we use direction: 'rtl' to have the text-ellipsis at the start of the text, see https://davidwalsh.name/css-ellipsis-left */}
+    <div className={"pr-1"} style={{
+      whiteSpace: 'nowrap', flexGrow: 1, textAlign: 'right', paddingRight: '10px', 
+      textOverflow: 'ellipsis', overflow: 'hidden', direction: 'rtl'}}>
       {removed ? <Text delete>{attribute.name}</Text> : attribute.name}
     </div>
   </div>;
@@ -76,7 +79,7 @@ function Attribute(props) {
         >
           <Row>
             {/* name */}
-            <Col span={6}>
+            <Col span={7}>
               {leftPart}
             </Col>
 

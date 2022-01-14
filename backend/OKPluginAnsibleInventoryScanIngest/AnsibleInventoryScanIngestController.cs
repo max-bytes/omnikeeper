@@ -50,7 +50,7 @@ namespace Omnikeeper.Controllers.Ingest
             {
                 using var mc = modelContextBuilder.BuildImmediate();
                 var searchLayers = new LayerSet(searchLayerIDs);
-                var writeLayer = await layerModel.GetLayer(writeLayerID, mc, TimeThreshold.BuildLatest());
+                var writeLayer = await layerModel.GetLayer(writeLayerID, mc);
                 var user = await currentUserService.GetCurrentUser(mc);
 
                 if (writeLayer == null)

@@ -129,6 +129,12 @@
             <param name="trans"></param>
             <returns></returns>
         </member>
+        <member name="M:Omnikeeper.Model.EffectiveTraitModel.FilterCIsWithTraitSOP(System.Collections.Generic.IEnumerable{Omnikeeper.Base.Entity.MergedCI},System.ValueTuple{Omnikeeper.Base.Entity.ITrait,System.Boolean}[][],Omnikeeper.Base.Entity.LayerSet,Omnikeeper.Base.Utils.ModelContext.IModelContext,Omnikeeper.Base.Utils.TimeThreshold)">
+            <summary>
+            traitSOP is a sum of products of trait requirements
+            see https://en.wikipedia.org/wiki/Disjunctive_normal_form
+            </summary>
+        </member>
         <member name="M:Omnikeeper.Program.AddAssemblyResolver">
             <summary>
             NOTE: this method hooks into assembly resolving and provides hangfire with already loaded assemblies

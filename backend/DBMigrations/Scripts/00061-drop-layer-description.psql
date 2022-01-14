@@ -1,0 +1,8 @@
+﻿ALTER TABLE public.layer DROP COLUMN description;
+
+-- NOTE: tables public.layer_* will be dropped at a later point in time
+-- DROP TABLE public.layer_color;
+-- DROP TABLE public.layer_computelayerbrain;
+-- DROP TABLE public.layer_generators;
+-- DROP TABLE public.layer_onlineinboundlayerplugin;
+-- DROP TABLE public.layer_state;

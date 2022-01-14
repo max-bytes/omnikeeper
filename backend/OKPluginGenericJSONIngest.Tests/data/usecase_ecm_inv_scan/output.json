@@ -1,0 +1,2499 @@
+{
+  "cis": [
+    {
+      "tempID": "tempCIID>H13524429",
+      "idMethod": {
+        "attributes": [
+          "cmdb.host.id"
+        ],
+        "type": "byData"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "H13524429 - uansvclxnaemp01",
+          "type": 0
+        },
+        {
+          "name": "cmdb.host.id",
+          "value": "H13524429",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.configuration_files.nrpe",
+          "value": "log_facility=daemon\npid_file=varrunnrpenrpe.pid\nserver_port=5666\nnrpe_user=nrpe\nnrpe_group=nrpe\nallowed_hosts=127.0.0.1,185.49.176.16028,185.49.176.19226,10.48.202.84,2001:9d0:2:10f::b931:b0c8\ndont_blame_nrpe=1\ndebug=0\ncommand_timeout=60\nconnection_timeout=300\n\nssl_client_certs=2\nssl_version=TLSv1+\nssl_cipher_list=ALL:!aNULL:!eNULL:!SSLv2:!LOW:!EXP:!RC4:!MD5:@STRENGTH\nssl_cacert_file=etcnagiosnrpe.ssl.ca-crt\nssl_cert_file=etcnagiosnrpe.ssl.crt\nssl_privatekey_file=etcnagiosnrpe.ssl.key\n\ncommand[check_process]=usrlib64nagiospluginscheck_procs $ARG1$\ncommand[check_users]=usrlib64nagiospluginscheck_users $ARG1$\ncommand[check_load]=usrlib64nagiospluginscheck_load $ARG1$\ncommand[check_disk]=usrlib64nagiospluginscheck_disk $ARG1$\ncommand[check_mem]=usrlib64nagiospluginscheck_mem $ARG1$\ncommand[check_cpu]=usrlib64nagiospluginscheck_cpu $ARG1$\ncommand[check_mailq]=usrlib64nagiospluginscheck_mailq $ARG1$\ncommand[check_dmesg]=usrlib64nagiospluginscheck_dmesg.sh $ARG1$\n\ninclude_dir=etcnrpe.d",
+          "type": 1
+        },
+        {
+          "name": "ecm_inv_scan.linux.machine_info.chassis",
+          "value": "",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.machine_info.identifying_number",
+          "value": "VMware-42 1f 5f 84 99 ed b1 8a-07 ba dd 16 e6 77 87 51",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.machine_info.manufacturer",
+          "value": "VMware, Inc.",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.machine_info.platform",
+          "value": "x86_64",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.machine_info.processor_type",
+          "value": "x86_64",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.machine_info.product_name",
+          "value": "VMware Virtual Platform",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.machine_info.serial_number",
+          "value": "",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.machine_info.uuid",
+          "value": "421f5f84-99ed-b18a-07ba-dd16e6778751",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.memory.available_mb",
+          "value": "14248",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.memory.total_size_mb",
+          "value": "16257",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.network.dns_servers",
+          "value": [
+            "185.49.177.40",
+            "185.49.177.41",
+            "2001:9d0:2:113::b931:b128",
+            "2001:9d0:2:113::b931:b129"
+          ],
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.ntp_servers",
+          "value": [
+            {
+              "name": "185.49.177.40"
+            },
+            {
+              "name": "185.49.177.41"
+            },
+            {
+              "name": "2001:9d0:2:113::b931:b128"
+            },
+            {
+              "name": "2001:9d0:2:113::b931:b129"
+            }
+          ],
+          "type": 3
+        },
+        {
+          "name": "ecm_inv_scan.linux.operating_system.name",
+          "value": "Red Hat Enterprise Linux Server 7.9",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.operating_system.os_family",
+          "value": "unix",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.operating_system.platform",
+          "value": "linux",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.operating_system.release",
+          "value": "redhat",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.operating_system.release_name",
+          "value": "Red Hat Enterprise Linux Server release 7.9 (Maipo)",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.operating_system.version",
+          "value": "7.9",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.processors.cores_per_cpu",
+          "value": 1,
+          "type": 2
+        },
+        {
+          "name": "ecm_inv_scan.linux.processors.logical_processors",
+          "value": 6,
+          "type": 2
+        },
+        {
+          "name": "ecm_inv_scan.linux.processors.number_of_cpus",
+          "value": 6,
+          "type": 2
+        },
+        {
+          "name": "ecm_inv_scan.linux.processors.physical_processors",
+          "value": 6,
+          "type": 2
+        },
+        {
+          "name": "ecm_inv_scan.linux.processors.total_cores",
+          "value": 6,
+          "type": 2
+        },
+        {
+          "name": "ecm_inv_scan.linux.scan_time",
+          "value": "2021-11-01 22:12:14",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.system.application_architecture",
+          "value": "x86",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.system.hostname_domain",
+          "value": "srv.dsh.at",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.system.hostname_fqdn",
+          "value": "uansvclxnaemp01.srv.dsh.at",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.system.install_date",
+          "value": "2018-07-09 06:04:53",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.system.kernel_architecture",
+          "value": "x64",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.system.kernel_bit_size",
+          "value": "64",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.system.kernel_name",
+          "value": "Linux",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.system.kernel_release",
+          "value": "3.10.0-1160.45.1.el7.x86_64",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.system.last_reboot_time",
+          "value": "2021-10-19 09:17:33",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.system.name",
+          "value": "uansvclxnaemp01",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>network_interface>0",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attribute": {
+                  "name": "cmdb.interface.hwaddress",
+                  "value": "00:50:56:9f:84:e9",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.hwaddress",
+                  "value": "0050569f84e9",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.ip",
+                  "value": "185.49.176.204",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.ip",
+                  "value": "fe80::250:56ff:fe9f:84e9",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.ip",
+                  "value": "2001:9d0:2:10f::b931:b0cc",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.name",
+                  "value": "lan1103",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": true
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.network_interface.mac_address",
+                  "ecm_inv_scan.linux.network_interface.description"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_interface",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Network Interface - lan1103",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.network_interface.description",
+          "value": "lan1103",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.network_interface.mac_address",
+          "value": "00:50:56:9f:84:e9",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.network_interface.ips",
+          "value": [
+            {
+              "address": "185.49.176.204",
+              "dnsName": "uansvclxnaemp01.srv.dsh.at",
+              "subnetMask": "255.255.255.192",
+              "version": "ipv4"
+            },
+            {
+              "address": "fe80::250:56ff:fe9f:84e9",
+              "scope": "link",
+              "subnetMask": 64,
+              "version": "ipv6"
+            },
+            {
+              "address": "2001:9d0:2:10f::b931:b0cc",
+              "scope": "global",
+              "subnetMask": 64,
+              "version": "ipv6"
+            }
+          ],
+          "type": 3
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>0",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - devtmpfs",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "devtmpfs",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "devtmpfs",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,nosuid,size=8117080k,nr_inodes=2029270,mode=755",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/dev",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "8117080",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "8117080",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "0",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>1",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - /dev/mapper/vg_sys-lv_root",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "/dev/mapper/vg_sys-lv_root",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "ext4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,relatime,data=ordered",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "5029504",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "1734464",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "3016512",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>2",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - /dev/sda1",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "/dev/sda1",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "ext4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,relatime,data=ordered",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/boot",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "999320",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "744116",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "186392",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>3",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - /dev/mapper/vg_sys-lv_var",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "/dev/mapper/vg_sys-lv_var",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "ext4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,relatime,data=ordered",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/var",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "3030800",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "2417320",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "439812",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>4",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - /dev/mapper/vg_sys-lv_tmp",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "/dev/mapper/vg_sys-lv_tmp",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "ext4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,relatime,data=ordered",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/tmp",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "11320520",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "10824120",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "8172",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>5",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - /dev/mapper/vg_sys-lv_var_log",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "/dev/mapper/vg_sys-lv_var_log",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "ext4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,relatime,data=ordered",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/var/log",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "3063568",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "2388716",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "522160",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>6",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - /dev/mapper/vg_sys-lv_opt",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "/dev/mapper/vg_sys-lv_opt",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "ext4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,relatime,data=ordered",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/opt",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "1998672",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "1871276",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "6156",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>7",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - /dev/mapper/vg_data-lv_data",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "/dev/mapper/vg_data-lv_data",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "ext4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,relatime,data=ordered",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/data",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "82434456",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "77318456",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "905520",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>8",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - /dev/mapper/vg_data-lv_data",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "/dev/mapper/vg_data-lv_data",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "ext4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,relatime,data=ordered",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/var/spool/perfdata",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "null",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "null",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "null",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>9",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - /dev/mapper/vg_data-lv_data",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "/dev/mapper/vg_data-lv_data",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "ext4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,relatime,data=ordered",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/home",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "null",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "null",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "null",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>10",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - /dev/mapper/vg_data-lv_data",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "/dev/mapper/vg_data-lv_data",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "ext4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,relatime,data=ordered",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/var/log/naemon",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "null",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "null",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "null",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>linux_partition>11",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attributes": [
+                  "ecm_inv_scan.linux.partition.device",
+                  "ecm_inv_scan.linux.partition.mount_point"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Linux Partition - /dev/mapper/vg_data-lv_data",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.device",
+          "value": "/dev/mapper/vg_data-lv_data",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.file_system_type",
+          "value": "ext4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_options",
+          "value": "rw,relatime,data=ordered",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.mount_point",
+          "value": "/opt2",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.size_kb",
+          "value": "null",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.free_kb",
+          "value": "null",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.linux.partition.used_kb",
+          "value": "null",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429",
+      "idMethod": {
+        "attributes": [
+          "cmdb.host.id"
+        ],
+        "type": "byData"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "H13524429 - saladvpsqlc1n2",
+          "type": 0
+        },
+        {
+          "name": "cmdb.host.id",
+          "value": "H13524429",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.scan_time",
+          "value": "2021-11-01 23:41:18",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.name",
+          "value": "Microsoft Windows Server 2019 Standard",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.servicepack",
+          "value": "",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.last_bootup_time",
+          "value": "2021-08-21 19:54:29",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.install_date",
+          "value": "2020-10-08 15:40:01",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.architecture",
+          "value": "64-bit",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.language",
+          "value": "English ��� United States",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.product_suite",
+          "value": "Unknown (Undocumented)",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.type",
+          "value": "WINNT",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.version",
+          "value": "10.0.17763",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.build_number",
+          "value": "17763",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.codeset",
+          "value": "1252",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.country_code",
+          "value": "43",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.timezone",
+          "value": "GMT +1",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.ntp_server",
+          "value": "time.windows.com,0x8",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.ntp_server_synchronisation_type",
+          "value": "NT5DS",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.dep_32_bit_applications",
+          "value": "true",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.dep_available",
+          "value": "true",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.dep_drivers",
+          "value": "true",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.dep_support_policy",
+          "value": "Opt Out",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.sku",
+          "value": "Windows Server Standard Edition (Desktop Experience installation)",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.installation_type",
+          "value": "Server",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.ubr",
+          "value": "2114",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.edition_id",
+          "value": "ServerStandard",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.registered_organization",
+          "value": "",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.operating_system.registered_owner",
+          "value": "Windows User",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.fqdn",
+          "value": "saladvpsqlc1n2.salres.com",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.machine_info.manufacturer",
+          "value": "Dell Inc.",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.machine_info.product_name",
+          "value": "PowerEdge R740",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.machine_info.identifying_number",
+          "value": "7VN6K63",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.machine_info.chassis",
+          "value": "Rack Mount Chassis",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.processors.physical_processors",
+          "value": 1,
+          "type": 2
+        },
+        {
+          "name": "ecm_inv_scan.win.processors.logical_processors",
+          "value": 24,
+          "type": 2
+        },
+        {
+          "name": "ecm_inv_scan.win.processors.total_cores",
+          "value": 12,
+          "type": 2
+        },
+        {
+          "name": "ecm_inv_scan.win.processors.cores_per_cpu",
+          "value": 12,
+          "type": 2
+        },
+        {
+          "name": "ecm_inv_scan.win.memory.total_size",
+          "value": 785031,
+          "type": 2
+        },
+        {
+          "name": "ecm_inv_scan.win.os_configuration.computer_role",
+          "value": "Member Server",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.os_configuration.domain_name",
+          "value": "salres.com",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.os_configuration.domain_type",
+          "value": "domain",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.server_features",
+          "value": [
+            {
+              "id": 33,
+              "name": "Failover Clustering",
+              "parentid": 0
+            },
+            {
+              "id": 6,
+              "name": "File and iSCSI Services",
+              "parentid": 481
+            },
+            {
+              "id": 481,
+              "name": "File and Storage Services",
+              "parentid": 0
+            },
+            {
+              "id": 255,
+              "name": "File Server",
+              "parentid": 6
+            },
+            {
+              "id": 57,
+              "name": "Multipath I/O",
+              "parentid": 0
+            },
+            {
+              "id": 418,
+              "name": ".NET Framework 4.7",
+              "parentid": 466
+            },
+            {
+              "id": 466,
+              "name": ".NET Framework 4.7 Features",
+              "parentid": 0
+            },
+            {
+              "id": 220,
+              "name": ".NET Framework 3.5 (includes .NET 2.0 and 3.0)",
+              "parentid": 475
+            },
+            {
+              "id": 475,
+              "name": ".NET Framework 3.5 Features",
+              "parentid": 0
+            },
+            {
+              "id": 420,
+              "name": "WCF Services",
+              "parentid": 466
+            },
+            {
+              "id": 425,
+              "name": "TCP Port Sharing",
+              "parentid": 420
+            },
+            {
+              "id": 412,
+              "name": "Windows PowerShell 5.1",
+              "parentid": 417
+            },
+            {
+              "id": 351,
+              "name": "Windows PowerShell ISE",
+              "parentid": 417
+            },
+            {
+              "id": 411,
+              "name": "Windows PowerShell 2.0 Engine",
+              "parentid": 417
+            },
+            {
+              "id": 417,
+              "name": "Windows PowerShell",
+              "parentid": 0
+            },
+            {
+              "id": 67,
+              "name": "Remote Server Administration Tools",
+              "parentid": 0
+            },
+            {
+              "id": 331,
+              "name": "Active Directory module for Windows PowerShell",
+              "parentid": 329
+            },
+            {
+              "id": 329,
+              "name": "AD DS and AD LDS Tools",
+              "parentid": 256
+            },
+            {
+              "id": 268,
+              "name": "Failover Clustering Tools",
+              "parentid": 265
+            },
+            {
+              "id": 484,
+              "name": "Failover Cluster Management Tools",
+              "parentid": 268
+            },
+            {
+              "id": 483,
+              "name": "Failover Cluster Module for Windows PowerShell",
+              "parentid": 268
+            },
+            {
+              "id": 265,
+              "name": "Feature Administration Tools",
+              "parentid": 67
+            },
+            {
+              "id": 256,
+              "name": "Role Administration Tools",
+              "parentid": 67
+            },
+            {
+              "id": 482,
+              "name": "Storage Services",
+              "parentid": 481
+            },
+            {
+              "id": 1043,
+              "name": "System Data Archiver",
+              "parentid": 0
+            },
+            {
+              "id": 44,
+              "name": "Telnet Client",
+              "parentid": 0
+            },
+            {
+              "id": 296,
+              "name": "Windows Server Backup",
+              "parentid": 0
+            },
+            {
+              "id": 340,
+              "name": "WoW64 Support",
+              "parentid": 0
+            },
+            {
+              "id": 338,
+              "name": "XPS Viewer",
+              "parentid": 0
+            }
+          ],
+          "type": 3
+        },
+        {
+          "name": "ecm_inv_scan.win.system.name",
+          "value": "SALADVPSQLC1N2",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.system.netbios_hostname",
+          "value": "SALADVPSQLC1N2",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.system.dns_hostname",
+          "value": "saladvpsqlc1n2",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.system.distinguished_name",
+          "value": "CN=SALADVPSQLC1N2,CN=Computers,DC=salres,DC=com",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.cmdb_info.host_id",
+          "value": "H13306165",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.cmdb_info.customer",
+          "value": "SALESIANER",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>network_adapter>0",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attribute": {
+                  "name": "cmdb.interface.hwaddress",
+                  "value": "E4:43:4B:F4:2B:FA",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.hwaddress",
+                  "value": "E4-43-4B-F4-2B-FA",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.hwaddress",
+                  "value": "E4434BF42BFA",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.ip",
+                  "value": "10.10.200.98",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.name",
+                  "value": "HB",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": true
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attributes": [
+                  "ecm_inv_scan.win.network_adapter.mac_address",
+                  "ecm_inv_scan.win.network_adapter.device_id"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_interface",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Network Adapter - HB",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.name",
+          "value": "HB",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.description",
+          "value": "Intel(R) Gigabit 4P X550/I350 rNDC",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.mac_address",
+          "value": "E4:43:4B:F4:2B:FA",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.device_id",
+          "value": "4",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.ip",
+          "value": [
+            {
+              "address": "10.10.200.98",
+              "subnetmask": "255.255.255.240"
+            }
+          ],
+          "type": 3
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.dns_server",
+          "value": [],
+          "type": 3
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>network_adapter>1",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attribute": {
+                  "name": "cmdb.interface.hwaddress",
+                  "value": "B4:96:91:8F:A4:D2",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.hwaddress",
+                  "value": "B4-96-91-8F-A4-D2",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.hwaddress",
+                  "value": "B496918FA4D2",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.ip",
+                  "value": "10.10.203.12",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.name",
+                  "value": "Prod-Team",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": true
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attributes": [
+                  "ecm_inv_scan.win.network_adapter.mac_address",
+                  "ecm_inv_scan.win.network_adapter.device_id"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_interface",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Network Adapter - Prod-Team",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.name",
+          "value": "Prod-Team",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.description",
+          "value": "Microsoft Network Adapter Multiplexor Driver",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.mac_address",
+          "value": "B4:96:91:8F:A4:D2",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.device_id",
+          "value": "16",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.ip",
+          "value": [
+            {
+              "address": "10.10.203.12",
+              "subnetmask": "255.255.255.0"
+            }
+          ],
+          "type": 3
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.dns_server",
+          "value": [
+            {
+              "address": "10.10.203.5",
+              "order": 0
+            },
+            {
+              "address": "10.10.203.4",
+              "order": 1
+            }
+          ],
+          "type": 3
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>network_adapter>2",
+      "idMethod": {
+        "inner": [
+          {
+            "inner": [
+              {
+                "attribute": {
+                  "name": "cmdb.interface.hwaddress",
+                  "value": "02:6F:D7:4F:BA:0F",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.hwaddress",
+                  "value": "02-6F-D7-4F-BA-0F",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.hwaddress",
+                  "value": "026FD74FBA0F",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.ip",
+                  "value": "169.254.1.213",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.ip",
+                  "value": "fe80::64ca:3a9d:1382:c837",
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": false
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attribute": {
+                  "name": "cmdb.interface.name",
+                  "value": null,
+                  "type": 0
+                },
+                "modifiers": {
+                  "caseInsensitive": true
+                },
+                "type": "byAttribute"
+              },
+              {
+                "attributes": [
+                  "ecm_inv_scan.win.network_adapter.mac_address",
+                  "ecm_inv_scan.win.network_adapter.device_id"
+                ],
+                "type": "byData"
+              }
+            ],
+            "type": "byUnion"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_interface",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Network Adapter - ",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.name",
+          "value": "",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.description",
+          "value": "Microsoft Failover Cluster Virtual Adapter",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.mac_address",
+          "value": "02:6F:D7:4F:BA:0F",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.device_id",
+          "value": "17",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.ip",
+          "value": [
+            {
+              "address": "169.254.1.213",
+              "subnetmask": "255.255.0.0"
+            },
+            {
+              "address": "fe80::64ca:3a9d:1382:c837",
+              "subnetmask": "64"
+            }
+          ],
+          "type": 3
+        },
+        {
+          "name": "ecm_inv_scan.win.network_adapter.dns_server",
+          "value": [],
+          "type": 3
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>storage_drive>0",
+      "idMethod": {
+        "inner": [
+          {
+            "attributes": [
+              "ecm_inv_scan.win.storage_drive.name",
+              "ecm_inv_scan.win.storage_drive.device_id",
+              "ecm_inv_scan.win.storage_drive.serial_number"
+            ],
+            "type": "byData"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_storage_drive",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.name",
+          "value": "HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.device_id",
+          "value": "\\\\.\\PHYSICALDRIVE3",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.interface",
+          "value": "SCSI",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.serial_number",
+          "value": "50453394",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
+          "value": "1.0",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
+          "value": "GB",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>storage_drive>1",
+      "idMethod": {
+        "inner": [
+          {
+            "attributes": [
+              "ecm_inv_scan.win.storage_drive.name",
+              "ecm_inv_scan.win.storage_drive.device_id",
+              "ecm_inv_scan.win.storage_drive.serial_number"
+            ],
+            "type": "byData"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_storage_drive",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.name",
+          "value": "HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.device_id",
+          "value": "\\\\.\\PHYSICALDRIVE1",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.interface",
+          "value": "SCSI",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.serial_number",
+          "value": "307365",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
+          "value": "2500.0",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
+          "value": "GB",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>storage_drive>2",
+      "idMethod": {
+        "inner": [
+          {
+            "attributes": [
+              "ecm_inv_scan.win.storage_drive.name",
+              "ecm_inv_scan.win.storage_drive.device_id",
+              "ecm_inv_scan.win.storage_drive.serial_number"
+            ],
+            "type": "byData"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_storage_drive",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Storage Drive - H13524429 - DELL PERC H740P Mini SCSI Disk Device",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.name",
+          "value": "DELL PERC H740P Mini SCSI Disk Device",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.device_id",
+          "value": "\\\\.\\PHYSICALDRIVE0",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.interface",
+          "value": "SCSI",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.serial_number",
+          "value": "00de454d4cd8da1127009afc52f0a7ce",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
+          "value": "1489.87",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
+          "value": "GB",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>storage_drive>3",
+      "idMethod": {
+        "inner": [
+          {
+            "attributes": [
+              "ecm_inv_scan.win.storage_drive.name",
+              "ecm_inv_scan.win.storage_drive.device_id",
+              "ecm_inv_scan.win.storage_drive.serial_number"
+            ],
+            "type": "byData"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_storage_drive",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.name",
+          "value": "HITACHI OPEN-V  Multi-Path Disk Device",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.device_id",
+          "value": "\\\\.\\PHYSICALDRIVE2",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.interface",
+          "value": "SCSI",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.serial_number",
+          "value": "307365",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
+          "value": "3999.99",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
+          "value": "GB",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE1>partition>0",
+      "idMethod": {
+        "inner": [
+          {
+            "attributes": [
+              "ecm_inv_scan.win.partition.name"
+            ],
+            "type": "byData"
+          },
+          {
+            "tempID": "tempCIID>H13524429>storage_drive>1",
+            "outgoingRelation": false,
+            "predicateID": "has_partition",
+            "type": "byRelatedTempID"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Partition - H13524429 - E:",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.name",
+          "value": "E:",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.filesystem",
+          "value": "NTFS",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.size",
+          "value": "2499.98",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.size_unit",
+          "value": "GB",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.freespace",
+          "value": "1483.98",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>0",
+      "idMethod": {
+        "inner": [
+          {
+            "attributes": [
+              "ecm_inv_scan.win.partition.name"
+            ],
+            "type": "byData"
+          },
+          {
+            "tempID": "tempCIID>H13524429>storage_drive>2",
+            "outgoingRelation": false,
+            "predicateID": "has_partition",
+            "type": "byRelatedTempID"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Partition - H13524429 - C:",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.name",
+          "value": "C:",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.filesystem",
+          "value": "NTFS",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.size",
+          "value": "204.15",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.size_unit",
+          "value": "GB",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.freespace",
+          "value": "146.35",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>1",
+      "idMethod": {
+        "inner": [
+          {
+            "attributes": [
+              "ecm_inv_scan.win.partition.name"
+            ],
+            "type": "byData"
+          },
+          {
+            "tempID": "tempCIID>H13524429>storage_drive>2",
+            "outgoingRelation": false,
+            "predicateID": "has_partition",
+            "type": "byRelatedTempID"
+          },
+          {
+            "tempID": "tempCIID>H13524429",
+            "outgoingRelation": false,
+            "predicateID": "has_mounted_partition",
+            "type": "byRelatedTempID"
+          }
+        ],
+        "type": "byIntersect"
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Windows Partition - H13524429 - S:",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.name",
+          "value": "S:",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.filesystem",
+          "value": "NTFS",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.size",
+          "value": "400.0",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.size_unit",
+          "value": "GB",
+          "type": 0
+        },
+        {
+          "name": "ecm_inv_scan.win.partition.freespace",
+          "value": "358.81",
+          "type": 0
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_interface",
+      "to": "tempCIID>H13524429>network_interface>0"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>0"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>1"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>2"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>3"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>4"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>5"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>6"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>7"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>8"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>9"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>10"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>linux_partition>11"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_interface",
+      "to": "tempCIID>H13524429>network_adapter>0"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_interface",
+      "to": "tempCIID>H13524429>network_adapter>1"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_interface",
+      "to": "tempCIID>H13524429>network_adapter>2"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_storage_drive",
+      "to": "tempCIID>H13524429>storage_drive>0"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_storage_drive",
+      "to": "tempCIID>H13524429>storage_drive>1"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_storage_drive",
+      "to": "tempCIID>H13524429>storage_drive>2"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_storage_drive",
+      "to": "tempCIID>H13524429>storage_drive>3"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE1>partition>0"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>0"
+    },
+    {
+      "from": "tempCIID>H13524429",
+      "predicate": "has_mounted_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>1"
+    },
+    {
+      "from": "tempCIID>H13524429>storage_drive>1",
+      "predicate": "has_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE1>partition>0"
+    },
+    {
+      "from": "tempCIID>H13524429>storage_drive>2",
+      "predicate": "has_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>0"
+    },
+    {
+      "from": "tempCIID>H13524429>storage_drive>2",
+      "predicate": "has_partition",
+      "to": "tempCIID>H13524429>\\\\.\\PHYSICALDRIVE0>partition>1"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 ﻿using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class AuthRoleType : ObjectGraphType<AuthRole>
     {

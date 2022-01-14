@@ -24,14 +24,15 @@ namespace Omnikeeper.Runners
         private readonly ICIModel ciModel;
         private readonly CIMappingService ciMappingService;
         private readonly IAttributeModel attributeModel;
-        private readonly ILayerModel layerModel;
+        private readonly IRelationModel relationModel;
+        private readonly ILayerDataModel layerDataModel;
         private readonly IModelContextBuilder modelContextBuilder;
 
         // HACK: making this static sucks, find better way, but runner is instantiated anew on each run
         private static readonly IDictionary<string, DateTimeOffset> lastRuns = new ConcurrentDictionary<string, DateTimeOffset>();
 
         public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, IExternalIDMapPersister externalIDMapPersister, ICIModel ciModel, CIMappingService ciMappingService,
-            IAttributeModel attributeModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder, ILogger<ExternalIDManagerRunner> logger)
+            IAttributeModel attributeModel, IRelationModel relationModel, ILayerDataModel layerDataModel, IModelContextBuilder modelContextBuilder, ILogger<ExternalIDManagerRunner> logger)
         {
             this.logger = logger;
             this.pluginManager = pluginManager;
@@ -39,7 +40,8 @@ namespace Omnikeeper.Runners
             this.ciModel = ciModel;
             this.ciMappingService = ciMappingService;
             this.attributeModel = attributeModel;
-            this.layerModel = layerModel;
+            this.relationModel = relationModel;
+            this.layerDataModel = layerDataModel;
             this.modelContextBuilder = modelContextBuilder;
         }
 
@@ -56,10 +58,10 @@ namespace Omnikeeper.Runners
         public async Task RunAsync()
         {
             var trans = modelContextBuilder.BuildImmediate();
-            var activeLayers = await layerModel.GetLayers(Omnikeeper.Base.Entity.AnchorStateFilter.ActiveAndDeprecated, trans, TimeThreshold.BuildLatest());
-            var layersWithOILPs = activeLayers.Where(l => l.OnlineInboundAdapterLink.AdapterName != ""); // TODO: better check for set oilp than name != ""
+            var activeLayers = await layerDataModel.GetLayerData(Base.Entity.AnchorStateFilter.ActiveAndDeprecated, trans, TimeThreshold.BuildLatest());
+            var layersWithOILPs = activeLayers.Where(l => l.OIAReference != "");
 
-            var adapters = layersWithOILPs.Select(l => l.OnlineInboundAdapterLink.AdapterName)
+            var adapters = layersWithOILPs.Select(l => l.OIAReference)
                 .Distinct(); // distinct because multiple layers can have the same adapter configured
 
             var usedPersisterScopes = new HashSet<string>();
@@ -90,7 +92,7 @@ namespace Omnikeeper.Runners
                         {
                             using var transD = modelContextBuilder.BuildDeferred();
 
-                            var (changes, successful) = await EIDManager.Update(ciModel, attributeModel, ciMappingService, transD, logger);
+                            var (changes, successful) = await EIDManager.Update(ciModel, attributeModel, relationModel, ciMappingService, transD, logger);
 
                             if (!successful)
                             {

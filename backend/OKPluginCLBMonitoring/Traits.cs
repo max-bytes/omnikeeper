@@ -14,32 +14,32 @@ namespace OKPluginCLBMonitoring
 
         public static readonly RecursiveTrait Module = new RecursiveTrait("naemon_service_module", traitOrigin, new List<TraitAttribute>() {
             new TraitAttribute("template",
-                CIAttributeTemplate.BuildFromParams("naemon.config_template", AttributeValueType.MultilineText, null, CIAttributeValueConstraintTextLength.Build(1, null))
+                CIAttributeTemplate.BuildFromParams("naemon.config_template", AttributeValueType.MultilineText, null, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
         public static readonly GenericTrait ModuleFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(Module);
 
         public static readonly RecursiveTrait NaemonInstance = new RecursiveTrait("naemon_instance", traitOrigin, new List<TraitAttribute>() {
             new TraitAttribute("name",
-                CIAttributeTemplate.BuildFromParams("naemon.instance_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                CIAttributeTemplate.BuildFromParams("naemon.instance_name", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         }, optionalAttributes: new List<TraitAttribute>()
         {
             new TraitAttribute("config",
-                CIAttributeTemplate.BuildFromParams("naemon.config", AttributeValueType.JSON, true)
+                CIAttributeTemplate.BuildFromParams("naemon.config", AttributeValueType.JSON, true, false)
             ),
             new TraitAttribute("requirements",
-                CIAttributeTemplate.BuildFromParams("naemon.requirements", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
+                CIAttributeTemplate.BuildFromParams("naemon.requirements", AttributeValueType.Text, true, false, CIAttributeValueConstraintTextLength.Build(1, null))
             ),
             new TraitAttribute("capabilities",
-                CIAttributeTemplate.BuildFromParams("naemon.capabilities", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
+                CIAttributeTemplate.BuildFromParams("naemon.capabilities", AttributeValueType.Text, true, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
         public static readonly GenericTrait NaemonInstanceFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(NaemonInstance);
 
         public static readonly RecursiveTrait Contactgroup = new RecursiveTrait("naemon_contactgroup", traitOrigin, new List<TraitAttribute>() {
             new TraitAttribute("name",
-                CIAttributeTemplate.BuildFromParams("naemon.contactgroup_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                CIAttributeTemplate.BuildFromParams("naemon.contactgroup_name", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
         public static readonly GenericTrait ContactgroupFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(Contactgroup);

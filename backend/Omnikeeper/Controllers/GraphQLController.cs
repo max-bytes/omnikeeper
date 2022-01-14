@@ -6,9 +6,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
+using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
@@ -29,12 +31,17 @@ namespace Omnikeeper.Controllers
         private readonly DataLoaderDocumentListener dataLoaderDocumentListener;
         private readonly IEnumerable<IValidationRule> _validationRules;
         private readonly IWebHostEnvironment _env;
+        private readonly TraitEntitiesQuerySchemaLoader traitEntitiesQuerySchemaLoader;
+        private readonly TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader;
+        private readonly ILogger<GraphQLController> logger;
         private readonly ICurrentUserAccessor _currentUserService;
 
         public GraphQLController(ISchema schema, ICurrentUserAccessor currentUserService,
             IDocumentExecuter documentExecuter, IDocumentWriter documentWriter,
             IModelContextBuilder modelContextBuilder, DataLoaderDocumentListener dataLoaderDocumentListener,
-            IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env)
+            IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env, 
+            TraitEntitiesQuerySchemaLoader traitEntitiesTypeLoader, TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader,
+            ILogger<GraphQLController> logger)
         {
             _currentUserService = currentUserService;
             _schema = schema;
@@ -44,6 +51,9 @@ namespace Omnikeeper.Controllers
             this.dataLoaderDocumentListener = dataLoaderDocumentListener;
             _validationRules = validationRules;
             _env = env;
+            this.traitEntitiesQuerySchemaLoader = traitEntitiesTypeLoader;
+            this.traitEntitiesMutationSchemaLoader = traitEntitiesMutationSchemaLoader;
+            this.logger = logger;
         }
 
         [HttpPost]
@@ -72,6 +82,14 @@ namespace Omnikeeper.Controllers
 
             var trans = _modelContextBuilder.BuildImmediate();
             var user = await _currentUserService.GetCurrentUser(trans);
+
+            // TODO: we should only call *.Init() on app startup and after trait changes... NOT on every request
+            if (!_schema.Initialized)
+            {
+                var typesContainers = await traitEntitiesQuerySchemaLoader.CreateTypes(trans, _schema, logger);
+                traitEntitiesQuerySchemaLoader.Init(typesContainers);
+                traitEntitiesMutationSchemaLoader.Init(typesContainers);
+            }
 
             var inputs = query.Variables?.ToInputs();
             var result = await _documentExecuter.ExecuteAsync(options =>

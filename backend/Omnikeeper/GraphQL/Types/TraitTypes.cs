@@ -3,7 +3,7 @@ using Omnikeeper.Base.Entity;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class EffectiveTraitType : ObjectGraphType<EffectiveTrait>
     {

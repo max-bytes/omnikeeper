@@ -138,7 +138,7 @@ function App() {
             </div>
 
             <Drawer 
-              width={440}
+              width={500}
               title="Layers"
               placement={"left"}
               closable={true}

@@ -50,11 +50,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                 {
                     new GenericInboundCI
                     {
-                        idMethod = new GenericInboundIDMethod
-                        {
-                            method = "byData",
-                            attributes = new string[] {}
-                        },
+                        idMethod = new InboundIDMethodByData(Array.Empty<string>()),
                         tempID = "foo",
                         attributes = new List<GenericInboundAttribute>
                         {
@@ -89,13 +85,13 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                     new GenericInboundCI
                     {
                         tempID = "ci1",
-                        idMethod = new GenericInboundIDMethod() {attributes = new string[0], method = "byData" },
+                        idMethod = new InboundIDMethodByData(Array.Empty<string>()),
                         attributes = new List<GenericInboundAttribute>()
                     },
                     new GenericInboundCI
                     {
                         tempID = "ci2",
-                        idMethod = new GenericInboundIDMethod() {attributes = new string[0], method = "byData" },
+                        idMethod = new InboundIDMethodByData(Array.Empty<string>()),
                         attributes = new List<GenericInboundAttribute>()
                     }
                 },

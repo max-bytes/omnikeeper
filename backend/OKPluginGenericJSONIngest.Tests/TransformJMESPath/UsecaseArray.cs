@@ -32,7 +32,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                     new GenericInboundCI
                     {
                         tempID = "tempCIID",
-                        idMethod = new GenericInboundIDMethod { method = "byData", attributes = new string[]{ "foo" } },
+                        idMethod = new InboundIDMethodByData(new string[]{ "foo" }),
                         attributes = new List<GenericInboundAttribute>
                         {
                             new GenericInboundAttribute { name = "textscalar", value = "value 1", type = AttributeValueType.Text },

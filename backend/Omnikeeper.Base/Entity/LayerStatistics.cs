@@ -5,9 +5,9 @@ namespace Omnikeeper.Base.Entity
 {
     public class LayerStatistics
     {
-        public LayerStatistics(Layer layer, long numActiveAttributes, long numAttributeChangesHistory, long numActiveRelations, long numRelationChangesHistory, long numLayerChangesetsHistory, DateTimeOffset? latestChange)
+        public LayerStatistics(LayerData layerData, long numActiveAttributes, long numAttributeChangesHistory, long numActiveRelations, long numRelationChangesHistory, long numLayerChangesetsHistory, DateTimeOffset? latestChange)
         {
-            Layer = layer;
+            LayerData = layerData;
             NumActiveAttributes = numActiveAttributes;
             NumAttributeChangesHistory = numAttributeChangesHistory;
             NumActiveRelations = numActiveRelations;
@@ -16,7 +16,7 @@ namespace Omnikeeper.Base.Entity
             LatestChange = latestChange;
         }
 
-        public Layer Layer { get; private set; }
+        public LayerData LayerData { get; private set; }
         public long NumActiveAttributes { get; private set; }
         public long NumAttributeChangesHistory { get; private set; }
         public long NumActiveRelations { get; private set; }

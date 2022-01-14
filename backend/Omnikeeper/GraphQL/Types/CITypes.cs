@@ -12,7 +12,7 @@ using Omnikeeper.Entity.AttributeValues;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     // TODO: ci- and layer-based authorization!
     public class MergedCIType : ObjectGraphType<MergedCI>
@@ -154,22 +154,23 @@ namespace Omnikeeper.GraphQL
 
     public class MergedCIAttributeType : ObjectGraphType<MergedCIAttribute>
     {
-        public MergedCIAttributeType(IDataLoaderService dataLoaderService, ILayerModel layerModel)
+        public MergedCIAttributeType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel)
         {
             Field(x => x.LayerStackIDs);
             Field(x => x.Attribute, type: typeof(CIAttributeType));
 
-            Field<ListGraphType<LayerType>>("layerStack",
+            Field<ListGraphType<LayerDataType>>("layerStack",
             resolve: (context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source!.LayerStackIDs;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
 
-                return dataLoaderService.SetupAndLoadAllLayers(layerModel, timeThreshold, userContext.Transaction)
+                return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, timeThreshold, userContext.Transaction)
                     .Then(layers => layers
-                        .Where(l => layerstackIDs.Contains(l.ID))
-                        .OrderBy(l => layerstackIDs.IndexOf(l.ID))
+                        .Where(kv => layerstackIDs.Contains(kv.Key))
+                        .OrderBy(kv => layerstackIDs.IndexOf(kv.Key))
+                        .Select(kv => kv.Value)
                     );
             });
         }

@@ -33,6 +33,8 @@ namespace Omnikeeper.Entity.AttributeValues
         public bool IsArray { get; }
 
         public string[] ToRawDTOValues();
+
+        public object ToGraphQLValue();
     }
 
     public interface IAttributeScalarValue<T> : IAttributeValue
@@ -87,6 +89,8 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public object ToGenericObject() => Values.Select(v => v.Value).ToArray();
         public string Value2String() => string.Join(",", Values.Select(value => value.Value2String().Replace(",", "\\,")));
+
+        public object ToGraphQLValue() => Values.Select(v => v.ToGraphQLValue()).ToArray();
     }
 
     public static class Extensions

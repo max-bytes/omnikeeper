@@ -10,7 +10,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System.Linq;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class UserTypeType : EnumerationGraphType<UserType>
     {
@@ -30,22 +30,22 @@ namespace Omnikeeper.GraphQL
 
     public class ChangesetType : ObjectGraphType<Changeset>
     {
-        public ChangesetType(IDataLoaderService dataLoaderService, ILayerModel layerModel)
+        public ChangesetType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel)
         {
             Field("id", x => x.ID);
             Field(x => x.Timestamp);
             Field(x => x.User, type: typeof(UserInDatabaseType));
             Field(x => x.LayerID);
             Field(x => x.DataOrigin, type: typeof(DataOriginGQL));
-            Field<LayerType>("layer",
+            Field<LayerDataType>("layer",
                 resolve: (context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerID = context.Source!.LayerID; 
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
 
-                    return dataLoaderService.SetupAndLoadAllLayers(layerModel, timeThreshold, userContext.Transaction)
-                        .Then(layers => layers.FirstOrDefault(l => l.ID == layerID));
+                    return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, timeThreshold, userContext.Transaction)
+                        .Then(layers => layers.GetOrWithClass(layerID, null));
                 });
             FieldAsync<ChangesetStatisticsType>("statistics",
                 resolve: async (context) =>

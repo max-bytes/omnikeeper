@@ -175,7 +175,7 @@ namespace Omnikeeper.GridView.Commands
                         {
                             try
                             {
-                                var val = AttributeValueBuilder.BuildFromDTO(cell.Value);
+                                var val = AttributeValueHelper.BuildFromDTO(cell.Value);
 
                                 await attributeModel.InsertAttribute(
                                     attributeName,

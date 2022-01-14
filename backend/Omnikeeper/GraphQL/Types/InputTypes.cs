@@ -5,7 +5,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using System;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.Types
 {
     public class CreateCIInput
     {
@@ -21,7 +21,7 @@ namespace Omnikeeper.GraphQL
         }
     }
 
-    public class UpsertLayerInput
+    public class UpsertLayerDataInput
     {
         public string ID { get; private set; }
         public string Description { get; private set; }
@@ -31,9 +31,9 @@ namespace Omnikeeper.GraphQL
         public int Color { get; private set; }
         public string[] Generators { get; private set; }
     }
-    public class UpsertLayerInputType : InputObjectGraphType<UpsertLayerInput>
+    public class UpsertLayerInputDataType : InputObjectGraphType<UpsertLayerDataInput>
     {
-        public UpsertLayerInputType()
+        public UpsertLayerInputDataType()
         {
             Field("id", x => x.ID);
             Field(x => x.Description);

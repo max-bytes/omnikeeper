@@ -44,7 +44,7 @@ namespace Omnikeeper.Controllers
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            return Ok((await layerModel.GetLayers(trans, TimeThreshold.BuildLatest()))
+            return Ok((await layerModel.GetLayers(trans))
                 .Where(l => layerBasedAuthorizationService.CanUserReadFromLayer(user, l)) // authz filter
                 .Select(l => LayerDTO.Build(l)));
         }
@@ -57,7 +57,7 @@ namespace Omnikeeper.Controllers
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
-            var layer = await layerModel.GetLayer(layerName, trans, TimeThreshold.BuildLatest());
+            var layer = await layerModel.GetLayer(layerName, trans);
 
             if (layer == null)
                 return NotFound($"Could not find layer with name {layerName}");
@@ -79,7 +79,7 @@ namespace Omnikeeper.Controllers
             // TODO: better performance: use GetLayers()
             foreach (var layerName in layerNames)
             {
-                var layer = await layerModel.GetLayer(layerName, trans, TimeThreshold.BuildLatest());
+                var layer = await layerModel.GetLayer(layerName, trans);
                 if (layer == null)
                     return NotFound($"Could not find layer with name {layerName}");
                 if (!layerBasedAuthorizationService.CanUserReadFromLayer(user, layer))

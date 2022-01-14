@@ -41,7 +41,7 @@ namespace Tests.Integration.Model
             string layerID1;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var layer1 = await layerModel.UpsertLayer("l1", trans);
+                var (layer1,_) = await layerModel.CreateLayerIfNotExists("l1", trans);
                 layerID1 = layer1.ID;
                 Assert.AreEqual("l1", layerID1);
                 trans.Commit();
@@ -118,7 +118,7 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, transI);
 
             var ciid1 = await model.CreateCI(transI);
-            var layer1 = await layerModel.UpsertLayer("l1", transI);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", transI);
 
             var layerset1 = new LayerSet(new string[] { layer1.ID });
 
@@ -163,7 +163,7 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, transI);
 
             var ciid1 = await model.CreateCI(transI);
-            var layer1 = await layerModel.UpsertLayer("l1", transI);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", transI);
 
             var layerset1 = new LayerSet(new string[] { layer1.ID });
 
@@ -198,7 +198,7 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, transI);
 
             var ciid1 = await model.CreateCI(transI);
-            var layer1 = await layerModel.UpsertLayer("l1", transI);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", transI);
 
             var layerset1 = new LayerSet(new string[] { layer1.ID });
 
@@ -274,7 +274,7 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, trans);
 
             var ciid1 = await model.CreateCI(trans);
-            var layer1 = await layerModel.UpsertLayer("l1", trans);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
 
             var layerset1 = new LayerSet(new string[] { layer1.ID });
 
@@ -305,8 +305,8 @@ namespace Tests.Integration.Model
 
             var ciid1 = await model.CreateCI(trans);
             var ciid2 = await model.CreateCI(trans);
-            var layer1 = await layerModel.UpsertLayer("l1", trans);
-            var layer2 = await layerModel.UpsertLayer("l2", trans);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
+            var (layer2, _) = await layerModel.CreateLayerIfNotExists("l2", trans);
 
             var layerset1 = new LayerSet(new string[] { layer2.ID, layer1.ID });
 
@@ -351,7 +351,7 @@ namespace Tests.Integration.Model
 
             var ciid1 = await model.CreateCI(trans);
             var ciid2 = await model.CreateCI(trans);
-            var layer1 = await layerModel.UpsertLayer("l1", trans);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
 
             var layerset1 = new LayerSet(new string[] { layer1.ID });
 
@@ -397,8 +397,8 @@ namespace Tests.Integration.Model
 
             var ciid1 = await model.CreateCI(trans);
             var ciid2 = await model.CreateCI(trans);
-            var layer1 = await layerModel.UpsertLayer("l1", trans);
-            var layer2 = await layerModel.UpsertLayer("l2", trans);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
+            var (layer2, _) = await layerModel.CreateLayerIfNotExists("l2", trans);
 
             var layerset1 = new LayerSet(new string[] { layer2.ID, layer1.ID });
 
@@ -433,8 +433,8 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, trans);
 
             var ciid1 = await model.CreateCI(trans);
-            var layer1 = await layerModel.UpsertLayer("l1", trans);
-            var layer2 = await layerModel.UpsertLayer("l2", trans);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
+            var (layer2, _) = await layerModel.CreateLayerIfNotExists("l2", trans);
 
             var layerset1 = new LayerSet(new string[] { layer1.ID });
             var layerset2 = new LayerSet(new string[] { layer2.ID });
@@ -475,8 +475,8 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, transI);
 
             var ciid1 = await model.CreateCI(transI);
-            var layer1 = await layerModel.UpsertLayer("l1", transI);
-            var layer2 = await layerModel.UpsertLayer("l2", transI);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", transI);
+            var (layer2, _) = await layerModel.CreateLayerIfNotExists("l2", transI);
             var layerset1 = new LayerSet(new string[] { layer2.ID, layer1.ID });
 
             using (var trans = ModelContextBuilder.BuildDeferred())

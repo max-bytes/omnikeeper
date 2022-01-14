@@ -68,4 +68,4 @@ The super user role serves two primary purposes:
 
 Example using Keycloak and layer access
 
- ![Authorization Overview](assets/drawio/authz-overview-Seite-1.svg)
+ ![Authorization Overview](assets/drawio/authz-overview.svg)

@@ -24,5 +24,16 @@ namespace Omnikeeper.Base.Entity
             };
             return states;
         }
+        public static bool Contains(this AnchorStateFilter stateFilter, AnchorState state)
+        {
+            return stateFilter switch
+            {
+                AnchorStateFilter.ActiveOnly => state == AnchorState.Active,
+                AnchorStateFilter.ActiveAndDeprecated => state == AnchorState.Active || state == AnchorState.Deprecated,
+                AnchorStateFilter.All => true,
+                AnchorStateFilter.MarkedForDeletion => state == AnchorState.MarkedForDeletion,
+                _ => throw new Exception("Invalid AnchorStateFilter")
+            };
+        }
     }
 }
