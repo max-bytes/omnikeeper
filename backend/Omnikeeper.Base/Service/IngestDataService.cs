@@ -104,7 +104,7 @@ namespace Omnikeeper.Base.Service
             var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, data.CICandidates.SelectMany(cic =>
                 cic.Attributes.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, cic.TempCIID))
             ));
-            // return number of affected attributes (instead of CIs)
+            // TODO: return number of affected attributes (instead of CIs)
             await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
