@@ -16,6 +16,7 @@ import LayerOperations from 'components/manage/LayerOperations';
 import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
 import ManageGenerators from './ManageGenerators';
 import ManageCLConfigs from './ManageCLConfigs';
+import ManageRestartApplication from './ManageRestartApplication';
 
 export default function Manage(props) {
     let { path, url } = useRouteMatch();
@@ -71,6 +72,9 @@ export default function Manage(props) {
             <PrivateRoute path={`${path}/logs`}>
                 <ShowLogs />
             </PrivateRoute>
+            <PrivateRoute path={`${path}/restart-application`}>
+                <ManageRestartApplication />
+            </PrivateRoute>
             {
                 // 'pluginLoading'-PrivateRoute:
                 // Shows "Loading..." until frontend-plugin was loaded (if frontend-plugin doesn't exist after loading -> Shows Manage-main-component)
@@ -96,6 +100,7 @@ export default function Manage(props) {
                         <li><Link to={`${url}/layers`}>Layers</Link></li>
                         <li><Link to={`${url}/oiacontexts`}>Online Inbound Layer Contexts</Link></li>
                         <li><Link to={`${url}/odataapicontexts`}>OData API Contexts</Link></li>
+                        <li><Link to={`${url}/restart-application`}>Restart Application</Link></li>
                     </ul>
 
                     <h3>Data-Config Management</h3>

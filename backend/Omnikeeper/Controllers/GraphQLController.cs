@@ -31,6 +31,7 @@ namespace Omnikeeper.Controllers
         private readonly DataLoaderDocumentListener dataLoaderDocumentListener;
         private readonly IEnumerable<IValidationRule> _validationRules;
         private readonly IWebHostEnvironment _env;
+        private readonly IHostApplicationLifetime appLifetime;
         private readonly TraitEntitiesQuerySchemaLoader traitEntitiesQuerySchemaLoader;
         private readonly TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader;
         private readonly ILogger<GraphQLController> logger;
@@ -39,7 +40,8 @@ namespace Omnikeeper.Controllers
         public GraphQLController(ISchema schema, ICurrentUserAccessor currentUserService,
             IDocumentExecuter documentExecuter, IDocumentWriter documentWriter,
             IModelContextBuilder modelContextBuilder, DataLoaderDocumentListener dataLoaderDocumentListener,
-            IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env, 
+            IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env,
+            IHostApplicationLifetime appLifetime,
             TraitEntitiesQuerySchemaLoader traitEntitiesTypeLoader, TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader,
             ILogger<GraphQLController> logger)
         {
@@ -51,6 +53,7 @@ namespace Omnikeeper.Controllers
             this.dataLoaderDocumentListener = dataLoaderDocumentListener;
             _validationRules = validationRules;
             _env = env;
+            this.appLifetime = appLifetime;
             this.traitEntitiesQuerySchemaLoader = traitEntitiesTypeLoader;
             this.traitEntitiesMutationSchemaLoader = traitEntitiesMutationSchemaLoader;
             this.logger = logger;
@@ -73,6 +76,13 @@ namespace Omnikeeper.Controllers
             if (_env.IsProduction())
                 return Forbid("Not allowed");
             return await ProcessQuery(query);
+        }
+
+        [HttpGet("/blow-me-up")]
+        public IActionResult BlowMeUp()
+        {
+            appLifetime.StopApplication();
+            return new EmptyResult();
         }
 
         private static readonly Object traitEntitiesInitLock = new Object();
