@@ -1,13 +1,10 @@
 ﻿using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
-using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.Model;
-using Omnikeeper.Model.Decorators;
 using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
