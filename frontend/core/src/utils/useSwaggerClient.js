@@ -21,6 +21,8 @@ export default function useSwaggerClient() {
             }).then(d => {
                 setSwaggerClient(d);
                 setLoading(false);
+            }).catch(e => {
+                setError(e);
             });
         } catch(e) {
             setError(e);
