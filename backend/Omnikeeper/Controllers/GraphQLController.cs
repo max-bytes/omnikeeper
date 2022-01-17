@@ -75,6 +75,8 @@ namespace Omnikeeper.Controllers
             return await ProcessQuery(query);
         }
 
+        private static readonly Object traitEntitiesInitLock = new Object();
+
         private async Task<IActionResult> ProcessQuery(Omnikeeper.Base.Entity.GraphQLQuery query)
         {
             if (query == null)
@@ -87,8 +89,11 @@ namespace Omnikeeper.Controllers
             if (!_schema.Initialized)
             {
                 var typesContainers = await traitEntitiesQuerySchemaLoader.CreateTypes(trans, _schema, logger);
-                traitEntitiesQuerySchemaLoader.Init(typesContainers);
-                traitEntitiesMutationSchemaLoader.Init(typesContainers);
+                lock (traitEntitiesInitLock)
+                {
+                    traitEntitiesQuerySchemaLoader.Init(typesContainers);
+                    traitEntitiesMutationSchemaLoader.Init(typesContainers);
+                }
             }
 
             var inputs = query.Variables?.ToInputs();
