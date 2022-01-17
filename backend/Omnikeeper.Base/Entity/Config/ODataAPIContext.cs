@@ -1,18 +1,17 @@
 ﻿
 using Newtonsoft.Json;
 using Omnikeeper.Base.Utils;
-using ProtoBuf;
 
 namespace Omnikeeper.Base.Entity
 {
-    [ProtoContract(SkipConstructor = true)]
+    //[ProtoContract(SkipConstructor = true)]
     public class ODataAPIContext
     {
-        [ProtoContract]
-        [ProtoInclude(1, typeof(ConfigV3))]
+        //[ProtoContract]
+        //[ProtoInclude(1, typeof(ConfigV3))]
         public interface IConfig { }
 
-        [ProtoContract(SkipConstructor = true)]
+        //[ProtoContract(SkipConstructor = true)]
         public class ConfigV3 : IConfig
         {
             public ConfigV3(string writeLayerID, string[] readLayerset)
@@ -21,12 +20,16 @@ namespace Omnikeeper.Base.Entity
                 ReadLayerset = readLayerset;
             }
 
-            [ProtoMember(1)] public string WriteLayerID { get; set; }
-            [ProtoMember(2)] public string[] ReadLayerset { get; set; }
+            //[ProtoMember(1)] 
+            public string WriteLayerID { get; set; }
+            //[ProtoMember(2)] 
+            public string[] ReadLayerset { get; set; }
         }
 
-        [ProtoMember(1)] public string ID { get; set; }
-        [ProtoMember(2)] public IConfig CConfig { get; set; }
+        //[ProtoMember(1)] 
+        public string ID { get; set; }
+        //[ProtoMember(2)] 
+        public IConfig CConfig { get; set; }
 
         public static MyJSONSerializer<IConfig> ConfigSerializer = new MyJSONSerializer<IConfig>(new JsonSerializerSettings()
         {

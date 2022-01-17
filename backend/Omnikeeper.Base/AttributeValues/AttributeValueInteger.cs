@@ -1,14 +1,14 @@
-﻿using ProtoBuf;
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    [ProtoContract(SkipConstructor = true)]
+    //[ProtoContract(SkipConstructor = true)]
     public class AttributeScalarValueInteger : IAttributeScalarValue<long>, IEquatable<AttributeScalarValueInteger>
     {
-        [ProtoMember(1)] private readonly long value;
+        //[ProtoMember(1)]
+        private readonly long value;
         public long Value => value;
         public string Value2String() => Value.ToString();
         public string[] ToRawDTOValues() => new string[] { Value.ToString() };
@@ -37,7 +37,7 @@ namespace Omnikeeper.Entity.AttributeValues
 
     }
 
-    [ProtoContract]
+    //[ProtoContract]
     public class AttributeArrayValueInteger : AttributeArrayValue<AttributeScalarValueInteger, long>
     {
         public AttributeArrayValueInteger(AttributeScalarValueInteger[] values) : base(values)

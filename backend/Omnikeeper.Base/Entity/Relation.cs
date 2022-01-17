@@ -1,7 +1,5 @@
-using ProtoBuf;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -18,14 +16,19 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    //[ProtoContract(SkipConstructor = true)]
     public class Relation
     {
-        [ProtoMember(1)] public readonly Guid ID;
-        [ProtoMember(2)] public readonly Guid FromCIID;
-        [ProtoMember(3)] public readonly Guid ToCIID;
-        [ProtoMember(4)] public readonly string PredicateID;
-        [ProtoMember(5)] public readonly Guid ChangesetID;
+        //[ProtoMember(1)] 
+        public readonly Guid ID;
+        //[ProtoMember(2)] 
+        public readonly Guid FromCIID;
+        //[ProtoMember(3)] 
+        public readonly Guid ToCIID;
+        //[ProtoMember(4)] 
+        public readonly string PredicateID;
+        //[ProtoMember(5)] 
+        public readonly Guid ChangesetID;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);

@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,12 +12,14 @@ namespace Omnikeeper.Entity.AttributeValues
         IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex);
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    //[ProtoContract(SkipConstructor = true)]
     public class AttributeScalarValueText : IAttributeScalarValue<string>, IEquatable<AttributeScalarValueText>, IAttributeValueText
     {
-        [ProtoMember(1)] private readonly bool multiline;
+        //[ProtoMember(1)] 
+        private readonly bool multiline;
         public bool Multiline => multiline;
-        [ProtoMember(2)] private readonly string value;
+        //[ProtoMember(2)] 
+        private readonly string value;
         public string Value => value;
 
         public string Value2String() => Value;
@@ -56,7 +57,7 @@ namespace Omnikeeper.Entity.AttributeValues
         }
     }
 
-    [ProtoContract]
+    //[ProtoContract]
     public class AttributeArrayValueText : AttributeArrayValue<AttributeScalarValueText, string>, IAttributeValueText
     {
         protected AttributeArrayValueText(AttributeScalarValueText[] values) : base(values)

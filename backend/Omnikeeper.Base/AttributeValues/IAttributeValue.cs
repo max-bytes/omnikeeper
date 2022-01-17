@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json.Linq;
-using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,18 +11,18 @@ namespace Omnikeeper.Entity.AttributeValues
     {
         Text, MultilineText, Integer, JSON, YAML, Image, Mask
     }
-    [ProtoContract]
-    [ProtoInclude(1, typeof(AttributeScalarValueImage))]
-    [ProtoInclude(2, typeof(AttributeScalarValueInteger))]
-    [ProtoInclude(3, typeof(AttributeScalarValueJSON))]
-    [ProtoInclude(4, typeof(AttributeScalarValueText))]
-    [ProtoInclude(5, typeof(AttributeScalarValueYAML))]
-    [ProtoInclude(6, typeof(AttributeScalarValueMask))]
-    [ProtoInclude(51, typeof(AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>))]
-    [ProtoInclude(52, typeof(AttributeArrayValue<AttributeScalarValueInteger, long>))]
-    [ProtoInclude(53, typeof(AttributeArrayValue<AttributeScalarValueJSON, JToken>))]
-    [ProtoInclude(54, typeof(AttributeArrayValue<AttributeScalarValueText, string>))]
-    [ProtoInclude(55, typeof(AttributeArrayValue<AttributeScalarValueYAML, YamlDocument>))]
+    //[ProtoContract]
+    //[ProtoInclude(1, typeof(AttributeScalarValueImage))]
+    //[ProtoInclude(2, typeof(AttributeScalarValueInteger))]
+    //[ProtoInclude(3, typeof(AttributeScalarValueJSON))]
+    //[ProtoInclude(4, typeof(AttributeScalarValueText))]
+    //[ProtoInclude(5, typeof(AttributeScalarValueYAML))]
+    //[ProtoInclude(6, typeof(AttributeScalarValueMask))]
+    //[ProtoInclude(51, typeof(AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>))]
+    //[ProtoInclude(52, typeof(AttributeArrayValue<AttributeScalarValueInteger, long>))]
+    //[ProtoInclude(53, typeof(AttributeArrayValue<AttributeScalarValueJSON, JToken>))]
+    //[ProtoInclude(54, typeof(AttributeArrayValue<AttributeScalarValueText, string>))]
+    //[ProtoInclude(55, typeof(AttributeArrayValue<AttributeScalarValueYAML, YamlDocument>))]
     public interface IAttributeValue : IEquatable<IAttributeValue>
     {
         public string Value2String();
@@ -52,16 +51,16 @@ namespace Omnikeeper.Entity.AttributeValues
         public S[] Values { get; }
     }
 
-    [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
-    [ProtoInclude(2, typeof(AttributeArrayValueImage))]
-    [ProtoInclude(3, typeof(AttributeArrayValueInteger))]
-    [ProtoInclude(4, typeof(AttributeArrayValueJSON))]
-    [ProtoInclude(5, typeof(AttributeArrayValueText))]
-    [ProtoInclude(6, typeof(AttributeArrayValueYAML))]
+    //[ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
+    //[ProtoInclude(2, typeof(AttributeArrayValueImage))]
+    //[ProtoInclude(3, typeof(AttributeArrayValueInteger))]
+    //[ProtoInclude(4, typeof(AttributeArrayValueJSON))]
+    //[ProtoInclude(5, typeof(AttributeArrayValueText))]
+    //[ProtoInclude(6, typeof(AttributeArrayValueYAML))]
     public abstract class AttributeArrayValue<S, T> : IAttributeArrayValue<S, T>, IEquatable<AttributeArrayValue<S, T>> where S : IAttributeScalarValue<T>
     {
         public S[] Values => values;
-        [ProtoMember(1)]
+        //[ProtoMember(1)]
         private readonly S[] values = Array.Empty<S>();
 
         protected AttributeArrayValue(S[] values)
