@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+## [11.1.0] - 2022-01-17
+
+### Added 
+- restart functionality in backend through REST API and frontend through management interface
+- implemented querying and mutating of relations through GraphQL API for trait entities
+
+### Changed
+- bumped versions of backend libraries:
+  - NuGet.Frameworks from 5.8.0 to 6.0.0
+  - GraphQL from 4.6.1 to 4.7.1
+  - GraphQL Playground from 4.3.0 to 5.2.0
+- removed protobuf dependency
+- reduced loglevel of UsageDataWriterRunner
+- removed graphql playground in production environment
+
+### Fixed
+- added permission check for readable layers when performing generic JSON ingest
+- bugfix for race condition on trait entity initialization
+
+
 ## [11.0.0] - 2022-01-13
 
 ### Added
