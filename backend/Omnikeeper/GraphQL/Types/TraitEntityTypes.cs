@@ -485,7 +485,8 @@ namespace Omnikeeper.GraphQL.Types
                     var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, dataLoaderService, traitsProvider, attributeModel, relationModel, ttWrapper, idt);
                     var upsertInputType = new UpsertInputType(at.Value);
 
-                    schema.RegisterTypes(upsertInputType, t);
+                    // TODO: needed?
+                    //schema.RegisterTypes(upsertInputType, t);
 
                     ret.Add(new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType));
                 } catch(Exception e)

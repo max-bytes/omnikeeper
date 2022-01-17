@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL.Types
 {
-    // TODO: ci- and layer-based authorization!
+    // TODO: ci-based authorization!
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
         public MergedCIType(IDataLoaderService dataLoaderService, IRelationModel relationModel,
