@@ -6,9 +6,10 @@ import { useExplorerLayers } from "../../utils/layers";
 import TraitList from "./TraitList.js";
 import { withRouter } from "react-router-dom";
 import queryString from 'query-string';
-import { Spin, Form, Input } from 'antd';
+import { Spin, Form, Input, Button } from 'antd';
 import { useLocation } from 'react-router-dom'
 import _ from 'lodash';
+import { SearchOutlined, LoadingOutlined } from '@ant-design/icons';
 
 function SearchCIAdvanced(props) {
     let urlParams = parseURLQuery(useLocation().search);
@@ -64,10 +65,25 @@ function SearchCIAdvanced(props) {
     // debounce search, so its not called too often
     const debouncedSearch = useCallback(_.debounce(search, 500), [search]);
 
-    useEffect(() => {
+    // useEffect(() => {
+    //     if (activeTraits && visibleLayers) {
+    //         // TODO: cancel previous searches -> see: https://evilmartians.com/chronicles/aborting-queries-and-mutations-in-react-apollo
+    //         // but... it seems like a clusterfuck :(
+    //         debouncedSearch({
+    //             variables: {
+    //                 searchString: searchString,
+    //                 withEffectiveTraits: activeTraits.activeTraits.map(et => et.id)
+    //                     .filter((et) => checkedTraits[et] === 1),
+    //                 withoutEffectiveTraits: activeTraits.activeTraits.map(et => et.id)
+    //                     .filter((et) => checkedTraits[et] === -1),
+    //                 layers: visibleLayers.map((l) => l.id),
+    //             }
+    //         });
+    //     }
+    // }, [searchString, debouncedSearch, activeTraits, visibleLayers, checkedTraits]);
+
+    const performSearch = () => {
         if (activeTraits && visibleLayers) {
-            // TODO: cancel previous searches -> see: https://evilmartians.com/chronicles/aborting-queries-and-mutations-in-react-apollo
-            // but... it seems like a clusterfuck :(
             debouncedSearch({
                 variables: {
                     searchString: searchString,
@@ -79,28 +95,28 @@ function SearchCIAdvanced(props) {
                 }
             });
         }
-    }, [searchString, debouncedSearch, activeTraits, visibleLayers, checkedTraits]);
+    };
 
     return (
         <div style={styles.container}>
             <Spin
                 spinning={loadingLayers || loadingActiveTraits}>
                 {/* left column - search */}
-                <div style={styles.searchColumn}>
+                <Form style={styles.searchColumn}>
                     <h2>Search CIs</h2>
-                    <div style={styles.searchColumnEntry}>
+                    <div style={{marginBottom: "20px"}}>
                         <h4>Name or CI-ID</h4>
                         <Form.Item initialValue={searchString ?? ""} style={{ marginBottom: 0 }}>
                             <Input
                                 style={styles.searchField}
                                 icon="search"
-                                placeholder="Search..."
+                                placeholder="Search by name for CI-ID..."
                                 value={searchString ?? ""}
                                 onChange={(e) => setSearchString(e.target.value)}
                             />
                         </Form.Item>
                     </div>
-                    <div style={styles.searchColumnEntry}>
+                    <div style={{marginBottom: "10px", display: "flex", overflowY: "scroll"}}>
                         {activeTraits && 
                             <TraitList traitList={activeTraits.activeTraits} 
                             checked={checkedTraits} setChecked={setCheckedTraits}
@@ -108,7 +124,12 @@ function SearchCIAdvanced(props) {
                             showEmptyTrait={showEmptyTrait} setShowEmptyTrait={setShowEmptyTrait} />
                         }
                     </div>
-                </div>
+                    <div style={{display: "flex", justifyContent: "flex-end"}}>
+                        <Form.Item style={{marginBottom: '0px'}}>
+                            <Button type="primary" size="large" htmlType="submit" onClick={() => performSearch()} icon={<SearchOutlined />}>Search</Button>
+                        </Form.Item>
+                    </div>
+                </Form>
                 {/* right column - results */}
                 <div style={styles.resultsColumn}>
                     <SearchResults cis={dataCIs?.cis} loading={loading} />
@@ -156,12 +177,9 @@ const styles = {
         display: "flex",
         flexDirection: "column",
         padding: "10px",
-        overflowY: "scroll",
+        overflowY: "hidden",
         width: "30%",
         minWidth: "300px",
-    },
-    searchColumnEntry: {
-        marginBottom: "20px",
     },
     searchField: {
         width: "100%",
