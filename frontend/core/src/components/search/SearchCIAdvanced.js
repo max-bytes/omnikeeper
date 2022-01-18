@@ -14,14 +14,14 @@ import { SearchOutlined, LoadingOutlined } from '@ant-design/icons';
 function SearchCIAdvanced(props) {
     let urlParams = parseURLQuery(useLocation().search);
 
-    const { data: visibleLayers, loading: loadingLayers } = useExplorerLayers(true);
+    const { data: visibleLayers, loading: loadingLayers, error: errorLayers } = useExplorerLayers(true);
 
     const [searchString, setSearchString] = useState(urlParams.searchString);
     const [showMetaTraits, setShowMetaTraits] = useState(urlParams.showMetaTraits);
     const [showEmptyTrait, setShowEmptyTrait] = useState(urlParams.showEmptyTrait);
     
 
-    const [loadActiveTraits, { data: activeTraits, loading: loadingActiveTraits }] = useLazyQuery(queries.ActiveTraits);
+    const [loadActiveTraits, { data: activeTraits, loading: loadingActiveTraits, error: errorActiveTraits }] = useLazyQuery(queries.ActiveTraits);
     useEffect(() => {
         if (visibleLayers) {
             loadActiveTraits({});
@@ -60,27 +60,10 @@ function SearchCIAdvanced(props) {
     // https://github.com/apollographql/apollo-client/issues/7396
     // update graphql and implement previousData as soon as bug is fixed
     // NOTE: caching big results is really slow with apollo, so we completely bypass the cache, hence fetchPolicy: "no-cache"
-    const [search, { loading, data: dataCIs }] = useLazyQuery(queries.SearchCIs, {fetchPolicy: "no-cache"});
+    const [search, { loading, data: dataCIs, error }] = useLazyQuery(queries.SearchCIs, {fetchPolicy: "no-cache"});
 
     // debounce search, so its not called too often
     const debouncedSearch = useCallback(_.debounce(search, 500), [search]);
-
-    // useEffect(() => {
-    //     if (activeTraits && visibleLayers) {
-    //         // TODO: cancel previous searches -> see: https://evilmartians.com/chronicles/aborting-queries-and-mutations-in-react-apollo
-    //         // but... it seems like a clusterfuck :(
-    //         debouncedSearch({
-    //             variables: {
-    //                 searchString: searchString,
-    //                 withEffectiveTraits: activeTraits.activeTraits.map(et => et.id)
-    //                     .filter((et) => checkedTraits[et] === 1),
-    //                 withoutEffectiveTraits: activeTraits.activeTraits.map(et => et.id)
-    //                     .filter((et) => checkedTraits[et] === -1),
-    //                 layers: visibleLayers.map((l) => l.id),
-    //             }
-    //         });
-    //     }
-    // }, [searchString, debouncedSearch, activeTraits, visibleLayers, checkedTraits]);
 
     const performSearch = () => {
         if (activeTraits && visibleLayers) {
@@ -132,7 +115,7 @@ function SearchCIAdvanced(props) {
                 </Form>
                 {/* right column - results */}
                 <div style={styles.resultsColumn}>
-                    <SearchResults cis={dataCIs?.cis} loading={loading} />
+                    <SearchResults cis={dataCIs?.cis} loading={loading} error={error ?? errorActiveTraits ?? errorLayers} />
                 </div>
             </Spin>
         </div>

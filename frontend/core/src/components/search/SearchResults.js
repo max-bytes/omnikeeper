@@ -7,7 +7,7 @@ import Text from "antd/lib/typography/Text";
 
 export function SearchResults(props) {
 
-    const {cis} = props;
+    const {cis, loading, error} = props;
 
     const Row = (index) => {
         const result = cis[index];
@@ -38,12 +38,18 @@ export function SearchResults(props) {
         </Link>;
     };
 
-    if (!props.loading && !cis) {
-        return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: "1"}}>
-            <Text type="secondary">Use the search bar on the left to start searching...</Text>
-        </div>;
+    if (!loading && !cis) {
+        if (error) {
+            return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: "1"}}>
+                <Text type="danger">Encountered error while searching. Please try again...</Text>
+            </div>;
+        } else {
+            return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: "1"}}>
+                <Text type="secondary">Use the search bar on the left to start searching...</Text>
+            </div>;
+        }
     } else {
-        if (props.loading) {
+        if (loading) {
             return <Spin spinning={true} size="large" tip="Searching...">&nbsp;</Spin>;
         } else {
             return <>  
