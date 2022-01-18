@@ -98,11 +98,17 @@ namespace Omnikeeper.Controllers
             // TODO: we should only call *.Init() on app startup and after trait changes... NOT on every request
             if (!_schema.Initialized)
             {
-                var typesContainers = await traitEntitiesQuerySchemaLoader.CreateTypes(trans, _schema, logger);
-                lock (traitEntitiesInitLock)
+                try
                 {
-                    traitEntitiesQuerySchemaLoader.Init(typesContainers);
-                    traitEntitiesMutationSchemaLoader.Init(typesContainers);
+                    var typesContainers = await traitEntitiesQuerySchemaLoader.CreateTypes(trans, _schema, logger);
+                    lock (traitEntitiesInitLock)
+                    {
+                        traitEntitiesQuerySchemaLoader.Init(typesContainers);
+                        traitEntitiesMutationSchemaLoader.Init(typesContainers);
+                    }
+                } catch(Exception e)
+                {
+                    logger.LogError(e, "Encountered error while creating trait entity GraphQL schema");
                 }
             }
 
