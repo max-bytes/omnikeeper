@@ -141,11 +141,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class ElementType : ObjectGraphType
     {
-        public ElementType(ITrait at, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, ICIModel ciModel)
-        {
-            Name = TraitEntityTypesNameGenerator.GenerateTraitEntityGraphTypeName(at);
+        public readonly ITrait UnderlyingTrait;
 
-            foreach (var ta in at.RequiredAttributes.Concat(at.OptionalAttributes))
+        public ElementType(ITrait underlyingTrait, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, ICIModel ciModel)
+        {
+            Name = TraitEntityTypesNameGenerator.GenerateTraitEntityGraphTypeName(underlyingTrait);
+
+            foreach (var ta in underlyingTrait.RequiredAttributes.Concat(underlyingTrait.OptionalAttributes))
             {
                 var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
 
@@ -172,7 +174,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 });
             }
 
-            foreach (var r in at.RequiredRelations.Concat(at.OptionalRelations))
+            foreach (var r in underlyingTrait.RequiredRelations.Concat(underlyingTrait.OptionalRelations))
             {
                 var relationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
                 AddField(new FieldType()
@@ -200,6 +202,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     })
                 });
             }
+
+            this.UnderlyingTrait = underlyingTrait;
         }
     }
 
@@ -312,6 +316,49 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 return finalCI;
             });
+        }
+    }
+
+
+    public class MergedCI2TraitEntityWrapper : ObjectGraphType
+    {
+        public static readonly string StaticName = "MergedCI2TraitEntityWrapper";
+
+        public MergedCI2TraitEntityWrapper(IEnumerable<ElementTypesContainer> typesContainers, IDataLoaderService dataLoaderService, IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider)
+        {
+            this.Name = StaticName;
+
+            if (typesContainers.IsEmpty())
+            {
+                // NOTE: because graphql types MUST define at least one field, we define a placeholder field whose single purpose is to simply exist and fulfill the requirement
+                // when there are no types
+                Field<StringGraphType>("placeholder", resolve: ctx => "placeholder");
+            }
+
+            foreach (var typeContainer in typesContainers)
+            {
+                var traitID = typeContainer.Trait.ID;
+                var fieldName = TraitEntityTypesNameGenerator.GenerateTraitIDFieldName(traitID);
+                this.Field(fieldName, typeContainer.Element, resolve: context =>
+                {
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var ci = context.Parent?.Source as MergedCI;
+
+                    if (ci == null)
+                        throw new Exception("Could not get MergedCI from context... implementation bug?");
+
+                    // NOTE: we assume here that the ci has all relevant attributes loaded for properly checking for effective trait/trait entity
+                    // this is ensured through ForwardInspectRequiredAttributes()
+
+                    var ret = dataLoaderService.SetupAndLoadEffectiveTraitLoader(ci, NamedTraitsSelection.Build(traitID), effectiveTraitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                        .Then(ets => {
+                            var et = ets.FirstOrDefault();
+                            return et;
+                        });
+
+                    return ret;
+                });
+            }
         }
     }
 }

@@ -37,7 +37,7 @@ namespace Omnikeeper.Controllers
         private readonly ITraitsProvider traitsProvider;
         private readonly TraitEntitiesQuerySchemaLoader traitEntitiesQuerySchemaLoader;
         private readonly TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader;
-        private readonly ElementTypesContainerCreator elementTypesContainerCreator;
+        private readonly TypeContainerCreator typeContainerCreator;
         private readonly ILogger<GraphQLController> logger;
         private readonly ICurrentUserAccessor _currentUserService;
 
@@ -47,7 +47,7 @@ namespace Omnikeeper.Controllers
             IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env,
             IHostApplicationLifetime appLifetime, ITraitsProvider traitsProvider,
             TraitEntitiesQuerySchemaLoader traitEntitiesTypeLoader, TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader,
-            ILogger<GraphQLController> logger, ElementTypesContainerCreator elementTypesContainerCreator)
+            ILogger<GraphQLController> logger, TypeContainerCreator elementTypesContainerCreator)
         {
             _currentUserService = currentUserService;
             _schema = schema;
@@ -62,7 +62,7 @@ namespace Omnikeeper.Controllers
             this.traitEntitiesQuerySchemaLoader = traitEntitiesTypeLoader;
             this.traitEntitiesMutationSchemaLoader = traitEntitiesMutationSchemaLoader;
             this.logger = logger;
-            this.elementTypesContainerCreator = elementTypesContainerCreator;
+            this.typeContainerCreator = elementTypesContainerCreator;
         }
 
         [HttpPost]
@@ -110,9 +110,9 @@ namespace Omnikeeper.Controllers
                     var activeTraits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
                     lock (traitEntitiesInitLock)
                     {
-                        var typesContainers = elementTypesContainerCreator.CreateTypes(activeTraits, _schema, logger);
-                        traitEntitiesQuerySchemaLoader.Init(typesContainers);
-                        traitEntitiesMutationSchemaLoader.Init(typesContainers);
+                        var typeContainer = typeContainerCreator.CreateTypes(activeTraits, _schema, logger);
+                        traitEntitiesQuerySchemaLoader.Init(typeContainer);
+                        traitEntitiesMutationSchemaLoader.Init(typeContainer);
                     }
                 } catch(Exception e)
                 {

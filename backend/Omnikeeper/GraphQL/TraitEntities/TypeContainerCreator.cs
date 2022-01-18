@@ -16,7 +16,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public readonly IDInputType? IDInputType;
         public readonly UpsertInputType UpsertInputType;
 
-        public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType, TraitEntityRootType rootQueryType, UpsertInputType upsertInputType)
+        public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType, 
+            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType)
         {
             Trait = trait;
             Element = element;
@@ -27,7 +28,19 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
-    public class ElementTypesContainerCreator
+    public class TypeContainer
+    {
+        public readonly IEnumerable<ElementTypesContainer> ElementTypes;
+        public readonly MergedCI2TraitEntityWrapper MergedCI2TraitEntityWrapper;
+
+        public TypeContainer(IEnumerable<ElementTypesContainer> elementTypes, MergedCI2TraitEntityWrapper mergedCI2TraitEntityWrapper)
+        {
+            ElementTypes = elementTypes;
+            MergedCI2TraitEntityWrapper = mergedCI2TraitEntityWrapper;
+        }
+    }
+
+    public class TypeContainerCreator
     {
         private readonly ITraitsProvider traitsProvider;
         private readonly IAttributeModel attributeModel;
@@ -36,7 +49,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly ICIModel ciModel;
         private readonly IDataLoaderService dataLoaderService;
 
-        public ElementTypesContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService)
+        public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel, 
+            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService)
         {
             this.traitsProvider = traitsProvider;
             this.attributeModel = attributeModel;
@@ -46,9 +60,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
             this.dataLoaderService = dataLoaderService;
         }
 
-        public IEnumerable<ElementTypesContainer> CreateTypes(IDictionary<string, ITrait> activeTraits, ISchema schema, ILogger logger)
+        public TypeContainer CreateTypes(IDictionary<string, ITrait> activeTraits, ISchema schema, ILogger logger)
         {
-            var ret = new List<ElementTypesContainer>();
+            var elementTypes = new List<ElementTypesContainer>();
             foreach (var at in activeTraits)
             {
                 if (at.Key == TraitEmpty.StaticID) // ignore the empty trait
@@ -65,14 +79,17 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     // TODO: needed?
                     //schema.RegisterTypes(upsertInputType, t);
 
-                    ret.Add(new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType));
+                    elementTypes.Add(new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType));
                 }
                 catch (Exception e)
                 {
                     logger.LogError(e, $"Could not create types for trait entity with trait ID {at.Key}");
                 }
             }
-            return ret;
+
+            var w = new MergedCI2TraitEntityWrapper(elementTypes, dataLoaderService, effectiveTraitModel, traitsProvider);
+
+            return new TypeContainer(elementTypes, w);
         }
 
     }

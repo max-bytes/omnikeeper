@@ -48,20 +48,20 @@ namespace Omnikeeper.GraphQL.TraitEntities
             return t.et;
         }
 
-        public void Init(IEnumerable<ElementTypesContainer> typesContainers)
+        public void Init(TypeContainer typeContainer)
         {
-            foreach (var typeContainer in typesContainers)
+            foreach (var elementTypeContainer in typeContainer.ElementTypes)
             {
-                var traitID = typeContainer.Trait.ID;
+                var traitID = elementTypeContainer.Trait.ID;
 
-                var traitEntityModel = new TraitEntityModel(typeContainer.Trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
+                var traitEntityModel = new TraitEntityModel(elementTypeContainer.Trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
 
                 var upsertByCIIDMutationName = TraitEntityTypesNameGenerator.GenerateUpsertByCIIDMutationName(traitID);
-                tet.FieldAsync(upsertByCIIDMutationName, typeContainer.ElementWrapper,
+                tet.FieldAsync(upsertByCIIDMutationName, elementTypeContainer.ElementWrapper,
                     arguments: new QueryArguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                        new QueryArgument(new NonNullGraphType(typeContainer.UpsertInputType)) { Name = "input" },
+                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" },
                         new QueryArgument(new GuidGraphType()) { Name = "ciid" }),
                     resolve: async context =>
                     {
@@ -81,7 +81,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (context.GetArgument(typeof(object), "input") is not IDictionary<string, object> upsertInputCollection)
                             throw new Exception("Invalid input object for upsert detected");
 
-                        var (inputAttributeValues, inputRelationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, typeContainer.Trait);
+                        var (inputAttributeValues, inputRelationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, elementTypeContainer.Trait);
 
                         var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
@@ -120,14 +120,14 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         return removed;
                     });
 
-                if (typeContainer.IDInputType != null) // only add *byDataID-mutations for trait entities that have an ID
+                if (elementTypeContainer.IDInputType != null) // only add *byDataID-mutations for trait entities that have an ID
                 {
                     var upsertByDataIDMutationName = TraitEntityTypesNameGenerator.GenerateUpsertByDataIDMutationName(traitID);
-                    tet.FieldAsync(upsertByDataIDMutationName, typeContainer.ElementWrapper,
+                    tet.FieldAsync(upsertByDataIDMutationName, elementTypeContainer.ElementWrapper,
                         arguments: new QueryArguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                            new QueryArgument(new NonNullGraphType(typeContainer.UpsertInputType)) { Name = "input" }),
+                            new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" }),
                         resolve: async context =>
                         {
                             var layerStrings = context.GetArgument<string[]>("layers")!;
@@ -145,8 +145,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (context.GetArgument(typeof(object), "input") is not IDictionary<string, object> upsertInputCollection)
                                 throw new Exception("Invalid input object for upsert detected");
 
-                            var (inputAttributeValues, inputRelationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, typeContainer.Trait);
-                            var idAttributeValues = TraitEntityHelper.InputDictionary2IDAttributeTuples(upsertInputCollection, typeContainer.Trait);
+                            var (inputAttributeValues, inputRelationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, elementTypeContainer.Trait);
+                            var idAttributeValues = TraitEntityHelper.InputDictionary2IDAttributeTuples(upsertInputCollection, elementTypeContainer.Trait);
 
                             if (idAttributeValues.IsEmpty())
                             {
@@ -167,7 +167,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         arguments: new QueryArguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                            new QueryArgument(new NonNullGraphType(typeContainer.IDInputType)) { Name = "id" }
+                            new QueryArgument(new NonNullGraphType(elementTypeContainer.IDInputType)) { Name = "id" }
                         ),
                         description: @"Note on the return value: deleteByDataID* only returns true if the trait entity was present 
                             (and found through its ID) first, and it is not present anymore after the deletion.",
@@ -190,7 +190,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (idCollection == null)
                                 throw new Exception("Invalid input object for trait entity ID detected");
 
-                            var idAttributeValues = TraitEntityHelper.InputDictionary2IDAttributeTuples(idCollection, typeContainer.Trait);
+                            var idAttributeValues = TraitEntityHelper.InputDictionary2IDAttributeTuples(idCollection, elementTypeContainer.Trait);
 
                             // TODO: use data loader?
                             var foundCIID = await traitEntityModel.GetSingleCIIDByAttributeValueTuples(idAttributeValues, layerset, trans, timeThreshold);

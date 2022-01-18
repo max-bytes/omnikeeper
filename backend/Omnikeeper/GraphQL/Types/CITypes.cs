@@ -1,5 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
+using GraphQL.Execution;
 using GraphQL.Language.AST;
 using GraphQL.Types;
 using Omnikeeper.Base.Entity;
@@ -9,6 +10,9 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.GraphQL.TraitEntities;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -98,6 +102,7 @@ namespace Omnikeeper.GraphQL.Types
             IAttributeSelection baseAttributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute);
             IAttributeSelection attributeSelectionBecauseOfMergedAttributes = NoAttributesSelection.Instance;
             IAttributeSelection attributeSelectionBecauseOfTraits = NoAttributesSelection.Instance;
+            IAttributeSelection attributeSelectionBecauseOfTraitEntities = NoAttributesSelection.Instance;
             if (context.SubFields != null && context.SubFields.TryGetValue("mergedAttributes", out var mergedAttributesField))
             {
                 // check whether or not the attributeNames parameter was set, in which case we can reduce the attributes to query for
@@ -132,6 +137,7 @@ namespace Omnikeeper.GraphQL.Types
                         return null;
                     }).Where(v => v != null).Select(v => v!).ToHashSet();
 
+                    // TODO: more performant, rely on dictionary
                     var allTraits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
                     var requestedTraits = allTraits.Where(t => requestedTraitIDs.Contains(t.ID));
 
@@ -147,8 +153,58 @@ namespace Omnikeeper.GraphQL.Types
                     attributeSelectionBecauseOfTraits = AllAttributeSelection.Instance;
                 }
             }
-            var finalAttributeSelection = baseAttributeSelection.Union(attributeSelectionBecauseOfMergedAttributes).Union(attributeSelectionBecauseOfTraits);
+            if (context.SubFields != null && context.SubFields.TryGetValue("traitEntity", out var traitEntityField))
+            {
+                var selectedTraitEntityFields = traitEntityField.SelectionSet?.Selections;
+
+                if (selectedTraitEntityFields != null)
+                {
+                    var parentGraphType = context.Schema.AllTypes.FirstOrDefault(t => t.Name == MergedCI2TraitEntityWrapper.StaticName) as IObjectGraphType;
+                    if (parentGraphType == null) throw new Exception();
+
+                    // from the field name, resolve the actual trait entity name
+                    foreach (var selection in selectedTraitEntityFields)
+                    {
+                        var field = selection as Field;
+                        if (field == null) throw new Exception();
+                        var ft = _GetAroundProtectedFunctions.PublicGetFieldDefinition(context.Schema, parentGraphType, field);
+                        var rt = ft?.ResolvedType as ElementType;
+                        var underlyingTrait = rt?.UnderlyingTrait;
+                        if (underlyingTrait == null) throw new Exception();
+
+                        var @as = NamedAttributesSelection.Build(
+                            underlyingTrait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Union(underlyingTrait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet()
+                        );
+                        attributeSelectionBecauseOfTraitEntities = attributeSelectionBecauseOfTraitEntities.Union(@as);
+                    }
+                }
+            }
+
+            var finalAttributeSelection = baseAttributeSelection
+                .Union(attributeSelectionBecauseOfMergedAttributes)
+                .Union(attributeSelectionBecauseOfTraits)
+                .Union(attributeSelectionBecauseOfTraitEntities);
             return finalAttributeSelection;
+        }
+
+        private static readonly GetAroundProtectedFunctions _GetAroundProtectedFunctions = new();
+
+        private class GetAroundProtectedFunctions : ExecutionStrategy
+        {
+            protected override Task ExecuteNodeTreeAsync(ExecutionContext context, ObjectExecutionNode rootNode)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public Dictionary<string, Field> PublicCollectFieldsFrom(ExecutionContext context, IGraphType specificType, SelectionSet selectionSet, Dictionary<string, Field>? fields)
+            {
+                return base.CollectFieldsFrom(context, specificType, selectionSet, fields);
+            }
+
+            public FieldType? PublicGetFieldDefinition(ISchema schema, IObjectGraphType parentType, Field field)
+            {
+                return base.GetFieldDefinition(schema, parentType, field);
+            }
         }
     }
 
