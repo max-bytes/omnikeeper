@@ -33,7 +33,7 @@ namespace OKPluginValidation.Tests
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitEntityHelper.Class2RecursiveTrait<Validation.Validation>();
+            var et = GenericTraitEntityHelper.Class2RecursiveTrait<Validation.Validation>();
 
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.validation.validation", new TraitOriginV1(TraitOriginType.Plugin),

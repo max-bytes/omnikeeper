@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Model.TraitBased;
 using System.Collections.Immutable;
+using Microsoft.Extensions.Logging;
 
 namespace Omnikeeper.Model
 {
@@ -19,12 +20,14 @@ namespace Omnikeeper.Model
         private readonly GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IEnumerable<IPluginRegistration> loadedPlugins;
+        private readonly ILogger<TraitsProvider> logger;
 
-        public TraitsProvider(GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel, IMetaConfigurationModel metaConfigurationModel, IEnumerable<IPluginRegistration> loadedPlugins)
+        public TraitsProvider(GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel, IMetaConfigurationModel metaConfigurationModel, IEnumerable<IPluginRegistration> loadedPlugins, ILogger<TraitsProvider> logger)
         {
             this.dataTraitModel = dataTraitModel;
             this.metaConfigurationModel = metaConfigurationModel;
             this.loadedPlugins = loadedPlugins;
+            this.logger = logger;
         }
 
         // TODO: caching of active trait sets
@@ -32,7 +35,15 @@ namespace Omnikeeper.Model
         {
             var pluginTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>();
             foreach (var plugin in loadedPlugins)
-                pluginTraitSets.Add($"okplugin-{plugin.Name}", plugin.DefinedTraits);
+            {
+                try
+                {
+                    pluginTraitSets.Add($"okplugin-{plugin.Name}", plugin.DefinedTraits);
+                } catch (Exception e)
+                {
+                    logger.LogError(e, $"Could not load defined traits from plugin {plugin.Name}");
+                }
+            }
 
 
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?

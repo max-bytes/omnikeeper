@@ -7,10 +7,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
-using Omnikeeper.GraphQL.Types;
+using Omnikeeper.GraphQL.TraitEntities;
 using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
@@ -32,8 +34,10 @@ namespace Omnikeeper.Controllers
         private readonly IEnumerable<IValidationRule> _validationRules;
         private readonly IWebHostEnvironment _env;
         private readonly IHostApplicationLifetime appLifetime;
+        private readonly ITraitsProvider traitsProvider;
         private readonly TraitEntitiesQuerySchemaLoader traitEntitiesQuerySchemaLoader;
         private readonly TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader;
+        private readonly ElementTypesContainerCreator elementTypesContainerCreator;
         private readonly ILogger<GraphQLController> logger;
         private readonly ICurrentUserAccessor _currentUserService;
 
@@ -41,9 +45,9 @@ namespace Omnikeeper.Controllers
             IDocumentExecuter documentExecuter, IDocumentWriter documentWriter,
             IModelContextBuilder modelContextBuilder, DataLoaderDocumentListener dataLoaderDocumentListener,
             IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env,
-            IHostApplicationLifetime appLifetime,
+            IHostApplicationLifetime appLifetime, ITraitsProvider traitsProvider,
             TraitEntitiesQuerySchemaLoader traitEntitiesTypeLoader, TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader,
-            ILogger<GraphQLController> logger)
+            ILogger<GraphQLController> logger, ElementTypesContainerCreator elementTypesContainerCreator)
         {
             _currentUserService = currentUserService;
             _schema = schema;
@@ -54,9 +58,11 @@ namespace Omnikeeper.Controllers
             _validationRules = validationRules;
             _env = env;
             this.appLifetime = appLifetime;
+            this.traitsProvider = traitsProvider;
             this.traitEntitiesQuerySchemaLoader = traitEntitiesTypeLoader;
             this.traitEntitiesMutationSchemaLoader = traitEntitiesMutationSchemaLoader;
             this.logger = logger;
+            this.elementTypesContainerCreator = elementTypesContainerCreator;
         }
 
         [HttpPost]
@@ -100,9 +106,11 @@ namespace Omnikeeper.Controllers
             {
                 try
                 {
-                    var typesContainers = await traitEntitiesQuerySchemaLoader.CreateTypes(trans, _schema, logger);
+                    var timeThreshold = TimeThreshold.BuildLatest();
+                    var activeTraits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
                     lock (traitEntitiesInitLock)
                     {
+                        var typesContainers = elementTypesContainerCreator.CreateTypes(activeTraits, _schema, logger);
                         traitEntitiesQuerySchemaLoader.Init(typesContainers);
                         traitEntitiesMutationSchemaLoader.Init(typesContainers);
                     }

@@ -9,6 +9,7 @@ using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.GraphQL.TraitEntities;
 using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Service;
 using System;
@@ -491,7 +492,7 @@ namespace Omnikeeper.GraphQL
                     .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                     .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
-                return new TraitEntities();
+                return new TraitEntities.TraitEntities();
             });
         }
 

@@ -7,23 +7,13 @@ using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.GraphQL.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static Omnikeeper.GraphQL.Types.TraitEntitiesQuerySchemaLoader;
-using static Omnikeeper.GraphQL.Types.TraitEntitiesType;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.GraphQL.TraitEntities
 {
-    public partial class GraphQLMutation
-    {
-        public void CreateTraitEntities()
-        {
-        }
-    }
-
     public class TraitEntitiesMutationSchemaLoader
     {
         private readonly GraphQLMutation tet;
@@ -46,11 +36,6 @@ namespace Omnikeeper.GraphQL
             this.changesetModel = changesetModel;
         }
 
-        private static string GenerateUpsertByCIIDMutationName(string traitID) => "upsertByCIID_" + SanitizeMutationName(traitID);
-        private static string GenerateDeleteByCIIDMutationName(string traitID) => "deleteByCIID_" + SanitizeMutationName(traitID);
-        private static string GenerateUpsertByDataIDMutationName(string traitID) => "upsertByDataID_" + SanitizeMutationName(traitID);
-        private static string GenerateDeleteByDataIDMutationName(string traitID) => "deleteByDataID_" + SanitizeMutationName(traitID);
-
         private async Task<EffectiveTrait> Upsert(Guid? ciid, (string name, IAttributeValue value, bool isID)[] attributeValues, (string predicateID, bool forward, Guid[] relatedCIIDs)[] relationValues, IModelContext trans, IChangesetProxy changeset, TraitEntityModel traitEntityModel, LayerSet layerset, string writeLayerID)
         {
             var finalCIID = (ciid.HasValue) ? ciid.Value : await ciModel.CreateCI(trans);
@@ -71,7 +56,7 @@ namespace Omnikeeper.GraphQL
 
                 var traitEntityModel = new TraitEntityModel(typeContainer.Trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
 
-                var upsertByCIIDMutationName = GenerateUpsertByCIIDMutationName(traitID);
+                var upsertByCIIDMutationName = TraitEntityTypesNameGenerator.GenerateUpsertByCIIDMutationName(traitID);
                 tet.FieldAsync(upsertByCIIDMutationName, typeContainer.ElementWrapper,
                     arguments: new QueryArguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
@@ -96,7 +81,7 @@ namespace Omnikeeper.GraphQL
                         if (context.GetArgument(typeof(object), "input") is not IDictionary<string, object> upsertInputCollection)
                             throw new Exception("Invalid input object for upsert detected");
 
-                        var (inputAttributeValues, inputRelationValues) = TraitEntitiesType.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, typeContainer.Trait);
+                        var (inputAttributeValues, inputRelationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, typeContainer.Trait);
 
                         var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
@@ -105,7 +90,7 @@ namespace Omnikeeper.GraphQL
                         return et;
                     });
 
-                var deleteByCIIDMutationName = GenerateDeleteByCIIDMutationName(traitID);
+                var deleteByCIIDMutationName = TraitEntityTypesNameGenerator.GenerateDeleteByCIIDMutationName(traitID);
                 tet.FieldAsync(deleteByCIIDMutationName, new BooleanGraphType(),
                     arguments: new QueryArguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
@@ -137,7 +122,7 @@ namespace Omnikeeper.GraphQL
 
                 if (typeContainer.IDInputType != null) // only add *byDataID-mutations for trait entities that have an ID
                 {
-                    var upsertByDataIDMutationName = GenerateUpsertByDataIDMutationName(traitID);
+                    var upsertByDataIDMutationName = TraitEntityTypesNameGenerator.GenerateUpsertByDataIDMutationName(traitID);
                     tet.FieldAsync(upsertByDataIDMutationName, typeContainer.ElementWrapper,
                         arguments: new QueryArguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
@@ -160,8 +145,8 @@ namespace Omnikeeper.GraphQL
                             if (context.GetArgument(typeof(object), "input") is not IDictionary<string, object> upsertInputCollection)
                                 throw new Exception("Invalid input object for upsert detected");
 
-                            var (inputAttributeValues, inputRelationValues) = TraitEntitiesType.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, typeContainer.Trait);
-                            var idAttributeValues = TraitEntitiesType.InputDictionary2IDAttributeTuples(upsertInputCollection, typeContainer.Trait);
+                            var (inputAttributeValues, inputRelationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, typeContainer.Trait);
+                            var idAttributeValues = TraitEntityHelper.InputDictionary2IDAttributeTuples(upsertInputCollection, typeContainer.Trait);
 
                             if (idAttributeValues.IsEmpty())
                             {
@@ -177,7 +162,7 @@ namespace Omnikeeper.GraphQL
                             return et;
                         });
 
-                    var deleteByDataIDMutationName = GenerateDeleteByDataIDMutationName(traitID);
+                    var deleteByDataIDMutationName = TraitEntityTypesNameGenerator.GenerateDeleteByDataIDMutationName(traitID);
                     tet.FieldAsync(deleteByDataIDMutationName, new BooleanGraphType(),
                         arguments: new QueryArguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
@@ -205,7 +190,7 @@ namespace Omnikeeper.GraphQL
                             if (idCollection == null)
                                 throw new Exception("Invalid input object for trait entity ID detected");
 
-                            var idAttributeValues = InputDictionary2IDAttributeTuples(idCollection, typeContainer.Trait);
+                            var idAttributeValues = TraitEntityHelper.InputDictionary2IDAttributeTuples(idCollection, typeContainer.Trait);
 
                             // TODO: use data loader?
                             var foundCIID = await traitEntityModel.GetSingleCIIDByAttributeValueTuples(idAttributeValues, layerset, trans, timeThreshold);

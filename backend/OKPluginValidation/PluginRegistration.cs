@@ -22,8 +22,8 @@ namespace OKPluginValidation
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => new RecursiveTrait[] {
-            TraitEntityHelper.Class2RecursiveTrait<Validation.Validation>(),
-            TraitEntityHelper.Class2RecursiveTrait<ValidationIssue>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<Validation.Validation>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<ValidationIssue>(),
         };
 
         public override void RegisterHangfireJobRunners()

@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
-    public static class TraitEntityHelper
+    public static class GenericTraitEntityHelper
     {
         public static (TraitEntityAttribute te, IEnumerable<TraitAttributeFieldInfo> ta, IEnumerable<TraitRelationFieldInfo> tr) ExtractFieldInfos<C>() where C : TraitEntity, new()
         {
@@ -48,7 +48,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (ta, attributeFieldInfos, relationFieldInfos);
         }
 
-        public static TraitEntityIDAttributeInfos<C, ID> ExtractIDAttributeInfos<C, ID>() where C : TraitEntity, new() where ID : notnull
+        public static GenericTraitEntityIDAttributeInfos<C, ID> ExtractIDAttributeInfos<C, ID>() where C : TraitEntity, new() where ID : notnull
         {
             Type type = typeof(C);
             var idFields = type.GetFields().Where(f => Attribute.IsDefined(f, typeof(TraitEntityIDAttribute)));
@@ -66,7 +66,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 var (attributeValueType, _) = Type2AttributeValueType(idField, taa);
                 outFields.Add((idField, taa.aName, attributeValueType));
             }
-            return new TraitEntityIDAttributeInfos<C, ID>(outFields);
+            return new GenericTraitEntityIDAttributeInfos<C, ID>(outFields);
         }
 
         public static C EffectiveTrait2Object<C>(EffectiveTrait et, MyJSONSerializer<object> jsonSerializer) where C : TraitEntity, new()

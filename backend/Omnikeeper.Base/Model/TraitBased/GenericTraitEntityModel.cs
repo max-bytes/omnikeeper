@@ -22,7 +22,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
         private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
-        private readonly TraitEntityIDAttributeInfos<T, ID> idAttributeInfos;
+        private readonly GenericTraitEntityIDAttributeInfos<T, ID> idAttributeInfos;
 
         private readonly TraitEntityModel traitEntityModel;
 
@@ -40,11 +40,11 @@ namespace Omnikeeper.Base.Model.TraitBased
         {
             this.ciModel = ciModel;
 
-            var trait = RecursiveTraitService.FlattenSingleRecursiveTrait(TraitEntityHelper.Class2RecursiveTrait<T>());
+            var trait = RecursiveTraitService.FlattenSingleRecursiveTrait(GenericTraitEntityHelper.Class2RecursiveTrait<T>());
 
-            (_, attributeFieldInfos, relationFieldInfos) = TraitEntityHelper.ExtractFieldInfos<T>();
+            (_, attributeFieldInfos, relationFieldInfos) = GenericTraitEntityHelper.ExtractFieldInfos<T>();
 
-            idAttributeInfos = TraitEntityHelper.ExtractIDAttributeInfos<T, ID>();
+            idAttributeInfos = GenericTraitEntityHelper.ExtractIDAttributeInfos<T, ID>();
 
             traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
         }
@@ -54,14 +54,14 @@ namespace Omnikeeper.Base.Model.TraitBased
             var et = await traitEntityModel.GetSingleByCIID(ciid, layerSet, trans, timeThreshold);
             if (et == null)
                 return default;
-            var dc = TraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
+            var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
             return (dc, ciid);
         }
 
         private async Task<IDictionary<Guid, T>> GetAllByCIID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var ets = await traitEntityModel.GetAllByCIID(layerSet, trans, timeThreshold);
-            return ets.ToDictionary(kv => kv.Key, kv => TraitEntityHelper.EffectiveTrait2Object<T>(kv.Value, DefaultSerializer));
+            return ets.ToDictionary(kv => kv.Key, kv => GenericTraitEntityHelper.EffectiveTrait2Object<T>(kv.Value, DefaultSerializer));
         }
 
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
@@ -85,7 +85,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var ret = new Dictionary<ID, T>();
             foreach (var et in ets)
             {
-                var dc = TraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer); 
+                var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer); 
                 var id = idAttributeInfos.ExtractIDFromEntity(dc);
                 if (!ret.ContainsKey(id))
                 {
@@ -149,7 +149,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(tuples);
             var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans);
 
-            var dc = TraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
+            var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
 
             return (dc, changed);
         }
