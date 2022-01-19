@@ -179,7 +179,7 @@ namespace Omnikeeper.Model
                 var actualNewInserts = inserts.Where(t => t.existingAttributeID == null);
                 if (!actualNewInserts.IsEmpty())
                 {
-                    using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
+                    using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, changeset_id) FROM STDIN (FORMAT BINARY)");
                     foreach (var (ciid, fullName, value, _, newAttributeID) in actualNewInserts)
                     {
                         var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(value);
@@ -192,7 +192,6 @@ namespace Omnikeeper.Model
                         writerLatest.Write(valueBinary);
                         writerLatest.Write(valueControl);
                         writerLatest.Write(layerID);
-                        writerLatest.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                         writerLatest.Write(changeset.ID);
                     }
                     writerLatest.Complete();
@@ -207,7 +206,7 @@ namespace Omnikeeper.Model
                 {
                     using var commandUpdateLatest = new NpgsqlCommand(@"
                         UPDATE attribute_latest SET id = @id, type = @type, value_text = @value_text, value_binary = @value_binary, 
-                        value_control = @value_control, ""timestamp"" = @timestamp, changeset_id = @changeset_id
+                        value_control = @value_control, changeset_id = @changeset_id
                         WHERE id = @old_id", trans.DBConnection, trans.DBTransaction);
                     var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(value);
                     commandUpdateLatest.Parameters.AddWithValue("id", newAttributeID);
@@ -216,7 +215,6 @@ namespace Omnikeeper.Model
                     commandUpdateLatest.Parameters.AddWithValue("value_text", valueText);
                     commandUpdateLatest.Parameters.AddWithValue("value_binary", valueBinary);
                     commandUpdateLatest.Parameters.AddWithValue("value_control", valueControl);
-                    commandUpdateLatest.Parameters.AddWithValue("timestamp", changeset.Timestamp);
                     commandUpdateLatest.Parameters.AddWithValue("changeset_id", changeset.ID);
                     await commandUpdateLatest.ExecuteNonQueryAsync();
                 }

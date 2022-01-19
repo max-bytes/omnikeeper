@@ -337,7 +337,7 @@ namespace Omnikeeper.Model
                 // new inserts
                 if (!inserts.IsEmpty())
                 {
-                    using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY relation_latest (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, ""timestamp"") FROM STDIN (FORMAT BINARY)");
+                    using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY relation_latest (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id) FROM STDIN (FORMAT BINARY)");
                     foreach (var (fromCIID, toCIID, predicateID, newRelationID) in inserts)
                     {
                         writerLatest.StartRow();
@@ -347,7 +347,6 @@ namespace Omnikeeper.Model
                         writerLatest.Write(predicateID);
                         writerLatest.Write(changeset.ID);
                         writerLatest.Write(layerID);
-                        writerLatest.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     }
                     writerLatest.Complete();
                     writerLatest.Close();
