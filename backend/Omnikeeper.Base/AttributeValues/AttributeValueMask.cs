@@ -1,5 +1,4 @@
-﻿using ProtoBuf;
-using System;
+﻿using System;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
@@ -7,7 +6,7 @@ namespace Omnikeeper.Entity.AttributeValues
     {
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    //[ProtoContract(SkipConstructor = true)]
     public class AttributeScalarValueMask : IAttributeScalarValue<object>, IEquatable<AttributeScalarValueMask>, IAttributeValueMask
     {
         private static readonly object o = new object();
@@ -17,6 +16,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public string[] ToRawDTOValues() => oArray;
         public object ToGenericObject() => o;
         public bool IsArray => false;
+        public object ToGraphQLValue() => o;
 
         public override string ToString() => $"AV-Mask";
 

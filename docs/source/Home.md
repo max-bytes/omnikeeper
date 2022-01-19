@@ -27,6 +27,17 @@ All stored data in omnikeeper breaks down into these three basic structures. Sta
 
 This approach to modelling data is not novel whatsoever. It is most well-known under the name [Entity-Attribute-Value Model](https://en.wikipedia.org/wiki/Entity%E2%80%93attribute%E2%80%93value_model). Many applications have used this or a similar approach to data modelling. However, omnikeeper introduces novel concepts and includes tools and features that make it unique.
 
+# Elements of omnikeeper
+
+|                        |             |                |                    |          |
+|------------------------|-------------|----------------|--------------------|----------|
+| **Data Storage**       | CIs         | [Attributes](attributes)     | Relations          | [Layers](layers)   |
+| **Data Structuring**   | CIs         | Relations      | [Layers](layers)             | [Traits](traits)   |
+| **Data Access**        | [GraphQL API](graphql-api) | REST API       | Technical Frontend | [GridView](gridview) |
+| **Data Generation**    | [Generators](generators)  | [Compute Layers](compute-layers) | [GridView](gridview)           |          |
+| **Data Authorization** | [Layers](layers)      | [AuthRoles](authorization)      |                    |          |
+| **Programmability**    | [Generators](generators)  | [Compute Layers](compute-layers) | [GridView](gridview)           | [Plugins](plugins)  |
+
 # Motivation - why does omnikeeper exist and what makes it special?
 
 In the realm of data modelling and applications that work with said data, there's one thing that's certain: change. Everything changes all the time: requirements of stakeholders and users, their access patterns, their usecases, ... and therefore, the data itself needs to change as well.  

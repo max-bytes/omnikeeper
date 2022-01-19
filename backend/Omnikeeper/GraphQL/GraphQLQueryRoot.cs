@@ -1,4 +1,5 @@
 ﻿using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
@@ -8,6 +9,8 @@ using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.GraphQL.TraitEntities;
+using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
@@ -23,6 +26,7 @@ namespace Omnikeeper.GraphQL
         private readonly ICIIDModel ciidModel;
         private readonly IAttributeModel attributeModel;
         private readonly ILayerModel layerModel;
+        private readonly ILayerDataModel layerDataModel;
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ITraitsProvider traitsProvider;
@@ -42,19 +46,20 @@ namespace Omnikeeper.GraphQL
         private readonly IBaseAttributeModel baseAttributeModel;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+        private readonly IDataLoaderService dataLoaderService;
 
-
-        public GraphQLQueryRoot(ICIIDModel ciidModel, IAttributeModel attributeModel, ILayerModel layerModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel,
+        public GraphQLQueryRoot(ICIIDModel ciidModel, IAttributeModel attributeModel, ILayerModel layerModel, ILayerDataModel layerDataModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel,
             ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, GenericTraitEntityModel<Predicate, string> predicateModel,
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GenericTraitEntityModel<GeneratorV1, string> generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
             GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
             IEnumerable<IPluginRegistration> plugins, ILatestLayerChangeModel latestLayerChangeModel, IBaseAttributeModel baseAttributeModel,
-            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
+            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, IDataLoaderService dataLoaderService)
         {
             this.ciidModel = ciidModel;
             this.attributeModel = attributeModel;
             this.layerModel = layerModel;
+            this.layerDataModel = layerDataModel;
             this.ciModel = ciModel;
             this.effectiveTraitModel = effectiveTraitModel;
             this.traitsProvider = traitsProvider;
@@ -74,6 +79,7 @@ namespace Omnikeeper.GraphQL
             this.baseAttributeModel = baseAttributeModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+            this.dataLoaderService = dataLoaderService;
 
             CreateMain();
             CreateManage();
@@ -162,7 +168,6 @@ namespace Omnikeeper.GraphQL
 
                     IAttributeSelection attributeSelection = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, userContext.Transaction, timeThreshold);
 
-
                     // create shallow copy, because we potentially modify these lists
                     IEnumerable<ITrait> requiredTraitsCopy = new List<ITrait>(requiredTraits.Values);
                     IEnumerable<ITrait> requiredNonTraitsCopy = new List<ITrait>(requiredNonTraits.Values);
@@ -188,6 +193,7 @@ namespace Omnikeeper.GraphQL
                     // NOTE: so, because it needs to check for traits it fetches more attributes, and hence this method may return more attributes than requested
                     var finalAttributeSelection = attributeSelection.Union(NamedAttributesSelection.Build(relevantAttributesForTraits));
 
+                    // TODO: includeEmptyCIs is slow, and most often, not necessary: find way to get rid of it
                     var workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, finalAttributeSelection, userContext.Transaction, timeThreshold);
 
                     // in case the empty trait is non-required, we reduce the workCIs list by those CIs that are empty
@@ -317,22 +323,22 @@ namespace Omnikeeper.GraphQL
                     return predicates.Values;
                 });
 
-            FieldAsync<ListGraphType<LayerType>>("layers",
+            Field<ListGraphType<LayerDataType>>("layers",
                 arguments: new QueryArguments(
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }
                     ),
-                resolve: async context =>
+                resolve: context =>
                 {
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                         .WithTimeThreshold(context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()), context.Path);
 
-                    var layers = await layerModel.GetLayers(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-
-                    // authz filter
-                    layers = layers.Where(l => layerBasedAuthorizationService.CanUserReadFromLayer(userContext.User, l));
-
-                    return layers;
+                    return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                        .Then(layersDict =>
+                        {
+                            // authz filter
+                            return layersDict.Values.Where(l => layerBasedAuthorizationService.CanUserReadFromLayer(userContext.User, l.LayerID));
+                        });
                 });
 
             FieldAsync<ChangesetType>("changeset",
@@ -349,6 +355,8 @@ namespace Omnikeeper.GraphQL
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                     var id = context.GetArgument<Guid>("id");
+
+                    // TODO: use dataloader
                     var changeset = await changesetModel.GetChangeset(id, userContext.Transaction);
                     return changeset;
                 });
@@ -378,7 +386,7 @@ namespace Omnikeeper.GraphQL
                     var limit = context.GetArgument<int?>("limit", null);
                     IChangesetSelection selection = new ChangesetSelectionAllCIs();
                     if (ciids != null)
-                        selection = ChangesetSelectionMultipleCIs.Build(ciids);
+                        selection = ChangesetSelectionSpecificCIs.Build(ciids);
 
                     // NOTE: we can't filter the changesets using CIBasedAuthorizationService because changesets are not bound to CIs
 
@@ -439,7 +447,7 @@ namespace Omnikeeper.GraphQL
 
                     var relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name)
                         .Concat(
-                            trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name)
+                            trait.OptionalAttributes.Select(ra => ra.AttributeTemplate.Name)
                         ).ToHashSet();
 
                     var cis = await ciModel.GetMergedCIs(ciidSelection, userContext.GetLayerSet(context.Path), false, NamedAttributesSelection.Build(relevantAttributesForTrait), userContext.Transaction, userContext.GetTimeThreshold(context.Path));
@@ -459,7 +467,7 @@ namespace Omnikeeper.GraphQL
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
 
-                    var layers = await layerModel.GetLayers(userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: we only need count, implement more efficient model method
+                    var layers = await layerModel.GetLayers(userContext.Transaction); // TODO: we only need count, implement more efficient model method
                     var ciids = await ciidModel.GetCIIDs(userContext.Transaction);
                     var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
                     var predicates = await predicateModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement PredicateProvider
@@ -473,6 +481,21 @@ namespace Omnikeeper.GraphQL
 
                     return new Statistics(ciids.Count(), numActiveAttributes, numActiveRelations, numChangesets, numAttributeChanges, numRelationChanges, layers.Count(), traits.Count(), predicates.Count(), generators.Count());
                 });
+
+            FieldAsync<TraitEntitiesType>("traitEntities",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
+                resolve: async context =>
+            {
+                var layerStrings = context.GetArgument<string[]>("layers")!;
+
+                var userContext = await context.SetupUserContext()
+                    .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                    .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                    .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                return new TraitEntities.TraitEntities();
+            });
         }
 
         private void CreatePlugin(IEnumerable<IPluginRegistration> plugins)

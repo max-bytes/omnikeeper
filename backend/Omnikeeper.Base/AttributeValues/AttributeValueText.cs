@@ -1,8 +1,6 @@
 ﻿using Omnikeeper.Base.Entity;
-using ProtoBuf;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -12,21 +10,23 @@ namespace Omnikeeper.Entity.AttributeValues
     {
         IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
         IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex);
-        bool FullTextSearch(string searchString, CompareOptions compareOptions); // TODO: remove, not needed
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    //[ProtoContract(SkipConstructor = true)]
     public class AttributeScalarValueText : IAttributeScalarValue<string>, IEquatable<AttributeScalarValueText>, IAttributeValueText
     {
-        [ProtoMember(1)] private readonly bool multiline;
+        //[ProtoMember(1)] 
+        private readonly bool multiline;
         public bool Multiline => multiline;
-        [ProtoMember(2)] private readonly string value;
+        //[ProtoMember(2)] 
+        private readonly string value;
         public string Value => value;
 
         public string Value2String() => Value;
         public string[] ToRawDTOValues() => new string[] { Value };
         public object ToGenericObject() => Value;
         public bool IsArray => false;
+        public object ToGraphQLValue() => Value;
 
         public override string ToString() => $"AV-Text: {Value2String()}";
 
@@ -55,13 +55,9 @@ namespace Omnikeeper.Entity.AttributeValues
             if (!match.Success)
                 yield return new TemplateErrorAttributeGeneric($"Regex {regex} did not match text {Value}");
         }
-
-        // TODO: not needed, remove
-        public bool FullTextSearch(string searchString, CompareOptions compareOptions)
-            => CultureInfo.InvariantCulture.CompareInfo.IndexOf(Value, searchString, compareOptions) >= 0;
     }
 
-    [ProtoContract]
+    //[ProtoContract]
     public class AttributeArrayValueText : AttributeArrayValue<AttributeScalarValueText, string>, IAttributeValueText
     {
         protected AttributeArrayValueText(AttributeScalarValueText[] values) : base(values)
@@ -96,11 +92,6 @@ namespace Omnikeeper.Entity.AttributeValues
             {
                 foreach (var e in Values[i].MatchRegex(regex)) yield return e;
             }
-        }
-
-        public bool FullTextSearch(string searchString, CompareOptions compareOptions)
-        {
-            return Values.Any(v => v.FullTextSearch(searchString, compareOptions));
         }
 
     }

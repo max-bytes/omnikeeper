@@ -14,7 +14,7 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
 export default function AgGridCrud(props) {
 
-  const {rowData, setRowData, deleteRow, saveRow, setupNewRowData, onRefresh, columnDefs, idIsUserCreated, deletableRows, loading} = props;
+  const {rowData, setRowData, deleteRow, saveRow, disableAddRow, setupNewRowData, onRefresh, columnDefs, idIsUserCreated, deletableRows, loading} = props;
 
   var [isSaving, setIsSaving] = useState(false);
 
@@ -172,7 +172,7 @@ export default function AgGridCrud(props) {
     <div className="button-toolbar">
         <div className="button-toolbar-row" style={{ display: "flex", justifyContent: "space-between", marginTop: "10px", marginBottom: "10px" }}>
             <div style={{ display: "flex" }}>
-                <Button style={{ display: "flex" }} onClick={e => addRow()}>Add Row</Button>
+                {!disableAddRow && <Button style={{ display: "flex" }} onClick={e => addRow()}>Add Row</Button>}
             </div>
             <div style={{ display: "flex" }}>
                 <Button onClick={e => save()} disabled={!hasEditedOrDeletedRowData} loading={isSaving}>Save</Button>

@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ProtoBuf;
-using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -9,7 +7,7 @@ using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    [ProtoContract(Serializer = typeof(AttributeScalarValueJSONSerializer))]
+    //[ProtoContract(Serializer = typeof(AttributeScalarValueJSONSerializer))]
     public class AttributeScalarValueJSON : IAttributeScalarValue<JToken>, IEquatable<AttributeScalarValueJSON>
     {
         public static JToken ErrorValue(string message) => JToken.Parse($"{{\"error\": \"{message}\" }}");
@@ -25,6 +23,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public string[] ToRawDTOValues() => new string[] { valueStr };
         public object ToGenericObject() => Value;
         public bool IsArray => false;
+        public object ToGraphQLValue() => valueStr;
 
         public AttributeValueType Type => AttributeValueType.JSON;
 
@@ -58,44 +57,44 @@ namespace Omnikeeper.Entity.AttributeValues
         }
     }
 
-    public class AttributeScalarValueJSONSerializer : ISubTypeSerializer<AttributeScalarValueJSON>, ISerializer<AttributeScalarValueJSON>
-    {
-        SerializerFeatures ISerializer<AttributeScalarValueJSON>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
-        void ISerializer<AttributeScalarValueJSON>.Write(ref ProtoWriter.State state, AttributeScalarValueJSON value)
-            => ((ISubTypeSerializer<AttributeScalarValueJSON>)this).WriteSubType(ref state, value);
-        AttributeScalarValueJSON ISerializer<AttributeScalarValueJSON>.Read(ref ProtoReader.State state, AttributeScalarValueJSON value)
-            => ((ISubTypeSerializer<AttributeScalarValueJSON>)this).ReadSubType(ref state, SubTypeState<AttributeScalarValueJSON>.Create(state.Context, value));
+    //public class AttributeScalarValueJSONSerializer : ISubTypeSerializer<AttributeScalarValueJSON>, ISerializer<AttributeScalarValueJSON>
+    //{
+    //    SerializerFeatures ISerializer<AttributeScalarValueJSON>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
+    //    void ISerializer<AttributeScalarValueJSON>.Write(ref ProtoWriter.State state, AttributeScalarValueJSON value)
+    //        => ((ISubTypeSerializer<AttributeScalarValueJSON>)this).WriteSubType(ref state, value);
+    //    AttributeScalarValueJSON ISerializer<AttributeScalarValueJSON>.Read(ref ProtoReader.State state, AttributeScalarValueJSON value)
+    //        => ((ISubTypeSerializer<AttributeScalarValueJSON>)this).ReadSubType(ref state, SubTypeState<AttributeScalarValueJSON>.Create(state.Context, value));
 
-        public void WriteSubType(ref ProtoWriter.State state, AttributeScalarValueJSON value)
-        {
-            state.WriteFieldHeader(1, WireType.String);
-            state.WriteString(value.ValueStr);
-        }
+    //    public void WriteSubType(ref ProtoWriter.State state, AttributeScalarValueJSON value)
+    //    {
+    //        state.WriteFieldHeader(1, WireType.String);
+    //        state.WriteString(value.ValueStr);
+    //    }
 
-        public AttributeScalarValueJSON ReadSubType(ref ProtoReader.State state, SubTypeState<AttributeScalarValueJSON> value)
-        {
-            int field;
-            string valueStr = "";
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                        valueStr = state.ReadString();
-                        break;
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            if (valueStr != "")
-                return AttributeScalarValueJSON.BuildFromString(valueStr);
-            else
-                throw new Exception("Could not deserialize AttributeScalarValueJSON");
-        }
-    }
+    //    public AttributeScalarValueJSON ReadSubType(ref ProtoReader.State state, SubTypeState<AttributeScalarValueJSON> value)
+    //    {
+    //        int field;
+    //        string valueStr = "";
+    //        while ((field = state.ReadFieldHeader()) > 0)
+    //        {
+    //            switch (field)
+    //            {
+    //                case 1:
+    //                    valueStr = state.ReadString();
+    //                    break;
+    //                default:
+    //                    state.SkipField();
+    //                    break;
+    //            }
+    //        }
+    //        if (valueStr != "")
+    //            return AttributeScalarValueJSON.BuildFromString(valueStr);
+    //        else
+    //            throw new Exception("Could not deserialize AttributeScalarValueJSON");
+    //    }
+    //}
 
-    [ProtoContract]
+    //[ProtoContract]
     public class AttributeArrayValueJSON : AttributeArrayValue<AttributeScalarValueJSON, JToken>
     {
         protected AttributeArrayValueJSON(AttributeScalarValueJSON[] values) : base(values)

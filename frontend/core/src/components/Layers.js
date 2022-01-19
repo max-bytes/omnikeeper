@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import LayerIcon from './LayerIcon';
-import { Button, Popover, Radio } from 'antd'
+import { Button, Popover } from 'antd'
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import { queries } from 'graphql/queries'
 import { useQuery } from '@apollo/client';
@@ -71,7 +71,7 @@ function Layers(props) {
   if (data) {
     let layers = mergeSettingsAndSortLayers(data.layers, layerSettings);
 
-    return (<ul style={{listStyle: 'none', paddingLeft: '0px', marginBottom: '0px'}}>
+    return (
       <Flipper flipKey={layers.map(a => a.id + ";" + a.visible).join(' ')}>
       {layers.map((layer, index) => {
 
@@ -81,42 +81,40 @@ function Layers(props) {
         const layerDescPopup = <Popover
           placement="topRight"
           trigger="click"
-          content={layer.description}
+          content={<ul style={{marginBottom: '0px'}}><li>ID: {layer.id}</li><li>Description: {layer.description}</li></ul>}
           on='click'
           position='top right'
         >
-          <Button size='small'><FontAwesomeIcon icon={faInfo} color={"gray"} /></Button>
+          <Button size='small'><FontAwesomeIcon fixedWidth icon={faInfo} /></Button>
         </Popover>
 
         return (
           <Flipped key={layer.id} flipId={layer.id}>
-            <li style={{paddingBottom: '5px', display: 'flex'}}>
-              
-              <span style={{flexGrow: 1}}>
-                {!layer.writable && (<FontAwesomeIcon icon={faBan} />)}
-                {layer.writable && (<FontAwesomeIcon icon={faEdit} />)}
-                &nbsp;
-                <span style={((layer.visible) ? {} : {color: '#ccc'})}>{layerDescPopup} <LayerIcon layer={layer} /> {layer.id} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
-                {layer.brainName !== "" && (<FontAwesomeIcon icon={faCogs} />)}
-                {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} />)}
-              </span>
+            <div style={{paddingBottom: '5px', display: 'flex', alignItems: 'center'}}>
+              {!layer.writable && (<FontAwesomeIcon fixedWidth icon={faBan} />)}
+              {layer.writable && (<FontAwesomeIcon fixedWidth icon={faEdit} />)}
+              &nbsp;
+              {layerDescPopup} 
+              <LayerIcon layer={layer} />
+              <span style={{flexGrow: '1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: (layer.visible) ? 'unset': '#ccc'}}>{layer.id} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
+              {layer.clConfigID !== "" && (<FontAwesomeIcon icon={faCogs} fixedWidth />)}
+              {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} fixedWidth />)}
               &nbsp;&nbsp;
-                <Button size='small' onClick={() => toggleLayerVisibility(layer.id, data.layers)} style={{ marginRight: "0.5rem" }}>
-                  <FontAwesomeIcon icon={((layer.visible) ? faEye : faEyeSlash)} color={"grey"} style={{ padding: "2px"}} />
+              <Button size='small' onClick={() => toggleLayerVisibility(layer.id, data.layers)} style={{ marginRight: "0.5rem" }}>
+                <FontAwesomeIcon icon={((layer.visible) ? faEye : faEyeSlash)} fixedWidth style={{ padding: "2px"}} />
+              </Button>
+              {/* <Radio.Group size='small' style={{flexShrink: '0'}}> */}
+                <Button size='small' disabled={!previousLayer} onClick={() => changeLayerSortOrder(layer.id, previousLayer.id, 1, data.layers)}>
+                  <FontAwesomeIcon icon={faArrowAltCircleUp} fixedWidth style={{ padding: "2px"}} />
                 </Button>
-              <Radio.Group size='small'>
-                <Radio.Button disabled={!previousLayer} onClick={() => changeLayerSortOrder(layer.id, previousLayer.id, 1, data.layers)}>
-                  <FontAwesomeIcon icon={faArrowAltCircleUp} color={"grey"} style={{ padding: "2px"}} />
-                </Radio.Button>
-                <Radio.Button disabled={!nextLayer} onClick={() => changeLayerSortOrder(layer.id, nextLayer.id, -1, data.layers)}>
-                  <FontAwesomeIcon icon={faArrowAltCircleDown} color={"grey"} style={{ padding: "2px"}} />
-                </Radio.Button>
-              </Radio.Group>
-            </li>
+                <Button size='small' disabled={!nextLayer} onClick={() => changeLayerSortOrder(layer.id, nextLayer.id, -1, data.layers)}>
+                  <FontAwesomeIcon icon={faArrowAltCircleDown} fixedWidth style={{ padding: "2px"}} />
+                </Button>
+              {/* </Radio.Group> */}
+            </div>
           </Flipped>)
         })}
-      </Flipper>
-      </ul>);
+      </Flipper>);
   } else if (error) {
     return "Error";
   } else {

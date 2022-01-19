@@ -17,18 +17,18 @@ namespace Tests.Integration.Model
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitEntityHelper.Class2RecursiveTrait<CLConfigV1>();
+            var et = GenericTraitEntityHelper.Class2RecursiveTrait<CLConfigV1>();
 
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.config.cl_config", new TraitOriginV1(TraitOriginType.Core),
                     new List<TraitAttribute>() {
-                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("cl_config.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.CLConfigIDRegexString, IDValidations.CLConfigIDRegexOptions))),
-                        new TraitAttribute("cl_brain_reference", CIAttributeTemplate.BuildFromParams("cl_config.cl_brain_reference", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-                        new TraitAttribute("cl_brain_config", CIAttributeTemplate.BuildFromParams("cl_config.cl_brain_config", AttributeValueType.JSON, false)),
+                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("cl_config.id", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.CLConfigIDRegexString, IDValidations.CLConfigIDRegexOptions))),
+                        new TraitAttribute("cl_brain_reference", CIAttributeTemplate.BuildFromParams("cl_config.cl_brain_reference", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("cl_brain_config", CIAttributeTemplate.BuildFromParams("cl_config.cl_brain_config", AttributeValueType.JSON, false, false)),
                     },
                     new List<TraitAttribute>()
                     {
-                        new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                     }
                 )
             );

@@ -70,7 +70,7 @@ export const Fragments = {
     }
   `,
   fullLayer: gql`
-  fragment FullLayer on LayerType {
+  fragment FullLayer on LayerDataType {
     id
     description
     color

@@ -1,13 +1,10 @@
 ﻿using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
-using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.Model;
-using Omnikeeper.Model.Decorators;
 using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
@@ -47,7 +44,7 @@ namespace Tests.Integration.Model
 
             //var (predicate, changed) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
 
-            var layer = await layerModel.UpsertLayer("test_layer", trans);
+            var (layer, _) = await layerModel.CreateLayerIfNotExists("test_layer", trans);
 
             await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
@@ -94,7 +91,7 @@ namespace Tests.Integration.Model
             //var (predicate, changed) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
             var predicateID1 = "predicate_1";
 
-            var layer = await layerModel.UpsertLayer("test_layer", trans);
+            var (layer, _) = await layerModel.CreateLayerIfNotExists("test_layer", trans);
 
             await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
             await relationModel.InsertRelation(ciid1, ciid3, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);

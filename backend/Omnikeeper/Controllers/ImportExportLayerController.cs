@@ -163,7 +163,7 @@ namespace Omnikeeper.Controllers
 
                     var writeLayerID = overwriteLayerID ?? data.LayerID;
 
-                    var writeLayer = await layerModel.GetLayer(writeLayerID, trans, timeThreshold);
+                    var writeLayer = await layerModel.GetLayer(writeLayerID, trans);
                     if (writeLayer == null)
                     {
                         return BadRequest($"Cannot write to layer with ID {data.LayerID}: layer does not exist");
@@ -189,7 +189,7 @@ namespace Omnikeeper.Controllers
                     var cisToCreate = cisToImport.Except(existingCIIDs);
                     await ciModel.BulkCreateCIs(cisToCreate, trans);
 
-                    var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataLayerScope.Fragment(t.Name, AttributeValueBuilder.BuildFromDTO(t.Value), t.CIID));
+                    var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataLayerScope.Fragment(t.Name, AttributeValueHelper.BuildFromDTO(t.Value), t.CIID));
                     var bulkUpdates = await attributeModel.PrepareForBulkUpdate(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), trans);
                     await attributeModel.BulkUpdate(bulkUpdates.inserts, bulkUpdates.removes, writeLayer.ID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
 

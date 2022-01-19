@@ -3,11 +3,13 @@
   * [authorization](./authorization)
   * [build and packaging](./build-and-packaging)
   * [comparisons](./comparisons)
+  * [compute layers](./compute-layers)
   * configuration
     * [application configuration](./configuration_application-configuration)
     * [configuration layers](./configuration_configuration-layers)
   * [datamodel](./datamodel)
   * [generators](./generators)
+  * [graphql api](./graphql-api)
   * [gridview](./gridview)
   * inbound adapter
     * [generic json inbound adapter](./inbound-adapter_generic-json-inbound-adapter)

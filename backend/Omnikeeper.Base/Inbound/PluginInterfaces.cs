@@ -92,7 +92,7 @@ namespace Omnikeeper.Base.Inbound
 
     public interface IExternalIDManager
     {
-        Task<(bool updated, bool successful)> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, IModelContext trans, ILogger logger);
+        Task<(bool updated, bool successful)> Update(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, CIMappingService ciMappingService, IModelContext trans, ILogger logger);
         TimeSpan PreferredUpdateRate { get; }
         string PersisterScope { get; }
     }

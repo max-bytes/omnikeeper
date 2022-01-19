@@ -32,7 +32,7 @@ namespace Omnikeeper.Runners
             {
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
-                logger.LogInformation("Start");
+                logger.LogTrace("Start");
 
                 var deleteThreshold = DateTimeOffset.Now.Subtract(TimeSpan.FromDays(30));
 
@@ -42,7 +42,7 @@ namespace Omnikeeper.Runners
                     var numDeleted = usageDataAccumulator.DeleteOlderThan(deleteThreshold, trans).GetAwaiter().GetResult();
                     if (numDeleted > 0)
                     {
-                        logger.LogInformation($"Deleted {numDeleted} usage stats entries that were older than {deleteThreshold}");
+                        logger.LogTrace($"Deleted {numDeleted} usage stats entries that were older than {deleteThreshold}");
                     }
                     trans.Commit();
                 }
@@ -50,7 +50,7 @@ namespace Omnikeeper.Runners
                 stopWatch.Stop();
                 TimeSpan ts = stopWatch.Elapsed;
                 string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                logger.LogInformation($"Finished in {elapsedTime}");
+                logger.LogTrace($"Finished in {elapsedTime}");
             }
         }
     }

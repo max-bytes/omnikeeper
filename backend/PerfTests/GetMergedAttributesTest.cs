@@ -59,7 +59,7 @@ namespace PerfTests
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
             attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
             using var mc = modelContextBuilder!.BuildImmediate();
-            var layers = await layerModel.GetLayers(mc, TimeThreshold.BuildLatest());
+            var layers = await layerModel.GetLayers(mc);
             layerset = layerModel!.BuildLayerSet(layers.Select(l => l.ID).ToArray(), mc).GetAwaiter().GetResult();
 
             var ciidModel = ServiceProvider.GetRequiredService<ICIIDModel>();
@@ -142,7 +142,7 @@ namespace PerfTests
 
             var layers = layerNames.Select(identity =>
             {
-                return layerModel.UpsertLayer(identity, mc).GetAwaiter().GetResult();
+                return (layerModel.CreateLayerIfNotExists(identity, mc).GetAwaiter().GetResult()).layer;
             }).ToList();
 
             var attributeNames = Enumerable.Range(0, AttributeCITuple.numAttributeNames).Select(i => "A" + RandomUtility.GenerateRandomString(32, random)).ToList();

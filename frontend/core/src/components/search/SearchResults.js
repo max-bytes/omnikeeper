@@ -1,12 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Spin } from 'antd';
+import { Skeleton, Spin } from 'antd';
 import { CIID } from "utils/uuidRenderers";
 import AutoSizedList from "utils/AutoSizedList";
+import Text from "antd/lib/typography/Text";
 
 export function SearchResults(props) {
 
-    const {cis} = props;
+    const {cis, loading, error} = props;
 
     const Row = (index) => {
         const result = cis[index];
@@ -37,13 +38,27 @@ export function SearchResults(props) {
         </Link>;
     };
 
-    return <>
-        <h3>Results:</h3>     
-        <Spin spinning={props.loading}>
-            <h4>Number of CIs: {cis?.length ?? '?'}</h4>
-            <div style={{flex:1}}> {/* reason for the div with flex: 1: https://github.com/bvaughn/react-virtualized/blob/master/docs/usingAutoSizer.md#can-i-use-autosizer-within-a-flex-container */}
-                <AutoSizedList itemCount={cis?.length ?? 0} item={Row} />
-            </div>
-        </Spin>
-    </>;
+    if (!loading && !cis) {
+        if (error) {
+            return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: "1"}}>
+                <Text type="danger">Encountered error while searching. Please try again...</Text>
+            </div>;
+        } else {
+            return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: "1"}}>
+                <Text type="secondary">Use the search bar on the left to start searching...</Text>
+            </div>;
+        }
+    } else {
+        if (loading) {
+            return <Spin spinning={true} size="large" tip="Searching...">&nbsp;</Spin>;
+        } else {
+            return <>  
+                <h3>Results: {cis.length} CIs</h3>
+                <div style={{flex:1}}> {/* reason for the div with flex: 1: https://github.com/bvaughn/react-virtualized/blob/master/docs/usingAutoSizer.md#can-i-use-autosizer-within-a-flex-container */}
+                    <AutoSizedList itemCount={cis.length} item={Row} />
+                </div>
+            </>;
+        }
+    }
+
 }

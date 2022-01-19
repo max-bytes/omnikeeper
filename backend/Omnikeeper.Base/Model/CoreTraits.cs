@@ -16,17 +16,17 @@ namespace Omnikeeper.Base.Model
     {
         public static readonly RecursiveTrait Named = new RecursiveTrait("named", new TraitOriginV1(TraitOriginType.Core), new List<TraitAttribute>() {
             new TraitAttribute("name",
-                CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
         public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { 
             Named,
-            TraitEntityHelper.Class2RecursiveTrait<BaseConfigurationV2>(),
-            TraitEntityHelper.Class2RecursiveTrait<RecursiveTrait>(),
-            TraitEntityHelper.Class2RecursiveTrait<Predicate>(),
-            TraitEntityHelper.Class2RecursiveTrait<AuthRole>(),
-            TraitEntityHelper.Class2RecursiveTrait<GeneratorV1>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<BaseConfigurationV2>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<RecursiveTrait>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<Predicate>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<AuthRole>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<GeneratorV1>(),
             //TraitBuilderFromClass.Class2RecursiveTrait<GridViewContext>(), // TODO: add?
         };
     }

@@ -3,11 +3,10 @@
     {
       "tempID": "tempCIID",
       "idMethod": {
-        "method": "byData",
         "attributes": [
           "foo"
         ],
-        "tempID": null
+        "type": "byData"
       },
       "attributes": [
         {

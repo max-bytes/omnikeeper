@@ -62,6 +62,7 @@ namespace Tests.OIA
 
             var ciModelMock = new Mock<ICIModel>();
             var attributeModelMock = new Mock<IAttributeModel>();
+            var relationModelMock = new Mock<IRelationModel>();
             var existingCIs = new List<Guid>();
             var newCIIDs = new Queue<Guid>();
             newCIIDs.Enqueue(Guid.Parse("006DA01F-9ABD-4D9D-80C7-02AF85C822A8"));
@@ -81,7 +82,7 @@ namespace Tests.OIA
             await scopedExternalIDMapper.Setup(trans);
 
             // initial run, creating 3 mapped cis
-            var (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            var (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, relationModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
             Assert.IsTrue(successful);
             Assert.IsTrue(changed);
             Assert.IsEmpty(newCIIDs); // all ciids from the queue have been used
@@ -94,13 +95,13 @@ namespace Tests.OIA
             });
 
             // nothing must have changed if called again
-            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, relationModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
             Assert.IsTrue(successful);
             Assert.IsFalse(changed);
 
             // remove one ci from the external source
             eidManager.RemoveAt(1);
-            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, relationModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
             Assert.IsTrue(successful);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count); // there should still be all three cis present in the model
@@ -113,7 +114,7 @@ namespace Tests.OIA
             // add a new ci in external source
             newCIIDs.Enqueue(Guid.Parse("336DA01F-9ABD-4D9D-80C7-02AF85C822A8"));
             eidManager.Add("eid3");
-            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, relationModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
             Assert.IsTrue(successful);
             Assert.IsTrue(changed);
             Assert.AreEqual(4, existingCIs.Count);
@@ -127,7 +128,7 @@ namespace Tests.OIA
             // delete cis from model, should be recreated on update, if mapped
             existingCIs.RemoveAt(2); // this ci (22xxx...) is still mapped and must be re-created
             existingCIs.RemoveAt(1); // this ci (11xxx...) is not mapped anymore, should stay removed
-            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, relationModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
             Assert.IsTrue(successful);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count);
@@ -184,6 +185,7 @@ namespace Tests.OIA
 
             var ciModelMock = new Mock<ICIModel>();
             var attributeModelMock = new Mock<IAttributeModel>();
+            var relationModelMock = new Mock<IRelationModel>();
             var existingCIs = new List<Guid>();
             var trans = new Mock<IModelContext>().Object;
 
@@ -196,7 +198,7 @@ namespace Tests.OIA
             await scopedExternalIDMapper.Setup(trans);
 
             // initial run, creating 3 mapped cis
-            var (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            var (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, relationModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
             Assert.IsTrue(successful);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count); // new cis have been created

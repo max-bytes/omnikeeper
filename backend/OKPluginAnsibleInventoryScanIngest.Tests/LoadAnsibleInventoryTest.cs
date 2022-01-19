@@ -10,7 +10,6 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.Controllers.Ingest;
 using Omnikeeper.Model;
 using System;
@@ -68,7 +67,7 @@ namespace Tests.Ingest
 
             var mc = modelContextBuilder.BuildImmediate();
 
-            Layer layer1 = await layerModel.UpsertLayer("inventory_scan", mc);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("inventory_scan", mc);
 
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserAccessor>();

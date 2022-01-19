@@ -17,6 +17,8 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
+using Omnikeeper.GraphQL.TraitEntities;
+using Omnikeeper.GraphQL.Types;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
@@ -168,8 +170,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<LayerBasedAuthorizationService>().As<ILayerBasedAuthorizationService>().SingleInstance();
             builder.RegisterType<CIBasedAuthorizationService>().As<ICIBasedAuthorizationService>().SingleInstance();
             builder.RegisterType<DataPartitionService>().As<IDataPartitionService>().SingleInstance();
-            builder.RegisterType<MarkedForDeletionService>().SingleInstance();
-            builder.RegisterType<IngestDataService>().InstancePerLifetimeScope(); // TODO: make singleton
+            builder.RegisterType<IngestDataService>().SingleInstance();
             builder.RegisterType<ReactiveLogReceiver>().SingleInstance();
 
             builder.RegisterType<AuthRolePermissionChecker>().As<IAuthRolePermissionChecker>().SingleInstance();
@@ -197,6 +198,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<BaseRelationRevisionistModel>().As<IBaseRelationRevisionistModel>().SingleInstance();
             builder.RegisterType<UserInDatabaseModel>().As<IUserInDatabaseModel>().SingleInstance();
             builder.RegisterType<LayerModel>().As<ILayerModel>().SingleInstance();
+            builder.RegisterType<LayerDataModel>().As<ILayerDataModel>().SingleInstance();
             builder.RegisterType<LayerStatisticsModel>().As<ILayerStatisticsModel>().SingleInstance();
             builder.RegisterType<ChangesetStatisticsModel>().As<IChangesetStatisticsModel>().SingleInstance();
             builder.RegisterType<RelationModel>().As<IRelationModel>().SingleInstance();
@@ -215,6 +217,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<GenericTraitEntityModel<Predicate, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<RecursiveTrait, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<GenericTraitEntityModel<GridViewContext, string>>().SingleInstance(); // TODO: ok this way?
+            builder.RegisterType<GenericTraitEntityModel<LayerData, string>>().SingleInstance(); // TODO: ok this way?
             builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
 
             // these aren't real models, but we keep them here because they are closely related to models
@@ -227,6 +230,8 @@ namespace Omnikeeper.Startup
                 builder.RegisterDecorator<CachingLayerModel, ILayerModel>();
                 builder.RegisterType<PerRequestMetaConfigurationCache>().InstancePerLifetimeScope();
                 builder.RegisterDecorator<CachingMetaConfigurationModel, IMetaConfigurationModel>();
+                builder.RegisterType<PerRequestTraitsProviderCache>().InstancePerLifetimeScope();
+                builder.RegisterDecorator<CachingTraitsProvider, ITraitsProvider>();
             }
 
             // latest layer change caching
@@ -239,11 +244,12 @@ namespace Omnikeeper.Startup
 
             builder.RegisterType<CLBLastRunCache>().SingleInstance();
 
-            if (enableOIA)
-            {
-                builder.RegisterDecorator<OIABaseAttributeModel, IBaseAttributeModel>();
-                builder.RegisterDecorator<OIABaseRelationModel, IBaseRelationModel>();
-            }
+            // HACK: are defunct due to circular dependeny regarding LayerDataModel and OnlineAccessProxy
+            //if (enableOIA)
+            //{
+            //    builder.RegisterDecorator<OIABaseAttributeModel, IBaseAttributeModel>();
+            //    builder.RegisterDecorator<OIABaseRelationModel, IBaseRelationModel>();
+            //}
 
             if (enabledGenerators)
             {
@@ -275,6 +281,20 @@ namespace Omnikeeper.Startup
             builder.RegisterType<DataLoaderContextAccessor>().As<IDataLoaderContextAccessor>().SingleInstance();
             builder.RegisterType<DataLoaderDocumentListener>().SingleInstance();
             builder.RegisterType<DataLoaderService>().As<IDataLoaderService>().SingleInstance();
+
+            // NOTE: for now, we do not do per-request recreation of the trait entities, but instead require a restart
+            // we do this to not reduce performance, and until we find a better way to to this
+            builder.RegisterType<TraitEntitiesQuerySchemaLoader>().SingleInstance();
+            builder.RegisterType<TraitEntitiesMutationSchemaLoader>().SingleInstance();
+            builder.RegisterType<TypeContainerCreator>().SingleInstance();
+            // HACK, NOTE: overwrite lifetime of the chain of parent graphql elements to instance-per-lifetime
+            // this is necessary to ensure that the TraitEntitiesType is properly re-created on each request
+            // otherwise, changes to traits can not be properly updated/reflected
+            // TODO: once we do not Init() the TraitEntityTypes on every request anymore, we can maybe find a better way to do this
+            //builder.RegisterType<GraphQLSchema>().As<ISchema>().InstancePerLifetimeScope();
+            //builder.RegisterType<TraitEntitiesType>().InstancePerLifetimeScope();
+            //builder.RegisterType<TraitEntitiesQuerySchemaLoader>().InstancePerLifetimeScope();
+            //builder.RegisterType<TraitEntitiesMutationSchemaLoader>().InstancePerLifetimeScope();
         }
     }
 }

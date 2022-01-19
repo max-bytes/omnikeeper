@@ -6,6 +6,60 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
+## [11.1.0] - 2022-01-17
+
+### Added 
+- restart functionality in backend through REST API and frontend through management interface
+- implemented querying and mutating of relations through GraphQL API for trait entities
+
+### Changed
+- bumped versions of backend libraries:
+  - NuGet.Frameworks from 5.8.0 to 6.0.0
+  - GraphQL from 4.6.1 to 4.7.1
+  - GraphQL Playground from 4.3.0 to 5.2.0
+- removed protobuf dependency
+- reduced loglevel of UsageDataWriterRunner
+- removed graphql playground in production environment
+
+### Fixed
+- added permission check for readable layers when performing generic JSON ingest
+- bugfix for race condition on trait entity initialization
+
+
+## [11.0.0] - 2022-01-13
+
+### Added
+- Initial implementation of GraphQL API for trait entities:
+  - custom type-safe types for all traits
+  - querying all/singleByCIID/singleByDataID  
+  - mutations: upsert and remove
+    - unsupported: mutating trait relations
+
+### Changed
+- Big refactoring to the way trait entities and generic trait entities are handled in code
+- Generic JSON ingest plugin: 
+  - improved features on how to do ID matching: union/intersect nested matching, more matching options
+  - improved performance, logging and error handling
+
+### Fixes
+- GraphQL query for effective traits: did not return optional trait attributes properly
+
+## [10.0.0] - 2021-12-17
+
+### Added
+- ability to change layer description
+
+### Changed
+- (breaking) migrated layer-data from dedicated database tables into meta-config layer structure
+- (breaking) changed GraphQL API for creating layers and layer-data
+- technical frontend: changed layer modification UI in management
+- technical frontend: improved layer drawer visualization
+- improved hangfire concurrent job handling
+- performance improvement: per-request caching of traits
+
+### Fixes
+- technical frontend: layer drawer line break bug
+
 ## [9.0.0] - 2021-12-09
 
 ### Added

@@ -22,7 +22,7 @@ namespace Tests.Integration.Model
 
             var layerNames = Enumerable.Range(0, 100).Select(i => $"l{i}");
             foreach (var ln in layerNames)
-                await layerModel.UpsertLayer(ln, trans);
+                await layerModel.CreateLayerIfNotExists(ln, trans);
 
             //layerModel.CreateLayer("l1");
             //layerModel.CreateLayer("l2");
@@ -50,9 +50,9 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel);
             using var trans = ModelContextBuilder.BuildImmediate();
 
-            var layerA = await layerModel.UpsertLayer("a", trans);
-            var layerB = await layerModel.UpsertLayer("b", "", ColorTranslator.FromHtml("#FF0000"), AnchorState.Deprecated, "clbB", OnlineInboundAdapterLink.Build("oilpX"), new string[0], trans);
-            var layerC = await layerModel.UpsertLayer("c", "", ColorTranslator.FromHtml("#00FF00"), AnchorState.Deprecated, "clbC", OnlineInboundAdapterLink.Build("oilpY"), new string[0], trans);
+            var (layerA, _) = await layerModel.CreateLayerIfNotExists("a", trans);
+            var (layerB, _) = await layerModel.CreateLayerIfNotExists("b", trans);
+            var (layerC, _) = await layerModel.CreateLayerIfNotExists("c", trans);
 
             var user = await userModel.UpsertUser("testuser", "testuser", Guid.NewGuid(), UserType.Human, trans);
 

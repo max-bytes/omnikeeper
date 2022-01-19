@@ -18,4 +18,4 @@ omnikeeper's plugin based architecture makes it a bit tricky to distribute omnik
 
 ## Pipeline chart
 The following chart shows the full build and packaging process, starting from the left as source code and ending on the right with published artifacts and deployed containers.
-![Pipeline chart for building and deploying](assets/drawio/build-deploy-pipeline-Seite-1.svg)
+![Pipeline chart for building and deploying](assets/drawio/build-deploy-pipeline.svg)

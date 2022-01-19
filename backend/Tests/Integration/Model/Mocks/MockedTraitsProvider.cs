@@ -29,34 +29,34 @@ namespace Tests.Integration.Model.Mocks
                 new RecursiveTrait("test_trait_1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a4",
-                        CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false)
+                        CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false, false)
                     )
                 }, new List<TraitAttribute>() { }, new List<TraitRelation>() { }),
                 new RecursiveTrait("test_trait_2", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a4",
-                        CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false)
+                        CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false, false)
                     ),
                     new TraitAttribute("a2",
-                        CIAttributeTemplate.BuildFromParams("a2", AttributeValueType.Text, false)
+                        CIAttributeTemplate.BuildFromParams("a2", AttributeValueType.Text, false, false)
                     )
                 }, new List<TraitAttribute>() { }, new List<TraitRelation>() { }),
                 new RecursiveTrait("test_trait_3", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a1",
-                        CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)
+                        CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false, false)
                     )
                 }, new List<TraitAttribute>() { }, new List<TraitRelation>() { }),
                 new RecursiveTrait("test_trait_4", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a1",
-                        CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)
+                        CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false, false)
                     )
                 }, requiredTraits: new List<string>() { "test_trait_1" }),
                 new RecursiveTrait("test_trait_5", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a2",
-                        CIAttributeTemplate.BuildFromParams("a2", AttributeValueType.Text, false)
+                        CIAttributeTemplate.BuildFromParams("a2", AttributeValueType.Text, false, false)
                     )
                 }, requiredTraits: new List<string>() { "test_trait_4" })
             };

@@ -4,7 +4,6 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -37,7 +36,16 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             var value = args[1].Token;
             var type = AttributeValueType.Text.ToString();
             if (args.Length >= 3)
-                type = Enum.Parse<AttributeValueType>(args[2].Token.ToString()).ToString();
+            {
+                var typeStr = args[2].Token.ToString();
+                try
+                {
+                    type = Enum.Parse<AttributeValueType>(typeStr).ToString();
+                } catch (Exception e)
+                {
+                    throw new Exception($"Cannot parse type \"{typeStr}\" into enum for attribute {name} with value {value}", e);
+                }
+            }
             // TODO: consider how to handle null values
             //if (value is JValue jv && jv.Value == null)
             //{
@@ -70,10 +78,56 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             if (!(args[0].Token is JArray ja))
                 throw new Exception("Invalid attributes when constructing idMethodByData");
             var attributes = ja;
-            var method = "byData";
-            return JObject.FromObject(new { method, attributes });
+            var type = "byData";
+            return JObject.FromObject(new { type, attributes });
         }
     }
+
+    public class IDMethodByAttributeFunc : JmesPathFunction
+    {
+        public IDMethodByAttributeFunc() : base("idMethodByAttribute", 1, true) { }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            if (!(args[0].Token is JObject ja))
+                throw new Exception("Invalid attribute when constructing idMethodByAttribute");
+
+            JObject modifiers = JObject.FromObject(new object());
+            if (args.Length >= 2)
+            {
+                if (!(args[1].Token is JObject jModifiers))
+                    throw new Exception("Invalid modifiers when constructing idMethodByAttribute, must be object");
+
+                modifiers = jModifiers;
+            }
+
+            var attribute = ja;
+            var type = "byAttribute";
+            return JObject.FromObject(new { type, attribute, modifiers });
+        }
+    }
+
+    public class IDMethodByRelatedTempIDFunc : JmesPathFunction
+    {
+        public IDMethodByRelatedTempIDFunc() : base("idMethodByRelatedTempID", 2) { }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            if (!(args[0].Token is JArray ra))
+                throw new Exception("Invalid relation path when constructing idMethodByRelatedData");
+            if (ra.Count != 2)
+                throw new Exception("Invalid relation path length (must be 2) when constructing idMethodByRelatedData");
+            if (!(args[1].Token is JValue jid))
+                throw new Exception("Invalid temp ID when constructing idMethodByRelatedData");
+            var tempID = jid;
+            var outgoingRelationStr = ra[0].ToString();
+            var outgoingRelation = outgoingRelationStr == ">";
+            var predicateID = ra[1].ToString();
+            var type = "byRelatedTempID";
+            return JObject.FromObject(new { type, tempID, outgoingRelation, predicateID });
+        }
+    }
+
     public class IDMethodByTempIDFunc : JmesPathFunction
     {
         public IDMethodByTempIDFunc() : base("idMethodByTempID", 1) { }
@@ -83,8 +137,35 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             if (!(args[0].Token is JValue jv))
                 throw new Exception("Invalid attributes when constructing idMethodByTempID");
             var tempID = jv;
-            var method = "byTempID";
-            return JObject.FromObject(new { method, tempID });
+            var type = "byTempID";
+            return JObject.FromObject(new { type, tempID });
+        }
+    }
+
+    public class IDMethodByUnionFunc : JmesPathFunction
+    {
+        public IDMethodByUnionFunc() : base("idMethodByUnion", 1) { }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            if (!(args[0].Token is JArray i))
+                throw new Exception("Invalid inner idMethods when constructing idMethodByUnion");
+            var inner = i;
+            var type = "byUnion";
+            return JObject.FromObject(new { type, inner });
+        }
+    }
+    public class IDMethodByIntersectFunc : JmesPathFunction
+    {
+        public IDMethodByIntersectFunc() : base("idMethodByIntersect", 1) { }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            if (!(args[0].Token is JArray i))
+                throw new Exception("Invalid inner idMethods when constructing idMethodByIntersect");
+            var inner = i;
+            var type = "byIntersect";
+            return JObject.FromObject(new { type, inner });
         }
     }
 

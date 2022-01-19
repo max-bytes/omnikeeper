@@ -1,7 +1,5 @@
-using ProtoBuf;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -18,14 +16,19 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    //[ProtoContract(SkipConstructor = true)]
     public class Relation
     {
-        [ProtoMember(1)] public readonly Guid ID;
-        [ProtoMember(2)] public readonly Guid FromCIID;
-        [ProtoMember(3)] public readonly Guid ToCIID;
-        [ProtoMember(4)] public readonly string PredicateID;
-        [ProtoMember(5)] public readonly Guid ChangesetID;
+        //[ProtoMember(1)] 
+        public readonly Guid ID;
+        //[ProtoMember(2)] 
+        public readonly Guid FromCIID;
+        //[ProtoMember(3)] 
+        public readonly Guid ToCIID;
+        //[ProtoMember(4)] 
+        public readonly string PredicateID;
+        //[ProtoMember(5)] 
+        public readonly Guid ChangesetID;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
@@ -127,7 +130,7 @@ namespace Omnikeeper.Base.Entity
 
         public string LayerID { get; private set; }
 
-        private readonly IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> Data;
+        private readonly IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> Data;
         public readonly bool Outgoing;
         public readonly ISet<(Guid thisCIID, string predicateID)> Relevant;
 
@@ -135,7 +138,7 @@ namespace Omnikeeper.Base.Entity
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
 
-        public BulkRelationDataCIAndPredicateScope(string layerID, IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> data, ISet<(Guid thisCIID, string predicateID)> relevant, bool outgoing)
+        public BulkRelationDataCIAndPredicateScope(string layerID, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> data, ISet<(Guid thisCIID, string predicateID)> relevant, bool outgoing)
         {
             LayerID = layerID;
             Data = data;

@@ -32,16 +32,16 @@ namespace OKPluginValidation.Tests
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitEntityHelper.Class2RecursiveTrait<ValidationIssue>();
+            var et = GenericTraitEntityHelper.Class2RecursiveTrait<ValidationIssue>();
 
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.validation.validation_issue", new TraitOriginV1(TraitOriginType.Plugin),
                     new List<TraitAttribute>() {
-                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("validation_issue.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-                        new TraitAttribute("message", CIAttributeTemplate.BuildFromParams("validation_issue.message", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("validation_issue.id", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("message", CIAttributeTemplate.BuildFromParams("validation_issue.message", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                     },
                     new List<TraitAttribute>() {
-                        new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                     },
                     new List<TraitRelation>()
                     {

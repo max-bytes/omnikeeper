@@ -41,52 +41,70 @@ namespace Omnikeeper.Base.Service
             var timeThreshold = TimeThreshold.BuildLatest();
             var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, ChangesetModel);
 
-            var ciMappingContext = new CIMappingService.CIMappingContext(AttributeModel, TimeThreshold.BuildLatest());
+            var ciMappingContext = new CIMappingService.CIMappingContext(AttributeModel, RelationModel, TimeThreshold.BuildLatest());
             var affectedCIs = new HashSet<Guid>();
             var cisToCreate = new List<Guid>();
             foreach (var cic in data.CICandidates)
             {
                 var attributes = cic.Attributes;
-                var ciCandidateID = cic.TempCIID; // TODO: detect duplicate tempCIIDs in source -> throw exception if so, each candidate MUST have a unique ID
-
-                // find out if it's a new CI or an existing one
-                var foundCIIDs = await ciMappingService.TryToMatch(ciCandidateID.ToString(), cic.IdentificationMethod, ciMappingContext, trans, logger);
-
-                Guid finalCIID;
-                if (!foundCIIDs.IsEmpty())
+                var ciCandidateCIID = cic.TempCIID; // TODO: detect duplicate tempCIIDs in source -> throw exception if so, each candidate MUST have a unique ID
+                try
                 {
-                    if (foundCIIDs.Count() == 1)
-                        finalCIID = foundCIIDs.First();
+                    // find out if it's a new CI or an existing one
+                    var foundCIIDs = await ciMappingService.TryToMatch(cic.IdentificationMethod, ciMappingContext, trans, logger);
+
+                    // already affected/mapped CIs must not be mapped again, so we remove them
+                    // if we wouldn't do that, the mapping process could map multiple candidates to the same target CI, which would result in an ingest error
+                    for (int i = foundCIIDs.Count - 1; i >= 0; i--)
+                    {
+                        if (affectedCIs.Contains(foundCIIDs[i]))
+                        {
+                            foundCIIDs.RemoveAt(i);
+                        }
+                    }
+
+
+                    Guid finalCIID;
+                    if (!foundCIIDs.IsEmpty())
+                    {
+                        if (foundCIIDs.Count() == 1)
+                            finalCIID = foundCIIDs.First();
+                        else
+                        {
+                            // NOTE: how to deal with ambiguities? In other words: more than one CI fit, where to put the data?
+                            // ciMappingService.TryToMatch() returns an already ordered list (by varying criteria, or - if nothing else - by CIID)
+                            finalCIID = foundCIIDs.First();
+
+                            logger.LogWarning($"Multiple CIs match for candidate with temp-ID {ciCandidateCIID}: {string.Join(",", foundCIIDs)}, taking first one");
+                        }
+                    }
                     else
                     {
-                        // TODO: how to deal with ambiguities? In other words: more than one CI fit, where to put the data?
-                        // for now, we sort the guids and take the lowest, which at least makes the process repeatable/reliable
-                        var sortedCIIDs = foundCIIDs.ToList();
-                        sortedCIIDs.Sort();
-                        finalCIID = sortedCIIDs.First();
+                        // CI is new, create a ciid for it (we'll later batch create all CIs)
+                        finalCIID = CIModel.CreateCIID(); // use a totally new CIID, do NOT use the temporary CIID of the ciCandidate
+                        cisToCreate.Add(finalCIID);
                     }
-                }
-                else
+
+                    // add to mapping context
+                    ciMappingContext.AddTemp2FinallCIIDMapping(ciCandidateCIID, finalCIID);
+
+                    cic.TempCIID = finalCIID; // we update the TempCIID of the CI candidate with its final ID
+
+                    affectedCIs.Add(finalCIID);
+                } catch (Exception e)
                 {
-                    // CI is new, create a ciid for it (we'll later batch create all CIs)
-                    finalCIID = CIModel.CreateCIID(); // use a totally new CIID, do NOT use the temporary CIID of the ciCandidate
-                    cisToCreate.Add(finalCIID);
+                    throw new Exception($"Error mapping CI-candidate {ciCandidateCIID}", e);
                 }
-
-                // add to mapping context
-                ciMappingContext.AddTemp2FinallCIIDMapping(ciCandidateID, finalCIID);
-
-                cic.TempCIID = finalCIID; // we update the TempCIID of the CI candidate with its final ID
-
-                affectedCIs.Add(finalCIID);
             }
 
             // batch process CI creation
-            await CIModel.BulkCreateCIs(cisToCreate, trans);
+            if (!cisToCreate.IsEmpty())
+                await CIModel.BulkCreateCIs(cisToCreate, trans);
 
             var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, data.CICandidates.SelectMany(cic =>
                 cic.Attributes.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, cic.TempCIID))
             ));
+            // TODO: return number of affected attributes (instead of CIs)
             await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
@@ -132,11 +150,11 @@ namespace Omnikeeper.Base.Service
 
     public class RelationCandidate
     {
-        public CIIdentificationMethodByTemporaryCIID IdentificationMethodFromCI { get; private set; }
-        public CIIdentificationMethodByTemporaryCIID IdentificationMethodToCI { get; private set; }
+        public CIIdentificationMethodByTempCIID IdentificationMethodFromCI { get; private set; }
+        public CIIdentificationMethodByTempCIID IdentificationMethodToCI { get; private set; }
         public string PredicateID { get; private set; }
 
-        public RelationCandidate(CIIdentificationMethodByTemporaryCIID identificationMethodFromCI, CIIdentificationMethodByTemporaryCIID identificationMethodToCI, string predicateID)
+        public RelationCandidate(CIIdentificationMethodByTempCIID identificationMethodFromCI, CIIdentificationMethodByTempCIID identificationMethodToCI, string predicateID)
         {
             IdentificationMethodFromCI = identificationMethodFromCI;
             IdentificationMethodToCI = identificationMethodToCI;

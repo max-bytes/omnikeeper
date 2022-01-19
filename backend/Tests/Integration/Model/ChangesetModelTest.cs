@@ -39,7 +39,7 @@ namespace Tests.Integration.Model
             var t1 = DateTimeOffset.Now;
 
             using var trans2 = ModelContextBuilder.BuildDeferred();
-            var layer1 = await layerModel.UpsertLayer("l1", trans2);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans2);
             var layerset = new LayerSet(new string[] { layer1.ID });
             var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
@@ -65,7 +65,7 @@ namespace Tests.Integration.Model
             var changesets = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, new ChangesetSelectionAllCIs(), transI);
             Assert.AreEqual(2, changesets.Count());
 
-            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, ChangesetSelectionMultipleCIs.Build(ciid3), transI);
+            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, ChangesetSelectionSpecificCIs.Build(ciid3), transI);
             Assert.AreEqual(2, changesets2.Count());
 
             using (var trans = ModelContextBuilder.BuildDeferred())
@@ -79,8 +79,11 @@ namespace Tests.Integration.Model
             Assert.AreEqual(3, changesets3.Count());
             var changesets4 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, new ChangesetSelectionAllCIs(), transI, 2);
             Assert.AreEqual(2, changesets4.Count());
-            var changesets5 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, ChangesetSelectionMultipleCIs.Build(ciid2), transI, 1);
+            var changesets5 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, ChangesetSelectionSpecificCIs.Build(ciid2), transI, 1);
             Assert.AreEqual(1, changesets5.Count());
+
+            var changesets6 = await changesetModel.GetChangesets(changesets4.Select(c => c.ID).ToHashSet(), transI);
+            Assert.AreEqual(2, changesets6.Count());
         }
 
 
@@ -111,7 +114,7 @@ namespace Tests.Integration.Model
             var t1 = DateTimeOffset.Now;
 
             using var trans2 = ModelContextBuilder.BuildDeferred();
-            var layer1 = await layerModel.UpsertLayer("l1", trans2);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans2);
             var layerset = new LayerSet(new string[] { layer1.ID });
             var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
             await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
@@ -129,10 +132,10 @@ namespace Tests.Integration.Model
             var t3 = DateTimeOffset.Now;
 
             using var transI = ModelContextBuilder.BuildImmediate();
-            var changesets1 = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, ChangesetSelectionMultipleCIs.Build(ciid1), transI);
+            var changesets1 = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, ChangesetSelectionSpecificCIs.Build(ciid1), transI);
             Assert.AreEqual(1, changesets1.Count());
 
-            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, ChangesetSelectionMultipleCIs.Build(ciid1), transI);
+            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, ChangesetSelectionSpecificCIs.Build(ciid1), transI);
             Assert.AreEqual(2, changesets2.Count());
         }
 
@@ -153,8 +156,8 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, trans1);
             var ciid1 = await ciModel.CreateCI(trans1);
             var ciid2 = await ciModel.CreateCI(trans1);
-            var layer1 = await layerModel.UpsertLayer("l1", trans1);
-            var layer2 = await layerModel.UpsertLayer("l2", trans1);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans1);
+            var (layer2, _) = await layerModel.CreateLayerIfNotExists("l2", trans1);
             var layerset1 = new LayerSet(new string[] { layer1.ID });
             var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(100)), changesetModel);
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans1);
@@ -201,7 +204,7 @@ namespace Tests.Integration.Model
             trans.Commit();
 
             using var trans2 = ModelContextBuilder.BuildDeferred();
-            var layer1 = await layerModel.UpsertLayer("l1", trans2);
+            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans2);
             var layerset1 = new LayerSet(new string[] { layer1.ID });
             var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(100)), changesetModel);
             await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);

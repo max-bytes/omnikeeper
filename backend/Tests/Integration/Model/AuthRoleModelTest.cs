@@ -15,17 +15,17 @@ namespace Tests.Integration.Model
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitEntityHelper.Class2RecursiveTrait<AuthRole>();
+            var et = GenericTraitEntityHelper.Class2RecursiveTrait<AuthRole>();
 
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.config.auth_role", new TraitOriginV1(TraitOriginType.Core),
                     new List<TraitAttribute>() {
-                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("auth_role.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("auth_role.id", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))),
                     },
                     new List<TraitAttribute>()
                     {
-                        new TraitAttribute("permissions", CIAttributeTemplate.BuildFromParams("auth_role.permissions", AttributeValueType.Text, true)),
-                        new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("permissions", CIAttributeTemplate.BuildFromParams("auth_role.permissions", AttributeValueType.Text, true, false)),
+                        new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                     }
                 )
             );

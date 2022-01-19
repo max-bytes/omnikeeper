@@ -11,47 +11,60 @@ namespace Omnikeeper.Base.Inbound
 {
     public class OnlineAccessProxy : IOnlineAccessProxy
     {
-        private readonly ILayerModel layerModel;
+        private readonly ILayerDataModel layerDataModel;
         private readonly IInboundAdapterManager pluginManager;
 
-        public OnlineAccessProxy(ILayerModel layerModel, IInboundAdapterManager pluginManager)
+        public OnlineAccessProxy(ILayerDataModel layerDataModel, IInboundAdapterManager pluginManager)
         {
-            this.layerModel = layerModel;
+            this.layerDataModel = layerDataModel;
             this.pluginManager = pluginManager;
         }
 
         public async Task<bool> IsOnlineInboundLayer(string layerID, IModelContext trans)
         {
-            var layer = await layerModel.GetLayer(layerID, trans, TimeThreshold.BuildLatest());
-            if (layer == null) return false;
-            var adapterName = layer.OnlineInboundAdapterLink.AdapterName;
+            var layerData = await layerDataModel.GetLayerData(layerID, trans, TimeThreshold.BuildLatest());
+            if (layerData == null) return false;
+            var adapterName = layerData.OIAReference;
             return await pluginManager.IsValidOnlinePluginInstance(adapterName, trans);
         }
 
         public async Task<bool> ContainsOnlineInboundLayer(LayerSet layerset, IModelContext trans)
         {
-            var layers = await layerModel.GetLayers(layerset.LayerIDs, trans, TimeThreshold.BuildLatest());
-            foreach (var layer in layers)
+            var layerData = await layerDataModel.GetLayerData(trans, TimeThreshold.BuildLatest());
+            foreach (var layerID in layerset)
             {
-                var adapterName = layer.OnlineInboundAdapterLink.AdapterName;
-                if (await pluginManager.IsValidOnlinePluginInstance(adapterName, trans))
-                    return true;
+                if (layerData.TryGetValue(layerID, out var ld))
+                {
+                    var adapterName = ld.OIAReference;
+                    if (await pluginManager.IsValidOnlinePluginInstance(adapterName, trans))
+                        return true;
+                }
             }
             return false;
         }
 
-        private async IAsyncEnumerable<(ILayerAccessProxy? proxy, Layer layer, int index)> GetAccessProxies(string[] layerIDs, IModelContext trans)
+        private async IAsyncEnumerable<(ILayerAccessProxy? proxy, int index)> GetAccessProxies(string[] layerIDs, IModelContext trans)
         {
             var i = 0;
-            foreach (var layer in await layerModel.GetLayers(layerIDs, trans, TimeThreshold.BuildLatest()))
+            var layerData = await layerDataModel.GetLayerData(trans, TimeThreshold.BuildLatest());
+            foreach (var layerID in layerIDs)
             {
-                var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-                if (plugin != null)
+                if (layerData.TryGetValue(layerID, out var ld))
                 {
-                    yield return (plugin.CreateLayerAccessProxy(layer), layer, i++);
+                    //await layerModel.GetLayers(layerIDs, trans, TimeThreshold.BuildLatest()))
+                    var plugin = await pluginManager.GetOnlinePluginInstance(ld.OIAReference, trans);
+                    if (plugin != null)
+                    {
+                        var layer = Layer.Build(ld.LayerID); // HACK: we shouldn't create a layer object here
+                        yield return (plugin.CreateLayerAccessProxy(layer), i++);
+                    }
+                    else
+                    {
+                        yield return (null, i++);
+                    }
                 } else
                 {
-                    yield return (null, layer, i++);
+                    yield return (null, i++);
                 }
             }
         }
@@ -59,7 +72,7 @@ namespace Omnikeeper.Base.Inbound
         public async Task<IEnumerable<CIAttribute>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             var ret = new IEnumerable<CIAttribute>[layerIDs.Length];
-            await foreach (var (proxy, _, index) in GetAccessProxies(layerIDs, trans))
+            await foreach (var (proxy, index) in GetAccessProxies(layerIDs, trans))
             {
                 if (proxy != null)
                 {
@@ -67,7 +80,7 @@ namespace Omnikeeper.Base.Inbound
                     ret[index] = attributes;
                 } else
                 {
-                    ret[index] = new CIAttribute[0];
+                    ret[index] = Array.Empty<CIAttribute>();
                 }
             }
             return ret;
@@ -75,38 +88,40 @@ namespace Omnikeeper.Base.Inbound
 
         public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
         {
-            var layer = await layerModel.GetLayer(layerID, trans, atTime);
-            if (layer == null)
+            var layerData = await layerDataModel.GetLayerData(layerID, trans, atTime);
+            if (layerData == null)
                 throw new Exception($"Could not find layer with ID {layerID}");
-            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
+            var plugin = await pluginManager.GetOnlinePluginInstance(layerData.OIAReference, trans);
             if (plugin == null)
-                throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
-
+                throw new Exception($"Could not load plugin instance {layerData.OIAReference}");
+            var layer = Layer.Build(layerData.LayerID); // HACK: we shouldn't create a layer object here
             return await plugin.CreateLayerAccessProxy(layer).GetRelation(fromCIID, toCIID, predicateID, atTime);
         }
 
         public async IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
         {
-            var layer = await layerModel.GetLayer(layerID, trans, atTime);
-            if (layer == null)
+            var layerData = await layerDataModel.GetLayerData(layerID, trans, atTime);
+            if (layerData == null)
                 throw new Exception($"Could not find layer with ID {layerID}");
-            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
+            var plugin = await pluginManager.GetOnlinePluginInstance(layerData.OIAReference, trans);
 
             if (plugin == null)
-                throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
+                throw new Exception($"Could not load plugin instance {layerData.OIAReference}");
+            var layer = Layer.Build(layerData.LayerID); // HACK: we shouldn't create a layer object here
             await foreach (var relation in plugin.CreateLayerAccessProxy(layer).GetRelations(rl, atTime))
                 yield return relation;
         }
 
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, string layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
         {
-            var layer = await layerModel.GetLayer(layerID, trans, atTime);
-            if (layer == null)
+            var layerData = await layerDataModel.GetLayerData(layerID, trans, atTime);
+            if (layerData == null)
                 throw new Exception($"Could not find layer with ID {layerID}");
-            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
+            var plugin = await pluginManager.GetOnlinePluginInstance(layerData.OIAReference, trans);
 
             if (plugin == null)
-                throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
+                throw new Exception($"Could not load plugin instance {layerData.OIAReference}");
+            var layer = Layer.Build(layerData.LayerID); // HACK: we shouldn't create a layer object here
             return await plugin.CreateLayerAccessProxy(layer).GetFullBinaryAttribute(name, ciid, atTime);
         }
     }

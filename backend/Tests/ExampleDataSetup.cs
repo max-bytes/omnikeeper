@@ -68,18 +68,19 @@ namespace Tests
             List<Layer> layers;
             using (var mc = modelContextBuilder.BuildDeferred())
             {
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+
                 // okconfig layer
-                layerModel.UpsertLayer("__okconfig", mc).GetAwaiter().GetResult();
+                layerModel.CreateLayerIfNotExists("__okconfig", mc).GetAwaiter().GetResult();
 
                 await ciModel.BulkCreateCIs(ciids, mc);
 
                 layers = layerNames.Select(identity =>
                 {
-                    return layerModel.UpsertLayer(identity, mc).GetAwaiter().GetResult();
+                    return (layerModel.CreateLayerIfNotExists(identity, mc).GetAwaiter().GetResult()).layer;
                 }).ToList();
 
                 var rts = Traits.Get();
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in rts)
                     await traitModel.InsertOrUpdate(rt,
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
@@ -138,19 +139,19 @@ namespace Tests
                     // hosts
                     new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                         new TraitAttribute("hostname",
-                            CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
                     new RecursiveTrait("host_windows", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                         new TraitAttribute("os_family",
-                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
+                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false, false,
                                 new CIAttributeValueConstraintTextRegex(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                         )
                     }, requiredTraits: new string[] { "host" }),
 
                     new RecursiveTrait("host_linux", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                         new TraitAttribute("os_family",
-                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
+                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false, false,
                                 new CIAttributeValueConstraintTextRegex(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
                         )
                     }, requiredTraits: new string[] { "host" }),
@@ -158,30 +159,30 @@ namespace Tests
                     // linux disk devices
                     new RecursiveTrait("linux_block_device", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                         new TraitAttribute("device",
-                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
                         new TraitAttribute("mount",
-                            CIAttributeTemplate.BuildFromParams("mount", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            CIAttributeTemplate.BuildFromParams("mount", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
 
                     // linux network_interface
                     new RecursiveTrait("linux_network_interface", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                         new TraitAttribute("device",
-                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
                         new TraitAttribute("type",
-                            CIAttributeTemplate.BuildFromParams("type", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            CIAttributeTemplate.BuildFromParams("type", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
                         new TraitAttribute("active",
-                            CIAttributeTemplate.BuildFromParams("active", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            CIAttributeTemplate.BuildFromParams("active", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
 
                     // applications
                     new RecursiveTrait("application", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                         new TraitAttribute("name",
-                            CIAttributeTemplate.BuildFromParams("application_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            CIAttributeTemplate.BuildFromParams("application_name", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
 
@@ -189,12 +190,12 @@ namespace Tests
                     new RecursiveTrait("ansible_can_deploy_to_it", new TraitOriginV1(TraitOriginType.Data),
                         new List<TraitAttribute>() {
                             new TraitAttribute("hostname", // TODO: make this an anyOf[CIAttributeTemplate], or use dependent trait host
-                                CIAttributeTemplate.BuildFromParams("ipAddress",    AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                                CIAttributeTemplate.BuildFromParams("ipAddress",    AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
                         },
                         new List<TraitAttribute>() {
                             new TraitAttribute("variables",
-                                CIAttributeTemplate.BuildFromParams("automation.ansible_variables", AttributeValueType.JSON, false)
+                                CIAttributeTemplate.BuildFromParams("automation.ansible_variables", AttributeValueType.JSON, false, false)
                             )
                         }
                         //new List<TraitRelation>() {

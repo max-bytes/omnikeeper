@@ -1,7 +1,6 @@
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
-using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,14 +19,19 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    //[ProtoContract(SkipConstructor = true)]
     public class CIAttribute
     {
-        [ProtoMember(1)] public readonly Guid ID;
-        [ProtoMember(2)] public readonly string Name;
-        [ProtoMember(3)] public readonly Guid CIID;
-        [ProtoMember(4)] public readonly IAttributeValue Value;
-        [ProtoMember(5)] public readonly Guid ChangesetID;
+        //[ProtoMember(1)] 
+        public readonly Guid ID;
+        //[ProtoMember(2)] 
+        public readonly string Name;
+        //[ProtoMember(3)] 
+        public readonly Guid CIID;
+        //[ProtoMember(4)] 
+        public readonly IAttributeValue Value;
+        //[ProtoMember(5)] 
+        public readonly Guid ChangesetID;
 
         // information hash: 
         // TODO: move into extension method
@@ -90,7 +94,7 @@ namespace Omnikeeper.Base.Entity
         {
             return new BulkCIAttributeDataLayerScope(
                 dto.NamePrefix, dto.LayerID,
-                dto.Fragments.Select(f => new Fragment(f.Name, AttributeValueBuilder.BuildFromDTO(f.Value), f.CIID)));
+                dto.Fragments.Select(f => new Fragment(f.Name, AttributeValueHelper.BuildFromDTO(f.Value), f.CIID)));
         }
     }
 

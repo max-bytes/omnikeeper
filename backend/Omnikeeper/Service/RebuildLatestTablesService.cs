@@ -21,7 +21,7 @@ namespace Omnikeeper.Service
 
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
-            foreach (var layer in await layerModel.GetLayers(trans, atTime))
+            foreach (var layer in await layerModel.GetLayers(trans))
             {
                 using var commandGetHistoric = new NpgsqlCommand($@"
                     select distinct on(ci_id, name) removed, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id FROM attribute 
@@ -50,7 +50,7 @@ namespace Omnikeeper.Service
                             var valueText = dr.GetString(5);
                             var valueBinary = dr.GetFieldValue<byte[]>(6);
                             var valueControl = dr.GetFieldValue<byte[]>(7);
-                            var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                            var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, false);
                             var changesetID = dr.GetGuid(8);
 
                             var att = new CIAttribute(id, name, CIID, av, changesetID);
@@ -79,7 +79,7 @@ namespace Omnikeeper.Service
                         var valueText = dr.GetString(4);
                         var valueBinary = dr.GetFieldValue<byte[]>(5);
                         var valueControl = dr.GetFieldValue<byte[]>(6);
-                        var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                        var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, false);
                         var changesetID = dr.GetGuid(7);
 
                         var att = new CIAttribute(id, name, CIID, av, changesetID);
@@ -127,7 +127,7 @@ namespace Omnikeeper.Service
             await commandTruncate.ExecuteNonQueryAsync();
 
             // rebuild
-            foreach (var layer in await layerModel.GetLayers(trans, atTime))
+            foreach (var layer in await layerModel.GetLayers(trans))
             {
                 var query = @"
                     insert into attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id)
@@ -170,7 +170,7 @@ namespace Omnikeeper.Service
             await commandTruncate.ExecuteNonQueryAsync();
 
             // rebuild
-            foreach (var layer in await layerModel.GetLayers(trans, atTime))
+            foreach (var layer in await layerModel.GetLayers(trans))
             {
                 var query = @"
                     insert into relation_latest (id, from_ci_id, to_ci_id, predicate_id, changeset_id, timestamp, layer_id)

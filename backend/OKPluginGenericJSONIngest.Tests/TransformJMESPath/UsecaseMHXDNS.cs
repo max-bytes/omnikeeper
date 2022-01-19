@@ -44,7 +44,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                     new GenericInboundCI
                     {
                         tempID = "tempCIID>zone>mhx-consulting.at",
-                        idMethod = new GenericInboundIDMethod { method = "byData", attributes = new string[]{ "id" } },
+                        idMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         attributes = new List<GenericInboundAttribute>
                         {
                             new GenericInboundAttribute { name = "id", value = 718656, type = AttributeValueType.Integer },
@@ -54,7 +54,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                     new GenericInboundCI
                     {
                         tempID = "tempCIID>zone>mhx.at",
-                        idMethod = new GenericInboundIDMethod { method = "byData", attributes = new string[]{ "id" } },
+                        idMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         attributes = new List<GenericInboundAttribute>
                         {
                             new GenericInboundAttribute { name = "id", value = 742507, type = AttributeValueType.Integer },
@@ -65,7 +65,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                     new GenericInboundCI
                     {
                         tempID = "tempCIID>record>1569516122",
-                        idMethod = new GenericInboundIDMethod { method = "byData", attributes = new string[]{ "id" } },
+                        idMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         attributes = new List<GenericInboundAttribute>
                         {
                             new GenericInboundAttribute { name = "id", value = 1569516122, type = AttributeValueType.Integer },
@@ -78,7 +78,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                     new GenericInboundCI
                     {
                         tempID = "tempCIID>record>1569516123",
-                        idMethod = new GenericInboundIDMethod { method = "byData", attributes = new string[]{ "id" } },
+                        idMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         attributes = new List<GenericInboundAttribute>
                         {
                             new GenericInboundAttribute { name = "id", value = 1569516123, type = AttributeValueType.Integer },
@@ -91,7 +91,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                     new GenericInboundCI
                     {
                         tempID = "tempCIID>record>2569516148",
-                        idMethod = new GenericInboundIDMethod { method = "byData", attributes = new string[]{ "id" } },
+                        idMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         attributes = new List<GenericInboundAttribute>
                         {
                             new GenericInboundAttribute { name = "id", value = 2569516148, type = AttributeValueType.Integer },

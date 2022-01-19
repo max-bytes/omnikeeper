@@ -30,7 +30,7 @@ namespace Tests.Integration.Service
             var trans = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, trans);
 
-            var layer = await layerModel.UpsertLayer("l1", trans);
+            var (layer, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
 
             Assert.AreEqual(0, await ArchiveUnusedCIsService.ArchiveUnusedCIs(e, ModelContextBuilder, NullLogger.Instance));
 
