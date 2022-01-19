@@ -45,5 +45,14 @@ namespace Omnikeeper.Base.Entity
         {
             return effectiveTrait.TraitAttributes[traitAttributeIdentifier]?.Attribute.Value;
         }
+
+        // returns all changeset IDs that contribute to this effective trait
+        public static ISet<Guid> GetRelevantChangesetIDs(this EffectiveTrait effectiveTrait)
+        {
+            return effectiveTrait.TraitAttributes.Select(ta => ta.Value.Attribute.ChangesetID)
+                .Union(effectiveTrait.OutgoingTraitRelations.SelectMany(or => or.Value.Select(o => o.Relation.ChangesetID)))
+                .Union(effectiveTrait.IncomingTraitRelations.SelectMany(or => or.Value.Select(o => o.Relation.ChangesetID)))
+                .ToHashSet();
+        }
     }
 }

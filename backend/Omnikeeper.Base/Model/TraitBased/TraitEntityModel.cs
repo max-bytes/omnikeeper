@@ -80,7 +80,7 @@ namespace Omnikeeper.Base.Model.TraitBased
          */
         // NOTE: the cis MUST exist already
         public async Task<bool> BulkReplace(ISet<Guid> ciids, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
-            IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> incomingRelations, 
+            IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations, 
             LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             if (attributeFragments.IsEmpty() || ciids.IsEmpty())
@@ -105,7 +105,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         // NOTE: the ci MUST exist already
         public async Task<(EffectiveTrait et, bool changed)> InsertOrUpdate(Guid ciid, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
-            IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> incomingRelations,
+            IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
             LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var changed = await WriteAttributes(attributeFragments, new HashSet<Guid>() { ciid }, writeLayer, dataOrigin, changesetProxy, trans);
@@ -131,7 +131,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return changed;
         }
 
-        private async Task<bool> WriteRelations(IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)> incomingRelations,
+        private async Task<bool> WriteRelations(IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
             ISet<(Guid thisCIID, string predicateID)> relevantOutgoingRelations, ISet<(Guid thisCIID, string predicateID)> relevantIncomingRelations,
             string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
@@ -182,10 +182,10 @@ namespace Omnikeeper.Base.Model.TraitBased
                 }
 
                 await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayerID, 
-                    new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>(),
+                    new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>(),
                     outgoing, true), changesetProxy, dataOrigin, trans);
                 await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayerID, 
-                    new List<(Guid thisCIID, string predicateID, IEnumerable<Guid> otherCIIDs)>(),
+                    new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>(),
                     incoming, false), changesetProxy, dataOrigin, trans);
             }
         }

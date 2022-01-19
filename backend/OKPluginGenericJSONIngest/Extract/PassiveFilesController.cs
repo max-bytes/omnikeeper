@@ -230,6 +230,10 @@ namespace Omnikeeper.Controllers.Ingest
                 {
                     return Forbid();
                 }
+                if (!authorizationService.CanUserReadFromAllLayers(user, searchLayers))
+                {
+                    return Forbid();
+                }
                 // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
                 // TODO: think about this!
 

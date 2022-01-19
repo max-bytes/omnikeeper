@@ -6,21 +6,22 @@ import { useExplorerLayers } from "../../utils/layers";
 import TraitList from "./TraitList.js";
 import { withRouter } from "react-router-dom";
 import queryString from 'query-string';
-import { Spin, Form, Input } from 'antd';
+import { Spin, Form, Input, Button } from 'antd';
 import { useLocation } from 'react-router-dom'
 import _ from 'lodash';
+import { SearchOutlined, LoadingOutlined } from '@ant-design/icons';
 
 function SearchCIAdvanced(props) {
     let urlParams = parseURLQuery(useLocation().search);
 
-    const { data: visibleLayers, loading: loadingLayers } = useExplorerLayers(true);
+    const { data: visibleLayers, loading: loadingLayers, error: errorLayers } = useExplorerLayers(true);
 
     const [searchString, setSearchString] = useState(urlParams.searchString);
     const [showMetaTraits, setShowMetaTraits] = useState(urlParams.showMetaTraits);
     const [showEmptyTrait, setShowEmptyTrait] = useState(urlParams.showEmptyTrait);
     
 
-    const [loadActiveTraits, { data: activeTraits, loading: loadingActiveTraits }] = useLazyQuery(queries.ActiveTraits);
+    const [loadActiveTraits, { data: activeTraits, loading: loadingActiveTraits, error: errorActiveTraits }] = useLazyQuery(queries.ActiveTraits);
     useEffect(() => {
         if (visibleLayers) {
             loadActiveTraits({});
@@ -59,15 +60,13 @@ function SearchCIAdvanced(props) {
     // https://github.com/apollographql/apollo-client/issues/7396
     // update graphql and implement previousData as soon as bug is fixed
     // NOTE: caching big results is really slow with apollo, so we completely bypass the cache, hence fetchPolicy: "no-cache"
-    const [search, { loading, data: dataCIs }] = useLazyQuery(queries.SearchCIs, {fetchPolicy: "no-cache"});
+    const [search, { loading, data: dataCIs, error }] = useLazyQuery(queries.SearchCIs, {fetchPolicy: "no-cache"});
 
     // debounce search, so its not called too often
     const debouncedSearch = useCallback(_.debounce(search, 500), [search]);
 
-    useEffect(() => {
+    const performSearch = () => {
         if (activeTraits && visibleLayers) {
-            // TODO: cancel previous searches -> see: https://evilmartians.com/chronicles/aborting-queries-and-mutations-in-react-apollo
-            // but... it seems like a clusterfuck :(
             debouncedSearch({
                 variables: {
                     searchString: searchString,
@@ -79,28 +78,28 @@ function SearchCIAdvanced(props) {
                 }
             });
         }
-    }, [searchString, debouncedSearch, activeTraits, visibleLayers, checkedTraits]);
+    };
 
     return (
         <div style={styles.container}>
             <Spin
                 spinning={loadingLayers || loadingActiveTraits}>
                 {/* left column - search */}
-                <div style={styles.searchColumn}>
+                <Form style={styles.searchColumn}>
                     <h2>Search CIs</h2>
-                    <div style={styles.searchColumnEntry}>
+                    <div style={{marginBottom: "20px"}}>
                         <h4>Name or CI-ID</h4>
                         <Form.Item initialValue={searchString ?? ""} style={{ marginBottom: 0 }}>
                             <Input
                                 style={styles.searchField}
                                 icon="search"
-                                placeholder="Search..."
+                                placeholder="Search by name for CI-ID..."
                                 value={searchString ?? ""}
                                 onChange={(e) => setSearchString(e.target.value)}
                             />
                         </Form.Item>
                     </div>
-                    <div style={styles.searchColumnEntry}>
+                    <div style={{marginBottom: "10px", display: "flex", overflowY: "scroll"}}>
                         {activeTraits && 
                             <TraitList traitList={activeTraits.activeTraits} 
                             checked={checkedTraits} setChecked={setCheckedTraits}
@@ -108,10 +107,15 @@ function SearchCIAdvanced(props) {
                             showEmptyTrait={showEmptyTrait} setShowEmptyTrait={setShowEmptyTrait} />
                         }
                     </div>
-                </div>
+                    <div style={{display: "flex", justifyContent: "flex-end"}}>
+                        <Form.Item style={{marginBottom: '0px'}}>
+                            <Button type="primary" size="large" htmlType="submit" onClick={() => performSearch()} icon={<SearchOutlined />}>Search</Button>
+                        </Form.Item>
+                    </div>
+                </Form>
                 {/* right column - results */}
                 <div style={styles.resultsColumn}>
-                    <SearchResults cis={dataCIs?.cis} loading={loading} />
+                    <SearchResults cis={dataCIs?.cis} loading={loading} error={error ?? errorActiveTraits ?? errorLayers} />
                 </div>
             </Spin>
         </div>
@@ -156,12 +160,9 @@ const styles = {
         display: "flex",
         flexDirection: "column",
         padding: "10px",
-        overflowY: "scroll",
+        overflowY: "hidden",
         width: "30%",
         minWidth: "300px",
-    },
-    searchColumnEntry: {
-        marginBottom: "20px",
     },
     searchField: {
         width: "100%",

@@ -87,6 +87,21 @@ namespace Omnikeeper.GraphQL
             return loader.LoadAsync((ciidSelection, attributeSelection));
         }
 
+        public IDataLoaderResult<IEnumerable<Changeset>> SetupAndLoadChangesets(ISet<Guid> ids, IChangesetModel changesetModel, IModelContext trans)
+        {
+            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetChangesets",
+                    async (IEnumerable<ISet<Guid>> selections) =>
+                    {
+                        var combinedIDs = selections.SelectMany(id => id).ToHashSet();
+
+                        var combinedChangesets = (await changesetModel.GetChangesets(combinedIDs, trans)).ToDictionary(ci => ci.ID);
+
+                        // NOTE: seems weird, cant lookup be created better?
+                        return selections.SelectMany(s => s.Select(id => (s, combinedChangesets[id]!))).ToLookup(t => t.s, t => t.Item2);
+                    });
+            return loader.LoadAsync(ids);
+        }
+
         public IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader<ICIIDSelection, IDictionary<Guid, string>>($"GetMergedCINames_{layerSet}_{timeThreshold}",
@@ -177,6 +192,7 @@ namespace Omnikeeper.GraphQL
 
     public interface IDataLoaderService
     {
+        IDataLoaderResult<IEnumerable<Changeset>> SetupAndLoadChangesets(ISet<Guid> ids, IChangesetModel changesetModel, IModelContext trans);
         IDataLoaderResult<IEnumerable<EffectiveTrait>> SetupAndLoadEffectiveTraitLoader(MergedCI ci, ITraitSelection traitSelection, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, bool includeEmptyCIs, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);

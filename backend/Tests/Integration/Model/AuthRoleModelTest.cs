@@ -15,7 +15,7 @@ namespace Tests.Integration.Model
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitEntityHelper.Class2RecursiveTrait<AuthRole>();
+            var et = GenericTraitEntityHelper.Class2RecursiveTrait<AuthRole>();
 
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.config.auth_role", new TraitOriginV1(TraitOriginType.Core),

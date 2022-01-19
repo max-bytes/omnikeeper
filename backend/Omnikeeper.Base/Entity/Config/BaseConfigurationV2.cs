@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Omnikeeper.Base.Utils;
-using ProtoBuf;
 using System;
 
 namespace Omnikeeper.Base.Entity.Config

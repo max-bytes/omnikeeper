@@ -34,7 +34,7 @@ namespace OKPluginGenericJSONIngest
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitEntityHelper.Class2RecursiveTrait<Context>();
+            var et = GenericTraitEntityHelper.Class2RecursiveTrait<Context>();
 
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.config.gji_context", new TraitOriginV1(TraitOriginType.Plugin),

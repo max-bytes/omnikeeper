@@ -17,6 +17,7 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
+using Omnikeeper.GraphQL.TraitEntities;
 using Omnikeeper.GraphQL.Types;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.Model;
@@ -282,6 +283,7 @@ namespace Omnikeeper.Startup
             // we do this to not reduce performance, and until we find a better way to to this
             builder.RegisterType<TraitEntitiesQuerySchemaLoader>().SingleInstance();
             builder.RegisterType<TraitEntitiesMutationSchemaLoader>().SingleInstance();
+            builder.RegisterType<TypeContainerCreator>().SingleInstance();
             // HACK, NOTE: overwrite lifetime of the chain of parent graphql elements to instance-per-lifetime
             // this is necessary to ensure that the TraitEntitiesType is properly re-created on each request
             // otherwise, changes to traits can not be properly updated/reflected

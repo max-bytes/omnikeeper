@@ -9,6 +9,7 @@ using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.GraphQL.TraitEntities;
 using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Service;
 using System;
@@ -354,6 +355,8 @@ namespace Omnikeeper.GraphQL
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                     var id = context.GetArgument<Guid>("id");
+
+                    // TODO: use dataloader
                     var changeset = await changesetModel.GetChangeset(id, userContext.Transaction);
                     return changeset;
                 });
@@ -383,7 +386,7 @@ namespace Omnikeeper.GraphQL
                     var limit = context.GetArgument<int?>("limit", null);
                     IChangesetSelection selection = new ChangesetSelectionAllCIs();
                     if (ciids != null)
-                        selection = ChangesetSelectionMultipleCIs.Build(ciids);
+                        selection = ChangesetSelectionSpecificCIs.Build(ciids);
 
                     // NOTE: we can't filter the changesets using CIBasedAuthorizationService because changesets are not bound to CIs
 
@@ -491,7 +494,7 @@ namespace Omnikeeper.GraphQL
                     .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                     .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
-                return new TraitEntities();
+                return new TraitEntities.TraitEntities();
             });
         }
 

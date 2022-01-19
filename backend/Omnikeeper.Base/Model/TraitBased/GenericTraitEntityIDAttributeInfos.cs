@@ -9,11 +9,11 @@ using System.Runtime.CompilerServices;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
-    public class TraitEntityIDAttributeInfos<T, ID> where T : TraitEntity, new() where ID : notnull
+    public class GenericTraitEntityIDAttributeInfos<T, ID> where T : TraitEntity, new() where ID : notnull
     {
         private readonly IEnumerable<(FieldInfo idFieldInfo, string idAttributeName, AttributeValueType idAttributeValueType)> fields;
 
-        public TraitEntityIDAttributeInfos(IEnumerable<(FieldInfo idFieldInfo, string idAttributeName, AttributeValueType idAttributeValueType)> f)
+        public GenericTraitEntityIDAttributeInfos(IEnumerable<(FieldInfo idFieldInfo, string idAttributeName, AttributeValueType idAttributeValueType)> f)
         {
             fields = f;
         }

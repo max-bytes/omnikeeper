@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -8,10 +7,10 @@ using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    [ProtoContract(SkipConstructor = true)]
+    //[ProtoContract(SkipConstructor = true)]
     public class AttributeScalarValueImage : IAttributeScalarValue<BinaryScalarAttributeValueProxy>, IEquatable<AttributeScalarValueImage>
     {
-        [ProtoMember(1)]
+        //[ProtoMember(1)]
         private readonly BinaryScalarAttributeValueProxy value;
         public BinaryScalarAttributeValueProxy Value => value;
         public string Value2String() => Value.ToString();
@@ -40,7 +39,7 @@ namespace Omnikeeper.Entity.AttributeValues
         }
     }
 
-    [ProtoContract]
+    //[ProtoContract]
     public class AttributeArrayValueImage : AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>
     {
         protected AttributeArrayValueImage(AttributeScalarValueImage[] values) : base(values)

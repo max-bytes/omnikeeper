@@ -16,25 +16,25 @@ namespace Omnikeeper.Base.Model
 
         }
 
-        public class ChangesetSelectionMultipleCIs : IChangesetSelection
+        public class ChangesetSelectionSpecificCIs : IChangesetSelection
         {
             public Guid[] CIIDs { get; }
-            private ChangesetSelectionMultipleCIs(IEnumerable<Guid> ciids)
+            private ChangesetSelectionSpecificCIs(IEnumerable<Guid> ciids)
             {
                 CIIDs = ciids.ToArray();
             }
 
             public bool Contains(Guid ciid) => CIIDs.Contains(ciid);
 
-            public static ChangesetSelectionMultipleCIs Build(IEnumerable<Guid> ciids)
+            public static ChangesetSelectionSpecificCIs Build(IEnumerable<Guid> ciids)
             {
                 if (ciids.IsEmpty()) throw new Exception("Empty ChangesetSelectionMultipleCIs not allowed");
-                return new ChangesetSelectionMultipleCIs(ciids);
+                return new ChangesetSelectionSpecificCIs(ciids);
             }
-            public static ChangesetSelectionMultipleCIs Build(params Guid[] ciids)
+            public static ChangesetSelectionSpecificCIs Build(params Guid[] ciids)
             {
                 if (ciids.IsEmpty()) throw new Exception("Empty ChangesetSelectionMultipleCIs not allowed");
-                return new ChangesetSelectionMultipleCIs(ciids);
+                return new ChangesetSelectionSpecificCIs(ciids);
             }
         }
 
@@ -45,6 +45,7 @@ namespace Omnikeeper.Base.Model
 
         Task<Changeset> CreateChangeset(long userID, string layerID, DataOriginV1 dataOrigin, IModelContext trans, DateTimeOffset? timestamp = null);
         Task<Changeset?> GetChangeset(Guid id, IModelContext trans);
+        Task<IEnumerable<Changeset>> GetChangesets(ISet<Guid> ids, IModelContext trans);
         Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null);
         Task<Changeset?> GetLatestChangesetForLayer(string layerID, IModelContext trans);
 
