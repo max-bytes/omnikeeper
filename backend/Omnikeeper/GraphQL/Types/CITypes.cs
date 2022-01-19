@@ -168,7 +168,7 @@ namespace Omnikeeper.GraphQL.Types
                         var field = selection as Field;
                         if (field == null) throw new Exception();
                         var ft = _GetAroundProtectedFunctions.PublicGetFieldDefinition(context.Schema, parentGraphType, field);
-                        var rt = ft?.ResolvedType as ElementType;
+                        var rt = ft?.ResolvedType as ElementWrapperType;
                         var underlyingTrait = rt?.UnderlyingTrait;
                         if (underlyingTrait == null) throw new Exception();
 

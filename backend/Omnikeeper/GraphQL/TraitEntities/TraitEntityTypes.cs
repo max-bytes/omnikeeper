@@ -103,9 +103,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class ElementWrapperType : ObjectGraphType
     {
-        public ElementWrapperType(ITrait at, ObjectGraphType elementGraphType, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, ICIModel ciModel)
+        public readonly ITrait UnderlyingTrait;
+
+        public ElementWrapperType(ITrait underlyingTrait, ObjectGraphType elementGraphType, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, ICIModel ciModel)
         {
-            Name = TraitEntityTypesNameGenerator.GenerateTraitEntityWrapperGraphTypeName(at);
+            Name = TraitEntityTypesNameGenerator.GenerateTraitEntityWrapperGraphTypeName(underlyingTrait);
 
             this.Field<GuidGraphType>("ciid", resolve: context =>
             {
@@ -136,13 +138,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 var et = (EffectiveTrait?)context.Source!;
                 return et;
             });
+            this.UnderlyingTrait = underlyingTrait;
         }
     }
 
     public class ElementType : ObjectGraphType
     {
-        public readonly ITrait UnderlyingTrait;
-
         public ElementType(ITrait underlyingTrait, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, ICIModel ciModel)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityGraphTypeName(underlyingTrait);
@@ -202,8 +203,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     })
                 });
             }
-
-            this.UnderlyingTrait = underlyingTrait;
         }
     }
 
@@ -328,10 +327,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             this.Name = StaticName;
 
+            // NOTE: because graphql types MUST define at least one field, we define a placeholder field whose single purpose is to simply exist and fulfill the requirement
+            // when there are no types
             if (typesContainers.IsEmpty())
             {
-                // NOTE: because graphql types MUST define at least one field, we define a placeholder field whose single purpose is to simply exist and fulfill the requirement
-                // when there are no types
                 Field<StringGraphType>("placeholder", resolve: ctx => "placeholder");
             }
 
@@ -339,7 +338,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             {
                 var traitID = typeContainer.Trait.ID;
                 var fieldName = TraitEntityTypesNameGenerator.GenerateTraitIDFieldName(traitID);
-                this.Field(fieldName, typeContainer.Element, resolve: context =>
+                this.Field(fieldName, typeContainer.ElementWrapper, resolve: context =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var ci = context.Parent?.Source as MergedCI;
