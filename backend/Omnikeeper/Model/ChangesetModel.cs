@@ -6,6 +6,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using static Omnikeeper.Base.Model.IChangesetModel;
 
@@ -66,20 +67,52 @@ namespace Omnikeeper.Model
             return new Changeset(id, user, layerID, origin, timestamp);
         }
 
+        public async Task<IEnumerable<Changeset>> GetChangesets(ISet<Guid> ids, IModelContext trans)
+        {
+            using var command = new NpgsqlCommand($@"SELECT c.id, c.timestamp, c.user_id, c.layer_id, c.origin_type, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c
+                LEFT JOIN ""user"" u ON c.user_id = u.id
+                WHERE c.id = ANY(@ids)
+            ", trans.DBConnection, trans.DBTransaction);
+
+            command.Parameters.AddWithValue("ids", ids.ToArray());
+            command.Prepare();
+            using var dr = await command.ExecuteReaderAsync();
+
+            var ret = new List<Changeset>();
+            while (await dr.ReadAsync())
+            {
+                var id = dr.GetGuid(0);
+                var timestamp = dr.GetTimeStamp(1).ToDateTime();
+                var userID = dr.GetInt64(2);
+                var layerID = dr.GetString(3);
+                var dataOriginType = dr.GetFieldValue<DataOriginType>(4);
+                var origin = new DataOriginV1(dataOriginType);
+                var username = dr.GetString(5);
+                var displayName = dr.GetString(6);
+                var keycloakUUID = dr.GetGuid(7);
+                var userType = dr.GetFieldValue<UserType>(8);
+                var userTimestamp = dr.GetTimeStamp(9).ToDateTime();
+
+                var user = new UserInDatabase(userID, keycloakUUID, username, displayName, userType, userTimestamp);
+                ret.Add(new Changeset(id, user, layerID, origin, timestamp));
+            }
+            return ret;
+        }
+
         // returns all changesets in the time range
         // sorted by timestamp
         public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null)
         {
             return cs switch
             {
-                ChangesetSelectionMultipleCIs mci => await GetChangesetsInTimespan(from, to, layers, mci.CIIDs, trans, limit),
+                ChangesetSelectionSpecificCIs mci => await GetChangesetsInTimespan(from, to, layers, mci.CIIDs, trans, limit),
                 ChangesetSelectionAllCIs _ => await GetChangesetsInTimespan(from, to, layers, trans, limit),
                 _ => throw new Exception("Invalid changeset selection"),
             };
         }
 
 
-        // returns all changesets affecting this CI, both via attributes OR relations
+        // returns all changesets affecting these CI, both via attributes OR relations
         // sorted by timestamp
         private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, Guid[] ciids, IModelContext trans, int? limit = null)
         {

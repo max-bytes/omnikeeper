@@ -48,9 +48,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
         private readonly IDataLoaderService dataLoaderService;
+        private readonly IChangesetModel changesetModel;
 
         public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel, 
-            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService)
+            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService, IChangesetModel changesetModel)
         {
             this.traitsProvider = traitsProvider;
             this.attributeModel = attributeModel;
@@ -58,6 +59,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.dataLoaderService = dataLoaderService;
+            this.changesetModel = changesetModel;
         }
 
         public TypeContainer CreateTypes(IDictionary<string, ITrait> activeTraits, ISchema schema, ILogger logger)
@@ -71,7 +73,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 try
                 {
                     var tt = new ElementType(at.Value, traitsProvider, dataLoaderService, ciModel);
-                    var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel);
+                    var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel);
                     var idt = IDInputType.Build(at.Value);
                     var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, dataLoaderService, traitsProvider, attributeModel, relationModel, ttWrapper, idt);
                     var upsertInputType = new UpsertInputType(at.Value);
