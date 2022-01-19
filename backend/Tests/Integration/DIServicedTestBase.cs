@@ -75,6 +75,7 @@ namespace Tests.Integration
             builder.Register<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance).SingleInstance();
             builder.Register<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance).SingleInstance();
             builder.Register<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance).SingleInstance();
+            builder.Register<ILogger<TraitsProvider>>((sp) => NullLogger<TraitsProvider>.Instance).SingleInstance();
             builder.Register<ILogger<CachingMetaConfigurationModel>>((sp) => NullLogger<CachingMetaConfigurationModel>.Instance).SingleInstance();
             builder.RegisterType<NullLoggerFactory>().As<ILoggerFactory>().SingleInstance();
 
