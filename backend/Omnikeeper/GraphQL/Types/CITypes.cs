@@ -254,7 +254,7 @@ namespace Omnikeeper.GraphQL.Types
         public AttributeValueDTOType()
         {
             Field(x => x.Type, type: typeof(AttributeValueTypeType));
-            Field("Value", x => x.Values[0]);
+            Field("value", x => x.Values[0]);
             Field(x => x.Values);
             Field(x => x.IsArray);
         }
