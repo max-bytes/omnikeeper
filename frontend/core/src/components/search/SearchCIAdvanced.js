@@ -99,7 +99,7 @@ function SearchCIAdvanced(props) {
                             />
                         </Form.Item>
                     </div>
-                    <div style={{marginBottom: "10px", display: "flex", overflowY: "scroll"}}>
+                    <div style={{marginBottom: "10px", display: "flex", overflow: "hidden"}}>
                         {activeTraits && 
                             <TraitList traitList={activeTraits.activeTraits} 
                             checked={checkedTraits} setChecked={setCheckedTraits}
@@ -161,8 +161,8 @@ const styles = {
         flexDirection: "column",
         padding: "10px",
         overflowY: "hidden",
-        width: "30%",
-        minWidth: "300px",
+        minWidth: "250px",
+        maxWidth: "400px",
     },
     searchField: {
         width: "100%",
