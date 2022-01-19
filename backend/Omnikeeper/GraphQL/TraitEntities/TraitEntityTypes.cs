@@ -148,11 +148,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var trans = userContext.Transaction;
 
-                var relevantChangesets =
-                    et.TraitAttributes.Select(ta => ta.Value.Attribute.ChangesetID)
-                    .Union(et.OutgoingTraitRelations.SelectMany(or => or.Value.Select(o => o.Relation.ChangesetID)))
-                    .Union(et.IncomingTraitRelations.SelectMany(or => or.Value.Select(o => o.Relation.ChangesetID)))
-                    .ToHashSet();
+                var relevantChangesets = et.GetRelevantChangesetIDs();
 
                 return dataLoaderService.SetupAndLoadChangesets(relevantChangesets, changesetModel, trans)
                 .Then(changesets =>
