@@ -40,13 +40,13 @@ namespace Omnikeeper
                 NpgsqlLogManager.Provider = scope.ServiceProvider.GetRequiredService<NpgsqlLoggingProvider>();
 
                 // migration/rebuild of *-latest tables in database to be backward compatible
-                await RebuildLatestTablesIfNonEmpty(scope);
+                //await RebuildLatestTablesIfNonEmpty(scope);
 
                 // create a default __okconfig layer if it does not exist and meta config has this set
                 await CreateOKConfigLayerIfNotExists(scope);
 
                 // migrate layer data into proper layer-data entities
-                await MigrateLayerData(scope);
+                //await MigrateLayerData(scope);
             }
 
             host.Run();
