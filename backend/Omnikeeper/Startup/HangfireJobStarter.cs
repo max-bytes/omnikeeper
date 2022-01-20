@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using Hangfire.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Omnikeeper.Base.Entity;
@@ -7,6 +8,7 @@ using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Runners;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,11 +33,8 @@ namespace Omnikeeper.Startup
 
             var plugins = scope.ServiceProvider.GetServices<IPluginRegistration>();
 
-            RecurringJob.RemoveIfExists("CLBRunner");
-            RecurringJob.RemoveIfExists("MarkedForDeletionRunner");
-            RecurringJob.RemoveIfExists("ExternalIDManagerRunner");
-            RecurringJob.RemoveIfExists("ArchiveOldDataRunner");
-            RecurringJob.RemoveIfExists("UsageDataWriteRunner");
+            // remove all running jobs at startup
+            RemoveAllHangfireJobs();
 
             RecurringJob.AddOrUpdate<CLBRunner>("CLBRunner", s => s.Run(null), config.CLBRunnerInterval);
             RecurringJob.AddOrUpdate<MarkedForDeletionRunner>("MarkedForDeletionRunner", s => s.Run(null), config.MarkedForDeletionRunnerInterval);
@@ -48,6 +47,24 @@ namespace Omnikeeper.Startup
             {
                 plugin.RegisterHangfireJobRunners();
             }
+        }
+
+        // taken from https://stackoverflow.com/questions/51631092/hangfire-duplicates-jobs-on-server-restart
+        private void RemoveAllHangfireJobs()
+        {
+            var hangfireMonitor = JobStorage.Current.GetMonitoringApi();
+
+            //RecurringJobs
+            JobStorage.Current.GetConnection().GetRecurringJobs().ForEach(xx => RecurringJob.RemoveIfExists(xx.Id));
+
+            //ProcessingJobs
+            hangfireMonitor.ProcessingJobs(0, int.MaxValue).ForEach(xx => BackgroundJob.Delete(xx.Key));
+
+            //ScheduledJobs
+            hangfireMonitor.ScheduledJobs(0, int.MaxValue).ForEach(xx => BackgroundJob.Delete(xx.Key));
+
+            //EnqueuedJobs
+            hangfireMonitor.Queues().ToList().ForEach(xx => hangfireMonitor.EnqueuedJobs(xx.Name, 0, int.MaxValue).ForEach(x => BackgroundJob.Delete(x.Key)));
         }
     }
 }

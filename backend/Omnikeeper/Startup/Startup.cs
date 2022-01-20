@@ -48,8 +48,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Startup
 {
-
-    public partial class Startup
+    public class Startup
     {
         private IMvcBuilder? mvcBuilder;
 
@@ -167,6 +166,7 @@ namespace Omnikeeper.Startup
                 //policy.RequireClaim("member_of", "[accounting]"));
             });
 
+            services.AddHangfireServer();
             services.AddHangfire(config =>
             {
                 // re-using main DB connection
@@ -320,7 +320,7 @@ namespace Omnikeeper.Startup
         private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime,
             ILogger<Startup> logger, IEnumerable<IPluginRegistration> plugins)
         {
             var version = VersionService.GetVersion();
@@ -431,7 +431,6 @@ namespace Omnikeeper.Startup
 
             // Configure hangfire to use the new JobActivator we defined.
             GlobalConfiguration.Configuration.UseAutofacActivator(app.ApplicationServices.GetAutofacRoot());
-            app.UseHangfireServer();
             if (env.IsDevelopment() || env.IsStaging())
             { // TODO: also use in production, but fix auth first
                 // workaround, see: https://github.com/HangfireIO/Hangfire/issues/1110
