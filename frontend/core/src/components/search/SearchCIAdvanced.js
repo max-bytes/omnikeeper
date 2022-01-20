@@ -162,7 +162,7 @@ const styles = {
         padding: "10px",
         overflowY: "hidden",
         minWidth: "250px",
-        maxWidth: "400px",
+        maxWidth: "500px",
     },
     searchField: {
         width: "100%",
