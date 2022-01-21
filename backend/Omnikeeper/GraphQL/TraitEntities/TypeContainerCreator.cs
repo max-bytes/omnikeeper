@@ -65,6 +65,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public TypeContainer CreateTypes(IDictionary<string, ITrait> activeTraits, ISchema schema, ILogger logger)
         {
             var elementTypes = new List<ElementTypesContainer>();
+
+            var relatedCIType = new RelatedCIType(traitsProvider, dataLoaderService, ciModel);
+
             foreach (var at in activeTraits)
             {
                 if (at.Key == TraitEmpty.StaticID) // ignore the empty trait
@@ -72,7 +75,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 try
                 {
-                    var tt = new ElementType(at.Value, traitsProvider, dataLoaderService, ciModel);
+                    var tt = new ElementType(at.Value, relatedCIType);
                     var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel);
                     var idt = IDInputType.Build(at.Value);
                     var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, dataLoaderService, traitsProvider, attributeModel, relationModel, ttWrapper, idt);

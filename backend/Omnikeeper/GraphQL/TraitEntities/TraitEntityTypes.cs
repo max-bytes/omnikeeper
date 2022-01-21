@@ -164,7 +164,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class ElementType : ObjectGraphType<EffectiveTrait>
     {
-        public ElementType(ITrait underlyingTrait, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, ICIModel ciModel)
+        public ElementType(ITrait underlyingTrait, RelatedCIType relatedCIType)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityGraphTypeName(underlyingTrait);
 
@@ -201,25 +201,25 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 AddField(new FieldType()
                 {
                     Name = relationFieldName,
-                    ResolvedType = new ListGraphType(new RelatedCIType(r, traitsProvider, dataLoaderService, ciModel)),
+                    ResolvedType = new ListGraphType(relatedCIType),
                     Resolver = new FuncFieldResolver<object>(ctx =>
                     {
                         var o = ctx.Source as EffectiveTrait;
                         if (o == null)
                         {
-                            return null;
+                            return default;
                         }
 
                         var fn = ctx.FieldDefinition.Name;
                         if (o.IncomingTraitRelations.TryGetValue(fn, out var incomingTraitRelation))
                         {
-                            return incomingTraitRelation;
+                            return incomingTraitRelation.Select(r => (r, false));
                         }
                         if (o.OutgoingTraitRelations.TryGetValue(fn, out var outgoingTraitRelation))
                         {
-                            return outgoingTraitRelation;
+                            return outgoingTraitRelation.Select(r => (r, true));
                         }
-                        else return null;
+                        else return default;
                     })
                 });
             }
@@ -302,26 +302,26 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
-    public class RelatedCIType : ObjectGraphType<MergedRelation>
+    public class RelatedCIType : ObjectGraphType<(MergedRelation relation, bool outgoing)>
     {
-        public RelatedCIType(TraitRelation traitRelation, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, ICIModel ciModel)
+        public RelatedCIType(ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, ICIModel ciModel)
         {
             Name = "RelatedCIType";
 
             Field<GuidGraphType>("relatedCIID", resolve: context =>
             {
-                var relation = context.Source;
-                if (traitRelation.RelationTemplate.DirectionForward)
+                var (relation, outgoing) = context.Source;
+                if (outgoing)
                     return relation?.Relation.ToCIID;
                 else
                     return relation?.Relation.FromCIID;
             });
-            Field<MergedRelationType>("relation", resolve: context => (MergedRelation)context.Source!);
+            Field<MergedRelationType>("relation", resolve: context => context.Source.relation);
             this.FieldAsync<MergedCIType>("relatedCI", resolve: async context =>
             {
-                var relation = context.Source;
+                var (relation, outgoing) = context.Source;
 
-                var otherCIID = (traitRelation.RelationTemplate.DirectionForward) ? relation.Relation.ToCIID : relation.Relation.FromCIID;
+                var otherCIID = (outgoing) ? relation.Relation.ToCIID : relation.Relation.FromCIID;
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerset = userContext.GetLayerSet(context.Path);
