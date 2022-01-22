@@ -1,6 +1,7 @@
 ﻿using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Omnikeeper.GraphQL.Types
@@ -27,7 +28,6 @@ namespace Omnikeeper.GraphQL.Types
             // HACK, TODO: objects are complex, simply returning them as JSON strings for now
             Field("requiredAttributes", x => x.RequiredAttributes.Select(r => TraitAttribute.Serializer.SerializeToString(r)), type: typeof(ListGraphType<StringGraphType>));
             Field("optionalAttributes", x => x.OptionalAttributes.Select(r => TraitAttribute.Serializer.SerializeToString(r)), type: typeof(ListGraphType<StringGraphType>));
-            Field("requiredRelations", x => x.RequiredRelations.Select(r => TraitRelation.Serializer.SerializeToString(r)), type: typeof(ListGraphType<StringGraphType>));
             Field("optionalRelations", x => x.OptionalRelations.Select(r => TraitRelation.Serializer.SerializeToString(r)), type: typeof(ListGraphType<StringGraphType>));
         }
     }
@@ -50,7 +50,6 @@ namespace Omnikeeper.GraphQL.Types
             Field("id", x => x.ID);
             Field("requiredAttributes", x => x.RequiredAttributes.Select(a => TraitAttribute.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
             Field("optionalAttributes", x => x.OptionalAttributes.Select(a => TraitAttribute.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
-            Field("requiredRelations", x => x.RequiredRelations.Select(a => TraitRelation.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
             Field("optionalRelations", x => x.OptionalRelations.Select(a => TraitRelation.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
             Field("requiredTraits", x => x.RequiredTraits, type: typeof(ListGraphType<StringGraphType>));
         }

@@ -28,7 +28,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 if (attribute == null)
                 {
                     // lookup relation
-                    var relation = trait.RequiredRelations.Concat(trait.OptionalRelations).FirstOrDefault(r =>
+                    var relation = trait.OptionalRelations.FirstOrDefault(r =>
                     {
                         var convertedRelationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
                         return convertedRelationFieldName == inputFieldName;

@@ -116,7 +116,7 @@ namespace Tasks.Tools
                             new TraitAttribute("hostid",
                                 CIAttributeTemplate.BuildFromParams("cmdb.host.id", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
-                        },requiredRelations: new List<TraitRelation>()
+                        },optionalRelations: new List<TraitRelation>()
                         {
                             new TraitRelation("interfaces",
                                 new RelationTemplate("has_interface", true, null, null)

@@ -50,9 +50,8 @@ namespace Omnikeeper.Base.Entity
         public readonly bool directionForward;
         public readonly int? minCardinality;
         public readonly int? maxCardinality;
-        public readonly bool optional;
 
-        public TraitRelationAttribute(string trName, string predicateID, bool directionForward, int minCardinality, int maxCardinality, bool optional = false)
+        public TraitRelationAttribute(string trName, string predicateID, bool directionForward, int minCardinality, int maxCardinality)
         {
             this.trName = trName;
             this.predicateID = predicateID;
@@ -67,8 +66,6 @@ namespace Omnikeeper.Base.Entity
                 this.maxCardinality = null;
             else
                 this.maxCardinality = maxCardinality;
-
-            this.optional = optional;
         }
     }
 

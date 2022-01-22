@@ -34,10 +34,10 @@ namespace PerfTests
             using var mc = modelContextBuilder!.BuildImmediate();
             var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
             var cis = await ciModel!.GetMergedCIs(ciSelection!, layerset!, false, AllAttributeSelection.Instance, mc, time);
-            (await effectiveTraitModel!.FilterCIsWithTrait(cis, trait!, layerset!, mc, time)).Consume(consumer);
+            effectiveTraitModel!.FilterCIsWithTrait(cis, trait!, layerset!, mc, time).Consume(consumer);
 
             // second time should hit cache
-            (await effectiveTraitModel!.FilterCIsWithTrait(cis, trait!, layerset!, mc, time)).Consume(consumer);
+            effectiveTraitModel!.FilterCIsWithTrait(cis, trait!, layerset!, mc, time).Consume(consumer);
         }
 
         [Test]

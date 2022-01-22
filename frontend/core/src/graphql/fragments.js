@@ -133,7 +133,6 @@ export const Fragments = {
     id,
     requiredAttributes,
     optionalAttributes,
-    requiredRelations,
     optionalRelations,
     requiredTraits
   }

@@ -51,13 +51,6 @@ export default function Trait(props) {
                         })}
                 </TabPane>
                 <TabPane 
-                    tab={<CountBadge count={data.activeTrait.requiredRelations.length}>Required Relations</CountBadge>}
-                    key="Required Relations" disabled={data.activeTrait.requiredRelations.length === 0}>
-                        {data.activeTrait.requiredRelations.map((r, index) => {
-                            return <ReactJson key={index} collapsed={false} name={false} src={JSON.parse(r)} enableClipboard={false} />
-                        })}
-                </TabPane>
-                <TabPane 
                     tab={<CountBadge count={data.activeTrait.optionalRelations.length}>Optional Relations</CountBadge>}
                     key="Optional Relations" disabled={data.activeTrait.optionalRelations.length === 0}>
                         {data.activeTrait.optionalRelations.map((r, index) => {

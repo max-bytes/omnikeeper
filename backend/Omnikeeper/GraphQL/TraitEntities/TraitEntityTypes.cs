@@ -195,7 +195,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 });
             }
 
-            foreach (var r in underlyingTrait.RequiredRelations.Concat(underlyingTrait.OptionalRelations))
+            foreach (var r in underlyingTrait.OptionalRelations)
             {
                 var relationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
                 AddField(new FieldType()
@@ -283,14 +283,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 });
             }
 
-            foreach (var rr in at.RequiredRelations)
-            {
-                AddField(new FieldType()
-                {
-                    Name = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(rr),
-                    ResolvedType = new NonNullGraphType(new ListGraphType(new GuidGraphType()))
-                });
-            }
             foreach (var rr in at.OptionalRelations)
             {
                 AddField(new FieldType()

@@ -233,10 +233,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                         }
                         else
                         {
-                            if (!trFieldInfo.TraitRelationAttribute.optional)
-                            {
-                                throw new Exception(); // TODO
-                            }
+                            // relations are optional by design, continue if not found
                         }
                     }
                 }

@@ -43,7 +43,7 @@ namespace OKPluginValidation.Tests
                     new List<TraitAttribute>() {
                         new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                     },
-                    new List<TraitRelation>()
+                    optionalRelations: new List<TraitRelation>()
                     {
                         new TraitRelation("has_issue", new RelationTemplate("__meta.validation.has_issue", false, 1, null)),
                     }

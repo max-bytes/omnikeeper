@@ -18,7 +18,6 @@ namespace Omnikeeper.Base.Model.TraitBased
         protected readonly IRelationModel relationModel;
         private readonly ITrait trait;
         private readonly HashSet<string> relevantAttributesForTrait;
-        private readonly bool hasRelations;
 
         public TraitEntityModel(ITrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
         {
@@ -29,7 +28,6 @@ namespace Omnikeeper.Base.Model.TraitBased
             this.trait = trait;
 
             relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Concat(trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet();
-            hasRelations = !trait.RequiredRelations.IsEmpty() || !trait.OptionalRelations.IsEmpty();
         }
 
         public async Task<EffectiveTrait?> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
@@ -91,10 +89,10 @@ namespace Omnikeeper.Base.Model.TraitBased
             var relevantCIIDs = outdated.Keys.ToHashSet();
             var changed = await WriteAttributes(attributeFragments, relevantCIIDs, writeLayer, dataOrigin, changesetProxy, trans);
 
-            if (hasRelations)
+            if (!trait.OptionalRelations.IsEmpty())
             {
-                var relevantOutgoingRelations = trait.RequiredRelations.Concat(trait.OptionalRelations).Where(rr => rr.RelationTemplate.DirectionForward).SelectMany(rr => relevantCIIDs.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
-                var relevantIncomingRelations = trait.RequiredRelations.Concat(trait.OptionalRelations).Where(rr => !rr.RelationTemplate.DirectionForward).SelectMany(rr => relevantCIIDs.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
+                var relevantOutgoingRelations = trait.OptionalRelations.Where(rr => rr.RelationTemplate.DirectionForward).SelectMany(rr => relevantCIIDs.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
+                var relevantIncomingRelations = trait.OptionalRelations.Where(rr => !rr.RelationTemplate.DirectionForward).SelectMany(rr => relevantCIIDs.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
 
                 var tmpChanged = await WriteRelations(outgoingRelations, incomingRelations, relevantOutgoingRelations, relevantIncomingRelations, writeLayer, dataOrigin, changesetProxy, trans);
                 changed = changed || tmpChanged;
@@ -110,10 +108,10 @@ namespace Omnikeeper.Base.Model.TraitBased
         {
             var changed = await WriteAttributes(attributeFragments, new HashSet<Guid>() { ciid }, writeLayer, dataOrigin, changesetProxy, trans);
 
-            if (hasRelations)
+            if (!trait.OptionalRelations.IsEmpty())
             {
-                var relevantOutgoingRelations = trait.RequiredRelations.Concat(trait.OptionalRelations).Where(rr => rr.RelationTemplate.DirectionForward).Select(rr => (ciid, rr.RelationTemplate.PredicateID)).ToHashSet();
-                var relevantIncomingRelations = trait.RequiredRelations.Concat(trait.OptionalRelations).Where(rr => !rr.RelationTemplate.DirectionForward).Select(rr => (ciid, rr.RelationTemplate.PredicateID)).ToHashSet();
+                var relevantOutgoingRelations = trait.OptionalRelations.Where(rr => rr.RelationTemplate.DirectionForward).Select(rr => (ciid, rr.RelationTemplate.PredicateID)).ToHashSet();
+                var relevantIncomingRelations = trait.OptionalRelations.Where(rr => !rr.RelationTemplate.DirectionForward).Select(rr => (ciid, rr.RelationTemplate.PredicateID)).ToHashSet();
                 var tmpChanged = await WriteRelations(outgoingRelations, incomingRelations, relevantOutgoingRelations, relevantIncomingRelations, writeLayer, dataOrigin, changesetProxy, trans);
                 changed = changed || tmpChanged;
             }
@@ -136,7 +134,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var changed = false;
-            if (hasRelations)
+            if (!trait.OptionalRelations.IsEmpty())
             {
                 var tmpChanged = await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayer, outgoingRelations, relevantOutgoingRelations, true), changesetProxy, dataOrigin, trans);
                 changed = changed || !tmpChanged.IsEmpty();
@@ -167,11 +165,11 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         private async Task RemoveRelations(Guid ciid, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            if (hasRelations)
+            if (!trait.OptionalRelations.IsEmpty())
             {
                 var outgoing = new HashSet<(Guid thisCIID, string predicateID)>();
                 var incoming = new HashSet<(Guid thisCIID, string predicateID)>();
-                foreach (var traitRelation in trait.RequiredRelations.Concat(trait.OptionalRelations))
+                foreach (var traitRelation in trait.OptionalRelations)
                 {
                     var predicateID = traitRelation.RelationTemplate.PredicateID;
                     var isOutgoing = traitRelation.RelationTemplate.DirectionForward;

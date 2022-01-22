@@ -43,7 +43,6 @@ export const queries = {
                 ancestorTraits
                 requiredAttributes
                 optionalAttributes
-                requiredRelations
                 optionalRelations
             }
         }

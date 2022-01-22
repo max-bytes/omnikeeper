@@ -75,7 +75,7 @@ namespace Tests.Integration.Model
             async Task<IEnumerable<MergedCI>> FindMergedCIsByTraits(ICIModel ciModel, IEffectiveTraitModel traitModel, IEnumerable<ITrait> withEffectiveTraits, IEnumerable<ITrait> withoutEffectiveTraits, LayerSet layerSet, IModelContext transI)
             {
                 var workCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, includeEmptyCIs: true, AllAttributeSelection.Instance, transI, tt);
-                return await traitModel.FilterMergedCIsByTraits(workCIs, withEffectiveTraits, withoutEffectiveTraits, new LayerSet(layerID1, layerID2), transI, tt);
+                return traitModel.FilterMergedCIsByTraits(workCIs, withEffectiveTraits, withoutEffectiveTraits, new LayerSet(layerID1, layerID2), transI, tt);
             }
 
             var activeTraits = await traitsProvider.GetActiveTraits(transI, tt);

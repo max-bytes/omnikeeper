@@ -138,7 +138,6 @@ namespace Omnikeeper.GraphQL.Types
         public string ID { get; private set; }
         public string[] RequiredAttributes { get; private set; }
         public string[] OptionalAttributes { get; private set; }
-        public string[] RequiredRelations { get; private set; }
         public string[] OptionalRelations { get; private set; }
         public string[] RequiredTraits { get; private set; }
     }
@@ -149,7 +148,7 @@ namespace Omnikeeper.GraphQL.Types
             Field("id", x => x.ID);
             Field(x => x.RequiredAttributes);
             Field(x => x.OptionalAttributes);
-            Field(x => x.RequiredRelations);
+            Field<StringGraphType>(name: "requiredRelations", resolve: x => "", deprecationReason: "not used anymore"); // TODO: remove
             Field(x => x.OptionalRelations);
             Field(x => x.RequiredTraits);
         }

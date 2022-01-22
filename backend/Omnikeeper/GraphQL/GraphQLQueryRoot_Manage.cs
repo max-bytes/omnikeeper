@@ -15,6 +15,7 @@ using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Service;
 using System;
 using System.Linq;
+
 namespace Omnikeeper.GraphQL
 {
     public partial class GraphQLQueryRoot

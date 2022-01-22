@@ -137,9 +137,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 }
                 else
                 {
-                    // optional or not? depending on that, throw error or continue
-                    if (!trFieldInfo.TraitRelationAttribute.optional)
-                        throw new Exception($"Could not find trait relation {trFieldInfo.TraitRelationAttribute.trName} for mandatory field");
+                    // relations are always optional by design, if we do not find it, just continue
                 }
             }
 
@@ -152,7 +150,6 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             var requiredAttributes = new List<TraitAttribute>();
             var optionalAttributes = new List<TraitAttribute>();
-            var requiredRelations = new List<TraitRelation>();
             var optionalRelations = new List<TraitRelation>();
 
             foreach (var taFieldInfo in attributeFieldInfos)
@@ -166,13 +163,12 @@ namespace Omnikeeper.Base.Model.TraitBased
             foreach (var trFieldInfo in relationFieldInfos)
             {
                 var tra = trFieldInfo.TraitRelationAttribute;
-                var targetRelationList = (tra.optional) ? optionalRelations : requiredRelations;
-                targetRelationList.Add(new TraitRelation(tra.trName, new RelationTemplate(tra.predicateID, tra.directionForward, tra.minCardinality, tra.maxCardinality)));
+                optionalRelations.Add(new TraitRelation(tra.trName, new RelationTemplate(tra.predicateID, tra.directionForward, tra.minCardinality, tra.maxCardinality)));
             }
 
             var traitOrigin = new TraitOriginV1(ta.originType);
 
-            var ret = new RecursiveTrait(ta.traitName, traitOrigin, requiredAttributes, optionalAttributes, requiredRelations, optionalRelations);
+            var ret = new RecursiveTrait(ta.traitName, traitOrigin, requiredAttributes, optionalAttributes, optionalRelations);
             return ret;
         }
 

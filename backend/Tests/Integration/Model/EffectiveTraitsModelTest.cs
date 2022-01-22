@@ -47,19 +47,19 @@ namespace Tests.Integration.Model
             Assert.AreEqual(2, et3.Count());
             Assert.IsTrue(et3.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
 
-            var cis1 = await traitModel.FilterCIsWithTrait(cis, testTrait1, layerset, trans, timeThreshold);
+            var cis1 = traitModel.FilterCIsWithTrait(cis, testTrait1, layerset, trans, timeThreshold);
             Assert.AreEqual(3, cis1.Count());
             cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithStrictOrdering());
 
-            var cis2 = await traitModel.FilterCIsWithTrait(cis, testTrait2, layerset, trans, timeThreshold);
+            var cis2 = traitModel.FilterCIsWithTrait(cis, testTrait2, layerset, trans, timeThreshold);
             Assert.AreEqual(2, cis2.Count());
             cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
 
             // test inverted filtering
-            var cis3 = await traitModel.FilterCIsWithoutTrait(cis, testTrait1, layerset, trans, timeThreshold);
+            var cis3 = traitModel.FilterCIsWithoutTrait(cis, testTrait1, layerset, trans, timeThreshold);
             Assert.AreEqual(0, cis3.Count());
 
-            var cis4 = await traitModel.FilterCIsWithoutTrait(cis, testTrait2, layerset, trans, timeThreshold);
+            var cis4 = traitModel.FilterCIsWithoutTrait(cis, testTrait2, layerset, trans, timeThreshold);
             Assert.AreEqual(1, cis4.Count());
             cis4.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[1] }, options => options.WithStrictOrdering());
         }

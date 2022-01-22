@@ -67,7 +67,7 @@ namespace Omnikeeper.Validation.Rules
 
             var traits = await traitsProvider.GetActiveTraitsByIDs(new string[] { CoreTraits.Named.ID }, trans, atTime);
             var workCIs = await ciModel!.GetMergedCIs(new AllCIIDsSelection(), layerset!, includeEmptyCIs: false, attributeSelection, trans, atTime);
-            var unnamedCIs = await effectiveTraitModel.FilterMergedCIsByTraits(workCIs, Enumerable.Empty<ITrait>(), traits.Values, layerset, trans, atTime);
+            var unnamedCIs = effectiveTraitModel.FilterMergedCIsByTraits(workCIs, Enumerable.Empty<ITrait>(), traits.Values, layerset, trans, atTime);
 
             var unnamedCISelection = SpecificCIIDsSelection.Build(unnamedCIs.Select(ci => ci.ID).ToHashSet());
             var nonEmptyButUnnamedCIIDs = await baseAttributeModel.GetCIIDsWithAttributes(unnamedCISelection, layerset.LayerIDs, trans, atTime);
