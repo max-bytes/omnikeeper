@@ -1,17 +1,17 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Logging;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
-using System.Collections.Immutable;
-using Microsoft.Extensions.Logging;
 
 namespace Omnikeeper.Model
 {
@@ -39,7 +39,8 @@ namespace Omnikeeper.Model
                 try
                 {
                     pluginTraitSets.Add($"okplugin-{plugin.Name}", plugin.DefinedTraits);
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     logger.LogError(e, $"Could not load defined traits from plugin {plugin.Name}");
                 }

@@ -1,7 +1,6 @@
 ﻿using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 
 namespace Omnikeeper.GraphQL.Types

@@ -22,7 +22,7 @@ namespace Omnikeeper.GraphQL
         // TODO: rework to also work with lists of CIs, then use throughout graphql resolvers
         public IDataLoaderResult<IEnumerable<EffectiveTrait>> SetupAndLoadEffectiveTraitLoader(MergedCI ci, ITraitSelection traitSelection, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetAllEffectiveTraits_{layerSet}_{timeThreshold}", 
+            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetAllEffectiveTraits_{layerSet}_{timeThreshold}",
                 async (IEnumerable<(MergedCI ci, ITraitSelection traitSelection)> selections) =>
             {
                 var traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
@@ -143,7 +143,8 @@ namespace Omnikeeper.GraphQL
         private IDataLoader<RelationSelectionFrom, IEnumerable<MergedRelation>> SetupRelationFetchingFrom(IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsFrom_{layerSet}_{timeThreshold}",
-                async (IEnumerable<RelationSelectionFrom> relationSelections) => {
+                async (IEnumerable<RelationSelectionFrom> relationSelections) =>
+                {
                     var combinedRelationsFrom = new HashSet<Guid>();
                     foreach (var rs in relationSelections)
                         combinedRelationsFrom.UnionWith(rs.FromCIIDs);
@@ -162,7 +163,8 @@ namespace Omnikeeper.GraphQL
         private IDataLoader<RelationSelectionTo, IEnumerable<MergedRelation>> SetupRelationFetchingTo(IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsTo_{layerSet}_{timeThreshold}",
-                async (IEnumerable<RelationSelectionTo> relationSelections) => {
+                async (IEnumerable<RelationSelectionTo> relationSelections) =>
+                {
                     var combinedRelationsTo = new HashSet<Guid>();
                     foreach (var rs in relationSelections)
                         combinedRelationsTo.UnionWith(rs.ToCIIDs);
@@ -181,7 +183,8 @@ namespace Omnikeeper.GraphQL
         private IDataLoader<RelationSelectionAll, IEnumerable<MergedRelation>> SetupRelationFetchingAll(IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsAll_{layerSet}_{timeThreshold}",
-                async (IEnumerable<RelationSelectionAll> relationSelections) => {
+                async (IEnumerable<RelationSelectionAll> relationSelections) =>
+                {
                     var relations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layerSet, trans, timeThreshold);
                     return relations.ToLookup(r => RelationSelectionAll.Instance);
                 });

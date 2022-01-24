@@ -1,12 +1,9 @@
-﻿using Autofac;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Utils;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Omnikeeper.Service
 {
@@ -37,7 +34,7 @@ namespace Omnikeeper.Service
             var toCheckLayerIDs = new List<string>(layerIDs);
             foreach (var ar in authRoles)
             {
-                for(int i = toCheckLayerIDs.Count - 1;i >= 0;i--)
+                for (int i = toCheckLayerIDs.Count - 1; i >= 0; i--)
                 {
                     var layerID = toCheckLayerIDs[i];
                     if (authRolePermissionChecker.DoesAuthRoleGivePermission(ar, PermissionUtils.GetLayerReadPermission(layerID)))

@@ -40,9 +40,9 @@ namespace Omnikeeper.Model.Decorators
                 async (onlineLayerIDs) =>
                 {
                     var onlineResults = await onlineAccessProxy.GetAttributes(selection, onlineLayerIDs, trans, atTime, attributeSelection);
-                    
+
                     var ret = new IDictionary<Guid, IDictionary<string, CIAttribute>>[onlineLayerIDs.Length];
-                    for(int i = 0;i < onlineResults.Length;i++)
+                    for (int i = 0; i < onlineResults.Length; i++)
                     {
                         var layerID = onlineLayerIDs[i];
                         var tmp2 = (IDictionary<Guid, IDictionary<string, CIAttribute>>)onlineResults[i].GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));

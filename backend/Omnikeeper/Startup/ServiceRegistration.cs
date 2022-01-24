@@ -18,7 +18,6 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
 using Omnikeeper.GraphQL.TraitEntities;
-using Omnikeeper.GraphQL.Types;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;

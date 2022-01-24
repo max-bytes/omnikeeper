@@ -30,7 +30,7 @@ namespace Omnikeeper.GraphQL.Types
             Field(x => x.AtTime, type: typeof(TimeThresholdType));
             Field<ListGraphType<MergedCIAttributeType>>("mergedAttributes",
                 arguments: new QueryArguments(new QueryArgument<ListGraphType<StringGraphType>> { Name = "attributeNames" }),
-                resolve: context => 
+                resolve: context =>
                 {
                     var mergedAttributes = context.Source!.MergedAttributes.Values;
 
@@ -56,7 +56,7 @@ namespace Omnikeeper.GraphQL.Types
                 { // TODO: move predicateID filtering into fetch and RelationSelection
                     if (requiredPredicateID != null)
                         return ret.Where(r => r.Relation.PredicateID == requiredPredicateID);
-                    else 
+                    else
                         return ret;
                 });
             });
@@ -141,7 +141,7 @@ namespace Omnikeeper.GraphQL.Types
                     var allTraits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
                     var requestedTraits = allTraits.Where(t => requestedTraitIDs.Contains(t.ID));
 
-                    var relevantAttributesForTraits = requestedTraits.SelectMany(t => 
+                    var relevantAttributesForTraits = requestedTraits.SelectMany(t =>
                     t.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Union(
                     t.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name))
                     ).ToHashSet();

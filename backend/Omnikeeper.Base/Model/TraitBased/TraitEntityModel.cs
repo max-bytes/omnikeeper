@@ -78,7 +78,7 @@ namespace Omnikeeper.Base.Model.TraitBased
          */
         // NOTE: the cis MUST exist already
         public async Task<bool> BulkReplace(ISet<Guid> ciids, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
-            IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations, 
+            IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
             LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             if (attributeFragments.IsEmpty() || ciids.IsEmpty())
@@ -158,8 +158,8 @@ namespace Omnikeeper.Base.Model.TraitBased
         private async Task RemoveAttributes(Guid ciid, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             await attributeModel.BulkReplaceAttributes(
-                new BulkCIAttributeDataCIAndAttributeNameScope(writeLayerID, new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>(), 
-                new HashSet<Guid>() { ciid }, relevantAttributesForTrait), 
+                new BulkCIAttributeDataCIAndAttributeNameScope(writeLayerID, new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>(),
+                new HashSet<Guid>() { ciid }, relevantAttributesForTrait),
                 changesetProxy, dataOrigin, trans, MaskHandlingForRemovalApplyNoMask.Instance);
         }
 
@@ -179,10 +179,10 @@ namespace Omnikeeper.Base.Model.TraitBased
                         incoming.Add((ciid, predicateID));
                 }
 
-                await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayerID, 
+                await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayerID,
                     new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>(),
                     outgoing, true), changesetProxy, dataOrigin, trans);
-                await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayerID, 
+                await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayerID,
                     new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>(),
                     incoming, false), changesetProxy, dataOrigin, trans);
             }

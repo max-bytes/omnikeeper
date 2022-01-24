@@ -114,7 +114,8 @@ namespace Omnikeeper.Controllers
                         traitEntitiesQuerySchemaLoader.Init(typeContainer);
                         traitEntitiesMutationSchemaLoader.Init(typeContainer);
                     }
-                } catch(Exception e)
+                }
+                catch (Exception e)
                 {
                     logger.LogError(e, "Encountered error while creating trait entity GraphQL schema");
                 }

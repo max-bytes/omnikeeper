@@ -20,7 +20,7 @@ namespace Omnikeeper.Base.Entity
     /// </summary>
     public class GenericTrait : ITrait
     {
-        private GenericTrait(string id, TraitOriginV1 origin, IImmutableList<TraitAttribute> requiredAttributes, IImmutableList<TraitAttribute> optionalAttributes, 
+        private GenericTrait(string id, TraitOriginV1 origin, IImmutableList<TraitAttribute> requiredAttributes, IImmutableList<TraitAttribute> optionalAttributes,
             IImmutableList<TraitRelation> optionalRelations, IImmutableSet<string> ancestorTraits)
         {
             ID = id;
@@ -46,7 +46,7 @@ namespace Omnikeeper.Base.Entity
             IEnumerable<TraitRelation> optionalRelations,
             ISet<string> ancestorTraits)
         {
-            return new GenericTrait(id, origin, requiredAttributes.ToImmutableList(), optionalAttributes.ToImmutableList(), 
+            return new GenericTrait(id, origin, requiredAttributes.ToImmutableList(), optionalAttributes.ToImmutableList(),
                 optionalRelations.ToImmutableList(), ancestorTraits.ToImmutableHashSet());
         }
     }

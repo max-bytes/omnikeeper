@@ -4,8 +4,6 @@ using Hangfire.States;
 using Hangfire.Storage;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.Utils
 {

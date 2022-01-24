@@ -1,7 +1,4 @@
-﻿using Npgsql;
-using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
+﻿using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;

@@ -31,13 +31,13 @@ namespace Omnikeeper.Model
                 return cis;
 
             var ret = new HashSet<MergedCI>();
-            for(var i = 0;i < traitSOP.Length;i++)
+            for (var i = 0; i < traitSOP.Length; i++)
             {
                 var traitP = traitSOP[i];
 
                 IEnumerable<MergedCI>? productResult = null;
 
-                for(var j = 0;j < traitP.Length;j++)
+                for (var j = 0; j < traitP.Length; j++)
                 {
                     var (trait, negated) = traitP[j];
                     var (has, hasNot) = CanResolve(trait, productResult ?? cis, layers, trans, atTime);
@@ -103,7 +103,7 @@ namespace Omnikeeper.Model
 
                         has.Add(ci);
 
-                        ENDOFCILOOP:
+                    ENDOFCILOOP:
                         ;
                     }
                     return (has, hasNot);
@@ -180,7 +180,7 @@ namespace Omnikeeper.Model
                         var resolvedET = new EffectiveTrait(ci.ID, tt, effectiveTraitAttributes, effectiveOutgoingTraitRelations, effectiveIncomingTraitRelations);
                         ret.Add(ci.ID, resolvedET);
 
-                        ENDOFCILOOP:
+                    ENDOFCILOOP:
                         ;
                     }
 

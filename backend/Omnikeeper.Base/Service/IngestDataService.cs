@@ -91,7 +91,8 @@ namespace Omnikeeper.Base.Service
                     cic.TempCIID = finalCIID; // we update the TempCIID of the CI candidate with its final ID
 
                     affectedCIs.Add(finalCIID);
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     throw new Exception($"Error mapping CI-candidate {ciCandidateCIID}", e);
                 }

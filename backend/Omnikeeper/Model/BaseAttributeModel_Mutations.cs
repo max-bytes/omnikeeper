@@ -32,8 +32,8 @@ namespace Omnikeeper.Model
 
             var id = Guid.NewGuid();
             var (_, changesetID) = await BulkUpdate(
-                new (Guid, string, IAttributeValue, Guid?, Guid)[] { (ciid, name, value, currentAttribute?.ID, id) }, 
-                new (Guid, string, IAttributeValue, Guid, Guid)[0], 
+                new (Guid, string, IAttributeValue, Guid?, Guid)[] { (ciid, name, value, currentAttribute?.ID, id) },
+                new (Guid, string, IAttributeValue, Guid, Guid)[0],
                 layerID, origin, changesetProxy, trans);
 
             return (new CIAttribute(id, name, ciid, value, changesetID), true);
@@ -230,7 +230,8 @@ namespace Omnikeeper.Model
                 }
 
                 return (true, changeset.ID);
-            } else
+            }
+            else
             {
                 return (false, default);
             }

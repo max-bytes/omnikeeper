@@ -60,7 +60,7 @@ namespace Omnikeeper.GridView.Commands
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly IMetaConfigurationModel metaConfigurationModel;
 
-            public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, 
+            public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
                 IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, GenericTraitEntityModel<GridViewContext, string> gridViewContextModel,
                 IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
                 ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService,
@@ -161,7 +161,7 @@ namespace Omnikeeper.GridView.Commands
                                         writeLayer,
                                         changesetProxy,
                                         new DataOriginV1(DataOriginType.Manual),
-                                        trans, 
+                                        trans,
                                         MaskHandlingForRemovalApplyNoMask.Instance);
                                 }
                                 catch (Exception e)

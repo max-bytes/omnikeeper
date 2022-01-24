@@ -214,7 +214,8 @@ namespace Omnikeeper
         /// </summary>
         private static void AddAssemblyResolver()
         {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => {
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
                 var asmName = new AssemblyName(args.Name!);
                 var existing = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(c => c.FullName == asmName.FullName);
                 if (existing != null)

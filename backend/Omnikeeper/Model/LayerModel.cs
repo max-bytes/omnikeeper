@@ -31,7 +31,8 @@ namespace Omnikeeper.Model
                 }
 
                 return (Layer.Build(id), true);
-            } else
+            }
+            else
             {
                 return (current, false);
             }
@@ -127,7 +128,8 @@ namespace Omnikeeper.Model
                 if (layerData.TryGetValue(l.ID, out var ld))
                 {
                     return ld;
-                } else
+                }
+                else
                 {
                     return new LayerData(l.ID, "", ILayerDataModel.DefaultColor.ToArgb(), "", Array.Empty<string>(), "", ILayerDataModel.DefaultState.ToString());
                 }

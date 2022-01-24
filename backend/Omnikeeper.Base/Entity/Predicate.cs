@@ -45,7 +45,7 @@ namespace Omnikeeper.Base.Entity
         {
             return other != null && ID == other.ID &&
                    WordingFrom == other.WordingFrom &&
-                   WordingTo == other.WordingTo && 
+                   WordingTo == other.WordingTo &&
                    Name == other.Name;
         }
         public override int GetHashCode() => HashCode.Combine(ID, WordingFrom, WordingTo, Name);

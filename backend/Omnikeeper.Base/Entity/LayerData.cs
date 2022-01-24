@@ -52,7 +52,7 @@ namespace Omnikeeper.Base.Entity
         public override bool Equals(object? obj) => Equals(obj as LayerData);
         public bool Equals(LayerData? other)
         {
-            return other != null && LayerID == other.LayerID && Name == other.Name && Description == other.Description && Color == other.Color && CLConfigID == other.CLConfigID && 
+            return other != null && LayerID == other.LayerID && Name == other.Name && Description == other.Description && Color == other.Color && CLConfigID == other.CLConfigID &&
                 Generators.NullRespectingSequenceEqual(other.Generators) && OIAReference == other.OIAReference && State == other.State;
         }
         public override int GetHashCode() => HashCode.Combine(LayerID, Name, Description, Color, CLConfigID, Generators, OIAReference, State);

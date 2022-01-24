@@ -95,7 +95,8 @@ namespace Omnikeeper.Controllers.OData
             if (ci.MergedAttributes.TryGetValue(keyAttributeName, out var a))
             {
                 return Model2DTO(a, ci.CIName);
-            } else
+            }
+            else
             {
                 throw new Exception("Could not get attribute");
             }

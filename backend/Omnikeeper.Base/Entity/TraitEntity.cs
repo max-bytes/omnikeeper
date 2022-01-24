@@ -1,7 +1,4 @@
-﻿using Omnikeeper.Base.Utils;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Entity
@@ -69,9 +66,9 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    
 
-   [AttributeUsage(AttributeTargets.Field)]
+
+    [AttributeUsage(AttributeTargets.Field)]
     public sealed class TraitEntityIDAttribute : Attribute
     {
         public TraitEntityIDAttribute()
@@ -79,7 +76,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    
+
 
     [AttributeUsage(AttributeTargets.Field)]
     public sealed class TraitAttributeValueConstraintTextLengthAttribute : Attribute

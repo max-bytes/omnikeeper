@@ -35,10 +35,12 @@ namespace Omnikeeper.Base.Model.TraitBased
 
                         var (attributeValueType, isArray) = Type2AttributeValueType(fInfo, taa);
                         attributeFieldInfos.Add(new TraitAttributeFieldInfo(fInfo, taa, attributeValueType, isArray, isID));
-                    } else if (tra != null)
+                    }
+                    else if (tra != null)
                     {
                         relationFieldInfos.Add(new TraitRelationFieldInfo(fInfo, tra));
-                    } else
+                    }
+                    else
                     {
                         throw new Exception($"Trait class {type.Name}: field with both TraitAttribute AND TraitRelation attribute detected: {fInfo.Name}");
                     }
@@ -92,7 +94,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                                 throw new Exception(); // TODO
                             var tokens = (JToken[])entityFieldValue;
                             var deserialized = Array.CreateInstance(fieldType, tokens.Length);
-                            for(int i = 0;i < tokens.Length;i++)
+                            for (int i = 0; i < tokens.Length; i++)
                             {
                                 var e = jsonSerializer.Deserialize(tokens[i], fieldType);
                                 if (e == null)
@@ -132,7 +134,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 if (relationList.TryGetValue(trName, out var relations))
                 {
                     var otherCIIDs = ((isForward) ? relations.Select(r => r.Relation.ToCIID) : relations.Select(r => r.Relation.FromCIID)).ToArray();
-                    
+
                     trFieldInfo.FieldInfo.SetValue(ret, otherCIIDs);
                 }
                 else
@@ -195,7 +197,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     yield return new CIAttributeValueConstraintArrayLength(alal.Minimum, alal.Maximum);
                 }
             }
-            
+
             // TODO: support other constraints
         }
 

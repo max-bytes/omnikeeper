@@ -59,17 +59,20 @@ namespace Omnikeeper.Runners
             var activeLayers = await layerDataModel.GetLayerData(AnchorStateFilter.ActiveAndDeprecated, trans, TimeThreshold.BuildLatest());
             var layersWithCLBs = activeLayers.Where(l => l.CLConfigID != "");
 
-            if (!layersWithCLBs.IsEmpty()) {
+            if (!layersWithCLBs.IsEmpty())
+            {
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
                 var clConfigs = await clConfigModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
 
                 foreach (var l in layersWithCLBs)
                 {
                     // find clConfig for layer
-                    if (!clConfigs.TryGetValue(l.CLConfigID, out var clConfig)) 
+                    if (!clConfigs.TryGetValue(l.CLConfigID, out var clConfig))
                     {
                         logger.LogError($"Could not find cl config with ID {l.CLConfigID}");
-                    } else {
+                    }
+                    else
+                    {
                         if (!existingComputeLayerBrains.TryGetValue(clConfig.CLBrainReference, out var clb))
                         {
                             logger.LogError($"Could not find compute layer brain with name {clConfig.CLBrainReference}");

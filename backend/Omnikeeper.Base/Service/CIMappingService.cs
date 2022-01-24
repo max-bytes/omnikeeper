@@ -76,7 +76,8 @@ namespace Omnikeeper.Base.Service
                                     if (!tmpSet.Contains(ret[i]))
                                     {
                                         ret.RemoveAt(i);
-                                    } else
+                                    }
+                                    else
                                     {
                                         tmpSet.Remove(ret[i]);
                                     }
@@ -93,7 +94,7 @@ namespace Omnikeeper.Base.Service
                         foreach (var inner in f.Inner)
                         {
                             var r = await TryToMatch(inner, ciMappingContext, trans, logger);
-                            foreach(var rr in r)
+                            foreach (var rr in r)
                             {
                                 if (!tmpSet.Contains(rr))
                                 {
@@ -151,7 +152,8 @@ namespace Omnikeeper.Base.Service
                 if (cache.TryGetValue(predicateID, out var rc))
                 {
                     return rc[startCIID];
-                } else
+                }
+                else
                 {
                     var allRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(predicateID), searchableLayers, trans, atTime);
                     var outgoingCache = allRelations.ToLookup(r => r.Relation.FromCIID, r => r.Relation.ToCIID);
@@ -181,10 +183,12 @@ namespace Omnikeeper.Base.Service
                 if (attributeCache.TryGetValue(cacheKey, out var ac))
                 {
                     return ac[valueKey];
-                } else
+                }
+                else
                 {
                     var attributes = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), searchableLayers, trans, atTime);
-                    var attributesLookup = attributes.ToLookup(kv => {
+                    var attributesLookup = attributes.ToLookup(kv =>
+                    {
                         var v = kv.Value.Attribute.Value.Value2String();
                         if (caseInsensitive)
                             v = v.ToLower();

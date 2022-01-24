@@ -99,7 +99,8 @@ namespace Omnikeeper.Base.Entity
         [TraitAttribute("required_traits", "trait.required_traits", optional: true)]
         public readonly string[] RequiredTraits = Array.Empty<string>();
 
-        public RecursiveTrait() {
+        public RecursiveTrait()
+        {
             ID = "";
             Name = "";
             Origin = new TraitOriginV1(TraitOriginType.Data);

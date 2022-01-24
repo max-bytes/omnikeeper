@@ -63,8 +63,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     var trans = userContext.Transaction;
                     var ciid = context.GetArgument<Guid>("ciid");
 
-                        // TODO: use dataloader
-                        var et = await traitEntityModel.GetSingleByCIID(ciid, layerset, trans, timeThreshold);
+                    // TODO: use dataloader
+                    var et = await traitEntityModel.GetSingleByCIID(ciid, layerset, trans, timeThreshold);
                     return et;
                 });
 
@@ -87,8 +87,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         var idAttributeValues = TraitEntityHelper.InputDictionary2IDAttributeTuples(idCollection, at);
 
-                            // TODO: use data loader?
-                            var foundCIID = await traitEntityModel.GetSingleCIIDByAttributeValueTuples(idAttributeValues, layerset, trans, timeThreshold);
+                        // TODO: use data loader?
+                        var foundCIID = await traitEntityModel.GetSingleCIIDByAttributeValueTuples(idAttributeValues, layerset, trans, timeThreshold);
 
                         if (!foundCIID.HasValue)
                         {
@@ -362,7 +362,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     // this is ensured through ForwardInspectRequiredAttributes()
 
                     var ret = dataLoaderService.SetupAndLoadEffectiveTraitLoader(ci, NamedTraitsSelection.Build(traitID), effectiveTraitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction)
-                        .Then(ets => {
+                        .Then(ets =>
+                        {
                             var et = ets.FirstOrDefault();
                             return et;
                         });

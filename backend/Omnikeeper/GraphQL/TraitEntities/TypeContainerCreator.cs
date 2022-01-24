@@ -16,7 +16,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public readonly IDInputType? IDInputType;
         public readonly UpsertInputType UpsertInputType;
 
-        public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType, 
+        public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType,
             TraitEntityRootType rootQueryType, UpsertInputType upsertInputType)
         {
             Trait = trait;
@@ -50,7 +50,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly IDataLoaderService dataLoaderService;
         private readonly IChangesetModel changesetModel;
 
-        public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel, 
+        public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel,
             IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService, IChangesetModel changesetModel)
         {
             this.traitsProvider = traitsProvider;

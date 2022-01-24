@@ -39,7 +39,8 @@ namespace Omnikeeper.GraphQL
                     return FindScopedContext(contextPath, skipFirstN + 1, subScopedContext);
                 else
                     return currentScopedContext;
-            } else
+            }
+            else
             {
                 return FindScopedContext(contextPath, skipFirstN + 1, currentScopedContext);
             }

@@ -62,7 +62,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return await InsertOrUpdateAttributesAndRelations(layerSet, writeLayerID, dataOrigin, changesetProxy, trans, attributes, new (Guid, bool, string)[0]);
         }
 
-        protected async Task<(T dc, bool changed)> InsertOrUpdateAttributesAndRelations(LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, 
+        protected async Task<(T dc, bool changed)> InsertOrUpdateAttributesAndRelations(LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans,
             IEnumerable<(string attributeName, IAttributeValue value)> attributes, IEnumerable<(Guid otherCIID, bool forward, string predicateID)> relations)
         {
             var t = await TryToGet(layerSet, changesetProxy.TimeThreshold, trans);
@@ -79,7 +79,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 }
             }
 
-            foreach(var (otherCIID, forward, predicateID) in relations)
+            foreach (var (otherCIID, forward, predicateID) in relations)
             {
                 if (predicateID != default)
                 {
@@ -106,7 +106,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return await TryToDelete(layerSet, writeLayerID, dataOrigin, changesetProxy, trans, attributesToRemove, new string[0], new string[0]);
         }
 
-        protected async Task<bool> TryToDelete(LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, 
+        protected async Task<bool> TryToDelete(LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy,
             IModelContext trans, IEnumerable<string> attributesToRemove,
             IEnumerable<string> relationsToRemoveForward,
             IEnumerable<string> relationsToRemoveBackward)

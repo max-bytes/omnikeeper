@@ -7,7 +7,6 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -35,7 +34,7 @@ namespace Omnikeeper.Model.Decorators
         {
             var usageTracker = scopedLifetimeAccessor.GetLifetimeScope()?.Resolve<IScopedUsageTracker>();
             if (usageTracker != null)
-                foreach (var layerID in layerIDs) 
+                foreach (var layerID in layerIDs)
                     usageTracker.TrackUseLayer(layerID);
         }
 

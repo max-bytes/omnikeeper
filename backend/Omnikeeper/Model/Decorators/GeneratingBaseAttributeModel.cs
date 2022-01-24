@@ -4,7 +4,6 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Templating;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -72,7 +71,7 @@ namespace Omnikeeper.Model.Decorators
             return @base;
         }
 
-        private IDictionary<Guid, IDictionary<string, CIAttribute>>[] MergeInGeneratedAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] @base, 
+        private IDictionary<Guid, IDictionary<string, CIAttribute>>[] MergeInGeneratedAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] @base,
             IDictionary<Guid, IDictionary<string, CIAttribute>>[]? additionalAttributes, IEnumerable<GeneratorV1>[] egis, string[] layerIDs)
         {
             // TODO: maybe we can find an efficient way to not generate attributes that are guaranteed to be hidden by a higher layer anyway

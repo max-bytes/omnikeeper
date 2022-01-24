@@ -85,7 +85,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var ret = new Dictionary<ID, T>();
             foreach (var et in ets)
             {
-                var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer); 
+                var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
                 var id = idAttributeInfos.ExtractIDFromEntity(dc);
                 if (!ret.ContainsKey(id))
                 {

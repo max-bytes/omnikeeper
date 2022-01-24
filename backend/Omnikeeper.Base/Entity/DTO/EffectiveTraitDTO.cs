@@ -7,7 +7,7 @@ namespace Omnikeeper.Base.Entity.DTO
 {
     public class EffectiveTraitDTO
     {
-        private EffectiveTraitDTO(IImmutableDictionary<string, CIAttributeDTO> traitAttributes, 
+        private EffectiveTraitDTO(IImmutableDictionary<string, CIAttributeDTO> traitAttributes,
             IImmutableDictionary<string, IEnumerable<RelationDTO>> outgoingTraitRelations,
             IImmutableDictionary<string, IEnumerable<RelationDTO>> incomingTraitRelations)
         {

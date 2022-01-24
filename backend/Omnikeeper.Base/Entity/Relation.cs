@@ -150,9 +150,9 @@ namespace Omnikeeper.Base.Entity
         {
             get
             {
-                foreach(var (thisCIID, predicateID, otherCIIDs) in Data)
+                foreach (var (thisCIID, predicateID, otherCIIDs) in Data)
                 {
-                    foreach(var otherCIID in otherCIIDs)
+                    foreach (var otherCIID in otherCIIDs)
                     {
                         var fromCIID = (Outgoing) ? thisCIID : otherCIID;
                         var toCIID = (Outgoing) ? otherCIID : thisCIID;
@@ -163,5 +163,5 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    
+
 }

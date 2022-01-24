@@ -107,7 +107,8 @@ namespace Omnikeeper.Model
                 command.Parameters.AddWithValue("predicate_id", predicateID);
                 command.Parameters.AddWithValue("layer_id", layerID);
                 command.Prepare();
-            } else
+            }
+            else
             {
                 command = new NpgsqlCommand(@"select id, changeset_id from (select id, removed, changeset_id from relation where 
                 timestamp <= @time_threshold AND from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id and layer_id = @layer_id and predicate_id = @predicate_id 
@@ -292,7 +293,7 @@ namespace Omnikeeper.Model
 
         private async Task<(bool changed, Guid changesetID)> _BulkUpdate(
             IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)> inserts,
-            IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)> removes, 
+            IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)> removes,
             string layerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             if (!inserts.IsEmpty() || !removes.IsEmpty())
@@ -372,7 +373,8 @@ namespace Omnikeeper.Model
                 }
 
                 return (true, changeset.ID);
-            } else
+            }
+            else
             {
                 return (false, default);
             }

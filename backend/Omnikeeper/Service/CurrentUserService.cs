@@ -7,6 +7,7 @@ using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -15,7 +16,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Service
 {
@@ -39,7 +39,7 @@ namespace Omnikeeper.Service
 
     public class CurrentAuthorizedHttpUserService : ICurrentUserService
     {
-        public CurrentAuthorizedHttpUserService(IHttpContextAccessor httpContextAccessor, 
+        public CurrentAuthorizedHttpUserService(IHttpContextAccessor httpContextAccessor,
             ILayerModel layerModel, IMetaConfigurationModel metaConfigurationModel,
             IUserInDatabaseModel userModel, IConfiguration configuration, ILogger<CurrentAuthorizedHttpUserService> logger,
             GenericTraitEntityModel<AuthRole, string> authRoleModel)

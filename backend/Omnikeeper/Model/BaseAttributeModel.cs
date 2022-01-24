@@ -8,7 +8,6 @@ using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model
@@ -198,7 +197,7 @@ namespace Omnikeeper.Model
                     where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY(@layer_ids)
                     and ({AttributeSelection2WhereClause(attributeSelection)})", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
-                foreach(var p in AttributeSelection2Parameters(attributeSelection))
+                foreach (var p in AttributeSelection2Parameters(attributeSelection))
                     command.Parameters.Add(p);
             }
             else
@@ -260,7 +259,7 @@ namespace Omnikeeper.Model
             selection = await OptimizeCIIDSelection(selection, trans);
 
             var tmp = new Dictionary<string, IDictionary<Guid, IDictionary<string, CIAttribute>>>(layerIDs.Length);
-            foreach(var layerID in layerIDs)
+            foreach (var layerID in layerIDs)
                 tmp[layerID] = new Dictionary<Guid, IDictionary<string, CIAttribute>>();
             await foreach (var (att, layerID) in _GetAttributes(selection, layerIDs, trans, atTime, attributeSelection))
             {

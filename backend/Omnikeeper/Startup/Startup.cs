@@ -92,7 +92,8 @@ namespace Omnikeeper.Startup
 
             // add input and output formatters
             services.AddOptions<MvcOptions>()
-                .PostConfigure<IOptions<JsonOptions>, IOptions<MvcNewtonsoftJsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, newtonJsonOpts, charPool, objectPoolProvider, loggerFactory) => {
+                .PostConfigure<IOptions<JsonOptions>, IOptions<MvcNewtonsoftJsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, newtonJsonOpts, charPool, objectPoolProvider, loggerFactory) =>
+                {
 
                     config.InputFormatters.Clear();
                     config.InputFormatters.Add(new MySuperJsonInputFormatter());

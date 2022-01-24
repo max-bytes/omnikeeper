@@ -56,7 +56,8 @@ namespace Omnikeeper.Model.Decorators
             if (trait.Origin.Type == TraitOriginType.Core)
             { // not interested in recording usage of core traits
                 return;
-            } else if (trait.ID.StartsWith("__meta"))
+            }
+            else if (trait.ID.StartsWith("__meta"))
             { // not interested in recording usage of meta traits
                 return;
             }

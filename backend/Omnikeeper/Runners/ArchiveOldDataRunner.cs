@@ -27,7 +27,7 @@ namespace Omnikeeper.Runners
         private readonly ILayerModel layerModel;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister, 
+        public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             IChangesetModel changesetModel, IMetaConfigurationModel metaConfigurationModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder)
         {
@@ -58,7 +58,7 @@ namespace Omnikeeper.Runners
                 }
                 var threshold = DateTimeOffset.Now.Add(archiveThreshold.Negate());
 
-               logger.LogDebug($"Deleting outdated attributes and relations older than {threshold}");
+                logger.LogDebug($"Deleting outdated attributes and relations older than {threshold}");
 
                 var layerIDs = (await layerModel.GetLayers(trans)).Select(l => l.ID).ToArray();
                 var numDeletedAttributes = await baseAttributeRevisionistModel.DeleteOutdatedAttributesOlderThan(layerIDs, trans, threshold, now);

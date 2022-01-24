@@ -128,7 +128,7 @@ namespace Omnikeeper.Controllers
         [HttpPost("importLayer")]
         [DisableRequestSizeLimit]
         [RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
-        public async Task<ActionResult> ImportLayer([FromForm, Required] IEnumerable<IFormFile> files, [FromQuery]string? overwriteLayerID = null)
+        public async Task<ActionResult> ImportLayer([FromForm, Required] IEnumerable<IFormFile> files, [FromQuery] string? overwriteLayerID = null)
         {
             try
             {

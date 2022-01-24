@@ -1,19 +1,12 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using Omnikeeper.Base.Model.TraitBased;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {

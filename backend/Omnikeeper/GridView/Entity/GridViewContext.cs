@@ -1,9 +1,7 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
-using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 
 namespace Omnikeeper.GridView.Entity
 {
@@ -40,7 +38,8 @@ namespace Omnikeeper.GridView.Entity
             Name = $"Gridview-Context {ID}";
         }
 
-        public GridViewContext() {
+        public GridViewContext()
+        {
             ID = "";
             SpeakingName = "";
             Description = "";

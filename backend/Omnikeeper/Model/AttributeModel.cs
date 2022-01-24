@@ -25,7 +25,7 @@ namespace Omnikeeper.Model
         private IDictionary<Guid, IDictionary<string, MergedCIAttribute>> MergeAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] layeredAttributes, string[] layerIDs)
         {
             var compound = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
-            for (var i = 0;i < layerIDs.Length;i++)
+            for (var i = 0; i < layerIDs.Length; i++)
             {
                 var layerID = layerIDs[i];
                 var cis = layeredAttributes[i];
@@ -34,12 +34,13 @@ namespace Omnikeeper.Model
                     var ciid = ci.Key;
                     if (compound.TryGetValue(ciid, out var existingAttributes))
                     {
-                        foreach(var newAttribute in ci.Value)
+                        foreach (var newAttribute in ci.Value)
                         {
                             if (existingAttributes.TryGetValue(newAttribute.Key, out var existingMergedAttribute))
                             {
                                 existingAttributes[newAttribute.Key].LayerStackIDs.Add(layerID);
-                            } else
+                            }
+                            else
                             {
                                 existingAttributes[newAttribute.Key] = new MergedCIAttribute(newAttribute.Value, new List<string> { layerID });
                             }
@@ -133,7 +134,7 @@ namespace Omnikeeper.Model
                         var ciids = removals.Select(t => t.ciid).ToHashSet();
                         var attributeNames = removals.Select(t => t.name).ToHashSet();
                         var attributesRemaining = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciids), NamedAttributesSelection.Build(attributeNames), new LayerSet(n.ReadLayersBelowWriteLayer), trans, n.ReadTime);
-                        for (int i = removals.Count - 1;i >= 0;i--)
+                        for (int i = removals.Count - 1; i >= 0; i--)
                         {
                             var (ciid, name, value, attributeID, newAttributeID) = removals[i];
                             if (attributesRemaining.TryGetValue(ciid, out var aa) && aa.ContainsKey(name))

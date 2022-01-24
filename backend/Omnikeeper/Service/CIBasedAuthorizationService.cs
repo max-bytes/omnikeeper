@@ -1,7 +1,6 @@
 ﻿using Omnikeeper.Base.Service;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Omnikeeper.Service
 {
@@ -15,7 +14,7 @@ namespace Omnikeeper.Service
 
         public IEnumerable<T> FilterReadableCIs<T>(IEnumerable<T> t, Func<T, Guid> f)
         {
-            foreach(var tt in t)
+            foreach (var tt in t)
             {
                 if (CanReadCI(f(tt)))
                     yield return tt;
