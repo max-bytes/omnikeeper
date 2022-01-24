@@ -9,7 +9,7 @@ import queryString from 'query-string';
 import { Spin, Form, Input, Button } from 'antd';
 import { useLocation } from 'react-router-dom'
 import _ from 'lodash';
-import { SearchOutlined, LoadingOutlined } from '@ant-design/icons';
+import { SearchOutlined } from '@ant-design/icons';
 
 function SearchCIAdvanced(props) {
     let urlParams = parseURLQuery(useLocation().search);

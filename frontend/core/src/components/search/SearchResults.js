@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Skeleton, Spin } from 'antd';
+import { Spin } from 'antd';
 import { CIID } from "utils/uuidRenderers";
 import AutoSizedList from "utils/AutoSizedList";
 import Text from "antd/lib/typography/Text";
