@@ -1,13 +1,11 @@
 ﻿using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Templating;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
 using Scriban;
 using Scriban.Runtime;
 using System;

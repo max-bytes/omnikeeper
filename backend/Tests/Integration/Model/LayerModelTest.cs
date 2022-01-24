@@ -6,7 +6,6 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
 using System;
-using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 

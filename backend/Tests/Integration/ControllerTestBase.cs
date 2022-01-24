@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
@@ -30,7 +29,8 @@ namespace Tests.Integration.Controller
             Guid? tmp;
             cbas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
             cbas.Setup(x => x.FilterReadableCIs(It.IsAny<IEnumerable<Guid>>())).Returns<IEnumerable<Guid>>((i) => i);
-            cbas.Setup(x => x.FilterReadableCIs(It.IsAny<IEnumerable<MergedCI>>(), It.IsAny<Func<MergedCI, Guid>>())).Returns<IEnumerable<MergedCI>, Func<MergedCI, Guid>>((i, j) => {
+            cbas.Setup(x => x.FilterReadableCIs(It.IsAny<IEnumerable<MergedCI>>(), It.IsAny<Func<MergedCI, Guid>>())).Returns<IEnumerable<MergedCI>, Func<MergedCI, Guid>>((i, j) =>
+            {
                 return i;
             });
             builder.Register((sp) => cbas.Object).InstancePerLifetimeScope();

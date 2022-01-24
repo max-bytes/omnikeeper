@@ -63,7 +63,7 @@ namespace Tasks.DBInit
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in DefaultTraits.Get())
                 {
-                    await traitModel.InsertOrUpdate(rt, 
+                    await traitModel.InsertOrUpdate(rt,
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changeset, mc);
                 }

@@ -4,10 +4,8 @@ using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -88,7 +86,7 @@ namespace Tests.Integration.Model
                 "id1", "id2"
                 );
         }
-        
+
     }
 
     [TraitEntity("test_entity1", TraitOriginType.Data)]

@@ -1,7 +1,4 @@
-﻿using FluentAssertions;
-using Npgsql;
-using NUnit.Framework;
-using Omnikeeper.Base.Entity;
+﻿using NUnit.Framework;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
@@ -9,8 +6,6 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Tests.Integration.Model

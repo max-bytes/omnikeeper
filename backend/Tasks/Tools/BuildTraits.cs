@@ -5,8 +5,6 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Tasks.Tools
 {
@@ -125,7 +123,7 @@ namespace Tasks.Tools
                     ),
                 };
 
-            foreach(var trait in traits)
+            foreach (var trait in traits)
             {
                 var s = new JsonSerializerSettings()
                 {

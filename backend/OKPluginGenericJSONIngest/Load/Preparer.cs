@@ -24,7 +24,7 @@ namespace OKPluginGenericJSONIngest.Load
             var tempCIIDMapping = new Dictionary<string, Guid>(); // maps tempIDs to temporary Guids
 
             var ciCandidates = new List<CICandidate>(data.cis.Count());
-            foreach(var ci in data.cis)
+            foreach (var ci in data.cis)
             {
                 try
                 {
@@ -53,7 +53,8 @@ namespace OKPluginGenericJSONIngest.Load
                     tempCIIDMapping.TryAdd(ci.tempID, tempGuid);
 
                     ciCandidates.Add(new CICandidate(tempGuid, idMethod, attributes));
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     logger.LogError(e, $"Could not create CI-candidate with temp ID {ci.tempID}");
                 }

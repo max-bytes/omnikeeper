@@ -28,7 +28,8 @@ namespace OKPluginGenericJSONIngest
     [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByTemporaryCIID), "byTempID")]
     [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByByUnion), "byUnion")]
     [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByIntersect), "byIntersect")]
-    public interface IInboundIDMethod {
+    public interface IInboundIDMethod
+    {
         string type { get; }
     }
 

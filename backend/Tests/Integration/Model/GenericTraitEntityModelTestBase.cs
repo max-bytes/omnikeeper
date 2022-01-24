@@ -5,14 +5,13 @@ using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Tests.Integration.Model
 {

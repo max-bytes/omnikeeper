@@ -1,12 +1,10 @@
 ﻿using GraphQL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GraphQL;
@@ -35,7 +33,7 @@ namespace Tests.Integration.GraphQL
             var changeset = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), changesetModel);
             var (layer1, _) = await layerModel.CreateLayerIfNotExists("layer_1", trans);
             var (layer2, _) = await layerModel.CreateLayerIfNotExists("layer_2", trans);
-            var user = new AuthenticatedUser(userInDatabase, 
+            var user = new AuthenticatedUser(userInDatabase,
                 new AuthRole[]
                 {
                     new AuthRole("ar1", new string[] { PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1) }),

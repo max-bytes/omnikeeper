@@ -3,12 +3,11 @@ using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Tests.Integration.Model
 {

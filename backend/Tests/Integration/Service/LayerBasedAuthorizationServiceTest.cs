@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
@@ -17,14 +15,14 @@ namespace Tests.Integration.Service
         public void TestBasics()
         {
             IConfigurationRoot configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>() { { "Authorization:debugAllowAll", "false"} })
+                .AddInMemoryCollection(new Dictionary<string, string>() { { "Authorization:debugAllowAll", "false" } })
                 .Build();
 
             var lbas = new LayerBasedAuthorizationService(configuration, new AuthRolePermissionChecker());
 
             var userInDatabase1 = new UserInDatabase(1L, Guid.NewGuid(), "user1", "User1", UserType.Robot, DateTimeOffset.UtcNow);
-            var user1 = new AuthenticatedUser(userInDatabase1, new AuthRole[] { 
-                new AuthRole("ar1", new string[] { 
+            var user1 = new AuthenticatedUser(userInDatabase1, new AuthRole[] {
+                new AuthRole("ar1", new string[] {
                     PermissionUtils.GetLayerReadPermission("layer1"),
                     PermissionUtils.GetLayerWritePermission("layer3"),
                 }),

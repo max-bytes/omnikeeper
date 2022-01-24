@@ -39,7 +39,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                             new GenericInboundAttribute { name = "textarray", value = new string[] {"value 1", "value 2" }, type = AttributeValueType.Text },
                             new GenericInboundAttribute { name = "jsonarray", value = new JToken[] {
                                 JToken.Parse(@"{foo: 'bar', blub: 'bla'}"),
-                                JToken.Parse(@"{ foo2: 'bar2', blub2: 'bla2'}"), 
+                                JToken.Parse(@"{ foo2: 'bar2', blub2: 'bla2'}"),
                             }, type = AttributeValueType.JSON },
                         }
                     },
