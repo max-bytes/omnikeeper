@@ -9,6 +9,6 @@ export default function CITitle(props) {
 
     const finalCIName = ciName ?? "[UNNAMED]";
 
-    return <Title level={5} style={{marginBottom: 0}}>{finalCIName} - <CIID id={ciid} link={true} /></Title>;
+    return <Title level={5} style={{marginBottom: 0}}>{finalCIName} - <CIID id={ciid} link={true} copyable={true} /></Title>;
 }
 
