@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom';
 import { buildDiffingURLQueryBetweenChangesets } from 'components/diffing/Diffing'
 import _ from "lodash"
 import moment from 'moment';
+import { useLocalStorage } from 'utils/useLocalStorage';
 
 function Timeline(props) {
   const { data: layers } = useExplorerLayers(true);
@@ -58,7 +59,7 @@ function LoadingTimeline(props) {
 
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
   
-  var { data: layerSettingsData } = useQuery(queries.LayerSettings, {fetchPolicy: 'cache-only'});
+  const [layerSettings, _ignore] = useLocalStorage('layerSettings', null);
 
   if (error) return <ErrorView error={error}/>;
 
@@ -126,7 +127,7 @@ function LoadingTimeline(props) {
                 </div>);
               } else {
                 const isLatest = latestChangeset === cs;
-                const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
+                const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
                 return (<div style={lineStyle} key={cs.id}>
                     <Button style={buttonStyle} type="link" size="small"
                     onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: (isLatest) ? null : cs.timestamp, isLatest: isLatest }})}>

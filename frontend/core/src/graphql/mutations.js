@@ -100,12 +100,6 @@ export const mutations = {
     }
   `,
 
-  SET_LAYER_SETTINGS: gql`
-    mutation($layerSettings: [LayerSettings]) {
-      setLayerSettings(layerSettings: $layerSettings) @client
-    }
-  `,
-
   SET_SELECTED_TIME_THRESHOLD: gql`
   mutation($newTimeThreshold: DateTimeOffset, $isLatest: Bool, $refreshTimeline: Bool = false, $refreshCI: bool = false) {
     setSelectedTimeThreshold(newTimeThreshold: $newTimeThreshold, isLatest: $isLatest, refreshTimeline: $refreshTimeline, refreshCI: $refreshCI) @client

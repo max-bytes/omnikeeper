@@ -190,14 +190,6 @@ export const queries = {
             selectedTimeThreshold @client
           }
       `,
-    LayerSettings: gql`
-    query {
-        layerSettings {
-            layerID @client
-            sortOffset @client
-            visible @client
-        }
-    }`,
     Statistics: gql`
         query {
             statistics {

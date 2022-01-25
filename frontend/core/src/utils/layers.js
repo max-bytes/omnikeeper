@@ -2,16 +2,17 @@ import { useQuery } from '@apollo/client';
 import { useState, useEffect } from "react";
 import { queries } from 'graphql/queries';
 import _ from 'lodash';
+import { useLocalStorage } from './useLocalStorage';
 
 export function useExplorerLayers(skipInvisible = false, skipReadonly = false) {
     const { error, data, loading } = useQuery(queries.Layers, {fetchPolicy: 'cache-first'});
-    var { data: layerSettingsData } = useQuery(queries.LayerSettings, {fetchPolicy: 'cache-only'});
+    const [layerSettings, _ignore] = useLocalStorage('layerSettings', null);
 
     const [explorerLayers, setExplorerLayers] = useState({error: undefined, data: [], loading: undefined});
 
     useEffect(() => {
-        if (data && layerSettingsData) {
-            let layers = mergeSettingsAndSortLayers(data.layers, layerSettingsData.layerSettings);
+        if (data) {
+            let layers = mergeSettingsAndSortLayers(data.layers, layerSettings);
     
             if (skipInvisible)
                 layers = layers.filter(l => l.visible);
@@ -20,7 +21,7 @@ export function useExplorerLayers(skipInvisible = false, skipReadonly = false) {
                 
             setExplorerLayers({error: error, data: layers, loading: loading});
         }
-    }, [data, error, loading, layerSettingsData, skipInvisible, skipReadonly]);
+    }, [data, error, loading, layerSettings, skipInvisible, skipReadonly]);
 
     return explorerLayers;
 }
