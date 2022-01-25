@@ -19,7 +19,7 @@ namespace OKPluginValidation.Validation
             this.logger = logger;
         }
 
-        public string CronExpression => "*/5 * * * * *";
+        public static string CronExpression => "*/5 * * * * *";
 
         [MaximumConcurrentExecutions(1, timeoutInSeconds: 300)]
         [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]

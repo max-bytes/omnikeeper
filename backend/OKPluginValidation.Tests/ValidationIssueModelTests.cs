@@ -45,7 +45,8 @@ namespace OKPluginValidation.Tests
                     },
                     optionalRelations: new List<TraitRelation>()
                     {
-                        new TraitRelation("has_issue", new RelationTemplate("__meta.validation.has_issue", false, 1, null)),
+                        new TraitRelation("has_issue", new RelationTemplate("__meta.validation.has_issue", false, null, null)),
+                        new TraitRelation("belongs_to_validation", new RelationTemplate("__meta.validation.belongs_to_validation", true, null, null)),
                     }
                 )
             );
@@ -60,9 +61,10 @@ namespace OKPluginValidation.Tests
                 await ciModel.CreateCI(ModelContextBuilder.BuildImmediate()), 
                 await ciModel.CreateCI(ModelContextBuilder.BuildImmediate()) 
             };
+            var validationCIID = await ciModel.CreateCI(ModelContextBuilder.BuildImmediate());
             await TestGenericModelOperations(
-                () => new ValidationIssue("validation_issue1", "msg1", new Guid[] { affectedCIIDs[0], affectedCIIDs[1] }),
-                () => new ValidationIssue("validation_issue2", "msg2", new Guid[] { affectedCIIDs[2] }),
+                () => new ValidationIssue("validation_issue1", "msg1", new Guid[] { affectedCIIDs[0], affectedCIIDs[1] }, validationCIID),
+                () => new ValidationIssue("validation_issue2", "msg2", new Guid[] { affectedCIIDs[2] }, validationCIID),
                 "validation_issue1", "validation_issue2", "non_existant_id"
                 );
         }
@@ -75,10 +77,11 @@ namespace OKPluginValidation.Tests
                 await ciModel.CreateCI(ModelContextBuilder.BuildImmediate()),
                 await ciModel.CreateCI(ModelContextBuilder.BuildImmediate())
             };
+            var validationCIID = await ciModel.CreateCI(ModelContextBuilder.BuildImmediate());
 
             await TestGenericModelGetByDataID(
-                () => new ValidationIssue("validation_issue1", "msg1", new Guid[] { affectedCIIDs[0], affectedCIIDs[1] }),
-                () => new ValidationIssue("validation_issue2", "msg2", new Guid[] { affectedCIIDs[2] }),
+                () => new ValidationIssue("validation_issue1", "msg1", new Guid[] { affectedCIIDs[0], affectedCIIDs[1] }, validationCIID),
+                () => new ValidationIssue("validation_issue2", "msg2", new Guid[] { affectedCIIDs[2] }, validationCIID),
                 "validation_issue1", "validation_issue2", "non_existant_id"
                 );
         }
@@ -91,11 +94,12 @@ namespace OKPluginValidation.Tests
                 await ciModel.CreateCI(ModelContextBuilder.BuildImmediate()),
                 await ciModel.CreateCI(ModelContextBuilder.BuildImmediate())
             };
+            var validationCIID = await ciModel.CreateCI(ModelContextBuilder.BuildImmediate());
 
             await TestGenericModelBulkReplace(
-                () => new ValidationIssue("validation_issue1", "msg1", new Guid[] { affectedCIIDs[0], affectedCIIDs[1] }),
-                () => new ValidationIssue("validation_issue2", "msg2", new Guid[] { affectedCIIDs[2] }),
-                () => new ValidationIssue("validation_issue2", "msg2", new Guid[] { affectedCIIDs[0] }),
+                () => new ValidationIssue("validation_issue1", "msg1", new Guid[] { affectedCIIDs[0], affectedCIIDs[1] }, validationCIID),
+                () => new ValidationIssue("validation_issue2", "msg2", new Guid[] { affectedCIIDs[2] }, validationCIID),
+                () => new ValidationIssue("validation_issue2", "msg2", new Guid[] { affectedCIIDs[0] }, validationCIID),
                 "validation_issue1", "validation_issue2"
                 );
         }

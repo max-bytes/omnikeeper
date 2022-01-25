@@ -2,11 +2,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using OKPluginValidation.Validation;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Validation.Rules;
 using System.Collections.Generic;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace OKPluginValidation
 {
@@ -16,9 +15,11 @@ namespace OKPluginValidation
         {
             sc.AddSingleton<GenericTraitEntityModel<ValidationIssue, string>>();
             sc.AddSingleton<GenericTraitEntityModel<Validation.Validation, string>>();
-            sc.AddSingleton<IValidationRule, ValidationRuleNamedCI>();
             sc.AddScoped<IValidationEngine, ValidationEngine>();
             sc.AddScoped<ValidationEngineRunner>();
+
+            sc.AddSingleton<IValidationRule, ValidationRuleNamedCI>();
+            sc.AddSingleton<IValidationRule, ValidationRuleAnyOfTraits>();
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => new RecursiveTrait[] {
@@ -28,7 +29,7 @@ namespace OKPluginValidation
 
         public override void RegisterHangfireJobRunners()
         {
-            RecurringJob.AddOrUpdate<ValidationEngineRunner>(s => s.Run(null), "*/5 * * * * *");
+            RecurringJob.AddOrUpdate<ValidationEngineRunner>(s => s.Run(null), ValidationEngineRunner.CronExpression);
         }
     }
 }
