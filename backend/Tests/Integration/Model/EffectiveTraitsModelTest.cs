@@ -6,7 +6,6 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,7 +13,7 @@ using Tests.Integration.Model.Mocks;
 
 namespace Tests.Integration.Model
 {
-    partial class EffectiveTraitsModelTest : DBBackedTestBase
+    partial class EffectiveTraitsModelTest : DIServicedTestBase
     {
         [Test]
         public async Task TestTraitAttributes()
@@ -94,43 +93,34 @@ namespace Tests.Integration.Model
             Assert.AreEqual(1, t1.Count());
         }
 
-        private async Task<(EffectiveTraitModel traitModel, CIModel ciModel, LayerSet layerset, Guid[])> BaseSetup()
+        private async Task<(IEffectiveTraitModel traitModel, ICIModel ciModel, LayerSet layerset, Guid[])> BaseSetup()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
-            var ciModel = new CIModel(attributeModel, new CIIDModel());
-            var userModel = new UserInDatabaseModel();
-            var changesetModel = new ChangesetModel(userModel);
-            var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
-            var layerModel = new LayerModel();
-            var traitModel = new EffectiveTraitModel(relationModel);
-
             var transI = ModelContextBuilder.BuildImmediate();
-            var user = await DBSetup.SetupUser(userModel, transI);
-            var ciid1 = await ciModel.CreateCI(transI);
-            var ciid2 = await ciModel.CreateCI(transI);
-            var ciid3 = await ciModel.CreateCI(transI);
-            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", transI);
+            var ciid1 = await GetService<ICIModel>().CreateCI(transI);
+            var ciid2 = await GetService<ICIModel>().CreateCI(transI);
+            var ciid3 = await GetService<ICIModel>().CreateCI(transI);
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", transI);
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text41"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var changeset = await CreateChangesetProxy();
+                await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text41"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
-                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
                 trans.Commit();
             }
 
-            var layerset = await layerModel.BuildLayerSet(new string[] { "l1" }, transI);
-            return (traitModel, ciModel, layerset, new Guid[] { ciid1, ciid2, ciid3 });
+            var layerset = await GetService<ILayerModel>().BuildLayerSet(new string[] { "l1" }, transI);
+            return (GetService<IEffectiveTraitModel>(), GetService<ICIModel>(), layerset, new Guid[] { ciid1, ciid2, ciid3 });
         }
     }
 }

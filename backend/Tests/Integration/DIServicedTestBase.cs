@@ -36,6 +36,8 @@ namespace Tests.Integration
             currentUserServiceMock = new Mock<ICurrentUserAccessor>();
         }
 
+        protected DIServicedTestBase() : this(false) { }
+
         [SetUp]
         public override void Setup()
         {

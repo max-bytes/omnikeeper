@@ -16,10 +16,6 @@ namespace Tests.Integration.Model
 {
     class AttributeModelTest : DIServicedTestBase
     {
-        public AttributeModelTest() : base(false)
-        {
-        }
-
         [Test]
         public async Task TestAddingUpdatingRemovingAndRenewingOfAttributes()
         {
