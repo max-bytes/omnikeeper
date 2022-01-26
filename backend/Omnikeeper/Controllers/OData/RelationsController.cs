@@ -137,7 +137,7 @@ namespace Omnikeeper.Controllers.OData
 
                 var timeThreshold = TimeThreshold.BuildLatest();
                 var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
-                var (removed, changed) = await relationModel.RemoveRelation(keyFromCIID, keyToCIID, keyPredicate, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+                var (removed, changed) = await relationModel.RemoveRelation(keyFromCIID, keyToCIID, keyPredicate, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
             catch (Exception)

@@ -53,7 +53,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, "p1", layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, "p1", layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
             using (var trans = ModelContextBuilder.BuildDeferred())

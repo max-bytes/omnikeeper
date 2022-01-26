@@ -184,7 +184,7 @@ namespace Tests.Integration.Model
             // delete relation again
             using var trans4 = ModelContextBuilder.BuildDeferred();
             var changeset3 = await CreateChangesetProxy(TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(200)));
-            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans4);
+            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans4, MaskHandlingForRemovalApplyNoMask.Instance);
             trans4.Commit();
 
             // changeset1 is now old "enough", and can be deleted

@@ -160,9 +160,12 @@ namespace OKPluginCLBMonitoring
                 }
             }
 
+            // TODO: mask handling
+            var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
+
             var fragments = renderedTemplatesPerCI.Select(t => new BulkCIAttributeDataLayerScope.Fragment("", t.attributeValue, t.ciid));
             await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments),
-                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, maskHandling);
 
             logger.LogDebug("Updated executed commands per monitored CI");
 
@@ -174,7 +177,7 @@ namespace OKPluginCLBMonitoring
                 foreach (var monitoredCI in monitoredCIs.Values)
                     if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value))
                         monitoredByCIIDFragments.Add(new BulkRelationDataPredicateScope.Fragment(monitoredCI.ID, naemonInstanceTS.Key));
-            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
+            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, maskHandling);
             logger.LogDebug("Assigned CIs to naemon instances");
 
 

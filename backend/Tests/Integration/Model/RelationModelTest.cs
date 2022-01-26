@@ -152,7 +152,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                var removedRelation = await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var removedRelation = await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 Assert.IsNotNull(removedRelation);
                 var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, r1.Count());
@@ -204,7 +204,7 @@ namespace Tests.Integration.Model
                     new BulkRelationDataPredicateScope.Fragment(ciid2, ciid1),
                     new BulkRelationDataPredicateScope.Fragment(ciid3, ciid2),
                     new BulkRelationDataPredicateScope.Fragment(ciid3, ciid1)
-                }), changeset2, new DataOriginV1(DataOriginType.Manual), trans2);
+                }), changeset2, new DataOriginV1(DataOriginType.Manual), trans2, MaskHandlingForRemovalApplyNoMask.Instance);
 
             var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionWithPredicate.Build(predicateID1), layerset, trans2, TimeThreshold.BuildLatest());
             Assert.AreEqual(4, r1.Count());

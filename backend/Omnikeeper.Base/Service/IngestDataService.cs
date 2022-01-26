@@ -98,6 +98,9 @@ namespace Omnikeeper.Base.Service
                 }
             }
 
+            // TODO: mask handling
+            var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
+
             // batch process CI creation
             if (!cisToCreate.IsEmpty())
                 await CIModel.BulkCreateCIs(cisToCreate, trans);
@@ -106,7 +109,7 @@ namespace Omnikeeper.Base.Service
                 cic.Attributes.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, cic.TempCIID))
             ));
             // TODO: return number of affected attributes (instead of CIs)
-            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling);
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
             foreach (var cic in data.RelationCandidates)
@@ -122,7 +125,7 @@ namespace Omnikeeper.Base.Service
                 relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID));
             }
             var bulkRelationData = new BulkRelationDataLayerScope(writeLayer.ID, relationFragments.ToArray());
-            var affectedRelations = await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans);
+            var affectedRelations = await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling);
 
             trans.Commit();
 

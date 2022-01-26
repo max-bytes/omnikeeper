@@ -32,13 +32,14 @@ namespace Omnikeeper.Controllers
         private readonly ILayerModel layerModel;
         private readonly ICurrentUserAccessor currentUserService;
         private readonly ICIModel ciModel;
+        private readonly IBaseRelationModel baseRelationModel;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerStatisticsModel layerStatisticsModel;
         private readonly IRelationModel relationModel;
 
-        public ImportExportLayerController(IBaseAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, ICIModel ciModel,
+        public ImportExportLayerController(IBaseAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, ICIModel ciModel, IBaseRelationModel baseRelationModel,
             ILayerBasedAuthorizationService layerBasedAuthorizationService, IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerModel layerModel, ILayerStatisticsModel layerStatisticsModel, IRelationModel relationModel)
         {
             this.modelContextBuilder = modelContextBuilder;
@@ -47,6 +48,7 @@ namespace Omnikeeper.Controllers
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.currentUserService = currentUserService;
             this.ciModel = ciModel;
+            this.baseRelationModel = baseRelationModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerModel = layerModel;
             this.layerStatisticsModel = layerStatisticsModel;
@@ -97,7 +99,7 @@ namespace Omnikeeper.Controllers
                 .Where(a => a.ChangesetID != GeneratorV1.StaticChangesetID) // HACK: skip generated attributes
                 .Select(a => CIAttributeDTO.Build(a));
 
-            var relations = (await relationModel.GetRelations(RelationSelectionAll.Instance, layerID, trans, timeThreshold));
+            var relations = (await baseRelationModel.GetRelations(RelationSelectionAll.Instance, layerID, trans, timeThreshold));
 
             // TODO: because there is no proper "RelationSelectionFromAndToInList", we fetch all and select manually afterwards
             if (ciidSelection is SpecificCIIDsSelection specificCIIDsSelection)
@@ -194,7 +196,7 @@ namespace Omnikeeper.Controllers
                     await baseAttributeModel.BulkUpdate(bulkUpdates.inserts, bulkUpdates.removes, writeLayer.ID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
 
                     var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID));
-                    await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+                    await baseRelationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
                 }
 
                 trans.Commit();

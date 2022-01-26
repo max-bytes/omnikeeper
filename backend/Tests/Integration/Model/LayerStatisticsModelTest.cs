@@ -27,7 +27,7 @@ namespace Tests.Integration.Model
 
             var ch2 = await CreateChangesetProxy();
 
-            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, new DataOriginV1(DataOriginType.Manual), trans);
+            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
             await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
@@ -61,11 +61,11 @@ namespace Tests.Integration.Model
 
             var ch2 = await CreateChangesetProxy();
 
-            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, new DataOriginV1(DataOriginType.Manual), trans);
+            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
             var ch3 = await CreateChangesetProxy();
 
-            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid3, predicateID1, layer.ID, ch3, new DataOriginV1(DataOriginType.Manual), trans);
+            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid3, predicateID1, layer.ID, ch3, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
             var layerChangesetsHistory = await GetService<ILayerStatisticsModel>().GetLayerChangesetsHistory(layer.ID, trans);
 
