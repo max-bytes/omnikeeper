@@ -1,4 +1,6 @@
-﻿using Omnikeeper.Base.Utils;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Utils;
+using System.Linq;
 
 namespace Omnikeeper.Base.Model
 {
@@ -14,19 +16,28 @@ namespace Omnikeeper.Base.Model
     public class MaskHandlingForRemovalApplyMaskIfNecessary : IMaskHandlingForRemoval
     {
         public readonly string[] ReadLayersBelowWriteLayer;
-        public readonly TimeThreshold ReadTime;
 
-        private MaskHandlingForRemovalApplyMaskIfNecessary(string[] readLayersBelowWriteLayer, TimeThreshold readTime)
+        private MaskHandlingForRemovalApplyMaskIfNecessary(string[] readLayersBelowWriteLayer)
         {
             ReadLayersBelowWriteLayer = readLayersBelowWriteLayer;
-            ReadTime = readTime;
         }
 
-        public static IMaskHandlingForRemoval Build(string[] readLayersBelowWriteLayer, TimeThreshold readTime)
+        public static IMaskHandlingForRemoval Build(string[] readLayersBelowWriteLayer)
         {
-            if (readLayersBelowWriteLayer.IsEmpty())
+            if (readLayersBelowWriteLayer.Length == 0)
                 return MaskHandlingForRemovalApplyNoMask.Instance;
-            return new MaskHandlingForRemovalApplyMaskIfNecessary(readLayersBelowWriteLayer, readTime);
+            return new MaskHandlingForRemovalApplyMaskIfNecessary(readLayersBelowWriteLayer);
+        }
+
+        public static IMaskHandlingForRemoval Build(LayerSet readLayerSet, string writeLayerID)
+        {
+            var indexWriteLayerID = readLayerSet.IndexOf(writeLayerID);
+            if (indexWriteLayerID == -1)
+                throw new System.Exception("Cannot create mask handling object when write layer ID is not contained within read layerset");
+            var readLayersBelowWriteLayer = readLayerSet.Skip(indexWriteLayerID + 1).ToArray();
+            if (readLayersBelowWriteLayer.Length == 0)
+                return MaskHandlingForRemovalApplyNoMask.Instance;
+            return new MaskHandlingForRemovalApplyMaskIfNecessary(readLayersBelowWriteLayer);
         }
     }
 

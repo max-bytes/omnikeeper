@@ -68,7 +68,7 @@ namespace Omnikeeper.Model
         public async Task<(
             IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
             IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes
-            )> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans)
+            )> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             var readTS = TimeThreshold.BuildLatest();
 
@@ -110,9 +110,57 @@ namespace Omnikeeper.Model
                 actualInserts.Add((ciid, fullName, value, currentAttribute?.ID, Guid.NewGuid()));
             }
 
-            var removes = outdatedAttributes.Values.Select(a => (a.CIID, a.Name, a.Value, a.ID, Guid.NewGuid())).ToList();
+            // mask-based changes to inserts and removals
+            // depending on mask-handling, calculate attribute that are potentially "maskable" in below layers
+            var maskableAttributesInBelowLayers = new Dictionary<string, (Guid ciid, string name)>();
+            switch (maskHandlingForRemoval)
+            {
+                case MaskHandlingForRemovalApplyMaskIfNecessary n:
 
-            return (actualInserts, removes);
+                    maskableAttributesInBelowLayers = (data switch
+                    {
+                        BulkCIAttributeDataLayerScope d => (d.NamePrefix.IsEmpty()) ?
+                                (await GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, n.ReadLayersBelowWriteLayer, trans, readTS)) :
+                                (await GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), n.ReadLayersBelowWriteLayer, trans, readTS)),
+                        BulkCIAttributeDataCIScope d =>
+                            await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, n.ReadLayersBelowWriteLayer, trans: trans, atTime: readTS),
+                        BulkCIAttributeDataCIAndAttributeNameScope a =>
+                            await GetAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), n.ReadLayersBelowWriteLayer, trans, readTS),
+                        _ => throw new Exception("Unknown scope")
+                    })
+                    .SelectMany(t => t.Values.SelectMany(tt => tt.Values))
+                    .GroupBy(t => t.InformationHash)
+                    .Where(g => !informationHashesToInsert.Contains(g.Key)) // if we are already inserting this attribute, we definitely do not want to mask it
+                    .ToDictionary(g => g.Key, g => (g.First().CIID, g.First().Name));
+                    break;
+                case MaskHandlingForRemovalApplyNoMask _:
+                    // no operation necessary
+                    break;
+                default:
+                    throw new Exception("Invalid mask handling");
+            }
+            // reduce the actual removes by looking at maskable attributes, replacing the removes with masks if necessary
+            foreach (var kv in maskableAttributesInBelowLayers)
+            {
+                var ih = kv.Key;
+
+                if (outdatedAttributes.TryGetValue(ih, out var outdatedAttribute))
+                {
+                    // the attribute exists in the write-layer AND is actually outdated AND needs to be masked -> mask it, instead of removing it
+                    outdatedAttributes.Remove(ih);
+                    actualInserts.Add((outdatedAttribute.CIID, outdatedAttribute.Name, AttributeScalarValueMask.Instance, outdatedAttribute.ID, Guid.NewGuid()));
+                }
+                else
+                {
+                    // the attribute exists only in the layers below -> mask it
+                    actualInserts.Add((kv.Value.ciid, kv.Value.name, AttributeScalarValueMask.Instance, null, Guid.NewGuid()));
+                }
+            }
+
+            // build final removal-list
+            var actualRemoves = outdatedAttributes.Values.Select(a => (a.CIID, a.Name, a.Value, a.ID, Guid.NewGuid())).ToList();
+
+            return (actualInserts, actualRemoves);
         }
 
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(

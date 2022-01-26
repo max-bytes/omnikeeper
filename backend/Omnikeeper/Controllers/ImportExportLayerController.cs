@@ -27,7 +27,7 @@ namespace Omnikeeper.Controllers
     [Authorize]
     public class ImportExportLayerController : ControllerBase
     {
-        private readonly IBaseAttributeModel attributeModel;
+        private readonly IBaseAttributeModel baseAttributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly ILayerModel layerModel;
         private readonly ICurrentUserAccessor currentUserService;
@@ -43,7 +43,7 @@ namespace Omnikeeper.Controllers
         {
             this.modelContextBuilder = modelContextBuilder;
             this.changesetModel = changesetModel;
-            this.attributeModel = attributeModel;
+            this.baseAttributeModel = attributeModel;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.currentUserService = currentUserService;
             this.ciModel = ciModel;
@@ -90,7 +90,7 @@ namespace Omnikeeper.Controllers
             if (ciids != null && ciids.Length > 0)
                 ciidSelection = SpecificCIIDsSelection.Build(ciids);
 
-            var attributesDict = (await attributeModel.GetAttributes(ciidSelection, AllAttributeSelection.Instance, new string[] { layerID }, trans, timeThreshold)).First();
+            var attributesDict = (await baseAttributeModel.GetAttributes(ciidSelection, AllAttributeSelection.Instance, new string[] { layerID }, trans, timeThreshold)).First();
             var attributesDTO = attributesDict
                 .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                 .SelectMany(kv => kv.Value.Values)
@@ -190,8 +190,8 @@ namespace Omnikeeper.Controllers
                     await ciModel.BulkCreateCIs(cisToCreate, trans);
 
                     var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataLayerScope.Fragment(t.Name, AttributeValueHelper.BuildFromDTO(t.Value), t.CIID));
-                    var bulkUpdates = await attributeModel.PrepareForBulkUpdate(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), trans);
-                    await attributeModel.BulkUpdate(bulkUpdates.inserts, bulkUpdates.removes, writeLayer.ID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
+                    var bulkUpdates = await baseAttributeModel.PrepareForBulkUpdate(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                    await baseAttributeModel.BulkUpdate(bulkUpdates.inserts, bulkUpdates.removes, writeLayer.ID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
 
                     var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID));
                     await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);

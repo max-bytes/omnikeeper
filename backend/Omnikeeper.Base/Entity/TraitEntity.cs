@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Entity
 {
+    // TODO: needed?
     public abstract class TraitEntity
     {
     }

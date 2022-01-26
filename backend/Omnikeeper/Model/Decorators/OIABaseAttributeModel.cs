@@ -113,9 +113,10 @@ namespace Omnikeeper.Model.Decorators
             return await model.RemoveAttribute(name, ciid, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes)> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans)
+        public async Task<(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes)>
+            PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            return await model.PrepareForBulkUpdate(data, trans);
+            return await model.PrepareForBulkUpdate(data, trans, maskHandlingForRemoval);
         }
 
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes, string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)
