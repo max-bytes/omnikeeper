@@ -78,7 +78,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     var tt = new ElementType(at.Value, relatedCIType);
                     var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel);
                     var idt = IDInputType.Build(at.Value);
-                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, dataLoaderService, traitsProvider, attributeModel, relationModel, ttWrapper, idt);
+                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel, ttWrapper, idt);
                     var upsertInputType = new UpsertInputType(at.Value);
 
                     // TODO: needed?

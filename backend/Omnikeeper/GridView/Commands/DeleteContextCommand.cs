@@ -59,7 +59,7 @@ namespace Omnikeeper.GridView.Commands
                 {
                     var isSuccess = await gridViewContextModel.TryToDelete(request.ID,
                         new Base.Entity.LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
-                        new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, trans);
+                        new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                     if (isSuccess)
                     {

@@ -65,7 +65,7 @@ namespace Tasks.DBInit
                 {
                     await traitModel.InsertOrUpdate(rt,
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                        new DataOriginV1(DataOriginType.Manual), changeset, mc);
+                        new DataOriginV1(DataOriginType.Manual), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance);
                 }
                 trans.Commit();
             }
@@ -217,7 +217,7 @@ namespace Tasks.DBInit
                 {
                     await predicateModel.InsertOrUpdate(new Predicate(predicate.ID, predicate.WordingFrom, predicate.WordingTo),
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                        new DataOriginV1(DataOriginType.Manual), changeset, trans);
+                        new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 }
 
                 trans.Commit();

@@ -16,10 +16,17 @@ namespace Omnikeeper.Base.Model
         public readonly string[] ReadLayersBelowWriteLayer;
         public readonly TimeThreshold ReadTime;
 
-        public MaskHandlingForRemovalApplyMaskIfNecessary(string[] readLayersBelowWriteLayer, TimeThreshold readTime)
+        private MaskHandlingForRemovalApplyMaskIfNecessary(string[] readLayersBelowWriteLayer, TimeThreshold readTime)
         {
             ReadLayersBelowWriteLayer = readLayersBelowWriteLayer;
             ReadTime = readTime;
+        }
+
+        public static IMaskHandlingForRemoval Build(string[] readLayersBelowWriteLayer, TimeThreshold readTime)
+        {
+            if (readLayersBelowWriteLayer.IsEmpty())
+                return MaskHandlingForRemovalApplyNoMask.Instance;
+            return new MaskHandlingForRemovalApplyMaskIfNecessary(readLayersBelowWriteLayer, readTime);
         }
     }
 

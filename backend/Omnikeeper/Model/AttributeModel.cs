@@ -129,19 +129,16 @@ namespace Omnikeeper.Model
                 case MaskHandlingForRemovalApplyMaskIfNecessary n:
 
                     // check removals, change them to a mask-insertion if necessary; necessary means that the same attribute (same ci, same name) is defined in a layer below and hence needs to be masked
-                    if (!n.ReadLayersBelowWriteLayer.IsEmpty())
+                    var ciids = removals.Select(t => t.ciid).ToHashSet();
+                    var attributeNames = removals.Select(t => t.name).ToHashSet();
+                    var attributesRemaining = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciids), NamedAttributesSelection.Build(attributeNames), new LayerSet(n.ReadLayersBelowWriteLayer), trans, n.ReadTime);
+                    for (int i = removals.Count - 1; i >= 0; i--)
                     {
-                        var ciids = removals.Select(t => t.ciid).ToHashSet();
-                        var attributeNames = removals.Select(t => t.name).ToHashSet();
-                        var attributesRemaining = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciids), NamedAttributesSelection.Build(attributeNames), new LayerSet(n.ReadLayersBelowWriteLayer), trans, n.ReadTime);
-                        for (int i = removals.Count - 1; i >= 0; i--)
+                        var (ciid, name, value, attributeID, newAttributeID) = removals[i];
+                        if (attributesRemaining.TryGetValue(ciid, out var aa) && aa.ContainsKey(name))
                         {
-                            var (ciid, name, value, attributeID, newAttributeID) = removals[i];
-                            if (attributesRemaining.TryGetValue(ciid, out var aa) && aa.ContainsKey(name))
-                            {
-                                removals.RemoveAt(i);
-                                inserts.Add((ciid, name, AttributeScalarValueMask.Instance, attributeID, newAttributeID));
-                            }
+                            removals.RemoveAt(i);
+                            inserts.Add((ciid, name, AttributeScalarValueMask.Instance, attributeID, newAttributeID));
                         }
                     }
 

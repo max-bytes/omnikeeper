@@ -104,14 +104,14 @@ namespace Omnikeeper.Model
             // upsert layer data
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
             var ld = new LayerData(id, description, color, clConfigID, generators, oiaReference, state);
-            var t = await innerModel.InsertOrUpdate(ld, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, dataOrigin, changesetProxy, trans);
+            var t = await innerModel.InsertOrUpdate(ld, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, dataOrigin, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return t;
         }
 
         public async Task<bool> TryToDelete(string id, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-            return await innerModel.TryToDelete(id, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, dataOrigin, changesetProxy, trans);
+            return await innerModel.TryToDelete(id, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, dataOrigin, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
         }
 
         public async Task<IDictionary<string, LayerData>> GetLayerData(IModelContext trans, TimeThreshold timeThreshold)

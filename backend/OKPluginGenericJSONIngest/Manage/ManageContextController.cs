@@ -105,7 +105,7 @@ namespace Omnikeeper.Controllers.Ingest
                 var updated = new Context(contextCandidate.ID, contextCandidate.ExtractConfig, contextCandidate.TransformConfig, contextCandidate.LoadConfig);
                 var (context, _) = await contextModel.InsertOrUpdate(updated, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                     new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
-                    changesetProxy, mc);
+                    changesetProxy, mc, MaskHandlingForRemovalApplyNoMask.Instance);
                 mc.Commit();
                 return Ok(context);
             }
@@ -132,7 +132,7 @@ namespace Omnikeeper.Controllers.Ingest
                 var deleted = await contextModel.TryToDelete(id,
                     metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                     new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
-                    changesetProxy, mc);
+                    changesetProxy, mc, MaskHandlingForRemovalApplyNoMask.Instance);
                 mc.Commit();
                 return Ok(deleted);
             }

@@ -46,7 +46,7 @@ namespace Tests.Integration.Model
             var e1 = new TestEntityForStringID("id1", null);
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                await model.InsertOrUpdate(e1, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -57,7 +57,7 @@ namespace Tests.Integration.Model
             var e2 = new TestEntityForStringID("id1", "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e2, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                await model.InsertOrUpdate(e2, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -67,7 +67,7 @@ namespace Tests.Integration.Model
             // re-set to e1, with non-set optional attribute
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                await model.InsertOrUpdate(e1, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -123,8 +123,8 @@ namespace Tests.Integration.Model
             var e12 = new TestEntityForLongID(2L, "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
-                await model.InsertOrUpdate(e12, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                await model.InsertOrUpdate(e1, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await model.InsertOrUpdate(e12, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -143,7 +143,7 @@ namespace Tests.Integration.Model
             var e2 = new TestEntityForLongID(1L, "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e2, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                await model.InsertOrUpdate(e2, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -153,7 +153,7 @@ namespace Tests.Integration.Model
             // re-set to e1, with non-set optional attribute
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                await model.InsertOrUpdate(e1, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -214,8 +214,8 @@ namespace Tests.Integration.Model
             var e12 = new TestEntityForTupleID(1L, "id2", "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
-                await model.InsertOrUpdate(e12, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                await model.InsertOrUpdate(e1, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await model.InsertOrUpdate(e12, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
