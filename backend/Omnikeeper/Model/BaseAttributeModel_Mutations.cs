@@ -78,7 +78,8 @@ namespace Omnikeeper.Model
                 BulkCIAttributeDataLayerScope d => (d.NamePrefix.IsEmpty()) ?
                         (await GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { data.LayerID }, trans, readTS)) :
                         (await GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), new string[] { data.LayerID }, trans, readTS)),
-                BulkCIAttributeDataCIScope d => await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, new string[] { data.LayerID }, trans: trans, atTime: readTS),
+                BulkCIAttributeDataCIScope d => 
+                    await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, new string[] { data.LayerID }, trans: trans, atTime: readTS),
                 BulkCIAttributeDataCIAndAttributeNameScope a =>
                     await GetAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), new string[] { data.LayerID }, trans, readTS),
                 _ => throw new Exception("Unknown scope")

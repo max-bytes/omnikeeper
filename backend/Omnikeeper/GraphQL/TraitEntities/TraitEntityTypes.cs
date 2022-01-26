@@ -31,8 +31,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class TraitEntityRootType : ObjectGraphType
     {
-        public TraitEntityRootType(ITrait at, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService, ITraitsProvider traitsProvider,
-            IAttributeModel attributeModel, IRelationModel relationModel,
+        public TraitEntityRootType(ITrait at, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
             ElementWrapperType wrapperElementGraphType, InputObjectGraphType? idGraphType)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityRootGraphTypeName(at);
