@@ -7,7 +7,7 @@ export function Copyable(props) {
     if (enabled) {
         return <span style={{display: 'inline-flex', alignItems: 'center'}}>
             {children}
-            <Button icon={<CopyOutlined />} size="small" onClick={() => {
+            <Button icon={<CopyOutlined />} type="text" size="small" onClick={() => {
                 navigator.clipboard.writeText(copyText);
                 message.info(`${copyText} copied to clipboard`);
                 }} />

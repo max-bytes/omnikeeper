@@ -11,14 +11,12 @@ export function SearchResults(props) {
 
     const Row = (index) => {
         const result = cis[index];
-        return <Link key={result.id} to={`/explorer/${result.id}`}>
-            <div
+        return <div
                 style={{
                     display: "flex",
                     padding: "10px",
                     backgroundColor: index % 2 === 0 ? "#eee" : "#fff",
-                }}
-            >
+                }}>
                 <div
                     style={{
                         flexGrow: "2",
@@ -26,16 +24,16 @@ export function SearchResults(props) {
                         flexBasis: "0",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
-                        whiteSpace: "nowrap"
+                        whiteSpace: "nowrap",
+                        paddingRight: "10px"
                     }}
                 >
-                    {result.name ?? "[UNNAMED]"}
+                    <Link key={result.id} to={`/explorer/${result.id}`}>{result.name ?? "[UNNAMED]"}</Link>
                 </div>
-                <div style={{ flexGrow: "2", flexBasis: "0" }}>
-                    <CIID id={result.id} link={false} />
+                <div style={{ flexGrow: "0" }}>
+                    <CIID id={result.id} link={false} copyable={true} />
                 </div>
-            </div>
-        </Link>;
+            </div>;
     };
 
     if (!loading && !cis) {
