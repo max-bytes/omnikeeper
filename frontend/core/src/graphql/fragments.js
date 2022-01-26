@@ -92,7 +92,6 @@ export const Fragments = {
           changesetID
         }
         layerStackIDs
-        layerID
         layerStack {
             id
             description
@@ -111,7 +110,6 @@ export const Fragments = {
         changesetID
       }
       layerStackIDs
-      layerID
       layerStack {
           id
           description

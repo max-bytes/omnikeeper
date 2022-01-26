@@ -20,14 +20,9 @@ namespace Omnikeeper.Model.Decorators.CachingLatestLayerChange
             this.cache = cache;
         }
 
-        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
-            return await model.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
-        }
-
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await model.GetRelations(rl, layerID, trans, atTime);
+            return await model.GetRelations(rl, layerIDs, trans, atTime);
         }
 
         public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
@@ -51,9 +46,9 @@ namespace Omnikeeper.Model.Decorators.CachingLatestLayerChange
             return t;
         }
 
-        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            var t = await model.BulkReplaceRelations(data, changesetProxy, origin, trans);
+            var t = await model.BulkReplaceRelations(data, changesetProxy, origin, trans, maskHandling);
             if (!t.IsEmpty())
                 cache.UpdateCache(data.LayerID, changesetProxy.TimeThreshold.Time);
             return t;

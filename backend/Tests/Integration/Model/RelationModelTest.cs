@@ -42,7 +42,7 @@ namespace Tests.Integration.Model
                 var rr1 = r1.First();
                 Assert.AreEqual(ciid1, rr1.Relation.FromCIID);
                 Assert.AreEqual(ciid2, rr1.Relation.ToCIID);
-                Assert.AreEqual(layerID1, rr1.LayerID);
+                Assert.AreEqual(layerID1, rr1.LayerStackIDs[0]);
                 Assert.AreEqual((await changeset.GetChangeset(layerID1, new DataOriginV1(DataOriginType.Manual), trans)).ID, rr1.Relation.ChangesetID);
 
                 // test repeated insertion
@@ -61,7 +61,7 @@ namespace Tests.Integration.Model
                 var rr2 = r2.FirstOrDefault(r => r.Relation.ToCIID == ciid3);
                 Assert.AreEqual(ciid1, rr2.Relation.FromCIID);
                 Assert.IsNotNull(rr2);
-                Assert.AreEqual(layerID1, rr2.LayerID);
+                Assert.AreEqual(layerID1, rr2.LayerStackIDs[0]);
                 Assert.AreEqual((await changeset.GetChangeset(layerID1, new DataOriginV1(DataOriginType.Manual), trans)).ID, rr2.Relation.ChangesetID);
 
                 trans.Commit();
@@ -92,7 +92,7 @@ namespace Tests.Integration.Model
             var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, r1.Count());
             var rr1 = r1.First();
-            Assert.AreEqual(layer2.ID, rr1.LayerID);
+            Assert.AreEqual(layer2.ID, rr1.LayerStackIDs[0]);
         }
 
 
@@ -157,7 +157,7 @@ namespace Tests.Integration.Model
                 var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, r1.Count());
                 var rr1 = r1.First();
-                Assert.AreEqual(layer1.ID, rr1.LayerID);
+                Assert.AreEqual(layer1.ID, rr1.LayerStackIDs[0]);
                 trans.Commit();
             }
 
@@ -169,7 +169,7 @@ namespace Tests.Integration.Model
                 var r2 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, r2.Count());
                 var rr2 = r2.First();
-                Assert.AreEqual(layer2.ID, rr2.LayerID);
+                Assert.AreEqual(layer2.ID, rr2.LayerStackIDs[0]);
                 trans.Commit();
             }
         }

@@ -6,10 +6,9 @@ namespace Omnikeeper.Base.Entity
     public class MergedRelation
     {
         public Relation Relation { get; private set; }
-        public string[] LayerStackIDs { get; private set; }
-        public string LayerID { get => LayerStackIDs[0]; }
+        public IList<string> LayerStackIDs { get; private set; }
 
-        public MergedRelation(Relation relation, string[] layerStackIDs)
+        public MergedRelation(Relation relation, IList<string> layerStackIDs)
         {
             Relation = relation;
             LayerStackIDs = layerStackIDs;

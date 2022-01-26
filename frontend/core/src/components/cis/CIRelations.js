@@ -55,12 +55,13 @@ function CIRelations(props) {
 
     const Item = (index) => {
       const r = sortedRelations[index];
-      const isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
+      const layerID = r.layerStackIDs[0];
+      const isLayerWritable = visibleAndWritableLayers.some(l => l.id === layerID);
 
       const onRemove = (isEditable && isLayerWritable) ? 
       (() => {
         removeRelation({ variables: { fromCIID: r.relation.fromCIID, toCIID: r.relation.toCIID,
-          predicateID: r.relation.predicateID, layerID: r.layerID, layers: visibleLayers.map(l => l.id) } })
+          predicateID: r.relation.predicateID, layerID: layerID, layers: visibleLayers.map(l => l.id) } })
         .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }}));
       })
       : null;

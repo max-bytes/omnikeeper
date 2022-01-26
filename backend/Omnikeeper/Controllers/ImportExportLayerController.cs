@@ -99,7 +99,7 @@ namespace Omnikeeper.Controllers
                 .Where(a => a.ChangesetID != GeneratorV1.StaticChangesetID) // HACK: skip generated attributes
                 .Select(a => CIAttributeDTO.Build(a));
 
-            var relations = (await baseRelationModel.GetRelations(RelationSelectionAll.Instance, layerID, trans, timeThreshold));
+            var relations = (await baseRelationModel.GetRelations(RelationSelectionAll.Instance, new string[] { layerID }, trans, timeThreshold))[0];
 
             // TODO: because there is no proper "RelationSelectionFromAndToInList", we fetch all and select manually afterwards
             if (ciidSelection is SpecificCIIDsSelection specificCIIDsSelection)
@@ -191,12 +191,14 @@ namespace Omnikeeper.Controllers
                     var cisToCreate = cisToImport.Except(existingCIIDs);
                     await ciModel.BulkCreateCIs(cisToCreate, trans);
 
+                    var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
+
                     var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataLayerScope.Fragment(t.Name, AttributeValueHelper.BuildFromDTO(t.Value), t.CIID));
-                    var bulkUpdates = await baseAttributeModel.PrepareForBulkUpdate(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                    var bulkUpdates = await baseAttributeModel.PrepareForBulkUpdate(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), trans, maskHandling);
                     await baseAttributeModel.BulkUpdate(bulkUpdates.inserts, bulkUpdates.removes, writeLayer.ID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
 
                     var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID));
-                    await baseRelationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+                    await baseRelationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, maskHandling);
                 }
 
                 trans.Commit();

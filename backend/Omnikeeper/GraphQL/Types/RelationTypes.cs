@@ -70,7 +70,6 @@ namespace Omnikeeper.GraphQL.Types
         public MergedRelationType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel)
         {
             Field(x => x.LayerStackIDs);
-            Field(x => x.LayerID);
             Field(x => x.Relation, type: typeof(RelationType));
 
             Field<ListGraphType<LayerDataType>>("layerStack",

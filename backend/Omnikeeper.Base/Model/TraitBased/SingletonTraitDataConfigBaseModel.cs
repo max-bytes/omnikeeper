@@ -122,11 +122,13 @@ namespace Omnikeeper.Base.Model.TraitBased
                 var (_, changed) = await baseAttributeModel.RemoveAttribute(attribute, t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
             }
 
-            var allRelationsForward = await baseRelationModel.GetRelations(RelationSelectionFrom.Build(t.Item1), writeLayerID, trans, TimeThreshold.BuildLatest());
-            var allRelationsBackward = await baseRelationModel.GetRelations(RelationSelectionTo.Build(t.Item1), writeLayerID, trans, TimeThreshold.BuildLatest());
+            // TODO: masking
 
-            var relevantRelationsForward = allRelationsForward.Where(r => relationsToRemoveForward.Contains(r.PredicateID));
-            var relevantRelationsBackward = allRelationsBackward.Where(r => relationsToRemoveBackward.Contains(r.PredicateID));
+            var allRelationsForward = await baseRelationModel.GetRelations(RelationSelectionFrom.Build(t.Item1), new string[] { writeLayerID }, trans, TimeThreshold.BuildLatest());
+            var allRelationsBackward = await baseRelationModel.GetRelations(RelationSelectionTo.Build(t.Item1), new string[] { writeLayerID }, trans, TimeThreshold.BuildLatest());
+
+            var relevantRelationsForward = allRelationsForward[0].Where(r => relationsToRemoveForward.Contains(r.PredicateID));
+            var relevantRelationsBackward = allRelationsBackward[0].Where(r => relationsToRemoveBackward.Contains(r.PredicateID));
 
             var relationsToRemove = relevantRelationsForward.Concat(relevantRelationsBackward);
 
