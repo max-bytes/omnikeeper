@@ -10,7 +10,6 @@ export default function RelatedCIText(props) {
   : <i style={{textDecorationStyle: 'dashed', textDecorationColor: 'red', textDecorationThickness: '1px', textDecorationLine: 'underline'}}>{relation.predicateID}</i>;
 
   const isMask = relation.mask;
-  console.log(relation);
   const maskStyle = (isMask) ? {border: '1px dashed red', background: '#FFDDDD'} : {};
   const maskText = (isMask) ? ` [MASK]` : ``;
 
