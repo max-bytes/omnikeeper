@@ -119,7 +119,6 @@ function Diffing(props) {
           changesetID
         }
         layerStackIDs
-        layerID
         layerStack {
             id
             description
@@ -136,7 +135,6 @@ function Diffing(props) {
           changesetID
         }
         layerStackIDs
-        layerID
         layerStack {
             id
             description
