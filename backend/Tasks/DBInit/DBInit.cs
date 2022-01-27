@@ -247,7 +247,7 @@ namespace Tasks.DBInit
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 var ciid1 = applicationCIIDs.GetRandom(random);
                 var ciid2 = hostCIIDs.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
-                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, false, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 trans.Commit();
             }
 
@@ -326,8 +326,8 @@ namespace Tasks.DBInit
                     var windowsHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(windowsHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
                     foreach (var ci in windowsHosts)
                     {
-                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module"));
-                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHostWindows, "has_monitoring_module"));
+                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module", false));
+                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", false));
                         //await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                         //await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     }
@@ -337,8 +337,8 @@ namespace Tasks.DBInit
                     var linuxHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(linuxHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
                     foreach (var ci in linuxHosts)
                     {
-                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module"));
-                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHostLinux, "has_monitoring_module"));
+                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module", false));
+                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", false));
                         //await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                         //await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     }

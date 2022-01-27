@@ -85,7 +85,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 {
                     var fromCIID = (forward) ? ciid : otherCIID;
                     var toCIID = (forward) ? otherCIID : ciid;
-                    (_, var tmpChanged) = await baseRelationModel.InsertRelation(fromCIID, toCIID, predicateID, writeLayerID, changesetProxy, dataOrigin, trans);
+                    (_, var tmpChanged) = await baseRelationModel.InsertRelation(fromCIID, toCIID, predicateID, false, writeLayerID, changesetProxy, dataOrigin, trans);
                     changed = changed || tmpChanged;
                 }
             }

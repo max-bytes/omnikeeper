@@ -92,7 +92,7 @@ namespace Tests.Integration.Model
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans2);
             var layerset = new LayerSet(new string[] { layer1.ID });
             var changeset1 = await CreateChangesetProxy();
-            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
+            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
@@ -100,7 +100,7 @@ namespace Tests.Integration.Model
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
             var changeset2 = await CreateChangesetProxy();
-            await GetService<IRelationModel>().InsertRelation(ciid2, ciid1, predicateID2, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3);
+            await GetService<IRelationModel>().InsertRelation(ciid2, ciid1, predicateID2, false, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3);
             trans3.Commit();
 
             Thread.Sleep(500);
@@ -161,7 +161,7 @@ namespace Tests.Integration.Model
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans2);
             var layerset1 = new LayerSet(new string[] { layer1.ID });
             var changeset1 = await CreateChangesetProxy(TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(100)));
-            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
+            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
             trans2.Commit();
 
             using var transI = ModelContextBuilder.BuildImmediate();

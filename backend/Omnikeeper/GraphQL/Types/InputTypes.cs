@@ -90,6 +90,7 @@ namespace Omnikeeper.GraphQL.Types
         public Guid FromCIID { get; private set; }
         public Guid ToCIID { get; private set; }
         public string PredicateID { get; private set; }
+        public bool Mask { get; private set; }
     }
 
     public class InsertRelationInputType : InputObjectGraphType<InsertRelationInput>
@@ -99,6 +100,7 @@ namespace Omnikeeper.GraphQL.Types
             Field(x => x.FromCIID, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.ToCIID, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.PredicateID);
+            Field(x => x.Mask);
         }
     }
 

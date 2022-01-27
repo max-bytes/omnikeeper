@@ -15,31 +15,28 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    //[ProtoContract(SkipConstructor = true)]
     public class Relation
     {
-        //[ProtoMember(1)] 
         public readonly Guid ID;
-        //[ProtoMember(2)] 
         public readonly Guid FromCIID;
-        //[ProtoMember(3)] 
         public readonly Guid ToCIID;
-        //[ProtoMember(4)] 
         public readonly string PredicateID;
-        //[ProtoMember(5)] 
         public readonly Guid ChangesetID;
+
+        public readonly bool Mask;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
         public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => predicateID + fromCIID + toCIID;
 
-        public Relation(Guid id, Guid fromCIID, Guid toCIID, string predicateID, Guid changesetID)
+        public Relation(Guid id, Guid fromCIID, Guid toCIID, string predicateID, Guid changesetID, bool mask)
         {
             ID = id;
             FromCIID = fromCIID;
             ToCIID = toCIID;
             PredicateID = predicateID;
             ChangesetID = changesetID;
+            Mask = mask;
         }
     }
 
@@ -51,6 +48,7 @@ namespace Omnikeeper.Base.Entity
         string GetPredicateID(F fragment);
         Guid GetFromCIID(F fragment);
         Guid GetToCIID(F fragment);
+        bool GetMask(F fragment);
     }
 
     public class BulkRelationDataPredicateScope : IBulkRelationData<BulkRelationDataPredicateScope.Fragment>
@@ -59,11 +57,13 @@ namespace Omnikeeper.Base.Entity
         {
             public Guid From { get; private set; }
             public Guid To { get; private set; }
+            public bool Mask { get; private set; }
 
-            public Fragment(Guid from, Guid to)
+            public Fragment(Guid from, Guid to, bool mask)
             {
                 From = from;
                 To = to;
+                Mask = mask;
             }
         }
 
@@ -73,6 +73,7 @@ namespace Omnikeeper.Base.Entity
         public string GetPredicateID(Fragment fragment) => PredicateID;
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
+        public bool GetMask(Fragment fragment) => fragment.Mask;
 
         public BulkRelationDataPredicateScope(string predicateID, string layerID, IEnumerable<Fragment> fragments)
         {
@@ -89,12 +90,14 @@ namespace Omnikeeper.Base.Entity
             public Guid From { get; private set; }
             public Guid To { get; private set; }
             public string PredicateID { get; private set; }
+            public bool Mask { get; private set; }
 
-            public Fragment(Guid from, Guid to, string predicateID)
+            public Fragment(Guid from, Guid to, string predicateID, bool mask)
             {
                 From = from;
                 To = to;
                 PredicateID = predicateID;
+                Mask = mask;
             }
         }
 
@@ -103,6 +106,7 @@ namespace Omnikeeper.Base.Entity
         public string GetPredicateID(Fragment fragment) => fragment.PredicateID;
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
+        public bool GetMask(Fragment fragment) => fragment.Mask;
 
         public BulkRelationDataLayerScope(string layerID, IEnumerable<Fragment> fragments)
         {
@@ -118,12 +122,14 @@ namespace Omnikeeper.Base.Entity
             public Guid From { get; private set; }
             public Guid To { get; private set; }
             public string PredicateID { get; private set; }
+            public bool Mask { get; private set; }
 
-            public Fragment(Guid from, Guid to, string predicateID)
+            public Fragment(Guid from, Guid to, string predicateID, bool mask)
             {
                 From = from;
                 To = to;
                 PredicateID = predicateID;
+                Mask = mask;
             }
         }
 
@@ -136,6 +142,7 @@ namespace Omnikeeper.Base.Entity
         public string GetPredicateID(Fragment fragment) => fragment.PredicateID;
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
+        public bool GetMask(Fragment fragment) => fragment.Mask;
 
         public BulkRelationDataCIAndPredicateScope(string layerID, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> data, ISet<(Guid thisCIID, string predicateID)> relevant, bool outgoing)
         {
@@ -155,7 +162,7 @@ namespace Omnikeeper.Base.Entity
                     {
                         var fromCIID = (Outgoing) ? thisCIID : otherCIID;
                         var toCIID = (Outgoing) ? otherCIID : thisCIID;
-                        yield return new Fragment(fromCIID, toCIID, predicateID);
+                        yield return new Fragment(fromCIID, toCIID, predicateID, false); // TODO: add support for masks
                     }
                 }
             }

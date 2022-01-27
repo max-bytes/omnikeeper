@@ -62,7 +62,7 @@ namespace Omnikeeper.Model
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
-                var query = $@"select id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id from relation_latest
+                var query = $@"select id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, mask from relation_latest
                     where layer_id = ANY(@layer_ids) and ({innerWhereClause})";
                 command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
                 foreach (var p in parameters)
@@ -72,8 +72,8 @@ namespace Omnikeeper.Model
             }
             else
             {
-                var query = $@"select id, from_ci_id, to_ci_id, predicate_id, changeset_id from (
-                select distinct on (from_ci_id, to_ci_id, predicate_id) id, from_ci_id, to_ci_id, predicate_id, removed, changeset_id, layer_id from relation 
+                var query = $@"select id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, mask from (
+                select distinct on (from_ci_id, to_ci_id, predicate_id) id, from_ci_id, to_ci_id, predicate_id, removed, changeset_id, layer_id, mask from relation 
                     where timestamp <= @time_threshold and ({innerWhereClause}) and layer_id = ANY(@layer_ids)
                     and partition_index >= @partition_index
                     order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST
@@ -99,7 +99,7 @@ namespace Omnikeeper.Model
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
-                command = new NpgsqlCommand(@"select id, changeset_id from relation_latest
+                command = new NpgsqlCommand(@"select id, changeset_id, mask from relation_latest
                 where from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id and layer_id = @layer_id and predicate_id = @predicate_id
                 LIMIT 1", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("from_ci_id", fromCIID);
@@ -110,7 +110,7 @@ namespace Omnikeeper.Model
             }
             else
             {
-                command = new NpgsqlCommand(@"select id, changeset_id from (select id, removed, changeset_id from relation where 
+                command = new NpgsqlCommand(@"select id, changeset_id, mask from (select id, removed, changeset_id, mask from relation where 
                 timestamp <= @time_threshold AND from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id and layer_id = @layer_id and predicate_id = @predicate_id 
                 and partition_index >= @partition_index
                 order by timestamp DESC NULLS LAST
@@ -131,8 +131,9 @@ namespace Omnikeeper.Model
 
             var id = dr.GetGuid(0);
             var changesetID = dr.GetGuid(1);
+            var mask = dr.GetBoolean(2);
 
-            return new Relation(id, fromCIID, toCIID, predicateID, changesetID);
+            return new Relation(id, fromCIID, toCIID, predicateID, changesetID, mask);
         }
 
         public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
@@ -150,8 +151,9 @@ namespace Omnikeeper.Model
                     var predicateID = dr.GetString(3);
                     var changesetID = dr.GetGuid(4);
                     var layerID = dr.GetString(5);
+                    var mask = dr.GetBoolean(6);
 
-                    var relation = new Relation(id, fromCIID, toCIID, predicateID, changesetID);
+                    var relation = new Relation(id, fromCIID, toCIID, predicateID, changesetID, mask);
                     if (tmp.TryGetValue(layerID, out var e))
                         e.Add(relation);
                     else
@@ -176,7 +178,7 @@ namespace Omnikeeper.Model
         {
             var ret = new List<Relation>();
             using var command = new NpgsqlCommand($@"
-            select id, from_ci_id, to_ci_id, predicate_id FROM relation 
+            select id, from_ci_id, to_ci_id, predicate_id, mask FROM relation 
             where changeset_id = @changeset_id and removed = @removed
             ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("changeset_id", changesetID);
@@ -192,14 +194,15 @@ namespace Omnikeeper.Model
                 var fromCIID = dr.GetGuid(1);
                 var toCIID = dr.GetGuid(2);
                 var predicateID = dr.GetString(3);
+                var mask = dr.GetBoolean(4);
 
-                var relation = new Relation(id, fromCIID, toCIID, predicateID, changesetID);
+                var relation = new Relation(id, fromCIID, toCIID, predicateID, changesetID, mask);
                 ret.Add(relation);
             }
             return ret;
         }
 
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, bool mask, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (fromCIID == toCIID)
                 throw new Exception("From and To CIID must not be the same!");
@@ -217,11 +220,11 @@ namespace Omnikeeper.Model
 
             var id = Guid.NewGuid();
             var (_, changesetID) = await _BulkUpdate(
-                new (Guid, Guid, string, Guid)[] { (fromCIID, toCIID, predicateID, id) },
-                new (Guid, Guid, string, Guid)[0],
+                new (Guid, Guid, string, Guid, bool)[] { (fromCIID, toCIID, predicateID, id, mask) },
+                new (Guid, Guid, string, Guid, bool)[0],
                 layerID, origin, changesetProxy, trans);
 
-            return (new Relation(id, fromCIID, toCIID, predicateID, changesetID), true);
+            return (new Relation(id, fromCIID, toCIID, predicateID, changesetID, mask), true);
         }
 
         public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
@@ -237,11 +240,11 @@ namespace Omnikeeper.Model
             var id = Guid.NewGuid();
 
             var (_, changesetID) = await _BulkUpdate(
-                new (Guid, Guid, string, Guid)[0],
-                new (Guid, Guid, string, Guid)[] { (fromCIID, toCIID, predicateID, id) },
+                new (Guid, Guid, string, Guid, bool)[0],
+                new (Guid, Guid, string, Guid, bool)[] { (fromCIID, toCIID, predicateID, id, currentRelation.Mask) },
                 layerID, origin, changesetProxy, trans);
 
-            return (new Relation(id, fromCIID, toCIID, predicateID, changesetID), true);
+            return (new Relation(id, fromCIID, toCIID, predicateID, changesetID, currentRelation.Mask), true);
         }
 
 
@@ -268,7 +271,8 @@ namespace Omnikeeper.Model
                 _ => throw new Exception("Unknown scope")
             }).SelectMany(r => r).ToDictionary(r => r.InformationHash);
 
-            var actualInserts = new List<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)>();
+            var actualInserts = new List<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID, bool mask)>();
+            var informationHashesToInsert = new HashSet<string>();
             foreach (var fragment in data.Fragments)
             {
                 var fromCIID = data.GetFromCIID(fragment);
@@ -281,9 +285,18 @@ namespace Omnikeeper.Model
                     throw new Exception("PredicateID must not be empty");
                 IDValidations.ValidatePredicateIDThrow(predicateID);
 
+                var mask = data.GetMask(fragment);
+
                 var informationHash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
+                if (informationHashesToInsert.Contains(informationHash))
+                {
+                    throw new Exception($"Duplicate relation fragment detected! Bulk insertion does not support duplicate relations; relation predicate ID: {predicateID}, from CIID: {fromCIID}, to CIID: {toCIID}");
+                }
+                informationHashesToInsert.Add(informationHash);
+
                 // remove the current relation from the list of relations to remove
                 outdatedRelations.Remove(informationHash, out var currentRelation);
+
 
                 if (currentRelation != null)
                 {
@@ -291,33 +304,28 @@ namespace Omnikeeper.Model
                 }
 
                 Guid relationID = Guid.NewGuid();
-                actualInserts.Add((fromCIID, toCIID, predicateID, relationID));
+                actualInserts.Add((fromCIID, toCIID, predicateID, relationID, mask));
             }
 
 
 
-            // mask-based changes to inserts and removals
+            // mask - based changes to inserts and removals
             // depending on mask-handling, calculate relations that are potentially "maskable" in below layers
-            //var maskableRelationsInBelowLayers = new Dictionary<string, (Guid ciid, string name)>();
+            //var maskableRelationsInBelowLayers = new Dictionary<string, (Guid fromCIID, Guid toCIID, string predicateID)>();
             //switch (maskHandling)
             //{
             //    case MaskHandlingForRemovalApplyMaskIfNecessary n:
 
             //        maskableRelationsInBelowLayers = (data switch
             //        {
-            //            BulkCIAttributeDataLayerScope d => (d.NamePrefix.IsEmpty()) ?
-            //                    (await GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, n.ReadLayersBelowWriteLayer, trans, readTS)) :
-            //                    (await GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), n.ReadLayersBelowWriteLayer, trans, readTS)),
-            //            BulkCIAttributeDataCIScope d =>
-            //                await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, n.ReadLayersBelowWriteLayer, trans: trans, atTime: readTS),
-            //            BulkCIAttributeDataCIAndAttributeNameScope a =>
-            //                await GetAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), n.ReadLayersBelowWriteLayer, trans, readTS),
+            //            BulkRelationDataPredicateScope p => (await GetRelations(RelationSelectionWithPredicate.Build(p.PredicateID), new string[] { data.LayerID }, trans, changesetProxy.TimeThreshold)),
+            //            BulkRelationDataLayerScope l => (await GetRelations(RelationSelectionAll.Instance, new string[] { data.LayerID }, trans, changesetProxy.TimeThreshold)),
+            //            BulkRelationDataCIAndPredicateScope cp => await GetOutdatedRelationsFromCIAndPredicateScope(cp, new string[] { cp.LayerID }, trans, changesetProxy.TimeThreshold),
             //            _ => throw new Exception("Unknown scope")
-            //        })
-            //        .SelectMany(t => t.Values.SelectMany(tt => tt.Values))
+            //        }).SelectMany(r => r)
             //        .GroupBy(t => t.InformationHash)
-            //        .Where(g => !informationHashesToInsert.Contains(g.Key)) // if we are already inserting this attribute, we definitely do not want to mask it
-            //        .ToDictionary(g => g.Key, g => (g.First().CIID, g.First().Name));
+            //        .Where(g => !informationHashesToInsert.Contains(g.Key)) // if we are already inserting this relation, we definitely do not want to mask it
+            //        .ToDictionary(r => r.Key, r => (r.First().FromCIID, r.First().ToCIID, r.First().PredicateID));
             //        break;
             //    case MaskHandlingForRemovalApplyNoMask _:
             //        // no operation necessary
@@ -325,16 +333,16 @@ namespace Omnikeeper.Model
             //    default:
             //        throw new Exception("Invalid mask handling");
             //}
-            //// reduce the actual removes by looking at maskable attributes, replacing the removes with masks if necessary
+            //// reduce the actual removes by looking at maskable relations, replacing the removes with masks if necessary
             //foreach (var kv in maskableRelationsInBelowLayers)
             //{
             //    var ih = kv.Key;
 
-            //    if (outdatedAttributes.TryGetValue(ih, out var outdatedAttribute))
+            //    if (outdatedRelations.TryGetValue(ih, out var outdatedRelation))
             //    {
             //        // the attribute exists in the write-layer AND is actually outdated AND needs to be masked -> mask it, instead of removing it
-            //        outdatedAttributes.Remove(ih);
-            //        actualInserts.Add((outdatedAttribute.CIID, outdatedAttribute.Name, AttributeScalarValueMask.Instance, outdatedAttribute.ID, Guid.NewGuid()));
+            //        outdatedRelations.Remove(ih);
+            //        actualInserts.Add((outdatedRelation.FromCIID, outdatedRelation.ToCIID, outdatedRelation.PredicateID, mask, Guid.NewGuid()));
             //    }
             //    else
             //    {
@@ -347,7 +355,7 @@ namespace Omnikeeper.Model
 
 
             // perform actual updates in bulk
-            var removes = outdatedRelations.Values.Select(t => (t.FromCIID, t.ToCIID, t.PredicateID, Guid.NewGuid())).ToList();
+            var removes = outdatedRelations.Values.Select(t => (t.FromCIID, t.ToCIID, t.PredicateID, Guid.NewGuid(), t.Mask)).ToList();
             await _BulkUpdate(actualInserts, removes, data.LayerID, origin, changesetProxy, trans);
 
             // TODO: data (almost) is never used -> replace with a simpler return structure?
@@ -357,8 +365,8 @@ namespace Omnikeeper.Model
 
 
         private async Task<(bool changed, Guid changesetID)> _BulkUpdate(
-            IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)> inserts,
-            IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID)> removes,
+            IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID, bool mask)> inserts,
+            IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid newRelationID, bool mask)> removes,
             string layerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             if (!inserts.IsEmpty() || !removes.IsEmpty())
@@ -367,8 +375,8 @@ namespace Omnikeeper.Model
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
                 // historic
-                using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, removed, ""timestamp"", partition_index) FROM STDIN (FORMAT BINARY)");
-                foreach (var (fromCIID, toCIID, predicateID, newRelationID) in inserts)
+                using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, removed, ""timestamp"", partition_index, mask) FROM STDIN (FORMAT BINARY)");
+                foreach (var (fromCIID, toCIID, predicateID, newRelationID, mask) in inserts)
                 {
                     writerHistoric.StartRow();
                     writerHistoric.Write(newRelationID);
@@ -380,10 +388,11 @@ namespace Omnikeeper.Model
                     writerHistoric.Write(false);
                     writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
+                    writerHistoric.Write(mask);
                 }
 
                 // remove outdated 
-                foreach (var (fromCIID, toCIID, predicateID, newRelationID) in removes)
+                foreach (var (fromCIID, toCIID, predicateID, newRelationID, mask) in removes)
                 {
                     writerHistoric.StartRow();
                     writerHistoric.Write(newRelationID);
@@ -395,6 +404,7 @@ namespace Omnikeeper.Model
                     writerHistoric.Write(true);
                     writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
+                    writerHistoric.Write(mask);
                 }
                 writerHistoric.Complete();
                 writerHistoric.Close();
@@ -403,8 +413,8 @@ namespace Omnikeeper.Model
                 // new inserts
                 if (!inserts.IsEmpty())
                 {
-                    using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY relation_latest (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id) FROM STDIN (FORMAT BINARY)");
-                    foreach (var (fromCIID, toCIID, predicateID, newRelationID) in inserts)
+                    using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY relation_latest (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, mask) FROM STDIN (FORMAT BINARY)");
+                    foreach (var (fromCIID, toCIID, predicateID, newRelationID, mask) in inserts)
                     {
                         writerLatest.StartRow();
                         writerLatest.Write(newRelationID);
@@ -413,6 +423,7 @@ namespace Omnikeeper.Model
                         writerLatest.Write(predicateID);
                         writerLatest.Write(changeset.ID);
                         writerLatest.Write(layerID);
+                        writerLatest.Write(mask);
                     }
                     writerLatest.Complete();
                     writerLatest.Close();

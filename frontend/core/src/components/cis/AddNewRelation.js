@@ -69,7 +69,12 @@ function AddNewRelation(props) {
               ? { fromCIID: props.ciIdentity, toCIID: newRelation.targetCIID } 
               : { fromCIID: newRelation.targetCIID, toCIID: props.ciIdentity };
 
-            insertRelation({ variables: { ...fromTo, predicateID: newRelation.predicateID, layerID: newRelation.layer.id, layers: props.visibleLayers} })
+            insertRelation({ variables: { 
+                ...fromTo, 
+                predicateID: newRelation.predicateID, 
+                mask: false, // TODO: add support for masks
+                layerID: newRelation.layer.id, 
+                layers: props.visibleLayers} })
               .then(d => {
                 setOpen(false);
                 setNewRelation(initialRelation);

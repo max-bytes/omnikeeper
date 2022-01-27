@@ -34,7 +34,7 @@ namespace Tests.Integration.Model
                 var layerset = new LayerSet(new string[] { layerID1 });
 
                 // test single relation
-                var (i1, c1) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (i1, c1) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 Assert.AreEqual(predicateID1, i1.PredicateID);
                 Assert.IsTrue(c1);
                 var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest());
@@ -46,7 +46,7 @@ namespace Tests.Integration.Model
                 Assert.AreEqual((await changeset.GetChangeset(layerID1, new DataOriginV1(DataOriginType.Manual), trans)).ID, rr1.Relation.ChangesetID);
 
                 // test repeated insertion
-                var (i2, c2) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (i2, c2) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 Assert.AreEqual(predicateID1, i2.PredicateID);
                 Assert.IsFalse(c2);
                 r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest());
@@ -54,7 +54,7 @@ namespace Tests.Integration.Model
 
 
                 // test second relation
-                var (i3, c3) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (i3, c3) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID1, false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 Assert.AreEqual(predicateID1, i3.PredicateID);
                 var r2 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(2, r2.Count());
@@ -83,8 +83,8 @@ namespace Tests.Integration.Model
             var (layer2, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l2", trans);
             var layerset = new LayerSet(new string[] { layer2.ID, layer1.ID });
 
-            var (i1, c1) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-            var (i2, c2) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            var (i1, c1) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            var (i2, c2) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
             Assert.AreEqual(predicateID1, i1.PredicateID);
             Assert.AreEqual(predicateID1, i2.PredicateID);
             Assert.IsTrue(c1);
@@ -113,10 +113,10 @@ namespace Tests.Integration.Model
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans);
             var layerset = new LayerSet(new string[] { layer1.ID });
 
-            var i1 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-            var i2 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-            var i3 = await GetService<IRelationModel>().InsertRelation(ciid2, ciid3, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-            var i4 = await GetService<IRelationModel>().InsertRelation(ciid3, ciid1, predicateID2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            var i1 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            var i2 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID2, false, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            var i3 = await GetService<IRelationModel>().InsertRelation(ciid2, ciid3, predicateID1, false, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            var i4 = await GetService<IRelationModel>().InsertRelation(ciid3, ciid1, predicateID2, false, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
             var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionWithPredicate.Build(predicateID1), layerset, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(2, r1.Count());
@@ -142,8 +142,8 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                var (i1, c1) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                var (i2, c2) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (i1, c1) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (i2, c2) = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 Assert.AreEqual(predicateID1, i1.PredicateID);
                 Assert.AreEqual(predicateID1, i2.PredicateID);
                 trans.Commit();
@@ -165,7 +165,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 var r2 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, r2.Count());
                 var rr2 = r2.First();
@@ -191,19 +191,19 @@ namespace Tests.Integration.Model
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans);
             var layerset = new LayerSet(new string[] { layer1.ID });
 
-            var i1 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-            var i2 = await GetService<IRelationModel>().InsertRelation(ciid2, ciid3, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-            var i3 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            var i1 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            var i2 = await GetService<IRelationModel>().InsertRelation(ciid2, ciid3, predicateID1, false, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            var i3 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID1, false, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
             trans.Commit();
 
             // test bulk replace
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var changeset2 = await CreateChangesetProxy();
             await GetService<IRelationModel>().BulkReplaceRelations(new BulkRelationDataPredicateScope(predicateID1, layer1.ID, new BulkRelationDataPredicateScope.Fragment[] {
-                    new BulkRelationDataPredicateScope.Fragment(ciid1, ciid2),
-                    new BulkRelationDataPredicateScope.Fragment(ciid2, ciid1),
-                    new BulkRelationDataPredicateScope.Fragment(ciid3, ciid2),
-                    new BulkRelationDataPredicateScope.Fragment(ciid3, ciid1)
+                    new BulkRelationDataPredicateScope.Fragment(ciid1, ciid2, false),
+                    new BulkRelationDataPredicateScope.Fragment(ciid2, ciid1, false),
+                    new BulkRelationDataPredicateScope.Fragment(ciid3, ciid2, false),
+                    new BulkRelationDataPredicateScope.Fragment(ciid3, ciid1, false)
                 }), changeset2, new DataOriginV1(DataOriginType.Manual), trans2, MaskHandlingForRemovalApplyNoMask.Instance);
 
             var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionWithPredicate.Build(predicateID1), layerset, trans2, TimeThreshold.BuildLatest());

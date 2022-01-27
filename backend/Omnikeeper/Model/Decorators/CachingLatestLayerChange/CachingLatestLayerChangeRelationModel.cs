@@ -30,9 +30,9 @@ namespace Omnikeeper.Model.Decorators.CachingLatestLayerChange
             return await model.GetRelationsOfChangeset(changesetID, getRemoved, trans);
         }
 
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, bool mask, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
-            var t = await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
+            var t = await model.InsertRelation(fromCIID, toCIID, predicateID, mask, layerID, changesetProxy, origin, trans);
             if (t.changed)
                 cache.UpdateCache(layerID, changesetProxy.TimeThreshold.Time);
             return t;
