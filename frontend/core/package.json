@@ -25,7 +25,7 @@
     "env-cmd": "^10.1.0",
     "graphiql": "^1.5.16",
     "graphql": "^15.6.1",
-    "keycloak-js": "^9.0.3",
+    "keycloak-js": "^16.1.1",
     "lodash": "^4.17.20",
     "moment": "^2.29.1",
     "path-to-regexp": "^1.7.0",
