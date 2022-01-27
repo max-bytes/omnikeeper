@@ -6,7 +6,7 @@ import { useLocalStorage } from './useLocalStorage';
 
 export function useExplorerLayers(skipInvisible = false, skipReadonly = false) {
     const { error, data, loading } = useQuery(queries.Layers, {fetchPolicy: 'cache-first'});
-    const [layerSettings, _ignore] = useLocalStorage('layerSettings', null);
+    const [layerSettings,] = useLocalStorage('layerSettings', null);
 
     const [explorerLayers, setExplorerLayers] = useState({error: undefined, data: [], loading: undefined});
 

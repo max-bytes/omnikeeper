@@ -59,7 +59,7 @@ function LoadingTimeline(props) {
 
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
   
-  const [layerSettings, _ignore] = useLocalStorage('layerSettings', null);
+  const [layerSettings, ] = useLocalStorage('layerSettings', null);
 
   if (error) return <ErrorView error={error}/>;
 

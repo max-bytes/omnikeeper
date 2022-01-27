@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@apollo/client": "^3.2.5",
+    "@apollo/client": "^3.4.17",
     "@aspnet/signalr": "^1.1.4",
     "@babel/runtime": "^7.12.1",
     "@fortawesome/fontawesome-svg-core": "^1.2.32",
@@ -23,8 +23,8 @@
     "console-feed": "^3.1.10",
     "downloadjs": "^1.4.7",
     "env-cmd": "^10.1.0",
-    "graphiql": "^1.4.2",
-    "graphql": "^14.7.0",
+    "graphiql": "^1.5.16",
+    "graphql": "^15.6.1",
     "keycloak-js": "^9.0.3",
     "lodash": "^4.17.20",
     "moment": "^2.29.1",
@@ -40,11 +40,10 @@
     "react-json-view": "^1.19.1",
     "react-loading-overlay": "^1.0.1",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "^3.4.3",
+    "react-scripts": "5.0.0",
     "react-virtualized-auto-sizer": "^1.0.3",
     "react-virtuoso": "^2.2.6",
     "swagger-client": "^3.12.0",
-    "use-promise": "^2.0.1",
     "uuid": "^8.3.2"
   },
   "scripts": {
