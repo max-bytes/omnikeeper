@@ -117,6 +117,7 @@ function Diffing(props) {
           ${(outgoing) ? "toCIName" : "fromCIName"}
           predicateID
           changesetID
+          mask
         }
         layerStackIDs
         layerStack {
@@ -133,6 +134,7 @@ function Diffing(props) {
           ${(outgoing) ? "toCIName" : "fromCIName"}
           predicateID
           changesetID
+          mask
         }
         layerStackIDs
         layerStack {

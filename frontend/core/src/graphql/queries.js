@@ -171,6 +171,7 @@ export const queries = {
                     toCIName
                     predicateID
                     changesetID
+                    mask
                 }
                 removedRelations {
                     id
@@ -180,6 +181,7 @@ export const queries = {
                     toCIName
                     predicateID
                     changesetID
+                    mask
                 }
             }
         }
