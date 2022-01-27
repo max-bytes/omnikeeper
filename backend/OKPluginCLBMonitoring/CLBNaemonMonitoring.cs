@@ -56,7 +56,7 @@ namespace OKPluginCLBMonitoring
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
 
 
-            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
+            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
 
             // prepare contact groups
             var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, (Guid ciid, string name, string message) => LogError(ciid, name, message));
@@ -280,7 +280,7 @@ namespace OKPluginCLBMonitoring
 
             public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, ITrait contactgroupTrait, IModelContext trans, TimeThreshold timeThreshold)
             {
-                var contactGroupRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(belongsToNaemonContactgroup), layerSetAll, trans, timeThreshold);
+                var contactGroupRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(belongsToNaemonContactgroup), layerSetAll, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
                 if (contactGroupRelations.IsEmpty())
                 {
                     contactGroupsMap = new Dictionary<Guid, IEnumerable<MergedCI>>();

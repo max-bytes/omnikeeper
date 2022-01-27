@@ -67,7 +67,7 @@ namespace Omnikeeper.Controllers.OData
         {
             var trans = modelContextBuilder.BuildImmediate();
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
-            var relations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layerset, trans, TimeThreshold.BuildLatest());
+            var relations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance);
 
             return relations.Select(r => Model2DTO(r));
         }

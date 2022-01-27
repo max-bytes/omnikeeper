@@ -3,7 +3,6 @@ using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
-using System;
 using System.Linq;
 
 namespace Omnikeeper.GraphQL.Types
@@ -17,6 +16,7 @@ namespace Omnikeeper.GraphQL.Types
             Field(x => x.ToCIID);
             Field(x => x.PredicateID);
             Field(x => x.ChangesetID);
+            Field(x => x.Mask);
 
             Field<StringGraphType>("fromCIName",
                 resolve: (context) =>

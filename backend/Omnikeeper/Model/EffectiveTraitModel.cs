@@ -133,9 +133,9 @@ namespace Omnikeeper.Model
                     {
                         var ciids = cis.Select(ci => ci.ID).ToHashSet();
                         if (tt.OptionalRelations.Any(r => r.RelationTemplate.DirectionForward))
-                            fromRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(ciids), layers, trans, atTime)).ToLookup(r => r.Relation.FromCIID);
+                            fromRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(ciids), layers, trans, atTime, MaskHandlingForRetrievalApplyMasks.Instance)).ToLookup(r => r.Relation.FromCIID);
                         if (tt.OptionalRelations.Any(r => !r.RelationTemplate.DirectionForward))
-                            toRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(ciids), layers, trans, atTime)).ToLookup(r => r.Relation.ToCIID);
+                            toRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(ciids), layers, trans, atTime, MaskHandlingForRetrievalApplyMasks.Instance)).ToLookup(r => r.Relation.ToCIID);
                     }
 
                     foreach (var ci in cis)

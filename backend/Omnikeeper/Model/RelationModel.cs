@@ -20,7 +20,7 @@ namespace Omnikeeper.Model
             this.baseModel = baseModel;
         }
 
-        private IEnumerable<MergedRelation> MergeRelations(IEnumerable<Relation>[] relations, string[] layerIDs)
+        private IEnumerable<MergedRelation> MergeRelations(IEnumerable<Relation>[] relations, string[] layerIDs, IMaskHandlingForRetrieval maskHandling)
         {
             var compound = new Dictionary<string, MergedRelation>();
             for (var i = 0; i < layerIDs.Length; i++)
@@ -40,10 +40,18 @@ namespace Omnikeeper.Model
                 }
             }
 
-            return compound.Values;
+            switch (maskHandling)
+            {
+                case MaskHandlingForRetrievalApplyMasks:
+                    return compound.Values.Where(r => !r.Relation.Mask);
+                case MaskHandlingForRetrievalGetMasks:
+                    return compound.Values;
+                default:
+                    throw new Exception("Unknown mask handling");
+            }
         }
 
-        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, LayerSet layerset, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, LayerSet layerset, IModelContext trans, TimeThreshold atTime, IMaskHandlingForRetrieval maskHandling)
         {
             if (layerset.IsEmpty)
                 return ImmutableList<MergedRelation>.Empty; // return empty, an empty layer list can never produce any relations
@@ -51,7 +59,7 @@ namespace Omnikeeper.Model
             var lr = await baseModel.GetRelations(rl, layerset.LayerIDs, trans, atTime);
 
 
-            return MergeRelations(lr, layerset.LayerIDs);
+            return MergeRelations(lr, layerset.LayerIDs, maskHandling);
         }
 
         public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
@@ -61,7 +69,6 @@ namespace Omnikeeper.Model
 
         public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            // TODO: masking
             return await baseModel.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
         }
 
@@ -72,7 +79,6 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            // TODO: masking
             return await baseModel.BulkReplaceRelations(data, changesetProxy, origin, trans, maskHandling);
         }
     }

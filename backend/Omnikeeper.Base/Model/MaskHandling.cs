@@ -4,7 +4,22 @@ using System.Linq;
 
 namespace Omnikeeper.Base.Model
 {
-    public interface IMaskHandlingForRemoval { }
+    public interface IMaskHandlingForRetrieval { }
+
+    public class MaskHandlingForRetrievalApplyMasks : IMaskHandlingForRetrieval
+    {
+        private MaskHandlingForRetrievalApplyMasks() { }
+
+        public static MaskHandlingForRetrievalApplyMasks Instance = new MaskHandlingForRetrievalApplyMasks();
+    }
+    public class MaskHandlingForRetrievalGetMasks : IMaskHandlingForRetrieval
+    {
+        private MaskHandlingForRetrievalGetMasks() { }
+
+        public static MaskHandlingForRetrievalGetMasks Instance = new MaskHandlingForRetrievalGetMasks();
+    }
+
+public interface IMaskHandlingForRemoval { }
 
     /// <summary>
     /// detects if the layers "below" contain the attribute too

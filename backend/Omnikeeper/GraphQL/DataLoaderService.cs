@@ -149,7 +149,8 @@ namespace Omnikeeper.GraphQL
                     foreach (var rs in relationSelections)
                         combinedRelationsFrom.UnionWith(rs.FromCIIDs);
 
-                    var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(combinedRelationsFrom), layerSet, trans, timeThreshold);
+                    // TODO: masking
+                    var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(combinedRelationsFrom), layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
                     var relationsFromMap = relationsFrom.ToLookup(t => t.Relation.FromCIID);
 
                     var ret = new List<(RelationSelectionFrom, MergedRelation)>();
@@ -169,7 +170,8 @@ namespace Omnikeeper.GraphQL
                     foreach (var rs in relationSelections)
                         combinedRelationsTo.UnionWith(rs.ToCIIDs);
 
-                    var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(combinedRelationsTo), layerSet, trans, timeThreshold);
+                    // TODO: masking
+                    var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(combinedRelationsTo), layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
                     var relationsToMap = relationsTo.ToLookup(t => t.Relation.ToCIID);
 
                     var ret = new List<(RelationSelectionTo, MergedRelation)>();
@@ -185,7 +187,8 @@ namespace Omnikeeper.GraphQL
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsAll_{layerSet}_{timeThreshold}",
                 async (IEnumerable<RelationSelectionAll> relationSelections) =>
                 {
-                    var relations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layerSet, trans, timeThreshold);
+                    // TODO: masking
+                    var relations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
                     return relations.ToLookup(r => RelationSelectionAll.Instance);
                 });
             return loader;
