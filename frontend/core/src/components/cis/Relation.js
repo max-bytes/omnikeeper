@@ -13,7 +13,7 @@ export default function Relation(props) {
   const {predicates, relation, layer, removed } = props;
 
   const isMask = relation.mask;
-  const maskStyle = (isMask) ? {border: '1px dashed red', background: '#FFDDDD'} : {};
+  const maskStyle = (isMask) ? {border: '1px dashed black', background: '#f0f0f0', opacity: '0.7'} : {};
   const maskText = (isMask) ? ` [MASK]` : ``;
 
   // TODO: mergable with RelatedCIText?
