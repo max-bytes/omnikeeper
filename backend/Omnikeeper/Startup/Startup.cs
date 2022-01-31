@@ -251,7 +251,7 @@ namespace Omnikeeper.Startup
             IdentityModelEventSource.ShowPII = Configuration.GetValue<bool>("ShowPII");
 
             //services.AddMemoryCache();
-            services.AddDistributedMemoryCache();
+            //services.AddDistributedMemoryCache();
 
             // HACK: needed by odata, see: https://github.com/OData/WebApi/issues/2024
             services.AddMvcCore(options =>

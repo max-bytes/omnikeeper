@@ -25,7 +25,7 @@ namespace Omnikeeper.Runners
         public CLBRunner(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
             IMetaConfigurationModel metaConfigurationModel, ILifetimeScope parentLifetimeScope,
             IChangesetModel changesetModel, ScopedLifetimeAccessor scopedLifetimeAccessor, CLBLastRunCache clbLastRunCache,
-            ILayerModel layerModel, ILayerDataModel layerDataModel, ILogger<CLBRunner> logger, IModelContextBuilder modelContextBuilder)
+            ILayerDataModel layerDataModel, ILogger<CLBRunner> logger, IModelContextBuilder modelContextBuilder)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.clConfigModel = clConfigModel;
@@ -33,8 +33,7 @@ namespace Omnikeeper.Runners
             this.changesetModel = changesetModel;
             this.lifetimeScope = parentLifetimeScope;
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
-            this.clbLastRunCache = clbLastRunCache;
-            this.layerModel = layerModel;
+            this.clbLastRunCache = clbLastRunCache; // TODO: check if that works in HA scenario
             this.layerDataModel = layerDataModel;
             this.logger = logger;
             this.modelContextBuilder = modelContextBuilder;
@@ -141,7 +140,6 @@ namespace Omnikeeper.Runners
         private readonly IChangesetModel changesetModel;
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
         private readonly CLBLastRunCache clbLastRunCache;
-        private readonly ILayerModel layerModel;
         private readonly ILayerDataModel layerDataModel;
         private readonly ILogger<CLBRunner> logger;
         private readonly IModelContextBuilder modelContextBuilder;

@@ -226,12 +226,12 @@ namespace Omnikeeper.Startup
             }
 
             // latest layer change caching
-            builder.RegisterType<LatestLayerChangeCache>().SingleInstance();
-            builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
-            builder.RegisterDecorator<CachingLatestLayerChangeModel, ILatestLayerChangeModel>();
-            builder.RegisterDecorator<CachingLatestLayerChangeAttributeModel, IBaseAttributeModel>();
-            builder.RegisterDecorator<CachingLatestLayerChangeRelationModel, IBaseRelationModel>();
-            builder.RegisterDecorator<CachingLatestLayerChangeLayerModel, ILayerModel>();
+            // NOTE: removed because its ineffectual and does not work properly in HA scenario
+            //builder.RegisterType<LatestLayerChangeCache>().SingleInstance();
+            //builder.RegisterDecorator<CachingLatestLayerChangeModel, ILatestLayerChangeModel>();
+            //builder.RegisterDecorator<CachingLatestLayerChangeAttributeModel, IBaseAttributeModel>();
+            //builder.RegisterDecorator<CachingLatestLayerChangeRelationModel, IBaseRelationModel>();
+            //builder.RegisterDecorator<CachingLatestLayerChangeLayerModel, ILayerModel>();
 
             builder.RegisterType<CLBLastRunCache>().SingleInstance();
 
