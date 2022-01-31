@@ -88,7 +88,7 @@ namespace Omnikeeper.GraphQL
 
         private void CreateMain()
         {
-            FieldAsync<ListGraphType<StringGraphType>>("ciids",
+            FieldAsync<ListGraphType<GuidGraphType>>("ciids",
                 resolve: async context =>
                 {
                     var userContext = context.SetupUserContext()
