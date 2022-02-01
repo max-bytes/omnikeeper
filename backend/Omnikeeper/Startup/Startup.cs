@@ -439,23 +439,27 @@ namespace Omnikeeper.Startup
             GlobalConfiguration.Configuration.UseAutofacActivator(app.ApplicationServices.GetAutofacRoot());
 
             // workaround, see: https://github.com/HangfireIO/Hangfire/issues/1110
-            app.Use((context, next) =>
-            {
-                if (context.Request.Path.StartsWithSegments("/hangfire"))
-                {
-                    context.Request.PathBase = new PathString(context.Request.Headers["X-Forwarded-Prefix"]);
-                }
-                return next();
-            });
-            app.UseHangfireDashboard(options: new DashboardOptions()
-            {
-                AppPath = null,
-                Authorization = new IDashboardAuthorizationFilter[] {
-                    new HangFireAuthorizationFilter(BuildTokenValidationParameters(),
+            //app.Use((context, next) =>
+            //{
+            //    if (context.Request.Path.StartsWithSegments("/hangfire"))
+            //    {
+            //        context.Request.PathBase = new PathString(context.Request.Headers["X-Forwarded-Prefix"]);
+            //    }
+            //    return next();
+            //});
+            // in development environment, we do not use a auth filter, otherwise, we do
+            IDashboardAuthorizationFilter[] hangfireDashboardAuthFilter = new IDashboardAuthorizationFilter[] { };
+            if (!env.IsDevelopment())
+                hangfireDashboardAuthFilter = new IDashboardAuthorizationFilter[] { new HangFireAuthorizationFilter(BuildTokenValidationParameters(),
                     Configuration.GetSection("Authentication")["Authority"],
                     Configuration.GetSection("Authentication")["Audience"],
                     serviceProvider.GetRequiredService<ILogger<HangFireAuthorizationFilter>>())
-                }
+                };
+            app.UseHangfireDashboard(options: new DashboardOptions()
+            {
+                AppPath = null,
+                PrefixPath = $"{Configuration["BaseURL"]}",
+                Authorization = hangfireDashboardAuthFilter
             });
 
             // plugins setup
