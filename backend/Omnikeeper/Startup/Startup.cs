@@ -458,7 +458,7 @@ namespace Omnikeeper.Startup
             app.UseHangfireDashboard(options: new DashboardOptions()
             {
                 AppPath = null,
-                PrefixPath = $"{Configuration["BaseURL"]}",
+                //PrefixPath = $"{Configuration["BaseURL"]}",
                 Authorization = hangfireDashboardAuthFilter
             });
 
