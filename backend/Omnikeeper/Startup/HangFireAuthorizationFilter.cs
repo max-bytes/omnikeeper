@@ -79,10 +79,11 @@ namespace Omnikeeper.Startup
 
             try
             {
+                var dr = new HttpDocumentRetriever() { RequireHttps = false };
                 var openidConfigManaged = new ConfigurationManager<OpenIdConnectConfiguration>(
                     $"{authority}/.well-known/openid-configuration",
                     new OpenIdConnectConfigurationRetriever(),
-                    new HttpDocumentRetriever());
+                    dr);
                 var config = await openidConfigManaged.GetConfigurationAsync();
 
                 JwtSecurityTokenHandler hand = new JwtSecurityTokenHandler();
