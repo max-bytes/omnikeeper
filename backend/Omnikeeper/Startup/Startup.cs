@@ -438,17 +438,9 @@ namespace Omnikeeper.Startup
             // Configure hangfire to use the new JobActivator we defined.
             GlobalConfiguration.Configuration.UseAutofacActivator(app.ApplicationServices.GetAutofacRoot());
 
-            // workaround, see: https://github.com/HangfireIO/Hangfire/issues/1110
-            //app.Use((context, next) =>
-            //{
-            //    if (context.Request.Path.StartsWithSegments("/hangfire"))
-            //    {
-            //        context.Request.PathBase = new PathString(context.Request.Headers["X-Forwarded-Prefix"]);
-            //    }
-            //    return next();
-            //});
+            // hangfire dashboard
             // in development environment, we do not use a auth filter, otherwise, we do
-            IDashboardAuthorizationFilter[] hangfireDashboardAuthFilter = new IDashboardAuthorizationFilter[] { };
+            var hangfireDashboardAuthFilter = new IDashboardAuthorizationFilter[] { };
             if (!env.IsDevelopment())
                 hangfireDashboardAuthFilter = new IDashboardAuthorizationFilter[] { new HangFireAuthorizationFilter(BuildTokenValidationParameters(),
                     Configuration.GetSection("Authentication")["Authority"],
@@ -458,7 +450,6 @@ namespace Omnikeeper.Startup
             app.UseHangfireDashboard(options: new DashboardOptions()
             {
                 AppPath = null,
-                //PrefixPath = $"{Configuration["BaseURL"]}",
                 Authorization = hangfireDashboardAuthFilter
             });
 

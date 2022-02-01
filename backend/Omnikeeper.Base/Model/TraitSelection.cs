@@ -12,11 +12,19 @@ namespace Omnikeeper.Base.Model
 
     public class NamedTraitsSelection : ITraitSelection, IEquatable<NamedTraitsSelection>
     {
-        public readonly ISet<string> TraitIDs;
+        public readonly IReadOnlySet<string> TraitIDs;
+        private readonly int hashCode;
 
-        private NamedTraitsSelection(ISet<string> traitIDs)
+        private NamedTraitsSelection(IReadOnlySet<string> traitIDs)
         {
             TraitIDs = traitIDs;
+
+            unchecked // Overflow is fine, just wrap
+            {
+                hashCode = (int)2166136262;
+                foreach (var traitID in traitIDs)
+                    hashCode = (hashCode * 16777619) ^ traitID.GetHashCode();
+            }
         }
 
         public static ITraitSelection Build(params string[] traitIDs)
@@ -25,7 +33,7 @@ namespace Omnikeeper.Base.Model
                 return NoTraitsSelection.Instance;
             return new NamedTraitsSelection(traitIDs.ToHashSet());
         }
-        public static ITraitSelection Build(ISet<string> traitIDs)
+        public static ITraitSelection Build(IReadOnlySet<string> traitIDs)
         {
             if (traitIDs.IsEmpty())
                 return NoTraitsSelection.Instance;
@@ -33,7 +41,7 @@ namespace Omnikeeper.Base.Model
         }
 
         public bool Contains(string traitID) => TraitIDs.Contains(traitID);
-        public override int GetHashCode() => TraitIDs.GetHashCode();
+        public override int GetHashCode() => hashCode;
         public override bool Equals(object? obj) => Equals(obj as NamedTraitsSelection);
         public bool Equals(NamedTraitsSelection? other) => other != null && TraitIDs.SetEquals(other.TraitIDs);
 

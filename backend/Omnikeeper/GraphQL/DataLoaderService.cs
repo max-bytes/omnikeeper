@@ -26,26 +26,40 @@ namespace Omnikeeper.GraphQL
                 async (IEnumerable<(MergedCI ci, ITraitSelection traitSelection)> selections) =>
             {
                 var traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
-
                 var requestedTraits = TraitSelectionExtensions.UnionAll(selections.Select(t => t.traitSelection));
-
                 var finalTraits = traits.Where(t => requestedTraits.Contains(t.ID));
 
-                var cis = selections.Select(t => t.ci).ToList();
-                var ciMap = selections.ToDictionary(t => t.ci.ID); // TODO: fix bug for duplicate CIs -> use lookup instead of dictionary
+                // this results in a (nested) dictionary, that contains a dictionary of distinct CIs PER requested trait
+                var trait2CIDictionary = selections
+                    .SelectMany(t => traits.Where(trait => t.traitSelection.Contains(trait.ID)).Select(trait => (t.ci, trait.ID)))
+                    .GroupBy(t => t.ID)
+                    .ToDictionary(t => t.Key, t => t.GroupBy(tt => tt.ci.ID).Select(tt => tt.First().ci).ToDictionary(tt => tt.ID));
 
-                var tmp = new List<(Guid ciid, EffectiveTrait et)>(finalTraits.Count() * cis.Count);
+                // this results in a (nested) dictionary, that contains a dictionary of distinct trait selections PER requested trait
+                var trait2TraitSelectionDictionary = selections
+                    .SelectMany(t => traits.Where(trait => t.traitSelection.Contains(trait.ID)).Select(trait => (t.traitSelection, trait.ID)))
+                    .GroupBy(t => t.ID)
+                    .ToDictionary(t => t.Key, t => t.GroupBy(tt => tt.traitSelection.GetHashCode()).Select(tt => tt.First().traitSelection));
+
+                var tmp = new List<(MergedCI ci, ITraitSelection traitSelection, EffectiveTrait et)>();
                 foreach (var trait in finalTraits)
                 {
-                    var etsPerTrait = await traitModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, timeThreshold);
+                    var cis = trait2CIDictionary[trait.ID];
 
-                    foreach (var kv in etsPerTrait)
+                    var traitSelections = trait2TraitSelectionDictionary[trait.ID];
+                    var etsPerTrait = await traitModel.GetEffectiveTraitsForTrait(trait, cis.Values, layerSet, trans, timeThreshold);
+
+                    foreach (var traitSelection in traitSelections)
                     {
-                        tmp.Add((kv.Key, kv.Value));
+                        foreach (var kv in etsPerTrait)
+                        {
+                            var ci = cis[kv.Key];
+                            tmp.Add((ci, traitSelection, kv.Value));
+                        }
                     }
                 }
 
-                return tmp.ToLookup(kv => ciMap[kv.ciid], kv => kv.et, new MergedCIComparer());
+                return tmp.ToLookup(kv => (kv.ci, kv.traitSelection), kv => kv.et, new MergedCIComparer());
             });
             return loader.LoadAsync((ci, traitSelection));
         }
