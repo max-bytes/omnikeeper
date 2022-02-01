@@ -1,6 +1,6 @@
 {
-  "short_name": "Landscape omnikeeper",
-  "name": "Landscape omnikeeper",
+  "short_name": "omnikeeper",
+  "name": "omnikeeper",
   "icons": [
     {
       "src": "favicon.ico",
