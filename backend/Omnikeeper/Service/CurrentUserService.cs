@@ -75,34 +75,8 @@ namespace Omnikeeper.Service
 
         private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
         {
-            var httpUser = HttpUserUtils.CreateUserFromHttpContext(HttpContextAccessor.HttpContext!, configuration, logger);
-            var userInDatabase = await userModel.UpsertUser(httpUser.Username, httpUser.DisplayName, httpUser.UserID, httpUser.UserType, trans);
-
-            if (httpUser.ClientRoles.Contains("__ok_superuser"))
-            {
-                var suar = await PermissionUtils.GetSuperUserAuthRole(LayerModel, trans);
-                return new AuthenticatedUser(userInDatabase, new AuthRole[] { suar });
-            }
-            else
-            {
-                var metaConfiguration = await MetaConfigurationModel.GetConfigOrDefault(trans);
-
-                var allAuthRoles = await AuthRoleModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
-
-                var activeAuthRoles = new List<AuthRole>();
-                foreach (var role in httpUser.ClientRoles)
-                {
-                    if (allAuthRoles.TryGetValue(role, out var authRole))
-                    {
-                        activeAuthRoles.Add(authRole);
-                    }
-                }
-
-                // order auth roles of user by ID, so they are consistent
-                activeAuthRoles.Sort((a, b) => a.ID.CompareTo(b.ID));
-
-                return new AuthenticatedUser(userInDatabase, activeAuthRoles.ToArray());
-            }
+            var httpUser = HttpUserUtils.CreateUserFromClaims(HttpContextAccessor.HttpContext!.User.Claims, configuration.GetSection("Authentication")["Audience"], logger);
+            return await HttpUserUtils.CreateAuthenticationUserFromHTTPUser(httpUser, userModel, LayerModel, MetaConfigurationModel, AuthRoleModel, trans);
         }
     }
 
@@ -210,9 +184,45 @@ namespace Omnikeeper.Service
             return claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
         }
 
-        public static HttpUser CreateUserFromHttpContext(HttpContext httpContext, IConfiguration configuration, ILogger logger)
+        public static bool HasSuperUserClientRole(HttpUser httpUser)
         {
-            var claims = httpContext.User.Claims;
+            return httpUser.ClientRoles.Contains("__ok_superuser");
+        }
+
+        public static async Task<AuthenticatedUser> CreateAuthenticationUserFromHTTPUser(HttpUser httpUser, IUserInDatabaseModel userModel, ILayerModel LayerModel, 
+            IMetaConfigurationModel MetaConfigurationModel, GenericTraitEntityModel<AuthRole, string> AuthRoleModel, IModelContext trans)
+        {
+            var userInDatabase = await userModel.UpsertUser(httpUser.Username, httpUser.DisplayName, httpUser.UserID, httpUser.UserType, trans);
+
+            if (HasSuperUserClientRole(httpUser))
+            {
+                var suar = await PermissionUtils.GetSuperUserAuthRole(LayerModel, trans);
+                return new AuthenticatedUser(userInDatabase, new AuthRole[] { suar });
+            }
+            else
+            {
+                var metaConfiguration = await MetaConfigurationModel.GetConfigOrDefault(trans);
+
+                var allAuthRoles = await AuthRoleModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+
+                var activeAuthRoles = new List<AuthRole>();
+                foreach (var role in httpUser.ClientRoles)
+                {
+                    if (allAuthRoles.TryGetValue(role, out var authRole))
+                    {
+                        activeAuthRoles.Add(authRole);
+                    }
+                }
+
+                // order auth roles of user by ID, so they are consistent
+                activeAuthRoles.Sort((a, b) => a.ID.CompareTo(b.ID));
+
+                return new AuthenticatedUser(userInDatabase, activeAuthRoles.ToArray());
+            }
+        }
+
+        public static HttpUser CreateUserFromClaims(IEnumerable<Claim> claims, string audience, ILogger logger)
+        {
             var username = GetUsernameFromClaims(claims);
 
             if (username == null)
@@ -240,7 +250,7 @@ namespace Omnikeeper.Service
                 {
                     throw new Exception("Cannot parse roles in user token: Cannot parse resource_access JSON value");
                 }
-                var resourceName = configuration.GetSection("Authentication")["Audience"];
+                var resourceName = audience;
                 var claimRoles = resourceAccess[resourceName]?["roles"];
                 var clientRoles = new HashSet<string>();
                 if (claimRoles == null)

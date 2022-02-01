@@ -131,6 +131,11 @@
             See https://stackoverflow.com/questions/47828704/how-to-use-hangfire-when-using-mef-to-load-plugins for further explanation
             </summary>
         </member>
+        <member name="T:Omnikeeper.Startup.HangFireAuthorizationFilter">
+            <summary>
+            NOTE: this is a really nasty implementation, but hangfire does not provide any other way to do authorization for its dashboard
+            </summary>
+        </member>
         <member name="M:LandscapeRegistry.GridView.GridViewController.GetGridViewContexts">
             <summary>
             Returns a list of contexts for grid view.

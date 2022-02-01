@@ -32,7 +32,7 @@ namespace Omnikeeper.GraphQL
                 var finalTraits = traits.Where(t => requestedTraits.Contains(t.ID));
 
                 var cis = selections.Select(t => t.ci).ToList();
-                var ciMap = selections.ToDictionary(t => t.ci.ID);
+                var ciMap = selections.ToDictionary(t => t.ci.ID); // TODO: fix bug for duplicate CIs -> use lookup instead of dictionary
 
                 var tmp = new List<(Guid ciid, EffectiveTrait et)>(finalTraits.Count() * cis.Count);
                 foreach (var trait in finalTraits)

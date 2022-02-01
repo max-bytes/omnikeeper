@@ -60,6 +60,16 @@ namespace Omnikeeper.Startup
 
         public IConfiguration Configuration { get; }
 
+        private TokenValidationParameters BuildTokenValidationParameters()
+        {
+            return new TokenValidationParameters
+            { // TODO: is this needed? According to https://developer.okta.com/blog/2018/03/23/token-authentication-aspnetcore-complete-guide, this should work automatically
+                ValidateAudience = true,
+                ValidAudience = Configuration.GetSection("Authentication")["Audience"],
+                ValidateIssuer = Configuration.GetSection("Authentication").GetValue<bool>("ValidateIssuer")
+            };
+        }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -122,12 +132,7 @@ namespace Omnikeeper.Startup
             })
             .AddJwtBearer(options =>
             {
-                options.TokenValidationParameters = new TokenValidationParameters
-                { // TODO: is this needed? According to https://developer.okta.com/blog/2018/03/23/token-authentication-aspnetcore-complete-guide, this should work automatically
-                    ValidateAudience = true,
-                    ValidAudience = Configuration.GetSection("Authentication")["Audience"],
-                    ValidateIssuer = Configuration.GetSection("Authentication").GetValue<bool>("ValidateIssuer")
-                };
+                options.TokenValidationParameters = BuildTokenValidationParameters();
 
                 // NOTE: according to https://social.technet.microsoft.com/Forums/en-US/2f889c6f-b500-4ba6-bba0-a2a4fee1604f/cannot-authenticate-odata-feed-using-an-organizational-account
                 // windows applications want to receive an authorization_uri in the challenge response with an URI where the user can authenticate
@@ -322,7 +327,7 @@ namespace Omnikeeper.Startup
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime,
-            ILogger<Startup> logger, IEnumerable<IPluginRegistration> plugins)
+            ILogger<Startup> logger, IEnumerable<IPluginRegistration> plugins, IServiceProvider serviceProvider)
         {
             var version = VersionService.GetVersion();
             logger.LogInformation($"Running version: {version}");
@@ -432,24 +437,26 @@ namespace Omnikeeper.Startup
 
             // Configure hangfire to use the new JobActivator we defined.
             GlobalConfiguration.Configuration.UseAutofacActivator(app.ApplicationServices.GetAutofacRoot());
-            if (env.IsDevelopment() || env.IsStaging())
-            { // TODO: also use in production, but fix auth first
-                // workaround, see: https://github.com/HangfireIO/Hangfire/issues/1110
-                app.Use((context, next) =>
-                {
-                    if (context.Request.Path.StartsWithSegments("/hangfire"))
-                    {
-                        context.Request.PathBase = new PathString(context.Request.Headers["X-Forwarded-Prefix"]);
-                    }
-                    return next();
-                });
 
-                app.UseHangfireDashboard(options: new DashboardOptions()
+            // workaround, see: https://github.com/HangfireIO/Hangfire/issues/1110
+            app.Use((context, next) =>
+            {
+                if (context.Request.Path.StartsWithSegments("/hangfire"))
                 {
-                    AppPath = null,
-                    Authorization = new IDashboardAuthorizationFilter[] { new HangFireAuthorizationFilter() }
-                });
-            }
+                    context.Request.PathBase = new PathString(context.Request.Headers["X-Forwarded-Prefix"]);
+                }
+                return next();
+            });
+            app.UseHangfireDashboard(options: new DashboardOptions()
+            {
+                AppPath = null,
+                Authorization = new IDashboardAuthorizationFilter[] {
+                    new HangFireAuthorizationFilter(BuildTokenValidationParameters(),
+                    Configuration.GetSection("Authentication")["Authority"],
+                    Configuration.GetSection("Authentication")["Audience"],
+                    serviceProvider.GetRequiredService<ILogger<HangFireAuthorizationFilter>>())
+                }
+            });
 
             // plugins setup
             foreach (var plugin in plugins)
