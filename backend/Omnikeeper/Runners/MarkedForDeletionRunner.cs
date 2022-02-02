@@ -58,7 +58,7 @@ namespace Omnikeeper.Runners
 
                     var stopWatch = new Stopwatch();
                     stopWatch.Start();
-                    logger.LogInformation("Start");
+                    logger.LogTrace("Start");
 
                     // try to delete marked layers
                     var toDeleteLayers = await layerDataModel.GetLayerData(AnchorStateFilter.MarkedForDeletion, modelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
@@ -88,7 +88,7 @@ namespace Omnikeeper.Runners
                     stopWatch.Stop();
                     TimeSpan ts = stopWatch.Elapsed;
                     string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                    logger.LogInformation($"Finished in {elapsedTime}");
+                    logger.LogTrace($"Finished in {elapsedTime}");
                 }
                 finally
                 {

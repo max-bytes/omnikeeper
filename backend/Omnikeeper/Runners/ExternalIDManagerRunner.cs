@@ -132,7 +132,7 @@ namespace Omnikeeper.Runners
                 logger.LogError(e, $"An error occured when deleting unused persisted scopes");
             }
 
-            logger.LogInformation("Finished");
+            logger.LogTrace("Finished");
         }
     }
 }
