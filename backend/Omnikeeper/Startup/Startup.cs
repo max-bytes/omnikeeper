@@ -175,8 +175,8 @@ namespace Omnikeeper.Startup
             services.AddHangfireServer();
             services.AddHangfire(config =>
             {
-                // re-using main DB connection
-                var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
+                // using its own DB connection
+                var cs = Configuration.GetConnectionString("HangfireDatabaseConnection");
                 //config.UseMemoryStorage();
                 config.UsePostgreSqlStorage(cs);
                 config.UseFilter(new AutomaticRetryAttribute() { Attempts = 0 });
