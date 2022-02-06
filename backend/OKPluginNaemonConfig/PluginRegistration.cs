@@ -32,6 +32,6 @@ namespace OKPluginNaemonConfig
             
         }
 
-        //public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;
+        public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;
     }
 }

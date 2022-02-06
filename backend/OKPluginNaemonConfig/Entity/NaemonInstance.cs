@@ -1,4 +1,5 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Newtonsoft.Json.Linq;
+using Omnikeeper.Base.Entity;
 
 namespace OKPluginNaemonConfig.Entity
 {
@@ -12,6 +13,9 @@ namespace OKPluginNaemonConfig.Entity
 
         [TraitAttribute("name", "naemon_instance.name")]
         public readonly string Name;
+
+        [TraitAttribute("config", "config", optional: true)]
+        public readonly JObject Config;
         public NaemonInstance()
         {
             Id = "";
