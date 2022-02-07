@@ -33,10 +33,10 @@
     <PackageReference Include="GraphQL.DataLoader" Version="4.7.1" />
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="5.2.0" />
     <PackageReference Include="GraphQL.Server.Ui.Playground" Version="5.2.0" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.27" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.28" />
     <PackageReference Include="HangFire.Autofac" Version="2.3.1" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.7.0" />
-    <PackageReference Include="Hangfire.PostgreSql" Version="1.8.6" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.9.5" />
     <PackageReference Include="Karambolo.Extensions.Logging.File" Version="3.1.1" />
     <PackageReference Include="MediatR" Version="8.1.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="8.1.0" />
