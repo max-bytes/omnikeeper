@@ -17,7 +17,6 @@ import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
 import ManageGenerators from './ManageGenerators';
 import ManageCLConfigs from './ManageCLConfigs';
 import ManageRestartApplication from './ManageRestartApplication';
-import env from "@beam-australia/react-env";
 
 export default function Manage(props) {
     let { path, url } = useRouteMatch();
@@ -119,7 +118,6 @@ export default function Manage(props) {
                         <li><Link to={`${url}/version`}>Version</Link></li>
                         <li><Link to={`${url}/current-user`}>Current User Data</Link></li>
                         <li><Link to={`${url}/logs`}>Logs</Link></li>
-                        <li><a href={`${env('BACKEND_URL')}/hangfire?access_token=${localStorage.getItem('token')}`}>Hangfire Dashboard</a></li>
                     </ul>
 
                     <h3>Plugin Management</h3>

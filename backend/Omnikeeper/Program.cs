@@ -12,6 +12,7 @@ using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
+using Omnikeeper.Startup;
 using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
@@ -189,9 +190,8 @@ namespace Omnikeeper
                 {
                     builder.AddConfiguration(ctx.Configuration.GetSection("Logging"));
 
-                    builder.AddFile(ctx.Configuration.GetSection("Logging"));
+                    builder.AddFile(ctx.Configuration.GetSection("Logging").GetSection("File"));
 
-                    builder.AddProvider(new HangfireConsoleLoggerProvider());
                     builder.Services.AddSingleton<ILoggerProvider>(sp => new ReactiveLoggerProvider(sp.GetRequiredService<ReactiveLogReceiver>()));
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
@@ -204,7 +204,7 @@ namespace Omnikeeper
                 })
                 .ConfigureServices(services =>
                 {
-                    services.AddHostedService<Startup.HangfireJobStarter>();
+                    services.AddHostedService<QuartzJobStarter>();
                 });
 
         /// <summary>

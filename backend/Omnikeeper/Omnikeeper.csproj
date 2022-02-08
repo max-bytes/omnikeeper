@@ -28,16 +28,12 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac.Extras.DynamicProxy" Version="6.0.0" />
+    <PackageReference Include="Autofac.Extras.Quartz" Version="7.3.0" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="9.2.0" />
     <PackageReference Include="GraphQL.Authorization" Version="4.0.0" />
     <PackageReference Include="GraphQL.DataLoader" Version="4.7.1" />
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="5.2.0" />
     <PackageReference Include="GraphQL.Server.Ui.Playground" Version="5.2.0" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.28" />
-    <PackageReference Include="HangFire.Autofac" Version="2.3.1" />
-    <PackageReference Include="Hangfire.MemoryStorage" Version="1.7.0" />
-    <PackageReference Include="Hangfire.PostgreSql.Npgsql5" Version="1.9.5" />
-    <PackageReference Include="Karambolo.Extensions.Logging.File" Version="3.1.1" />
     <PackageReference Include="MediatR" Version="8.1.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="8.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.12" />
@@ -50,7 +46,9 @@
     <PackageReference Include="NetCore.AutoRegisterDi" Version="1.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NuGet.Frameworks" Version="6.0.0" />
-	<PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
+    <PackageReference Include="Quartz.AspNetCore" Version="3.3.3" />
+    <PackageReference Include="Quartz.Serialization.Json" Version="3.3.3" />
+    <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
 	<PackageReference Include="SpanJson.AspNetCore.Formatter" Version="3.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.1.2" />

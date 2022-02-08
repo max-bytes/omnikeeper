@@ -1,13 +1,8 @@
 using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using FluentValidation.AspNetCore;
 using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
-using Hangfire;
-using Hangfire.Console;
-using Hangfire.Dashboard;
-using Hangfire.PostgreSql;
 using MediatR;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
@@ -172,17 +167,6 @@ namespace Omnikeeper.Startup
                 //policy.RequireClaim("member_of", "[accounting]"));
             });
 
-            services.AddHangfireServer();
-            services.AddHangfire(config =>
-            {
-                // using its own DB connection
-                var cs = Configuration.GetConnectionString("HangfireDatabaseConnection");
-                //config.UseMemoryStorage();
-                config.UsePostgreSqlStorage(cs);
-                config.UseFilter(new AutomaticRetryAttribute() { Attempts = 0 });
-                config.UseConsole(); //TODO
-            });
-
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Landscape omnikeeper REST API", Version = "v1" });
@@ -304,14 +288,16 @@ namespace Omnikeeper.Startup
         {
             ServiceRegistration.RegisterLogging(builder);
 
-            var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
-            ServiceRegistration.RegisterDB(builder, cs, false);
+            var csOmnikeeper = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
+            ServiceRegistration.RegisterDB(builder, csOmnikeeper, false);
 
             ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching: true, true, true, true);
 
             ServiceRegistration.RegisterGraphQL(builder);
             ServiceRegistration.RegisterOIABase(builder);
             ServiceRegistration.RegisterServices(builder);
+            var csQuartz = Configuration.GetConnectionString("QuartzDatabaseConnection");
+            ServiceRegistration.RegisterQuartz(builder, csQuartz);
 
             // plugins
             var pluginFolder = Path.Combine(Directory.GetCurrentDirectory(), "OKPlugins");
@@ -433,24 +419,6 @@ namespace Omnikeeper.Startup
             {
                 c.SwaggerEndpoint($"{Configuration["BaseURL"]}/swagger/v1/swagger.json", "Landscape omnikeeper REST API V1");
                 c.OAuthClientId("landscape-omnikeeper"); // TODO: make configurable?
-            });
-
-            // Configure hangfire to use the new JobActivator we defined.
-            GlobalConfiguration.Configuration.UseAutofacActivator(app.ApplicationServices.GetAutofacRoot());
-
-            // hangfire dashboard
-            // in development environment, we do not use a auth filter, otherwise, we do
-            var hangfireDashboardAuthFilter = new IDashboardAuthorizationFilter[] { };
-            if (!env.IsDevelopment())
-                hangfireDashboardAuthFilter = new IDashboardAuthorizationFilter[] { new HangFireAuthorizationFilter(BuildTokenValidationParameters(),
-                    Configuration.GetSection("Authentication")["Authority"],
-                    Configuration.GetSection("Authentication")["Audience"],
-                    serviceProvider.GetRequiredService<ILogger<HangFireAuthorizationFilter>>())
-                };
-            app.UseHangfireDashboard(options: new DashboardOptions()
-            {
-                AppPath = null,
-                Authorization = hangfireDashboardAuthFilter
             });
 
             // plugins setup

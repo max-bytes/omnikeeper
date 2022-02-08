@@ -1,32 +1,30 @@
-﻿using Hangfire;
-using Hangfire.Server;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Quartz;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.Runners
 {
-    public class UsageDataWriteRunner
+    [DisallowConcurrentExecution]
+    public class UsageDataWriterJob : IJob
     {
         private readonly IUsageDataAccumulator usageDataAccumulator;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly ILogger<UsageDataWriteRunner> logger;
+        private readonly ILogger<UsageDataWriterJob> logger;
 
-        public UsageDataWriteRunner(IUsageDataAccumulator usageDataAccumulator, IModelContextBuilder modelContextBuilder, ILogger<UsageDataWriteRunner> logger)
+        public UsageDataWriterJob(IUsageDataAccumulator usageDataAccumulator, IModelContextBuilder modelContextBuilder, ILogger<UsageDataWriterJob> logger)
         {
             this.usageDataAccumulator = usageDataAccumulator;
             this.modelContextBuilder = modelContextBuilder;
             this.logger = logger;
         }
 
-        [MaximumConcurrentExecutions(1, timeoutInSeconds: 120)]
-        [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
-        public void Run(PerformContext? context)
+        public async Task Execute(IJobExecutionContext context)
         {
-            using (HangfireConsoleLogger.InContext(context))
+            try
             {
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
@@ -49,6 +47,10 @@ namespace Omnikeeper.Runners
                 TimeSpan ts = stopWatch.Elapsed;
                 string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
                 logger.LogTrace($"Finished in {elapsedTime}");
+            }
+            catch (Exception e)
+            {
+                logger.LogError("Error running usage-data-writer job", e);
             }
         }
     }

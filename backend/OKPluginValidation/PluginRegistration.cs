@@ -1,5 +1,4 @@
-﻿using Hangfire;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using OKPluginValidation.Validation;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model.TraitBased;
@@ -16,7 +15,7 @@ namespace OKPluginValidation
             sc.AddSingleton<GenericTraitEntityModel<ValidationIssue, string>>();
             sc.AddSingleton<GenericTraitEntityModel<Validation.Validation, string>>();
             sc.AddScoped<IValidationEngine, ValidationEngine>();
-            sc.AddScoped<ValidationEngineRunner>();
+            //sc.AddScoped<ValidationEngineRunner>();
 
             sc.AddSingleton<IValidationRule, ValidationRuleNamedCI>();
             sc.AddSingleton<IValidationRule, ValidationRuleAnyOfTraits>();
@@ -27,9 +26,10 @@ namespace OKPluginValidation
             GenericTraitEntityHelper.Class2RecursiveTrait<ValidationIssue>(),
         };
 
-        public override void RegisterHangfireJobRunners()
-        {
-            RecurringJob.AddOrUpdate<ValidationEngineRunner>(s => s.Run(null), ValidationEngineRunner.CronExpression);
-        }
+        // TODO: rework to work with quartz
+        //public override void RegisterHangfireJobRunners()
+        //{
+        //    RecurringJob.AddOrUpdate<ValidationEngineRunner>(s => s.Run(null), ValidationEngineRunner.CronExpression);
+        //}
     }
 }
