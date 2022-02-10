@@ -30,8 +30,6 @@ namespace Omnikeeper
             var version = VersionService.GetVersion();
             Console.WriteLine($"Running version: {version}");
 
-            AddAssemblyResolver();
-
             var host = CreateHostBuilder(args)
                 .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                 .Build();
@@ -206,24 +204,5 @@ namespace Omnikeeper
                 {
                     services.AddHostedService<QuartzJobStarter>();
                 });
-
-        /// <summary>
-        /// NOTE: this method hooks into assembly resolving and provides hangfire with already loaded assemblies
-        /// this is required so that hangfire jobs can be loaded via plugins.
-        /// See https://stackoverflow.com/questions/47828704/how-to-use-hangfire-when-using-mef-to-load-plugins for further explanation
-        /// </summary>
-        private static void AddAssemblyResolver()
-        {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-            {
-                var asmName = new AssemblyName(args.Name!);
-                var existing = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(c => c.FullName == asmName.FullName);
-                if (existing != null)
-                {
-                    return existing;
-                }
-                return null;
-            };
-        }
     }
 }
