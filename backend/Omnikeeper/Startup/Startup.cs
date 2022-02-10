@@ -239,9 +239,6 @@ namespace Omnikeeper.Startup
             // see https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/wiki/PII
             IdentityModelEventSource.ShowPII = Configuration.GetValue<bool>("ShowPII");
 
-            //services.AddMemoryCache();
-            //services.AddDistributedMemoryCache();
-
             // HACK: needed by odata, see: https://github.com/OData/WebApi/issues/2024
             services.AddMvcCore(options =>
             {

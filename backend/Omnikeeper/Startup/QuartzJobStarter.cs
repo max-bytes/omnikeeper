@@ -41,12 +41,14 @@ namespace Omnikeeper.Startup
                 LogProvider.SetCurrentLogProvider(new QuartzLogProvider(lf));
                 var scheduler = scope.ServiceProvider.GetRequiredService<IScheduler>();
 
+                bool deleteOnly = false; // TODO: only set to true for debugging purposes
+
                 // schedule internal recurring jobs
-                await ScheduleJob<CLBJob>(scheduler, "CLB", config.CLBRunnerInterval, logger);
-                await ScheduleJob<MarkedForDeletionJob>(scheduler, "MarkedForDeletion", config.MarkedForDeletionRunnerInterval, logger);
-                await ScheduleJob<ExternalIDManagerJob>(scheduler, "ExternalIDManager", config.ExternalIDManagerRunnerInterval, logger);
-                await ScheduleJob<ArchiveOldDataJob>(scheduler, "ArchiveOldData", config.ArchiveOldDataRunnerInterval, logger);
-                await ScheduleJob<UsageDataWriterJob>(scheduler, "UsageDataWriter", "0 * * * * ?", logger);
+                await ScheduleJob<CLBJob>(scheduler, "CLB", config.CLBRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<MarkedForDeletionJob>(scheduler, "MarkedForDeletion", config.MarkedForDeletionRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<ExternalIDManagerJob>(scheduler, "ExternalIDManager", config.ExternalIDManagerRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<ArchiveOldDataJob>(scheduler, "ArchiveOldData", config.ArchiveOldDataRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<UsageDataWriterJob>(scheduler, "UsageDataWriter", "0 * * * * ?", logger, deleteOnly);
 
                 await scheduler.Start();
 
@@ -61,7 +63,7 @@ namespace Omnikeeper.Startup
             }
         }
 
-        private async Task ScheduleJob<J>(IScheduler scheduler, string name, string cronSchedule, ILogger logger) where J : IJob
+        private async Task ScheduleJob<J>(IScheduler scheduler, string name, string cronSchedule, ILogger logger, bool deleteOnly) where J : IJob
         {
             IJobDetail job = JobBuilder.Create<J>().WithIdentity(name, "omnikeeper").Build();
 
@@ -70,6 +72,8 @@ namespace Omnikeeper.Startup
             {
                 await scheduler.DeleteJob(job.Key);
             }
+
+            if (deleteOnly) return;
 
             try
             {

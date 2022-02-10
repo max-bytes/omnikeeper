@@ -28,12 +28,20 @@ namespace Omnikeeper.Service
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
         }
 
-        public Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
+        public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
             var scope = scopedLifetimeAccessor.GetLifetimeScope();
             if (scope == null)
                 throw new Exception("Cannot get current user: not in proper scope");
-            return scope.Resolve<ICurrentUserService>().GetCurrentUser(trans);
+            return await scope.Resolve<ICurrentUserService>().GetCurrentUser(trans);
+        }
+
+        public string GetCurrentUsername()
+        {
+            var scope = scopedLifetimeAccessor.GetLifetimeScope();
+            if (scope == null)
+                throw new Exception("Cannot get current username: not in proper scope");
+            return scope.Resolve<ICurrentUserService>().GetCurrentUsername();
         }
     }
 
@@ -58,6 +66,7 @@ namespace Omnikeeper.Service
         private readonly ILogger<CurrentAuthorizedHttpUserService> logger;
 
         private AuthenticatedUser? cached = null;
+        private readonly SemaphoreLocker cachedLock = new SemaphoreLocker();
 
         private GenericTraitEntityModel<AuthRole, string> AuthRoleModel { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
@@ -66,11 +75,20 @@ namespace Omnikeeper.Service
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
-            if (cached == null)
+            return await cachedLock.LockAsync(async () =>
             {
-                cached = await _GetCurrentUser(trans);
-            }
-            return cached;
+                if (cached == null)
+                {
+                    cached = await _GetCurrentUser(trans);
+                }
+                return cached;
+            });
+        }
+
+        public string GetCurrentUsername()
+        {
+            var httpUser = HttpUserUtils.CreateUserFromClaims(HttpContextAccessor.HttpContext!.User.Claims, configuration.GetSection("Authentication")["Audience"], logger);
+            return httpUser.Username;
         }
 
         private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
@@ -95,14 +113,23 @@ namespace Omnikeeper.Service
         private readonly IUserInDatabaseModel userModel;
 
         private AuthenticatedUser? cached = null;
+        private readonly SemaphoreLocker cachedLock = new SemaphoreLocker();
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
-            if (cached == null)
+            return await cachedLock.LockAsync(async () =>
             {
-                cached = await _GetCurrentUser(trans);
-            }
-            return cached;
+                if (cached == null)
+                {
+                    cached = await _GetCurrentUser(trans);
+                }
+                return cached;
+            });
+        }
+
+        public string GetCurrentUsername()
+        {
+            return $"__cl.{clbContext.Brain.Name}"; // make username the same as CLB name
         }
 
         private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
@@ -111,7 +138,7 @@ namespace Omnikeeper.Service
             var suar = await PermissionUtils.GetSuperUserAuthRole(layerModel, trans);
 
             // upsert user
-            var username = $"__cl.{clbContext.Brain.Name}"; // make username the same as CLB name
+            var username = GetCurrentUsername();
             var displayName = username;
             // generate a unique but deterministic GUID from the clb Name
             var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
@@ -134,14 +161,23 @@ namespace Omnikeeper.Service
         private readonly IUserInDatabaseModel userModel;
 
         private AuthenticatedUser? cached = null;
+        private readonly SemaphoreLocker cachedLock = new SemaphoreLocker();
+
+        public string GetCurrentUsername()
+        {
+            return $"__marked_for_deletion";
+        }
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
-            if (cached == null)
+            return await cachedLock.LockAsync(async () =>
             {
-                cached = await _GetCurrentUser(trans);
-            }
-            return cached;
+                if (cached == null)
+                {
+                    cached = await _GetCurrentUser(trans);
+                }
+                return cached;
+            });
         }
 
         private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
@@ -150,7 +186,7 @@ namespace Omnikeeper.Service
             var suar = await PermissionUtils.GetSuperUserAuthRole(layerModel, trans);
 
             // upsert user
-            var username = $"__marked_for_deletion";
+            var username = GetCurrentUsername();
             var displayName = username;
             var userGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2");
             var user = await userModel.UpsertUser(username, displayName, userGuid, UserType.Robot, trans);
