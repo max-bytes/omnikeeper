@@ -51,13 +51,15 @@ namespace Omnikeeper.Base.CLB
             if (lastRun == null)
             {
                 return false;
-            } else
+            }
+            else
             {
                 var dependentLayerIDs = GetDependentLayerIDs(config, logger);
                 if (dependentLayerIDs == null)
                 {
                     return false;
-                } else
+                }
+                else
                 {
                     using var trans = modelContextBuilder.BuildImmediate();
                     foreach (var dependentLayerID in dependentLayerIDs)

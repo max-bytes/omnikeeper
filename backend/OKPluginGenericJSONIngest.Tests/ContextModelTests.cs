@@ -2,19 +2,17 @@
 using Autofac.Extensions.DependencyInjection;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Extract;
 using OKPluginGenericJSONIngest.Load;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Entity.AttributeValues;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tests.Integration.Model;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace OKPluginGenericJSONIngest
 {

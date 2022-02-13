@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Omnikeeper.Base.Entity
+﻿namespace Omnikeeper.Base.Entity
 {
     public class AuthenticatedUser
     {

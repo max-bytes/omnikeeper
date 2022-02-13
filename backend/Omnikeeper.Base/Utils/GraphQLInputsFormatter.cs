@@ -2,7 +2,6 @@
 using SpanJson.Formatters.Dynamic;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Omnikeeper.Base.Utils
 {
@@ -72,7 +71,7 @@ namespace Omnikeeper.Base.Utils
                     if (dynamicNumber.TryConvert(typeof(int), out var i))
                     {
                         return i;
-                    } 
+                    }
                     else if (dynamicNumber.TryConvert(typeof(float), out var f))
                     {
                         return f;
@@ -80,7 +79,8 @@ namespace Omnikeeper.Base.Utils
                     else if (dynamicNumber.TryConvert(typeof(double), out var d))
                     {
                         return d;
-                    } else
+                    }
+                    else
                     {
                         throw new NotImplementedException();
                     }

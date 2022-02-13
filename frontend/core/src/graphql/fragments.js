@@ -90,9 +90,9 @@ export const Fragments = {
           toCIName
           predicateID
           changesetID
+          mask
         }
         layerStackIDs
-        layerID
         layerStack {
             id
             description
@@ -109,9 +109,9 @@ export const Fragments = {
         fromCIName
         predicateID
         changesetID
+        mask
       }
       layerStackIDs
-      layerID
       layerStack {
           id
           description
@@ -133,7 +133,6 @@ export const Fragments = {
     id,
     requiredAttributes,
     optionalAttributes,
-    requiredRelations,
     optionalRelations,
     requiredTraits
   }

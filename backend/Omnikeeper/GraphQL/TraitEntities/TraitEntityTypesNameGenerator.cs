@@ -16,7 +16,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             if (tmp.StartsWith("__"))
                 tmp = "m" + tmp; // graphql does not support types starting with __, so we prefix it with an "m" (for meta)
 
-            if (Regex.IsMatch(tmp, "[0-9]"))
+            if (Regex.IsMatch(tmp, "^[0-9]"))
                 tmp = "m" + tmp; // graphql does not support types starting with a digit, so we prefix it with an "m" (for meta)
 
             return tmp;

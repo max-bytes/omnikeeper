@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace Omnikeeper.Base.Service
 {
@@ -33,7 +32,8 @@ namespace Omnikeeper.Base.Service
             {
                 var ls = httpContextAccessor.HttpContext.RequestServices.GetRequiredService<ILifetimeScope>();
                 return ls;
-            } else
+            }
+            else
             {
                 return null;
             }

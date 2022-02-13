@@ -2,11 +2,13 @@
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -17,6 +19,7 @@ using Omnikeeper.Service;
 using Omnikeeper.Startup;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Tests.Integration
 {
@@ -33,6 +36,8 @@ namespace Tests.Integration
             currentUserServiceMock = new Mock<ICurrentUserAccessor>();
         }
 
+        protected DIServicedTestBase() : this(false) { }
+
         [SetUp]
         public override void Setup()
         {
@@ -42,10 +47,6 @@ namespace Tests.Integration
             InitServices(builder);
             var container = builder.Build();
             serviceProvider = new AutofacServiceProvider(container);
-
-            //var services = new ServiceCollection();
-            //InitServices(services);
-            //serviceProvider = services.BuildServiceProvider();
         }
 
         [TearDown]
@@ -57,7 +58,23 @@ namespace Tests.Integration
                 serviceProvider.Dispose();
         }
 
+        protected async Task<UserInDatabase> SetupDefaultUser()
+        {
+            var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
+            var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
+            return user;
+        }
+
+        protected async Task<ChangesetProxy> CreateChangesetProxy() => await CreateChangesetProxy(TimeThreshold.BuildLatest());
+        protected async Task<ChangesetProxy> CreateChangesetProxy(TimeThreshold timeThreshold)
+        {
+            var changesetModel = ServiceProvider.GetRequiredService<IChangesetModel>();
+            return new ChangesetProxy(await SetupDefaultUser(), timeThreshold, changesetModel);
+        }
+
         protected IServiceProvider ServiceProvider => serviceProvider!;
+
+        protected T GetService<T>() where T : notnull => ServiceProvider.GetRequiredService<T>();
 
         protected virtual void InitServices(ContainerBuilder builder)
         {
@@ -68,7 +85,6 @@ namespace Tests.Integration
             ServiceRegistration.RegisterServices(builder);
             ServiceRegistration.RegisterGraphQL(builder);
 
-            // TODO: add generic?
             builder.Register<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance).SingleInstance();
             builder.Register<ILogger<MetaConfigurationModel>>((sp) => NullLogger<MetaConfigurationModel>.Instance).SingleInstance();
             builder.Register<ILogger<OIAContextModel>>((sp) => NullLogger<OIAContextModel>.Instance).SingleInstance();

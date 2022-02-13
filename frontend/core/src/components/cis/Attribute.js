@@ -45,7 +45,7 @@ function Attribute(props) {
     <div className={"pr-1"} style={{
       whiteSpace: 'nowrap', flexGrow: 1, textAlign: 'right', paddingRight: '10px', 
       textOverflow: 'ellipsis', overflow: 'hidden', direction: 'rtl'}}>
-      {removed ? <Text delete>{attribute.name}</Text> : attribute.name}
+      <bdi>{removed ? <Text delete>{attribute.name}</Text> : attribute.name}</bdi>
     </div>
   </div>;
 

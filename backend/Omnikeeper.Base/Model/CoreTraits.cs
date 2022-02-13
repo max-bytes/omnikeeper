@@ -1,14 +1,10 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Generator;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Base.Model
 {
@@ -20,7 +16,7 @@ namespace Omnikeeper.Base.Model
             )
         });
 
-        public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { 
+        public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() {
             Named,
             GenericTraitEntityHelper.Class2RecursiveTrait<BaseConfigurationV2>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<RecursiveTrait>(),
@@ -42,7 +38,7 @@ namespace Omnikeeper.Base.Model
 
         public TraitOriginV1 Origin => new TraitOriginV1(TraitOriginType.Core);
 
-        public IImmutableList<TraitAttribute> RequiredAttributes { get => ImmutableList<TraitAttribute>.Empty;  }
+        public IImmutableList<TraitAttribute> RequiredAttributes { get => ImmutableList<TraitAttribute>.Empty; }
         public IImmutableList<TraitAttribute> OptionalAttributes { get => ImmutableList<TraitAttribute>.Empty; }
         public IImmutableList<TraitRelation> RequiredRelations { get => ImmutableList<TraitRelation>.Empty; }
         public IImmutableList<TraitRelation> OptionalRelations { get => ImmutableList<TraitRelation>.Empty; }

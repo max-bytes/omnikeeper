@@ -40,9 +40,9 @@ namespace Omnikeeper.Model.Decorators
                 async (onlineLayerIDs) =>
                 {
                     var onlineResults = await onlineAccessProxy.GetAttributes(selection, onlineLayerIDs, trans, atTime, attributeSelection);
-                    
+
                     var ret = new IDictionary<Guid, IDictionary<string, CIAttribute>>[onlineLayerIDs.Length];
-                    for(int i = 0;i < onlineResults.Length;i++)
+                    for (int i = 0; i < onlineResults.Length; i++)
                     {
                         var layerID = onlineLayerIDs[i];
                         var tmp2 = (IDictionary<Guid, IDictionary<string, CIAttribute>>)onlineResults[i].GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
@@ -113,9 +113,10 @@ namespace Omnikeeper.Model.Decorators
             return await model.RemoveAttribute(name, ciid, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes)> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans)
+        public async Task<(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes)>
+            PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            return await model.PrepareForBulkUpdate(data, trans);
+            return await model.PrepareForBulkUpdate(data, trans, maskHandlingForRemoval);
         }
 
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes, string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)

@@ -3,11 +3,11 @@ using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Tests.Integration.Model
 {
@@ -37,7 +37,7 @@ namespace Tests.Integration.Model
         public async Task TestGenericOperations()
         {
             await TestGenericModelOperations(
-                () => new GeneratorV1("generator1", "attribute name 1",  "template string 1"),
+                () => new GeneratorV1("generator1", "attribute name 1", "template string 1"),
                 () => new GeneratorV1("generator2", "attribute name 2", "template string 2"),
                 "generator1", "generator2", "non_existant"
                 );

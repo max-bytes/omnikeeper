@@ -43,7 +43,6 @@ export const queries = {
                 ancestorTraits
                 requiredAttributes
                 optionalAttributes
-                requiredRelations
                 optionalRelations
             }
         }
@@ -172,6 +171,7 @@ export const queries = {
                     toCIName
                     predicateID
                     changesetID
+                    mask
                 }
                 removedRelations {
                     id
@@ -181,6 +181,7 @@ export const queries = {
                     toCIName
                     predicateID
                     changesetID
+                    mask
                 }
             }
         }
@@ -191,14 +192,6 @@ export const queries = {
             selectedTimeThreshold @client
           }
       `,
-    LayerSettings: gql`
-    query {
-        layerSettings {
-            layerID @client
-            sortOffset @client
-            visible @client
-        }
-    }`,
     Statistics: gql`
         query {
             statistics {

@@ -88,7 +88,7 @@ namespace Omnikeeper.GraphQL
 
         private void CreateMain()
         {
-            FieldAsync<ListGraphType<StringGraphType>>("ciids",
+            FieldAsync<ListGraphType<GuidGraphType>>("ciids",
                 resolve: async context =>
                 {
                     var userContext = context.SetupUserContext()
@@ -206,7 +206,7 @@ namespace Omnikeeper.GraphQL
                         workCIs = workCIs.Where(ci => nonEmptyCIIDs.Contains(ci.ID));
                     }
 
-                    var cisFilteredByTraits = await effectiveTraitModel.FilterMergedCIsByTraits(workCIs, requiredTraitsCopy, requiredNonTraitsCopy, layerSet, userContext.Transaction, timeThreshold);
+                    var cisFilteredByTraits = effectiveTraitModel.FilterMergedCIsByTraits(workCIs, requiredTraitsCopy, requiredNonTraitsCopy, layerSet, userContext.Transaction, timeThreshold);
 
                     // reduce CIs to those that are allowed
                     if (!preAuthzCheckedCIs)
@@ -248,15 +248,15 @@ namespace Omnikeeper.GraphQL
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', leftLayers.LayerIDs)}");
                     if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, rightLayers))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', rightLayers.LayerIDs)}");
-                    
+
                     var leftTimeThresholdDTO = context.GetArgument<DateTimeOffset?>($"leftTimeThreshold");
                     var leftTimeThreshold = (!leftTimeThresholdDTO.HasValue) ? TimeThreshold.BuildLatest() : TimeThreshold.BuildAtTime(leftTimeThresholdDTO.Value);
                     var rightTimeThresholdDTO = context.GetArgument<DateTimeOffset?>($"rightTimeThreshold");
                     var rightTimeThreshold = (!rightTimeThresholdDTO.HasValue) ? TimeThreshold.BuildLatest() : TimeThreshold.BuildAtTime(rightTimeThresholdDTO.Value);
-                    
+
                     var leftCIIDs = context.GetArgument<Guid[]?>($"leftCIIDs", null);
                     var rightCIIDs = context.GetArgument<Guid[]?>($"rightCIIDs", null);
-                    
+
                     var leftAttributes = context.GetArgument<string[]?>($"leftAttributes", null);
                     var rightAttributes = context.GetArgument<string[]?>($"rightAttributes", null);
                     IAttributeSelection leftAttributeSelection = AllAttributeSelection.Instance;
@@ -271,7 +271,7 @@ namespace Omnikeeper.GraphQL
 
                     // if it's allowed AND there's one CI on each side AND the CIs are different, switch to "crossCIDiffing"
                     var allowCrossCIDiffing = context.GetArgument<bool?>($"allowCrossCIDiffing").GetValueOrDefault(true);
-                    var crossCIDiffingSettings = (allowCrossCIDiffing && leftCIIDs?.Length == 1 && rightCIIDs?.Length == 1 && leftCIIDs[0] != rightCIIDs[0]) ? 
+                    var crossCIDiffingSettings = (allowCrossCIDiffing && leftCIIDs?.Length == 1 && rightCIIDs?.Length == 1 && leftCIIDs[0] != rightCIIDs[0]) ?
                         new CrossCIDiffingSettings(leftCIIDs[0], rightCIIDs[0]) :
                         null;
 
@@ -500,7 +500,7 @@ namespace Omnikeeper.GraphQL
 
         private void CreatePlugin(IEnumerable<IPluginRegistration> plugins)
         {
-            foreach(var plugin in plugins)
+            foreach (var plugin in plugins)
             {
                 plugin.RegisterGraphqlQueries(this);
             }

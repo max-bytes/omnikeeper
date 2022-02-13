@@ -5,7 +5,6 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -30,28 +29,23 @@ namespace Omnikeeper.Model.Decorators
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
         }
 
-        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
             TrackLayerUsage(data.LayerID);
-            return await model.BulkReplaceRelations(data, changesetProxy, origin, trans);
+            return await model.BulkReplaceRelations(data, changesetProxy, origin, trans, maskHandling);
         }
 
-        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
-            TrackLayerUsage(layerID);
-            return await model.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
+            foreach(var layerID in layerIDs)
+                TrackLayerUsage(layerID);
+            return await model.GetRelations(rl, layerIDs, trans, atTime);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, bool mask, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             TrackLayerUsage(layerID);
-            return await model.GetRelations(rl, layerID, trans, atTime);
-        }
-
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            TrackLayerUsage(layerID);
-            return await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
+            return await model.InsertRelation(fromCIID, toCIID, predicateID, mask, layerID, changesetProxy, origin, trans);
         }
 
         public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)

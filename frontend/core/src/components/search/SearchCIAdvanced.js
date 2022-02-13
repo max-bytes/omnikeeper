@@ -9,7 +9,7 @@ import queryString from 'query-string';
 import { Spin, Form, Input, Button } from 'antd';
 import { useLocation } from 'react-router-dom'
 import _ from 'lodash';
-import { SearchOutlined, LoadingOutlined } from '@ant-design/icons';
+import { SearchOutlined } from '@ant-design/icons';
 
 function SearchCIAdvanced(props) {
     let urlParams = parseURLQuery(useLocation().search);
@@ -99,7 +99,7 @@ function SearchCIAdvanced(props) {
                             />
                         </Form.Item>
                     </div>
-                    <div style={{marginBottom: "10px", display: "flex", overflowY: "scroll"}}>
+                    <div style={{marginBottom: "10px", display: "flex", overflow: "hidden"}}>
                         {activeTraits && 
                             <TraitList traitList={activeTraits.activeTraits} 
                             checked={checkedTraits} setChecked={setCheckedTraits}
@@ -161,8 +161,8 @@ const styles = {
         flexDirection: "column",
         padding: "10px",
         overflowY: "hidden",
-        width: "30%",
-        minWidth: "300px",
+        minWidth: "250px",
+        maxWidth: "500px",
     },
     searchField: {
         width: "100%",

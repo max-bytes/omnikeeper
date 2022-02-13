@@ -100,6 +100,9 @@ namespace Omnikeeper.GraphQL
                         }
                     }
 
+                    // TODO: mask handling
+                    var maskHandlingForRemoval = MaskHandlingForRemovalApplyNoMask.Instance;
+
                     var groupedRemoveAttributes = removeAttributes.GroupBy(a => a.CI);
                     var removedAttributes = new List<CIAttribute>();
                     foreach (var attributeGroup in groupedRemoveAttributes)
@@ -109,7 +112,7 @@ namespace Omnikeeper.GraphQL
                         foreach (var attribute in attributeGroup)
                         {
                             // TODO: mask handling
-                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, maskHandlingForRemoval);
                             removedAttributes.Add(a);
                         }
                     }
@@ -117,14 +120,14 @@ namespace Omnikeeper.GraphQL
                     var insertedRelations = new List<Relation>();
                     foreach (var insertRelation in insertRelations)
                     {
-                        var (r, changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                        var (r, changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.Mask, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                         insertedRelations.Add(r);
                     }
 
                     var removedRelations = new List<Relation>();
                     foreach (var removeRelation in removeRelations)
                     {
-                        var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                        var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, maskHandlingForRemoval);
                         removedRelations.Add(r);
 
                         // TODO: support for masking of relations

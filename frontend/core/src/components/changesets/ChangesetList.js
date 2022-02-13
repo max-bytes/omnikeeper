@@ -11,6 +11,7 @@ import moment from 'moment';
 import { useExplorerLayers } from "../../utils/layers";
 import { SyncOutlined } from '@ant-design/icons';
 import { ChangesetID } from "utils/uuidRenderers";
+import Text from "antd/lib/typography/Text";
 
 const { RangePicker } = DatePicker;
 
@@ -147,6 +148,9 @@ export default function ChangesetList(props) {
                                 'This Month': [moment().startOf('month'), moment().endOf('month')],
                             }}
                             />
+                    </div>
+                    <div style={styles.filterColumnEntry}>
+                        <Text>Note: only changesets from visible layers will be shown. Make sure to mark the desired layers as visible in the layer side-bar.</Text>
                     </div>
                     <div style={styles.filterColumnEntry}>
                         <Row>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import './App.css';
 import Explorer from './components/cis/Explorer';
 import Diffing from './components/diffing/Diffing';
-import 'antd/dist/antd.css';
+import 'antd/dist/antd.min.css';
 import Keycloak from 'keycloak-js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faList, faLayerGroup, faPlayCircle } from '@fortawesome/free-solid-svg-icons';

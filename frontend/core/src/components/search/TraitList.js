@@ -95,16 +95,14 @@ function TraitList(props) {
                             <FontAwesomeIcon icon={icon} style={{ marginRight: "0.5rem" }}/>
                         </span>
                         <span style={styles.traitsID}>
-                            <TraitID id={effectiveTrait.id} link={true} />
+                            <bdi><TraitID id={effectiveTrait.id} link={true} /></bdi>
                         </span>
-                        <span>
-                                <Radio.Group buttonStyle="solid" size="small"
-                                    onChange={(e) => onChange(effectiveTrait, e.target.value)} value={checked[effectiveTrait.id]?.toString()}>
-                                    <Radio.Button value="-1">No</Radio.Button>
-                                    <Radio.Button value="0">May</Radio.Button>
-                                    <Radio.Button value="1">Yes</Radio.Button>
-                                </Radio.Group>
-                        </span>
+                        <Radio.Group buttonStyle="solid" size="small" style={{display: 'flex'}}
+                            onChange={(e) => onChange(effectiveTrait, e.target.value)} value={checked[effectiveTrait.id]?.toString()}>
+                            <Radio.Button value="-1">No</Radio.Button>
+                            <Radio.Button value="0">May</Radio.Button>
+                            <Radio.Button value="1">Yes</Radio.Button>
+                        </Radio.Group>
                     </div>
                 );
             })}
@@ -116,7 +114,10 @@ export default TraitList;
 
 const styles = {
     container: {
-        display: "flex"
+        display: "flex",
+        overflowX: "hidden",
+        overflowY: "scroll",
+        paddingRight: "10px",
     },
     title: {
         flexGrow: "1",
@@ -127,6 +128,12 @@ const styles = {
         display: "flex" 
     },
     traitsID: {
-        flexGrow: 1
+        flexGrow: 1,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        direction: "rtl",
+        textAlign: "left",
+        paddingRight: "5px",
     },
 };

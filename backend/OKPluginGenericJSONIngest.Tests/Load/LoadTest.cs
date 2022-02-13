@@ -1,16 +1,13 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Load;
 using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace OKPluginGenericJSONIngest.Tests.Load
 {
@@ -23,7 +20,8 @@ namespace OKPluginGenericJSONIngest.Tests.Load
 
             var inboundData = new GenericInboundData
             {
-                cis = new List<GenericInboundCI> {
+                cis = new List<GenericInboundCI>
+                {
                 },
                 relations = new List<GenericInboundRelation> { }
             };
@@ -32,7 +30,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
 
             ingestData.Should().BeEquivalentTo(
                 new IngestData(
-                    new List<CICandidate> { }, 
+                    new List<CICandidate> { },
                     new List<RelationCandidate> { }
                 ), options => options.WithStrictOrdering()
             );

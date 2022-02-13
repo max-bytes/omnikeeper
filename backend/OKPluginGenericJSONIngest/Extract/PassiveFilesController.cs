@@ -1,13 +1,17 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OKPluginGenericJSONIngest;
-using OKPluginGenericJSONIngest.Transform.JMESPath;
+using OKPluginGenericJSONIngest.Extract;
 using OKPluginGenericJSONIngest.Load;
+using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -16,12 +20,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using OKPluginGenericJSONIngest.Extract;
-using Omnikeeper.Base.Model.Config;
 using System.Text;
-using Omnikeeper.Base.Model.TraitBased;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers.Ingest
 {
@@ -198,7 +198,7 @@ namespace Omnikeeper.Controllers.Ingest
         [HttpPost("")]
         [DisableRequestSizeLimit]
         [RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
-        public async Task<ActionResult> Ingest([FromQuery, Required]string context, [FromForm, Required] IEnumerable<IFormFile> files)
+        public async Task<ActionResult> Ingest([FromQuery, Required] string context, [FromForm, Required] IEnumerable<IFormFile> files)
         {
             logger.LogInformation($"Starting ingest at context {context}");
             try

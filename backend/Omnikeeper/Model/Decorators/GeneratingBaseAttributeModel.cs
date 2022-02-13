@@ -4,7 +4,6 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Templating;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -72,7 +71,7 @@ namespace Omnikeeper.Model.Decorators
             return @base;
         }
 
-        private IDictionary<Guid, IDictionary<string, CIAttribute>>[] MergeInGeneratedAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] @base, 
+        private IDictionary<Guid, IDictionary<string, CIAttribute>>[] MergeInGeneratedAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] @base,
             IDictionary<Guid, IDictionary<string, CIAttribute>>[]? additionalAttributes, IEnumerable<GeneratorV1>[] egis, string[] layerIDs)
         {
             // TODO: maybe we can find an efficient way to not generate attributes that are guaranteed to be hidden by a higher layer anyway
@@ -134,9 +133,10 @@ namespace Omnikeeper.Model.Decorators
             return await model.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
         }
 
-        public async Task<(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes)> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans)
+        public async Task<(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes)> 
+            PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            return await model.PrepareForBulkUpdate(data, trans);
+            return await model.PrepareForBulkUpdate(data, trans, maskHandlingForRemoval);
         }
 
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes, string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)

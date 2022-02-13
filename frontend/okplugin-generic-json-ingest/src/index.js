@@ -2,7 +2,7 @@ import React from "react";
 import { Menu } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
-import "antd/dist/antd.css";
+import "antd/dist/antd.min.css";
 import {PrivateRoute} from 'components/PrivateRoute';
 import { Redirect, Route, Switch, Link, useRouteMatch, useLocation } from 'react-router-dom'
 import { name as pluginName, version as pluginVersion, description as pluginDescription } from './package.json';

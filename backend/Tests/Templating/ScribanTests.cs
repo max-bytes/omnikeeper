@@ -1,13 +1,11 @@
 ﻿using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Templating;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
 using Scriban;
 using Scriban.Runtime;
 using System;
@@ -38,9 +36,9 @@ namespace Tests.Templating
                 var testCIB = new MergedCI(Guid.NewGuid(), "test-ci-b", new LayerSet(), atTime, new Dictionary<string, MergedCIAttribute>() { });
 
                 var relationModel = new Mock<IRelationModel>();
-                relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
+                relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>(), It.IsAny<IMaskHandlingForRetrieval>()))
                     .ReturnsAsync(() => new MergedRelation[] {
-                        new MergedRelation(new Relation(Guid.NewGuid(), testCIA.ID, testCIB.ID, "p_a", staticChangesetID), new string[0])
+                        new MergedRelation(new Relation(Guid.NewGuid(), testCIA.ID, testCIB.ID, "p_a", staticChangesetID, false), new string[0])
                     });
 
                 var ciModel = new Mock<ICIModel>();

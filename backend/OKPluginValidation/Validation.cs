@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
+using System;
 
 namespace OKPluginValidation.Validation
 {
@@ -22,12 +23,16 @@ namespace OKPluginValidation.Validation
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Name;
 
+        [TraitRelation("detected_issues", "__meta.validation.belongs_to_validation", false, -1, -1)]
+        public readonly Guid[] DetectedIssues;
+
         public Validation(string id, string ruleName, JObject ruleConfig)
         {
             RuleName = ruleName;
             RuleConfig = ruleConfig;
             ID = id;
             Name = $"Validation - {ID}";
+            DetectedIssues = new Guid[0];
         }
 
         public Validation()
@@ -36,6 +41,7 @@ namespace OKPluginValidation.Validation
             RuleConfig = new JObject();
             ID = "";
             Name = "";
+            DetectedIssues = new Guid[0];
         }
     }
 }

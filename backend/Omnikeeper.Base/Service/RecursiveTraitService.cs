@@ -61,15 +61,13 @@ namespace Omnikeeper.Base.Service
             // 4) the priority of requirements within a required trait is resolved by their order of appearance in the definition
             var requiredAttributes = trait.RequiredAttributes.Concat(flattenedDependencies.SelectMany(d => d.RequiredAttributes)).GroupBy(d => d.Identifier).Select(l => l.First());
             var optionalAttributes = trait.OptionalAttributes.Concat(flattenedDependencies.SelectMany(d => d.OptionalAttributes)).GroupBy(d => d.Identifier).Select(l => l.First());
-            var requiredRelations = trait.RequiredRelations.Concat(flattenedDependencies.SelectMany(d => d.RequiredRelations)).GroupBy(d => d.Identifier).Select(l => l.First());
             var optionalRelations = trait.OptionalRelations.Concat(flattenedDependencies.SelectMany(d => d.OptionalRelations)).GroupBy(d => d.Identifier).Select(l => l.First());
 
             // remove the optional requirement when there is a mandatory requirement with the same identifier
             optionalAttributes = optionalAttributes.Where(r => requiredAttributes.All(rr => rr.Identifier != r.Identifier));
-            optionalRelations = optionalRelations.Where(r => requiredRelations.All(rr => rr.Identifier != r.Identifier));
 
             var ancestorTraits = trait.RequiredTraits.Concat(flattenedDependencies.SelectMany(d => d.AncestorTraits)).ToHashSet();
-            var flattenedTrait = GenericTrait.Build(trait.ID, trait.Origin, requiredAttributes, optionalAttributes, requiredRelations, optionalRelations, ancestorTraits);
+            var flattenedTrait = GenericTrait.Build(trait.ID, trait.Origin, requiredAttributes, optionalAttributes, optionalRelations, ancestorTraits);
 
             flattened.Add(trait.ID, flattenedTrait);
 

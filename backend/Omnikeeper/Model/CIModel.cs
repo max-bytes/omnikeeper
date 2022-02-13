@@ -3,7 +3,6 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -55,7 +54,7 @@ namespace Omnikeeper.Model
                 // check which ci we already got and which are empty, add the empty ones
                 var allSelectedCIIDs = await selection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
                 var emptyCIIDs = allSelectedCIIDs.Except(attributes.Keys);
-                foreach(var emptyCIID in emptyCIIDs)
+                foreach (var emptyCIID in emptyCIIDs)
                 {
                     ret.Add(new MergedCI(emptyCIID, null, layers, atTime, ImmutableDictionary<string, MergedCIAttribute>.Empty));
                 }

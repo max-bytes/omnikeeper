@@ -73,17 +73,6 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:Omnikeeper.Controllers.RelationController.GetMergedRelation(System.Guid,System.Guid,System.String,System.String[],System.Nullable{System.DateTimeOffset})">
-            <summary>
-            
-            </summary>
-            <param name="fromCIID"></param>
-            <param name="toCIID"></param>
-            <param name="predicateID"></param>
-            <param name="layerIDs"></param>
-            <param name="atTime"></param>
-            <returns></returns>
-        </member>
         <member name="M:Omnikeeper.Controllers.RelationController.GetMergedRelationsWithPredicate(System.String,System.String[],System.Nullable{System.DateTimeOffset})">
             <summary>
             
@@ -133,13 +122,6 @@
             <summary>
             traitSOP is a sum of products of trait requirements
             see https://en.wikipedia.org/wiki/Disjunctive_normal_form
-            </summary>
-        </member>
-        <member name="M:Omnikeeper.Program.AddAssemblyResolver">
-            <summary>
-            NOTE: this method hooks into assembly resolving and provides hangfire with already loaded assemblies
-            this is required so that hangfire jobs can be loaded via plugins.
-            See https://stackoverflow.com/questions/47828704/how-to-use-hangfire-when-using-mef-to-load-plugins for further explanation
             </summary>
         </member>
         <member name="M:LandscapeRegistry.GridView.GridViewController.GetGridViewContexts">

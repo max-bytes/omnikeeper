@@ -1,8 +1,7 @@
 ﻿using FluentValidation;
 using MediatR;
-using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -13,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.GridView.Queries
 {

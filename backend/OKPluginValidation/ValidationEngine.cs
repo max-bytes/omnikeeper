@@ -18,19 +18,17 @@ namespace OKPluginValidation.Validation
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly GenericTraitEntityModel<ValidationIssue, string> validationIssueModel;
         private readonly GenericTraitEntityModel<Validation, string> validationModel;
-        private readonly IAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly IUserInDatabaseModel userInDatabaseModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IDictionary<string, IValidationRule> availableValidationRules;
 
-        public ValidationEngine(IModelContextBuilder modelContextBuilder, GenericTraitEntityModel<ValidationIssue, string> validationIssueModel, GenericTraitEntityModel<Validation, string> validationModel, IAttributeModel attributeModel,
+        public ValidationEngine(IModelContextBuilder modelContextBuilder, GenericTraitEntityModel<ValidationIssue, string> validationIssueModel, GenericTraitEntityModel<Validation, string> validationModel, 
             IChangesetModel changesetModel, IUserInDatabaseModel userInDatabaseModel, IEnumerable<IValidationRule> availableValidationRules, IMetaConfigurationModel metaConfigurationModel)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.validationIssueModel = validationIssueModel;
             this.validationModel = validationModel;
-            this.attributeModel = attributeModel;
             this.changesetModel = changesetModel;
             this.userInDatabaseModel = userInDatabaseModel;
             this.metaConfigurationModel = metaConfigurationModel;
@@ -46,7 +44,7 @@ namespace OKPluginValidation.Validation
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var validations = await validationModel.GetAllByDataID(metaConfiguration.ConfigLayerset, modelContextBuilder.BuildImmediate(), timeThreshold);
+            var validations = await validationModel.GetAllByCIID(metaConfiguration.ConfigLayerset, modelContextBuilder.BuildImmediate(), timeThreshold);
 
             // user handling: get or create
             // TODO: generalize, offer method for upserting a special process user (consolidate with CLB users)
@@ -59,7 +57,7 @@ namespace OKPluginValidation.Validation
 
             // perform validation of rules, producing an updated set of issues
             var newIssues = new Dictionary<string, ValidationIssue>();
-            foreach (var (validationID, validation) in validations)
+            foreach (var (validationCIID, validation) in validations)
             {
                 var ruleName = validation.RuleName;
 
@@ -68,7 +66,7 @@ namespace OKPluginValidation.Validation
                 {
                     try
                     {
-                        var c = await rule.PerformValidation(validation.RuleConfig, modelContextBuilder.BuildImmediate(), timeThreshold);
+                        var c = await rule.PerformValidation(validation, validationCIID, modelContextBuilder.BuildImmediate(), timeThreshold);
                         foreach (var cc in c)
                             newIssues.Add(cc.ID, cc);
                     }
@@ -89,7 +87,7 @@ namespace OKPluginValidation.Validation
                 using var trans = modelContextBuilder.BuildDeferred();
                 var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
 
-                await validationIssueModel.BulkReplace(newIssues, validationWriteLayerset, validationWriteLayerID, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans);
+                await validationIssueModel.BulkReplace(newIssues, validationWriteLayerset, validationWriteLayerID, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                 // TODO: add relations from validation issue to validation
 

@@ -33,7 +33,7 @@ namespace Omnikeeper.Base.Entity
         public static IEnumerable<(string attributeName, IAttributeValue attributeValue)> ExtractIDAttributeValueTuples(this EffectiveTrait effectiveTrait)
         {
             var idTraitAttributes = effectiveTrait.UnderlyingTrait.RequiredAttributes.Where(ra => ra.AttributeTemplate.IsID.GetValueOrDefault(false));
-            foreach(var idTraitAttribute in idTraitAttributes)
+            foreach (var idTraitAttribute in idTraitAttributes)
             {
                 var ta = effectiveTrait.TraitAttributes[idTraitAttribute.Identifier];
 

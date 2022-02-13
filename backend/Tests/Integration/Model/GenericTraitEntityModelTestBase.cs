@@ -5,14 +5,13 @@ using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Tests.Integration.Model
 {
@@ -33,7 +32,7 @@ namespace Tests.Integration.Model
                 {
                     (entityOut, _) = await model.InsertOrUpdate(entityIn,
                         layerset, writeLayerID,
-                        new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                        new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                     trans.Commit();
                 }
                 return entityOut;
@@ -70,7 +69,7 @@ namespace Tests.Integration.Model
                 {
                     (entityOut, _) = await model.InsertOrUpdate(entityIn,
                         layerset, writeLayerID,
-                        new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                        new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                     trans.Commit();
                 }
                 return entityOut;
@@ -109,7 +108,7 @@ namespace Tests.Integration.Model
                     bool changed;
                     (entityOut, changed) = await model.InsertOrUpdate(entityIn,
                         layerset, writeLayerID,
-                        new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
+                        new DataOriginV1(DataOriginType.Manual), changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                     Assert.IsNotNull(entityOut);
                     Assert.AreEqual(expectChange, changed);
@@ -137,7 +136,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var result = await model.TryToDelete(nonExistantID, layerset, writeLayerID,
-                        new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                        new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 Assert.IsFalse(result);
             }
 
@@ -145,7 +144,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var result = await model.TryToDelete(entity1ID, layerset, writeLayerID,
-                        new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans);
+                        new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 Assert.IsTrue(result);
 
                 trans.Commit();
@@ -192,40 +191,40 @@ namespace Tests.Integration.Model
 
             // initial insert
             // +2 CIs
-            var c1 = await model.BulkReplace(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate());
+            var c1 = await model.BulkReplace(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate(), MaskHandlingForRemovalApplyNoMask.Instance);
             Assert.IsTrue(c1);
             var rt2 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             rt2.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, options => options.WithoutStrictOrdering());
 
             // same operation again, nothing must change
-            var c2 = await model.BulkReplace(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate());
+            var c2 = await model.BulkReplace(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate(), MaskHandlingForRemovalApplyNoMask.Instance);
             Assert.IsFalse(c2);
             var rt3 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             rt3.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, options => options.WithoutStrictOrdering());
 
             // remove one entity
-            var c3 = await model.BulkReplace(new Dictionary<ID, T>() { { entity2ID, entity2 } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate());
+            var c3 = await model.BulkReplace(new Dictionary<ID, T>() { { entity2ID, entity2 } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate(), MaskHandlingForRemovalApplyNoMask.Instance);
             Assert.IsTrue(c3);
             var rt4 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             rt4.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity2ID, entity2 } }, options => options.WithoutStrictOrdering());
 
             // completely different set
             // +1 CIs
-            var c4 = await model.BulkReplace(new Dictionary<ID, T>() { { entity1ID, entity1 } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate());
+            var c4 = await model.BulkReplace(new Dictionary<ID, T>() { { entity1ID, entity1 } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate(), MaskHandlingForRemovalApplyNoMask.Instance);
             Assert.IsTrue(c4);
             var rt5 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             rt5.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 } }, options => options.WithoutStrictOrdering());
 
             // add missing entity again
             // +1 CIs
-            var c5 = await model.BulkReplace(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate());
+            var c5 = await model.BulkReplace(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate(), MaskHandlingForRemovalApplyNoMask.Instance);
             Assert.IsTrue(c5);
             var rt6 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             rt6.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, options => options.WithoutStrictOrdering());
 
 
             // change one entity
-            var c6 = await model.BulkReplace(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2Changed } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate());
+            var c6 = await model.BulkReplace(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2Changed } }, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), ModelContextBuilder.BuildImmediate(), MaskHandlingForRemovalApplyNoMask.Instance);
             Assert.IsTrue(c6);
             var rt7 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             rt7.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2Changed } }, options => options.WithoutStrictOrdering());

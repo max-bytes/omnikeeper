@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
+## [12.0.1] - 2022-01-21
+
+### Fixed
+- bugfix for naming conventions of trait entities
+- bugfix regarding trait entity relations
+
+## [12.0.0] - 2022-01-20
+
+### Added 
+- GraphQL API:
+  - implemented transition from mergedCI to trait entity
+  - added API for fetching latest change(set) for a trait entity
+
+### Changed
+- technical frontend: 
+  - improved search UI: only search on button click, various layout improvements
+- (breaking) changed graphql field for attribute value to lowercase
+- (breaking ) switched from ElementType to ElementWrapperType when accessing trait entities from ci in GraphQL API
+- removed migration scripts for latest tables and layer data, removed old layer_* db tables
+
+### Fixed
+- some hangfire stability improvements (hopefully)
+- technical frontend:
+  - fixed rtl texts with special characters (attribute names, trait-IDs)
+
 ## [11.1.0] - 2022-01-17
 
 ### Added 

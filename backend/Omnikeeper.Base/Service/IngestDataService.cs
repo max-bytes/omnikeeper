@@ -91,11 +91,15 @@ namespace Omnikeeper.Base.Service
                     cic.TempCIID = finalCIID; // we update the TempCIID of the CI candidate with its final ID
 
                     affectedCIs.Add(finalCIID);
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     throw new Exception($"Error mapping CI-candidate {ciCandidateCIID}", e);
                 }
             }
+
+            // TODO: mask handling
+            var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
 
             // batch process CI creation
             if (!cisToCreate.IsEmpty())
@@ -105,7 +109,7 @@ namespace Omnikeeper.Base.Service
                 cic.Attributes.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, cic.TempCIID))
             ));
             // TODO: return number of affected attributes (instead of CIs)
-            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling);
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
             foreach (var cic in data.RelationCandidates)
@@ -118,10 +122,10 @@ namespace Omnikeeper.Base.Service
                 var tempToCIID = cic.IdentificationMethodToCI.CIID;
                 if (!ciMappingContext.TryGetMappedTemp2FinalCIID(tempToCIID, out Guid toCIID))
                     throw new Exception($"Could not find temporary CIID {tempToCIID}, tried using it as the \"to\" of a relation");
-                relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID));
+                relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID, false));
             }
             var bulkRelationData = new BulkRelationDataLayerScope(writeLayer.ID, relationFragments.ToArray());
-            var affectedRelations = await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans);
+            var affectedRelations = await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling);
 
             trans.Commit();
 

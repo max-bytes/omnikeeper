@@ -3,9 +3,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Utils;
-using System.Linq;
 
 namespace Omnikeeper.Service
 {
@@ -27,7 +25,7 @@ namespace Omnikeeper.Service
             if (debugAllowAll)
                 return true;
 
-            foreach(var ar in user.AuthRoles)
+            foreach (var ar in user.AuthRoles)
             {
                 if (authRolePermissionChecker.DoesAuthRoleGivePermission(ar, PermissionUtils.GetManagementPermission()))
                     return true;

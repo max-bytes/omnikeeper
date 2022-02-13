@@ -7,6 +7,7 @@ using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -15,7 +16,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Service
 {
@@ -28,18 +28,26 @@ namespace Omnikeeper.Service
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
         }
 
-        public Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
+        public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
             var scope = scopedLifetimeAccessor.GetLifetimeScope();
             if (scope == null)
                 throw new Exception("Cannot get current user: not in proper scope");
-            return scope.Resolve<ICurrentUserService>().GetCurrentUser(trans);
+            return await scope.Resolve<ICurrentUserService>().GetCurrentUser(trans);
+        }
+
+        public string GetCurrentUsername()
+        {
+            var scope = scopedLifetimeAccessor.GetLifetimeScope();
+            if (scope == null)
+                throw new Exception("Cannot get current username: not in proper scope");
+            return scope.Resolve<ICurrentUserService>().GetCurrentUsername();
         }
     }
 
     public class CurrentAuthorizedHttpUserService : ICurrentUserService
     {
-        public CurrentAuthorizedHttpUserService(IHttpContextAccessor httpContextAccessor, 
+        public CurrentAuthorizedHttpUserService(IHttpContextAccessor httpContextAccessor,
             ILayerModel layerModel, IMetaConfigurationModel metaConfigurationModel,
             IUserInDatabaseModel userModel, IConfiguration configuration, ILogger<CurrentAuthorizedHttpUserService> logger,
             GenericTraitEntityModel<AuthRole, string> authRoleModel)
@@ -58,6 +66,7 @@ namespace Omnikeeper.Service
         private readonly ILogger<CurrentAuthorizedHttpUserService> logger;
 
         private AuthenticatedUser? cached = null;
+        private readonly SemaphoreLocker cachedLock = new SemaphoreLocker();
 
         private GenericTraitEntityModel<AuthRole, string> AuthRoleModel { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
@@ -66,43 +75,26 @@ namespace Omnikeeper.Service
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
-            if (cached == null)
+            return await cachedLock.LockAsync(async () =>
             {
-                cached = await _GetCurrentUser(trans);
-            }
-            return cached;
+                if (cached == null)
+                {
+                    cached = await _GetCurrentUser(trans);
+                }
+                return cached;
+            });
+        }
+
+        public string GetCurrentUsername()
+        {
+            var httpUser = HttpUserUtils.CreateUserFromClaims(HttpContextAccessor.HttpContext!.User.Claims, configuration.GetSection("Authentication")["Audience"], logger);
+            return httpUser.Username;
         }
 
         private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
         {
-            var httpUser = HttpUserUtils.CreateUserFromHttpContext(HttpContextAccessor.HttpContext!, configuration, logger);
-            var userInDatabase = await userModel.UpsertUser(httpUser.Username, httpUser.DisplayName, httpUser.UserID, httpUser.UserType, trans);
-
-            if (httpUser.ClientRoles.Contains("__ok_superuser"))
-            {
-                var suar = await PermissionUtils.GetSuperUserAuthRole(LayerModel, trans);
-                return new AuthenticatedUser(userInDatabase, new AuthRole[] { suar });
-            }
-            else
-            {
-                var metaConfiguration = await MetaConfigurationModel.GetConfigOrDefault(trans);
-
-                var allAuthRoles = await AuthRoleModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
-
-                var activeAuthRoles = new List<AuthRole>();
-                foreach (var role in httpUser.ClientRoles)
-                {
-                    if (allAuthRoles.TryGetValue(role, out var authRole))
-                    {
-                        activeAuthRoles.Add(authRole);
-                    }
-                }
-
-                // order auth roles of user by ID, so they are consistent
-                activeAuthRoles.Sort((a, b) => a.ID.CompareTo(b.ID));
-
-                return new AuthenticatedUser(userInDatabase, activeAuthRoles.ToArray());
-            }
+            var httpUser = HttpUserUtils.CreateUserFromClaims(HttpContextAccessor.HttpContext!.User.Claims, configuration.GetSection("Authentication")["Audience"], logger);
+            return await HttpUserUtils.CreateAuthenticationUserFromHTTPUser(httpUser, userModel, LayerModel, MetaConfigurationModel, AuthRoleModel, trans);
         }
     }
 
@@ -121,14 +113,23 @@ namespace Omnikeeper.Service
         private readonly IUserInDatabaseModel userModel;
 
         private AuthenticatedUser? cached = null;
+        private readonly SemaphoreLocker cachedLock = new SemaphoreLocker();
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
-            if (cached == null)
+            return await cachedLock.LockAsync(async () =>
             {
-                cached = await _GetCurrentUser(trans);
-            }
-            return cached;
+                if (cached == null)
+                {
+                    cached = await _GetCurrentUser(trans);
+                }
+                return cached;
+            });
+        }
+
+        public string GetCurrentUsername()
+        {
+            return $"__cl.{clbContext.Brain.Name}"; // make username the same as CLB name
         }
 
         private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
@@ -137,7 +138,7 @@ namespace Omnikeeper.Service
             var suar = await PermissionUtils.GetSuperUserAuthRole(layerModel, trans);
 
             // upsert user
-            var username = $"__cl.{clbContext.Brain.Name}"; // make username the same as CLB name
+            var username = GetCurrentUsername();
             var displayName = username;
             // generate a unique but deterministic GUID from the clb Name
             var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
@@ -160,14 +161,23 @@ namespace Omnikeeper.Service
         private readonly IUserInDatabaseModel userModel;
 
         private AuthenticatedUser? cached = null;
+        private readonly SemaphoreLocker cachedLock = new SemaphoreLocker();
+
+        public string GetCurrentUsername()
+        {
+            return $"__marked_for_deletion";
+        }
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
-            if (cached == null)
+            return await cachedLock.LockAsync(async () =>
             {
-                cached = await _GetCurrentUser(trans);
-            }
-            return cached;
+                if (cached == null)
+                {
+                    cached = await _GetCurrentUser(trans);
+                }
+                return cached;
+            });
         }
 
         private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
@@ -176,7 +186,7 @@ namespace Omnikeeper.Service
             var suar = await PermissionUtils.GetSuperUserAuthRole(layerModel, trans);
 
             // upsert user
-            var username = $"__marked_for_deletion";
+            var username = GetCurrentUsername();
             var displayName = username;
             var userGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2");
             var user = await userModel.UpsertUser(username, displayName, userGuid, UserType.Robot, trans);
@@ -210,9 +220,45 @@ namespace Omnikeeper.Service
             return claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
         }
 
-        public static HttpUser CreateUserFromHttpContext(HttpContext httpContext, IConfiguration configuration, ILogger logger)
+        public static bool HasSuperUserClientRole(HttpUser httpUser)
         {
-            var claims = httpContext.User.Claims;
+            return httpUser.ClientRoles.Contains("__ok_superuser");
+        }
+
+        public static async Task<AuthenticatedUser> CreateAuthenticationUserFromHTTPUser(HttpUser httpUser, IUserInDatabaseModel userModel, ILayerModel LayerModel, 
+            IMetaConfigurationModel MetaConfigurationModel, GenericTraitEntityModel<AuthRole, string> AuthRoleModel, IModelContext trans)
+        {
+            var userInDatabase = await userModel.UpsertUser(httpUser.Username, httpUser.DisplayName, httpUser.UserID, httpUser.UserType, trans);
+
+            if (HasSuperUserClientRole(httpUser))
+            {
+                var suar = await PermissionUtils.GetSuperUserAuthRole(LayerModel, trans);
+                return new AuthenticatedUser(userInDatabase, new AuthRole[] { suar });
+            }
+            else
+            {
+                var metaConfiguration = await MetaConfigurationModel.GetConfigOrDefault(trans);
+
+                var allAuthRoles = await AuthRoleModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+
+                var activeAuthRoles = new List<AuthRole>();
+                foreach (var role in httpUser.ClientRoles)
+                {
+                    if (allAuthRoles.TryGetValue(role, out var authRole))
+                    {
+                        activeAuthRoles.Add(authRole);
+                    }
+                }
+
+                // order auth roles of user by ID, so they are consistent
+                activeAuthRoles.Sort((a, b) => a.ID.CompareTo(b.ID));
+
+                return new AuthenticatedUser(userInDatabase, activeAuthRoles.ToArray());
+            }
+        }
+
+        public static HttpUser CreateUserFromClaims(IEnumerable<Claim> claims, string audience, ILogger logger)
+        {
             var username = GetUsernameFromClaims(claims);
 
             if (username == null)
@@ -240,7 +286,7 @@ namespace Omnikeeper.Service
                 {
                     throw new Exception("Cannot parse roles in user token: Cannot parse resource_access JSON value");
                 }
-                var resourceName = configuration.GetSection("Authentication")["Audience"];
+                var resourceName = audience;
                 var claimRoles = resourceAccess[resourceName]?["roles"];
                 var clientRoles = new HashSet<string>();
                 if (claimRoles == null)

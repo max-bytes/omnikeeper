@@ -1,5 +1,4 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Utils.ModelContext;
+﻿using Omnikeeper.Base.Utils.ModelContext;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model

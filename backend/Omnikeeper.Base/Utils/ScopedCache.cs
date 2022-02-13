@@ -2,9 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Service;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Utils
@@ -45,7 +42,8 @@ namespace Omnikeeper.Base.Utils
             if (lifetimeScope.TryResolve<ConcreteScopedCache>(out var cache))
             {
                 return await cache.GetOrCreate(logger, factory);
-            } else
+            }
+            else
             {
                 throw new Exception("No concrete scoped cache registered");
             }
@@ -60,7 +58,8 @@ namespace Omnikeeper.Base.Utils
                 {
                     logger.LogDebug("Clearing cache");
                     cache.ClearCache();
-                } else
+                }
+                else
                 {
                     throw new Exception("No concrete scoped cache registered");
                 }

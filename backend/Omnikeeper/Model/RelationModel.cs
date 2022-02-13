@@ -20,70 +20,46 @@ namespace Omnikeeper.Model
             this.baseModel = baseModel;
         }
 
-        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
+        private IEnumerable<MergedRelation> MergeRelations(IEnumerable<Relation>[] relations, string[] layerIDs, IMaskHandlingForRetrieval maskHandling)
         {
-            return await baseModel.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
-        }
-
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.GetRelations(rs, layerID, trans, atTime);
-        }
-
-        private IEnumerable<MergedRelation> MergeRelations(IEnumerable<(Relation relation, string layerID)> relations, LayerSet layers)
-        {
-            var compound = new Dictionary<(Guid from_ciid, Guid to_ciid, string predicate_id), SortedList<int, (Relation relation, string layerID)>>();
-
-            foreach (var (relation, layerID) in relations)
+            var compound = new Dictionary<string, MergedRelation>();
+            for (var i = 0; i < layerIDs.Length; i++)
             {
-                var layerSortOrder = layers.GetOrder(layerID);
+                var layerID = layerIDs[i];
+                var rel = relations[i];
 
-                compound.AddOrUpdate((relation.FromCIID, relation.ToCIID, relation.PredicateID),
-                    () => new SortedList<int, (Relation relation, string layerID)>() { { layerSortOrder, (relation, layerID) } },
-                    (old) => { old.Add(layerSortOrder, (relation, layerID)); return old; }
-                );
+                foreach(var r in rel)
+                {
+                    if (compound.TryGetValue(r.InformationHash, out var existingRelation))
+                    {
+                        existingRelation.LayerStackIDs.Add(layerID);
+                    } else
+                    {
+                        compound.Add(r.InformationHash, new MergedRelation(r, new List<string>() { layerID }));
+                    }
+                }
             }
 
-            return compound.Select(t => new MergedRelation(t.Value.First().Value.relation, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).ToArray()));
+            switch (maskHandling)
+            {
+                case MaskHandlingForRetrievalApplyMasks:
+                    return compound.Values.Where(r => !r.Relation.Mask);
+                case MaskHandlingForRetrievalGetMasks:
+                    return compound.Values;
+                default:
+                    throw new Exception("Unknown mask handling");
+            }
         }
-        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, LayerSet layerset, IModelContext trans, TimeThreshold atTime)
+
+        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, LayerSet layerset, IModelContext trans, TimeThreshold atTime, IMaskHandlingForRetrieval maskHandling)
         {
             if (layerset.IsEmpty)
                 return ImmutableList<MergedRelation>.Empty; // return empty, an empty layer list can never produce any relations
 
-            var relations = new List<(Relation relation, string layerID)>();
+            var lr = await baseModel.GetRelations(rl, layerset.LayerIDs, trans, atTime);
 
-            foreach (var layerID in layerset)
-            {
-                var lr = await GetRelations(rl, layerID, trans, atTime);
-                foreach (var r in lr)
-                    relations.Add((r, layerID));
-            }
 
-            return MergeRelations(relations, layerset);
-        }
-
-        // TODO: remove, is just a special case; then also remove baseRelationModel.GetRelation()
-        public async Task<MergedRelation?> GetMergedRelation(Guid fromCIID, Guid toCIID, string predicateID, LayerSet layerset, IModelContext trans, TimeThreshold atTime)
-        {
-            if (layerset.IsEmpty)
-                return null; // return empty, an empty layer list can never produce any relations
-
-            var relations = new List<(Relation relation, string layerID)>();
-
-            foreach (var layerID in layerset)
-            {
-                var r = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
-                if (r != null)
-                    relations.Add((r, layerID));
-            }
-
-            var mergedRelations = MergeRelations(relations, layerset);
-
-            if (mergedRelations.Count() > 1)
-                throw new Exception("Should never happen!");
-
-            return mergedRelations.FirstOrDefault();
+            return MergeRelations(lr, layerset.LayerIDs, maskHandling);
         }
 
         public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
@@ -91,19 +67,19 @@ namespace Omnikeeper.Model
             return await baseModel.GetRelationsOfChangeset(changesetID, getRemoved, trans);
         }
 
-        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
             return await baseModel.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, bool mask, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
-            return await baseModel.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
+            return await baseModel.InsertRelation(fromCIID, toCIID, predicateID, mask, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            return await baseModel.BulkReplaceRelations(data, changesetProxy, origin, trans);
+            return await baseModel.BulkReplaceRelations(data, changesetProxy, origin, trans, maskHandling);
         }
     }
 }

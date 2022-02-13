@@ -46,7 +46,7 @@ namespace Omnikeeper.Base.Utils
         //{
         //    bool pooling = false;
         //    bool reloadTypes = true;
-        //    NpgsqlConnection conn = new NpgsqlConnection($"Server=localhost;Port=15432;User Id=postgres; Password=postgres;Database={dbName};Pooling={pooling};Enlist=false");
+        //    NpgsqlConnection conn = new NpgsqlConnection($"Server=localhost;Port=15432;User Id=postgres; Password=postgres;Database={dbName};Pooling={pooling};Maximum Pool Size=40;Enlist=false");
         //    conn.Open();
         //    connectorIDs.Add(conn.ProcessID);
         //    if (reloadTypes) conn.ReloadTypes(); // HACK, see https://github.com/npgsql/npgsql/issues/2366

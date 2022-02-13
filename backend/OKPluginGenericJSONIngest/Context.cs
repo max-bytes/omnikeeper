@@ -4,8 +4,6 @@ using OKPluginGenericJSONIngest.Load;
 using OKPluginGenericJSONIngest.Transform;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Utils;
-using System;
 using System.Text.RegularExpressions;
 
 namespace OKPluginGenericJSONIngest

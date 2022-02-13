@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace OKPluginGenericJSONIngest
+﻿namespace OKPluginGenericJSONIngest
 {
-	// TODO: move/replace with config
+    // TODO: move/replace with config
     public static class AnsibleInventoryScanJMESPathExpression
     {
         public static readonly string Expression = @"

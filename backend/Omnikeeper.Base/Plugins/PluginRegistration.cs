@@ -12,7 +12,7 @@ namespace Omnikeeper.Base.Plugins
         IPluginDBMigrator? DBMigration { get; }
         void RegisterServices(IServiceCollection sc);
 
-        void RegisterHangfireJobRunners();
+        void RegisterQuartzJobs();
 
         string? ManagementEndpoint { get; }
 
@@ -58,7 +58,7 @@ namespace Omnikeeper.Base.Plugins
 
         public abstract void RegisterServices(IServiceCollection sc);
 
-        public virtual void RegisterHangfireJobRunners() { }
+        public virtual void RegisterQuartzJobs() { }
 
         public virtual IEnumerable<RecursiveTrait> DefinedTraits { get; } = new RecursiveTrait[0];
 

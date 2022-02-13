@@ -7,7 +7,6 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model.Config
@@ -15,7 +14,7 @@ namespace Omnikeeper.Base.Model.Config
     // refactor into generic version, like GenericTraitEntityModel, but for Singletons
     public class BaseConfigurationModel : SingletonTraitDataConfigBaseModel<BaseConfigurationV2>, IBaseConfigurationModel
     {
-        public BaseConfigurationModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel) 
+        public BaseConfigurationModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
             : base(RecursiveTraitService.FlattenSingleRecursiveTrait(GenericTraitEntityHelper.Class2RecursiveTrait<BaseConfigurationV2>()), effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         {
         }
@@ -27,12 +26,13 @@ namespace Omnikeeper.Base.Model.Config
             {
                 return new BaseConfigurationV2(
                     TimeSpan.FromDays(90),
-                    "*/15 * * * * *",
-                    "*/5 * * * * *",
-                    "* * * * *",
-                    "0 0 1 * * *"
+                    "*/15 * * * * ?",
+                    "*/5 * * * * ?",
+                    "* * * * * ?",
+                    "0 0 1 * * ?"
                 );
-            } else
+            }
+            else
             {
                 return baseConfig.Item2;
             }

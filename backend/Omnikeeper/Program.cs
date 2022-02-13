@@ -12,6 +12,7 @@ using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
+using Omnikeeper.Startup;
 using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
@@ -29,8 +30,6 @@ namespace Omnikeeper
             var version = VersionService.GetVersion();
             Console.WriteLine($"Running version: {version}");
 
-            AddAssemblyResolver();
-
             var host = CreateHostBuilder(args)
                 .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                 .Build();
@@ -40,13 +39,13 @@ namespace Omnikeeper
                 NpgsqlLogManager.Provider = scope.ServiceProvider.GetRequiredService<NpgsqlLoggingProvider>();
 
                 // migration/rebuild of *-latest tables in database to be backward compatible
-                await RebuildLatestTablesIfNonEmpty(scope);
+                //await RebuildLatestTablesIfNonEmpty(scope);
 
                 // create a default __okconfig layer if it does not exist and meta config has this set
                 await CreateOKConfigLayerIfNotExists(scope);
 
                 // migrate layer data into proper layer-data entities
-                await MigrateLayerData(scope);
+                //await MigrateLayerData(scope);
             }
 
             host.Run();
@@ -189,9 +188,8 @@ namespace Omnikeeper
                 {
                     builder.AddConfiguration(ctx.Configuration.GetSection("Logging"));
 
-                    builder.AddFile(ctx.Configuration.GetSection("Logging"));
+                    builder.AddFile(ctx.Configuration.GetSection("Logging").GetSection("File"));
 
-                    builder.AddProvider(new HangfireConsoleLoggerProvider());
                     builder.Services.AddSingleton<ILoggerProvider>(sp => new ReactiveLoggerProvider(sp.GetRequiredService<ReactiveLogReceiver>()));
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
@@ -204,25 +202,7 @@ namespace Omnikeeper
                 })
                 .ConfigureServices(services =>
                 {
-                    services.AddHostedService<Startup.HangfireJobStarter>();
+                    services.AddHostedService<QuartzJobStarter>();
                 });
-
-        /// <summary>
-        /// NOTE: this method hooks into assembly resolving and provides hangfire with already loaded assemblies
-        /// this is required so that hangfire jobs can be loaded via plugins.
-        /// See https://stackoverflow.com/questions/47828704/how-to-use-hangfire-when-using-mef-to-load-plugins for further explanation
-        /// </summary>
-        private static void AddAssemblyResolver()
-        {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => {
-                var asmName = new AssemblyName(args.Name!);
-                var existing = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(c => c.FullName == asmName.FullName);
-                if (existing != null)
-                {
-                    return existing;
-                }
-                return null;
-            };
-        }
     }
 }

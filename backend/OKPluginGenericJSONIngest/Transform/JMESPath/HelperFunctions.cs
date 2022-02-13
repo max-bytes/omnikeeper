@@ -41,7 +41,8 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
                 try
                 {
                     type = Enum.Parse<AttributeValueType>(typeStr).ToString();
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     throw new Exception($"Cannot parse type \"{typeStr}\" into enum for attribute {name} with value {value}", e);
                 }

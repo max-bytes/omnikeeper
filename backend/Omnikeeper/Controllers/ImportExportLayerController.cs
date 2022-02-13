@@ -27,26 +27,28 @@ namespace Omnikeeper.Controllers
     [Authorize]
     public class ImportExportLayerController : ControllerBase
     {
-        private readonly IBaseAttributeModel attributeModel;
+        private readonly IBaseAttributeModel baseAttributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly ILayerModel layerModel;
         private readonly ICurrentUserAccessor currentUserService;
         private readonly ICIModel ciModel;
+        private readonly IBaseRelationModel baseRelationModel;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerStatisticsModel layerStatisticsModel;
         private readonly IRelationModel relationModel;
 
-        public ImportExportLayerController(IBaseAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, ICIModel ciModel,
+        public ImportExportLayerController(IBaseAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, ICIModel ciModel, IBaseRelationModel baseRelationModel,
             ILayerBasedAuthorizationService layerBasedAuthorizationService, IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerModel layerModel, ILayerStatisticsModel layerStatisticsModel, IRelationModel relationModel)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.changesetModel = changesetModel;
-            this.attributeModel = attributeModel;
+            this.baseAttributeModel = attributeModel;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.currentUserService = currentUserService;
             this.ciModel = ciModel;
+            this.baseRelationModel = baseRelationModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerModel = layerModel;
             this.layerStatisticsModel = layerStatisticsModel;
@@ -90,14 +92,14 @@ namespace Omnikeeper.Controllers
             if (ciids != null && ciids.Length > 0)
                 ciidSelection = SpecificCIIDsSelection.Build(ciids);
 
-            var attributesDict = (await attributeModel.GetAttributes(ciidSelection, AllAttributeSelection.Instance, new string[] { layerID }, trans, timeThreshold)).First();
+            var attributesDict = (await baseAttributeModel.GetAttributes(ciidSelection, AllAttributeSelection.Instance, new string[] { layerID }, trans, timeThreshold)).First();
             var attributesDTO = attributesDict
                 .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                 .SelectMany(kv => kv.Value.Values)
                 .Where(a => a.ChangesetID != GeneratorV1.StaticChangesetID) // HACK: skip generated attributes
                 .Select(a => CIAttributeDTO.Build(a));
 
-            var relations = (await relationModel.GetRelations(RelationSelectionAll.Instance, layerID, trans, timeThreshold));
+            var relations = (await baseRelationModel.GetRelations(RelationSelectionAll.Instance, new string[] { layerID }, trans, timeThreshold))[0];
 
             // TODO: because there is no proper "RelationSelectionFromAndToInList", we fetch all and select manually afterwards
             if (ciidSelection is SpecificCIIDsSelection specificCIIDsSelection)
@@ -128,7 +130,7 @@ namespace Omnikeeper.Controllers
         [HttpPost("importLayer")]
         [DisableRequestSizeLimit]
         [RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
-        public async Task<ActionResult> ImportLayer([FromForm, Required] IEnumerable<IFormFile> files, [FromQuery]string? overwriteLayerID = null)
+        public async Task<ActionResult> ImportLayer([FromForm, Required] IEnumerable<IFormFile> files, [FromQuery] string? overwriteLayerID = null)
         {
             try
             {
@@ -189,12 +191,14 @@ namespace Omnikeeper.Controllers
                     var cisToCreate = cisToImport.Except(existingCIIDs);
                     await ciModel.BulkCreateCIs(cisToCreate, trans);
 
-                    var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataLayerScope.Fragment(t.Name, AttributeValueHelper.BuildFromDTO(t.Value), t.CIID));
-                    var bulkUpdates = await attributeModel.PrepareForBulkUpdate(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), trans);
-                    await attributeModel.BulkUpdate(bulkUpdates.inserts, bulkUpdates.removes, writeLayer.ID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
+                    var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
 
-                    var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID));
-                    await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+                    var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataLayerScope.Fragment(t.Name, AttributeValueHelper.BuildFromDTO(t.Value), t.CIID));
+                    var bulkUpdates = await baseAttributeModel.PrepareForBulkUpdate(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), trans, maskHandling);
+                    await baseAttributeModel.BulkUpdate(bulkUpdates.inserts, bulkUpdates.removes, writeLayer.ID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
+
+                    var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID, t.Mask));
+                    await baseRelationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, maskHandling);
                 }
 
                 trans.Commit();

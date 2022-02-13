@@ -93,16 +93,14 @@ namespace Omnikeeper.Base.Entity
         [TraitAttribute("optional_attributes", "trait.optional_attributes", isJSONSerialized: true, optional: true)]
         public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
 
-        [TraitAttribute("required_relations", "trait.required_relations", isJSONSerialized: true, optional: true)]
-        public readonly TraitRelation[] RequiredRelations = Array.Empty<TraitRelation>();
-
         [TraitAttribute("optional_relations", "trait.optional_relations", isJSONSerialized: true, optional: true)]
         public readonly TraitRelation[] OptionalRelations = Array.Empty<TraitRelation>();
 
         [TraitAttribute("required_traits", "trait.required_traits", optional: true)]
         public readonly string[] RequiredTraits = Array.Empty<string>();
 
-        public RecursiveTrait() {
+        public RecursiveTrait()
+        {
             ID = "";
             Name = "";
             Origin = new TraitOriginV1(TraitOriginType.Data);
@@ -112,7 +110,6 @@ namespace Omnikeeper.Base.Entity
         public RecursiveTrait(string id, TraitOriginV1 origin,
             IEnumerable<TraitAttribute>? requiredAttributes = null,
             IEnumerable<TraitAttribute>? optionalAttributes = null,
-            IEnumerable<TraitRelation>? requiredRelations = null,
             IEnumerable<TraitRelation>? optionalRelations = null,
             IEnumerable<string>? requiredTraits = null)
         {
@@ -121,7 +118,6 @@ namespace Omnikeeper.Base.Entity
             Origin = origin ?? new TraitOriginV1(TraitOriginType.Data);
             RequiredAttributes = requiredAttributes?.ToArray() ?? new TraitAttribute[0];
             OptionalAttributes = optionalAttributes?.ToArray() ?? new TraitAttribute[0];
-            RequiredRelations = requiredRelations?.ToArray() ?? new TraitRelation[0];
             OptionalRelations = optionalRelations?.ToArray() ?? new TraitRelation[0];
             RequiredTraits = requiredTraits?.ToArray() ?? new string[0];
         }

@@ -25,7 +25,7 @@ namespace Omnikeeper.Model
         private IDictionary<Guid, IDictionary<string, MergedCIAttribute>> MergeAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] layeredAttributes, string[] layerIDs)
         {
             var compound = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
-            for (var i = 0;i < layerIDs.Length;i++)
+            for (var i = 0; i < layerIDs.Length; i++)
             {
                 var layerID = layerIDs[i];
                 var cis = layeredAttributes[i];
@@ -34,12 +34,13 @@ namespace Omnikeeper.Model
                     var ciid = ci.Key;
                     if (compound.TryGetValue(ciid, out var existingAttributes))
                     {
-                        foreach(var newAttribute in ci.Value)
+                        foreach (var newAttribute in ci.Value)
                         {
                             if (existingAttributes.TryGetValue(newAttribute.Key, out var existingMergedAttribute))
                             {
                                 existingAttributes[newAttribute.Key].LayerStackIDs.Add(layerID);
-                            } else
+                            }
+                            else
                             {
                                 existingAttributes[newAttribute.Key] = new MergedCIAttribute(newAttribute.Value, new List<string> { layerID });
                             }
@@ -100,7 +101,7 @@ namespace Omnikeeper.Model
             switch (maskHandling)
             {
                 case MaskHandlingForRemovalApplyMaskIfNecessary n:
-                    var attributeRemaining = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), NamedAttributesSelection.Build(name), new LayerSet(n.ReadLayersBelowWriteLayer), trans, n.ReadTime);
+                    var attributeRemaining = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), NamedAttributesSelection.Build(name), new LayerSet(n.ReadLayersBelowWriteLayer), trans, changeset.TimeThreshold);
                     if (attributeRemaining.TryGetValue(ciid, out var aa) && aa.ContainsKey(name))
                     { // attribute exists in lower layers, mask it
                         // NOTE: if the current attribute is already a mask, the InsertAttribute detects this and the operation becomes a NO-OP
@@ -121,37 +122,7 @@ namespace Omnikeeper.Model
 
         public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            var (inserts, removals) = await baseModel.PrepareForBulkUpdate(data, trans);
-
-            switch (maskHandling)
-            {
-                case MaskHandlingForRemovalApplyMaskIfNecessary n:
-
-                    // check removals, change them to a mask-insertion if necessary; necessary means that the same attribute (same ci, same name) is defined in a layer below and hence needs to be masked
-                    if (!n.ReadLayersBelowWriteLayer.IsEmpty())
-                    {
-                        var ciids = removals.Select(t => t.ciid).ToHashSet();
-                        var attributeNames = removals.Select(t => t.name).ToHashSet();
-                        var attributesRemaining = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciids), NamedAttributesSelection.Build(attributeNames), new LayerSet(n.ReadLayersBelowWriteLayer), trans, n.ReadTime);
-                        for (int i = removals.Count - 1;i >= 0;i--)
-                        {
-                            var (ciid, name, value, attributeID, newAttributeID) = removals[i];
-                            if (attributesRemaining.TryGetValue(ciid, out var aa) && aa.ContainsKey(name))
-                            {
-                                removals.RemoveAt(i);
-                                inserts.Add((ciid, name, AttributeScalarValueMask.Instance, attributeID, newAttributeID));
-                            }
-                        }
-                    }
-
-                    break;
-                case MaskHandlingForRemovalApplyNoMask _:
-                    // no operation necessary
-                    break;
-                default:
-                    throw new Exception("Invalid mask handling");
-            }
-
+            var (inserts, removals) = await baseModel.PrepareForBulkUpdate(data, trans, maskHandling);
 
             // perform updates in bulk
             await baseModel.BulkUpdate(inserts, removals, data.LayerID, origin, changeset, trans);

@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Autofac.Extras.Quartz;
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Types;
@@ -18,17 +19,17 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
 using Omnikeeper.GraphQL.TraitEntities;
-using Omnikeeper.GraphQL.Types;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
-using Omnikeeper.Model.Decorators.CachingLatestLayerChange;
+using Omnikeeper.Runners;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using Omnikeeper.Utils.Decorators;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -232,12 +233,12 @@ namespace Omnikeeper.Startup
             }
 
             // latest layer change caching
-            builder.RegisterType<LatestLayerChangeCache>().SingleInstance();
-            builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
-            builder.RegisterDecorator<CachingLatestLayerChangeModel, ILatestLayerChangeModel>();
-            builder.RegisterDecorator<CachingLatestLayerChangeAttributeModel, IBaseAttributeModel>();
-            builder.RegisterDecorator<CachingLatestLayerChangeRelationModel, IBaseRelationModel>();
-            builder.RegisterDecorator<CachingLatestLayerChangeLayerModel, ILayerModel>();
+            // NOTE: removed because its ineffectual and does not work properly in HA scenario
+            //builder.RegisterType<LatestLayerChangeCache>().SingleInstance();
+            //builder.RegisterDecorator<CachingLatestLayerChangeModel, ILatestLayerChangeModel>();
+            //builder.RegisterDecorator<CachingLatestLayerChangeAttributeModel, IBaseAttributeModel>();
+            //builder.RegisterDecorator<CachingLatestLayerChangeRelationModel, IBaseRelationModel>();
+            //builder.RegisterDecorator<CachingLatestLayerChangeLayerModel, ILayerModel>();
 
             builder.RegisterType<CLBLastRunCache>().SingleInstance();
 
@@ -292,6 +293,39 @@ namespace Omnikeeper.Startup
             //builder.RegisterType<TraitEntitiesType>().InstancePerLifetimeScope();
             //builder.RegisterType<TraitEntitiesQuerySchemaLoader>().InstancePerLifetimeScope();
             //builder.RegisterType<TraitEntitiesMutationSchemaLoader>().InstancePerLifetimeScope();
+        }
+
+        internal static void RegisterQuartz(ContainerBuilder builder, string connectionString)
+        {
+            var schedulerConfig = new NameValueCollection {
+                {"quartz.threadPool.threadCount", "3" },
+                {"quartz.scheduler.threadName", "Scheduler" },
+
+                {"quartz.dataSource.myDS.provider","Npgsql" },
+                {"quartz.dataSource.myDS.connectionString", connectionString },
+
+                {"quartz.jobStore.dataSource", "myDS" },
+                {"quartz.jobStore.type","Quartz.Impl.AdoJobStore.JobStoreTX, Quartz" },
+                {"quartz.jobStore.driverDelegateType", "Quartz.Impl.AdoJobStore.PostgreSQLDelegate, Quartz" },
+                {"quartz.jobStore.tablePrefix","qrtz." },
+                {"quartz.jobStore.useProperties","true" },
+                {"quartz.serializer.type","json" },
+
+                {"quartz.jobStore.clustered", "true" },
+                {"quartz.scheduler.instanceId", "instance-A" }, // TODO: make configurable for clustering
+            };
+
+            builder.RegisterModule(new QuartzAutofacFactoryModule
+            {
+                ConfigurationProvider = _ => schedulerConfig
+            });
+
+            // jobs
+            builder.RegisterType<CLBJob>().InstancePerLifetimeScope();
+            builder.RegisterType<ArchiveOldDataJob>().InstancePerLifetimeScope();
+            builder.RegisterType<ExternalIDManagerJob>().InstancePerLifetimeScope();
+            builder.RegisterType<MarkedForDeletionJob>().InstancePerLifetimeScope();
+            builder.RegisterType<UsageDataWriterJob>().InstancePerLifetimeScope();
         }
     }
 }

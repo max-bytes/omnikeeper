@@ -32,8 +32,8 @@ namespace Omnikeeper.Model
 
             var id = Guid.NewGuid();
             var (_, changesetID) = await BulkUpdate(
-                new (Guid, string, IAttributeValue, Guid?, Guid)[] { (ciid, name, value, currentAttribute?.ID, id) }, 
-                new (Guid, string, IAttributeValue, Guid, Guid)[0], 
+                new (Guid, string, IAttributeValue, Guid?, Guid)[] { (ciid, name, value, currentAttribute?.ID, id) },
+                new (Guid, string, IAttributeValue, Guid, Guid)[0],
                 layerID, origin, changesetProxy, trans);
 
             return (new CIAttribute(id, name, ciid, value, changesetID), true);
@@ -68,7 +68,7 @@ namespace Omnikeeper.Model
         public async Task<(
             IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
             IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes
-            )> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans)
+            )> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             var readTS = TimeThreshold.BuildLatest();
 
@@ -78,7 +78,8 @@ namespace Omnikeeper.Model
                 BulkCIAttributeDataLayerScope d => (d.NamePrefix.IsEmpty()) ?
                         (await GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { data.LayerID }, trans, readTS)) :
                         (await GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), new string[] { data.LayerID }, trans, readTS)),
-                BulkCIAttributeDataCIScope d => await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, new string[] { data.LayerID }, trans: trans, atTime: readTS),
+                BulkCIAttributeDataCIScope d => 
+                    await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, new string[] { data.LayerID }, trans: trans, atTime: readTS),
                 BulkCIAttributeDataCIAndAttributeNameScope a =>
                     await GetAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), new string[] { data.LayerID }, trans, readTS),
                 _ => throw new Exception("Unknown scope")
@@ -109,9 +110,57 @@ namespace Omnikeeper.Model
                 actualInserts.Add((ciid, fullName, value, currentAttribute?.ID, Guid.NewGuid()));
             }
 
-            var removes = outdatedAttributes.Values.Select(a => (a.CIID, a.Name, a.Value, a.ID, Guid.NewGuid())).ToList();
+            // mask-based changes to inserts and removals
+            // depending on mask-handling, calculate attribute that are potentially "maskable" in below layers
+            var maskableAttributesInBelowLayers = new Dictionary<string, (Guid ciid, string name)>();
+            switch (maskHandlingForRemoval)
+            {
+                case MaskHandlingForRemovalApplyMaskIfNecessary n:
 
-            return (actualInserts, removes);
+                    maskableAttributesInBelowLayers = (data switch
+                    {
+                        BulkCIAttributeDataLayerScope d => (d.NamePrefix.IsEmpty()) ?
+                                (await GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, n.ReadLayersBelowWriteLayer, trans, readTS)) :
+                                (await GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), n.ReadLayersBelowWriteLayer, trans, readTS)),
+                        BulkCIAttributeDataCIScope d =>
+                            await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, n.ReadLayersBelowWriteLayer, trans: trans, atTime: readTS),
+                        BulkCIAttributeDataCIAndAttributeNameScope a =>
+                            await GetAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), n.ReadLayersBelowWriteLayer, trans, readTS),
+                        _ => throw new Exception("Unknown scope")
+                    })
+                    .SelectMany(t => t.Values.SelectMany(tt => tt.Values))
+                    .GroupBy(t => t.InformationHash)
+                    .Where(g => !informationHashesToInsert.Contains(g.Key)) // if we are already inserting this attribute, we definitely do not want to mask it
+                    .ToDictionary(g => g.Key, g => (g.First().CIID, g.First().Name));
+                    break;
+                case MaskHandlingForRemovalApplyNoMask _:
+                    // no operation necessary
+                    break;
+                default:
+                    throw new Exception("Invalid mask handling");
+            }
+            // reduce the actual removes by looking at maskable attributes, replacing the removes with masks if necessary
+            foreach (var kv in maskableAttributesInBelowLayers)
+            {
+                var ih = kv.Key;
+
+                if (outdatedAttributes.TryGetValue(ih, out var outdatedAttribute))
+                {
+                    // the attribute exists in the write-layer AND is actually outdated AND needs to be masked -> mask it, instead of removing it
+                    outdatedAttributes.Remove(ih);
+                    actualInserts.Add((outdatedAttribute.CIID, outdatedAttribute.Name, AttributeScalarValueMask.Instance, outdatedAttribute.ID, Guid.NewGuid()));
+                }
+                else
+                {
+                    // the attribute exists only in the layers below -> mask it
+                    actualInserts.Add((kv.Value.ciid, kv.Value.name, AttributeScalarValueMask.Instance, null, Guid.NewGuid()));
+                }
+            }
+
+            // build final removal-list
+            var actualRemoves = outdatedAttributes.Values.Select(a => (a.CIID, a.Name, a.Value, a.ID, Guid.NewGuid())).ToList();
+
+            return (actualInserts, actualRemoves);
         }
 
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(
@@ -173,13 +222,13 @@ namespace Omnikeeper.Model
 
                 // latest
                 // new inserts
-                // NOTE: actual new inserts are only those that have isNew, which must be equivalent to NOT having an entry in the latest table
+                // NOTE: actual new inserts are only those that have no existing attribute ID, which must be equivalent to NOT having an entry in the latest table
                 // that allows us to do COPY insertion, because we guarantee that there are no unique constraint violations
                 // should this ever throw a unique constraint violation, means there is a bug and _latest and _historic are out of sync
                 var actualNewInserts = inserts.Where(t => t.existingAttributeID == null);
                 if (!actualNewInserts.IsEmpty())
                 {
-                    using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
+                    using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, changeset_id) FROM STDIN (FORMAT BINARY)");
                     foreach (var (ciid, fullName, value, _, newAttributeID) in actualNewInserts)
                     {
                         var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(value);
@@ -192,7 +241,6 @@ namespace Omnikeeper.Model
                         writerLatest.Write(valueBinary);
                         writerLatest.Write(valueControl);
                         writerLatest.Write(layerID);
-                        writerLatest.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                         writerLatest.Write(changeset.ID);
                     }
                     writerLatest.Complete();
@@ -207,7 +255,7 @@ namespace Omnikeeper.Model
                 {
                     using var commandUpdateLatest = new NpgsqlCommand(@"
                         UPDATE attribute_latest SET id = @id, type = @type, value_text = @value_text, value_binary = @value_binary, 
-                        value_control = @value_control, ""timestamp"" = @timestamp, changeset_id = @changeset_id
+                        value_control = @value_control, changeset_id = @changeset_id
                         WHERE id = @old_id", trans.DBConnection, trans.DBTransaction);
                     var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(value);
                     commandUpdateLatest.Parameters.AddWithValue("id", newAttributeID);
@@ -216,7 +264,6 @@ namespace Omnikeeper.Model
                     commandUpdateLatest.Parameters.AddWithValue("value_text", valueText);
                     commandUpdateLatest.Parameters.AddWithValue("value_binary", valueBinary);
                     commandUpdateLatest.Parameters.AddWithValue("value_control", valueControl);
-                    commandUpdateLatest.Parameters.AddWithValue("timestamp", changeset.Timestamp);
                     commandUpdateLatest.Parameters.AddWithValue("changeset_id", changeset.ID);
                     await commandUpdateLatest.ExecuteNonQueryAsync();
                 }
@@ -232,7 +279,8 @@ namespace Omnikeeper.Model
                 }
 
                 return (true, changeset.ID);
-            } else
+            }
+            else
             {
                 return (false, default);
             }

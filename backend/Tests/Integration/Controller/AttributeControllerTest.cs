@@ -29,12 +29,6 @@ namespace Tests.Integration.Controller
         [Test]
         public async Task TestBasics()
         {
-            var changesetModel = ServiceProvider.GetRequiredService<IChangesetModel>();
-            var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
-            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
-            var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
-            var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
-            var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             var attributeController = ServiceProvider.GetRequiredService<AttributeController>();
 
             Guid ciid1;
@@ -46,17 +40,17 @@ namespace Tests.Integration.Controller
             Guid changesetID;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                ciid1 = await ciModel.CreateCI(trans);
-                ciid2 = await ciModel.CreateCI(trans);
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", trans);
-                var (layer2, _) = await layerModel.CreateLayerIfNotExists("l2", trans);
+                ciid1 = await GetService<ICIModel>().CreateCI(trans);
+                ciid2 = await GetService<ICIModel>().CreateCI(trans);
+                var changeset = await CreateChangesetProxy();
+                var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans);
+                var (layer2, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l2", trans);
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
-                var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (attribute1, _) = await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 attribute1ID = attribute1.ID;
                 changesetID = attribute1.ChangesetID;
-                var (attribute2, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (attribute2, _) = await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 attribute2ID = attribute2.ID;
                 trans.Commit();
             }

@@ -4,7 +4,6 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -22,27 +21,27 @@ namespace Omnikeeper.Model.Decorators
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
         }
 
-        public async Task<IEnumerable<MergedCI>> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public IEnumerable<MergedCI> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             TrackTraitUsage(trait);
 
-            return await baseModel.FilterCIsWithoutTrait(cis, trait, layers, trans, atTime);
+            return baseModel.FilterCIsWithoutTrait(cis, trait, layers, trans, atTime);
         }
 
-        public async Task<IEnumerable<MergedCI>> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public IEnumerable<MergedCI> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             TrackTraitUsage(trait);
 
-            return await baseModel.FilterCIsWithTrait(cis, trait, layers, trans, atTime);
+            return baseModel.FilterCIsWithTrait(cis, trait, layers, trans, atTime);
         }
 
-        public async Task<IEnumerable<MergedCI>> FilterCIsWithTraitSOP(IEnumerable<MergedCI> cis, (ITrait trait, bool negated)[][] traitSOP, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public IEnumerable<MergedCI> FilterCIsWithTraitSOP(IEnumerable<MergedCI> cis, (ITrait trait, bool negated)[][] traitSOP, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             foreach (var traitP in traitSOP)
                 foreach (var (trait, _) in traitP)
                     TrackTraitUsage(trait);
 
-            return await baseModel.FilterCIsWithTraitSOP(cis, traitSOP, layers, trans, atTime);
+            return baseModel.FilterCIsWithTraitSOP(cis, traitSOP, layers, trans, atTime);
         }
 
         public async Task<IDictionary<Guid, EffectiveTrait>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
@@ -54,10 +53,7 @@ namespace Omnikeeper.Model.Decorators
 
         private void TrackTraitUsage(ITrait trait)
         {
-            if (trait.Origin.Type == TraitOriginType.Core)
-            { // not interested in recording usage of core traits
-                return;
-            } else if (trait.ID.StartsWith("__meta"))
+            if (trait.ID.StartsWith("__meta"))
             { // not interested in recording usage of meta traits
                 return;
             }

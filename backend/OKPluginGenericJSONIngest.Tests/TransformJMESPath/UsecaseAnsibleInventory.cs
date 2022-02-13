@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
-using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.IO;
 
@@ -28,7 +27,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
             {
                 {
                     "setup_facts_h1jmplx01.mhx.at.json", ParseJSONString(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                        "data", "usecase_ansible_inventory", "setup_facts_h1jmplx01.mhx.at.json"))) 
+                        "data", "usecase_ansible_inventory", "setup_facts_h1jmplx01.mhx.at.json")))
                 },
                 {
                     "yum_installed_h1jmplx01.mhx.at.json", ParseJSONString(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),

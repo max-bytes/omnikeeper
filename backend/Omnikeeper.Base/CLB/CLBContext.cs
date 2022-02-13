@@ -1,6 +1,4 @@
-﻿using Omnikeeper.Base.Entity;
-
-namespace Omnikeeper.Base.CLB
+﻿namespace Omnikeeper.Base.CLB
 {
     public class CLBContext
     {

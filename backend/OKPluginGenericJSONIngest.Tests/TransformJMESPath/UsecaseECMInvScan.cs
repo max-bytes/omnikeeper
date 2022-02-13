@@ -1,14 +1,10 @@
 using FluentAssertions;
-using FluentAssertions.Equivalency;
-using FluentAssertions.Equivalency.Tracing;
 using Microsoft.DotNet.InternalAbstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
-using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 
 namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath

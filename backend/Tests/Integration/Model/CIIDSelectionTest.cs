@@ -39,7 +39,7 @@ namespace Tests.Integration.Model
 
             // specific.Except(X)
             Assert.AreEqual(
-                SpecificCIIDsSelection.Build(ga), 
+                SpecificCIIDsSelection.Build(ga),
                 SpecificCIIDsSelection.Build(ga, gb).Except(SpecificCIIDsSelection.Build(gb, gc)));
             Assert.AreEqual(
                 SpecificCIIDsSelection.Build(gb),

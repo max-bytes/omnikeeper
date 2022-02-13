@@ -49,12 +49,12 @@ namespace Omnikeeper.Validation.Rules
             this.effectiveTraitModel = effectiveTraitModel;
         }
 
-        public async Task<IEnumerable<ValidationIssue>> PerformValidation(JObject config, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<ValidationIssue>> PerformValidation(OKPluginValidation.Validation.Validation validation, Guid validationCIID, IModelContext trans, TimeThreshold atTime)
         {
             Config parsedConfig;
             try
             {
-                parsedConfig = Config.Serializer.Deserialize(config);
+                parsedConfig = Config.Serializer.Deserialize(validation.RuleConfig);
             }
             catch (Exception e)
             {
@@ -66,21 +66,18 @@ namespace Omnikeeper.Validation.Rules
             var attributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute); // This is weird... it seems like we need to fetch at least ONE attribute otherwise, it's all empty.. which makes sense, but still...
 
             var traits = await traitsProvider.GetActiveTraitsByIDs(new string[] { CoreTraits.Named.ID }, trans, atTime);
-            var workCIs = await ciModel!.GetMergedCIs(new AllCIIDsSelection(), layerset!, includeEmptyCIs: false, attributeSelection, trans, atTime);
-            var unnamedCIs = await effectiveTraitModel.FilterMergedCIsByTraits(workCIs, Enumerable.Empty<ITrait>(), traits.Values, layerset, trans, atTime);
+            var workCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset!, includeEmptyCIs: true, attributeSelection, trans, atTime);
+            var unnamedCIs = effectiveTraitModel.FilterMergedCIsByTraits(workCIs, Enumerable.Empty<ITrait>(), traits.Values, layerset, trans, atTime);
 
             var unnamedCISelection = SpecificCIIDsSelection.Build(unnamedCIs.Select(ci => ci.ID).ToHashSet());
             var nonEmptyButUnnamedCIIDs = await baseAttributeModel.GetCIIDsWithAttributes(unnamedCISelection, layerset.LayerIDs, trans, atTime);
-
-            // NOTE: just a test
-            //var nonEmptyButUnnamedCIIDs = await baseAttributeModel.GetCIIDsWithAttributes(new AllCIIDsSelection(), layerset.LayerIDs, trans, atTime);
 
             if (nonEmptyButUnnamedCIIDs.IsEmpty())
                 return new ValidationIssue[0];
 
             var issueID = $"{Name}:{layerset}"; // TODO: name clashes possible? IDs need to be unique after all
 
-            return new ValidationIssue[] { new ValidationIssue(issueID, $"CI unnamed in layerset {layerset}", nonEmptyButUnnamedCIIDs.ToArray()) };
+            return new ValidationIssue[] { new ValidationIssue(issueID, $"CI unnamed in layerset {layerset}", nonEmptyButUnnamedCIIDs.ToArray(), validationCIID) };
         }
     }
 }

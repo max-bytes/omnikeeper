@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -10,6 +11,6 @@ namespace OKPluginValidation.Validation
     {
         string Name { get; }
 
-        Task<IEnumerable<ValidationIssue>> PerformValidation(JObject config, IModelContext trans, TimeThreshold atTime);
+        Task<IEnumerable<ValidationIssue>> PerformValidation(Validation validation, Guid validationCIID, IModelContext trans, TimeThreshold atTime);
     }
 }

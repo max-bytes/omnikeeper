@@ -90,6 +90,7 @@ namespace Omnikeeper.GraphQL.Types
         public Guid FromCIID { get; private set; }
         public Guid ToCIID { get; private set; }
         public string PredicateID { get; private set; }
+        public bool Mask { get; private set; }
     }
 
     public class InsertRelationInputType : InputObjectGraphType<InsertRelationInput>
@@ -99,6 +100,7 @@ namespace Omnikeeper.GraphQL.Types
             Field(x => x.FromCIID, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.ToCIID, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.PredicateID);
+            Field(x => x.Mask);
         }
     }
 
@@ -138,7 +140,6 @@ namespace Omnikeeper.GraphQL.Types
         public string ID { get; private set; }
         public string[] RequiredAttributes { get; private set; }
         public string[] OptionalAttributes { get; private set; }
-        public string[] RequiredRelations { get; private set; }
         public string[] OptionalRelations { get; private set; }
         public string[] RequiredTraits { get; private set; }
     }
@@ -149,7 +150,7 @@ namespace Omnikeeper.GraphQL.Types
             Field("id", x => x.ID);
             Field(x => x.RequiredAttributes);
             Field(x => x.OptionalAttributes);
-            Field(x => x.RequiredRelations);
+            Field<StringGraphType>(name: "requiredRelations", resolve: x => "", deprecationReason: "not used anymore"); // TODO: remove
             Field(x => x.OptionalRelations);
             Field(x => x.RequiredTraits);
         }

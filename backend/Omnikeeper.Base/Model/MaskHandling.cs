@@ -1,13 +1,25 @@
-﻿using Omnikeeper.Base.Utils;
-using System;
-using System.Collections.Generic;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Utils;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model
 {
-    public interface IMaskHandlingForRemoval { }
+    public interface IMaskHandlingForRetrieval { }
+
+    public class MaskHandlingForRetrievalApplyMasks : IMaskHandlingForRetrieval
+    {
+        private MaskHandlingForRetrievalApplyMasks() { }
+
+        public static MaskHandlingForRetrievalApplyMasks Instance = new MaskHandlingForRetrievalApplyMasks();
+    }
+    public class MaskHandlingForRetrievalGetMasks : IMaskHandlingForRetrieval
+    {
+        private MaskHandlingForRetrievalGetMasks() { }
+
+        public static MaskHandlingForRetrievalGetMasks Instance = new MaskHandlingForRetrievalGetMasks();
+    }
+
+public interface IMaskHandlingForRemoval { }
 
     /// <summary>
     /// detects if the layers "below" contain the attribute too
@@ -19,12 +31,28 @@ namespace Omnikeeper.Base.Model
     public class MaskHandlingForRemovalApplyMaskIfNecessary : IMaskHandlingForRemoval
     {
         public readonly string[] ReadLayersBelowWriteLayer;
-        public readonly TimeThreshold ReadTime;
 
-        public MaskHandlingForRemovalApplyMaskIfNecessary(string[] readLayersBelowWriteLayer, TimeThreshold readTime)
+        private MaskHandlingForRemovalApplyMaskIfNecessary(string[] readLayersBelowWriteLayer)
         {
             ReadLayersBelowWriteLayer = readLayersBelowWriteLayer;
-            ReadTime = readTime;
+        }
+
+        public static IMaskHandlingForRemoval Build(string[] readLayersBelowWriteLayer)
+        {
+            if (readLayersBelowWriteLayer.Length == 0)
+                return MaskHandlingForRemovalApplyNoMask.Instance;
+            return new MaskHandlingForRemovalApplyMaskIfNecessary(readLayersBelowWriteLayer);
+        }
+
+        public static IMaskHandlingForRemoval Build(LayerSet readLayerSet, string writeLayerID)
+        {
+            var indexWriteLayerID = readLayerSet.IndexOf(writeLayerID);
+            if (indexWriteLayerID == -1)
+                throw new System.Exception("Cannot create mask handling object when write layer ID is not contained within read layerset");
+            var readLayersBelowWriteLayer = readLayerSet.Skip(indexWriteLayerID + 1).ToArray();
+            if (readLayersBelowWriteLayer.Length == 0)
+                return MaskHandlingForRemovalApplyNoMask.Instance;
+            return new MaskHandlingForRemovalApplyMaskIfNecessary(readLayersBelowWriteLayer);
         }
     }
 
