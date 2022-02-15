@@ -2,7 +2,6 @@
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,48 +44,18 @@ namespace Omnikeeper.Base.Model.TraitBased
             return cisWithTrait;
         }
 
-        public async Task<Guid?> GetSingleCIIDByAttributeValueTuples((string name, IAttributeValue value)[] attributeValueTuples, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code... maybe impossible
-            var cisWithIDAttributes = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(attributeValueTuples.Select(i => i.name).ToHashSet()), layerSet, trans, timeThreshold);
-
-            var foundCIID = cisWithIDAttributes.Where(t =>
-            {
-                return attributeValueTuples.All(nameValue => t.Value[nameValue.name].Attribute.Value.Equals(nameValue.value));
-            })
-                .Select(t => t.Key)
-                .OrderBy(t => t) // we order by GUID to stay consistent even when multiple CIs would match
-                .FirstOrDefault();
-            return (foundCIID == default) ? null : foundCIID;
-        }
-
-        public async Task<IDictionary<Guid, EffectiveTrait>> GetAllByDataID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold);
-            return await GetAllByDataID(cis, layerSet, trans, timeThreshold);
-        }
-
-        public async Task<IDictionary<Guid, EffectiveTrait>> GetAllByDataID(IEnumerable<MergedCI> withinCIs, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            var cisWithTrait = (await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, withinCIs, layerSet, trans, timeThreshold));
-            return cisWithTrait;
-        }
-
         /*
          * NOTE: unlike the regular update, this does not do any checks if the updated entities actually fulfill the trait requirements 
          * and will be considered as this trait's entities going forward
          */
         // NOTE: the cis MUST exist already
-        public async Task<bool> BulkReplace(ISet<Guid> ciids, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
+        public async Task<bool> BulkReplace(ISet<Guid> relevantCIIDs, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
-            LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+            string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            if (attributeFragments.IsEmpty() || ciids.IsEmpty())
+            if (attributeFragments.IsEmpty() || relevantCIIDs.IsEmpty())
                 return false;
 
-            var outdated = await GetAllByCIID(layerSet, trans, changesetProxy.TimeThreshold);
-
-            var relevantCIIDs = outdated.Keys.ToHashSet();
             var changed = await WriteAttributes(attributeFragments, relevantCIIDs, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
 
             if (!trait.OptionalRelations.IsEmpty())

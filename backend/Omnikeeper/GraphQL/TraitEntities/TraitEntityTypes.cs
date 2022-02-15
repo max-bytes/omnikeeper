@@ -87,7 +87,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var idAttributeValues = TraitEntityHelper.InputDictionary2IDAttributeTuples(idCollection, at);
 
                         // TODO: use data loader?
-                        var foundCIID = await traitEntityModel.GetSingleCIIDByAttributeValueTuples(idAttributeValues, layerset, trans, timeThreshold);
+                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDForTraitEntityByAttributeValueTuples(attributeModel, idAttributeValues, layerset, trans, timeThreshold);
 
                         if (!foundCIID.HasValue)
                         {

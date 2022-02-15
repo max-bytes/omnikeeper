@@ -48,5 +48,11 @@ namespace Tests.Integration.Model
                 "test_auth_role01", "test_auth_role02", "non_existant_id"
                 );
         }
+
+        [Test]
+        public async Task TestUpdateIncompleteTraitEntity()
+        {
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new AuthRole("test_auth_role01", new string[] { "p1", "p2" }), "test_auth_role01", true);
+        }
     }
 }

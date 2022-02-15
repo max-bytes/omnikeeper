@@ -16,9 +16,10 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
-    public class GenericTraitEntityModel<T, ID> where T : TraitEntity, new() where ID : notnull
+    public class GenericTraitEntityModel<T, ID> where T : TraitEntity, new() where ID : notnull, IEquatable<ID>
     {
         protected readonly ICIModel ciModel;
+        private readonly IAttributeModel attributeModel;
         private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
         private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
@@ -39,7 +40,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
         {
             this.ciModel = ciModel;
-
+            this.attributeModel = attributeModel;
             var trait = RecursiveTraitService.FlattenSingleRecursiveTrait(GenericTraitEntityHelper.Class2RecursiveTrait<T>());
 
             (_, attributeFieldInfos, relationFieldInfos) = GenericTraitEntityHelper.ExtractFieldInfos<T>();
@@ -67,7 +68,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var idAttributeValueTuples = idAttributeInfos.ExtractAttributeValueTuplesFromID(id);
-            var foundCIID = await traitEntityModel.GetSingleCIIDByAttributeValueTuples(idAttributeValueTuples, layerSet, trans, timeThreshold);
+            var foundCIID = await TraitEntityHelper.GetMatchingCIIDForTraitEntityByAttributeValueTuples(attributeModel, idAttributeValueTuples, layerSet, trans, timeThreshold);
 
             if (!foundCIID.HasValue)
                 return default;
@@ -78,7 +79,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public async Task<IDictionary<ID, T>> GetAllByDataID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ets = (await traitEntityModel.GetAllByDataID(layerSet, trans, timeThreshold))
+            var ets = (await traitEntityModel.GetAllByCIID(layerSet, trans, timeThreshold))
                 .Values
                 .OrderBy(et => et.CIID); // we order by CIID to stay consistent even when multiple CIs would match
 
@@ -99,6 +100,8 @@ namespace Omnikeeper.Base.Model.TraitBased
          * NOTE: unlike the regular insert, this does not do any checks if the updated entities actually fulfill the trait requirements 
          * and will be considered as this trait's entities going forward
          */
+        // TODO: this does not yet support 
+        // TODO: do an ID lookup only too, don't create new CIs for found ones
         public async Task<bool> BulkReplace(IDictionary<ID, T> t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             if (t.IsEmpty())
@@ -127,22 +130,22 @@ namespace Omnikeeper.Base.Model.TraitBased
                 return (kv.Value, ciid);
             });
 
-
             var relevantCIIDs = newCIIDDictionary.Values.Union(outdated.Keys).ToHashSet();
             var attributeFragments = Entities2Fragments(entities);
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(entities);
-            var changed = await traitEntityModel.BulkReplace(relevantCIIDs, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            var changed = await traitEntityModel.BulkReplace(relevantCIIDs, attributeFragments, outgoingRelations, incomingRelations, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
 
             return changed;
         }
 
         public async Task<(T dc, bool changed)> InsertOrUpdate(T t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
+            // NOTE: we do a CIID lookup based on the ID attributes and their values, but we DON'T require that the found CI must already be a trait entity
             var id = idAttributeInfos.ExtractIDFromEntity(t);
+            var idAttributeValueTuples = idAttributeInfos.ExtractAttributeValueTuplesFromID(id);
+            var foundCIID = await TraitEntityHelper.GetMatchingCIIDForTraitEntityByAttributeValueTuples(attributeModel, idAttributeValueTuples, layerSet, trans, changesetProxy.TimeThreshold);
 
-            var current = await GetSingleByDataID(id, layerSet, trans, changesetProxy.TimeThreshold);
-
-            var ciid = (current != default) ? current.ciid : await ciModel.CreateCI(trans);
+            var ciid = (foundCIID.HasValue) ? foundCIID.Value : await ciModel.CreateCI(trans);
 
             var tuples = new (T t, Guid ciid)[] { (t, ciid) };
             var attributeFragments = Entities2Fragments(tuples);

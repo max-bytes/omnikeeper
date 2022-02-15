@@ -1,11 +1,15 @@
 ﻿using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
-namespace Omnikeeper.GraphQL.TraitEntities
+namespace Omnikeeper.Base.Model.TraitBased
 {
     public static class TraitEntityHelper
     {
@@ -67,6 +71,34 @@ namespace Omnikeeper.GraphQL.TraitEntities
             return attributeValues.Where(t => t.isID)
                 .Select(t => (t.name, t.value))
                 .ToArray();
+        }
+
+
+        /*
+         * NOTE: this does not care whether or not the CI is actually a trait entity or not
+         */
+        public static async Task<Guid?> GetMatchingCIIDForTraitEntityByAttributeValueTuples(IAttributeModel attributeModel, (string name, IAttributeValue value)[] attributeValueTuples, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...
+            var cisWithIDAttributes = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(attributeValueTuples.Select(i => i.name).ToHashSet()), layerSet, trans, timeThreshold);
+
+            var foundCIID = cisWithIDAttributes.Where(t =>
+            {
+                return attributeValueTuples.All(nameValue => {
+                    if (t.Value.TryGetValue(nameValue.name, out var ma))
+                    {
+                        return ma.Attribute.Value.Equals(nameValue.value);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                });
+            })
+                .Select(t => t.Key)
+                .OrderBy(t => t) // we order by GUID to stay consistent even when multiple CIs would match
+                .FirstOrDefault();
+            return (foundCIID == default) ? null : foundCIID;
         }
     }
 }
