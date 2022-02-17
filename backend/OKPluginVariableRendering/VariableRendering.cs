@@ -71,12 +71,12 @@ namespace OKPluginVariableRendering
                 return false;
             }
 
-            var mainCIs = await effectiveTraitModel.FilterCIsWithTrait(allCIs.Select(e => e.Value), activeTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
+            var mainCIs = effectiveTraitModel.FilterCIsWithTrait(allCIs.Select(e => e.Value), activeTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
             
             //TODO: select only the realtions that are defined in configuration
             //      check if selection with specific predicates is possible
 
-            var allMergedRelations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
+            var allMergedRelations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layersetVariableRendering, trans, changesetProxy.TimeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
 
             Dictionary<string, List<MergedRelation>> allFromRelations = new();
             Dictionary<string, List<MergedRelation>> allToRelations = new();
@@ -194,7 +194,7 @@ namespace OKPluginVariableRendering
                             var targetCIRequiredTrait = await traitsProvider.GetActiveTrait(follow.RequiredTrait, trans, changesetProxy.TimeThreshold);
 
                             // check the required trait for each CI
-                            var filteredCIsWithTrait = await effectiveTraitModel.FilterCIsWithTrait(targetCIs, targetCIRequiredTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
+                            var filteredCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(targetCIs, targetCIRequiredTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
 
                             if (!filteredCIsWithTrait.Any())
                             {
