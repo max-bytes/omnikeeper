@@ -191,10 +191,11 @@ namespace Tests.Integration.Model
             // create a CI with attributes that match the ID attributes of entity1, but not the full trait entity
             var ciid = await ciModel.CreateCI(ModelContextBuilder.BuildImmediate());
             var idAttributeInfos = GenericTraitEntityHelper.ExtractIDAttributeInfos<T, ID>();
-            var idAttributeValueTuples = idAttributeInfos.ExtractAttributeValueTuplesFromID(entity1ID);
-            foreach(var (name, value) in idAttributeValueTuples)
+            var idAttributeValues = idAttributeInfos.ExtractAttributeValuesFromID(entity1ID);
+            var idAttributeNames = idAttributeInfos.GetIDAttributeNames();
+            for(var i = 0;i < idAttributeNames.Length;i++)
             {
-                await attributeModel.InsertAttribute(name, value, ciid, layer2, changesetBuilder(), new DataOriginV1(DataOriginType.Manual), ModelContextBuilder.BuildImmediate());
+                await attributeModel.InsertAttribute(idAttributeNames[i], idAttributeValues[i], ciid, layer2, changesetBuilder(), new DataOriginV1(DataOriginType.Manual), ModelContextBuilder.BuildImmediate());
             }
 
             var rt2 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());

@@ -84,10 +84,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (idCollection == null)
                             throw new Exception("Invalid input object for trait entity ID detected");
 
-                        var idAttributeValues = TraitEntityHelper.InputDictionary2IDAttributeTuples(idCollection, at);
+                        var (idAttributeNames, idAttributeValues) = TraitEntityHelper.InputDictionary2IDAttributes(idCollection, at);
 
                         // TODO: use data loader?
-                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDForTraitEntityByAttributeValueTuples(attributeModel, idAttributeValues, layerset, trans, timeThreshold);
+                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeNames, idAttributeValues, layerset, trans, timeThreshold);
 
                         if (!foundCIID.HasValue)
                         {
