@@ -19,48 +19,6 @@ namespace Omnikeeper.Model
         // TODO: with the introduction of the latest table, consider using/enforcing a different transaction isolation level as the default "read committed" for modifications
         // ("repeatable read" may be needed?)
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            var readTS = TimeThreshold.BuildLatest();
-            var currentAttribute = await _GetAttribute(name, ciid, layerID, trans, readTS, false);
-
-            // handle equality case
-            // which user it is does not make any difference; if the data is the same, no insert is made
-            // the origin also does not make a difference... TODO: think about that! Is this correct?
-            if (currentAttribute != null && currentAttribute.Value.Equals(value))
-                return (currentAttribute, false);
-
-            var id = Guid.NewGuid();
-            var (_, changesetID) = await BulkUpdate(
-                new (Guid, string, IAttributeValue, Guid?, Guid)[] { (ciid, name, value, currentAttribute?.ID, id) },
-                new (Guid, string, IAttributeValue, Guid, Guid)[0],
-                layerID, origin, changesetProxy, trans);
-
-            return (new CIAttribute(id, name, ciid, value, changesetID), true);
-        }
-
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            var readTS = TimeThreshold.BuildLatest();
-            var currentAttribute = await _GetAttribute(name, ciid, layerID, trans, readTS, false);
-
-            if (currentAttribute == null)
-            {
-                // attribute does not exist
-                throw new Exception("Trying to remove attribute that does not exist");
-            }
-
-            var id = Guid.NewGuid();
-            var (_, changesetID) = await BulkUpdate(
-                new (Guid, string, IAttributeValue, Guid?, Guid)[0],
-                new (Guid, string, IAttributeValue, Guid, Guid)[] { (ciid, name, currentAttribute.Value, currentAttribute.ID, id) },
-                layerID, origin, changesetProxy, trans);
-
-            var ret = new CIAttribute(id, name, ciid, currentAttribute.Value, changesetID);
-
-            return (ret, true);
-        }
-
         // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":
         // it is not possible to insert the "same" attribute (same ciid, name and layer) multiple times when using this preparation method
         // if this operation detects a duplicate, an exception is thrown;

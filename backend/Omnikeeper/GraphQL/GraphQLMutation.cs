@@ -84,9 +84,9 @@ namespace Omnikeeper.GraphQL
                     var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
                     // TODO: replace with bulk update
+                    var affectedCIIDs = new HashSet<Guid>();
 
                     var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
-                    var insertedAttributes = new List<CIAttribute>();
                     foreach (var attributeGroup in groupedInsertAttributes)
                     {
                         // look for ciid
@@ -95,8 +95,9 @@ namespace Omnikeeper.GraphQL
                         {
                             var nonGenericAttributeValue = AttributeValueHelper.BuildFromDTO(attribute.Value);
 
-                            var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
-                            insertedAttributes.Add(a);
+                            var changed = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                            if (changed)
+                                affectedCIIDs.Add(ciIdentity);
                         }
                     }
 
@@ -104,7 +105,6 @@ namespace Omnikeeper.GraphQL
                     var maskHandlingForRemoval = MaskHandlingForRemovalApplyNoMask.Instance;
 
                     var groupedRemoveAttributes = removeAttributes.GroupBy(a => a.CI);
-                    var removedAttributes = new List<CIAttribute>();
                     foreach (var attributeGroup in groupedRemoveAttributes)
                     {
                         // look for ciid
@@ -112,39 +112,41 @@ namespace Omnikeeper.GraphQL
                         foreach (var attribute in attributeGroup)
                         {
                             // TODO: mask handling
-                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, maskHandlingForRemoval);
-                            removedAttributes.Add(a);
+                            var changed = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, maskHandlingForRemoval);
+                            if (changed)
+                                affectedCIIDs.Add(ciIdentity);
                         }
                     }
 
-                    var insertedRelations = new List<Relation>();
                     foreach (var insertRelation in insertRelations)
                     {
-                        var (r, changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.Mask, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
-                        insertedRelations.Add(r);
+                        (_, var changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.Mask, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                        if (changed)
+                        {
+                            affectedCIIDs.Add(insertRelation.FromCIID);
+                            affectedCIIDs.Add(insertRelation.ToCIID);
+                        }
                     }
 
-                    var removedRelations = new List<Relation>();
                     foreach (var removeRelation in removeRelations)
                     {
-                        var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, maskHandlingForRemoval);
-                        removedRelations.Add(r);
+                        (_, var changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, maskHandlingForRemoval);
+                        if (changed)
+                        {
+                            affectedCIIDs.Add(removeRelation.FromCIID);
+                            affectedCIIDs.Add(removeRelation.ToCIID);
+                        }
 
                         // TODO: support for masking of relations
                     }
 
                     IEnumerable<MergedCI> affectedCIs = new List<MergedCI>();
-                    var affectedCIIDs = removedAttributes.Select(r => r.CIID)
-                    .Concat(insertedAttributes.Select(i => i.CIID))
-                    .Concat(insertedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
-                    .Concat(removedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
-                    .ToHashSet();
                     if (!affectedCIIDs.IsEmpty())
                         affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.GetLayerSet(context.Path), true, AllAttributeSelection.Instance, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
 
                     userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                    return new MutateReturn(insertedAttributes, removedAttributes, insertedRelations, affectedCIs);
+                    return new MutateReturn(affectedCIs);
                 });
 
             FieldAsync<CreateCIsReturnType>("createCIs",

@@ -15,18 +15,18 @@ namespace Omnikeeper.Base.Model.TraitBased
     {
         private readonly IEffectiveTraitModel effectiveTraitModel;
         protected readonly ICIModel ciModel;
-        protected readonly IBaseAttributeModel baseAttributeModel;
+        protected readonly IAttributeModel attributeModel;
         protected readonly IBaseRelationModel baseRelationModel;
         private readonly GenericTrait trait;
         private readonly HashSet<string> relevantAttributesForTrait;
 
-        public SingletonTraitDataConfigBaseModel(GenericTrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
+        public SingletonTraitDataConfigBaseModel(GenericTrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IBaseRelationModel baseRelationModel)
         {
             this.trait = trait;
             relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Concat(trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet();
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
-            this.baseAttributeModel = baseAttributeModel;
+            this.attributeModel = attributeModel;
             this.baseRelationModel = baseRelationModel;
         }
 
@@ -74,7 +74,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             {
                 if (value != null)
                 {
-                    (_, var tmpChanged) = await baseAttributeModel.InsertAttribute(attributeName, value, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+                    var tmpChanged = await attributeModel.InsertAttribute(attributeName, value, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
                     changed = changed || tmpChanged;
                 }
             }
@@ -119,7 +119,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             foreach (var attribute in attributesToRemove)
             {
-                var (_, changed) = await baseAttributeModel.RemoveAttribute(attribute, t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+                var changed = await attributeModel.RemoveAttribute(attribute, t.Item1, writeLayerID, changesetProxy, dataOrigin, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             }
 
             // TODO: masking

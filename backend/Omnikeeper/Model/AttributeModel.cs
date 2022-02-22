@@ -91,35 +91,6 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
-        {
-            return await baseModel.InsertAttribute(name, value, ciid, layerID, changeset, origin, trans);
-        }
-
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
-        {
-            switch (maskHandling)
-            {
-                case MaskHandlingForRemovalApplyMaskIfNecessary n:
-                    var attributeRemaining = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), NamedAttributesSelection.Build(name), new LayerSet(n.ReadLayersBelowWriteLayer), trans, changeset.TimeThreshold);
-                    if (attributeRemaining.TryGetValue(ciid, out var aa) && aa.ContainsKey(name))
-                    { // attribute exists in lower layers, mask it
-                        // NOTE: if the current attribute is already a mask, the InsertAttribute detects this and the operation becomes a NO-OP
-                        return await baseModel.InsertAttribute(name, AttributeScalarValueMask.Instance, ciid, layerID, changeset, origin, trans);
-                    }
-                    else
-                    {
-                        // TODO: how should we handle the case when the attribute we try to delete is already a mask? -> NO-OP? or delete the mask? make it configurable?
-                        // currently any mask is removed as well
-                        return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
-                    }
-                case MaskHandlingForRemovalApplyNoMask _:
-                    return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
-                default:
-                    throw new Exception("Invalid mask handling");
-            }
-        }
-
         public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
             var readTS = changeset.TimeThreshold;

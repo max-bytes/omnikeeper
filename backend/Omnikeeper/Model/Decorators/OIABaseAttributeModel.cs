@@ -99,19 +99,6 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
-
-            return await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, origin, trans);
-        }
-
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
-
-            return await model.RemoveAttribute(name, ciid, layerID, changesetProxy, origin, trans);
-        }
 
         public async Task<(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
             IDictionary<string, CIAttribute> outdatedAttributes)>
