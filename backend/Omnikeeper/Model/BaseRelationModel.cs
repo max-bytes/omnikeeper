@@ -219,7 +219,7 @@ namespace Omnikeeper.Model
             }
 
             var id = Guid.NewGuid();
-            var (_, changesetID) = await _BulkUpdate(
+            var (_, changesetID) = await BulkUpdate(
                 new (Guid, Guid, string, Guid?, Guid, bool)[] { (fromCIID, toCIID, predicateID, currentRelation?.ID, id, mask) },
                 new (Guid, Guid, string, Guid, Guid, bool)[0],
                 layerID, origin, changesetProxy, trans);
@@ -239,7 +239,7 @@ namespace Omnikeeper.Model
 
             var id = Guid.NewGuid();
 
-            var (_, changesetID) = await _BulkUpdate(
+            var (_, changesetID) = await BulkUpdate(
                 new (Guid, Guid, string, Guid?, Guid, bool)[0],
                 new (Guid, Guid, string, Guid, Guid, bool)[] { (fromCIID, toCIID, predicateID, currentRelation.ID, id, currentRelation.Mask) },
                 layerID, origin, changesetProxy, trans);
@@ -252,22 +252,17 @@ namespace Omnikeeper.Model
         // it is not possible to insert the "same" relation (same from_ciid, to_ciid, predicate_id and layer) multiple times
         // if this operation detects a duplicate, an exception is thrown;
         // the caller is responsible for making sure there are no duplicates
-        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
+        public async Task<(
+            IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts,
+            IDictionary<string, Relation> outdatedRelations
+            )> PrepareForBulkUpdate<F>(IBulkRelationData<F> data, IModelContext trans, TimeThreshold readTS)
         {
-            async Task<IEnumerable<Relation>[]> GetOutdatedRelationsFromCIAndPredicateScope(BulkRelationDataCIAndPredicateScope cp, string[] layerIDs, IModelContext trans, TimeThreshold timeThreshold)
-            {
-                var dLookup = cp.Relevant.ToLookup(dd => dd.thisCIID, dd => dd.predicateID);
-                var relationSelection = (cp.Outgoing) ? RelationSelectionFrom.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet()) : RelationSelectionTo.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet());
-                var allRelations = await GetRelations(relationSelection, layerIDs, trans, timeThreshold); // TODO: restrict to relevant predicateIDs at fetch point
-                var outdatedRelations = allRelations[0].Where(r => dLookup[(cp.Outgoing) ? r.FromCIID : r.ToCIID].Contains(r.PredicateID));
-                return new IEnumerable<Relation>[] { outdatedRelations };
-            }
 
             var outdatedRelations = (data switch
             {
-                BulkRelationDataPredicateScope p => (await GetRelations(RelationSelectionWithPredicate.Build(p.PredicateID), new string[] { data.LayerID }, trans, changesetProxy.TimeThreshold)),
-                BulkRelationDataLayerScope l => (await GetRelations(RelationSelectionAll.Instance, new string[] { data.LayerID }, trans, changesetProxy.TimeThreshold)),
-                BulkRelationDataCIAndPredicateScope cp => await GetOutdatedRelationsFromCIAndPredicateScope(cp, new string[] { cp.LayerID }, trans, changesetProxy.TimeThreshold),
+                BulkRelationDataPredicateScope p => (await GetRelations(RelationSelectionWithPredicate.Build(p.PredicateID), new string[] { data.LayerID }, trans, readTS)),
+                BulkRelationDataLayerScope l => (await GetRelations(RelationSelectionAll.Instance, new string[] { data.LayerID }, trans, readTS)),
+                BulkRelationDataCIAndPredicateScope cp => await cp.GetOutdatedRelationsFromCIAndPredicateScope(this, new string[] { cp.LayerID }, trans, readTS),
                 _ => throw new Exception("Unknown scope")
             }).SelectMany(r => r).ToDictionary(r => r.InformationHash);
 
@@ -307,61 +302,11 @@ namespace Omnikeeper.Model
                 actualInserts.Add((fromCIID, toCIID, predicateID, currentRelation?.ID, newRelationID, mask));
             }
 
-
-
-            // mask - based changes to inserts and removals
-            // depending on mask-handling, calculate relations that are potentially "maskable" in below layers
-            var maskableRelationsInBelowLayers = new Dictionary<string, (Guid fromCIID, Guid toCIID, string predicateID)>();
-            switch (maskHandling)
-            {
-                case MaskHandlingForRemovalApplyMaskIfNecessary n:
-                    maskableRelationsInBelowLayers = (data switch
-                    {
-                        BulkRelationDataPredicateScope p => (await GetRelations(RelationSelectionWithPredicate.Build(p.PredicateID), n.ReadLayersBelowWriteLayer, trans, changesetProxy.TimeThreshold)),
-                        BulkRelationDataLayerScope l => (await GetRelations(RelationSelectionAll.Instance, n.ReadLayersBelowWriteLayer, trans, changesetProxy.TimeThreshold)),
-                        BulkRelationDataCIAndPredicateScope cp => await GetOutdatedRelationsFromCIAndPredicateScope(cp, n.ReadLayersBelowWriteLayer, trans, changesetProxy.TimeThreshold),
-                        _ => throw new Exception("Unknown scope")
-                    }).SelectMany(r => r)
-                    .GroupBy(t => t.InformationHash)
-                    .Where(g => !informationHashesToInsert.Contains(g.Key)) // if we are already inserting this relation, we definitely do not want to mask it
-                    .ToDictionary(r => r.Key, r => (r.First().FromCIID, r.First().ToCIID, r.First().PredicateID));
-                    break;
-                case MaskHandlingForRemovalApplyNoMask _:
-                    // no operation necessary
-                    break;
-                default:
-                    throw new Exception("Invalid mask handling");
-            }
-            // reduce the actual removes by looking at maskable relations, replacing the removes with masks if necessary
-            foreach (var kv in maskableRelationsInBelowLayers)
-            {
-                var ih = kv.Key;
-
-                if (outdatedRelations.TryGetValue(ih, out var outdatedRelation))
-                {
-                    // the attribute exists in the write-layer AND is actually outdated AND needs to be masked -> mask it, instead of removing it
-                    outdatedRelations.Remove(ih);
-                    actualInserts.Add((outdatedRelation.FromCIID, outdatedRelation.ToCIID, outdatedRelation.PredicateID, outdatedRelation.ID, Guid.NewGuid(), true));
-                }
-                else
-                {
-                    // the attribute exists only in the layers below -> mask it
-                    actualInserts.Add((kv.Value.fromCIID, kv.Value.toCIID, kv.Value.predicateID, null, Guid.NewGuid(), true));
-                }
-            }
-
-
-            // perform actual updates in bulk
-            var removes = outdatedRelations.Values.Select(t => (t.FromCIID, t.ToCIID, t.PredicateID, t.ID, Guid.NewGuid(), t.Mask)).ToList();
-            await _BulkUpdate(actualInserts, removes, data.LayerID, origin, changesetProxy, trans);
-
-            // TODO: data (almost) is never used -> replace with a simpler return structure?
-            return actualInserts.Select(r => (r.fromCIID, r.toCIID, r.predicateID))
-                .Concat(outdatedRelations.Values.Select(r => (r.FromCIID, r.ToCIID, r.PredicateID)));
+            return (actualInserts, outdatedRelations);
         }
 
 
-        private async Task<(bool changed, Guid changesetID)> _BulkUpdate(
+        public async Task<(bool changed, Guid changesetID)> BulkUpdate(
             IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts,
             IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid existingRelationID, Guid newRelationID, bool mask)> removes,
             string layerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)

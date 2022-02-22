@@ -1,5 +1,10 @@
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -166,6 +171,18 @@ namespace Omnikeeper.Base.Entity
                     }
                 }
             }
+        }
+    }
+
+    public static class BulkRelationDataCIAndPredicateScopeExtensions
+    {
+        public static async Task<IEnumerable<Relation>[]> GetOutdatedRelationsFromCIAndPredicateScope(this BulkRelationDataCIAndPredicateScope cp, IBaseRelationModel baseRelationModel, string[] layerIDs, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            var dLookup = cp.Relevant.ToLookup(dd => dd.thisCIID, dd => dd.predicateID);
+            var relationSelection = (cp.Outgoing) ? RelationSelectionFrom.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet()) : RelationSelectionTo.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet());
+            var allRelations = await baseRelationModel.GetRelations(relationSelection, layerIDs, trans, timeThreshold); // TODO: restrict to relevant predicateIDs at fetch point
+            var outdatedRelations = allRelations[0].Where(r => dLookup[(cp.Outgoing) ? r.FromCIID : r.ToCIID].Contains(r.PredicateID));
+            return new IEnumerable<Relation>[] { outdatedRelations };
         }
     }
 

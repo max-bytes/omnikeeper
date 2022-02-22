@@ -22,13 +22,6 @@ namespace Omnikeeper.Model.Decorators
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
-        {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(data.LayerID, trans)) throw new Exception("Cannot write to online inbound layer");
-
-            return await model.BulkReplaceRelations(data, changesetProxy, origin, trans, maskHandling);
-        }
-
         public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.ContainsOnlineInboundLayer(new LayerSet(layerIDs), trans))
@@ -58,6 +51,20 @@ namespace Omnikeeper.Model.Decorators
         {
             // NOTE: OIAs do not support changesets, so an OIA can never return any
             return await model.GetRelationsOfChangeset(changesetID, getRemoved, trans);
+        }
+
+        public async Task<(IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts, IDictionary<string, Relation> outdatedRelations)> PrepareForBulkUpdate<F>(IBulkRelationData<F> data, IModelContext trans, TimeThreshold readTS)
+        {
+            if (await onlineAccessProxy.IsOnlineInboundLayer(data.LayerID, trans)) throw new Exception("Cannot write to online inbound layer");
+
+            return await model.PrepareForBulkUpdate(data, trans, readTS);
+        }
+
+        public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts, IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid existingRelationID, Guid newRelationID, bool mask)> removes, string layerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        {
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
+
+            return await model.BulkUpdate(inserts, removes, layerID, dataOrigin, changesetProxy, trans);
         }
     }
 }

@@ -79,7 +79,60 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            return await baseModel.BulkReplaceRelations(data, changesetProxy, origin, trans, maskHandling);
+            var (actualInserts, outdatedRelations) = await baseModel.PrepareForBulkUpdate(data, trans, changesetProxy.TimeThreshold);
+
+            var informationHashesToInsert = data.Fragments.Select(f => Relation.CreateInformationHash(data.GetFromCIID(f), data.GetToCIID(f), data.GetPredicateID(f))).ToHashSet();
+
+            // mask - based changes to inserts and removals
+            // depending on mask-handling, calculate relations that are potentially "maskable" in below layers
+            var maskableRelationsInBelowLayers = new Dictionary<string, (Guid fromCIID, Guid toCIID, string predicateID)>();
+            switch (maskHandling)
+            {
+                case MaskHandlingForRemovalApplyMaskIfNecessary n:
+                    maskableRelationsInBelowLayers = (data switch
+                    {
+                        BulkRelationDataPredicateScope p => (await baseModel.GetRelations(RelationSelectionWithPredicate.Build(p.PredicateID), n.ReadLayersBelowWriteLayer, trans, changesetProxy.TimeThreshold)),
+                        BulkRelationDataLayerScope l => (await baseModel.GetRelations(RelationSelectionAll.Instance, n.ReadLayersBelowWriteLayer, trans, changesetProxy.TimeThreshold)),
+                        BulkRelationDataCIAndPredicateScope cp => await cp.GetOutdatedRelationsFromCIAndPredicateScope(baseModel, n.ReadLayersBelowWriteLayer, trans, changesetProxy.TimeThreshold),
+                        _ => throw new Exception("Unknown scope")
+                    }).SelectMany(r => r)
+                    .GroupBy(t => t.InformationHash)
+                    .Where(g => !informationHashesToInsert.Contains(g.Key)) // if we are already inserting this relation, we definitely do not want to mask it
+                    .ToDictionary(r => r.Key, r => (r.First().FromCIID, r.First().ToCIID, r.First().PredicateID));
+                    break;
+                case MaskHandlingForRemovalApplyNoMask _:
+                    // no operation necessary
+                    break;
+                default:
+                    throw new Exception("Invalid mask handling");
+            }
+            // reduce the actual removes by looking at maskable relations, replacing the removes with masks if necessary
+            foreach (var kv in maskableRelationsInBelowLayers)
+            {
+                var ih = kv.Key;
+
+                if (outdatedRelations.TryGetValue(ih, out var outdatedRelation))
+                {
+                    // the attribute exists in the write-layer AND is actually outdated AND needs to be masked -> mask it, instead of removing it
+                    outdatedRelations.Remove(ih);
+                    actualInserts.Add((outdatedRelation.FromCIID, outdatedRelation.ToCIID, outdatedRelation.PredicateID, outdatedRelation.ID, Guid.NewGuid(), true));
+                }
+                else
+                {
+                    // the attribute exists only in the layers below -> mask it
+                    actualInserts.Add((kv.Value.fromCIID, kv.Value.toCIID, kv.Value.predicateID, null, Guid.NewGuid(), true));
+                }
+            }
+
+
+            // perform actual updates in bulk
+            var removes = outdatedRelations.Values.Select(t => (t.FromCIID, t.ToCIID, t.PredicateID, t.ID, Guid.NewGuid(), t.Mask)).ToList();
+            await baseModel.BulkUpdate(actualInserts, removes, data.LayerID, origin, changesetProxy, trans);
+
+            // TODO: data (almost) is never used -> replace with a simpler return structure?
+            return actualInserts.Select(r => (r.fromCIID, r.toCIID, r.predicateID))
+                .Concat(outdatedRelations.Values.Select(r => (r.FromCIID, r.ToCIID, r.PredicateID)));
+
         }
     }
 }

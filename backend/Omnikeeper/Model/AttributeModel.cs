@@ -122,7 +122,7 @@ namespace Omnikeeper.Model
 
         public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            var readTS = TimeThreshold.BuildLatest();
+            var readTS = changeset.TimeThreshold;
 
             var (inserts, outdatedAttributes) = await baseModel.PrepareForBulkUpdate(data, trans, readTS);
 
