@@ -28,6 +28,7 @@ namespace Omnikeeper.Controllers
     public class ImportExportLayerController : ControllerBase
     {
         private readonly IBaseAttributeModel baseAttributeModel;
+        private readonly IAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly ILayerModel layerModel;
         private readonly ICurrentUserAccessor currentUserService;
@@ -39,12 +40,12 @@ namespace Omnikeeper.Controllers
         private readonly ILayerStatisticsModel layerStatisticsModel;
         private readonly IRelationModel relationModel;
 
-        public ImportExportLayerController(IBaseAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, ICIModel ciModel, IBaseRelationModel baseRelationModel,
+        public ImportExportLayerController(IBaseAttributeModel baseAttributeModel, IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, ICIModel ciModel, IBaseRelationModel baseRelationModel,
             ILayerBasedAuthorizationService layerBasedAuthorizationService, IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerModel layerModel, ILayerStatisticsModel layerStatisticsModel, IRelationModel relationModel)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.changesetModel = changesetModel;
-            this.baseAttributeModel = attributeModel;
+            this.baseAttributeModel = baseAttributeModel;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.currentUserService = currentUserService;
             this.ciModel = ciModel;
@@ -53,6 +54,7 @@ namespace Omnikeeper.Controllers
             this.layerModel = layerModel;
             this.layerStatisticsModel = layerStatisticsModel;
             this.relationModel = relationModel;
+            this.attributeModel = attributeModel;
         }
 
         public class ExportedLayerDataV1
@@ -194,8 +196,7 @@ namespace Omnikeeper.Controllers
                     var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
 
                     var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataLayerScope.Fragment(t.Name, AttributeValueHelper.BuildFromDTO(t.Value), t.CIID));
-                    var bulkUpdates = await baseAttributeModel.PrepareForBulkUpdate(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), trans, maskHandling);
-                    await baseAttributeModel.BulkUpdate(bulkUpdates.inserts, bulkUpdates.removes, writeLayer.ID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
+                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, maskHandling);
 
                     var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID, t.Mask));
                     await baseRelationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, maskHandling);
