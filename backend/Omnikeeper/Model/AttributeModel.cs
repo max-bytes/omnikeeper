@@ -179,10 +179,9 @@ namespace Omnikeeper.Model
             var actualRemoves = outdatedAttributes.Values.Select(a => (a.CIID, a.Name, a.Value, a.ID, Guid.NewGuid())).ToList();
 
             // perform updates in bulk
-            await baseModel.BulkUpdate(inserts, actualRemoves, data.LayerID, origin, changeset, trans);
+            var (changed, _) = await baseModel.BulkUpdate(inserts, actualRemoves, data.LayerID, origin, changeset, trans);
 
-            // TODO: return the actual result of the BulkUpdate(), not try to guess by using the insert- and removal-list
-            return !inserts.IsEmpty() || !actualRemoves.IsEmpty();
+            return changed;
         }
     }
 }
