@@ -158,8 +158,6 @@ namespace Omnikeeper.Base.Model.TraitBased
          * NOTE: unlike the regular insert, this does not do any checks if the updated entities actually fulfill the trait requirements 
          * and will be considered as this trait's entities going forward
          */
-        // TODO: this does not yet support 
-        // TODO: do an ID lookup only too, don't create new CIs for found ones
         public async Task<bool> BulkReplace(IDictionary<ID, T> t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             if (t.IsEmpty())

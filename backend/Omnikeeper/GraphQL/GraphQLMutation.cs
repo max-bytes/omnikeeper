@@ -120,7 +120,7 @@ namespace Omnikeeper.GraphQL
 
                     foreach (var insertRelation in insertRelations)
                     {
-                        (_, var changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.Mask, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                        var changed = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.Mask, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                         if (changed)
                         {
                             affectedCIIDs.Add(insertRelation.FromCIID);
@@ -130,7 +130,7 @@ namespace Omnikeeper.GraphQL
 
                     foreach (var removeRelation in removeRelations)
                     {
-                        (_, var changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, maskHandlingForRemoval);
+                        var changed = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, maskHandlingForRemoval);
                         if (changed)
                         {
                             affectedCIIDs.Add(removeRelation.FromCIID);

@@ -202,7 +202,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, bool mask, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<bool> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, bool mask, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (fromCIID == toCIID)
                 throw new Exception("From and To CIID must not be the same!");
@@ -215,19 +215,19 @@ namespace Omnikeeper.Model
             if (currentRelation != null && currentRelation.Mask == mask)
             {
                 // same relation already exists and is present
-                return (currentRelation, false);
+                return false;
             }
 
             var id = Guid.NewGuid();
-            var (_, changesetID) = await BulkUpdate(
+            var (changed, _) = await BulkUpdate(
                 new (Guid, Guid, string, Guid?, Guid, bool)[] { (fromCIID, toCIID, predicateID, currentRelation?.ID, id, mask) },
                 new (Guid, Guid, string, Guid, Guid, bool)[0],
                 layerID, origin, changesetProxy, trans);
 
-            return (new Relation(id, fromCIID, toCIID, predicateID, changesetID, mask), true);
+            return changed;
         }
 
-        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<bool> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, changesetProxy.TimeThreshold);
 
@@ -239,12 +239,12 @@ namespace Omnikeeper.Model
 
             var id = Guid.NewGuid();
 
-            var (_, changesetID) = await BulkUpdate(
+            var (changed, _) = await BulkUpdate(
                 new (Guid, Guid, string, Guid?, Guid, bool)[0],
                 new (Guid, Guid, string, Guid, Guid, bool)[] { (fromCIID, toCIID, predicateID, currentRelation.ID, id, currentRelation.Mask) },
                 layerID, origin, changesetProxy, trans);
 
-            return (new Relation(id, fromCIID, toCIID, predicateID, changesetID, currentRelation.Mask), true);
+            return changed;
         }
 
 

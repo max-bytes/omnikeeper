@@ -185,6 +185,4 @@ namespace Omnikeeper.Base.Entity
             return new IEnumerable<Relation>[] { outdatedRelations };
         }
     }
-
-
 }

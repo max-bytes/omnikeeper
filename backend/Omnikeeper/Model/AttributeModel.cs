@@ -146,6 +146,9 @@ namespace Omnikeeper.Model
                 }
             }
 
+            // TODO: other-layers-value handling
+            // if set: fetch attributes in layerset excluding write layer; if value is same as value that we want to write -> instead of write -> no-op or even delete
+
             // build final removal-list
             var actualRemoves = outdatedAttributes.Values.Select(a => (a.CIID, a.Name, a.Value, a.ID, Guid.NewGuid())).ToList();
 
