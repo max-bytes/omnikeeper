@@ -69,18 +69,24 @@ namespace Omnikeeper.Model
 
         public async Task<bool> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, bool mask, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IOtherLayersValueHandling otherLayersValueHandling)
         {
-            // TODO: other layers value handling
+            var scope = new BulkRelationDataSpecificScope(layerID, new BulkRelationDataSpecificScope.Fragment[] {
+                new BulkRelationDataSpecificScope.Fragment(fromCIID, toCIID, predicateID, mask)
+            }, Array.Empty<(Guid from, Guid to, string predicateID)>());
+            var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance; // NOTE: we can keep this fixed here, because it does not affect inserts
 
-            return await baseModel.InsertRelation(fromCIID, toCIID, predicateID, mask, layerID, changesetProxy, origin, trans);
+            var r = await BulkReplaceRelations(scope, changesetProxy, origin, trans, maskHandling, otherLayersValueHandling);
+            return !r.IsEmpty();
         }
 
         public async Task<bool> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            return await baseModel.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
+            var scope = new BulkRelationDataSpecificScope(layerID, Array.Empty<BulkRelationDataSpecificScope.Fragment>(), 
+                new List<(Guid from, Guid to, string predicateID)> { (fromCIID, toCIID, predicateID) });
+            var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance; // NOTE: we can keep this fixed here, because it does not affect removals
+
+            var r = await BulkReplaceRelations(scope, changesetProxy, origin, trans, maskHandling, otherLayersValueHandling);
+            return !r.IsEmpty();
         }
-
-
-
 
         // NOTE: this bulk operation DOES check if the relations that are inserted are "unique":
         // it is not possible to insert the "same" relation (same from_ciid, to_ciid, predicate_id and layer) multiple times
@@ -138,7 +144,7 @@ namespace Omnikeeper.Model
         {
             var maskHandlingForRetrieval = MaskHandlingForRetrievalGetMasks.Instance;
 
-            async Task<IEnumerable<MergedRelation>> GetOutdatedRelationsFromCIAndPredicateScope(BulkRelationDataCIAndPredicateScope cp, IBaseRelationModel baseRelationModel, LayerSet layerIDs, IModelContext trans, TimeThreshold timeThreshold, IMaskHandlingForRetrieval maskHandlingForRetrieval)
+            async Task<IEnumerable<MergedRelation>> GetOutdatedRelationsFromCIAndPredicateScope(BulkRelationDataCIAndPredicateScope cp, LayerSet layerIDs, IModelContext trans, TimeThreshold timeThreshold, IMaskHandlingForRetrieval maskHandlingForRetrieval)
             {
                 var dLookup = cp.Relevant.ToLookup(dd => dd.thisCIID, dd => dd.predicateID);
                 var relationSelection = (cp.Outgoing) ? RelationSelectionFrom.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet()) : RelationSelectionTo.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet());
@@ -147,11 +153,20 @@ namespace Omnikeeper.Model
                 return outdatedRelations;
             }
 
+            async Task<IEnumerable<MergedRelation>> GetOutdatedRelationsFromSpecificScope(BulkRelationDataSpecificScope ss, LayerSet layerIDs, IModelContext trans, TimeThreshold timeThreshold, IMaskHandlingForRetrieval maskHandlingForRetrieval)
+            {
+                var specificRelations = 
+                    ss.Fragments.Select(f => (ss.GetFromCIID(f), ss.GetToCIID(f), ss.GetPredicateID(f)))
+                    .Union(ss.Removals);
+                return await GetMergedRelations(RelationSelectionSpecific.Build(specificRelations), layerIDs, trans, timeThreshold, maskHandlingForRetrieval);
+            }
+
             return data switch
             {
                 BulkRelationDataPredicateScope p => await GetMergedRelations(RelationSelectionWithPredicate.Build(p.PredicateID), layerSet, trans, timeThreshold, maskHandlingForRetrieval),
                 BulkRelationDataLayerScope _ => await GetMergedRelations(RelationSelectionAll.Instance, layerSet, trans, timeThreshold, maskHandlingForRetrieval),
-                BulkRelationDataCIAndPredicateScope cp => await GetOutdatedRelationsFromCIAndPredicateScope(cp, baseModel, layerSet, trans, timeThreshold, maskHandlingForRetrieval),
+                BulkRelationDataCIAndPredicateScope cp => await GetOutdatedRelationsFromCIAndPredicateScope(cp, layerSet, trans, timeThreshold, maskHandlingForRetrieval),
+                BulkRelationDataSpecificScope ss => await GetOutdatedRelationsFromSpecificScope(ss, layerSet, trans, timeThreshold, maskHandlingForRetrieval),
                 _ => throw new Exception("Unknown scope")
             };
         }

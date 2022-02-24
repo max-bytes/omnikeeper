@@ -167,23 +167,4 @@ namespace Omnikeeper.Base.Entity
             RelevantAttributes = relevantAttributes;
         }
     }
-
-    public static class BulkCIAttributeScopeHelper
-    {
-        // TODO: move into AttributeModel?
-        public static async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetAttributesInScope<F>(IBulkCIAttributeData<F> data, LayerSet layerset, IAttributeModel attributeModel, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            return data switch
-            {
-                BulkCIAttributeDataLayerScope d => (d.NamePrefix.IsEmpty()) ?
-                        (await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, layerset, trans, timeThreshold)) :
-                        (await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), layerset, trans, timeThreshold)),
-                BulkCIAttributeDataCIScope d =>
-                    await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, layerset, trans: trans, atTime: timeThreshold),
-                BulkCIAttributeDataCIAndAttributeNameScope a =>
-                    await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), layerset, trans, timeThreshold),
-                _ => throw new Exception("Unknown scope")
-            };
-        }
-    }
 }

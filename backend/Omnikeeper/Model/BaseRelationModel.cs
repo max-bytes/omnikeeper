@@ -33,6 +33,16 @@ namespace Omnikeeper.Model
                     return ("(to_ci_id = ANY(@to_ci_ids))", new[] { new NpgsqlParameter("to_ci_ids", rst.ToCIIDs.ToArray()) });
                 case RelationSelectionWithPredicate rsp:
                     return ("(predicate_id = @predicate_id)", new[] { new NpgsqlParameter("predicate_id", rsp.PredicateID) });
+                case RelationSelectionSpecific rss:
+                {
+                    var sqlClause = "(" + string.Join(" OR ", rss.Specifics.Select((s, index) => $"(from_ci_id = @from_ci_id{index} AND to_ci_id = @to_ci_id{index} AND predicate_id = @predicate_id{index})")) + ")";
+                    var parameters = rss.Specifics.SelectMany((s, index) => new[] { 
+                        new NpgsqlParameter($"from_ci_id{index}", s.from),
+                        new NpgsqlParameter($"to_ci_id{index}", s.to),
+                        new NpgsqlParameter($"predicate_id{index}", s.predicateID)
+                    });
+                    return (sqlClause, parameters);
+                }
                 case RelationSelectionAll _:
                     return (null, new NpgsqlParameter[0]);
                 case RelationSelectionNone _:
@@ -89,51 +99,6 @@ namespace Omnikeeper.Model
                 command.Prepare();
             }
             return command;
-        }
-
-
-        private async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
-
-            NpgsqlCommand command;
-            if (atTime.IsLatest && _USE_LATEST_TABLE)
-            {
-                command = new NpgsqlCommand(@"select id, changeset_id, mask from relation_latest
-                where from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id and layer_id = @layer_id and predicate_id = @predicate_id
-                LIMIT 1", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("from_ci_id", fromCIID);
-                command.Parameters.AddWithValue("to_ci_id", toCIID);
-                command.Parameters.AddWithValue("predicate_id", predicateID);
-                command.Parameters.AddWithValue("layer_id", layerID);
-                command.Prepare();
-            }
-            else
-            {
-                command = new NpgsqlCommand(@"select id, changeset_id, mask from (select id, removed, changeset_id, mask from relation where 
-                timestamp <= @time_threshold AND from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id and layer_id = @layer_id and predicate_id = @predicate_id 
-                and partition_index >= @partition_index
-                order by timestamp DESC NULLS LAST
-                LIMIT 1) i where i.removed = false", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("from_ci_id", fromCIID);
-                command.Parameters.AddWithValue("to_ci_id", toCIID);
-                command.Parameters.AddWithValue("predicate_id", predicateID);
-                command.Parameters.AddWithValue("layer_id", layerID);
-                command.Parameters.AddWithValue("time_threshold", atTime.Time);
-                command.Parameters.AddWithValue("partition_index", partitionIndex);
-                command.Prepare();
-            }
-            using var dr = await command.ExecuteReaderAsync();
-            if (!await dr.ReadAsync())
-                return null;
-
-            command.Dispose();
-
-            var id = dr.GetGuid(0);
-            var changesetID = dr.GetGuid(1);
-            var mask = dr.GetBoolean(2);
-
-            return new Relation(id, fromCIID, toCIID, predicateID, changesetID, mask);
         }
 
         public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
@@ -200,51 +165,6 @@ namespace Omnikeeper.Model
                 ret.Add(relation);
             }
             return ret;
-        }
-
-        public async Task<bool> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, bool mask, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            if (fromCIID == toCIID)
-                throw new Exception("From and To CIID must not be the same!");
-            if (predicateID.IsEmpty())
-                throw new Exception("PredicateID must not be empty");
-            IDValidations.ValidatePredicateIDThrow(predicateID);
-
-            var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, changesetProxy.TimeThreshold);
-
-            if (currentRelation != null && currentRelation.Mask == mask)
-            {
-                // same relation already exists and is present
-                return false;
-            }
-
-            var id = Guid.NewGuid();
-            var (changed, _) = await BulkUpdate(
-                new (Guid, Guid, string, Guid?, Guid, bool)[] { (fromCIID, toCIID, predicateID, currentRelation?.ID, id, mask) },
-                new (Guid, Guid, string, Guid, Guid, bool)[0],
-                layerID, origin, changesetProxy, trans);
-
-            return changed;
-        }
-
-        public async Task<bool> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, changesetProxy.TimeThreshold);
-
-            if (currentRelation == null)
-            {
-                // relation does not exist
-                throw new Exception("Trying to remove relation that does not exist");
-            }
-
-            var id = Guid.NewGuid();
-
-            var (changed, _) = await BulkUpdate(
-                new (Guid, Guid, string, Guid?, Guid, bool)[0],
-                new (Guid, Guid, string, Guid, Guid, bool)[] { (fromCIID, toCIID, predicateID, currentRelation.ID, id, currentRelation.Mask) },
-                layerID, origin, changesetProxy, trans);
-
-            return changed;
         }
 
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(

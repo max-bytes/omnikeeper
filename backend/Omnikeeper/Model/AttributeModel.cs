@@ -103,7 +103,7 @@ namespace Omnikeeper.Model
             )> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans, TimeThreshold readTS)
         {
             // consider ALL relevant attributes as outdated first
-            var outdatedAttributes = (await BulkCIAttributeScopeHelper.GetAttributesInScope(data, new LayerSet(data.LayerID), this, trans, readTS))
+            var outdatedAttributes = (await GetAttributesInScope(data, new LayerSet(data.LayerID), trans, readTS))
                 .SelectMany(t => t.Value.Select(tt => tt.Value.Attribute)).ToDictionary(a => a.InformationHash); // TODO: slow?
 
             var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)>();
@@ -149,7 +149,7 @@ namespace Omnikeeper.Model
             switch (maskHandling)
             {
                 case MaskHandlingForRemovalApplyMaskIfNecessary n:
-                    maskableAttributesInBelowLayers = (await BulkCIAttributeScopeHelper.GetAttributesInScope(data, new LayerSet(n.ReadLayersBelowWriteLayer), this, trans, readTS))
+                    maskableAttributesInBelowLayers = (await GetAttributesInScope(data, new LayerSet(n.ReadLayersBelowWriteLayer), trans, readTS))
                     .SelectMany(t => t.Value.Select(tt => tt.Value.Attribute))
                     .GroupBy(t => t.InformationHash)
                     .Where(g => !informationHashesToInsert.Contains(g.Key)) // if we are already inserting this attribute, we definitely do not want to mask it
@@ -187,7 +187,7 @@ namespace Omnikeeper.Model
             {
                 case OtherLayersValueHandlingTakeIntoAccount t:
                     // fetch attributes in layerset excluding write layer; if value is same as value that we want to write -> instead of write -> no-op or even delete
-                    var existingAttributesInOtherLayers = await BulkCIAttributeScopeHelper.GetAttributesInScope(data, new LayerSet(t.ReadLayersWithoutWriteLayer), this, trans, readTS);
+                    var existingAttributesInOtherLayers = await GetAttributesInScope(data, new LayerSet(t.ReadLayersWithoutWriteLayer), trans, readTS);
                     for (var i = inserts.Count - 1;i >= 0;i--)
                     {
                         var insert = inserts[i];
@@ -220,6 +220,21 @@ namespace Omnikeeper.Model
             var (changed, _) = await baseModel.BulkUpdate(inserts, actualRemoves, data.LayerID, origin, changeset, trans);
 
             return changed;
+        }
+
+        private async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetAttributesInScope<F>(IBulkCIAttributeData<F> data, LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            return data switch
+            {
+                BulkCIAttributeDataLayerScope d => (d.NamePrefix.IsEmpty()) ?
+                        (await GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, layerset, trans, timeThreshold)) :
+                        (await GetMergedAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), layerset, trans, timeThreshold)),
+                BulkCIAttributeDataCIScope d =>
+                    await GetMergedAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, layerset, trans: trans, atTime: timeThreshold),
+                BulkCIAttributeDataCIAndAttributeNameScope a =>
+                    await GetMergedAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), layerset, trans, timeThreshold),
+                _ => throw new Exception("Unknown scope")
+            };
         }
     }
 }

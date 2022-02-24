@@ -173,4 +173,40 @@ namespace Omnikeeper.Base.Entity
             }
         }
     }
+
+    public class BulkRelationDataSpecificScope : IBulkRelationData<BulkRelationDataSpecificScope.Fragment>
+    {
+
+        public class Fragment
+        {
+            public Guid From { get; private set; }
+            public Guid To { get; private set; }
+            public string PredicateID { get; private set; }
+            public bool Mask { get; private set; }
+
+            public Fragment(Guid from, Guid to, string predicateID, bool mask)
+            {
+                From = from;
+                To = to;
+                PredicateID = predicateID;
+                Mask = mask;
+            }
+        }
+
+        public string LayerID { get; private set; }
+        public IEnumerable<Fragment> Fragments { get; private set; }
+        public string GetPredicateID(Fragment fragment) => fragment.PredicateID;
+        public Guid GetFromCIID(Fragment fragment) => fragment.From;
+        public Guid GetToCIID(Fragment fragment) => fragment.To;
+        public bool GetMask(Fragment fragment) => fragment.Mask;
+
+        public readonly IEnumerable<(Guid from, Guid to, string predicateID)> Removals;
+
+        public BulkRelationDataSpecificScope(string layerID, IEnumerable<Fragment> fragments, IEnumerable<(Guid from, Guid to, string predicateID)> removals)
+        {
+            LayerID = layerID;
+            Fragments = fragments;
+            Removals = removals;
+        }
+    }
 }
