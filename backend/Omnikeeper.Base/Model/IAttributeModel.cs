@@ -16,7 +16,7 @@ namespace Omnikeeper.Base.Model
 
         Task<MergedCIAttribute?> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layerset, IModelContext trans, TimeThreshold atTime);
 
-        Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, 
+        Task<int> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, 
             IMaskHandlingForRemoval maskHandling, IOtherLayersValueHandling otherLayersValueHandling);
     }
 
@@ -51,14 +51,16 @@ namespace Omnikeeper.Base.Model
                 new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, name, value)
             }, new HashSet<Guid>() { ciid }, new HashSet<string>() { name });
             var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance; // NOTE: we can keep this fixed here, because it does not affect inserts
-            return await attributeModel.BulkReplaceAttributes(data, changeset, origin, trans, maskHandling, otherLayersValueHandling);
+            var r = await attributeModel.BulkReplaceAttributes(data, changeset, origin, trans, maskHandling, otherLayersValueHandling);
+            return r > 0;
         }
 
         public static async Task<bool> RemoveAttribute(this IAttributeModel attributeModel, string name, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
             var data = new BulkCIAttributeDataCIAndAttributeNameScope(layerID, new BulkCIAttributeDataCIAndAttributeNameScope.Fragment[] { }, new HashSet<Guid>() { ciid }, new HashSet<string>() { name });
             var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance; // NOTE: we can keep this fixed here, because it does not affect removals
-            return await attributeModel.BulkReplaceAttributes(data, changeset, origin, trans, maskHandling, otherLayersValueHandling);
+            var r = await attributeModel.BulkReplaceAttributes(data, changeset, origin, trans, maskHandling, otherLayersValueHandling);
+            return r > 0;
         }
 
 

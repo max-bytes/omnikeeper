@@ -100,9 +100,9 @@ namespace Omnikeeper.Base.Model.TraitBased
             IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             var otherLayersValueHandling = GetOtherLayersValueHandling(layerSet, writeLayer);
-            var changed = await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(writeLayer, fragments, relevantCIs, relevantAttributesForTrait), changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
+            var numChanged = await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(writeLayer, fragments, relevantCIs, relevantAttributesForTrait), changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
 
-            return changed;
+            return numChanged > 0;
         }
 
         private async Task<bool> WriteRelations(IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
@@ -113,10 +113,10 @@ namespace Omnikeeper.Base.Model.TraitBased
             if (!trait.OptionalRelations.IsEmpty())
             {
                 var otherLayersValueHandling = GetOtherLayersValueHandling(layerSet, writeLayer);
-                var tmpChanged = await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayer, outgoingRelations, relevantOutgoingRelations, true), changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
-                changed = changed || !tmpChanged.IsEmpty();
-                tmpChanged = await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayer, incomingRelations, relevantIncomingRelations, false), changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
-                changed = changed || !tmpChanged.IsEmpty();
+                var tmpNumChanged = await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayer, outgoingRelations, relevantOutgoingRelations, true), changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
+                changed = changed || tmpNumChanged > 0;
+                tmpNumChanged = await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayer, incomingRelations, relevantIncomingRelations, false), changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
+                changed = changed || tmpNumChanged > 0;
             }
 
             return changed;

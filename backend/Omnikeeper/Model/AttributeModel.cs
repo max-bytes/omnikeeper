@@ -134,7 +134,7 @@ namespace Omnikeeper.Model
             return (actualInserts, outdatedAttributes);
         }
 
-        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, 
+        public async Task<int> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, 
             IMaskHandlingForRemoval maskHandling, IOtherLayersValueHandling otherLayersValueHandling)
         {
             var readTS = changeset.TimeThreshold;
@@ -217,9 +217,9 @@ namespace Omnikeeper.Model
             }
 
             // perform updates in bulk
-            var (changed, _) = await baseModel.BulkUpdate(inserts, actualRemoves, data.LayerID, origin, changeset, trans);
+            await baseModel.BulkUpdate(inserts, actualRemoves, data.LayerID, origin, changeset, trans);
 
-            return changed;
+            return inserts.Count + actualRemoves.Count;
         }
 
         private async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetAttributesInScope<F>(IBulkCIAttributeData<F> data, LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)

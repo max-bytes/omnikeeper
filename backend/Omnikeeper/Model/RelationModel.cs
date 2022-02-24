@@ -75,7 +75,7 @@ namespace Omnikeeper.Model
             var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance; // NOTE: we can keep this fixed here, because it does not affect inserts
 
             var r = await BulkReplaceRelations(scope, changesetProxy, origin, trans, maskHandling, otherLayersValueHandling);
-            return !r.IsEmpty();
+            return r > 0;
         }
 
         public async Task<bool> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
@@ -85,7 +85,7 @@ namespace Omnikeeper.Model
             var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance; // NOTE: we can keep this fixed here, because it does not affect removals
 
             var r = await BulkReplaceRelations(scope, changesetProxy, origin, trans, maskHandling, otherLayersValueHandling);
-            return !r.IsEmpty();
+            return r > 0;
         }
 
         // NOTE: this bulk operation DOES check if the relations that are inserted are "unique":
@@ -172,7 +172,7 @@ namespace Omnikeeper.Model
         }
 
 
-        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling, IOtherLayersValueHandling otherLayersValueHandling)
+        public async Task<int> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling, IOtherLayersValueHandling otherLayersValueHandling)
         {
             var (actualInserts, outdatedRelations) = await PrepareForBulkUpdate(data, trans, changesetProxy.TimeThreshold);
 
@@ -253,9 +253,7 @@ namespace Omnikeeper.Model
             // perform actual updates in bulk
             await baseModel.BulkUpdate(actualInserts, removes, data.LayerID, origin, changesetProxy, trans);
 
-            // TODO: data (almost) is never used -> replace with a simpler return structure?
-            return actualInserts.Select(r => (r.fromCIID, r.toCIID, r.predicateID))
-                .Concat(outdatedRelations.Values.Select(r => (r.FromCIID, r.ToCIID, r.PredicateID)));
+            return actualInserts.Count + removes.Count;
 
         }
     }
