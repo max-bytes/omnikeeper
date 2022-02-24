@@ -37,13 +37,6 @@ namespace Omnikeeper.Base.Model
             ReadLayersBelowWriteLayer = readLayersBelowWriteLayer;
         }
 
-        //public static IMaskHandlingForRemoval Build(string[] readLayersBelowWriteLayer)
-        //{
-        //    if (readLayersBelowWriteLayer.Length == 0)
-        //        return MaskHandlingForRemovalApplyNoMask.Instance;
-        //    return new MaskHandlingForRemovalApplyMaskIfNecessary(readLayersBelowWriteLayer);
-        //}
-
         public static IMaskHandlingForRemoval Build(LayerSet readLayerSet, string writeLayerID)
         {
             var indexWriteLayerID = readLayerSet.IndexOf(writeLayerID);
