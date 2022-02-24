@@ -14,8 +14,8 @@ namespace Omnikeeper.Base.Model.Config
     // refactor into generic version, like GenericTraitEntityModel, but for Singletons
     public class BaseConfigurationModel : SingletonTraitDataConfigBaseModel<BaseConfigurationV2>, IBaseConfigurationModel
     {
-        public BaseConfigurationModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
-            : base(RecursiveTraitService.FlattenSingleRecursiveTrait(GenericTraitEntityHelper.Class2RecursiveTrait<BaseConfigurationV2>()), effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
+        public BaseConfigurationModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
+            : base(RecursiveTraitService.FlattenSingleRecursiveTrait(GenericTraitEntityHelper.Class2RecursiveTrait<BaseConfigurationV2>()), effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
 

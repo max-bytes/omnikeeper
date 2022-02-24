@@ -19,7 +19,7 @@ namespace Omnikeeper.Base.Model
         public static MaskHandlingForRetrievalGetMasks Instance = new MaskHandlingForRetrievalGetMasks();
     }
 
-public interface IMaskHandlingForRemoval { }
+    public interface IMaskHandlingForRemoval { }
 
     /// <summary>
     /// detects if the layers "below" contain the attribute too
@@ -35,13 +35,6 @@ public interface IMaskHandlingForRemoval { }
         private MaskHandlingForRemovalApplyMaskIfNecessary(string[] readLayersBelowWriteLayer)
         {
             ReadLayersBelowWriteLayer = readLayersBelowWriteLayer;
-        }
-
-        public static IMaskHandlingForRemoval Build(string[] readLayersBelowWriteLayer)
-        {
-            if (readLayersBelowWriteLayer.Length == 0)
-                return MaskHandlingForRemovalApplyNoMask.Instance;
-            return new MaskHandlingForRemovalApplyMaskIfNecessary(readLayersBelowWriteLayer);
         }
 
         public static IMaskHandlingForRemoval Build(LayerSet readLayerSet, string writeLayerID)

@@ -335,9 +335,8 @@ namespace Omnikeeper.Controllers.Ingest
 
                 logger.LogInformation($"Performing ingest...");
 
-                var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
-
-                logger.LogInformation($"Ingest successful; ingested {numIngestedCIs} CIs, {numIngestedRelations} relations");
+                var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
+                logger.LogInformation($"Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");
 
                 return Ok();
             }

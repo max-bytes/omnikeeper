@@ -61,25 +61,6 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
-        {
-            TrackLayerUsage(layerID);
-            return await model.InsertAttribute(name, value, ciid, layerID, changeset, origin, trans);
-        }
-
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
-        {
-            TrackLayerUsage(layerID);
-            return await model.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
-        }
-
-        public async Task<(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
-            IDictionary<string, CIAttribute> outdatedAttributes)>
-            PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans, TimeThreshold readTS)
-        {
-            return await model.PrepareForBulkUpdate(data, trans, readTS);
-        }
-
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes, string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             TrackLayerUsage(layerID);

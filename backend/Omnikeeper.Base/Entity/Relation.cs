@@ -174,17 +174,39 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    public static class BulkRelationDataCIAndPredicateScopeExtensions
+    public class BulkRelationDataSpecificScope : IBulkRelationData<BulkRelationDataSpecificScope.Fragment>
     {
-        public static async Task<IEnumerable<Relation>[]> GetOutdatedRelationsFromCIAndPredicateScope(this BulkRelationDataCIAndPredicateScope cp, IBaseRelationModel baseRelationModel, string[] layerIDs, IModelContext trans, TimeThreshold timeThreshold)
+
+        public class Fragment
         {
-            var dLookup = cp.Relevant.ToLookup(dd => dd.thisCIID, dd => dd.predicateID);
-            var relationSelection = (cp.Outgoing) ? RelationSelectionFrom.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet()) : RelationSelectionTo.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet());
-            var allRelations = await baseRelationModel.GetRelations(relationSelection, layerIDs, trans, timeThreshold); // TODO: restrict to relevant predicateIDs at fetch point
-            var outdatedRelations = allRelations[0].Where(r => dLookup[(cp.Outgoing) ? r.FromCIID : r.ToCIID].Contains(r.PredicateID));
-            return new IEnumerable<Relation>[] { outdatedRelations };
+            public Guid From { get; private set; }
+            public Guid To { get; private set; }
+            public string PredicateID { get; private set; }
+            public bool Mask { get; private set; }
+
+            public Fragment(Guid from, Guid to, string predicateID, bool mask)
+            {
+                From = from;
+                To = to;
+                PredicateID = predicateID;
+                Mask = mask;
+            }
+        }
+
+        public string LayerID { get; private set; }
+        public IEnumerable<Fragment> Fragments { get; private set; }
+        public string GetPredicateID(Fragment fragment) => fragment.PredicateID;
+        public Guid GetFromCIID(Fragment fragment) => fragment.From;
+        public Guid GetToCIID(Fragment fragment) => fragment.To;
+        public bool GetMask(Fragment fragment) => fragment.Mask;
+
+        public readonly IEnumerable<(Guid from, Guid to, string predicateID)> Removals;
+
+        public BulkRelationDataSpecificScope(string layerID, IEnumerable<Fragment> fragments, IEnumerable<(Guid from, Guid to, string predicateID)> removals)
+        {
+            LayerID = layerID;
+            Fragments = fragments;
+            Removals = removals;
         }
     }
-
-
 }

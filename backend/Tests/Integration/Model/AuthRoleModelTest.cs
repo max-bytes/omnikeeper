@@ -52,7 +52,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new AuthRole("test_auth_role01", new string[] { "p1", "p2" }), "test_auth_role01", true);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new AuthRole("test_auth_role01", new string[] { "p1", "p2" }), "test_auth_role01", true, false);
         }
     }
 }

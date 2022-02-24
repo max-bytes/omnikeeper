@@ -92,9 +92,14 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForStringID("id1", "e1"), "id1", true);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForStringID("id1", "e1"), "id1", true, false);
         }
 
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForStringID("id1", "e1"), "id1");
+        }
     }
 
     [TraitEntity("test_entity1", TraitOriginType.Data)]
@@ -185,7 +190,13 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForLongID(1L, "e1"), 1L, true);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForLongID(1L, "e1"), 1L, true, false);
+        }
+
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForLongID(1L, "e1"), 1L);
         }
     }
 
@@ -258,7 +269,7 @@ namespace Tests.Integration.Model
 
             // create a CI with a partially matching ID
             var ciid = await ciModel.CreateCI(ModelContextBuilder.BuildImmediate());
-            await attributeModel.InsertAttribute("id1", new AttributeScalarValueInteger(1L), ciid, layer1, changesetBuilder(), new DataOriginV1(DataOriginType.Manual), ModelContextBuilder.BuildImmediate());
+            await attributeModel.InsertAttribute("id1", new AttributeScalarValueInteger(1L), ciid, layer1, changesetBuilder(), new DataOriginV1(DataOriginType.Manual), ModelContextBuilder.BuildImmediate(), OtherLayersValueHandlingForceWrite.Instance);
 
             var non_existant = await model.GetSingleByDataID((1L, "non_existant_id"), layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.IsTrue(non_existant.Equals(default));
@@ -297,7 +308,13 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForTupleID(1L, "id1", "e1"), (1L, "id1"), true);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForTupleID(1L, "id1", "e1"), (1L, "id1"), true, false);
+        }
+
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForTupleID(1L, "id1", "e1"), (1L, "id1"));
         }
     }
 
@@ -393,7 +410,17 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForOutgoingTraitRelation("id1", new Guid[] { }), "id1", true);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForOutgoingTraitRelation("id1", new Guid[] { }), "id1", true, true);
+        }
+
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
+            var otherCIID1 = await ciModel.CreateCI(modelContextBuilder.BuildImmediate());
+
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForOutgoingTraitRelation("id1", new Guid[] { otherCIID1 }), "id1");
         }
     }
 
@@ -487,7 +514,17 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForIncomingTraitRelation("id1", new Guid[] { }), "id1", true);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForIncomingTraitRelation("id1", new Guid[] { }), "id1", true, true);
+        }
+
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
+            var otherCIID1 = await ciModel.CreateCI(modelContextBuilder.BuildImmediate());
+
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForIncomingTraitRelation("id1", new Guid[] { otherCIID1 }), "id1");
         }
     }
 
@@ -520,8 +557,13 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForPartialEntity("ID1", "foo"), "ID1", false);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForPartialEntity("ID1", "foo"), "ID1", false, false);
         }
 
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForPartialEntity("ID1", "foo"), "ID1");
+        }
     }
 }
