@@ -69,12 +69,14 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             Guid ciid = (t.Equals(default)) ? await ciModel.CreateCI(trans) : t.Item1;
 
+            var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
+
             var changed = false;
             foreach (var (attributeName, value) in attributes)
             {
                 if (value != null)
                 {
-                    var tmpChanged = await attributeModel.InsertAttribute(attributeName, value, ciid, writeLayerID, changesetProxy, dataOrigin, trans, OtherLayersValueHandlingForceWrite.Instance);
+                    var tmpChanged = await attributeModel.InsertAttribute(attributeName, value, ciid, writeLayerID, changesetProxy, dataOrigin, trans, otherLayersValueHandling);
                     changed = changed || tmpChanged;
                 }
             }
@@ -85,7 +87,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 {
                     var fromCIID = (forward) ? ciid : otherCIID;
                     var toCIID = (forward) ? otherCIID : ciid;
-                    var tmpChanged = await relationModel.InsertRelation(fromCIID, toCIID, predicateID, false, writeLayerID, changesetProxy, dataOrigin, trans);
+                    var tmpChanged = await relationModel.InsertRelation(fromCIID, toCIID, predicateID, false, writeLayerID, changesetProxy, dataOrigin, trans, otherLayersValueHandling);
                     changed = changed || tmpChanged;
                 }
             }

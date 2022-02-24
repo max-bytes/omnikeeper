@@ -65,7 +65,7 @@ namespace Tasks.DBInit
                 {
                     await traitModel.InsertOrUpdate(rt,
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                        new DataOriginV1(DataOriginType.Manual), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                        new DataOriginV1(DataOriginType.Manual), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance);
                 }
                 trans.Commit();
             }
@@ -217,7 +217,7 @@ namespace Tasks.DBInit
                 {
                     await predicateModel.InsertOrUpdate(new Predicate(predicate.ID, predicate.WordingFrom, predicate.WordingTo),
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                        new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                        new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 }
 
                 trans.Commit();
@@ -247,7 +247,7 @@ namespace Tasks.DBInit
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 var ciid1 = applicationCIIDs.GetRandom(random);
                 var ciid2 = hostCIIDs.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
-                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, false, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, false, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -344,7 +344,7 @@ namespace Tasks.DBInit
                     }
                 }
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(cmdbLayerID, fragments), changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(cmdbLayerID, fragments), changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 

@@ -123,7 +123,7 @@ namespace Omnikeeper.GraphQL
 
                     foreach (var insertRelation in insertRelations)
                     {
-                        var changed = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.Mask, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                        var changed = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.Mask, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, otherLayersValueHandling);
                         if (changed)
                         {
                             affectedCIIDs.Add(insertRelation.FromCIID);

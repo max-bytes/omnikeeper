@@ -202,13 +202,12 @@ namespace Omnikeeper.Model
                                     // in case there is an attribute there already, we actually remove it because the other layers provide the same attribute with the same value 
                                     if (insert.existingAttributeID.HasValue)
                                     {
-                                        actualRemoves.Add((insert.ciid, insert.fullName, aa.Attribute.Value, aa.Attribute.ID, Guid.NewGuid()));
+                                        actualRemoves.Add((insert.ciid, insert.fullName, aa.Attribute.Value, insert.existingAttributeID.Value, Guid.NewGuid()));
                                     }
                                 }
                             }
                         }
                     }
-
                     break;
                 case OtherLayersValueHandlingForceWrite _:
                     // no operation necessary

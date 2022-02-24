@@ -83,7 +83,7 @@ namespace Tests
                 foreach (var rt in rts)
                     await traitModel.InsertOrUpdate(rt,
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                        new DataOriginV1(DataOriginType.Manual), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                        new DataOriginV1(DataOriginType.Manual), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance);
                 mc.Commit();
             }
 

@@ -200,7 +200,7 @@ namespace Omnikeeper.Controllers
                     await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, maskHandling, otherLayersValueHandling);
 
                     var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID, t.Mask));
-                    await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, maskHandling);
+                    await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, maskHandling, otherLayersValueHandling);
                 }
 
                 trans.Commit();

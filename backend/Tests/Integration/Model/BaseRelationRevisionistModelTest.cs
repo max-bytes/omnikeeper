@@ -40,8 +40,8 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p1", false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p2", false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p1", false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p2", false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -59,7 +59,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p1", false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p1", false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 

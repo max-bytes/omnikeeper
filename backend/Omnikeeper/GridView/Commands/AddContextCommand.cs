@@ -85,7 +85,7 @@ namespace Omnikeeper.GridView.Commands
                         new Base.Entity.LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
                         new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                         changesetProxy,
-                        trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                        trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                     trans.Commit();
                     return null;

@@ -52,13 +52,6 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetRelationsOfChangeset(changesetID, getRemoved, trans);
         }
 
-        public async Task<(IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts, IDictionary<string, Relation> outdatedRelations)> PrepareForBulkUpdate<F>(IBulkRelationData<F> data, IModelContext trans, TimeThreshold readTS)
-        {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(data.LayerID, trans)) throw new Exception("Cannot write to online inbound layer");
-
-            return await model.PrepareForBulkUpdate(data, trans, readTS);
-        }
-
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts, IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid existingRelationID, Guid newRelationID, bool mask)> removes, string layerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");

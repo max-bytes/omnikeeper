@@ -247,65 +247,6 @@ namespace Omnikeeper.Model
             return changed;
         }
 
-
-        // NOTE: this bulk operation DOES check if the relations that are inserted are "unique":
-        // it is not possible to insert the "same" relation (same from_ciid, to_ciid, predicate_id and layer) multiple times
-        // if this operation detects a duplicate, an exception is thrown;
-        // the caller is responsible for making sure there are no duplicates
-        public async Task<(
-            IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts,
-            IDictionary<string, Relation> outdatedRelations
-            )> PrepareForBulkUpdate<F>(IBulkRelationData<F> data, IModelContext trans, TimeThreshold readTS)
-        {
-
-            var outdatedRelations = (data switch
-            {
-                BulkRelationDataPredicateScope p => (await GetRelations(RelationSelectionWithPredicate.Build(p.PredicateID), new string[] { data.LayerID }, trans, readTS)),
-                BulkRelationDataLayerScope l => (await GetRelations(RelationSelectionAll.Instance, new string[] { data.LayerID }, trans, readTS)),
-                BulkRelationDataCIAndPredicateScope cp => await cp.GetOutdatedRelationsFromCIAndPredicateScope(this, new string[] { cp.LayerID }, trans, readTS),
-                _ => throw new Exception("Unknown scope")
-            }).SelectMany(r => r).ToDictionary(r => r.InformationHash);
-
-            var actualInserts = new List<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)>();
-            var informationHashesToInsert = new HashSet<string>();
-            foreach (var fragment in data.Fragments)
-            {
-                var fromCIID = data.GetFromCIID(fragment);
-                var toCIID = data.GetToCIID(fragment);
-                if (fromCIID == toCIID)
-                    throw new Exception("From and To CIID must not be the same!");
-
-                var predicateID = data.GetPredicateID(fragment);
-                if (predicateID.IsEmpty())
-                    throw new Exception("PredicateID must not be empty");
-                IDValidations.ValidatePredicateIDThrow(predicateID);
-
-                var mask = data.GetMask(fragment);
-
-                var informationHash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
-                if (informationHashesToInsert.Contains(informationHash))
-                {
-                    throw new Exception($"Duplicate relation fragment detected! Bulk insertion does not support duplicate relations; relation predicate ID: {predicateID}, from CIID: {fromCIID}, to CIID: {toCIID}");
-                }
-                informationHashesToInsert.Add(informationHash);
-
-                // remove the current relation from the list of relations to remove
-                outdatedRelations.Remove(informationHash, out var currentRelation);
-
-                // compare masks, if mask (and everything else) is equal, skip this relation
-                if (currentRelation != null && currentRelation.Mask == mask)
-                {
-                    continue;
-                }
-
-                Guid newRelationID = Guid.NewGuid();
-                actualInserts.Add((fromCIID, toCIID, predicateID, currentRelation?.ID, newRelationID, mask));
-            }
-
-            return (actualInserts, outdatedRelations);
-        }
-
-
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(
             IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts,
             IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid existingRelationID, Guid newRelationID, bool mask)> removes,

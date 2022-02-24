@@ -44,7 +44,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations = relationValues.Where(rv => !rv.forward).Select(rv => (finalCIID, rv.predicateID, rv.relatedCIIDs)).ToList();
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations = relationValues.Where(rv => rv.forward).Select(rv => (finalCIID, rv.predicateID, rv.relatedCIIDs)).ToList();
-            var t = await traitEntityModel.InsertOrUpdate(finalCIID, attributeFragments, outgoingRelations, incomingRelations, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+            var t = await traitEntityModel.InsertOrUpdate(finalCIID, attributeFragments, outgoingRelations, incomingRelations, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return t.et;
         }
 
@@ -54,7 +54,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations = relationValues.Where(rv => !rv.forward).Select(rv => (ciid, rv.predicateID, rv.relatedCIIDs)).ToList();
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations = relationValues.Where(rv => rv.forward).Select(rv => (ciid, rv.predicateID, rv.relatedCIIDs)).ToList();
-            var t = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+            var t = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return t.et;
         }
 
@@ -155,7 +155,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var trans = userContext.Transaction;
 
                         var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
-                        var removed = await traitEntityModel.TryToDelete(ciid, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                        var removed = await traitEntityModel.TryToDelete(ciid, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                         return removed;
                     });
@@ -245,7 +245,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 return false;
 
                             var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
-                            var removed = await traitEntityModel.TryToDelete(foundCIID.Value, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                            var removed = await traitEntityModel.TryToDelete(foundCIID.Value, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                             return removed;
                         });

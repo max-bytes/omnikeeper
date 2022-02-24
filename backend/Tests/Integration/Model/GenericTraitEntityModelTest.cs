@@ -48,7 +48,7 @@ namespace Tests.Integration.Model
             var e1 = new TestEntityForStringID("id1", null);
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -59,7 +59,7 @@ namespace Tests.Integration.Model
             var e2 = new TestEntityForStringID("id1", "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e2, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await model.InsertOrUpdate(e2, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -69,7 +69,7 @@ namespace Tests.Integration.Model
             // re-set to e1, with non-set optional attribute
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -92,9 +92,14 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForStringID("id1", "e1"), "id1", true);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForStringID("id1", "e1"), "id1", true, false);
         }
 
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForStringID("id1", "e1"), "id1");
+        }
     }
 
     [TraitEntity("test_entity1", TraitOriginType.Data)]
@@ -132,8 +137,8 @@ namespace Tests.Integration.Model
             var e12 = new TestEntityForLongID(2L, "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
-                await model.InsertOrUpdate(e12, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await model.InsertOrUpdate(e12, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -152,7 +157,7 @@ namespace Tests.Integration.Model
             var e2 = new TestEntityForLongID(1L, "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e2, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await model.InsertOrUpdate(e2, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -162,7 +167,7 @@ namespace Tests.Integration.Model
             // re-set to e1, with non-set optional attribute
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -185,7 +190,13 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForLongID(1L, "e1"), 1L, true);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForLongID(1L, "e1"), 1L, true, false);
+        }
+
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForLongID(1L, "e1"), 1L);
         }
     }
 
@@ -230,8 +241,8 @@ namespace Tests.Integration.Model
             var e12 = new TestEntityForTupleID(1L, "id2", "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
-                await model.InsertOrUpdate(e12, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await model.InsertOrUpdate(e12, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
 
@@ -297,7 +308,13 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForTupleID(1L, "id1", "e1"), (1L, "id1"), true);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForTupleID(1L, "id1", "e1"), (1L, "id1"), true, false);
+        }
+
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForTupleID(1L, "id1", "e1"), (1L, "id1"));
         }
     }
 
@@ -393,7 +410,17 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForOutgoingTraitRelation("id1", new Guid[] { }), "id1", true);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForOutgoingTraitRelation("id1", new Guid[] { }), "id1", true, true);
+        }
+
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
+            var otherCIID1 = await ciModel.CreateCI(modelContextBuilder.BuildImmediate());
+
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForOutgoingTraitRelation("id1", new Guid[] { otherCIID1 }), "id1");
         }
     }
 
@@ -487,7 +514,17 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForIncomingTraitRelation("id1", new Guid[] { }), "id1", true);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForIncomingTraitRelation("id1", new Guid[] { }), "id1", true, true);
+        }
+
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
+            var otherCIID1 = await ciModel.CreateCI(modelContextBuilder.BuildImmediate());
+
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForIncomingTraitRelation("id1", new Guid[] { otherCIID1 }), "id1");
         }
     }
 
@@ -520,8 +557,13 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
-            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForPartialEntity("ID1", "foo"), "ID1", false);
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForPartialEntity("ID1", "foo"), "ID1", false, false);
         }
 
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForPartialEntity("ID1", "foo"), "ID1");
+        }
     }
 }

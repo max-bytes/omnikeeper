@@ -127,7 +127,7 @@ namespace Omnikeeper.Base.Service
                 relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID, false));
             }
             var bulkRelationData = new BulkRelationDataLayerScope(writeLayer.ID, relationFragments.ToArray());
-            var affectedRelations = await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling);
+            var affectedRelations = await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling, otherLayersValueHandling);
 
             trans.Commit();
 
