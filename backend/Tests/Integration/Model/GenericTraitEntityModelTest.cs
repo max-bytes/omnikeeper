@@ -48,7 +48,7 @@ namespace Tests.Integration.Model
             var e1 = new TestEntityForStringID("id1", null);
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -59,7 +59,7 @@ namespace Tests.Integration.Model
             var e2 = new TestEntityForStringID("id1", "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e2, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await model.InsertOrUpdate(e2, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -69,7 +69,7 @@ namespace Tests.Integration.Model
             // re-set to e1, with non-set optional attribute
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -132,8 +132,8 @@ namespace Tests.Integration.Model
             var e12 = new TestEntityForLongID(2L, "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
-                await model.InsertOrUpdate(e12, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await model.InsertOrUpdate(e12, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -152,7 +152,7 @@ namespace Tests.Integration.Model
             var e2 = new TestEntityForLongID(1L, "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e2, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await model.InsertOrUpdate(e2, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -162,7 +162,7 @@ namespace Tests.Integration.Model
             // re-set to e1, with non-set optional attribute
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -230,8 +230,8 @@ namespace Tests.Integration.Model
             var e12 = new TestEntityForTupleID(1L, "id2", "set");
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
-                await model.InsertOrUpdate(e12, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await model.InsertOrUpdate(e1, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await model.InsertOrUpdate(e12, layerset, layer1, new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -258,7 +258,7 @@ namespace Tests.Integration.Model
 
             // create a CI with a partially matching ID
             var ciid = await ciModel.CreateCI(ModelContextBuilder.BuildImmediate());
-            await attributeModel.InsertAttribute("id1", new AttributeScalarValueInteger(1L), ciid, layer1, changesetBuilder(), new DataOriginV1(DataOriginType.Manual), ModelContextBuilder.BuildImmediate());
+            await attributeModel.InsertAttribute("id1", new AttributeScalarValueInteger(1L), ciid, layer1, changesetBuilder(), new DataOriginV1(DataOriginType.Manual), ModelContextBuilder.BuildImmediate(), OtherLayersValueHandlingForceWrite.Instance);
 
             var non_existant = await model.GetSingleByDataID((1L, "non_existant_id"), layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.IsTrue(non_existant.Equals(default));

@@ -83,7 +83,7 @@ namespace Tests
                 foreach (var rt in rts)
                     await traitModel.InsertOrUpdate(rt,
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                        new DataOriginV1(DataOriginType.Manual), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance);
+                        new DataOriginV1(DataOriginType.Manual), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 mc.Commit();
             }
 
@@ -121,7 +121,7 @@ namespace Tests
                         finalFragments = filtered.Values;
                     }
 
-                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", fl.Key, finalFragments), changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance);
+                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", fl.Key, finalFragments), changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 }
                 mc.Commit();
             }

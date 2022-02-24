@@ -51,12 +51,12 @@ namespace Omnikeeper.Base.Model.TraitBased
         // NOTE: the cis MUST exist already
         public async Task<bool> BulkReplace(ISet<Guid> relevantCIIDs, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
-            string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+            string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval, IOtherLayersValueHandling otherLayersValueHandling)
         {
             if (attributeFragments.IsEmpty() || relevantCIIDs.IsEmpty())
                 return false;
 
-            var changed = await WriteAttributes(attributeFragments, relevantCIIDs, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            var changed = await WriteAttributes(attributeFragments, relevantCIIDs, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval, otherLayersValueHandling);
 
             if (!trait.OptionalRelations.IsEmpty())
             {
@@ -73,9 +73,9 @@ namespace Omnikeeper.Base.Model.TraitBased
         // NOTE: the ci MUST exist already
         public async Task<(EffectiveTrait et, bool changed)> InsertOrUpdate(Guid ciid, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
-            LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+            LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval, IOtherLayersValueHandling otherLayersValueHandling)
         {
-            var changed = await WriteAttributes(attributeFragments, new HashSet<Guid>() { ciid }, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            var changed = await WriteAttributes(attributeFragments, new HashSet<Guid>() { ciid }, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval, otherLayersValueHandling);
 
             if (!trait.OptionalRelations.IsEmpty())
             {
@@ -91,9 +91,10 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (dc, changed);
         }
 
-        private async Task<bool> WriteAttributes(IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> fragments, ISet<Guid> relevantCIs, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        private async Task<bool> WriteAttributes(IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> fragments, ISet<Guid> relevantCIs, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, 
+            IMaskHandlingForRemoval maskHandlingForRemoval, IOtherLayersValueHandling otherLayersValueHandling)
         {
-            var changed = await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(writeLayer, fragments, relevantCIs, relevantAttributesForTrait), changesetProxy, dataOrigin, trans, maskHandlingForRemoval);
+            var changed = await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(writeLayer, fragments, relevantCIs, relevantAttributesForTrait), changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
 
             return changed;
         }
@@ -115,21 +116,21 @@ namespace Omnikeeper.Base.Model.TraitBased
         }
 
         // NOTE: assumes that the ciid exists, does not check beforehand if the trait entity is actually present
-        public async Task<bool> TryToDelete(Guid ciid, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        public async Task<bool> TryToDelete(Guid ciid, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval, IOtherLayersValueHandling otherLayersValueHandling)
         {
-            await RemoveAttributes(ciid, writeLayerID, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            await RemoveAttributes(ciid, writeLayerID, dataOrigin, changesetProxy, trans, maskHandlingForRemoval, otherLayersValueHandling);
             await RemoveRelations(ciid, writeLayerID, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
 
             var dcAfterDeletion = await GetSingleByCIID(ciid, layerSet, trans, changesetProxy.TimeThreshold);
             return (dcAfterDeletion == null); // return successful if dc does not exist anymore afterwards
         }
 
-        private async Task RemoveAttributes(Guid ciid, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        private async Task RemoveAttributes(Guid ciid, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval, IOtherLayersValueHandling otherLayersValueHandling)
         {
             await attributeModel.BulkReplaceAttributes(
                 new BulkCIAttributeDataCIAndAttributeNameScope(writeLayerID, new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>(),
                 new HashSet<Guid>() { ciid }, relevantAttributesForTrait),
-                changesetProxy, dataOrigin, trans, maskHandlingForRemoval);
+                changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
         }
 
         private async Task RemoveRelations(Guid ciid, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)

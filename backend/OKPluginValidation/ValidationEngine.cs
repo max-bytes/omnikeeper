@@ -87,7 +87,7 @@ namespace OKPluginValidation.Validation
                 using var trans = modelContextBuilder.BuildDeferred();
                 var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
 
-                await validationIssueModel.BulkReplace(newIssues, validationWriteLayerset, validationWriteLayerID, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await validationIssueModel.BulkReplace(newIssues, validationWriteLayerset, validationWriteLayerID, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
 
                 // TODO: add relations from validation issue to validation
 

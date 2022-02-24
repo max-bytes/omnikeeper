@@ -86,6 +86,11 @@ namespace Omnikeeper.GraphQL
                     // TODO: replace with bulk update
                     var affectedCIIDs = new HashSet<Guid>();
 
+                    // TODO: other-layers-value handling
+                    var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
+                    // TODO: mask handling
+                    var maskHandlingForRemoval = MaskHandlingForRemovalApplyNoMask.Instance;
+
                     var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
                     foreach (var attributeGroup in groupedInsertAttributes)
                     {
@@ -95,14 +100,12 @@ namespace Omnikeeper.GraphQL
                         {
                             var nonGenericAttributeValue = AttributeValueHelper.BuildFromDTO(attribute.Value);
 
-                            var changed = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                            var changed = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, otherLayersValueHandling);
                             if (changed)
                                 affectedCIIDs.Add(ciIdentity);
                         }
                     }
 
-                    // TODO: mask handling
-                    var maskHandlingForRemoval = MaskHandlingForRemovalApplyNoMask.Instance;
 
                     var groupedRemoveAttributes = removeAttributes.GroupBy(a => a.CI);
                     foreach (var attributeGroup in groupedRemoveAttributes)
@@ -167,12 +170,15 @@ namespace Omnikeeper.GraphQL
 
                     var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
+                    // TODO: other-layers-value handling
+                    var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
+
                     var createdCIIDs = new List<Guid>();
                     foreach (var ci in createCIs)
                     {
                         Guid ciid = await ciModel.CreateCI(userContext.Transaction);
 
-                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
+                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, otherLayersValueHandling);
 
                         createdCIIDs.Add(ciid);
                     }

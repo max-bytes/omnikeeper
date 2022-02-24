@@ -35,7 +35,7 @@ namespace Tests.Integration.Service
 
             var ciid2 = await GetService<ICIModel>().CreateCI(trans);
             var changeset1 = await CreateChangesetProxy();
-            await GetService<IAttributeModel>().InsertAttribute("foo", new AttributeScalarValueText("bar"), ciid2, layer.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
+            await GetService<IAttributeModel>().InsertAttribute("foo", new AttributeScalarValueText("bar"), ciid2, layer.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
 
             Assert.AreEqual(0, await ArchiveUnusedCIsService.ArchiveUnusedCIs(e, ModelContextBuilder, NullLogger.Instance));
 

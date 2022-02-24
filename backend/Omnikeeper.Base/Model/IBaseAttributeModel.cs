@@ -11,11 +11,6 @@ namespace Omnikeeper.Base.Model
 {
     public interface IBaseAttributeMutationModel
     {
-        Task<(
-            IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
-            IDictionary<string, CIAttribute> outdatedAttributes
-            )> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans, TimeThreshold readTS);
-
         Task<(bool changed, Guid changesetID)> BulkUpdate(
             IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
             IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes,

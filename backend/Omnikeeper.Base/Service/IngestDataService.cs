@@ -100,6 +100,8 @@ namespace Omnikeeper.Base.Service
 
             // TODO: mask handling
             var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
+            // TODO: other-layers-value handling
+            var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
 
             // batch process CI creation
             if (!cisToCreate.IsEmpty())
@@ -109,7 +111,7 @@ namespace Omnikeeper.Base.Service
                 cic.Attributes.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, cic.TempCIID))
             ));
             // TODO: return number of affected attributes (instead of CIs)
-            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling);
+            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling, otherLayersValueHandling);
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
             foreach (var cic in data.RelationCandidates)

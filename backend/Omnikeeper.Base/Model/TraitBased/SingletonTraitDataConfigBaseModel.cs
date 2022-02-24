@@ -74,7 +74,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             {
                 if (value != null)
                 {
-                    var tmpChanged = await attributeModel.InsertAttribute(attributeName, value, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+                    var tmpChanged = await attributeModel.InsertAttribute(attributeName, value, ciid, writeLayerID, changesetProxy, dataOrigin, trans, OtherLayersValueHandlingForceWrite.Instance);
                     changed = changed || tmpChanged;
                 }
             }

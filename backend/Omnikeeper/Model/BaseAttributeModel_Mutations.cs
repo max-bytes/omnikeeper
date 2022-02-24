@@ -19,56 +19,6 @@ namespace Omnikeeper.Model
         // TODO: with the introduction of the latest table, consider using/enforcing a different transaction isolation level as the default "read committed" for modifications
         // ("repeatable read" may be needed?)
 
-        // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":
-        // it is not possible to insert the "same" attribute (same ciid, name and layer) multiple times when using this preparation method
-        // if this operation detects a duplicate, an exception is thrown;
-        // the caller is responsible for making sure there are no duplicates
-        public async Task<(
-            IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
-            IDictionary<string, CIAttribute> outdatedAttributes
-            )> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans, TimeThreshold readTS)
-        {
-            // consider ALL relevant attributes as outdated first
-            var outdatedAttributes = (data switch
-            {
-                BulkCIAttributeDataLayerScope d => (d.NamePrefix.IsEmpty()) ?
-                        (await GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { data.LayerID }, trans, readTS)) :
-                        (await GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), new string[] { data.LayerID }, trans, readTS)),
-                BulkCIAttributeDataCIScope d => 
-                    await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, new string[] { data.LayerID }, trans: trans, atTime: readTS),
-                BulkCIAttributeDataCIAndAttributeNameScope a =>
-                    await GetAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), new string[] { data.LayerID }, trans, readTS),
-                _ => throw new Exception("Unknown scope")
-            }).SelectMany(t => t.Values.SelectMany(tt => tt.Values)).ToDictionary(a => a.InformationHash); // TODO: slow?
-
-            var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)>();
-            var informationHashesToInsert = new HashSet<string>();
-            foreach (var fragment in data.Fragments)
-            {
-                var fullName = data.GetFullName(fragment);
-                var ciid = data.GetCIID(fragment);
-                var value = data.GetValue(fragment);
-
-                var informationHash = CIAttribute.CreateInformationHash(fullName, ciid);
-                if (informationHashesToInsert.Contains(informationHash))
-                {
-                    throw new Exception($"Duplicate attribute fragment detected! Bulk insertion does not support duplicate attributes; attribute name: {fullName}, ciid: {ciid}, value: {value.Value2String()}");
-                }
-                informationHashesToInsert.Add(informationHash);
-
-                // remove the current attribute from the list of attributes to remove
-                outdatedAttributes.Remove(informationHash, out var currentAttribute);
-
-                // handle equality case, also think about what should happen if a different user inserts the same data
-                if (currentAttribute != null && currentAttribute.Value.Equals(value))
-                    continue;
-
-                actualInserts.Add((ciid, fullName, value, currentAttribute?.ID, Guid.NewGuid()));
-            }
-
-            return (actualInserts, outdatedAttributes);
-        }
-
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(
             IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
             IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes,

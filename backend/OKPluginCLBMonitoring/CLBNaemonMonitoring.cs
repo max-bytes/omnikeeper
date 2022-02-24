@@ -162,10 +162,11 @@ namespace OKPluginCLBMonitoring
 
             // TODO: mask handling
             var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
+            var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
 
             var fragments = renderedTemplatesPerCI.Select(t => new BulkCIAttributeDataLayerScope.Fragment("", t.attributeValue, t.ciid));
             await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments),
-                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, maskHandling);
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, maskHandling, otherLayersValueHandling);
 
             logger.LogDebug("Updated executed commands per monitored CI");
 
@@ -233,7 +234,7 @@ namespace OKPluginCLBMonitoring
                 //    templates.Select(t => t.yamlValue.Value).ToArray(), templates.Select(t => t.yamlValueStr).ToArray()), naemonInstance));
             }
             await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.config", targetLayer.ID, monitoringConfigs),
-                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
 
             logger.LogDebug("End clbMonitoring");
             return true;

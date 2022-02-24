@@ -16,7 +16,8 @@ namespace Omnikeeper.Base.Model
 
         Task<MergedCIAttribute?> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layerset, IModelContext trans, TimeThreshold atTime);
 
-        Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling);
+        Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, 
+            IMaskHandlingForRemoval maskHandling, IOtherLayersValueHandling otherLayersValueHandling);
     }
 
     public static class AttributeModelExtensions
@@ -42,24 +43,27 @@ namespace Omnikeeper.Base.Model
             return a.ToDictionary(t => t.Key, t => t.Value[name]);
         }
 
-        public static async Task<bool> InsertAttribute(this IAttributeModel attributeModel, string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
+        public static async Task<bool> InsertAttribute(this IAttributeModel attributeModel, string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, 
+            DataOriginV1 origin, IModelContext trans, IOtherLayersValueHandling otherLayersValueHandling)
         {
             var data = new BulkCIAttributeDataCIAndAttributeNameScope(layerID, new BulkCIAttributeDataCIAndAttributeNameScope.Fragment[]
             {
                 new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, name, value)
             }, new HashSet<Guid>() { ciid }, new HashSet<string>() { name });
-            var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
-            return await attributeModel.BulkReplaceAttributes(data, changeset, origin, trans, maskHandling);
+            var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance; // NOTE: we can keep this fixed here, because it does not affect inserts
+            return await attributeModel.BulkReplaceAttributes(data, changeset, origin, trans, maskHandling, otherLayersValueHandling);
         }
 
         public static async Task<bool> RemoveAttribute(this IAttributeModel attributeModel, string name, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
             var data = new BulkCIAttributeDataCIAndAttributeNameScope(layerID, new BulkCIAttributeDataCIAndAttributeNameScope.Fragment[] { }, new HashSet<Guid>() { ciid }, new HashSet<string>() { name });
-            return await attributeModel.BulkReplaceAttributes(data, changeset, origin, trans, maskHandling);
+            var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance; // NOTE: we can keep this fixed here, because it does not affect removals
+            return await attributeModel.BulkReplaceAttributes(data, changeset, origin, trans, maskHandling, otherLayersValueHandling);
         }
 
 
-        public static async Task<bool> InsertCINameAttribute(this IAttributeModel attributeModel, string nameValue, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-            => await attributeModel.InsertAttribute(ICIModel.NameAttribute, new AttributeScalarValueText(nameValue), ciid, layerID, changesetProxy, origin, trans);
+        public static async Task<bool> InsertCINameAttribute(this IAttributeModel attributeModel, string nameValue, Guid ciid, string layerID, IChangesetProxy changesetProxy, 
+            DataOriginV1 origin, IModelContext trans, IOtherLayersValueHandling otherLayersValueHandling)
+            => await attributeModel.InsertAttribute(ICIModel.NameAttribute, new AttributeScalarValueText(nameValue), ciid, layerID, changesetProxy, origin, trans, otherLayersValueHandling);
     }
 }
