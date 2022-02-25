@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,6 @@ namespace Omnikeeper.Base.Entity
     public class TraitRelation
     {
         public readonly RelationTemplate RelationTemplate;
-        // TODO: implement anyOf(RelationTemplate[])
         public readonly string Identifier;
 
         public TraitRelation(string identifier, RelationTemplate relationTemplate)
@@ -18,16 +16,6 @@ namespace Omnikeeper.Base.Entity
             Identifier = identifier;
             RelationTemplate = relationTemplate;
         }
-
-        public static readonly MyJSONSerializer<TraitRelation> Serializer = new MyJSONSerializer<TraitRelation>(() =>
-        {
-            var s = new JsonSerializerSettings()
-            {
-                TypeNameHandling = TypeNameHandling.Objects
-            };
-            s.Converters.Add(new StringEnumConverter());
-            return s;
-        });
     }
 
     public class TraitAttribute
@@ -40,16 +28,6 @@ namespace Omnikeeper.Base.Entity
             Identifier = identifier;
             AttributeTemplate = attributeTemplate;
         }
-
-        public static readonly MyJSONSerializer<TraitAttribute> Serializer = new MyJSONSerializer<TraitAttribute>(() =>
-        {
-            var s = new JsonSerializerSettings()
-            {
-                TypeNameHandling = TypeNameHandling.Objects
-            };
-            s.Converters.Add(new StringEnumConverter());
-            return s;
-        });
     }
 
     public enum TraitOriginType

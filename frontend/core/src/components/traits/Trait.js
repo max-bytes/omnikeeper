@@ -24,7 +24,6 @@ export default function Trait(props) {
           ))}
         </pre>
     } else if (data) {
-
         const ancestorTraits = data.activeTrait.ancestorTraits
             .map(t => <TraitID key={t} id={t} link={true} />)
             .reduce((prev, curr) => prev === '' ? curr : [prev, ', ', curr], '');
@@ -40,21 +39,21 @@ export default function Trait(props) {
                     tab={<CountBadge count={data.activeTrait.requiredAttributes.length}>Required Attributes</CountBadge>}
                     key="Required Attributes" disabled={data.activeTrait.requiredAttributes.length === 0}>
                         {data.activeTrait.requiredAttributes.map((r, index) => {
-                            return <ReactJson key={index} collapsed={false} name={false} src={JSON.parse(r)} enableClipboard={false} />
+                            return <ReactJson key={index} collapsed={false} name={false} src={r} enableClipboard={false} />
                         })}
                 </TabPane>
                 <TabPane 
                     tab={<CountBadge count={data.activeTrait.optionalAttributes.length}>Optional Attributes</CountBadge>}
                     key="Optional Attributes" disabled={data.activeTrait.optionalAttributes.length === 0}>
                         {data.activeTrait.optionalAttributes.map((r, index) => {
-                            return <ReactJson key={index} collapsed={false} name={false} src={JSON.parse(r)} enableClipboard={false} />
+                            return <ReactJson key={index} collapsed={false} name={false} src={r} enableClipboard={false} />
                         })}
                 </TabPane>
                 <TabPane 
                     tab={<CountBadge count={data.activeTrait.optionalRelations.length}>Optional Relations</CountBadge>}
                     key="Optional Relations" disabled={data.activeTrait.optionalRelations.length === 0}>
                         {data.activeTrait.optionalRelations.map((r, index) => {
-                            return <ReactJson key={index} collapsed={false} name={false} src={JSON.parse(r)} enableClipboard={false} />
+                            return <ReactJson key={index} collapsed={false} name={false} src={r} enableClipboard={false} />
                         })}
                 </TabPane>
             </Tabs>
