@@ -1,5 +1,6 @@
 ﻿using JsonSubTypes;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -11,23 +12,25 @@ namespace Omnikeeper.Base.Entity
     [JsonConverter(typeof(JsonSubtypes), "type")]
     [JsonSubtypes.KnownSubType(typeof(CIAttributeValueConstraintTextRegex), "textRegex")]
     [JsonSubtypes.KnownSubType(typeof(CIAttributeValueConstraintTextLength), "textLength")]
-    //[ProtoContract]
-    //[ProtoInclude(1, typeof(CIAttributeValueConstraintTextLength))]
-    //[ProtoInclude(2, typeof(CIAttributeValueConstraintTextRegex))]
     public interface ICIAttributeValueConstraint
     {
         public string type { get; }
-        [Obsolete]
-        IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value);
         bool HasErrors(IAttributeValue value);
+
+        public static readonly MyJSONSerializer<ICIAttributeValueConstraint> Serializer = new MyJSONSerializer<ICIAttributeValueConstraint>(() =>
+        {
+            var s = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            };
+            s.Converters.Add(new StringEnumConverter());
+            return s;
+        });
     }
 
-    //[ProtoContract(SkipConstructor = true)]
     public class CIAttributeValueConstraintTextLength : ICIAttributeValueConstraint
     {
-        //[ProtoMember(1)] 
         public readonly int? Minimum;
-        //[ProtoMember(2)] 
         public readonly int? Maximum;
 
         public CIAttributeValueConstraintTextLength(int? minimum, int? maximum)
@@ -45,20 +48,6 @@ namespace Omnikeeper.Base.Entity
             return new CIAttributeValueConstraintTextLength(min, max);
         }
 
-        [Obsolete]
-        public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
-        {
-            // HACK: this is a bit unclean, as we do CLR type-checking, but return an error based on the AttributeValueType value
-            if (value is IAttributeValueText v)
-            {
-                return v.ApplyTextLengthConstraint(Minimum, Maximum);
-            }
-            else
-            {
-                return new ITemplateErrorAttribute[] { new TemplateErrorAttributeWrongType(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
-            }
-        }
-
         public bool HasErrors(IAttributeValue value)
         {
             // HACK: this is a bit unclean, as we do CLR type-checking, but return an error based on the AttributeValueType value
@@ -73,12 +62,9 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    //[ProtoContract(SkipConstructor = true)]
     public class CIAttributeValueConstraintArrayLength : ICIAttributeValueConstraint
     {
-        //[ProtoMember(1)] 
         public readonly int? Minimum;
-        //[ProtoMember(2)] 
         public readonly int? Maximum;
 
         public CIAttributeValueConstraintArrayLength(int? minimum, int? maximum)
@@ -94,25 +80,6 @@ namespace Omnikeeper.Base.Entity
         {
             if (min > max) throw new Exception("Minimum value must not be larger than maximum value");
             return new CIAttributeValueConstraintArrayLength(min, max);
-        }
-
-        [Obsolete]
-        public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
-        {
-            if (value.IsArray)
-            {
-                var a = (value as IAttributeArrayValue);
-                if (a == null)
-                    yield return new TemplateErrorAttributeWrongMultiplicity();
-                else if (Maximum.HasValue && a.Length > Maximum)
-                    yield return new TemplateErrorAttributeGeneric("Array too long!");
-                else if (Minimum.HasValue && a.Length < Minimum)
-                    yield return new TemplateErrorAttributeGeneric("Array too short!");
-            }
-            else
-            {
-                yield return new TemplateErrorAttributeWrongMultiplicity();
-            }
         }
 
         public bool HasErrors(IAttributeValue value)
@@ -135,7 +102,6 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    //[ProtoContract(Serializer = typeof(Serializer))]
     public class CIAttributeValueConstraintTextRegex : ICIAttributeValueConstraint
     {
         public readonly string RegexStr;
@@ -161,22 +127,6 @@ namespace Omnikeeper.Base.Entity
             RegexStr = regexStr;
             RegexOptions = regexOptions;
             regex = null;
-        }
-
-        [Obsolete]
-        public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
-        {
-            // HACK: this is a bit unclean, as we do CLR type-checking, but return an error based on the AttributeValueType value
-            if (value is IAttributeValueText v)
-            {
-                if (regex == null)
-                    regex = new Regex(RegexStr, RegexOptions);
-                return v.MatchRegex(regex);
-            }
-            else
-            {
-                return new ITemplateErrorAttribute[] { new TemplateErrorAttributeWrongType(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
-            }
         }
 
         public bool HasErrors(IAttributeValue value)
@@ -235,18 +185,12 @@ namespace Omnikeeper.Base.Entity
         //}
     }
 
-    //[ProtoContract(SkipConstructor = true)]
     public class CIAttributeTemplate
     {
-        //[ProtoMember(1)] 
         public readonly string Name;
-        //[ProtoMember(2)] 
         public readonly AttributeValueType? Type;
-        //[ProtoMember(3)] 
         public readonly bool? IsArray;
-        //[ProtoMember(4)] 
         public readonly IEnumerable<ICIAttributeValueConstraint> ValueConstraints;
-        //[ProtoMember(5)] 
         public readonly bool? IsID;
 
         public static CIAttributeTemplate BuildFromParams(string name, AttributeValueType? type, bool? isArray, bool? isID, params ICIAttributeValueConstraint[] valueConstraints)

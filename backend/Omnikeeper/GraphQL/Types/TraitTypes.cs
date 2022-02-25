@@ -1,4 +1,5 @@
-﻿using GraphQL.Types;
+﻿using GraphQL.Language.AST;
+using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,10 +25,9 @@ namespace Omnikeeper.GraphQL.Types
             Field(x => x.Origin, type: typeof(TraitOriginV1Type));
             Field("ancestorTraits", x => x.AncestorTraits);
 
-            // HACK, TODO: objects are complex, simply returning them as JSON strings for now
-            Field("requiredAttributes", x => x.RequiredAttributes.Select(r => TraitAttribute.Serializer.SerializeToString(r)), type: typeof(ListGraphType<StringGraphType>));
-            Field("optionalAttributes", x => x.OptionalAttributes.Select(r => TraitAttribute.Serializer.SerializeToString(r)), type: typeof(ListGraphType<StringGraphType>));
-            Field("optionalRelations", x => x.OptionalRelations.Select(r => TraitRelation.Serializer.SerializeToString(r)), type: typeof(ListGraphType<StringGraphType>));
+            Field("requiredAttributes", x => x.RequiredAttributes, type: typeof(ListGraphType<TraitAttributeType>));
+            Field("optionalAttributes", x => x.OptionalAttributes, type: typeof(ListGraphType<TraitAttributeType>));
+            Field("optionalRelations", x => x.OptionalRelations, type: typeof(ListGraphType<TraitRelationType>));
         }
     }
     public class TraitOriginV1Type : ObjectGraphType<TraitOriginV1>
@@ -47,10 +47,89 @@ namespace Omnikeeper.GraphQL.Types
         public RecursiveTraitType()
         {
             Field("id", x => x.ID);
-            Field("requiredAttributes", x => x.RequiredAttributes.Select(a => TraitAttribute.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
-            Field("optionalAttributes", x => x.OptionalAttributes.Select(a => TraitAttribute.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
-            Field("optionalRelations", x => x.OptionalRelations.Select(a => TraitRelation.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
+            Field("requiredAttributes", x => x.RequiredAttributes, type: typeof(ListGraphType<TraitAttributeType>));
+            Field("optionalAttributes", x => x.OptionalAttributes, type: typeof(ListGraphType<TraitAttributeType>));
+            Field("optionalRelations", x => x.OptionalRelations, type: typeof(ListGraphType<TraitRelationType>));
             Field("requiredTraits", x => x.RequiredTraits, type: typeof(ListGraphType<StringGraphType>));
+        }
+    }
+
+    public class TraitAttributeType : ObjectGraphType<TraitAttribute>
+    {
+        public TraitAttributeType()
+        {
+            Field("identifier", x => x.Identifier);
+            Field("template", x => x.AttributeTemplate, type: typeof(CIAttributeTemplateType));
+        }
+    }
+
+    public class CIAttributeTemplateType : ObjectGraphType<CIAttributeTemplate>
+    {
+        public CIAttributeTemplateType()
+        {
+            Field("name", x => x.Name);
+            Field("type", x => x.Type, type: typeof(AttributeValueTypeType));
+            Field("isArray", x => x.IsArray, type: typeof(BooleanGraphType));
+            Field("isID", x => x.IsID, type: typeof(BooleanGraphType));
+            Field("valueConstraints", x => x.ValueConstraints, type: typeof(ListGraphType<AttributeValueConstraintType>));
+        }
+    }
+
+    public class AttributeValueConstraintType : ScalarGraphType
+    {
+        public AttributeValueConstraintType()
+        {
+            Name = "AttributeValueConstraint";
+        }
+
+        public override object? ParseLiteral(IValue value)
+        {
+            if (value is NullValue)
+                return null;
+
+            if (value is StringValue stringValue)
+                return ParseValue(stringValue.Value);
+
+            return ThrowLiteralConversionError(value);
+        }
+
+        public override object? ParseValue(object? value)
+        {
+            if (value == null)
+                return null;
+
+            if (value is string valueStr)
+                return ICIAttributeValueConstraint.Serializer.Deserialize(valueStr);
+            return ThrowValueConversionError(value);
+        }
+
+        public override object? Serialize(object? value)
+        {
+            if (value == null)
+                return null;
+
+            if (value is ICIAttributeValueConstraint vc)
+                return ICIAttributeValueConstraint.Serializer.SerializeToString(vc);
+            return ThrowSerializationError(value);
+        }
+    }
+
+    public class TraitRelationType : ObjectGraphType<TraitRelation>
+    {
+        public TraitRelationType()
+        {
+            Field("identifier", x => x.Identifier);
+            Field("template", x => x.RelationTemplate, type: typeof(RelationTemplateType));
+        }
+    }
+
+    public class RelationTemplateType : ObjectGraphType<RelationTemplate>
+    {
+        public RelationTemplateType() {
+            Field("predicateID", x => x.PredicateID);
+            Field("directionForward", x => x.DirectionForward);
+            Field("minCardinality", x => x.MinCardinality, type: typeof(IntGraphType));
+            Field("maxCardinality", x => x.MaxCardinality, type: typeof(IntGraphType));
         }
     }
 

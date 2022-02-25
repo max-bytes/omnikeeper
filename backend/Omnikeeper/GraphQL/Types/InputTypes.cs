@@ -4,6 +4,7 @@ using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using System;
+using System.Linq;
 
 namespace Omnikeeper.GraphQL.Types
 {
@@ -138,9 +139,9 @@ namespace Omnikeeper.GraphQL.Types
     public class UpsertRecursiveTraitInput
     {
         public string ID { get; private set; }
-        public string[] RequiredAttributes { get; private set; }
-        public string[] OptionalAttributes { get; private set; }
-        public string[] OptionalRelations { get; private set; }
+        public TraitAttribute[] RequiredAttributes { get; private set; }
+        public TraitAttribute[] OptionalAttributes { get; private set; }
+        public TraitRelation[] OptionalRelations { get; private set; }
         public string[] RequiredTraits { get; private set; }
     }
     public class UpsertRecursiveTraitInputType : InputObjectGraphType<UpsertRecursiveTraitInput>
@@ -148,11 +149,51 @@ namespace Omnikeeper.GraphQL.Types
         public UpsertRecursiveTraitInputType()
         {
             Field("id", x => x.ID);
-            Field(x => x.RequiredAttributes);
-            Field(x => x.OptionalAttributes);
-            Field<StringGraphType>(name: "requiredRelations", resolve: x => "", deprecationReason: "not used anymore"); // TODO: remove
-            Field(x => x.OptionalRelations);
+            Field(x => x.RequiredAttributes, type: typeof(ListGraphType<TraitAttributeInputType>));
+            Field(x => x.OptionalAttributes, type: typeof(ListGraphType<TraitAttributeInputType>));
+            Field(x => x.OptionalRelations, type: typeof(ListGraphType<TraitRelationInputType>));
             Field(x => x.RequiredTraits);
+        }
+    }
+
+    public class TraitAttributeInputType : InputObjectGraphType<TraitAttribute>
+    {
+        public TraitAttributeInputType()
+        {
+            Field("identifier", x => x.Identifier);
+            Field("template", x => x.AttributeTemplate, type: typeof(CIAttributeTemplateInputType));
+        }
+    }
+
+    public class CIAttributeTemplateInputType : InputObjectGraphType<CIAttributeTemplate>
+    {
+        public CIAttributeTemplateInputType()
+        {
+            Field("name", x => x.Name);
+            Field("type", x => x.Type, type: typeof(AttributeValueTypeType));
+            Field("isArray", x => x.IsArray, type: typeof(BooleanGraphType));
+            Field("isID", x => x.IsID, type: typeof(BooleanGraphType));
+            Field("valueConstraints", x => x.ValueConstraints, type: typeof(ListGraphType<AttributeValueConstraintType>));
+        }
+    }
+
+    public class TraitRelationInputType : InputObjectGraphType<TraitRelation>
+    {
+        public TraitRelationInputType()
+        {
+            Field("identifier", x => x.Identifier);
+            Field("template", x => x.RelationTemplate, type: typeof(RelationTemplateInputType));
+        }
+    }
+
+    public class RelationTemplateInputType : InputObjectGraphType<RelationTemplate>
+    {
+        public RelationTemplateInputType()
+        {
+            Field("predicateID", x => x.PredicateID);
+            Field("directionForward", x => x.DirectionForward);
+            Field("minCardinality", x => x.MinCardinality, type: typeof(IntGraphType));
+            Field("maxCardinality", x => x.MaxCardinality, type: typeof(IntGraphType));
         }
     }
 

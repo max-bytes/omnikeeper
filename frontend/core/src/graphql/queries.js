@@ -41,11 +41,13 @@ export const queries = {
                     info
                 }
                 ancestorTraits
-                requiredAttributes
-                optionalAttributes
-                optionalRelations
+                requiredAttributes { ...TraitAttribute}
+                optionalAttributes { ...TraitAttribute}
+                optionalRelations {...TraitRelation}
             }
         }
+        ${Fragments.traitAttribute}
+        ${Fragments.traitRelation}
     `,
 
     FullCI: gql`
