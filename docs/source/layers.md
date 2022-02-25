@@ -50,6 +50,26 @@ An important fact of layer merging is that the merging happens at the time a req
 ## Compute Layers
 See [[Compute Layers|compute-layers]].
 
+## Layers and Mutations
+| New Entity Attribute | Mask Handling        | Other Layers Value Handling | Layer(s) above | Write Layer | Layer(s) below | Resulting Operation | Layer(s) above after | Write Layer after | Layer(s) below after |
+| -------------------- | -------------------- | --------------------------- | -------------- | ----------- | -------------- | ------------------- | -------------------- | ----------------- | -------------------- |
+| Value Z              | \*                   | \*                          | \[NotSet\]    | \[NotSet\] | \[NotSet\]    | Write               | \[NotSet\]          | Value Z           | \[NotSet\]          |
+| Value Z              | \*                   | \*                          | \[NotSet\]    | Value A     | \[NotSet\]    | Write               | \[NotSet\]          | Value Z           | \[NotSet\]          |
+| Value Z              | \*                   | \*                          | \[NotSet\]    | Value Z     | \[NotSet\]    | No-op               | \[NotSet\]          | Value Z           | \[NotSet\]          |
+| Value Z              | \*                   | \*                          | \[NotSet\]    | \[NotSet\] | Value A        | Write               | \[NotSet\]          | Value Z           | Value A              |
+| Value Z              | \*                   | ForceWrite                  | \[NotSet\]    | \[NotSet\] | Value Z        | Write               | \[NotSet\]          | Value Z           | Value Z              |
+| Value Z              | \*                   | TakeIntoAccount             | \[NotSet\]    | \[NotSet\] | Value Z        | No-op               | \[NotSet\]          | \[NotSet\]       | Value Z              |
+| Value Z              | \*                   | TakeIntoAccount             | \[NotSet\]    | Value A     | Value Z        | Delete              | \[NotSet\]          | \[NotSet\]       | Value Z              |
+| Value Z              | \*                   | TakeIntoAccount             | \[NotSet\]    | Value Z     | Value Z        | Delete              | \[NotSet\]          | \[NotSet\]       | Value Z              |
+| Value Z              | \*                   | ForceWrite                  | Value Z        | \[NotSet\] | \[NotSet\]    | Write               | Value Z              | Value Z           | \[NotSet\]          |
+| Value Z              | \*                   | TakeIntoAccount             | Value Z        | \[NotSet\] | \[NotSet\]    | No-op               | Value Z              | \[NotSet\]       | \[NotSet\]          |
+| Value Z              | \*                   | \*                          | Value A        | \[NotSet\] | \[NotSet\]    | Error               | Value A              | \[NotSet\]       | \[NotSet\]          |
+| \[NotSet\]          | \*                   | \*                          | \[NotSet\]    | \[NotSet\] | \[NotSet\]    | No-op               | \[NotSet\]          | \[NotSet\]       | \[NotSet\]          |
+| \[NotSet\]          | \*                   | \*                          | \[NotSet\]    | Value A     | \[NotSet\]    | Delete              | \[NotSet\]          | \[NotSet\]       | \[NotSet\]          |
+| \[NotSet\]          | NoMask               | \*                          | \[NotSet\]    | Value B     | Value A        | Delete              | \[NotSet\]          | \[NotSet\]       | Value A              |
+| \[NotSet\]          | ApplyMaskIfNecessary | \*                          | \[NotSet\]    | Value B     | Value A        | Mask                | \[NotSet\]          | \[Mask\]          | Value A              |
+| \[NotSet\]          | \*                   | \*                          | Value A        | \[NotSet\] | \[NotSet\]    | Error               | Value A              | \[NotSet\]       | \[NotSet\]          |
+
 ## (OUTDATED) Types of Layers
 
 *   **Regular layer:** writable by humans (not by processes), readable by everyone (unless restricted)
