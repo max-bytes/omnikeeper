@@ -99,7 +99,7 @@ function SearchCIAdvanced(props) {
                             />
                         </Form.Item>
                     </div>
-                    <div style={{marginBottom: "10px", display: "flex", overflow: "hidden"}}>
+                    <div style={{marginBottom: "10px", display: "flex", overflow: "hidden", flexGrow: 1}}>
                         {activeTraits && 
                             <TraitList traitList={activeTraits.activeTraits} 
                             checked={checkedTraits} setChecked={setCheckedTraits}
