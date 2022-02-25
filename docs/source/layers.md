@@ -60,7 +60,7 @@ The table below shows how writing an attribute to a CI has different outcomes de
 * the list is not exhaustive, but should cover all important scenarios
 * a `*` means "any value"
 * relations are not depicted here, but behave similarly to attributes
-* Mask Handling: turning on mask handling (ApplyMaskIfNecessary) for deletions makes omnikeeper aware of the layers below the write layer and apply a mask to properly hide the lower layer's data if it is necessary. Without this, the lower layer's data would "shine through" and be visible after the deletion. Depending on the use case, this might or might not be intended.
+* Mask Handling: turning on mask handling (ApplyMask) for deletions makes omnikeeper aware of the layers below the write layer and apply a mask to properly hide the lower layer's data if it is necessary. Without this, the lower layer's data would "shine through" and be visible after the deletion. Depending on the use case, this might or might not be intended.
 * Other Layers Value Handling: turning on other-layers-value-handling (TakeIntoAccount) for writes makes omnikeeper aware of the "surrounding" layers. If a surrounding layer already contains the same attribute with the same value, no write operation is performed. In fact, an existing attribute in the write layer would be deleted even, to reduce the duplication and make the other layer's value take priority. Depending on the use case, this might or might not be intended.
 
 
@@ -80,7 +80,7 @@ The table below shows how writing an attribute to a CI has different outcomes de
 |      \[NotSet\]     |          \*          |              \*             |   |   \[NotSet\]  | \[NotSet\] |   \[NotSet\]  |        No-op        |      \[NotSet\]     |    \[NotSet\]    |      \[NotSet\]     |
 |      \[NotSet\]     |          \*          |              \*             |   |   \[NotSet\]  |   Value A   |   \[NotSet\]  |        Delete       |      \[NotSet\]     |    \[NotSet\]    |      \[NotSet\]     |
 |      \[NotSet\]     |        NoMask        |              \*             |   |   \[NotSet\]  |   Value B   |     Value A    |        Delete       |      \[NotSet\]     |    \[NotSet\]    |        Value A       |
-|      \[NotSet\]     | ApplyMaskIfNecessary |              \*             |   |   \[NotSet\]  |   Value B   |     Value A    |         Mask        |      \[NotSet\]     |      \[Mask\]     |        Value A       |
+|      \[NotSet\]     | ApplyMask |              \*             |   |   \[NotSet\]  |   Value B   |     Value A    |         Mask        |      \[NotSet\]     |      \[Mask\]     |        Value A       |
 |      \[NotSet\]     |          \*          |              \*             |   |     Value A    | \[NotSet\] |   \[NotSet\]  |        Error        |        Value A       |    \[NotSet\]    |      \[NotSet\]     |
 
 ## (OUTDATED) Types of Layers
