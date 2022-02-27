@@ -70,8 +70,8 @@ namespace Omnikeeper.Controllers.Ingest
                ));
                 var (ciCandidates, relationCandidates) = ingestActiveDirectoryXMLService.Files2IngestCandidates(fileStreams, searchLayers, logger);
                 var ingestData = new IngestData(ciCandidates, relationCandidates);
-                var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
-                logger.LogInformation($"Active Directory XML Ingest successful; ingested {numIngestedCIs} CIs, {numIngestedRelations} relations");
+                var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
+                logger.LogInformation($"Active Directory XML Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");
 
                 return Ok();
             }

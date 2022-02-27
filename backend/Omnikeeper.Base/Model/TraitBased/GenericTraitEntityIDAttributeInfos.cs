@@ -23,13 +23,18 @@ namespace Omnikeeper.Base.Model.TraitBased
             return NamedAttributesSelection.Build(fields.Select(f => f.idAttributeName).ToHashSet());
         }
 
-        public (string name, IAttributeValue value)[] ExtractAttributeValueTuplesFromID(ID id)
+        public string[] GetIDAttributeNames()
+        {
+            return fields.Select(f => f.idAttributeName).ToArray();
+        }
+
+        public IAttributeValue[] ExtractAttributeValuesFromID(ID id)
         {
             if (fields.Count() == 1)
             {
-                var (_, idAttributeName, idAttributeValueType) = fields.First();
+                var (_, _, idAttributeValueType) = fields.First();
                 IAttributeValue idAttributeValue = AttributeValueHelper.BuildFromTypeAndObject(idAttributeValueType, id);
-                return new[] { (idAttributeName, idAttributeValue) };
+                return new[] { idAttributeValue };
             }
             else
             {
@@ -43,16 +48,10 @@ namespace Omnikeeper.Base.Model.TraitBased
                     var subIndex = tupleID[index];
                     if (subIndex == null)
                         throw new Exception(); // TODO
-                    return (f.idAttributeName, AttributeValueHelper.BuildFromTypeAndObject(f.idAttributeValueType, subIndex));
+                    return AttributeValueHelper.BuildFromTypeAndObject(f.idAttributeValueType, subIndex);
                 }).ToArray();
             }
         }
-
-        //public Guid FilterCIAttributesWithMatchingID(ID id, IDictionary<Guid, IDictionary<string, MergedCIAttribute>> ciAttributes)
-        //{
-        //    (string name, IAttributeValue value)[] idAttributeValues = Tmp(id, ciAttributes);
-        //    return TraitEntityHelper.FindMatchingCIIDViaAttributeValues(idAttributeValues, ciAttributes);
-        //}
 
         public ID ExtractIDFromEntity(T entity)
         {
@@ -66,25 +65,33 @@ namespace Omnikeeper.Base.Model.TraitBased
             }
             else
             {
-                var genericTuple = fields.Count() switch
-                {
-                    0 => throw new Exception("Must not happen"),
-                    1 => throw new Exception("Must not happen"),
-                    2 => typeof(Tuple<,>),
-                    3 => typeof(Tuple<,,>),
-                    4 => typeof(Tuple<,,,>),
-                    5 => typeof(Tuple<,,,,>),
-                    6 => typeof(Tuple<,,,,,>),
-                    7 => typeof(Tuple<,,,,,,>),
-                    8 => typeof(Tuple<,,,,,,,>),
-                    _ => throw new Exception("Not supported")
-                };
-                var constructedTuple = genericTuple.MakeGenericType(fields.Select(f => f.idFieldInfo.FieldType).ToArray());
-                var t = Activator.CreateInstance(constructedTuple, fields.Select(f => f.idFieldInfo.GetValue(entity)).ToArray());
+                var t = CreateTupleFromTypeList(fields.Select(f => f.idFieldInfo.FieldType).ToArray(), fields.Select(f => f.idFieldInfo.GetValue(entity)).ToArray());
                 if (t == null)
                     throw new Exception(""); // TODO
                 return (ID)t;
             }
+        }
+
+        private static readonly Type[] tupleTypes = new[]
+        {
+            typeof(ValueTuple<,>),
+            typeof(ValueTuple<,,>),
+            typeof(ValueTuple<,,,>),
+            typeof(ValueTuple<,,,,>),
+            typeof(ValueTuple<,,,,,>),
+            typeof(ValueTuple<,,,,,,>),
+        };
+        private object? CreateTupleFromTypeList(Type[] types, object?[] values)
+        {
+            int numTupleMembers = types.Length;
+
+            if (numTupleMembers <= 1 ||  numTupleMembers > 6)
+                return null;
+
+            var currentTupleType = tupleTypes[numTupleMembers - 2].MakeGenericType(types);
+            var currentTuple = currentTupleType.GetConstructors()[0].Invoke(values);
+
+            return currentTuple;
         }
     }
 }

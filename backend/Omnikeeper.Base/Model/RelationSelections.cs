@@ -91,6 +91,34 @@ namespace Omnikeeper.Base.Model
         public override bool Equals(object? obj) => Equals(obj as RelationSelectionWithPredicate);
         public bool Equals(RelationSelectionWithPredicate? other) => other != null && PredicateID == other.PredicateID;
     }
+
+    public class RelationSelectionSpecific : IRelationSelection, IEquatable<RelationSelectionSpecific>
+    {
+        public ISet<(Guid from, Guid to, string predicateID)> Specifics { get; }
+        private RelationSelectionSpecific(ISet<(Guid from, Guid to, string predicateID)> specifics)
+        {
+            Specifics = specifics;
+        }
+
+        public static IRelationSelection Build(IEnumerable<(Guid from, Guid to, string predicateID)> from)
+        {
+            if (from.IsEmpty()) return RelationSelectionNone.Instance;
+            return new RelationSelectionSpecific(from.ToHashSet());
+        }
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = (int)2166136265;
+                foreach (var t in Specifics)
+                    hash = (hash * 16777619) ^ t.GetHashCode();
+                return hash;
+            }
+        }
+        public override bool Equals(object? obj) => Equals(obj as RelationSelectionSpecific);
+        public bool Equals(RelationSelectionSpecific? other) => other != null && Specifics.SetEquals(other.Specifics);
+    }
+
     public class RelationSelectionAll : IRelationSelection
     {
         private RelationSelectionAll() { }
@@ -101,31 +129,4 @@ namespace Omnikeeper.Base.Model
         private RelationSelectionNone() { }
         public static RelationSelectionNone Instance = new RelationSelectionNone();
     }
-    //public class RelationSelectionOr : IRelationSelection
-    //{
-    //    public readonly IEnumerable<IRelationSelection> inners;
-
-    //    public RelationSelectionOr(IEnumerable<IRelationSelection> inners)
-    //    {
-    //        this.inners = inners;
-    //    }
-    //}
-    //public class RelationSelectionAnd : IRelationSelection
-    //{
-    //    public readonly IEnumerable<IRelationSelection> inners;
-
-    //    public RelationSelectionAnd(IEnumerable<IRelationSelection> inners)
-    //    {
-    //        this.inners = inners;
-    //    }
-    //}
-
-    //public static class RelationSelectionExtensions
-    //{
-    //    public static IRelationSelection UnionAll(IEnumerable<IRelationSelection> selections)
-    //    {
-    //        return new RelationSelectionOr(selections); // TODO: simplify
-    //    }
-    //}
-
 }

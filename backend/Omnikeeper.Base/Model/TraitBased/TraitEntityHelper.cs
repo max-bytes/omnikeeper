@@ -1,11 +1,15 @@
 ﻿using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
-namespace Omnikeeper.GraphQL.TraitEntities
+namespace Omnikeeper.Base.Model.TraitBased
 {
     public static class TraitEntityHelper
     {
@@ -60,13 +64,47 @@ namespace Omnikeeper.GraphQL.TraitEntities
             return (attributeValues.ToArray(), relationValues.ToArray());
         }
 
-        public static (string name, IAttributeValue value)[] InputDictionary2IDAttributeTuples(IDictionary<string, object> inputDict, ITrait trait)
+        public static (string[] names, IAttributeValue[] values) InputDictionary2IDAttributes(IDictionary<string, object> inputDict, ITrait trait)
         {
             var (attributeValues, _) = InputDictionary2AttributeAndRelationTuples(inputDict, trait);
 
-            return attributeValues.Where(t => t.isID)
-                .Select(t => (t.name, t.value))
-                .ToArray();
+            return (
+                attributeValues.Where(t => t.isID).Select(t => t.name).ToArray(),
+                attributeValues.Where(t => t.isID).Select(t => t.value).ToArray()
+            );
+        }
+
+
+        /*
+         * NOTE: this does not care whether or not the CI is actually a trait entity or not
+         */
+        public static async Task<Guid?> GetMatchingCIIDByAttributeValues(IAttributeModel attributeModel, string[] attributeNames, IAttributeValue[] attributeValues, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...
+            var cisWithIDAttributes = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(attributeNames.ToHashSet()), layerSet, trans, timeThreshold);
+
+            var foundCIID = cisWithIDAttributes.Where(t =>
+            {
+                for(var i = 0;i < attributeNames.Length;i++)
+                {
+                    var attributeName = attributeNames[i];
+                    var attributeValue = attributeValues[i];
+                    if (t.Value.TryGetValue(attributeName, out var ma))
+                    {
+                        if (!ma.Attribute.Value.Equals(attributeValue))
+                            return false;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            })
+                .Select(t => t.Key)
+                .OrderBy(t => t) // we order by GUID to stay consistent even when multiple CIs would match
+                .FirstOrDefault();
+            return (foundCIID == default) ? null : foundCIID;
         }
     }
 }

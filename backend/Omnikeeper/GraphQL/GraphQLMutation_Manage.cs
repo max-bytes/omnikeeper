@@ -328,9 +328,9 @@ namespace Omnikeeper.GraphQL
 
                   var trait = context.GetArgument<UpsertRecursiveTraitInput>("trait")!;
 
-                  var requiredAttributes = trait.RequiredAttributes.Select(str => TraitAttribute.Serializer.Deserialize(str));
-                  var optionalAttributes = trait.OptionalAttributes?.Select(str => TraitAttribute.Serializer.Deserialize(str));
-                  var optionalRelations = trait.OptionalRelations?.Select(str => TraitRelation.Serializer.Deserialize(str));
+                  var requiredAttributes = trait.RequiredAttributes;
+                  var optionalAttributes = trait.OptionalAttributes;
+                  var optionalRelations = trait.OptionalRelations;
 
                   var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                   CheckModifyManagementThrow(userContext, metaConfiguration, "modify traits");

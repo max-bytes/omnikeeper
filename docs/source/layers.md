@@ -50,6 +50,39 @@ An important fact of layer merging is that the merging happens at the time a req
 ## Compute Layers
 See [[Compute Layers|compute-layers]].
 
+## Layers and Mutations
+
+When writing attributes and relations to a layer, what omnikeeper actually does in the end depends on a few factors, such as what data is already present in the write layer, what data is present in the layers below and above and a few "handling" settings.
+
+The table below shows how writing or deleting an attribute to a CI has different outcomes depending on the mentioned factors. A few notes:
+
+* while the inital request is always to write or delete a specific attribute, the resulting operation can differ a lot. The main intention is that omnikeeper tries to fulfill the request as best as possible, while still considering the "surrounding" layers.
+* the list is not exhaustive, but should cover all important scenarios
+* a `*` means "any value"
+* relations are not depicted here, but behave similarly to attributes
+* Mask Handling: turning on mask handling (ApplyMask) for deletions makes omnikeeper aware of the layers below the write layer and apply a mask to properly hide the lower layer's data if it is necessary. Without this, the lower layer's data would "shine through" and be visible after the deletion. Depending on the use case, this might or might not be intended.
+* Other Layers Value Handling: turning on other-layers-value-handling (TakeIntoAccount) for writes makes omnikeeper aware of the "surrounding" layers. If a surrounding layer already contains the same attribute with the same value, no write operation is performed. In fact, an existing attribute in the write layer would be deleted even, to reduce the duplication and make the other layer's value take priority. Depending on the use case, this might or might not be intended.
+
+
+| New Attribute / Intended Operation |     Mask Handling    | Other Layers Value Handling |   | Layer(s) above | Write Layer | Layer(s) below | Resulting Operation | Layer(s) above after | Write Layer after | Layer(s) below after |
+|:--------------------:|:--------------------:|:---------------------------:|---|:--------------:|:-----------:|:--------------:|:-------------------:|:--------------------:|:-----------------:|:--------------------:|
+|        Value Z       |          \*          |              \*             |   |   \[NotSet\]  | \[NotSet\] |   \[NotSet\]  |        Write        |      \[NotSet\]     |      Value Z      |      \[NotSet\]     |
+|        Value Z       |          \*          |              \*             |   |   \[NotSet\]  |   Value A   |   \[NotSet\]  |        Write        |      \[NotSet\]     |      Value Z      |      \[NotSet\]     |
+|        Value Z       |          \*          |              \*             |   |   \[NotSet\]  |   Value Z   |   \[NotSet\]  |        No-op        |      \[NotSet\]     |      Value Z      |      \[NotSet\]     |
+|        Value Z       |          \*          |              \*             |   |   \[NotSet\]  | \[NotSet\] |     Value A    |        Write        |      \[NotSet\]     |      Value Z      |        Value A       |
+|        Value Z       |          \*          |          ForceWrite         |   |   \[NotSet\]  | \[NotSet\] |     Value Z    |        Write        |      \[NotSet\]     |      Value Z      |        Value Z       |
+|        Value Z       |          \*          |       TakeIntoAccount       |   |   \[NotSet\]  | \[NotSet\] |     Value Z    |        No-op        |      \[NotSet\]     |    \[NotSet\]    |        Value Z       |
+|        Value Z       |          \*          |       TakeIntoAccount       |   |   \[NotSet\]  |   Value A   |     Value Z    |        Delete       |      \[NotSet\]     |    \[NotSet\]    |        Value Z       |
+|        Value Z       |          \*          |       TakeIntoAccount       |   |   \[NotSet\]  |   Value Z   |     Value Z    |        Delete       |      \[NotSet\]     |    \[NotSet\]    |        Value Z       |
+|        Value Z       |          \*          |          ForceWrite         |   |     Value Z    | \[NotSet\] |   \[NotSet\]  |        Write        |        Value Z       |      Value Z      |      \[NotSet\]     |
+|        Value Z       |          \*          |       TakeIntoAccount       |   |     Value Z    | \[NotSet\] |   \[NotSet\]  |        No-op        |        Value Z       |    \[NotSet\]    |      \[NotSet\]     |
+|        Value Z       |          \*          |              \*             |   |     Value A    | \[NotSet\] |   \[NotSet\]  |        Error        |        Value A       |    \[NotSet\]    |      \[NotSet\]     |
+|      \[Delete\]     |          \*          |              \*             |   |   \[NotSet\]  | \[NotSet\] |   \[NotSet\]  |        No-op        |      \[NotSet\]     |    \[NotSet\]    |      \[NotSet\]     |
+|      \[Delete\]     |          \*          |              \*             |   |   \[NotSet\]  |   Value A   |   \[NotSet\]  |        Delete       |      \[NotSet\]     |    \[NotSet\]    |      \[NotSet\]     |
+|      \[Delete\]     |        NoMask        |              \*             |   |   \[NotSet\]  |   Value B   |     Value A    |        Delete       |      \[NotSet\]     |    \[NotSet\]    |        Value A       |
+|      \[Delete\]     | ApplyMask |              \*             |   |   \[NotSet\]  |   Value B   |     Value A    |         Mask        |      \[NotSet\]     |      \[Mask\]     |        Value A       |
+|      \[Delete\]     |          \*          |              \*             |   |     Value A    | \[NotSet\] |   \[NotSet\]  |        Error        |        Value A       |    \[NotSet\]    |      \[NotSet\]     |
+
 ## (OUTDATED) Types of Layers
 
 *   **Regular layer:** writable by humans (not by processes), readable by everyone (unless restricted)

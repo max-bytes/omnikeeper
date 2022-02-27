@@ -177,6 +177,7 @@ namespace Omnikeeper.GridView.Commands
                             {
                                 var val = AttributeValueHelper.BuildFromDTO(cell.Value);
 
+                                // TODO: other-layers-value handling
                                 await attributeModel.InsertAttribute(
                                     attributeName,
                                     val,
@@ -184,7 +185,8 @@ namespace Omnikeeper.GridView.Commands
                                     writeLayer,
                                     changesetProxy,
                                     new DataOriginV1(DataOriginType.Manual),
-                                    trans);
+                                    trans, 
+                                    OtherLayersValueHandlingForceWrite.Instance);
                             }
                             catch (Exception e)
                             {

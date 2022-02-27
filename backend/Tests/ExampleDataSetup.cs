@@ -121,7 +121,7 @@ namespace Tests
                         finalFragments = filtered.Values;
                     }
 
-                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", fl.Key, finalFragments), changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance);
+                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", fl.Key, finalFragments), changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 }
                 mc.Commit();
             }

@@ -52,6 +52,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
     };
 
     var cache = new InMemoryCache({
+        addTypename: false,
         typePolicies: {
             // RelationType: {
             //     keyFields: false

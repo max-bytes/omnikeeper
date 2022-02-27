@@ -89,9 +89,8 @@ namespace Omnikeeper.Controllers.Ingest
                 var preparer = new Preparer();
                 var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, logger);
 
-                var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
-
-                logger.LogInformation($"Ansible Ingest successful; ingested {numIngestedCIs} CIs, {numIngestedRelations} relations");
+                var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
+                logger.LogInformation($"Ansible Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");
 
                 return Ok();
             }

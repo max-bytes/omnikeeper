@@ -45,12 +45,12 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await GetService<IAttributeModel>().InsertCINameAttribute("ci1", ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await GetService<IAttributeModel>().InsertCINameAttribute("ci2", ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await GetService<IAttributeModel>().InsertCINameAttribute("ci3", ciid3, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans); // name on different layer
-                var i1 = await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                var i2 = await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                var i3 = await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("text1"), ciid1, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IAttributeModel>().InsertCINameAttribute("ci1", ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertCINameAttribute("ci2", ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertCINameAttribute("ci3", ciid3, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance); // name on different layer
+                var i1 = await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                var i2 = await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                var i3 = await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("text1"), ciid1, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
 
                 trans.Commit();
             }

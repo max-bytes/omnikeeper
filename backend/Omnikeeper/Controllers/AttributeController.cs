@@ -116,7 +116,7 @@ namespace Omnikeeper.Controllers
                 return Forbid($"User \"{user.Username}\" does not have permission to write to CI {notAllowedCI}");
 
             var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-            await attributeModel.BulkReplaceAttributes(data, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            await attributeModel.BulkReplaceAttributes(data, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
             trans.Commit();
             return Ok();
         }

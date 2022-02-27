@@ -25,7 +25,7 @@ An example of a relation might be to define a parent-child relationship between 
 ## ...and that's it
 All stored data in omnikeeper breaks down into these three basic structures. Starting from a simple data model like this has a lot of advantages and makes supporting lots of usecases possible.
 
-This approach to modelling data is not novel whatsoever. It is most well-known under the name [Entity-Attribute-Value Model](https://en.wikipedia.org/wiki/Entity%E2%80%93attribute%E2%80%93value_model). Many applications have used this or a similar approach to data modelling. However, omnikeeper introduces novel concepts and includes tools and features that make it unique.
+This approach to modelling data is a combination of what is most well-known under the name [Entity-Attribute-Value Model](https://en.wikipedia.org/wiki/Entity%E2%80%93attribute%E2%80%93value_model), together with a [Graph Database](https://en.wikipedia.org/wiki/Graph_database). Many applications have used this or a similar approach to data modelling. However, omnikeeper introduces novel concepts and includes tools and features that make it unique, such as layers, traits and the historic .
 
 # Elements of omnikeeper
 
@@ -41,7 +41,7 @@ This approach to modelling data is not novel whatsoever. It is most well-known u
 # Motivation - why does omnikeeper exist and what makes it special?
 
 In the realm of data modelling and applications that work with said data, there's one thing that's certain: change. Everything changes all the time: requirements of stakeholders and users, their access patterns, their usecases, ... and therefore, the data itself needs to change as well.  
-This constant change does not only happen during the development, but extends beyond that to the whole lifecycle. In fact, the more successful an application or service is, the more pressure there will be to change it, to improve it, to add to it. This means that no matter how well you design your data model up front, there will be changes and they will be significant.  
+This constant change does not only happen during the development, but extends beyond that to the full lifecycle of the application. In fact, the more successful an application or service is, the more pressure there will be to change it, to improve it, to add to it. This means that no matter how well you design your data model up front, there will be changes and they will be significant.  
 What can make or break an application that is forced to change is its data model. A data model that is too rigid and too hard to change and adapt becomes a burden and can force costly refactorings or make full blown reworks necessary. On the other hand, a data model that is too limp and does not offer enough structure is not ideal either. Data handling becomes cumbersome, the data itself becomes fragmented and structures are lost.  
 omnikeeper claims to be - for a set of usecases - a sweet spot between the two extremes, offering the right balance between structure and flexibility.  
 omnikeeper tackles structuring of data from a different perspective. Instead of forcing incoming data into a very tight corset of pre-made structures and data-types, it only expects the data to conform to the simple CI-attribute-relation model described above. Apart from that, data is generally free to exist in whatever shape it prefers. To still be able to introduce structure and reason about the data in a more well-defined way, omnikeeper offers features such as [[traits|traits]] and [[layers|layers]]. [[Follow this link to read more about omnikeeper's data model and its design|datamodel]].
@@ -52,6 +52,7 @@ Another important topic when talking about data and change is the dimension of t
 
 - a data store for application and infrastructure configuration
 - an application prototyping framework or a data layer for applications that allows data models to stay in flux and evolve during initial development and beyond
+- a quickly set-up and flexible data store + web backend for access based on GraphQL
 - as an intermediate component in a data pipeline between data producers and consumers, offering data mapping, selection and prioritization capabilities
 
 # What is omnikeeper NOT

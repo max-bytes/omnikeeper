@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.GraphQL.Types;
 
 namespace Omnikeeper.GraphQL.TraitEntities

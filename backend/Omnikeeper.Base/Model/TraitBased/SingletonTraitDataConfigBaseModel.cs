@@ -15,19 +15,19 @@ namespace Omnikeeper.Base.Model.TraitBased
     {
         private readonly IEffectiveTraitModel effectiveTraitModel;
         protected readonly ICIModel ciModel;
-        protected readonly IBaseAttributeModel baseAttributeModel;
-        protected readonly IBaseRelationModel baseRelationModel;
+        protected readonly IAttributeModel attributeModel;
+        protected readonly IRelationModel relationModel;
         private readonly GenericTrait trait;
         private readonly HashSet<string> relevantAttributesForTrait;
 
-        public SingletonTraitDataConfigBaseModel(GenericTrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
+        public SingletonTraitDataConfigBaseModel(GenericTrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
         {
             this.trait = trait;
             relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Concat(trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet();
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
-            this.baseAttributeModel = baseAttributeModel;
-            this.baseRelationModel = baseRelationModel;
+            this.attributeModel = attributeModel;
+            this.relationModel = relationModel;
         }
 
         protected async Task<T> Get(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
@@ -69,12 +69,14 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             Guid ciid = (t.Equals(default)) ? await ciModel.CreateCI(trans) : t.Item1;
 
+            var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
+
             var changed = false;
             foreach (var (attributeName, value) in attributes)
             {
                 if (value != null)
                 {
-                    (_, var tmpChanged) = await baseAttributeModel.InsertAttribute(attributeName, value, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+                    var tmpChanged = await attributeModel.InsertAttribute(attributeName, value, ciid, writeLayerID, changesetProxy, dataOrigin, trans, otherLayersValueHandling);
                     changed = changed || tmpChanged;
                 }
             }
@@ -85,7 +87,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 {
                     var fromCIID = (forward) ? ciid : otherCIID;
                     var toCIID = (forward) ? otherCIID : ciid;
-                    (_, var tmpChanged) = await baseRelationModel.InsertRelation(fromCIID, toCIID, predicateID, false, writeLayerID, changesetProxy, dataOrigin, trans);
+                    var tmpChanged = await relationModel.InsertRelation(fromCIID, toCIID, predicateID, false, writeLayerID, changesetProxy, dataOrigin, trans, otherLayersValueHandling);
                     changed = changed || tmpChanged;
                 }
             }
@@ -119,22 +121,24 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             foreach (var attribute in attributesToRemove)
             {
-                var (_, changed) = await baseAttributeModel.RemoveAttribute(attribute, t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+                var changed = await attributeModel.RemoveAttribute(attribute, t.Item1, writeLayerID, changesetProxy, dataOrigin, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             }
 
             // TODO: masking
+            var maskHandlingForRetrieval = MaskHandlingForRetrievalApplyMasks.Instance;
+            var maskHandlingForRemoval = MaskHandlingForRemovalApplyNoMask.Instance;
 
-            var allRelationsForward = await baseRelationModel.GetRelations(RelationSelectionFrom.Build(t.Item1), new string[] { writeLayerID }, trans, TimeThreshold.BuildLatest());
-            var allRelationsBackward = await baseRelationModel.GetRelations(RelationSelectionTo.Build(t.Item1), new string[] { writeLayerID }, trans, TimeThreshold.BuildLatest());
+            var allRelationsForward = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(t.Item1), new LayerSet(writeLayerID), trans, TimeThreshold.BuildLatest(), maskHandlingForRetrieval);
+            var allRelationsBackward = await relationModel.GetMergedRelations(RelationSelectionTo.Build(t.Item1), new LayerSet(writeLayerID), trans, TimeThreshold.BuildLatest(), maskHandlingForRetrieval);
 
-            var relevantRelationsForward = allRelationsForward[0].Where(r => relationsToRemoveForward.Contains(r.PredicateID));
-            var relevantRelationsBackward = allRelationsBackward[0].Where(r => relationsToRemoveBackward.Contains(r.PredicateID));
+            var relevantRelationsForward = allRelationsForward.Select(r => r.Relation).Where(r => relationsToRemoveForward.Contains(r.PredicateID));
+            var relevantRelationsBackward = allRelationsBackward.Select(r => r.Relation).Where(r => relationsToRemoveBackward.Contains(r.PredicateID));
 
             var relationsToRemove = relevantRelationsForward.Concat(relevantRelationsBackward);
 
             foreach (var r in relationsToRemove)
             {
-                var (_, changed) = await baseRelationModel.RemoveRelation(r.FromCIID, r.ToCIID, r.PredicateID, writeLayerID, changesetProxy, dataOrigin, trans);
+                var changed = await relationModel.RemoveRelation(r.FromCIID, r.ToCIID, r.PredicateID, writeLayerID, changesetProxy, dataOrigin, trans, maskHandlingForRemoval);
             }
 
             var tAfterDeletion = await TryToGet(layerSet, changesetProxy.TimeThreshold, trans);

@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [13.0.0-rc13] - 2022-02-25
+
+### Added
+- support for masking of attributes and relations
+- implemented default behavior for Trait Entities to make it look for matching CIs based on IDs only if it can't find a complete entity
+- implemented "OtherLayersValueHandling", which allows the Trait Entity mutation APIs to skip attribute/relation writes if the data already exists in other layers. This means that data is not needlessly duplicated.
+
+### Changed
+- GraphQL API:
+  - (breaking) improved GraphQL API for (recursive) traits
+- technical frontend:
+  - small improvements to traits view
+  - store layer settings in local storage
+  - added copy buttons for various elements, including CIIDs and changeset-IDs
+  - improvements to search result list
+  - updated several dependencies, including graphql, ant-design, apollo, react and keycloak-js
+- high availability:
+  - (breaking) switched from hangfire to Quartz for job scheduling
+  - removed distributed memory cache
+  - removed latest layer caching
+
+- lots of code refactorings, including areas:
+  - completely reworked and simplified mutations in Attribute- and Relation Model
+  - tests
+
+### Fixed
+- bugfixes related to UsageTrackingService, Disposal and Autofac
+- improved caching/locking mechanisms of ICurrentUserService implementations
+- bugfix in data loader related to effective traits
+- bugfix related to masking in BulkUpdate() when removing attributes
 
 ## [12.0.1] - 2022-01-21
 
