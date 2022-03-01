@@ -41,6 +41,20 @@ namespace OKPluginVariableRendering
         const int assignmentGroupDefaultPrio = 10000;
         const int baseCIPrio = 100000;
 
+        protected override ISet<string> GetDependentLayerIDs(JObject config, ILogger logger)
+        {
+            try
+            {
+                var cfg = config.ToObject<Configuration>();
+                return cfg.InputLayerSet.ToHashSet();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Cannot parse CLB config");
+                return null; // we hit an error parsing the config, cannot extract dependent layers
+            }
+        }
+
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start VariableRendering");
@@ -142,6 +156,13 @@ namespace OKPluginVariableRendering
 
                 foreach (var followRelation in cfg.BaseCI.FollowRelations)
                 {
+
+                    // get all active traits here
+
+                    var allRequiredTraits = followRelation.Follow.Select(f => f.RequiredTrait);
+
+                    var allActiveTraits = await traitsProvider.GetActiveTraitsByIDs(allRequiredTraits, trans, changesetProxy.TimeThreshold);
+
                     MergedCI prevCI = mainCI;
 
                     // save a list with ids for first level of realtions we will need this to check to the second
@@ -191,7 +212,11 @@ namespace OKPluginVariableRendering
                                 targetCIs.Add(targetCI);
                             }
 
-                            var targetCIRequiredTrait = await traitsProvider.GetActiveTrait(follow.RequiredTrait, trans, changesetProxy.TimeThreshold);
+
+                            if (!allActiveTraits.TryGetValue(follow.RequiredTrait, out ITrait targetCIRequiredTrait))
+                            {
+                                continue;
+                            }
 
                             // check the required trait for each CI
                             var filteredCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(targetCIs, targetCIRequiredTrait, layersetVariableRendering, trans, changesetProxy.TimeThreshold);
@@ -308,7 +333,9 @@ namespace OKPluginVariableRendering
                 changesetProxy, 
                 new DataOriginV1(DataOriginType.ComputeLayer), 
                 trans,
-                MaskHandlingForRemovalApplyNoMask.Instance);
+                MaskHandlingForRemovalApplyNoMask.Instance,
+                OtherLayersValueHandlingForceWrite.Instance);
+
 
             return true;
         }
