@@ -151,7 +151,7 @@ namespace Omnikeeper.Base.Model
         {
             var specific = new HashSet<Guid>();
             HashSet<Guid>? allExcept = null;
-            foreach(var selection in selections)
+            foreach (var selection in selections)
             {
                 switch (selection)
                 {
@@ -174,7 +174,8 @@ namespace Omnikeeper.Base.Model
             if (allExcept != null)
             {
                 return AllCIIDsExceptSelection.Build(allExcept.Except(specific).ToArray());
-            } else
+            }
+            else
             {
                 return SpecificCIIDsSelection.Build(specific);
             }

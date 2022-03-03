@@ -63,65 +63,13 @@ namespace Omnikeeper.Controllers.OData
         }
 
         [EnableQuery]
-        public async Task<RelationDTO> GetRelationDTO([FromODataUri, Required] Guid keyFromCIID, [FromODataUri, Required] Guid keyToCIID, [FromODataUri, Required] string keyPredicate, [FromRoute] string context)
-        {
-            var trans = modelContextBuilder.BuildImmediate();
-            var timeThreshold = TimeThreshold.BuildLatest();
-            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
-            var r = await relationModel.GetMergedRelation(keyFromCIID, keyToCIID, keyPredicate, layerset, trans, timeThreshold);
-            if (r == null)
-                throw new Exception("Could not get relation");
-            return Model2DTO(r);
-        }
-
-        [EnableQuery]
         public async Task<IEnumerable<RelationDTO>> GetRelations([FromRoute] string context)
         {
             var trans = modelContextBuilder.BuildImmediate();
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
-            var relations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layerset, trans, TimeThreshold.BuildLatest());
+            var relations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance);
 
             return relations.Select(r => Model2DTO(r));
-        }
-
-        [EnableQuery]
-        public async Task<IActionResult> Post([FromBody] RelationDTO relation, [FromRoute] string context)
-        {
-            if (relation == null)
-                return BadRequest($"Could not parse inserted relation");
-            if (relation.FromCIID == Guid.Empty)
-                return BadRequest($"Relation from CIID must be set");
-            if (relation.ToCIID == Guid.Empty)
-                return BadRequest($"Relation to CIID must be set");
-            if (relation.Predicate == null || relation.Predicate == "")
-                return BadRequest($"Relation Predicate must be set");
-
-            using var trans = modelContextBuilder.BuildDeferred();
-            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, trans);
-            var readLayerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
-
-            var user = await currentUserService.GetCurrentUser(trans);
-            if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
-                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
-
-            if (!(await ciModel.CIIDExists(relation.FromCIID, trans)))
-                return BadRequest($"CI with ID \"{relation.FromCIID}\" does not exist");
-            if (!(await ciModel.CIIDExists(relation.ToCIID, trans)))
-                return BadRequest($"CI with ID \"{relation.ToCIID}\" does not exist");
-
-            var timeThreshold = TimeThreshold.BuildLatest();
-            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
-
-            var (created, changed) = await relationModel.InsertRelation(relation.FromCIID, relation.ToCIID, relation.Predicate, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
-
-            // we fetch the just created relation again, but merged
-            var r = await relationModel.GetMergedRelation(created.FromCIID, created.ToCIID, created.PredicateID, readLayerset, trans, timeThreshold);
-            if (r == null)
-                return BadRequest("Could not find relation");
-
-            trans.Commit();
-
-            return Created(Model2DTO(r));
         }
 
         [EnableQuery]
@@ -137,7 +85,7 @@ namespace Omnikeeper.Controllers.OData
 
                 var timeThreshold = TimeThreshold.BuildLatest();
                 var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
-                var (removed, changed) = await relationModel.RemoveRelation(keyFromCIID, keyToCIID, keyPredicate, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+                var changed = await relationModel.RemoveRelation(keyFromCIID, keyToCIID, keyPredicate, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
             catch (Exception)

@@ -1,11 +1,9 @@
-﻿using Omnikeeper.Base.Utils;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Entity
 {
+    // TODO: needed?
     public abstract class TraitEntity
     {
     }
@@ -50,9 +48,8 @@ namespace Omnikeeper.Base.Entity
         public readonly bool directionForward;
         public readonly int? minCardinality;
         public readonly int? maxCardinality;
-        public readonly bool optional;
 
-        public TraitRelationAttribute(string trName, string predicateID, bool directionForward, int minCardinality, int maxCardinality, bool optional = false)
+        public TraitRelationAttribute(string trName, string predicateID, bool directionForward, int minCardinality, int maxCardinality)
         {
             this.trName = trName;
             this.predicateID = predicateID;
@@ -67,14 +64,12 @@ namespace Omnikeeper.Base.Entity
                 this.maxCardinality = null;
             else
                 this.maxCardinality = maxCardinality;
-
-            this.optional = optional;
         }
     }
 
-    
 
-   [AttributeUsage(AttributeTargets.Field)]
+
+    [AttributeUsage(AttributeTargets.Field)]
     public sealed class TraitEntityIDAttribute : Attribute
     {
         public TraitEntityIDAttribute()
@@ -82,7 +77,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    
+
 
     [AttributeUsage(AttributeTargets.Field)]
     public sealed class TraitAttributeValueConstraintTextLengthAttribute : Attribute

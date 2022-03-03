@@ -1,13 +1,8 @@
 using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using FluentValidation.AspNetCore;
 using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
-using Hangfire;
-using Hangfire.Console;
-using Hangfire.Dashboard;
-using Hangfire.PostgreSql;
 using MediatR;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
@@ -48,8 +43,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Startup
 {
-
-    public partial class Startup
+    public class Startup
     {
         private IMvcBuilder? mvcBuilder;
 
@@ -60,6 +54,16 @@ namespace Omnikeeper.Startup
         }
 
         public IConfiguration Configuration { get; }
+
+        private TokenValidationParameters BuildTokenValidationParameters()
+        {
+            return new TokenValidationParameters
+            { // TODO: is this needed? According to https://developer.okta.com/blog/2018/03/23/token-authentication-aspnetcore-complete-guide, this should work automatically
+                ValidateAudience = true,
+                ValidAudience = Configuration.GetSection("Authentication")["Audience"],
+                ValidateIssuer = Configuration.GetSection("Authentication").GetValue<bool>("ValidateIssuer")
+            };
+        }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -93,7 +97,8 @@ namespace Omnikeeper.Startup
 
             // add input and output formatters
             services.AddOptions<MvcOptions>()
-                .PostConfigure<IOptions<JsonOptions>, IOptions<MvcNewtonsoftJsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, newtonJsonOpts, charPool, objectPoolProvider, loggerFactory) => {
+                .PostConfigure<IOptions<JsonOptions>, IOptions<MvcNewtonsoftJsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, newtonJsonOpts, charPool, objectPoolProvider, loggerFactory) =>
+                {
 
                     config.InputFormatters.Clear();
                     config.InputFormatters.Add(new MySuperJsonInputFormatter());
@@ -122,12 +127,7 @@ namespace Omnikeeper.Startup
             })
             .AddJwtBearer(options =>
             {
-                options.TokenValidationParameters = new TokenValidationParameters
-                { // TODO: is this needed? According to https://developer.okta.com/blog/2018/03/23/token-authentication-aspnetcore-complete-guide, this should work automatically
-                    ValidateAudience = true,
-                    ValidAudience = Configuration.GetSection("Authentication")["Audience"],
-                    ValidateIssuer = Configuration.GetSection("Authentication").GetValue<bool>("ValidateIssuer")
-                };
+                options.TokenValidationParameters = BuildTokenValidationParameters();
 
                 // NOTE: according to https://social.technet.microsoft.com/Forums/en-US/2f889c6f-b500-4ba6-bba0-a2a4fee1604f/cannot-authenticate-odata-feed-using-an-organizational-account
                 // windows applications want to receive an authorization_uri in the challenge response with an URI where the user can authenticate
@@ -165,16 +165,6 @@ namespace Omnikeeper.Startup
                 //options.AddPolicy("AuthenticatedUser", _ => _.AddRequirements(new AuthenticatedUserRequirement()));
                 //options.AddPolicy("Accounting", policy =>
                 //policy.RequireClaim("member_of", "[accounting]"));
-            });
-
-            services.AddHangfire(config =>
-            {
-                // re-using main DB connection
-                var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
-                //config.UseMemoryStorage();
-                config.UsePostgreSqlStorage(cs);
-                config.UseFilter(new AutomaticRetryAttribute() { Attempts = 0 });
-                config.UseConsole(); //TODO
             });
 
             services.AddSwaggerGen(c =>
@@ -249,9 +239,6 @@ namespace Omnikeeper.Startup
             // see https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/wiki/PII
             IdentityModelEventSource.ShowPII = Configuration.GetValue<bool>("ShowPII");
 
-            //services.AddMemoryCache();
-            services.AddDistributedMemoryCache();
-
             // HACK: needed by odata, see: https://github.com/OData/WebApi/issues/2024
             services.AddMvcCore(options =>
             {
@@ -298,14 +285,16 @@ namespace Omnikeeper.Startup
         {
             ServiceRegistration.RegisterLogging(builder);
 
-            var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
-            ServiceRegistration.RegisterDB(builder, cs, false);
+            var csOmnikeeper = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
+            ServiceRegistration.RegisterDB(builder, csOmnikeeper, false);
 
             ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching: true, true, true, true);
 
             ServiceRegistration.RegisterGraphQL(builder);
             ServiceRegistration.RegisterOIABase(builder);
             ServiceRegistration.RegisterServices(builder);
+            var csQuartz = Configuration.GetConnectionString("QuartzDatabaseConnection");
+            ServiceRegistration.RegisterQuartz(builder, csQuartz);
 
             // plugins
             var pluginFolder = Path.Combine(Directory.GetCurrentDirectory(), "OKPlugins");
@@ -320,8 +309,8 @@ namespace Omnikeeper.Startup
         private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
-            ILogger<Startup> logger, IEnumerable<IPluginRegistration> plugins)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime,
+            ILogger<Startup> logger, IEnumerable<IPluginRegistration> plugins, IServiceProvider serviceProvider)
         {
             var version = VersionService.GetVersion();
             logger.LogInformation($"Running version: {version}");
@@ -428,28 +417,6 @@ namespace Omnikeeper.Startup
                 c.SwaggerEndpoint($"{Configuration["BaseURL"]}/swagger/v1/swagger.json", "Landscape omnikeeper REST API V1");
                 c.OAuthClientId("landscape-omnikeeper"); // TODO: make configurable?
             });
-
-            // Configure hangfire to use the new JobActivator we defined.
-            GlobalConfiguration.Configuration.UseAutofacActivator(app.ApplicationServices.GetAutofacRoot());
-            app.UseHangfireServer();
-            if (env.IsDevelopment() || env.IsStaging())
-            { // TODO: also use in production, but fix auth first
-                // workaround, see: https://github.com/HangfireIO/Hangfire/issues/1110
-                app.Use((context, next) =>
-                {
-                    if (context.Request.Path.StartsWithSegments("/hangfire"))
-                    {
-                        context.Request.PathBase = new PathString(context.Request.Headers["X-Forwarded-Prefix"]);
-                    }
-                    return next();
-                });
-
-                app.UseHangfireDashboard(options: new DashboardOptions()
-                {
-                    AppPath = null,
-                    Authorization = new IDashboardAuthorizationFilter[] { new HangFireAuthorizationFilter() }
-                });
-            }
 
             // plugins setup
             foreach (var plugin in plugins)

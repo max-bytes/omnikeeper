@@ -22,7 +22,7 @@ namespace Omnikeeper.Model
         public async Task<MetaConfiguration> GetConfigOrDefault(IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"
-                SELECT config FROM config.general WHERE key = 'meta' LIMIT 1", 
+                SELECT config FROM config.general WHERE key = 'meta' LIMIT 1",
             trans.DBConnection, trans.DBTransaction);
             using var s = await command.ExecuteReaderAsync();
 

@@ -3,18 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using OKPluginGenericJSONIngest;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
-using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Controllers.Ingest
 {
@@ -93,7 +91,8 @@ namespace Omnikeeper.Controllers.Ingest
                         try
                         {
                             TransformerJMESPath.Build(jmesPathConfig); // if building fails, assume expression could not be parsed
-                        } catch (Exception e)
+                        }
+                        catch (Exception e)
                         {
                             throw new Exception($"Invalid JMESPath configuration: {e.Message}", e);
                         }
@@ -105,11 +104,12 @@ namespace Omnikeeper.Controllers.Ingest
                 var mc = modelContextBuilder.BuildDeferred();
                 var updated = new Context(contextCandidate.ID, contextCandidate.ExtractConfig, contextCandidate.TransformConfig, contextCandidate.LoadConfig);
                 var (context, _) = await contextModel.InsertOrUpdate(updated, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                    new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), 
-                    changesetProxy, mc);
+                    new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                    changesetProxy, mc, MaskHandlingForRemovalApplyNoMask.Instance);
                 mc.Commit();
                 return Ok(context);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 return BadRequest(e);
             }
@@ -131,8 +131,8 @@ namespace Omnikeeper.Controllers.Ingest
                 var mc = modelContextBuilder.BuildDeferred();
                 var deleted = await contextModel.TryToDelete(id,
                     metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                    new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), 
-                    changesetProxy,  mc);
+                    new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                    changesetProxy, mc, MaskHandlingForRemovalApplyNoMask.Instance);
                 mc.Commit();
                 return Ok(deleted);
             }

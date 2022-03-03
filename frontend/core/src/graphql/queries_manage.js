@@ -35,6 +35,8 @@ export const queries = {
             }
         }
         ${Fragments.recursiveTrait}
+        ${Fragments.traitAttribute}
+        ${Fragments.traitRelation}
     `,
     Generators: gql`
         query {

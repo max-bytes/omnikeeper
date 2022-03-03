@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 // TODO: move
+// TODO: use useLocalStorage hook
 export function useAttributeSegmentsToggler(segmentNames) {
     const [openAttributeSegments, setOpenAttributeSegmentsState] = useState(localStorage.getItem('openAttributeSegments') ? JSON.parse(localStorage.getItem('openAttributeSegments')) : [] );
     const setOpenAttributeSegments = (openAttributeSegments) => {

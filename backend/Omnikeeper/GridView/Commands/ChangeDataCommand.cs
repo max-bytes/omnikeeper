@@ -60,7 +60,7 @@ namespace Omnikeeper.GridView.Commands
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly IMetaConfigurationModel metaConfigurationModel;
 
-            public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, 
+            public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
                 IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, GenericTraitEntityModel<GridViewContext, string> gridViewContextModel,
                 IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
                 ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService,
@@ -161,7 +161,7 @@ namespace Omnikeeper.GridView.Commands
                                         writeLayer,
                                         changesetProxy,
                                         new DataOriginV1(DataOriginType.Manual),
-                                        trans, 
+                                        trans,
                                         MaskHandlingForRemovalApplyNoMask.Instance);
                                 }
                                 catch (Exception e)
@@ -177,6 +177,7 @@ namespace Omnikeeper.GridView.Commands
                             {
                                 var val = AttributeValueHelper.BuildFromDTO(cell.Value);
 
+                                // TODO: other-layers-value handling
                                 await attributeModel.InsertAttribute(
                                     attributeName,
                                     val,
@@ -184,7 +185,8 @@ namespace Omnikeeper.GridView.Commands
                                     writeLayer,
                                     changesetProxy,
                                     new DataOriginV1(DataOriginType.Manual),
-                                    trans);
+                                    trans, 
+                                    OtherLayersValueHandlingForceWrite.Instance);
                             }
                             catch (Exception e)
                             {
@@ -203,7 +205,7 @@ namespace Omnikeeper.GridView.Commands
                 // TODO: only fetch relevant attributes
                 var mergedCIs = await ciModel.GetMergedCIs(cisList, new LayerSet(config.ReadLayerset.ToArray()), true, AllAttributeSelection.Instance, trans, timeThreshold);
 
-                var cisWithTrait = await effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, new LayerSet(config.ReadLayerset.ToArray()), trans, timeThreshold);
+                var cisWithTrait = effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, new LayerSet(config.ReadLayerset.ToArray()), trans, timeThreshold);
                 if (cisWithTrait.Count() < mergedCIs.Count())
                 {
                     var cisWithoutTrait = mergedCIs.Select(ci => ci.ID).ToHashSet().Except(cisWithTrait.Select(ci => ci.ID));

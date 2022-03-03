@@ -2,11 +2,10 @@
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Entity.AttributeValues;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Tests.Integration.Model
 {
@@ -48,6 +47,12 @@ namespace Tests.Integration.Model
                 () => new AuthRole("test_auth_role02", new string[] { "p3" }),
                 "test_auth_role01", "test_auth_role02", "non_existant_id"
                 );
+        }
+
+        [Test]
+        public async Task TestUpdateIncompleteTraitEntity()
+        {
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new AuthRole("test_auth_role01", new string[] { "p1", "p2" }), "test_auth_role01", true, false);
         }
     }
 }

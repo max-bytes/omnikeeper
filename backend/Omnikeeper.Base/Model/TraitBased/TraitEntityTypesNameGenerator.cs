@@ -1,7 +1,7 @@
 ﻿using Omnikeeper.Base.Entity;
 using System.Text.RegularExpressions;
 
-namespace Omnikeeper.GraphQL.TraitEntities
+namespace Omnikeeper.Base.Model.TraitBased
 {
     public static class TraitEntityTypesNameGenerator
     {
@@ -16,7 +16,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             if (tmp.StartsWith("__"))
                 tmp = "m" + tmp; // graphql does not support types starting with __, so we prefix it with an "m" (for meta)
 
-            if (Regex.IsMatch(tmp, "[0-9]"))
+            if (Regex.IsMatch(tmp, "^[0-9]"))
                 tmp = "m" + tmp; // graphql does not support types starting with a digit, so we prefix it with an "m" (for meta)
 
             return tmp;
@@ -37,7 +37,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public static string GenerateTraitEntityGraphTypeName(ITrait trait) => SanitizeTypeName("TE_" + trait.ID);
         public static string GenerateTraitEntityIDInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_ID_Input_" + trait.ID);
         public static string GenerateUpsertTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Upsert_Input_" + trait.ID);
-        public static string GenerateUpsertByCIIDMutationName(string traitID) => "upsertByCIID_" + SanitizeMutationName(traitID);
+        public static string GenerateInsertNewMutationName(string traitID) => "insertNew_" + SanitizeMutationName(traitID);
+        public static string GenerateUpdateByCIIDMutationName(string traitID) => "updateByCIID_" + SanitizeMutationName(traitID);
         public static string GenerateDeleteByCIIDMutationName(string traitID) => "deleteByCIID_" + SanitizeMutationName(traitID);
         public static string GenerateUpsertByDataIDMutationName(string traitID) => "upsertByDataID_" + SanitizeMutationName(traitID);
         public static string GenerateDeleteByDataIDMutationName(string traitID) => "deleteByDataID_" + SanitizeMutationName(traitID);

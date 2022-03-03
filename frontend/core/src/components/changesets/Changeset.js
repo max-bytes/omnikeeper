@@ -88,7 +88,7 @@ export default function Changeset(props) {
                 <Descriptions.Item label="Timestamp">{formatTimestamp(data.changeset.timestamp)}</Descriptions.Item>
                 <Descriptions.Item label="Layer"><LayerIcon layer={data.changeset.layer} /> {data.changeset.layer.id}</Descriptions.Item>
                 <Descriptions.Item label="Origin-Type">{data.changeset.dataOrigin.type}</Descriptions.Item>
-                <Descriptions.Item label="Changeset-ID"><ChangesetID id={data.changeset.id} link={false} /></Descriptions.Item>
+                <Descriptions.Item label="Changeset-ID"><ChangesetID id={data.changeset.id} link={false} copyable={true} /></Descriptions.Item>
             </Descriptions>
             <Tabs defaultActiveKey={defaultActiveTab} style={{paddingTop: "1rem", flexBasis: '65%'}}>
                 <TabPane 

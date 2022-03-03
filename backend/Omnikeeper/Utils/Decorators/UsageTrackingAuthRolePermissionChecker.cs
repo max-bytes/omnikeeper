@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
-using Omnikeeper.Service;
 
 namespace Omnikeeper.Utils.Decorators
 {

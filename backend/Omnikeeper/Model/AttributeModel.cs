@@ -24,8 +24,10 @@ namespace Omnikeeper.Model
         // attributes must be a pre-sorted enumerable based on layer-sort
         private IDictionary<Guid, IDictionary<string, MergedCIAttribute>> MergeAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] layeredAttributes, string[] layerIDs)
         {
+            // TODO: implement faster in case of single layer
+
             var compound = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
-            for (var i = 0;i < layerIDs.Length;i++)
+            for (var i = 0; i < layerIDs.Length; i++)
             {
                 var layerID = layerIDs[i];
                 var cis = layeredAttributes[i];
@@ -34,12 +36,13 @@ namespace Omnikeeper.Model
                     var ciid = ci.Key;
                     if (compound.TryGetValue(ciid, out var existingAttributes))
                     {
-                        foreach(var newAttribute in ci.Value)
+                        foreach (var newAttribute in ci.Value)
                         {
                             if (existingAttributes.TryGetValue(newAttribute.Key, out var existingMergedAttribute))
                             {
                                 existingAttributes[newAttribute.Key].LayerStackIDs.Add(layerID);
-                            } else
+                            }
+                            else
                             {
                                 existingAttributes[newAttribute.Key] = new MergedCIAttribute(newAttribute.Value, new List<string> { layerID });
                             }
@@ -90,60 +93,67 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
+        // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":
+        // it is not possible to insert the "same" attribute (same ciid, name and layer) multiple times when using this preparation method
+        // if this operation detects a duplicate, an exception is thrown;
+        // the caller is responsible for making sure there are no duplicates
+        private async Task<(
+            IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
+            IDictionary<string, CIAttribute> outdatedAttributes
+            )> PrepareForBulkUpdate<F>(IBulkCIAttributeData<F> data, IModelContext trans, TimeThreshold readTS)
         {
-            return await baseModel.InsertAttribute(name, value, ciid, layerID, changeset, origin, trans);
-        }
+            // consider ALL relevant attributes as outdated first
+            var outdatedAttributes = (await GetAttributesInScope(data, new LayerSet(data.LayerID), trans, readTS))
+                .SelectMany(t => t.Value.Select(tt => tt.Value.Attribute)).ToDictionary(a => a.InformationHash); // TODO: slow?
 
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
-        {
-            switch (maskHandling)
+            var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)>();
+            var informationHashesToInsert = new HashSet<string>();
+            foreach (var fragment in data.Fragments)
             {
-                case MaskHandlingForRemovalApplyMaskIfNecessary n:
-                    var attributeRemaining = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), NamedAttributesSelection.Build(name), new LayerSet(n.ReadLayersBelowWriteLayer), trans, n.ReadTime);
-                    if (attributeRemaining.TryGetValue(ciid, out var aa) && aa.ContainsKey(name))
-                    { // attribute exists in lower layers, mask it
-                        // NOTE: if the current attribute is already a mask, the InsertAttribute detects this and the operation becomes a NO-OP
-                        return await baseModel.InsertAttribute(name, AttributeScalarValueMask.Instance, ciid, layerID, changeset, origin, trans);
-                    }
-                    else
-                    {
-                        // TODO: how should we handle the case when the attribute we try to delete is already a mask? -> NO-OP? or delete the mask? make it configurable?
-                        // currently any mask is removed as well
-                        return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
-                    }
-                case MaskHandlingForRemovalApplyNoMask _:
-                    return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
-                default:
-                    throw new Exception("Invalid mask handling");
+                var fullName = data.GetFullName(fragment);
+                var ciid = data.GetCIID(fragment);
+                var value = data.GetValue(fragment);
+
+                var informationHash = CIAttribute.CreateInformationHash(fullName, ciid);
+                if (informationHashesToInsert.Contains(informationHash))
+                {
+                    throw new Exception($"Duplicate attribute fragment detected! Bulk insertion does not support duplicate attributes; attribute name: {fullName}, ciid: {ciid}, value: {value.Value2String()}");
+                }
+                informationHashesToInsert.Add(informationHash);
+
+                // remove the current attribute from the list of attributes to remove
+                outdatedAttributes.Remove(informationHash, out var currentAttribute);
+
+                // handle equality case, also think about what should happen if a different user inserts the same data
+                if (currentAttribute != null && currentAttribute.Value.Equals(value))
+                    continue;
+
+                actualInserts.Add((ciid, fullName, value, currentAttribute?.ID, Guid.NewGuid()));
             }
+
+            return (actualInserts, outdatedAttributes);
         }
 
-        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
+        public async Task<int> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, 
+            IMaskHandlingForRemoval maskHandling, IOtherLayersValueHandling otherLayersValueHandling)
         {
-            var (inserts, removals) = await baseModel.PrepareForBulkUpdate(data, trans);
+            var readTS = changeset.TimeThreshold;
 
+            var (inserts, outdatedAttributes) = await PrepareForBulkUpdate(data, trans, readTS);
+
+            var informationHashesToInsert = data.Fragments.Select(f => CIAttribute.CreateInformationHash(data.GetFullName(f), data.GetCIID(f))).ToHashSet();
+
+            // mask-based changes to inserts and removals
+            // depending on mask-handling, calculate attribute that are potentially "maskable" in below layers
+            var maskableAttributesInBelowLayers = new Dictionary<string, (Guid ciid, string name)>();
             switch (maskHandling)
             {
                 case MaskHandlingForRemovalApplyMaskIfNecessary n:
-
-                    // check removals, change them to a mask-insertion if necessary; necessary means that the same attribute (same ci, same name) is defined in a layer below and hence needs to be masked
-                    if (!n.ReadLayersBelowWriteLayer.IsEmpty())
-                    {
-                        var ciids = removals.Select(t => t.ciid).ToHashSet();
-                        var attributeNames = removals.Select(t => t.name).ToHashSet();
-                        var attributesRemaining = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciids), NamedAttributesSelection.Build(attributeNames), new LayerSet(n.ReadLayersBelowWriteLayer), trans, n.ReadTime);
-                        for (int i = removals.Count - 1;i >= 0;i--)
-                        {
-                            var (ciid, name, value, attributeID, newAttributeID) = removals[i];
-                            if (attributesRemaining.TryGetValue(ciid, out var aa) && aa.ContainsKey(name))
-                            {
-                                removals.RemoveAt(i);
-                                inserts.Add((ciid, name, AttributeScalarValueMask.Instance, attributeID, newAttributeID));
-                            }
-                        }
-                    }
-
+                    maskableAttributesInBelowLayers = (await GetAttributesInScope(data, new LayerSet(n.ReadLayersBelowWriteLayer), trans, readTS))
+                    .SelectMany(t => t.Value.Select(tt => tt.Value.Attribute))
+                    .GroupBy(t => t.InformationHash)
+                    .Where(g => !informationHashesToInsert.Contains(g.Key)) // if we are already inserting this attribute, we definitely do not want to mask it
+                    .ToDictionary(g => g.Key, g => (g.First().CIID, g.First().Name));
                     break;
                 case MaskHandlingForRemovalApplyNoMask _:
                     // no operation necessary
@@ -151,12 +161,80 @@ namespace Omnikeeper.Model
                 default:
                     throw new Exception("Invalid mask handling");
             }
+            // reduce the actual removes by looking at maskable attributes, replacing the removes with masks if necessary
+            foreach (var kv in maskableAttributesInBelowLayers)
+            {
+                var ih = kv.Key;
 
+                if (outdatedAttributes.TryGetValue(ih, out var outdatedAttribute))
+                {
+                    // the attribute exists in the write-layer AND is actually outdated AND needs to be masked -> mask it, instead of removing it
+                    outdatedAttributes.Remove(ih);
+                    inserts.Add((outdatedAttribute.CIID, outdatedAttribute.Name, AttributeScalarValueMask.Instance, outdatedAttribute.ID, Guid.NewGuid()));
+                }
+                else
+                {
+                    // the attribute exists only in the layers below -> mask it
+                    inserts.Add((kv.Value.ciid, kv.Value.name, AttributeScalarValueMask.Instance, null, Guid.NewGuid()));
+                }
+            }
+
+            // build removal-list
+            var actualRemoves = outdatedAttributes.Values.Select(a => (a.CIID, a.Name, a.Value, existingAttributeID: a.ID, newAttributeID: Guid.NewGuid())).ToList();
+
+            // other-layers-value handling
+            switch (otherLayersValueHandling)
+            {
+                case OtherLayersValueHandlingTakeIntoAccount t:
+                    // fetch attributes in layerset excluding write layer; if value is same as value that we want to write -> instead of write -> no-op or even delete
+                    var existingAttributesInOtherLayers = await GetAttributesInScope(data, new LayerSet(t.ReadLayersWithoutWriteLayer), trans, readTS);
+                    for (var i = inserts.Count - 1;i >= 0;i--)
+                    {
+                        var insert = inserts[i];
+                        if (existingAttributesInOtherLayers.TryGetValue(insert.ciid, out var a))
+                        {
+                            if (a.TryGetValue(insert.fullName, out var aa))
+                            {
+                                if (aa.Attribute.Value.Equals(insert.value))
+                                {
+                                    inserts.RemoveAt(i);
+
+                                    // in case there is an attribute there already, we actually remove it because the other layers provide the same attribute with the same value 
+                                    if (insert.existingAttributeID.HasValue)
+                                    {
+                                        actualRemoves.Add((insert.ciid, insert.fullName, aa.Attribute.Value, insert.existingAttributeID.Value, Guid.NewGuid()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case OtherLayersValueHandlingForceWrite _:
+                    // no operation necessary
+                    break;
+                default:
+                    throw new Exception("Invalid other-layers-value handling");
+            }
 
             // perform updates in bulk
-            await baseModel.BulkUpdate(inserts, removals, data.LayerID, origin, changeset, trans);
+            await baseModel.BulkUpdate(inserts, actualRemoves, data.LayerID, origin, changeset, trans);
 
-            return !inserts.IsEmpty() || !removals.IsEmpty();
+            return inserts.Count + actualRemoves.Count;
+        }
+
+        private async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetAttributesInScope<F>(IBulkCIAttributeData<F> data, LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            return data switch
+            {
+                BulkCIAttributeDataLayerScope d => (d.NamePrefix.IsEmpty()) ?
+                        (await GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, layerset, trans, timeThreshold)) :
+                        (await GetMergedAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), layerset, trans, timeThreshold)),
+                BulkCIAttributeDataCIScope d =>
+                    await GetMergedAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, layerset, trans: trans, atTime: timeThreshold),
+                BulkCIAttributeDataCIAndAttributeNameScope a =>
+                    await GetMergedAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), layerset, trans, timeThreshold),
+                _ => throw new Exception("Unknown scope")
+            };
         }
     }
 }

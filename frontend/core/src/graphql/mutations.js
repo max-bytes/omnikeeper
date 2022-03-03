@@ -45,12 +45,13 @@ export const mutations = {
 
   // TODO: we should think about how a mutation can return all that has been updated, but does not need to return the FullCI
   INSERT_RELATION: gql`
-    mutation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: String!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
+    mutation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $mask: Boolean!, $layerID: String!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
       mutateCIs(insertRelations: [
         {
           fromCIID: $fromCIID,
           toCIID: $toCIID,
-          predicateID: $predicateID
+          predicateID: $predicateID,
+          mask: $mask
         }
       ], writeLayer: $layerID, readLayers: $layers) {
         affectedCIs {
@@ -97,12 +98,6 @@ export const mutations = {
         __typename
         ciids
       }
-    }
-  `,
-
-  SET_LAYER_SETTINGS: gql`
-    mutation($layerSettings: [LayerSettings]) {
-      setLayerSettings(layerSettings: $layerSettings) @client
     }
   `,
 

@@ -16,7 +16,8 @@ namespace Omnikeeper.Base.Model
         public readonly string RegexStr;
         public readonly Regex RegexCompiled;
 
-        public RegexAttributeSelection(string regex) {
+        public RegexAttributeSelection(string regex)
+        {
             RegexCompiled = new Regex(regex);
             RegexStr = regex;
         }

@@ -5,8 +5,6 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Tasks.Tools
 {
@@ -116,7 +114,7 @@ namespace Tasks.Tools
                             new TraitAttribute("hostid",
                                 CIAttributeTemplate.BuildFromParams("cmdb.host.id", AttributeValueType.Text, false, true, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
-                        },requiredRelations: new List<TraitRelation>()
+                        },optionalRelations: new List<TraitRelation>()
                         {
                             new TraitRelation("interfaces",
                                 new RelationTemplate("has_interface", true, null, null)
@@ -125,7 +123,7 @@ namespace Tasks.Tools
                     ),
                 };
 
-            foreach(var trait in traits)
+            foreach (var trait in traits)
             {
                 var s = new JsonSerializerSettings()
                 {

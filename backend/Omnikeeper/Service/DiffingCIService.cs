@@ -7,7 +7,6 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL;
 using Omnikeeper.GraphQL.Types;
-using Omnikeeper.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,11 +40,13 @@ namespace Omnikeeper.Service
                     var rightCI = rightDictionary[ciid];
                     var attributes = rightCI.MergedAttributes.Select(a => new AttributeComparison(a.Key, null, a.Value, ComparisonStatus.Unequal));
                     ciComparisons.Add(new CIAttributesComparison(ciid, ciid, null, rightCI.CIName, attributes));
-                } else if (!rightDictionary.TryGetValue(ciid, out var rightCI))
+                }
+                else if (!rightDictionary.TryGetValue(ciid, out var rightCI))
                 {
                     var attributes = leftCI.MergedAttributes.Select(a => new AttributeComparison(a.Key, a.Value, null, ComparisonStatus.Unequal));
                     ciComparisons.Add(new CIAttributesComparison(ciid, ciid, leftCI.CIName, null, attributes));
-                } else
+                }
+                else
                 {
                     IEnumerable<AttributeComparison> attributes = CompareAttributesOf2CIs(leftCI, rightCI, showEqual);
                     if (showEqual || !attributes.IsEmpty())
@@ -96,7 +97,7 @@ namespace Omnikeeper.Service
                     var rightRelation = right[key];
                     var rc = new RelationComparison(rightRelation.Relation.PredicateID, rightRelation.Relation.FromCIID, rightRelation.Relation.ToCIID, null, rightRelation, ComparisonStatus.Unequal);
                     dict.AddOrUpdate((outgoing) ? rc.fromCIID : rc.toCIID, () => new List<RelationComparison>() { rc }, (l) => { l.Add(rc); return l; });
-                    
+
                 }
                 else if (!right.TryGetValue(key, out var rightRelation))
                 {
@@ -450,7 +451,7 @@ namespace Omnikeeper.Service
         public readonly bool showEqual;
         public readonly CrossCIDiffingSettings? crossCIDiffingSettings;
 
-        public DiffingResult(ICIIDSelection leftCIIDSelection, ICIIDSelection rightCIIDSelection, IAttributeSelection leftAttributes, IAttributeSelection rightAttributes, LayerSet leftLayers, LayerSet rightLayers, 
+        public DiffingResult(ICIIDSelection leftCIIDSelection, ICIIDSelection rightCIIDSelection, IAttributeSelection leftAttributes, IAttributeSelection rightAttributes, LayerSet leftLayers, LayerSet rightLayers,
             TimeThreshold leftTimeThreshold, TimeThreshold rightTimeThreshold, bool showEqual, CrossCIDiffingSettings? crossCIDiffingSettings)
         {
             this.leftCIIDSelection = leftCIIDSelection;
@@ -485,8 +486,8 @@ namespace Omnikeeper.Service
                     leftCIs = ciBasedAuthorizationService.FilterReadableCIs(leftCIs, (ci) => ci.ID);
                     rightCIs = ciBasedAuthorizationService.FilterReadableCIs(rightCIs, (ci) => ci.ID);
 
-                    var comparisons = (d.crossCIDiffingSettings != null) ? 
-                        diffingCIService.DiffCross2CIs(leftCIs.First(), rightCIs.First(), d.showEqual, d.crossCIDiffingSettings) : 
+                    var comparisons = (d.crossCIDiffingSettings != null) ?
+                        diffingCIService.DiffCross2CIs(leftCIs.First(), rightCIs.First(), d.showEqual, d.crossCIDiffingSettings) :
                         diffingCIService.DiffCIs(leftCIs, rightCIs, d.showEqual);
                     return comparisons;
                 });
@@ -514,8 +515,8 @@ namespace Omnikeeper.Service
                 leftRelations = leftRelations.Where(r => ciBasedAuthorizationService.CanReadCI(r.Relation.FromCIID) && ciBasedAuthorizationService.CanReadCI(r.Relation.ToCIID));
                 rightRelations = rightRelations.Where(r => ciBasedAuthorizationService.CanReadCI(r.Relation.FromCIID) && ciBasedAuthorizationService.CanReadCI(r.Relation.ToCIID));
 
-                return (d.crossCIDiffingSettings != null) ? 
-                    diffingCIService.DiffRelationsOf2CIs(leftRelations, rightRelations, outgoing, d.showEqual, d.crossCIDiffingSettings) : 
+                return (d.crossCIDiffingSettings != null) ?
+                    diffingCIService.DiffRelationsOf2CIs(leftRelations, rightRelations, outgoing, d.showEqual, d.crossCIDiffingSettings) :
                     diffingCIService.DiffRelations(leftRelations, rightRelations, outgoing, d.showEqual);
             }
 
@@ -552,19 +553,19 @@ namespace Omnikeeper.Service
 
                     foreach (var trait in leftTraits)
                     {
-                        var leftCIsWithTrait = await effectiveTraitModel.FilterCIsWithTrait(leftCIs, trait, d.leftLayers, userContext.Transaction, d.leftTimeThreshold);
+                        var leftCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(leftCIs, trait, d.leftLayers, userContext.Transaction, d.leftTimeThreshold);
                         foreach (var ci in leftCIsWithTrait)
                             left.AddOrUpdate(ci.ID, () => (new HashSet<string>() { trait.ID }, ci.CIName), (current) => { current.traitIDs.Add(trait.ID); return current; });
                     }
                     foreach (var trait in rightTraits)
                     {
-                        var rightCIsWithTrait = await effectiveTraitModel.FilterCIsWithTrait(rightCIs, trait, d.rightLayers, userContext.Transaction, d.rightTimeThreshold);
+                        var rightCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(rightCIs, trait, d.rightLayers, userContext.Transaction, d.rightTimeThreshold);
                         foreach (var ci in rightCIsWithTrait)
                             right.AddOrUpdate(ci.ID, () => (new HashSet<string>() { trait.ID }, ci.CIName), (current) => { current.traitIDs.Add(trait.ID); return current; });
                     }
 
-                    var comparisons = (d.crossCIDiffingSettings != null) ? 
-                        diffingCIService.DiffEffectiveTraitsOf2CIs(left, right, d.showEqual, d.crossCIDiffingSettings) : 
+                    var comparisons = (d.crossCIDiffingSettings != null) ?
+                        diffingCIService.DiffEffectiveTraitsOf2CIs(left, right, d.showEqual, d.crossCIDiffingSettings) :
                         diffingCIService.DiffEffectiveTraits(left, right, d.showEqual);
                     return comparisons;
                 });

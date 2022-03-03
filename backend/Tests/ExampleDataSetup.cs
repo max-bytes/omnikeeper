@@ -3,7 +3,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -13,7 +13,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Tests.Integration;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Tests
 {
@@ -84,7 +83,7 @@ namespace Tests
                 foreach (var rt in rts)
                     await traitModel.InsertOrUpdate(rt,
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                        new DataOriginV1(DataOriginType.Manual), changeset, mc);
+                        new DataOriginV1(DataOriginType.Manual), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance);
                 mc.Commit();
             }
 
@@ -122,7 +121,7 @@ namespace Tests
                         finalFragments = filtered.Values;
                     }
 
-                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", fl.Key, finalFragments), changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance);
+                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", fl.Key, finalFragments), changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 }
                 mc.Commit();
             }

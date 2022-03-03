@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Controllers.Ingest;
 using System.Collections.Generic;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace OKPluginGenericJSONIngest
 {

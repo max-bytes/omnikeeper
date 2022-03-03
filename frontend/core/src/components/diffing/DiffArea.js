@@ -32,7 +32,7 @@ export function DiffArea(props) {
         const finalLeftCIName = leftCIName ?? "[UNNAMED]";
         const finalRightCIName = rightCIName ?? "[UNNAMED]";
         return <Title level={5} style={{marginBottom: 0}}>
-          {finalLeftCIName} - <CIID id={leftCIID} link={true} /> vs. {finalRightCIName} - <CIID id={rightCIID} link={true} />
+          {finalLeftCIName} - <CIID id={leftCIID} link={true} copyable={true} /> vs. {finalRightCIName} - <CIID id={rightCIID} link={true} copyable={true} />
         </Title>;
       }
     }

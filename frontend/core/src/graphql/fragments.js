@@ -90,9 +90,9 @@ export const Fragments = {
           toCIName
           predicateID
           changesetID
+          mask
         }
         layerStackIDs
-        layerID
         layerStack {
             id
             description
@@ -109,9 +109,9 @@ export const Fragments = {
         fromCIName
         predicateID
         changesetID
+        mask
       }
       layerStackIDs
-      layerID
       layerStack {
           id
           description
@@ -130,13 +130,35 @@ export const Fragments = {
   `,
   recursiveTrait: gql`
   fragment RecursiveTrait on RecursiveTraitType {
-    id,
-    requiredAttributes,
-    optionalAttributes,
-    requiredRelations,
-    optionalRelations,
+    id
+    requiredAttributes { ...TraitAttribute}
+    optionalAttributes { ...TraitAttribute}
+    optionalRelations {...TraitRelation}
     requiredTraits
   }
+  `,
+  traitAttribute: gql`
+  fragment TraitAttribute on TraitAttributeType {
+    identifier
+    template {
+      name
+      type
+      isArray
+      isID
+      valueConstraints
+    }
+  }
+  `,
+  traitRelation: gql`
+  fragment TraitRelation on TraitRelationType {
+    identifier
+    template {
+      predicateID
+      directionForward
+      minCardinality
+      maxCardinality
+    }
+  }  
   `,
   generator: gql`
   fragment Generator on GeneratorType {

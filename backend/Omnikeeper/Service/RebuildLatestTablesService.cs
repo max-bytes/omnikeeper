@@ -91,7 +91,7 @@ namespace Omnikeeper.Service
                 if (diffCount != 0)
                     Console.WriteLine($"Diff count: {diffCount}");
 
-                foreach(var al in attributesFromLatest)
+                foreach (var al in attributesFromLatest)
                 {
                     var ah = attributesFromHistoric.FirstOrDefault(ah => ah.ID == al.ID);
                     if (ah == null)

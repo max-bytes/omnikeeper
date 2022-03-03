@@ -95,7 +95,8 @@ namespace Omnikeeper.Base.Inbound
                         mapper.Add(ciid, externalID);
 
                         changes = true;
-                    } catch (Exception e)
+                    }
+                    catch (Exception e)
                     {
                         throw new Exception($"Error mapping external CI with external ID {externalID.SerializeToString()}", e);
                     }

@@ -20,10 +20,9 @@ export default function ManageTraits() {
       const finalData = data.manage_recursiveTraits.map(rt => {
         return {
           id: rt.id,
-          requiredAttributes: JSON.stringify(rt.requiredAttributes.map(e => JSON.parse(e))), // TODO
-          optionalAttributes: JSON.stringify(rt.optionalAttributes.map(e => JSON.parse(e))), // TODO
-          requiredRelations: JSON.stringify(rt.requiredRelations.map(e => JSON.parse(e))), // TODO
-          optionalRelations: JSON.stringify(rt.optionalRelations.map(e => JSON.parse(e))), // TODO
+          requiredAttributes: JSON.stringify(rt.requiredAttributes),
+          optionalAttributes: JSON.stringify(rt.optionalAttributes),
+          optionalRelations: JSON.stringify(rt.optionalRelations),
           requiredTraits: JSON.stringify(rt.requiredTraits),
         };
       })
@@ -43,7 +42,6 @@ export default function ManageTraits() {
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
     { headerName: "Required Attributes", field: "requiredAttributes" },
     { headerName: "Optional Attributes", field: "optionalAttributes" },
-    { headerName: "Required Relations", field: "requiredRelations" },
     { headerName: "Optional Relations", field: "optionalRelations" },
     { headerName: "Required Traits", field: "requiredTraits" },
   ];
@@ -55,10 +53,9 @@ export default function ManageTraits() {
       saveRow={async row => {
         const trait = {
           id: row.id, 
-          requiredAttributes: JSON.parse(row.requiredAttributes).map(e => JSON.stringify(e)),
-          optionalAttributes: JSON.parse(row.optionalAttributes).map(e => JSON.stringify(e)),
-          requiredRelations: JSON.parse(row.requiredRelations).map(e => JSON.stringify(e)),
-          optionalRelations: JSON.parse(row.optionalRelations).map(e => JSON.stringify(e)),
+          requiredAttributes: JSON.parse(row.requiredAttributes),
+          optionalAttributes: JSON.parse(row.optionalAttributes),
+          optionalRelations: JSON.parse(row.optionalRelations),
           requiredTraits: JSON.parse(row.requiredTraits),
         };
         return upsert({ variables: { trait: trait } })

@@ -1,0 +1,1 @@
+﻿ALTER TABLE public.attribute_latest DROP COLUMN "timestamp";

@@ -41,12 +41,13 @@ export const queries = {
                     info
                 }
                 ancestorTraits
-                requiredAttributes
-                optionalAttributes
-                requiredRelations
-                optionalRelations
+                requiredAttributes { ...TraitAttribute}
+                optionalAttributes { ...TraitAttribute}
+                optionalRelations {...TraitRelation}
             }
         }
+        ${Fragments.traitAttribute}
+        ${Fragments.traitRelation}
     `,
 
     FullCI: gql`
@@ -172,6 +173,7 @@ export const queries = {
                     toCIName
                     predicateID
                     changesetID
+                    mask
                 }
                 removedRelations {
                     id
@@ -181,6 +183,7 @@ export const queries = {
                     toCIName
                     predicateID
                     changesetID
+                    mask
                 }
             }
         }
@@ -191,14 +194,6 @@ export const queries = {
             selectedTimeThreshold @client
           }
       `,
-    LayerSettings: gql`
-    query {
-        layerSettings {
-            layerID @client
-            sortOffset @client
-            visible @client
-        }
-    }`,
     Statistics: gql`
         query {
             statistics {

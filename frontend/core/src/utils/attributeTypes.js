@@ -112,7 +112,9 @@ export function InputControl(props) {
         );
     } else if (props.type === 'MASK') {
         return <Form.Item style={{ marginBottom: 0 }} labelCol={props.hideNameLabel ? {} : { span: "4" }} name={props.name} label={props.hideNameLabel ? "" : props.name}>
-            [MASK]
+            <div style={{minHeight: '32px', border: '1px dashed black', background: '#f0f0f0', opacity: '0.7', display: 'flex', alignItems: 'center'}}>
+                <span>[MASK]</span>
+            </div>
         </Form.Item>
     } else {
         // simple type, simple handling

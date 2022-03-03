@@ -5,10 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Model.Decorators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +27,7 @@ namespace PerfTests
             using var mc = modelContextBuilder!.BuildImmediate();
             var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
             var workCIs1 = await ciModel!.GetMergedCIs(ciSelection!, layerset!, includeEmptyCIs: true, AllAttributeSelection.Instance, mc, time);
-            (await effectiveTraitModel!.FilterMergedCIsByTraits(workCIs1, requiredTraits!, Enumerable.Empty<ITrait>(), layerset!, mc, time)).Consume(consumer);
+            effectiveTraitModel!.FilterMergedCIsByTraits(workCIs1, requiredTraits!, Enumerable.Empty<ITrait>(), layerset!, mc, time).Consume(consumer);
         }
 
         [GlobalCleanup(Target = nameof(SearchForMergedCIsByTraits))]

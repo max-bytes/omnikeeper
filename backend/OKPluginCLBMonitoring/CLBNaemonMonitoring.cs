@@ -56,7 +56,7 @@ namespace OKPluginCLBMonitoring
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
 
 
-            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
+            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
 
             // prepare contact groups
             var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, (Guid ciid, string name, string message) => LogError(ciid, name, message));
@@ -160,9 +160,13 @@ namespace OKPluginCLBMonitoring
                 }
             }
 
+            // TODO: mask handling
+            var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
+            var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
+
             var fragments = renderedTemplatesPerCI.Select(t => new BulkCIAttributeDataLayerScope.Fragment("", t.attributeValue, t.ciid));
             await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments),
-                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, maskHandling, otherLayersValueHandling);
 
             logger.LogDebug("Updated executed commands per monitored CI");
 
@@ -173,8 +177,8 @@ namespace OKPluginCLBMonitoring
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
                     if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value))
-                        monitoredByCIIDFragments.Add(new BulkRelationDataPredicateScope.Fragment(monitoredCI.ID, naemonInstanceTS.Key));
-            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
+                        monitoredByCIIDFragments.Add(new BulkRelationDataPredicateScope.Fragment(monitoredCI.ID, naemonInstanceTS.Key, false));
+            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, maskHandling, otherLayersValueHandling);
             logger.LogDebug("Assigned CIs to naemon instances");
 
 
@@ -230,7 +234,7 @@ namespace OKPluginCLBMonitoring
                 //    templates.Select(t => t.yamlValue.Value).ToArray(), templates.Select(t => t.yamlValueStr).ToArray()), naemonInstance));
             }
             await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.config", targetLayer.ID, monitoringConfigs),
-                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
 
             logger.LogDebug("End clbMonitoring");
             return true;
@@ -277,7 +281,7 @@ namespace OKPluginCLBMonitoring
 
             public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, ITrait contactgroupTrait, IModelContext trans, TimeThreshold timeThreshold)
             {
-                var contactGroupRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(belongsToNaemonContactgroup), layerSetAll, trans, timeThreshold);
+                var contactGroupRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(belongsToNaemonContactgroup), layerSetAll, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
                 if (contactGroupRelations.IsEmpty())
                 {
                     contactGroupsMap = new Dictionary<Guid, IEnumerable<MergedCI>>();

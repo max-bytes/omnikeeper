@@ -26,14 +26,14 @@ namespace Omnikeeper.Base.Entity
         [TraitAttribute("id", "cl_config.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(IDValidations.CLConfigIDRegexString, IDValidations.CLConfigIDRegexOptions)]
-        [TraitEntityID] 
+        [TraitEntityID]
         public readonly string ID;
 
         [TraitAttribute("cl_brain_reference", "cl_config.cl_brain_reference")]
-        [TraitAttributeValueConstraintTextLength(1, -1)] 
+        [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string CLBrainReference;
 
-        [TraitAttribute("cl_brain_config", "cl_config.cl_brain_config")] 
+        [TraitAttribute("cl_brain_config", "cl_config.cl_brain_config")]
         public readonly JObject CLBrainConfig;
 
         [TraitAttribute("name", "__name", optional: true)]

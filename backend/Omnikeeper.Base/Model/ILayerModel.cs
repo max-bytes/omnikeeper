@@ -44,7 +44,8 @@ namespace Omnikeeper.Base.Model
         public static async Task<IEnumerable<LayerData>> GetLayerData(this ILayerDataModel layerDataModel, AnchorStateFilter stateFilter, IModelContext trans, TimeThreshold timeThreshold)
         {
             var layerData = await layerDataModel.GetLayerData(trans, timeThreshold);
-            return layerData.Values.Where(ld => {
+            return layerData.Values.Where(ld =>
+            {
                 return stateFilter.Contains(Enum.Parse<AnchorState>(ld.State));
             });
         }
@@ -85,7 +86,8 @@ namespace Omnikeeper.Base.Model
                     throw new Exception(@$"Could not find layer with ID ""{ids[0]}""");
                 else
                     return new LayerSet(ids[0]);
-            } else
+            }
+            else
             {
                 var layers = await layerModel.GetLayers(ids, trans);
                 if (layers.Count() < ids.Length)

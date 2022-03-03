@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -8,7 +9,6 @@ using Omnikeeper.GridView.Entity;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.GridView.Commands
 {
@@ -59,7 +59,7 @@ namespace Omnikeeper.GridView.Commands
                 {
                     var isSuccess = await gridViewContextModel.TryToDelete(request.ID,
                         new Base.Entity.LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
-                        new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, trans);
+                        new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                     if (isSuccess)
                     {

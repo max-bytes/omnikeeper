@@ -1,7 +1,5 @@
 ﻿using Npgsql;
-using System;
 using System.Data;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Utils.ModelContext
 {

@@ -126,7 +126,7 @@ namespace Omnikeeper.Controllers
             }
 
             var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-            var inserted = await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+            await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
             trans.Commit();
             return Ok();
         }

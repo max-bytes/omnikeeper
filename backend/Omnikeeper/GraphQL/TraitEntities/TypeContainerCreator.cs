@@ -16,7 +16,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public readonly IDInputType? IDInputType;
         public readonly UpsertInputType UpsertInputType;
 
-        public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType, 
+        public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType,
             TraitEntityRootType rootQueryType, UpsertInputType upsertInputType)
         {
             Trait = trait;
@@ -50,7 +50,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly IDataLoaderService dataLoaderService;
         private readonly IChangesetModel changesetModel;
 
-        public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel, 
+        public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel,
             IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService, IChangesetModel changesetModel)
         {
             this.traitsProvider = traitsProvider;
@@ -65,6 +65,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public TypeContainer CreateTypes(IDictionary<string, ITrait> activeTraits, ISchema schema, ILogger logger)
         {
             var elementTypes = new List<ElementTypesContainer>();
+
+            var relatedCIType = new RelatedCIType(traitsProvider, dataLoaderService, ciModel);
+
             foreach (var at in activeTraits)
             {
                 if (at.Key == TraitEmpty.StaticID) // ignore the empty trait
@@ -72,10 +75,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 try
                 {
-                    var tt = new ElementType(at.Value, traitsProvider, dataLoaderService, ciModel);
+                    var tt = new ElementType(at.Value, relatedCIType);
                     var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel);
                     var idt = IDInputType.Build(at.Value);
-                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, dataLoaderService, traitsProvider, attributeModel, relationModel, ttWrapper, idt);
+                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel, ttWrapper, idt);
                     var upsertInputType = new UpsertInputType(at.Value);
 
                     // TODO: needed?

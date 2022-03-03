@@ -16,9 +16,10 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
-    public class GenericTraitEntityModel<T, ID> where T : TraitEntity, new() where ID : notnull
+    public class GenericTraitEntityModel<T, ID> where T : TraitEntity, new() where ID : notnull, IEquatable<ID>
     {
         protected readonly ICIModel ciModel;
+        private readonly IAttributeModel attributeModel;
         private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
         private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
@@ -39,7 +40,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
         {
             this.ciModel = ciModel;
-
+            this.attributeModel = attributeModel;
             var trait = RecursiveTraitService.FlattenSingleRecursiveTrait(GenericTraitEntityHelper.Class2RecursiveTrait<T>());
 
             (_, attributeFieldInfos, relationFieldInfos) = GenericTraitEntityHelper.ExtractFieldInfos<T>();
@@ -49,7 +50,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
         }
 
-        private async Task<(T entity, Guid ciid)> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<(T entity, Guid ciid)> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var et = await traitEntityModel.GetSingleByCIID(ciid, layerSet, trans, timeThreshold);
             if (et == null)
@@ -66,8 +67,8 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var idAttributeValueTuples = idAttributeInfos.ExtractAttributeValueTuplesFromID(id);
-            var foundCIID = await traitEntityModel.GetSingleCIIDByAttributeValueTuples(idAttributeValueTuples, layerSet, trans, timeThreshold);
+            var idAttributeValues = idAttributeInfos.ExtractAttributeValuesFromID(id);
+            var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames(), idAttributeValues, layerSet, trans, timeThreshold);
 
             if (!foundCIID.HasValue)
                 return default;
@@ -78,14 +79,14 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public async Task<IDictionary<ID, T>> GetAllByDataID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ets = (await traitEntityModel.GetAllByDataID(layerSet, trans, timeThreshold))
+            var ets = (await traitEntityModel.GetAllByCIID(layerSet, trans, timeThreshold))
                 .Values
                 .OrderBy(et => et.CIID); // we order by CIID to stay consistent even when multiple CIs would match
 
             var ret = new Dictionary<ID, T>();
             foreach (var et in ets)
             {
-                var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer); 
+                var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
                 var id = idAttributeInfos.ExtractIDFromEntity(dc);
                 if (!ret.ContainsKey(id))
                 {
@@ -95,11 +96,69 @@ namespace Omnikeeper.Base.Model.TraitBased
             return ret;
         }
 
+
+        /*
+         * NOTE: this does not care whether or not the CI is actually a trait entity or not
+         */
+        // TODO: test
+        private async Task<IDictionary<ID, Guid>> FindMatchingCIIDsFromIDs(string[] attributeNames, ID[] ids, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            if (ids.Length == 0)
+                return new Dictionary<ID, Guid>();
+
+            var cisWithIDAttributes = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(attributeNames.ToHashSet()), layerSet, trans, timeThreshold);
+
+            // invert the dicationary and get a (attributeName, attributeValue) -> list of ciid
+            var lookup = cisWithIDAttributes
+                .SelectMany(t => t.Value.Select(tt => (ciid: t.Key, attributeName: tt.Key, attributeValue: tt.Value.Attribute.Value)))
+                .GroupBy(t => (t.attributeName, t.attributeValue), t => t.ciid)
+                .ToDictionary(t => t.Key, t => t.ToList());
+
+            var ret = new Dictionary<ID, Guid>(ids.Length);
+            for (var i = 0; i < ids.Length; i++)
+            {
+                var id = ids[i];
+
+                var idValues = idAttributeInfos.ExtractAttributeValuesFromID(id);
+
+                HashSet<Guid>? fitting = new HashSet<Guid>();
+                for (var j = 0; j < idValues.Length; j++)
+                {
+                    var attributeName = attributeNames[j];
+                    var attributeValue = idValues[j];
+
+                    if (lookup.TryGetValue((attributeName, attributeValue), out var candidates))
+                    {
+                        if (j == 0)
+                        {
+                            fitting.UnionWith(candidates);
+                        }
+                        else
+                        {
+                            fitting.IntersectWith(candidates);
+                        }
+                    }
+
+                    if (fitting.Count == 0)
+                        break;
+                }
+
+                if (fitting.Count == 1)
+                    ret[id] = fitting.First();
+                else if (fitting.Count > 1)
+                {
+                    ret[id] = fitting.OrderBy(t => t).FirstOrDefault(); // we order by GUID to stay consistent even when multiple CIs would match
+                }
+            }
+
+            return ret;
+        }
+
         /*
          * NOTE: unlike the regular insert, this does not do any checks if the updated entities actually fulfill the trait requirements 
          * and will be considered as this trait's entities going forward
          */
-        public async Task<bool> BulkReplace(IDictionary<ID, T> t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<bool> BulkReplace(IDictionary<ID, T> t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             if (t.IsEmpty())
                 return false;
@@ -110,10 +169,21 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             var outdatedIDs = outdated.Select(g => idAttributeInfos.ExtractIDFromEntity(g.Value)).ToHashSet();
 
-            var IDsOfNewEntities = t.Keys.Except(outdatedIDs);
+            var IDsOfNotFoundEntities = t.Keys.Except(outdatedIDs).ToArray();
 
-            var newCIIDDictionary = IDsOfNewEntities.ToDictionary(id => id, id => Guid.NewGuid());
-            await ciModel.BulkCreateCIs(newCIIDDictionary.Select(kv => kv.Value), trans);
+            // for new entities that do not have a fully matching entity that already exists, we try to find a CI where the ID attributes match
+            var newCIDictionary = new Dictionary<ID, Guid>();
+            var idMatchedCIDictionary = await FindMatchingCIIDsFromIDs(idAttributeInfos.GetIDAttributeNames(), IDsOfNotFoundEntities, layerSet, trans, changesetProxy.TimeThreshold);
+            for (var i = 0;i < IDsOfNotFoundEntities.Length;i++) {
+                var id = IDsOfNotFoundEntities[i];
+                if (!idMatchedCIDictionary.ContainsKey(id))
+                {
+                    newCIDictionary[id] = Guid.NewGuid();
+                }
+            }
+
+            // for entities that we really couldn't find a matching CI, create new CIs
+            await ciModel.BulkCreateCIs(newCIDictionary.Select(kv => kv.Value), trans);
 
             var entities = t.Select(kv =>
             {
@@ -122,32 +192,34 @@ namespace Omnikeeper.Base.Model.TraitBased
                 Guid ciid;
                 if (!ciidInOutdated.IsEmpty())
                     ciid = ciidInOutdated.OrderBy(ciid => ciid).First(); // stay consistent
+                else if (idMatchedCIDictionary.TryGetValue(id, out var outCiid))
+                    ciid = outCiid;
                 else
-                    ciid = newCIIDDictionary[id];
+                    ciid = newCIDictionary[id];
                 return (kv.Value, ciid);
             });
 
-
-            var relevantCIIDs = newCIIDDictionary.Values.Union(outdated.Keys).ToHashSet();
+            var relevantCIIDs = newCIDictionary.Values.Union(idMatchedCIDictionary.Values).Union(outdated.Keys).ToHashSet();
             var attributeFragments = Entities2Fragments(entities);
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(entities);
-            var changed = await traitEntityModel.BulkReplace(relevantCIIDs, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans);
+            var changed = await traitEntityModel.BulkReplace(relevantCIIDs, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
 
             return changed;
         }
 
-        public async Task<(T dc, bool changed)> InsertOrUpdate(T t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(T dc, bool changed)> InsertOrUpdate(T t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
+            // NOTE: we do a CIID lookup based on the ID attributes and their values, but we DON'T require that the found CI must already be a trait entity
             var id = idAttributeInfos.ExtractIDFromEntity(t);
+            var idAttributeValues = idAttributeInfos.ExtractAttributeValuesFromID(id);
+            var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames(), idAttributeValues, layerSet, trans, changesetProxy.TimeThreshold);
 
-            var current = await GetSingleByDataID(id, layerSet, trans, changesetProxy.TimeThreshold);
-
-            var ciid = (current != default) ? current.ciid : await ciModel.CreateCI(trans);
+            var ciid = foundCIID.HasValue ? foundCIID.Value : await ciModel.CreateCI(trans);
 
             var tuples = new (T t, Guid ciid)[] { (t, ciid) };
             var attributeFragments = Entities2Fragments(tuples);
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(tuples);
-            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans);
+            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
 
             var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
 
@@ -233,10 +305,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                         }
                         else
                         {
-                            if (!trFieldInfo.TraitRelationAttribute.optional)
-                            {
-                                throw new Exception(); // TODO
-                            }
+                            // relations are optional by design, continue if not found
                         }
                     }
                 }
@@ -245,7 +314,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (outgoingRelations, incomingRelations);
         }
 
-        public async Task<bool> TryToDelete(ID id, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<bool> TryToDelete(ID id, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             // TODO: we should actually not fetch a single, but instead ALL that match that ID and delete them
             // only then, the end result is that no CI matching the trait with that ID exists anymore, otherwise it's not guaranteed and deleting fails because there's still a matching ci afterwards
@@ -255,7 +324,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 return false; // no dc with this ID exists
             }
 
-            return await traitEntityModel.TryToDelete(t.ciid, layerSet, writeLayerID, dataOrigin, changesetProxy, trans);
+            return await traitEntityModel.TryToDelete(t.ciid, layerSet, writeLayerID, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
         }
     }
 

@@ -29,7 +29,7 @@ function InnerPredicateSelect(props) {
         disabled={loading}
         value={predicateID}
         placeholder='Search+select or set Predicate'
-        style={{ width: "100%" }}
+        style={{ minWidth: '200px' }}
         onChange={(value) => {
             setPredicateID(value);
         }}

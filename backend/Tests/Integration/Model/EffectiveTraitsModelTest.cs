@@ -1,15 +1,11 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
-using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,7 +13,7 @@ using Tests.Integration.Model.Mocks;
 
 namespace Tests.Integration.Model
 {
-    partial class EffectiveTraitsModelTest : DBBackedTestBase
+    partial class EffectiveTraitsModelTest : DIServicedTestBase
     {
         [Test]
         public async Task TestTraitAttributes()
@@ -47,19 +43,19 @@ namespace Tests.Integration.Model
             Assert.AreEqual(2, et3.Count());
             Assert.IsTrue(et3.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
 
-            var cis1 = await traitModel.FilterCIsWithTrait(cis, testTrait1, layerset, trans, timeThreshold);
+            var cis1 = traitModel.FilterCIsWithTrait(cis, testTrait1, layerset, trans, timeThreshold);
             Assert.AreEqual(3, cis1.Count());
             cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithStrictOrdering());
 
-            var cis2 = await traitModel.FilterCIsWithTrait(cis, testTrait2, layerset, trans, timeThreshold);
+            var cis2 = traitModel.FilterCIsWithTrait(cis, testTrait2, layerset, trans, timeThreshold);
             Assert.AreEqual(2, cis2.Count());
             cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
 
             // test inverted filtering
-            var cis3 = await traitModel.FilterCIsWithoutTrait(cis, testTrait1, layerset, trans, timeThreshold);
+            var cis3 = traitModel.FilterCIsWithoutTrait(cis, testTrait1, layerset, trans, timeThreshold);
             Assert.AreEqual(0, cis3.Count());
 
-            var cis4 = await traitModel.FilterCIsWithoutTrait(cis, testTrait2, layerset, trans, timeThreshold);
+            var cis4 = traitModel.FilterCIsWithoutTrait(cis, testTrait2, layerset, trans, timeThreshold);
             Assert.AreEqual(1, cis4.Count());
             cis4.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[1] }, options => options.WithStrictOrdering());
         }
@@ -97,43 +93,34 @@ namespace Tests.Integration.Model
             Assert.AreEqual(1, t1.Count());
         }
 
-        private async Task<(EffectiveTraitModel traitModel, CIModel ciModel, LayerSet layerset, Guid[])> BaseSetup()
+        private async Task<(IEffectiveTraitModel traitModel, ICIModel ciModel, LayerSet layerset, Guid[])> BaseSetup()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
-            var ciModel = new CIModel(attributeModel, new CIIDModel());
-            var userModel = new UserInDatabaseModel();
-            var changesetModel = new ChangesetModel(userModel);
-            var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
-            var layerModel = new LayerModel();
-            var traitModel = new EffectiveTraitModel(relationModel);
-
             var transI = ModelContextBuilder.BuildImmediate();
-            var user = await DBSetup.SetupUser(userModel, transI);
-            var ciid1 = await ciModel.CreateCI(transI);
-            var ciid2 = await ciModel.CreateCI(transI);
-            var ciid3 = await ciModel.CreateCI(transI);
-            var (layer1, _) = await layerModel.CreateLayerIfNotExists("l1", transI);
+            var ciid1 = await GetService<ICIModel>().CreateCI(transI);
+            var ciid2 = await GetService<ICIModel>().CreateCI(transI);
+            var ciid3 = await GetService<ICIModel>().CreateCI(transI);
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", transI);
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text41"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var changeset = await CreateChangesetProxy();
+                await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text41"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
 
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
 
-                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
 
                 trans.Commit();
             }
 
-            var layerset = await layerModel.BuildLayerSet(new string[] { "l1" }, transI);
-            return (traitModel, ciModel, layerset, new Guid[] { ciid1, ciid2, ciid3 });
+            var layerset = await GetService<ILayerModel>().BuildLayerSet(new string[] { "l1" }, transI);
+            return (GetService<IEffectiveTraitModel>(), GetService<ICIModel>(), layerset, new Guid[] { ciid1, ciid2, ciid3 });
         }
     }
 }

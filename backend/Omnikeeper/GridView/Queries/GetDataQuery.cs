@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -13,11 +14,9 @@ using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Response;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.GridView.Queries
 {
@@ -101,7 +100,7 @@ namespace Omnikeeper.GridView.Queries
                     .ToHashSet();
                 var attributeSelection = NamedAttributesSelection.Build(relevantAttributes);
                 var mergedCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), new LayerSet(config.ReadLayerset), false, attributeSelection, trans, atTime);
-                var mergedCIsWithTrait = await effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, new LayerSet(config.ReadLayerset), trans, atTime);
+                var mergedCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, new LayerSet(config.ReadLayerset), trans, atTime);
 
                 // filter readable CIs based on authorization
                 var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(mergedCIsWithTrait, (t) => t.ID);

@@ -1,12 +1,10 @@
 ﻿using GraphQL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GraphQL;
@@ -22,26 +20,19 @@ namespace Tests.Integration.GraphQL
         [Test]
         public async Task TestBasicQuery()
         {
-            var username = "testUser";
-            var userGUID = new Guid("7dc848b7-881d-4785-9f25-985e9b6f2715");
-            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
-            var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
-            var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
-            var changesetModel = ServiceProvider.GetRequiredService<IChangesetModel>();
-            var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
             using var trans = ModelContextBuilder.BuildDeferred();
-            var ciid1 = await ciModel.CreateCI(trans);
-            var userInDatabase = await userModel.UpsertUser(username, username, userGUID, UserType.Robot, trans);
-            var changeset = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), changesetModel);
-            var (layer1, _) = await layerModel.CreateLayerIfNotExists("layer_1", trans);
-            var (layer2, _) = await layerModel.CreateLayerIfNotExists("layer_2", trans);
-            var user = new AuthenticatedUser(userInDatabase, 
+            var ciid1 = await GetService<ICIModel>().CreateCI(trans);
+            var userInDatabase = await SetupDefaultUser();
+            var changeset = await CreateChangesetProxy();
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", trans);
+            var (layer2, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_2", trans);
+            var user = new AuthenticatedUser(userInDatabase,
                 new AuthRole[]
                 {
                     new AuthRole("ar1", new string[] { PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1) }),
                     new AuthRole("ar2", new string[] { PermissionUtils.GetLayerReadPermission(layer2), PermissionUtils.GetLayerWritePermission(layer2) }),
                 });
-            await attributeModel.InsertAttribute("a1", new AttributeScalarValueInteger(3), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueInteger(3), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
             trans.Commit();
 
             string query = @"
@@ -61,7 +52,7 @@ namespace Tests.Integration.GraphQL
                 }
                 ";
 
-            var inputs = new Inputs(new Dictionary<string, object>()
+            var inputs = new Inputs(new Dictionary<string, object?>()
                 {
                     { "ciids", new Guid[] { ciid1 } },
                     { "layers", new string[] { "layer_1", "layer_2" } }

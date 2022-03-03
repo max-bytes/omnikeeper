@@ -35,10 +35,12 @@ namespace Omnikeeper.Base.Model.TraitBased
 
                         var (attributeValueType, isArray) = Type2AttributeValueType(fInfo, taa);
                         attributeFieldInfos.Add(new TraitAttributeFieldInfo(fInfo, taa, attributeValueType, isArray, isID));
-                    } else if (tra != null)
+                    }
+                    else if (tra != null)
                     {
                         relationFieldInfos.Add(new TraitRelationFieldInfo(fInfo, tra));
-                    } else
+                    }
+                    else
                     {
                         throw new Exception($"Trait class {type.Name}: field with both TraitAttribute AND TraitRelation attribute detected: {fInfo.Name}");
                     }
@@ -92,7 +94,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                                 throw new Exception(); // TODO
                             var tokens = (JToken[])entityFieldValue;
                             var deserialized = Array.CreateInstance(fieldType, tokens.Length);
-                            for(int i = 0;i < tokens.Length;i++)
+                            for (int i = 0; i < tokens.Length; i++)
                             {
                                 var e = jsonSerializer.Deserialize(tokens[i], fieldType);
                                 if (e == null)
@@ -132,14 +134,12 @@ namespace Omnikeeper.Base.Model.TraitBased
                 if (relationList.TryGetValue(trName, out var relations))
                 {
                     var otherCIIDs = ((isForward) ? relations.Select(r => r.Relation.ToCIID) : relations.Select(r => r.Relation.FromCIID)).ToArray();
-                    
+
                     trFieldInfo.FieldInfo.SetValue(ret, otherCIIDs);
                 }
                 else
                 {
-                    // optional or not? depending on that, throw error or continue
-                    if (!trFieldInfo.TraitRelationAttribute.optional)
-                        throw new Exception($"Could not find trait relation {trFieldInfo.TraitRelationAttribute.trName} for mandatory field");
+                    // relations are always optional by design, if we do not find it, just continue
                 }
             }
 
@@ -152,7 +152,6 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             var requiredAttributes = new List<TraitAttribute>();
             var optionalAttributes = new List<TraitAttribute>();
-            var requiredRelations = new List<TraitRelation>();
             var optionalRelations = new List<TraitRelation>();
 
             foreach (var taFieldInfo in attributeFieldInfos)
@@ -166,13 +165,12 @@ namespace Omnikeeper.Base.Model.TraitBased
             foreach (var trFieldInfo in relationFieldInfos)
             {
                 var tra = trFieldInfo.TraitRelationAttribute;
-                var targetRelationList = (tra.optional) ? optionalRelations : requiredRelations;
-                targetRelationList.Add(new TraitRelation(tra.trName, new RelationTemplate(tra.predicateID, tra.directionForward, tra.minCardinality, tra.maxCardinality)));
+                optionalRelations.Add(new TraitRelation(tra.trName, new RelationTemplate(tra.predicateID, tra.directionForward, tra.minCardinality, tra.maxCardinality)));
             }
 
             var traitOrigin = new TraitOriginV1(ta.originType);
 
-            var ret = new RecursiveTrait(ta.traitName, traitOrigin, requiredAttributes, optionalAttributes, requiredRelations, optionalRelations);
+            var ret = new RecursiveTrait(ta.traitName, traitOrigin, requiredAttributes, optionalAttributes, optionalRelations);
             return ret;
         }
 
@@ -199,7 +197,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     yield return new CIAttributeValueConstraintArrayLength(alal.Minimum, alal.Maximum);
                 }
             }
-            
+
             // TODO: support other constraints
         }
 

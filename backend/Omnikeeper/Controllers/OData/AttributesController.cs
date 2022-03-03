@@ -95,7 +95,8 @@ namespace Omnikeeper.Controllers.OData
             if (ci.MergedAttributes.TryGetValue(keyAttributeName, out var a))
             {
                 return Model2DTO(a, ci.CIName);
-            } else
+            }
+            else
             {
                 throw new Exception("Could not get attribute");
             }
@@ -140,7 +141,7 @@ namespace Omnikeeper.Controllers.OData
             test.CopyChangedValues(oldDTO);
             var @newDTO = oldDTO;
             var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, new AttributeScalarValueText(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+            await attributeModel.InsertAttribute(@newDTO.AttributeName, new AttributeScalarValueText(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
 
             var newMergedCI = await ciModel.GetMergedCI(keyCIID, readLayerset, NamedAttributesSelection.Build(keyAttributeName), trans, TimeThreshold.BuildLatest());
             if (newMergedCI == null) return BadRequest();
@@ -204,7 +205,7 @@ namespace Omnikeeper.Controllers.OData
             {
                 await ciModel.CreateCI(finalCIID, trans);
                 if (attribute.CIName != null && attribute.CIName != "")
-                    await attributeModel.InsertCINameAttribute(attribute.CIName, finalCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+                    await attributeModel.InsertCINameAttribute(attribute.CIName, finalCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
             }
             else
             { // ci exists already, make sure either name is not set or it matches already present name
@@ -216,7 +217,7 @@ namespace Omnikeeper.Controllers.OData
                 }
             }
 
-            var created = await attributeModel.InsertAttribute(attribute.AttributeName, new AttributeScalarValueText(attribute.Value), finalCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+            await attributeModel.InsertAttribute(attribute.AttributeName, new AttributeScalarValueText(attribute.Value), finalCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
 
             var timeThresholdAfter = TimeThreshold.BuildLatest();
             var finalCI = await ciModel.GetMergedCI(finalCIID, readLayerset, NamedAttributesSelection.Build(attribute.AttributeName), trans, timeThresholdAfter);

@@ -35,7 +35,7 @@ namespace Omnikeeper.Base.Service
         }
 
         // TODO: add ci-based authorization
-        public async Task<(int numIngestedCIs, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user)
+        public async Task<(int numAffectedAttributes, int numAffectedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user)
         {
             using var trans = modelContextBuilder.BuildDeferred();
             var timeThreshold = TimeThreshold.BuildLatest();
@@ -91,11 +91,17 @@ namespace Omnikeeper.Base.Service
                     cic.TempCIID = finalCIID; // we update the TempCIID of the CI candidate with its final ID
 
                     affectedCIs.Add(finalCIID);
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     throw new Exception($"Error mapping CI-candidate {ciCandidateCIID}", e);
                 }
             }
+
+            // TODO: mask handling
+            var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
+            // TODO: other-layers-value handling
+            var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
 
             // batch process CI creation
             if (!cisToCreate.IsEmpty())
@@ -104,8 +110,8 @@ namespace Omnikeeper.Base.Service
             var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, data.CICandidates.SelectMany(cic =>
                 cic.Attributes.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, cic.TempCIID))
             ));
-            // TODO: return number of affected attributes (instead of CIs)
-            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+
+            var numAffectedAttributes = await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling, otherLayersValueHandling);
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
             foreach (var cic in data.RelationCandidates)
@@ -118,14 +124,14 @@ namespace Omnikeeper.Base.Service
                 var tempToCIID = cic.IdentificationMethodToCI.CIID;
                 if (!ciMappingContext.TryGetMappedTemp2FinalCIID(tempToCIID, out Guid toCIID))
                     throw new Exception($"Could not find temporary CIID {tempToCIID}, tried using it as the \"to\" of a relation");
-                relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID));
+                relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID, false));
             }
             var bulkRelationData = new BulkRelationDataLayerScope(writeLayer.ID, relationFragments.ToArray());
-            var affectedRelations = await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans);
+            var numAffectedRelations = await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling, otherLayersValueHandling);
 
             trans.Commit();
 
-            return (affectedCIs.Count(), affectedRelations.Count());
+            return (numAffectedAttributes, numAffectedRelations);
         }
     }
 

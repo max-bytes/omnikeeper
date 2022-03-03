@@ -20,7 +20,6 @@ function ApolloWrapper({ component: Component, ...rest }) {
         }
         extend type Query {
             selectedTimeThreshold: SelectedTimeThreshold! @client
-            layerSettings: [LayerSettings] @client
         }
     `;
     
@@ -35,10 +34,6 @@ function ApolloWrapper({ component: Component, ...rest }) {
                         refreshNonceCI: (variables.refreshCI) ? moment().format() : null
                     }
                 }});
-                return null;
-            },
-            setLayerSettings: (_root, variables, { cache, getCacheKey }) => {
-                cache.writeQuery({ query: queries.LayerSettings, data: { layerSettings: variables.layerSettings } });
                 return null;
             },
         },
@@ -57,6 +52,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
     };
 
     var cache = new InMemoryCache({
+        addTypename: false,
         typePolicies: {
             // RelationType: {
             //     keyFields: false
@@ -99,8 +95,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
             selectedTimeThreshold: {
             time: null,
             isLatest: true
-            },
-            layerSettings: null
+            }
         };
         // console.log("Writing initial state")
         cache.writeQuery({
@@ -109,13 +104,6 @@ function ApolloWrapper({ component: Component, ...rest }) {
                 selectedTimeThreshold {
                     time
                     isLatest
-                }
-                layerSettings {
-                    LayerSettings {
-                        layerID
-                        sortOffset
-                        visible
-                    }
                 }
             }
             `,

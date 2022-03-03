@@ -14,7 +14,7 @@ var _reactFontawesome = require("@fortawesome/react-fontawesome");
 
 var _freeSolidSvgIcons = require("@fortawesome/free-solid-svg-icons");
 
-require("antd/dist/antd.css");
+require("antd/dist/antd.min.css");
 
 var _PrivateRoute = require("components/PrivateRoute");
 

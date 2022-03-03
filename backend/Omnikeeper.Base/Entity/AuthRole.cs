@@ -1,17 +1,5 @@
-﻿using Omnikeeper.Base.AttributeValues;
-using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Entity
 {

@@ -13,7 +13,7 @@ namespace Omnikeeper.Base.Entity.Config
         [JsonIgnore]
         public readonly long archiveDataThresholdTicks;
 
-        // TODO: add regex or other check for hangfire compatible cronjob syntax
+        // TODO: add regex or other check for quartz compatible cronjob syntax
         [TraitAttribute("clb_runner_interval", "base_config.clb_runner_interval")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [JsonIgnore]

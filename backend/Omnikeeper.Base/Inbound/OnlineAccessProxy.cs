@@ -62,7 +62,8 @@ namespace Omnikeeper.Base.Inbound
                     {
                         yield return (null, i++);
                     }
-                } else
+                }
+                else
                 {
                     yield return (null, i++);
                 }
@@ -78,7 +79,8 @@ namespace Omnikeeper.Base.Inbound
                 {
                     var attributes = proxy.GetAttributes(selection, atTime, attributeSelection).ToEnumerable();
                     ret[index] = attributes;
-                } else
+                }
+                else
                 {
                     ret[index] = Array.Empty<CIAttribute>();
                 }

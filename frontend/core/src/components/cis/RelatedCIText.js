@@ -9,13 +9,17 @@ export default function RelatedCIText(props) {
     <i>{predicate.wordingFrom}</i>
   : <i style={{textDecorationStyle: 'dashed', textDecorationColor: 'red', textDecorationThickness: '1px', textDecorationLine: 'underline'}}>{relation.predicateID}</i>;
 
+  const isMask = relation.mask;
+  const maskStyle = (isMask) ? {border: '1px dashed black', background: '#f0f0f0', opacity: '0.7'} : {};
+  const maskText = (isMask) ? ` [MASK]` : ``;
+
   const otherCIID = (isOutgoingRelation) ? relation.toCIID : relation.fromCIID;
   const otherCIName = ((isOutgoingRelation) ? relation.toCIName : relation.fromCIName) ?? "[UNNAMED]";
   const otherCIButton = <Link to={"/explorer/" + otherCIID}>{otherCIName}</Link>; // TODO: merged with CIID component(?)
 
   const written = (isOutgoingRelation) ?
-    <span>{`This CI `}{predicateWording}{` `}{otherCIButton}</span> :
-    <span>{otherCIButton}{` `}{predicateWording}{` this CI`}</span>
+    <span style={maskStyle}>{`This CI `}{predicateWording}{` `}{otherCIButton}{maskText}</span> :
+    <span style={maskStyle}>{otherCIButton}{` `}{predicateWording}{` this CI`}{maskText}</span>
     ;
   return written;
 }

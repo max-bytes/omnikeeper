@@ -31,7 +31,8 @@ namespace Omnikeeper.Model
                 }
 
                 return (Layer.Build(id), true);
-            } else
+            }
+            else
             {
                 return (current, false);
             }
@@ -103,14 +104,14 @@ namespace Omnikeeper.Model
             // upsert layer data
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
             var ld = new LayerData(id, description, color, clConfigID, generators, oiaReference, state);
-            var t = await innerModel.InsertOrUpdate(ld, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, dataOrigin, changesetProxy, trans);
+            var t = await innerModel.InsertOrUpdate(ld, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, dataOrigin, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return t;
         }
 
         public async Task<bool> TryToDelete(string id, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-            return await innerModel.TryToDelete(id, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, dataOrigin, changesetProxy, trans);
+            return await innerModel.TryToDelete(id, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, dataOrigin, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
         }
 
         public async Task<IDictionary<string, LayerData>> GetLayerData(IModelContext trans, TimeThreshold timeThreshold)
@@ -127,7 +128,8 @@ namespace Omnikeeper.Model
                 if (layerData.TryGetValue(l.ID, out var ld))
                 {
                     return ld;
-                } else
+                }
+                else
                 {
                     return new LayerData(l.ID, "", ILayerDataModel.DefaultColor.ToArgb(), "", Array.Empty<string>(), "", ILayerDataModel.DefaultState.ToString());
                 }

@@ -1,19 +1,12 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using Omnikeeper.Base.Model.TraitBased;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
@@ -33,7 +26,6 @@ namespace Tests.Integration.Model
                     new List<TraitAttribute>()
                     {
                         new TraitAttribute("optional_attributes", CIAttributeTemplate.BuildFromParams("trait.optional_attributes", AttributeValueType.JSON, true, false)),
-                        new TraitAttribute("required_relations", CIAttributeTemplate.BuildFromParams("trait.required_relations", AttributeValueType.JSON, true, false)),
                         new TraitAttribute("optional_relations", CIAttributeTemplate.BuildFromParams("trait.optional_relations", AttributeValueType.JSON, true, false)),
                         new TraitAttribute("required_traits", CIAttributeTemplate.BuildFromParams("trait.required_traits", AttributeValueType.Text, true, false)),
                         new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
@@ -50,13 +42,11 @@ namespace Tests.Integration.Model
                     new List<TraitAttribute>() { new TraitAttribute("test_ta1", CIAttributeTemplate.BuildFromParams("test_a", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
                     new List<TraitAttribute>() { new TraitAttribute("test_tb1", CIAttributeTemplate.BuildFromParams("test_b", AttributeValueType.JSON, false, true, CIAttributeValueConstraintTextLength.Build(1, null))) },
                     new List<TraitRelation>() { },
-                    new List<TraitRelation>() { },
                     new List<string>() { "dependent_trait1" }
                     ),
                 () => new RecursiveTrait("trait2", new TraitOriginV1(TraitOriginType.Data),
                     new List<TraitAttribute>() { new TraitAttribute("test_ta2", CIAttributeTemplate.BuildFromParams("test_a", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
                     new List<TraitAttribute>() { new TraitAttribute("test_tb2", CIAttributeTemplate.BuildFromParams("test_b", AttributeValueType.JSON, false, true, CIAttributeValueConstraintTextLength.Build(1, null))) },
-                    new List<TraitRelation>() { },
                     new List<TraitRelation>() { },
                     new List<string>() { "dependent_trait2" }
                     ),
@@ -72,13 +62,11 @@ namespace Tests.Integration.Model
                     new List<TraitAttribute>() { new TraitAttribute("test_ta1", CIAttributeTemplate.BuildFromParams("test_a", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
                     new List<TraitAttribute>() { new TraitAttribute("test_tb1", CIAttributeTemplate.BuildFromParams("test_b", AttributeValueType.JSON, false, true, CIAttributeValueConstraintTextLength.Build(1, null))) },
                     new List<TraitRelation>() { },
-                    new List<TraitRelation>() { },
                     new List<string>() { "dependent_trait1" }
                     ),
                 () => new RecursiveTrait("trait2", new TraitOriginV1(TraitOriginType.Data),
                     new List<TraitAttribute>() { new TraitAttribute("test_ta2", CIAttributeTemplate.BuildFromParams("test_a", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
                     new List<TraitAttribute>() { new TraitAttribute("test_tb2", CIAttributeTemplate.BuildFromParams("test_b", AttributeValueType.JSON, false, true, CIAttributeValueConstraintTextLength.Build(1, null))) },
-                    new List<TraitRelation>() { },
                     new List<TraitRelation>() { },
                     new List<string>() { "dependent_trait2" }
                     ),

@@ -93,6 +93,8 @@ export const mutations = {
     }
   }
   ${Fragments.recursiveTrait}
+  ${Fragments.traitAttribute}
+  ${Fragments.traitRelation}
   `,
   REMOVE_RECURSIVE_TRAIT: gql`
   mutation($id: String!) {

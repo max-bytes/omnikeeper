@@ -60,16 +60,28 @@ namespace Omnikeeper.Base.AttributeValues
                     case AttributeValueType.JSON:
                         {
                             if (o == null)
-                                throw new Exception($"Expected object {o} to be JArray or JToken, found null");
+                                throw new Exception($"Expected object {o} to not be null, found null");
                             else if (o is JArray a) // TODO: stricter array null handling
                                 return AttributeArrayValueJSON.Build(a.Children().ToArray());
-                            else if (o is object[] oa) // TODO: stricter array null handling
-                                return AttributeArrayValueJSON.Build(oa.Select(t => t as JToken)!.ToArray()!);
+                            else if (o is object[] oa)
+                            {
+                                if (oa.Length == 0) // if the length of the array is zero, we don't have good type information, so we treat this case separately
+                                    return AttributeArrayValueJSON.Build(Enumerable.Empty<JToken>());
+                                if (o is string[] sa)
+                                    return AttributeArrayValueJSON.BuildFromString(sa);
+                                else if (o is JToken[] ja)
+                                    return AttributeArrayValueJSON.Build(ja);
+                                else
+                                    throw new Exception($"Cannot deal with object {o}, that is an array, but neither string array nor JToken array");
+                            }
                             else
                             {
-                                if (o is not JToken t)
+                                if (o is JToken t)
+                                    return AttributeScalarValueJSON.Build(t);
+                                else if (o is string so)
+                                    return AttributeScalarValueJSON.BuildFromString(so);
+                                else
                                     throw new Exception($"Expected object {o} to be JToken, found {o.GetType().Name}");
-                                return AttributeScalarValueJSON.Build(t);
                             }
                         }
                     case AttributeValueType.YAML:

@@ -1,17 +1,14 @@
 import React from 'react';
 import Layers from './Layers';
-import { mutations } from 'graphql/mutations'
-import { queries } from 'graphql/queries'
-import { useMutation, useQuery } from '@apollo/client';
+import { useLocalStorage } from 'utils/useLocalStorage';
 
 function ExplorerLayers() {
-  var { data: { layerSettings }, loading } = useQuery(queries.LayerSettings, {fetchPolicy: 'cache-only'});
-  const [setLayerSettings] = useMutation(mutations.SET_LAYER_SETTINGS);
-
-  if (loading) return "Loading";
+  const [layerSettings, setLayerSettings] = useLocalStorage('layerSettings', null);
 
   return <Layers layerSettings={layerSettings} 
-    setLayerSettings={ newLS => setLayerSettings({variables: {layerSettings: newLS}})} />
+    setLayerSettings={ newLS => {
+      setLayerSettings(newLS);
+    }} />
 }
 
 export default ExplorerLayers;

@@ -30,7 +30,7 @@ function InnerPopup(props) {
     </dl>
     <dl style={dls}>
       <dt style={dts}>Changeset:</dt>
-      <dd>{changeset ? <ChangesetID id={changeset.id} link={true} /> : 'None'}</dd>
+      <dd>{changeset ? <ChangesetID id={changeset.id} link={true} copyable={true} /> : 'None'}</dd>
     </dl>
     </div>
   );

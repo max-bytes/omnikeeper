@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Templating;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -13,7 +14,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace Omnikeeper.Base.Generator
 {
@@ -174,7 +174,7 @@ namespace Omnikeeper.Base.Generator
             IDictionary<string, GeneratorV1>? availableGenerators = null;
             MetaConfiguration? metaConfiguration = null;
             int i = 0;
-            foreach(var layerID in layerIDs)
+            foreach (var layerID in layerIDs)
             {
                 var l = new List<GeneratorV1>();
                 ret[i++] = l;
@@ -236,10 +236,12 @@ namespace Omnikeeper.Base.Generator
                     var agGuid = GuidUtility.Create(ciid, $"{generator.AttributeName}-{layerID}-{string.Join("-", relevantAttributes.Select(a => a.ID))}");
                     var ag = new CIAttribute(agGuid, generator.AttributeName, ciid, value, GeneratorV1.StaticChangesetID);
                     return ag;
-                } else if (evaluated is null)
+                }
+                else if (evaluated is null)
                 {
                     return null;
-                } else
+                }
+                else
                 {
                     // TODO: better error handling, not supported return detected
                     return null;

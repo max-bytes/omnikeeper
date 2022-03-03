@@ -1,9 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Service
 {
@@ -17,19 +15,17 @@ namespace Omnikeeper.Base.Service
         void TrackUse(string elementType, string elementName);
     }
 
-    public class ScopedUsageTracker : IScopedUsageTracker, IDisposable, IAsyncDisposable
+    public class ScopedUsageTracker : IScopedUsageTracker, IDisposable
     {
         private readonly ILogger<ScopedUsageTracker> logger;
         private readonly ICurrentUserService currentUserService;
-        private readonly IModelContextBuilder modelContextBuilder;
         private readonly IUsageDataAccumulator usageDataAccumulator;
         private readonly ISet<(string elementType, string elementName)> usages = new HashSet<(string elementType, string elementName)>();
 
-        public ScopedUsageTracker(ILogger<ScopedUsageTracker> logger, ICurrentUserService currentUserService, IModelContextBuilder modelContextBuilder, IUsageDataAccumulator usageDataAccumulator)
+        public ScopedUsageTracker(ILogger<ScopedUsageTracker> logger, ICurrentUserService currentUserService, IUsageDataAccumulator usageDataAccumulator)
         {
             this.logger = logger;
             this.currentUserService = currentUserService;
-            this.modelContextBuilder = modelContextBuilder;
             this.usageDataAccumulator = usageDataAccumulator;
         }
 
@@ -65,22 +61,17 @@ namespace Omnikeeper.Base.Service
 
         public void Dispose()
         {
-            DisposeAsync().GetAwaiter().GetResult();
-        }
-
-        public async ValueTask DisposeAsync()
-        {
             if (usages.Count > 0)
             {
-                var user = await currentUserService.GetCurrentUser(modelContextBuilder.BuildImmediate());
+                var username = currentUserService.GetCurrentUsername();
 
                 foreach (var (elementType, elementName) in usages)
                 {
-                    logger.LogTrace($"Usage tracked: type: {elementType}, name: {elementName}, user: {user.Username}");
+                    logger.LogTrace($"Usage tracked: type: {elementType}, name: {elementName}, user: {username}");
                 }
 
                 var timestamp = DateTimeOffset.Now;
-                usageDataAccumulator.Add(user.Username, timestamp, usages);
+                usageDataAccumulator.Add(username, timestamp, usages);
             }
         }
     }

@@ -1,13 +1,9 @@
-﻿using Autofac;
-using Microsoft.Extensions.Logging;
-using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Service;
-using System;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model.Decorators

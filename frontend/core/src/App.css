@@ -16,3 +16,12 @@
 .ant-layout .graphiql-container * {
   box-sizing: unset;
 }
+
+
+/* modify ant-design's tree classes to fix issues in effective trait tree in search view 
+TODO: consider making this more specific to not interfere with other uses of ant-design tree
+*/
+.ant-tree-node-content-wrapper {
+  flex-grow: 1;
+  min-width: 0px; /* see https://stackoverflow.com/a/41675912 for an explanation */
+}

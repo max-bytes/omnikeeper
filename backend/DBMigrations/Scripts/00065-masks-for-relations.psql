@@ -1,0 +1,4 @@
+﻿ALTER TABLE IF EXISTS public.relation
+    ADD COLUMN mask boolean NOT NULL DEFAULT false;
+ALTER TABLE IF EXISTS public.relation_latest
+    ADD COLUMN mask boolean NOT NULL DEFAULT false;

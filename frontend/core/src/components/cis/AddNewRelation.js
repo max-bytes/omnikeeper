@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/client';
 import { mutations } from 'graphql/mutations'
-import { Form, Button, Card } from "antd";
+import { Form, Button, Card, Space, Select, Input } from "antd";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import LayerDropdown from "components/LayerDropdown";
 import { ErrorPopupButton } from "components/ErrorPopupButton";
 import PredicateSelect from "components/PredicateSelect";
 import SingleCISelect from "components/SingleCISelect";
+import Checkbox from "antd/lib/checkbox/Checkbox";
 
 function AddNewRelation(props) {
   const {isOutgoingRelation} = props;
@@ -17,7 +18,7 @@ function AddNewRelation(props) {
   const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
   // use useRef to ensure reference is constant and can be properly used in dependency array
   const visibleLayersRef = useRef(JSON.stringify(props.visibleLayers)); // because JS only does reference equality, we need to convert the array to a string
-  const { current: initialRelation } = useRef({predicateID: "", targetCIID: null, layer: null });
+  const { current: initialRelation } = useRef({predicateID: "", targetCIID: null, layer: null, mask: false });
   const [isOpen, setOpen] = useState(false);
 
   const [newRelation, setNewRelation] = useState(initialRelation);
@@ -40,13 +41,13 @@ function AddNewRelation(props) {
   let addRelation = <></>;
   if (isOpen) {
 
-    const predicateSelect = <Form.Item name="predicate" key="predicate" noStyle style={{ flexGrow: '1' }}>
+    const predicateSelect = <Form.Item name="predicate" key="predicate" noStyle>
       <PredicateSelect predicateID={newRelation.predicateID} setPredicateID={(predicateID) => {
           setNewRelation({...newRelation, predicateID: predicateID});
         }} />
     </Form.Item>;
-    const targetCISelect = <Form.Item name="targetCI" key="ci" noStyle style={{ flexGrow: '2' }}>
-      <SingleCISelect 
+    const targetCISelect = <Form.Item name="targetCI" key="ci" noStyle>
+      <SingleCISelect
         layers={props.visibleLayers} 
         selectedCIID={newRelation.targetCIID} 
         setSelectedCIID={(ciid) => setNewRelation({...newRelation, targetCIID: ciid})} 
@@ -55,8 +56,8 @@ function AddNewRelation(props) {
     const thisCIStyle = {height: '30px', display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap'};
     const thisCI = <span key="thisCI" style={thisCIStyle}>{isOutgoingRelation ? `This CI...` : `...this CI`}</span>;
     const directionalUI = (isOutgoingRelation) ? 
-      (<>{thisCI} {predicateSelect} {targetCISelect}</>) : 
-      (<>{targetCISelect} {predicateSelect} {thisCI}</>);
+      (<Space wrap={true}>{thisCI} {predicateSelect} {targetCISelect}</Space>) : 
+      (<Space wrap={true}>{targetCISelect} {predicateSelect} {thisCI}</Space>);
 
 
     // move add functionality into on-prop
@@ -69,7 +70,12 @@ function AddNewRelation(props) {
               ? { fromCIID: props.ciIdentity, toCIID: newRelation.targetCIID } 
               : { fromCIID: newRelation.targetCIID, toCIID: props.ciIdentity };
 
-            insertRelation({ variables: { ...fromTo, predicateID: newRelation.predicateID, layerID: newRelation.layer.id, layers: props.visibleLayers} })
+            insertRelation({ variables: { 
+                ...fromTo, 
+                predicateID: newRelation.predicateID, 
+                mask: newRelation.mask,
+                layerID: newRelation.layer.id, 
+                layers: props.visibleLayers} })
               .then(d => {
                 setOpen(false);
                 setNewRelation(initialRelation);
@@ -80,9 +86,11 @@ function AddNewRelation(props) {
           }} labelCol={{ span: 4 }} wrapperCol={{ span: 20 }}>
 
           <Form.Item label={(isOutgoingRelation) ? "Outgoing Relation" : "Incoming Relation"} name="relation">
-            <div style={{display: 'flex', gap: '10px'}}>
               {directionalUI}
-            </div>
+          </Form.Item>
+
+          <Form.Item label="Is Mask" name="mask" key="mask" valuePropName="checked">
+            <Checkbox checked={newRelation.mask} onChange={(e) => {setNewRelation({...newRelation, mask: e.target.checked})}} />
           </Form.Item>
           
           <Form.Item label="Layer" name="layer">
