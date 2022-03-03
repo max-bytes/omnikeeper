@@ -94,6 +94,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
+                        // check if entity actually exists at that CI, error if not
+                        var existingEntity = await traitEntityModel.GetSingleByCIID(ciid, layerset, trans, timeThreshold);
+                        if (existingEntity == null)
+                        {
+                            throw new Exception($"Cannot update entity at CI with ID {ciid}: entity does not exist at that CI");
+                        }
+
                         var et = await Update(ciid, inputAttributeValues, inputRelationValues, trans, changeset, traitEntityModel, layerset, writeLayerID);
 
                         return et;
@@ -122,6 +129,17 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             throw new Exception("Invalid input object for insert detected");
 
                         var (inputAttributeValues, inputRelationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, elementTypeContainer.Trait);
+
+                        // check if the trait entity has an ID, and if so, check that there is no existing entity with that ID
+                        if (elementTypeContainer.IDInputType != null)
+                        {
+                            var (idAttributeNames, idAttributeValues) = TraitEntityHelper.InputDictionary2IDAttributes(upsertInputCollection, elementTypeContainer.Trait);
+                            var currentCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeNames, idAttributeValues, layerset, trans, timeThreshold);
+                            if (currentCIID.HasValue)
+                            { // there is already a trait entity with that ID -> error
+                                throw new Exception($"A CI with that data ID already exists; CIID: {currentCIID.Value})");
+                            }
+                        }
 
                         var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 

@@ -127,8 +127,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, trans, timeThreshold);
 
-                var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(et.CIID), forwardAS, false, ciModel, layerset, timeThreshold, trans)
-                    .Then(cis => cis.FirstOrDefault());
+                var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(et.CIID), forwardAS, includeEmptyCIs: false, ciModel, layerset, timeThreshold, trans)
+                    .Then(cis => {
+                        // NOTE we use includeEmptyCIs: false for performance, but because we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
+                        return cis.FirstOrDefault() ?? new MergedCI(et.CIID, null, layerset, timeThreshold, new Dictionary<string, MergedCIAttribute>());
+                    });
 
                 return finalCI;
             });
@@ -321,8 +324,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, trans, timeThreshold);
 
-                var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(otherCIID), forwardAS, false, ciModel, layerset, timeThreshold, trans)
-                    .Then(cis => cis.FirstOrDefault());
+                var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(otherCIID), forwardAS, includeEmptyCIs: false, ciModel, layerset, timeThreshold, trans)
+                    .Then(cis => {
+                        // NOTE we use includeEmptyCIs: false for performance, but because we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
+                        return cis.FirstOrDefault() ?? new MergedCI(otherCIID, null, layerset, timeThreshold, new Dictionary<string, MergedCIAttribute>());
+                    });
 
                 return finalCI;
             });
