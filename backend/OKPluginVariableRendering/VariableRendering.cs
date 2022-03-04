@@ -90,7 +90,7 @@ namespace OKPluginVariableRendering
             //TODO: select only the realtions that are defined in configuration
             //      check if selection with specific predicates is possible
 
-            var allMergedRelations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layersetVariableRendering, trans, changesetProxy.TimeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
+            var allMergedRelations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layersetVariableRendering, trans, changesetProxy.TimeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
 
             Dictionary<string, List<MergedRelation>> allFromRelations = new();
             Dictionary<string, List<MergedRelation>> allToRelations = new();
