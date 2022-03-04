@@ -24,13 +24,13 @@ namespace Tests.Integration.Service
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
             var relationModel = ServiceProvider.GetRequiredService<IRelationModel>();
 
-            var attributesBefore = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            var relationsBefore = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance);
+            var attributesBefore = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
+            var relationsBefore = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
 
             Assert.IsTrue(await dataPartitionService.StartNewPartition());
 
-            var attributesAfter = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            var relationsAfter = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance);
+            var attributesAfter = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
+            var relationsAfter = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
 
             attributesAfter.Should().BeEquivalentTo(attributesBefore, options => options.WithStrictOrdering());
             relationsAfter.Should().BeEquivalentTo(relationsBefore, options => options.WithStrictOrdering());

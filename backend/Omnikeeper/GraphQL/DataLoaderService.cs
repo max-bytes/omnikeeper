@@ -164,7 +164,7 @@ namespace Omnikeeper.GraphQL
                         combinedRelationsFrom.UnionWith(rs.FromCIIDs);
 
                     // TODO: masking
-                    var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(combinedRelationsFrom), layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
+                    var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(combinedRelationsFrom), layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                     var relationsFromMap = relationsFrom.ToLookup(t => t.Relation.FromCIID);
 
                     var ret = new List<(RelationSelectionFrom, MergedRelation)>();
@@ -185,7 +185,7 @@ namespace Omnikeeper.GraphQL
                         combinedRelationsTo.UnionWith(rs.ToCIIDs);
 
                     // TODO: masking
-                    var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(combinedRelationsTo), layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
+                    var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(combinedRelationsTo), layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                     var relationsToMap = relationsTo.ToLookup(t => t.Relation.ToCIID);
 
                     var ret = new List<(RelationSelectionTo, MergedRelation)>();
@@ -202,7 +202,7 @@ namespace Omnikeeper.GraphQL
                 async (IEnumerable<RelationSelectionAll> relationSelections) =>
                 {
                     // TODO: masking
-                    var relations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
+                    var relations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                     return relations.ToLookup(r => RelationSelectionAll.Instance);
                 });
             return loader;

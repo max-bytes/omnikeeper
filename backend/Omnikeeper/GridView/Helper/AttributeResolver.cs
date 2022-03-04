@@ -32,7 +32,7 @@ namespace Omnikeeper.GridView.Helper
             if (outgoingPathsRequiringRelations.Count() > 0)
             {
                 // TODO: masking
-                var outgoingRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(baseCIIDs), new LayerSet(config.ReadLayerset), trans, atTime, MaskHandlingForRetrievalGetMasks.Instance))
+                var outgoingRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(baseCIIDs), new LayerSet(config.ReadLayerset), trans, atTime, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance))
                     .Where(r => outgoingPathsRequiringRelations.Contains(r.Relation.PredicateID));
                 outgoingRelationsLookup = (outgoingRelations).ToLookup(r => (r.Relation.PredicateID, r.Relation.FromCIID), r => r.Relation.ToCIID);
                 outgoingRelatedCIIDs = outgoingRelations.Select(r => r.Relation.ToCIID).ToHashSet();
@@ -41,7 +41,7 @@ namespace Omnikeeper.GridView.Helper
             if (incomingPathsRequiringRelations.Count() > 0)
             {
                 // TODO: masking
-                var incomingRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(baseCIIDs), new LayerSet(config.ReadLayerset), trans, atTime, MaskHandlingForRetrievalGetMasks.Instance))
+                var incomingRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(baseCIIDs), new LayerSet(config.ReadLayerset), trans, atTime, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance))
                        .Where(r => incomingPathsRequiringRelations.Contains(r.Relation.PredicateID));
                 incomingRelationsLookup = (incomingRelations).ToLookup(r => (r.Relation.PredicateID, r.Relation.ToCIID), r => r.Relation.FromCIID);
                 incomingRelatedCIIDs = incomingRelations.Select(r => r.Relation.FromCIID).ToHashSet();

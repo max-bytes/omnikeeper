@@ -128,8 +128,8 @@ namespace Omnikeeper.Base.Model.TraitBased
             var maskHandlingForRetrieval = MaskHandlingForRetrievalApplyMasks.Instance;
             var maskHandlingForRemoval = MaskHandlingForRemovalApplyNoMask.Instance;
 
-            var allRelationsForward = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(t.Item1), new LayerSet(writeLayerID), trans, TimeThreshold.BuildLatest(), maskHandlingForRetrieval);
-            var allRelationsBackward = await relationModel.GetMergedRelations(RelationSelectionTo.Build(t.Item1), new LayerSet(writeLayerID), trans, TimeThreshold.BuildLatest(), maskHandlingForRetrieval);
+            var allRelationsForward = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(t.Item1), new LayerSet(writeLayerID), trans, TimeThreshold.BuildLatest(), maskHandlingForRetrieval, GeneratedDataHandlingInclude.Instance);
+            var allRelationsBackward = await relationModel.GetMergedRelations(RelationSelectionTo.Build(t.Item1), new LayerSet(writeLayerID), trans, TimeThreshold.BuildLatest(), maskHandlingForRetrieval, GeneratedDataHandlingInclude.Instance);
 
             var relevantRelationsForward = allRelationsForward.Select(r => r.Relation).Where(r => relationsToRemoveForward.Contains(r.PredicateID));
             var relevantRelationsBackward = allRelationsBackward.Select(r => r.Relation).Where(r => relationsToRemoveBackward.Contains(r.PredicateID));

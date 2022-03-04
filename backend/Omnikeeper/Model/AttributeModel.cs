@@ -81,12 +81,12 @@ namespace Omnikeeper.Model
             return ma;
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, IAttributeSelection attributeSelection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, IAttributeSelection attributeSelection, LayerSet layers, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
             if (layers.IsEmpty)
                 return ImmutableDictionary<Guid, IDictionary<string, MergedCIAttribute>>.Empty; // return empty, an empty layer list can never produce any attributes
 
-            var attributes = await baseModel.GetAttributes(cs, attributeSelection, layers.LayerIDs, trans: trans, atTime: atTime);
+            var attributes = await baseModel.GetAttributes(cs, attributeSelection, layers.LayerIDs, trans: trans, atTime: atTime, generatedDataHandling);
 
             var ret = MergeAttributes(attributes, layers.LayerIDs);
 
@@ -227,12 +227,12 @@ namespace Omnikeeper.Model
             return data switch
             {
                 BulkCIAttributeDataLayerScope d => (d.NamePrefix.IsEmpty()) ?
-                        (await GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, layerset, trans, timeThreshold)) :
-                        (await GetMergedAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), layerset, trans, timeThreshold)),
+                        (await GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, layerset, trans, timeThreshold, GeneratedDataHandlingExclude.Instance)) :
+                        (await GetMergedAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), layerset, trans, timeThreshold, GeneratedDataHandlingExclude.Instance)),
                 BulkCIAttributeDataCIScope d =>
-                    await GetMergedAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, layerset, trans: trans, atTime: timeThreshold),
+                    await GetMergedAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, layerset, trans: trans, atTime: timeThreshold, GeneratedDataHandlingExclude.Instance),
                 BulkCIAttributeDataCIAndAttributeNameScope a =>
-                    await GetMergedAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), layerset, trans, timeThreshold),
+                    await GetMergedAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), layerset, trans, timeThreshold, GeneratedDataHandlingExclude.Instance),
                 _ => throw new Exception("Unknown scope")
             };
         }

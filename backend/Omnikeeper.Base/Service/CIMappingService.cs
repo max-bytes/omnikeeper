@@ -156,7 +156,7 @@ namespace Omnikeeper.Base.Service
                 else
                 {
                     // TODO: mask handling?
-                    var allRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(predicateID), searchableLayers, trans, atTime, MaskHandlingForRetrievalGetMasks.Instance);
+                    var allRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(predicateID), searchableLayers, trans, atTime, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                     var outgoingCache = allRelations.ToLookup(r => r.Relation.FromCIID, r => r.Relation.ToCIID);
                     outgoingRelationsCache[predicateID] = outgoingCache;
                     var incomingCache = allRelations.ToLookup(r => r.Relation.ToCIID, r => r.Relation.FromCIID);

@@ -36,6 +36,13 @@
       "publishAllPorts": true,
       "useSSL": true,
       "sslPort": 44360
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": "",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
     }
   }
 }

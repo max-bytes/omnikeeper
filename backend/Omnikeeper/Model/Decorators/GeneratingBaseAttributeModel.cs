@@ -37,36 +37,46 @@ namespace Omnikeeper.Model.Decorators
             return ret;
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
-            var @base = await model.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime);
+            var @base = await model.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime, generatedDataHandling);
 
-            var generatorSelection = new GeneratorSelectionAll();
-
-            // calculate effective generators
-            var effectiveGeneratorProvider = sp.GetRequiredService<IEffectiveGeneratorProvider>(); // use serviceProvider to avoid circular dependency
-            var egis = await effectiveGeneratorProvider.GetEffectiveGenerators(layerIDs, generatorSelection, attributeSelection, trans, atTime);
-
-            // bail early if there are no egis
-            if (egis.All(egi => egi.IsEmpty()))
-                return @base;
-
-            // we need to potentially extend the attributeSelection so that it contains all attributes necessary to resolve the generated attributes
-            // the caller is allowed to not know or care about generated attributes and their requirements, so we need to extend here
-            // and also (for the return structure) ignore any additionally fetched attributes that were only fetched to calculate the generated attributes
-            var additionalAttributeNames = attributeSelection switch
+            switch (generatedDataHandling)
             {
-                NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
-                RegexAttributeSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
-                AllAttributeSelection _ => new HashSet<string>(), // we are fetching all attributes anyway, no need to add additional attributes
-                NoAttributesSelection _ => new HashSet<string>(), // no attributes necessary
-                _ => throw new Exception("Invalid attribute selection encountered"),
-            };
-            var additionalAttributes = (additionalAttributeNames.Count > 0) ? await model.GetAttributes(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerIDs, trans, atTime) : null;
+                case GeneratedDataHandlingExclude:
+                    break;
+                case GeneratedDataHandlingInclude:
+                    var generatorSelection = new GeneratorSelectionAll();
 
-            @base = MergeInGeneratedAttributes(@base, additionalAttributes, egis, layerIDs);
+                    // calculate effective generators
+                    var effectiveGeneratorProvider = sp.GetRequiredService<IEffectiveGeneratorProvider>(); // use serviceProvider to avoid circular dependency
+                    var egis = await effectiveGeneratorProvider.GetEffectiveGenerators(layerIDs, generatorSelection, attributeSelection, trans, atTime);
 
-            // TODO: remove additional attributes again, to be consistent; caller did not ask for them
+                    // bail early if there are no egis
+                    if (egis.All(egi => egi.IsEmpty()))
+                        return @base;
+
+                    // we need to potentially extend the attributeSelection so that it contains all attributes necessary to resolve the generated attributes
+                    // the caller is allowed to not know or care about generated attributes and their requirements, so we need to extend here
+                    // and also (for the return structure) ignore any additionally fetched attributes that were only fetched to calculate the generated attributes
+                    var additionalAttributeNames = attributeSelection switch
+                    {
+                        NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
+                        RegexAttributeSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
+                        AllAttributeSelection _ => new HashSet<string>(), // we are fetching all attributes anyway, no need to add additional attributes
+                        NoAttributesSelection _ => new HashSet<string>(), // no attributes necessary
+                        _ => throw new Exception("Invalid attribute selection encountered"),
+                    };
+                    var additionalAttributes = (additionalAttributeNames.Count > 0) ? await model.GetAttributes(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerIDs, trans, atTime, generatedDataHandling) : null;
+
+                    @base = MergeInGeneratedAttributes(@base, additionalAttributes, egis, layerIDs);
+
+                    // TODO: remove additional attributes again, to be consistent; caller did not ask for them
+
+                    break;
+                default:
+                    throw new Exception("Unknown generated-data-handling detected");
+            }
 
             return @base;
         }

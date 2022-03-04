@@ -21,15 +21,23 @@ namespace Omnikeeper.Model.Decorators
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
-            if (await onlineAccessProxy.ContainsOnlineInboundLayer(new LayerSet(layerIDs), trans))
+            switch (generatedDataHandling)
             {
-                throw new Exception("Not supported");
-                //return onlineAccessProxy.GetRelations(rl, layerIDs, trans, atTime).ToEnumerable();
-            }
+                case GeneratedDataHandlingExclude:
+                    return await model.GetRelations(rl, layerIDs, trans, atTime, generatedDataHandling);
+                case GeneratedDataHandlingInclude:
+                    if (await onlineAccessProxy.ContainsOnlineInboundLayer(new LayerSet(layerIDs), trans))
+                    {
+                        throw new Exception("Not supported");
+                        //return onlineAccessProxy.GetRelations(rl, layerIDs, trans, atTime).ToEnumerable();
+                    }
 
-            return await model.GetRelations(rl, layerIDs, trans, atTime);
+                    return await model.GetRelations(rl, layerIDs, trans, atTime, generatedDataHandling);
+                default:
+                    throw new Exception("Unknown generated-data-handling detected");
+            }
         }
 
         public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)

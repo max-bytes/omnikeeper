@@ -106,7 +106,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             if (ids.Length == 0)
                 return new Dictionary<ID, Guid>();
 
-            var cisWithIDAttributes = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(attributeNames.ToHashSet()), layerSet, trans, timeThreshold);
+            var cisWithIDAttributes = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(attributeNames.ToHashSet()), layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
 
             // invert the dicationary and get a (attributeName, attributeValue) -> list of ciid
             var lookup = cisWithIDAttributes
