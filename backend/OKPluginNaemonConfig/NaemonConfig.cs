@@ -84,6 +84,20 @@ namespace OKPluginNaemonConfig
             this.interfaceModel = interfaceModel;
         }
 
+        protected override ISet<string> GetDependentLayerIDs(JObject config, ILogger logger)
+        {
+            try
+            {
+                var parsedConfig = config.ToObject<Configuration>();
+                return new string[2] { parsedConfig!.MonmanLayerId, parsedConfig!.CMDBLayerId }.ToHashSet();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Cannot parse CLB config");
+                return null; // we hit an error parsing the config, cannot extract dependent layers
+            }
+        }
+
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start naemonConfig");
@@ -109,10 +123,10 @@ namespace OKPluginNaemonConfig
 
             // load all naemons
             var naemonInstances = await naemonInstanceModel.GetAllByCIID(layersetMonman, trans, changesetProxy.TimeThreshold);
-            logger.LogInformation("Loaded all naemon instances.");
+            logger.LogDebug("Loaded all naemon instances.");
 
 
-            logger.LogInformation("Started creating configuration items.");
+            logger.LogDebug("Started creating configuration items.");
             // a list with all CI from database
             var ciData = new List<ConfigurationItem>();
 
@@ -123,7 +137,7 @@ namespace OKPluginNaemonConfig
             var allInterfaces = await interfaceModel.GetAllByCIID(layersetCMDB, trans, changesetProxy.TimeThreshold);
 
             var hosts = await hostModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
-            logger.LogInformation("Loaded all hosts.");
+            logger.LogDebug("Loaded all hosts.");
 
             foreach (var ciItem in hosts)
             {
@@ -189,7 +203,7 @@ namespace OKPluginNaemonConfig
 
             // get services
             var services = await serviceModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
-            logger.LogInformation("Loaded all services.");
+            logger.LogDebug("Loaded all services.");
 
             foreach (var ciItem in services)
             {
@@ -306,21 +320,21 @@ namespace OKPluginNaemonConfig
 
             // process core data
 
-            logger.LogInformation("Started processing core data.");
+            logger.LogDebug("Started processing core data.");
 
             // Update normalized CiData field Profile
             Helper.CIData.UpdateProfileField(ciData, cfg!.CMDBMonprofilePrefix);
-            logger.LogInformation("Finished updating profile field => UpdateNormalizedCiDataFieldProfile.");
+            logger.LogDebug("Finished updating profile field => UpdateNormalizedCiDataFieldProfile.");
 
             // updateNormalizedCiDataFieldAddress
             // NOTE: this part is done directly when selecting hosts and serices
 
             // updateNormalizedCiData_addGenericCmdbCapTags
             Helper.CIData.AddGenericCmdbCapTags(ciData);
-            logger.LogInformation("Finished adding cap tags => updateNormalizedCiData_addGenericCmdbCapTags.");
+            logger.LogDebug("Finished adding cap tags => updateNormalizedCiData_addGenericCmdbCapTags.");
 
             // updateNormalizedCiData_addRelationData
-            var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runs_on"), layersetCMDB, trans, changesetProxy.TimeThreshold);
+            var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runs_on"), layersetCMDB, trans, changesetProxy.TimeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
             // NOTE In original implementation relations with predicate runsOn and canRunOn are selected.
 
             var fromCIIDs = allRunsOnRelations.Select(relation => relation.Relation.FromCIID).ToHashSet();
@@ -422,7 +436,7 @@ namespace OKPluginNaemonConfig
 
             }
 
-            logger.LogInformation("Finished adding relation data => updateNormalizedCiData_addRelationData.");
+            logger.LogDebug("Finished adding relation data => updateNormalizedCiData_addRelationData.");
 
 
             /* update data, mainly vars stuff */
@@ -447,7 +461,7 @@ namespace OKPluginNaemonConfig
                 }
             }
 
-            logger.LogInformation("Finished updating pre process vars => updateNormalizedCiData_preProcessVars.");
+            logger.LogDebug("Finished updating pre process vars => updateNormalizedCiData_preProcessVars.");
 
             // updateNormalizedCiData_varsFromDatabase
             // NOTE data that we need here is not present on cmdb layer
@@ -457,11 +471,11 @@ namespace OKPluginNaemonConfig
             // updateNormalizedCiData_postProcessVars
 
             Helper.CIData.UpdateNormalizedCiDataPostProcessVars(ciData);
-            logger.LogInformation("Finished updating post process cars => updateNormalizedCiData_postProcessVars.");
+            logger.LogDebug("Finished updating post process cars => updateNormalizedCiData_postProcessVars.");
 
             // updateNormalizedCiData_updateLocationField
             Helper.CIData.UpdateLocationField(ciData);
-            logger.LogInformation("Finished updating post process cars => updateNormalizedCiData_updateLocationField.");
+            logger.LogDebug("Finished updating post process cars => updateNormalizedCiData_updateLocationField.");
 
             // build CapabilityMap
             var nInstancesTag = await naemonInstancesTagModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
@@ -592,6 +606,11 @@ namespace OKPluginNaemonConfig
                     }
                 }
 
+                // proces JSON to flat file here
+                // NOTE: check the concat once again ??
+                var finalCfg = Helper.FinalConfiguration.Create(naemonObjs.Concat(configObjs).ToList());
+
+                fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("final_config", new AttributeScalarValueText(finalCfg), item.Key));
 
                 fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("config", AttributeScalarValueJSON.Build(JArray.FromObject(naemonObjs.Concat(configObjs).ToList())), item.Key));
 
@@ -606,7 +625,8 @@ namespace OKPluginNaemonConfig
                 changesetProxy,
                 new DataOriginV1(DataOriginType.ComputeLayer),
                 trans,
-                MaskHandlingForRemovalApplyNoMask.Instance);
+                MaskHandlingForRemovalApplyNoMask.Instance,
+                OtherLayersValueHandlingForceWrite.Instance);
 
             return true;
         }
