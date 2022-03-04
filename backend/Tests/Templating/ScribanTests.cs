@@ -36,7 +36,7 @@ namespace Tests.Templating
                 var testCIB = new MergedCI(Guid.NewGuid(), "test-ci-b", new LayerSet(), atTime, new Dictionary<string, MergedCIAttribute>() { });
 
                 var relationModel = new Mock<IRelationModel>();
-                relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>(), It.IsAny<IMaskHandlingForRetrieval>()))
+                relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>(), It.IsAny<IMaskHandlingForRetrieval>(), It.IsAny<IGeneratedDataHandling>()))
                     .ReturnsAsync(() => new MergedRelation[] {
                         new MergedRelation(new Relation(Guid.NewGuid(), testCIA.ID, testCIB.ID, "p_a", staticChangesetID, false), new string[0])
                     });

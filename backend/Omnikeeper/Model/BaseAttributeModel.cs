@@ -254,7 +254,7 @@ namespace Omnikeeper.Model
 
         // NOTE: returns a full array (one item for each layer), even when layer contains no attributes
         // NOTE: returns only entries for CIs and attributes where there actually are any attributes, so it can contain less items than the CI selection specifies
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
             selection = await OptimizeCIIDSelection(selection, trans);
 

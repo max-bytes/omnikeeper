@@ -51,12 +51,12 @@ namespace Omnikeeper.Model
             }
         }
 
-        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, LayerSet layerset, IModelContext trans, TimeThreshold atTime, IMaskHandlingForRetrieval maskHandling)
+        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, LayerSet layerset, IModelContext trans, TimeThreshold atTime, IMaskHandlingForRetrieval maskHandling, IGeneratedDataHandling generatedDataHandling)
         {
             if (layerset.IsEmpty)
                 return ImmutableList<MergedRelation>.Empty; // return empty, an empty layer list can never produce any relations
 
-            var lr = await baseModel.GetRelations(rl, layerset.LayerIDs, trans, atTime);
+            var lr = await baseModel.GetRelations(rl, layerset.LayerIDs, trans, atTime, generatedDataHandling);
 
 
             return MergeRelations(lr, layerset.LayerIDs, maskHandling);
@@ -148,7 +148,7 @@ namespace Omnikeeper.Model
             {
                 var dLookup = cp.Relevant.ToLookup(dd => dd.thisCIID, dd => dd.predicateID);
                 var relationSelection = (cp.Outgoing) ? RelationSelectionFrom.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet()) : RelationSelectionTo.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet());
-                var allRelations = await GetMergedRelations(relationSelection, layerIDs, trans, timeThreshold, maskHandlingForRetrieval); // TODO: restrict to relevant predicateIDs at fetch point
+                var allRelations = await GetMergedRelations(relationSelection, layerIDs, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance); // TODO: restrict to relevant predicateIDs at fetch point
                 var outdatedRelations = allRelations.Where(r => dLookup[(cp.Outgoing) ? r.Relation.FromCIID : r.Relation.ToCIID].Contains(r.Relation.PredicateID));
                 return outdatedRelations;
             }
@@ -158,13 +158,13 @@ namespace Omnikeeper.Model
                 var specificRelations = 
                     ss.Fragments.Select(f => (ss.GetFromCIID(f), ss.GetToCIID(f), ss.GetPredicateID(f)))
                     .Union(ss.Removals);
-                return await GetMergedRelations(RelationSelectionSpecific.Build(specificRelations), layerIDs, trans, timeThreshold, maskHandlingForRetrieval);
+                return await GetMergedRelations(RelationSelectionSpecific.Build(specificRelations), layerIDs, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance);
             }
 
             return data switch
             {
-                BulkRelationDataPredicateScope p => await GetMergedRelations(RelationSelectionWithPredicate.Build(p.PredicateID), layerSet, trans, timeThreshold, maskHandlingForRetrieval),
-                BulkRelationDataLayerScope _ => await GetMergedRelations(RelationSelectionAll.Instance, layerSet, trans, timeThreshold, maskHandlingForRetrieval),
+                BulkRelationDataPredicateScope p => await GetMergedRelations(RelationSelectionWithPredicate.Build(p.PredicateID), layerSet, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance),
+                BulkRelationDataLayerScope _ => await GetMergedRelations(RelationSelectionAll.Instance, layerSet, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance),
                 BulkRelationDataCIAndPredicateScope cp => await GetOutdatedRelationsFromCIAndPredicateScope(cp, layerSet, trans, timeThreshold, maskHandlingForRetrieval),
                 BulkRelationDataSpecificScope ss => await GetOutdatedRelationsFromSpecificScope(ss, layerSet, trans, timeThreshold, maskHandlingForRetrieval),
                 _ => throw new Exception("Unknown scope")

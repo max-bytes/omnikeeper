@@ -38,10 +38,10 @@ namespace Omnikeeper.Model.Decorators
                     usageTracker.TrackUseLayer(layerID);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
             TrackLayerUsages(layerIDs);
-            return await model.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime);
+            return await model.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime, generatedDataHandling);
         }
 
         public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)

@@ -12,7 +12,7 @@ namespace Omnikeeper.Base.Model
 {
     public interface IAttributeModel
     {
-        Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, IAttributeSelection attributeSelection, LayerSet layers, IModelContext trans, TimeThreshold atTime);
+        Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, IAttributeSelection attributeSelection, LayerSet layers, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling);
 
         Task<MergedCIAttribute?> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layerset, IModelContext trans, TimeThreshold atTime);
 
@@ -27,7 +27,7 @@ namespace Omnikeeper.Base.Model
          */
         public static async Task<IDictionary<Guid, string>> GetMergedCINames(this IAttributeModel attributeModel, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
-            var a = await attributeModel.GetMergedAttributes(selection, NamedAttributesSelection.Build(ICIModel.NameAttribute), layers, trans, atTime);
+            var a = await attributeModel.GetMergedAttributes(selection, NamedAttributesSelection.Build(ICIModel.NameAttribute), layers, trans, atTime, GeneratedDataHandlingInclude.Instance);
 
             // NOTE: because attributeModel.GetMergedAttributes() only returns inner dictionaries for CIs that contain ANY attributes, we can safely access the attribute in the dictionary by []
             var ret = a.ToDictionary(t => t.Key, t => t.Value[ICIModel.NameAttribute].Attribute.Value.Value2String());
@@ -37,7 +37,7 @@ namespace Omnikeeper.Base.Model
 
         public static async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(this IAttributeModel attributeModel, string name, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
-            var a = await attributeModel.GetMergedAttributes(selection, NamedAttributesSelection.Build(name), layers, trans, atTime);
+            var a = await attributeModel.GetMergedAttributes(selection, NamedAttributesSelection.Build(name), layers, trans, atTime, GeneratedDataHandlingInclude.Instance);
 
             // NOTE: because attributeModel.GetMergedAttributes() only returns inner dictionaries for CIs that contain ANY attributes, we can safely access the attribute in the dictionary by []
             return a.ToDictionary(t => t.Key, t => t.Value[name]);
