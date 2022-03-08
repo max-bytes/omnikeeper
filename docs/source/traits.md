@@ -100,6 +100,10 @@ Executing this query against an omnikeeper GraphQL instance could return the fol
 The following diagram shows the structures that data passes through from the core data all the way to the client:
 ![Overview of how trait entites work](assets/drawio/overview-trait-entities.svg)
 
+## Changes to traits
+
+TODO: write about the different changes that can be applied to a trait and what effects this has: backwards-compatible vs. backwards-incompatible changes, migration strategies, ...
+
 ## Traits vs. ...
 
 Because traits are a complex topic, it makes sense to view them through different lenses that touch on different aspects of them:
