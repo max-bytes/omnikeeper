@@ -42,9 +42,9 @@ namespace Omnikeeper.Base.Model.TraitBased
             return ciWithTrait;
         }
 
-        public async Task<IDictionary<Guid, EffectiveTrait>> GetAllByCIID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IDictionary<Guid, EffectiveTrait>> GetByCIID(ICIIDSelection ciidSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold);
+            var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold);
             var cisWithTrait = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, timeThreshold);
             return cisWithTrait;
         }

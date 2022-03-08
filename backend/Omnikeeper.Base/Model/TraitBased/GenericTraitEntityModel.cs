@@ -61,7 +61,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public async Task<IDictionary<Guid, T>> GetAllByCIID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ets = await traitEntityModel.GetAllByCIID(layerSet, trans, timeThreshold);
+            var ets = await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerSet, trans, timeThreshold);
             return ets.ToDictionary(kv => kv.Key, kv => GenericTraitEntityHelper.EffectiveTrait2Object<T>(kv.Value, DefaultSerializer));
         }
 
@@ -79,7 +79,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public async Task<IDictionary<ID, T>> GetAllByDataID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ets = (await traitEntityModel.GetAllByCIID(layerSet, trans, timeThreshold))
+            var ets = (await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerSet, trans, timeThreshold))
                 .Values
                 .OrderBy(et => et.CIID); // we order by CIID to stay consistent even when multiple CIs would match
 
