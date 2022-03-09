@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
-import { HubConnectionBuilder } from '@aspnet/signalr';
+import { HubConnectionBuilder } from '@microsoft/signalr';
 import { Console } from 'console-feed'
 import env from "@beam-australia/react-env";
 

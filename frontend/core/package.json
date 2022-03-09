@@ -5,11 +5,11 @@
   "private": true,
   "dependencies": {
     "@apollo/client": "^3.4.17",
-    "@aspnet/signalr": "^1.1.4",
     "@babel/runtime": "^7.12.1",
     "@fortawesome/fontawesome-svg-core": "^1.2.32",
     "@fortawesome/free-solid-svg-icons": "^5.15.1",
     "@fortawesome/react-fontawesome": "^0.1.12",
+    "@microsoft/signalr": "^6.0.3",
     "@react-keycloak/web": "^3.4.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
