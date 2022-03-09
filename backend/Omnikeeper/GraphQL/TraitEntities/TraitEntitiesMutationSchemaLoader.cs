@@ -36,7 +36,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             this.changesetModel = changesetModel;
         }
 
-        private async Task<EffectiveTrait> InsertUsingNewCI((string name, IAttributeValue value, bool isID)[] attributeValues, (string predicateID, bool forward, Guid[] relatedCIIDs)[] relationValues, IModelContext trans, IChangesetProxy changeset, TraitEntityModel traitEntityModel, LayerSet layerset, string writeLayerID)
+        private async Task<EffectiveTrait> InsertUsingNewCI((string name, IAttributeValue value, bool isID)[] attributeValues, (string predicateID, bool forward, Guid[] relatedCIIDs)[] relationValues, string? ciName, IModelContext trans, IChangesetProxy changeset, TraitEntityModel traitEntityModel, LayerSet layerset, string writeLayerID)
         {
             var finalCIID = await ciModel.CreateCI(trans);
 
@@ -44,17 +44,17 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations = relationValues.Where(rv => !rv.forward).Select(rv => (finalCIID, rv.predicateID, rv.relatedCIIDs)).ToList();
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations = relationValues.Where(rv => rv.forward).Select(rv => (finalCIID, rv.predicateID, rv.relatedCIIDs)).ToList();
-            var t = await traitEntityModel.InsertOrUpdate(finalCIID, attributeFragments, outgoingRelations, incomingRelations, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            var t = await traitEntityModel.InsertOrUpdate(finalCIID, attributeFragments, outgoingRelations, incomingRelations, ciName, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return t.et;
         }
 
-        private async Task<EffectiveTrait> Update(Guid ciid, (string name, IAttributeValue value, bool isID)[] attributeValues, (string predicateID, bool forward, Guid[] relatedCIIDs)[] relationValues, IModelContext trans, IChangesetProxy changeset, TraitEntityModel traitEntityModel, LayerSet layerset, string writeLayerID)
+        private async Task<EffectiveTrait> Update(Guid ciid, (string name, IAttributeValue value, bool isID)[] attributeValues, (string predicateID, bool forward, Guid[] relatedCIIDs)[] relationValues, string? ciName, IModelContext trans, IChangesetProxy changeset, TraitEntityModel traitEntityModel, LayerSet layerset, string writeLayerID)
         {
             var attributeFragments = attributeValues.Select(i => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, i.name, i.value));
 
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations = relationValues.Where(rv => !rv.forward).Select(rv => (ciid, rv.predicateID, rv.relatedCIIDs)).ToList();
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations = relationValues.Where(rv => rv.forward).Select(rv => (ciid, rv.predicateID, rv.relatedCIIDs)).ToList();
-            var t = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            var t = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, ciName, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return t.et;
         }
 
@@ -71,12 +71,14 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                         new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" },
-                        new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "ciid" }),
+                        new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "ciid" },
+                        new QueryArgument<StringGraphType> { Name = "ciName" }),
                     resolve: async context =>
                     {
                         var layerStrings = context.GetArgument<string[]>("layers")!;
                         var writeLayerID = context.GetArgument<string>("writeLayer")!;
                         var ciid = context.GetArgument<Guid>("ciid");
+                        var ciName = context.GetArgument<string?>("ciName", null);
 
                         var userContext = await context.SetupUserContext()
                             .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
@@ -101,7 +103,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             throw new Exception($"Cannot update entity at CI with ID {ciid}: entity does not exist at that CI");
                         }
 
-                        var et = await Update(ciid, inputAttributeValues, inputRelationValues, trans, changeset, traitEntityModel, layerset, writeLayerID);
+                        var et = await Update(ciid, inputAttributeValues, inputRelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
 
                         return et;
                     });
@@ -110,11 +112,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     arguments: new QueryArguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" }),
+                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" },
+                        new QueryArgument<StringGraphType> { Name = "ciName" }),
                     resolve: async context =>
                     {
                         var layerStrings = context.GetArgument<string[]>("layers")!;
                         var writeLayerID = context.GetArgument<string>("writeLayer")!;
+                        var ciName = context.GetArgument<string?>("ciName", null);
 
                         var userContext = await context.SetupUserContext()
                             .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
@@ -143,7 +147,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
-                        var et = await InsertUsingNewCI(inputAttributeValues, inputRelationValues, trans, changeset, traitEntityModel, layerset, writeLayerID);
+                        var et = await InsertUsingNewCI(inputAttributeValues, inputRelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
 
                         return et;
                     });
@@ -185,11 +189,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         arguments: new QueryArguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                            new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" }),
+                            new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" },
+                            new QueryArgument<StringGraphType> { Name = "ciName" }),
                         resolve: async context =>
                         {
                             var layerStrings = context.GetArgument<string[]>("layers")!;
                             var writeLayerID = context.GetArgument<string>("writeLayer")!;
+                            var ciName = context.GetArgument<string?>("ciName", null);
 
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
@@ -217,11 +223,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             if (currentCIID.HasValue)
                             {
-                                var et = await Update(currentCIID.Value, inputAttributeValues, inputRelationValues, trans, changeset, traitEntityModel, layerset, writeLayerID);
+                                var et = await Update(currentCIID.Value, inputAttributeValues, inputRelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
                                 return et;
                             } else
                             {
-                                var et = await InsertUsingNewCI(inputAttributeValues, inputRelationValues, trans, changeset, traitEntityModel, layerset, writeLayerID);
+                                var et = await InsertUsingNewCI(inputAttributeValues, inputRelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
                                 return et;
                             }
                         });
