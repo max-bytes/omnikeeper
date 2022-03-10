@@ -1,4 +1,4 @@
-import React, {useState, forwardRef, useImperativeHandle, useRef} from "react";
+import React, {useState, forwardRef, useImperativeHandle} from "react";
 import { Form, Select } from "antd"
 import { useQuery } from '@apollo/client';
 import { queries } from '../../graphql/queries_manage';
