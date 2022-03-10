@@ -9,12 +9,10 @@ export default forwardRef((props, ref) => {
     const { data, loading } = useQuery(queries.AvailablePermissions);
     var [selectedPermissions, setSelectedPermissions] = useState(props.value ?? []);
 
-    const inputRef = useRef(null);
-    
     useImperativeHandle(ref, () => {
         return {
             getValue: () => {
-                return inputRef.current.props.value;
+                return selectedPermissions;
             },
             isPopup: () => true
         };
@@ -32,7 +30,6 @@ export default forwardRef((props, ref) => {
     return <div style={{display: 'flex'}}>
         <Form style={{minWidth: '400px', margin: '10px'}}>
             <Select
-                ref={inputRef}
                 defaultActiveFirstOption={false}
                 autoFocus={true}
                 defaultOpen={true}
