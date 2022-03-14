@@ -11,6 +11,7 @@ using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL.Types;
+using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +35,7 @@ namespace Omnikeeper.GraphQL
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
+        private readonly IScheduler scheduler;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
@@ -42,7 +44,7 @@ namespace Omnikeeper.GraphQL
             GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
             IManagementAuthorizationService managementAuthorizationService, GenericTraitEntityModel<CLConfigV1, string> clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
-            IEnumerable<IPluginRegistration> plugins,
+            IEnumerable<IPluginRegistration> plugins, IScheduler scheduler,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, ILayerDataModel layerDataModel)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
@@ -201,6 +203,7 @@ namespace Omnikeeper.GraphQL
             this.metaConfigurationModel = metaConfigurationModel;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
+            this.scheduler = scheduler;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.layerDataModel = layerDataModel;
 

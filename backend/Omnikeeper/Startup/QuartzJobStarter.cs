@@ -18,6 +18,14 @@ namespace Omnikeeper.Startup
     public class QuartzJobStarter : BackgroundService, IHostedService
     {
         public IServiceScopeFactory _serviceScopeFactory;
+
+        private static readonly JobKey JKCLB = new JobKey("CLB", "omnikeeper");
+        private static readonly JobKey JKMarkedForDeletion = new JobKey("MarkedForDeletion", "omnikeeper");
+        private static readonly JobKey JKExternalIDManager = new JobKey("ExternalIDManager", "omnikeeper");
+        private static readonly JobKey JKArchiveOldData = new JobKey("ArchiveOldData", "omnikeeper");
+        private static readonly JobKey JKUsageDataWriter = new JobKey("UsageDataWriter", "omnikeeper");
+        public static readonly JobKey JKGraphQLSchemaReloader = new JobKey("GraphQLSchemaReloader", "omnikeeper");
+
         public QuartzJobStarter(IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
@@ -44,12 +52,12 @@ namespace Omnikeeper.Startup
                 bool deleteOnly = false; // TODO: only set to true for debugging purposes
 
                 // schedule internal recurring jobs
-                await ScheduleJob<CLBJob>(scheduler, "CLB", config.CLBRunnerInterval, logger, deleteOnly);
-                await ScheduleJob<MarkedForDeletionJob>(scheduler, "MarkedForDeletion", config.MarkedForDeletionRunnerInterval, logger, deleteOnly);
-                await ScheduleJob<ExternalIDManagerJob>(scheduler, "ExternalIDManager", config.ExternalIDManagerRunnerInterval, logger, deleteOnly);
-                await ScheduleJob<ArchiveOldDataJob>(scheduler, "ArchiveOldData", config.ArchiveOldDataRunnerInterval, logger, deleteOnly);
-                await ScheduleJob<UsageDataWriterJob>(scheduler, "UsageDataWriter", "0 * * * * ?", logger, deleteOnly);
-                await ScheduleJob<GraphQLSchemaReloaderJob>(scheduler, "GraphQLSchemaReloader", "0 * * * * ?", logger, deleteOnly);
+                await ScheduleJob<CLBJob>(scheduler, JKCLB, config.CLBRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<MarkedForDeletionJob>(scheduler, JKMarkedForDeletion, config.MarkedForDeletionRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<ExternalIDManagerJob>(scheduler, JKExternalIDManager, config.ExternalIDManagerRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<ArchiveOldDataJob>(scheduler, JKArchiveOldData, config.ArchiveOldDataRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<UsageDataWriterJob>(scheduler, JKUsageDataWriter, "0 * * * * ?", logger, deleteOnly);
+                await ScheduleJob<GraphQLSchemaReloaderJob>(scheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly);
 
                 await scheduler.Start();
 
@@ -64,9 +72,9 @@ namespace Omnikeeper.Startup
             }
         }
 
-        private async Task ScheduleJob<J>(IScheduler scheduler, string name, string cronSchedule, ILogger logger, bool deleteOnly) where J : IJob
+        private async Task ScheduleJob<J>(IScheduler scheduler, JobKey jobKey, string cronSchedule, ILogger logger, bool deleteOnly) where J : IJob
         {
-            IJobDetail job = JobBuilder.Create<J>().WithIdentity(name, "omnikeeper").Build();
+            IJobDetail job = JobBuilder.Create<J>().WithIdentity(jobKey).Build();
 
             // delete existing job, if exists
             if (await scheduler.CheckExists(job.Key))
@@ -79,7 +87,7 @@ namespace Omnikeeper.Startup
             try
             {
                 ITrigger trigger = TriggerBuilder.Create()
-                    .WithIdentity($"trigger_{name}", "omnikeeper")
+                    .WithIdentity($"trigger_{jobKey.Name}", "omnikeeper")
                     .StartNow()
                     .WithCronSchedule(cronSchedule)
                     .Build();
@@ -87,7 +95,7 @@ namespace Omnikeeper.Startup
             }
             catch (Exception e)
             {
-                logger.LogError($"Error scheduling job {name}, skipping", e);
+                logger.LogError($"Error scheduling job {jobKey.Name}, skipping", e);
             }
         }
     }
