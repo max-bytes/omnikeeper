@@ -334,7 +334,7 @@ namespace OKPluginNaemonConfig
             logger.LogDebug("Finished adding cap tags => updateNormalizedCiData_addGenericCmdbCapTags.");
 
             // updateNormalizedCiData_addRelationData
-            var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runs_on"), layersetCMDB, trans, changesetProxy.TimeThreshold, MaskHandlingForRetrievalGetMasks.Instance);
+            var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runs_on"), layersetCMDB, trans, changesetProxy.TimeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
             // NOTE In original implementation relations with predicate runsOn and canRunOn are selected.
 
             var fromCIIDs = allRunsOnRelations.Select(relation => relation.Relation.FromCIID).ToHashSet();

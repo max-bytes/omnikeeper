@@ -1,51 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 using static OKPluginNaemonConfig.NaemonConfig;
 
 namespace OKPluginNaemonConfig.Helper
 {
     public static class FinalConfiguration
     {
-
         public static string Create(List<ConfigObj> configObjs)
         {
-            var result = "";
+            StringBuilder result = new();
 
-            using (var s = new MemoryStream())
+            foreach (var obj in configObjs)
             {
-                using var sw = new StreamWriter(s);
-                foreach (var obj in configObjs)
+                result.AppendLine($"define {obj.Type} {{");
+
+                foreach (var a in obj.Attributes)
                 {
-                    sw.WriteLine($"define {obj.Type} {{");
-                    sw.Flush();
-
-                    foreach (var a in obj.Attributes)
-                    {
-                        sw.WriteLine($"\t{a.Key.ToUpper()}\t{a.Value}");
-                        sw.Flush();
-                    }
-
-                    sw.WriteLine("}");
-
-                    sw.Flush();
-
-                    sw.WriteLine("");
-                    sw.Flush();
-
-                    s.Position = 0;
+                    result.AppendLine($"\t{a.Key.ToUpper()}\t{a.Value}");
                 }
 
-                using var sr = new StreamReader(s);
-                result = sr.ReadToEnd();
+                result.AppendLine("}");
             }
 
-
-
-            return result ?? "";
+            return result.ToString();
         }
     }
 }
