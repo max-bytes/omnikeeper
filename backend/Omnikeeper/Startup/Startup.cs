@@ -116,12 +116,9 @@ namespace Omnikeeper.Startup
                 });
 
 
-            // NOTE: we register the types as scoped, so the GraphQLSchemaHolder has the chance to rebuild with new GraphQL type instances
-            // otherwise, it would always get the same types and could not rebuild
-            // the GraphQL schema stores the types anyway and only requests each type onces
-            services.AddGraphQL(x => { })
+            global::GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(services)
                 .AddErrorInfoProvider(opt => opt.ExposeExceptionStackTrace = CurrentEnvironment.IsDevelopment() || CurrentEnvironment.IsStaging())
-                .AddGraphTypes(ServiceLifetime.Scoped);
+                .AddGraphTypes();
 
             services.AddAuthentication(options =>
             {

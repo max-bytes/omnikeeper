@@ -44,12 +44,17 @@ namespace Omnikeeper.GraphQL
 
                 try
                 {
-                    var tet = sp.GetRequiredService<TraitEntitiesType>();
                     var mergedCIType = sp.GetRequiredService<MergedCIType>();
-                    var mutation = sp.GetRequiredService<GraphQLMutation>();
+                    var mutation = schema.Mutation as GraphQLMutation; // NOTE: take the already instantiated mutation from the schema
+                    var tet = sp.GetRequiredService<TraitEntitiesType>();
                     var typeContainer = typeContainerCreator.CreateTypes(activeTraits, logger);
                     traitEntitiesQuerySchemaLoader.Init(mergedCIType, tet, typeContainer);
-                    traitEntitiesMutationSchemaLoader.Init(mutation, typeContainer);
+                    traitEntitiesMutationSchemaLoader.Init(mutation!, typeContainer);
+
+                    // NOTE: manually register the types we modified, so that graphql takes our types instead of the default ones coming from the DI
+                    schema.RegisterType(tet);
+                    schema.RegisterType(mergedCIType);
+                    schema.RegisterType(mutation!);
                 }
                 catch (Exception e)
                 {
