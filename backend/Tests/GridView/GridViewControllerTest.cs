@@ -168,6 +168,11 @@ namespace Tests.Integration.Controller
                     throw new Exception($"Encountered unknown trait(s): {string.Join(",", IDs.Except(foundTraits.Select(t => t.Key)))}");
                 return foundTraits;
             }
+
+            public Task<DateTimeOffset?> GetLatestChangeToActiveDataTraits(IModelContext trans, TimeThreshold timeThreshold)
+            {
+                return Task.FromResult((DateTimeOffset?)null);
+            }
         }
     }
 }

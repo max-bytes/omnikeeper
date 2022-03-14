@@ -96,6 +96,13 @@ namespace Omnikeeper.Base.Model.TraitBased
             return ret;
         }
 
+        // returns all relevant changesets that affect/contribute to all trait entities at that time
+        public async Task<ISet<Guid>> GetRelevantChangesetIDsForAll(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            var ets = await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerSet, trans, timeThreshold);
+            var changesetIDs = ets.SelectMany(et => et.Value.GetRelevantChangesetIDs()).ToHashSet();
+            return changesetIDs;
+        }
 
         /*
          * NOTE: this does not care whether or not the CI is actually a trait entity or not

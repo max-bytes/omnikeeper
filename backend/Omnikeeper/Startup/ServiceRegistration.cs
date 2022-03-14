@@ -235,8 +235,6 @@ namespace Omnikeeper.Startup
             //builder.RegisterDecorator<CachingLatestLayerChangeRelationModel, IBaseRelationModel>();
             //builder.RegisterDecorator<CachingLatestLayerChangeLayerModel, ILayerModel>();
 
-            builder.RegisterType<CLBLastRunCache>().SingleInstance();
-
             // HACK: are defunct due to circular dependeny regarding LayerDataModel and OnlineAccessProxy
             //if (enableOIA)
             //{
@@ -268,7 +266,7 @@ namespace Omnikeeper.Startup
 
         public static void RegisterGraphQL(ContainerBuilder builder)
         {
-            builder.RegisterType<GraphQLSchema>().As<ISchema>().SingleInstance();
+            builder.RegisterType<GraphQLSchemaHolder>().SingleInstance();
             builder.RegisterType<MyDocumentExecutor>().As<IDocumentExecuter>().SingleInstance(); // custom document executor that does serial queries, required by postgres
             builder.RegisterType<SpanJSONDocumentWriter>().As<IDocumentWriter>().SingleInstance();
             builder.RegisterType<DataLoaderContextAccessor>().As<IDataLoaderContextAccessor>().SingleInstance();
@@ -317,10 +315,12 @@ namespace Omnikeeper.Startup
 
             // jobs
             builder.RegisterType<CLBJob>().InstancePerLifetimeScope();
+            builder.RegisterType<CLBLastRunCache>().SingleInstance();
             builder.RegisterType<ArchiveOldDataJob>().InstancePerLifetimeScope();
             builder.RegisterType<ExternalIDManagerJob>().InstancePerLifetimeScope();
             builder.RegisterType<MarkedForDeletionJob>().InstancePerLifetimeScope();
             builder.RegisterType<UsageDataWriterJob>().InstancePerLifetimeScope();
+            builder.RegisterType<GraphQLSchemaReloaderJob>().InstancePerLifetimeScope();
         }
     }
 }

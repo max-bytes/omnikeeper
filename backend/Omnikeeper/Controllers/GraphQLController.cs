@@ -1,18 +1,14 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
-using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
-using Omnikeeper.GraphQL.TraitEntities;
 using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
@@ -26,43 +22,28 @@ namespace Omnikeeper.Controllers
     [Route("[controller]")]
     public class GraphQLController : Controller
     {
-        private readonly ISchema _schema;
+        private GraphQLSchemaHolder _schemaHolder;
         private readonly IDocumentExecuter _documentExecuter;
         private readonly IDocumentWriter _documentWriter;
         private readonly IModelContextBuilder _modelContextBuilder;
         private readonly DataLoaderDocumentListener dataLoaderDocumentListener;
         private readonly IEnumerable<IValidationRule> _validationRules;
         private readonly IWebHostEnvironment _env;
-        private readonly IHostApplicationLifetime appLifetime;
-        private readonly ITraitsProvider traitsProvider;
-        private readonly TraitEntitiesQuerySchemaLoader traitEntitiesQuerySchemaLoader;
-        private readonly TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader;
-        private readonly TypeContainerCreator typeContainerCreator;
-        private readonly ILogger<GraphQLController> logger;
         private readonly ICurrentUserAccessor _currentUserService;
 
-        public GraphQLController(ISchema schema, ICurrentUserAccessor currentUserService,
+        public GraphQLController(ICurrentUserAccessor currentUserService, GraphQLSchemaHolder schemaHolder,
             IDocumentExecuter documentExecuter, IDocumentWriter documentWriter,
             IModelContextBuilder modelContextBuilder, DataLoaderDocumentListener dataLoaderDocumentListener,
-            IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env,
-            IHostApplicationLifetime appLifetime, ITraitsProvider traitsProvider,
-            TraitEntitiesQuerySchemaLoader traitEntitiesTypeLoader, TraitEntitiesMutationSchemaLoader traitEntitiesMutationSchemaLoader,
-            ILogger<GraphQLController> logger, TypeContainerCreator elementTypesContainerCreator)
+            IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env)
         {
+            _schemaHolder = schemaHolder;
             _currentUserService = currentUserService;
-            _schema = schema;
             _documentExecuter = documentExecuter;
             _documentWriter = documentWriter;
             _modelContextBuilder = modelContextBuilder;
             this.dataLoaderDocumentListener = dataLoaderDocumentListener;
             _validationRules = validationRules;
             _env = env;
-            this.appLifetime = appLifetime;
-            this.traitsProvider = traitsProvider;
-            this.traitEntitiesQuerySchemaLoader = traitEntitiesTypeLoader;
-            this.traitEntitiesMutationSchemaLoader = traitEntitiesMutationSchemaLoader;
-            this.logger = logger;
-            this.typeContainerCreator = elementTypesContainerCreator;
         }
 
         [HttpPost]
@@ -84,15 +65,6 @@ namespace Omnikeeper.Controllers
             return await ProcessQuery(query);
         }
 
-        [HttpGet("/blow-me-up")]
-        public IActionResult BlowMeUp()
-        {
-            appLifetime.StopApplication();
-            return new EmptyResult();
-        }
-
-        private static readonly Object traitEntitiesInitLock = new Object();
-
         private async Task<IActionResult> ProcessQuery(Omnikeeper.Base.Entity.GraphQLQuery query)
         {
             if (query == null)
@@ -101,30 +73,12 @@ namespace Omnikeeper.Controllers
             var trans = _modelContextBuilder.BuildImmediate();
             var user = await _currentUserService.GetCurrentUser(trans);
 
-            // TODO: we should only call *.Init() on app startup and after trait changes... NOT on every request
-            if (!_schema.Initialized)
-            {
-                try
-                {
-                    var timeThreshold = TimeThreshold.BuildLatest();
-                    var activeTraits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
-                    lock (traitEntitiesInitLock)
-                    {
-                        var typeContainer = typeContainerCreator.CreateTypes(activeTraits, _schema, logger);
-                        traitEntitiesQuerySchemaLoader.Init(typeContainer);
-                        traitEntitiesMutationSchemaLoader.Init(typeContainer);
-                    }
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e, "Encountered error while creating trait entity GraphQL schema");
-                }
-            }
+            var schema = _schemaHolder.GetSchema();
 
             var inputs = query.Variables?.ToInputs();
             var result = await _documentExecuter.ExecuteAsync(options =>
             {
-                options.Schema = _schema;
+                options.Schema = schema;
                 options.Query = query.Query;
                 options.Inputs = inputs;
                 options.EnableMetrics = false;

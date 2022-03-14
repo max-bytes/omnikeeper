@@ -62,7 +62,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             this.changesetModel = changesetModel;
         }
 
-        public TypeContainer CreateTypes(IDictionary<string, ITrait> activeTraits, ISchema schema, ILogger logger)
+        public TypeContainer CreateTypes(IDictionary<string, ITrait> activeTraits, ILogger logger)
         {
             var elementTypes = new List<ElementTypesContainer>();
 

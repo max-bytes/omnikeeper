@@ -16,7 +16,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
 {
     public class TraitEntitiesMutationSchemaLoader
     {
-        private readonly GraphQLMutation tet;
         private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
@@ -24,10 +23,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly ILayerModel layerModel;
         private readonly IChangesetModel changesetModel;
 
-        public TraitEntitiesMutationSchemaLoader(GraphQLMutation tet, IAttributeModel attributeModel, IRelationModel relationModel,
+        public TraitEntitiesMutationSchemaLoader(IAttributeModel attributeModel, IRelationModel relationModel,
             IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel)
         {
-            this.tet = tet;
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
             this.effectiveTraitModel = effectiveTraitModel;
@@ -58,7 +56,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             return t.et;
         }
 
-        public void Init(TypeContainer typeContainer)
+        public void Init(GraphQLMutation tet, TypeContainer typeContainer)
         {
             foreach (var elementTypeContainer in typeContainer.ElementTypes)
             {

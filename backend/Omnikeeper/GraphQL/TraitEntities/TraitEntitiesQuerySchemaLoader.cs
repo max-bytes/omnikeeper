@@ -6,16 +6,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 {
     public class TraitEntitiesQuerySchemaLoader
     {
-        private readonly TraitEntitiesType tet;
-        private readonly MergedCIType mergedCIType;
-
-        public TraitEntitiesQuerySchemaLoader(TraitEntitiesType tet, MergedCIType mergedCIType)
-        {
-            this.tet = tet;
-            this.mergedCIType = mergedCIType;
-        }
-
-        public void Init(TypeContainer typeContainer)
+        public void Init(MergedCIType mergedCIType, TraitEntitiesType tet, TypeContainer typeContainer)
         {
             foreach (var elementTypeContainer in typeContainer.ElementTypes)
             {
