@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Autofac.Extras.Quartz;
 using GraphQL;
 using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
@@ -34,6 +35,9 @@ namespace Tests.Integration.GraphQL.Base
 
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddGraphQL().AddGraphTypes(typeof(GraphQLSchema));
+
+            builder.RegisterModule(new QuartzAutofacFactoryModule());
+
             builder.Populate(serviceCollection);
         }
 
