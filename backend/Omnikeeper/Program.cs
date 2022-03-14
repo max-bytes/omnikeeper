@@ -11,6 +11,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.GraphQL;
 using Omnikeeper.Service;
 using Omnikeeper.Startup;
 using Omnikeeper.Utils;
@@ -18,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Omnikeeper
@@ -34,10 +34,33 @@ namespace Omnikeeper
                 .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                 .Build();
 
+            // set logging provider before doing any Npsql operations
             using (var scope = host.Services.CreateScope())
             {
                 NpgsqlLogManager.Provider = scope.ServiceProvider.GetRequiredService<NpgsqlLoggingProvider>();
+            }
 
+            using (var scope = host.Services.CreateScope())
+            {
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                try
+                {
+                    var traitsProvider = scope.ServiceProvider.GetRequiredService<ITraitsProvider>();
+                    var modelContextBuilder = scope.ServiceProvider.GetRequiredService<IModelContextBuilder>();
+                    var timeThreshold = TimeThreshold.BuildLatest();
+                    var trans = modelContextBuilder.BuildImmediate();
+                    var activeTraits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
+
+                    var graphqlSchemaHolder = scope.ServiceProvider.GetRequiredService<GraphQLSchemaHolder>();
+                    graphqlSchemaHolder.ReInitSchema(scope.ServiceProvider, activeTraits, logger);
+                } catch (Exception e)
+                {
+                    logger.LogError(e, "Encountered error while trying to initialize GraphQL schema");
+                }
+            }
+
+            using (var scope = host.Services.CreateScope())
+            {
                 // migration/rebuild of *-latest tables in database to be backward compatible
                 //await RebuildLatestTablesIfNonEmpty(scope);
 

@@ -62,7 +62,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             this.changesetModel = changesetModel;
         }
 
-        public TypeContainer CreateTypes(IDictionary<string, ITrait> activeTraits, ISchema schema, ILogger logger)
+        public TypeContainer CreateTypes(IDictionary<string, ITrait> activeTraits, ILogger logger)
         {
             var elementTypes = new List<ElementTypesContainer>();
 
@@ -77,8 +77,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 {
                     var tt = new ElementType(at.Value, relatedCIType);
                     var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel);
+                    var filterInputType = FilterInputType.Build(at.Value);
                     var idt = IDInputType.Build(at.Value);
-                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel, ttWrapper, idt);
+                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel, ttWrapper, filterInputType, idt);
                     var upsertInputType = new UpsertInputType(at.Value);
 
                     // TODO: needed?

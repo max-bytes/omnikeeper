@@ -54,6 +54,12 @@ namespace Omnikeeper.Model.Decorators
             return all.Where(kv => IDs.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
+        public async Task<DateTimeOffset?> GetLatestChangeToActiveDataTraits(IModelContext trans, TimeThreshold timeThreshold)
+        {
+            // TODO: caching?
+            return await Provider.GetLatestChangeToActiveDataTraits(trans, timeThreshold);
+        }
+
         private async Task<IDictionary<string, ITrait>?> _GetFromCache(IModelContext trans)
         {
             // TODO: we should not create a timethreshold instance in the factory

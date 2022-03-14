@@ -32,6 +32,7 @@
     <PackageReference Include="FluentValidation.AspNetCore" Version="9.2.0" />
     <PackageReference Include="GraphQL.Authorization" Version="4.0.0" />
     <PackageReference Include="GraphQL.DataLoader" Version="4.7.1" />
+    <PackageReference Include="GraphQL.MicrosoftDI" Version="4.7.1" />
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="5.2.0" />
     <PackageReference Include="GraphQL.Server.Ui.Playground" Version="5.2.0" />
     <PackageReference Include="MediatR" Version="8.1.0" />
@@ -44,8 +45,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0-preview.2.20160.3" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.9.10" />
     <PackageReference Include="NetCore.AutoRegisterDi" Version="1.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="NuGet.Frameworks" Version="6.0.0" />
+    <PackageReference Include="NuGet.Frameworks" Version="6.1.0" />
     <PackageReference Include="Quartz.AspNetCore" Version="3.3.3" />
     <PackageReference Include="Quartz.Serialization.Json" Version="3.3.3" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
@@ -53,8 +53,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.1.2" />
     <PackageReference Include="System.Linq" Version="4.3.0" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.20" />
-    <PackageReference Include="System.Reactive" Version="4.4.1" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.18" />
+    <PackageReference Include="System.Reactive" Version="5.0.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
   </ItemGroup>
 

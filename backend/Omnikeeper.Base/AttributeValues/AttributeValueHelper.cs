@@ -72,7 +72,17 @@ namespace Omnikeeper.Base.AttributeValues
                                 else if (o is JToken[] ja)
                                     return AttributeArrayValueJSON.Build(ja);
                                 else
-                                    throw new Exception($"Cannot deal with object {o}, that is an array, but neither string array nor JToken array");
+                                {
+                                    var stringArray = new string[oa.Length];
+                                    for(var i = 0;i < oa.Length;i++)
+                                    {
+                                        var s = oa[i].ToString();
+                                        if (s == null)
+                                            throw new Exception($"Cannot deal with object {o}, that is an array, but neither string array nor JToken array");
+                                        stringArray[i] = s;
+                                    }
+                                    return AttributeArrayValueJSON.BuildFromString(stringArray);
+                                }
                             }
                             else
                             {

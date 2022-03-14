@@ -85,7 +85,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             var foundCIID = cisWithIDAttributes.Where(t =>
             {
-                for(var i = 0;i < attributeNames.Length;i++)
+                for (var i = 0; i < attributeNames.Length; i++)
                 {
                     var attributeName = attributeNames[i];
                     var attributeValue = attributeValues[i];
@@ -105,6 +105,48 @@ namespace Omnikeeper.Base.Model.TraitBased
                 .OrderBy(t => t) // we order by GUID to stay consistent even when multiple CIs would match
                 .FirstOrDefault();
             return (foundCIID == default) ? null : foundCIID;
+        }
+
+        /*
+         * NOTE: this does not care whether or not the CIs are actually a trait entities or not
+         */
+        public static async Task<ISet<Guid>> GetMatchingCIIDsByAttributeFilters(IAttributeModel attributeModel, IEnumerable<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            if (filters.IsEmpty())
+                throw new Exception("Filtering with empty filter set not supported");
+            var attributeNames = filters.Select(t => t.traitAttribute.AttributeTemplate.Name);
+            // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...
+            var cisWithAttributes = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(attributeNames.ToHashSet()), layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
+            var ret = new HashSet<Guid>();
+            foreach (var t in cisWithAttributes)
+            {
+                var ciid = t.Key;
+                var attributes = t.Value;
+
+                var meetsAllFilters = true;
+                foreach (var (traitAttribute, filter) in filters)
+                {
+                    var attributeName = traitAttribute.AttributeTemplate.Name;
+                    if (attributes.TryGetValue(attributeName, out var foundAttribute))
+                    {
+                        if (!AttributeFilterHelper.Matches(foundAttribute.Attribute.Value, filter))
+                        {
+                            meetsAllFilters = false;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        meetsAllFilters = false;
+                        break;
+                    }
+                }
+                if (meetsAllFilters)
+                {
+                    ret.Add(ciid);
+                }
+            }
+            return ret;
         }
     }
 }

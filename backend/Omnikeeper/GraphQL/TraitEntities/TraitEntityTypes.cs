@@ -12,6 +12,7 @@ using Omnikeeper.GraphQL.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Omnikeeper.GraphQL.TraitEntities
 {
@@ -32,7 +33,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
     public class TraitEntityRootType : ObjectGraphType
     {
         public TraitEntityRootType(ITrait at, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
-            ElementWrapperType wrapperElementGraphType, InputObjectGraphType? idGraphType)
+            ElementWrapperType wrapperElementGraphType, FilterInputType? filterGraphType, InputObjectGraphType? idGraphType)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityRootGraphTypeName(at);
 
@@ -46,9 +47,54 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 var trans = userContext.Transaction;
 
                 // TODO: use dataloader
-                var ets = await traitEntityModel.GetAllByCIID(layerset, trans, timeThreshold);
+                var ets = await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerset, trans, timeThreshold);
                 return ets.Select(kv => kv.Value);
             });
+
+            if (filterGraphType != null)
+            {
+                this.FieldAsync("filtered", new ListGraphType(wrapperElementGraphType),
+                    arguments: new QueryArguments(
+                        new QueryArgument(filterGraphType) { Name = "filter" }
+                    ),
+                    resolve: async context =>
+                    {
+                        var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                        var layerset = userContext.GetLayerSet(context.Path);
+                        var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                        var trans = userContext.Transaction;
+
+                        // use filter to reduce list of potential cis
+                        var filters = new List<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)>(); // TODO: support non-text filters
+                        var filterCollection = context.GetArgument(typeof(object), "filter") as IDictionary<string, object>;
+                        if (filterCollection == null)
+                            throw new Exception("Unexpected filter detected");
+                        foreach (var kv in filterCollection)
+                        {
+                            var inputFieldName = kv.Key;
+
+                            // lookup value type based on input attribute name
+                            var attribute = at.RequiredAttributes.Concat(at.OptionalAttributes).FirstOrDefault(ra =>
+                            {
+                                var convertedAttributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ra);
+                                return convertedAttributeFieldName == inputFieldName;
+                            });
+
+                            if (attribute == null)
+                                throw new Exception($"Could not find input attribute filter {inputFieldName} in trait entity {at.ID}");
+                            if (kv.Value is not AttributeScalarTextFilter f)
+                                throw new Exception($"Unknown attribute filter for attribute {inputFieldName} detected");
+                            filters.Add((attribute, f));
+                        }
+
+                        var matchingCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(attributeModel, filters, layerset, trans, timeThreshold);
+
+                        // TODO: use dataloader
+                        var ets = await traitEntityModel.GetByCIID(SpecificCIIDsSelection.Build(matchingCIIDs), layerset, trans, timeThreshold);
+
+                        return ets.Select(kv => kv.Value);
+                    });
+            }
 
             this.FieldAsync("byCIID", wrapperElementGraphType,
                 arguments: new QueryArguments(
@@ -230,7 +276,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class IDInputType : InputObjectGraphType
     {
-        public IDInputType(ITrait at)
+        public IDInputType() { }
+
+        private IDInputType(ITrait at)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityIDInputGraphTypeName(at);
 
@@ -257,6 +305,68 @@ namespace Omnikeeper.GraphQL.TraitEntities
             if (!hasIDFields)
                 return null;
             return new IDInputType(at);
+        }
+    }
+
+
+    public class AttributeTextFilterInputType : InputObjectGraphType<AttributeScalarTextFilter>
+    {
+        public AttributeTextFilterInputType()
+        {
+            Field("regex", x => x.Regex, nullable: true, type: typeof(StringGraphType));
+            Field("exact", x => x.Exact, nullable: true);
+        }
+
+        public override object ParseDictionary(IDictionary<string, object?> value)
+        {
+            var exact = value.TryGetValue("exact", out var e) ? (string?)e : null;
+            var regexStr = value.TryGetValue("regex", out var r) ? (string?)r : null;
+            var regex = (regexStr != null) ? new Regex(regexStr) : null;
+            if (regex == null && exact == null)
+                throw new Exception("At least one filter option needs to be set for AttributeTextFilter");
+
+            return new AttributeScalarTextFilter
+            {
+                Regex = regex,
+                Exact = exact
+            };
+        }
+    }
+
+    public class FilterInputType : InputObjectGraphType
+    {
+        public FilterInputType() { }
+
+        private FilterInputType(ITrait at)
+        {
+            Name = TraitEntityTypesNameGenerator.GenerateTraitEntityFilterInputGraphTypeName(at);
+
+            foreach (var ta in at.RequiredAttributes.Concat(at.OptionalAttributes))
+            {
+                var attributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta);
+
+                // TODO: support for non-text types
+                if (ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text) == AttributeValueType.Text)
+                {
+                    // TODO: support for array types
+                    if (!ta.AttributeTemplate.IsArray.GetValueOrDefault(false))
+                    {
+                        AddField(new FieldType()
+                        {
+                            Type = typeof(AttributeTextFilterInputType),
+                            Name = attributeFieldName,
+                        });
+                    }
+                }
+            }
+        }
+
+        public static FilterInputType? Build(ITrait at)
+        {
+            var t = new FilterInputType(at);
+            if (t.Fields.IsEmpty())
+                return null;
+            return t;
         }
     }
 

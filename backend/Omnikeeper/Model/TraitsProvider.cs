@@ -19,13 +19,16 @@ namespace Omnikeeper.Model
     {
         private readonly GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
+        private readonly IChangesetModel changesetModel;
         private readonly IEnumerable<IPluginRegistration> loadedPlugins;
         private readonly ILogger<TraitsProvider> logger;
 
-        public TraitsProvider(GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel, IMetaConfigurationModel metaConfigurationModel, IEnumerable<IPluginRegistration> loadedPlugins, ILogger<TraitsProvider> logger)
+        public TraitsProvider(GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel, 
+            IMetaConfigurationModel metaConfigurationModel, IChangesetModel changesetModel, IEnumerable<IPluginRegistration> loadedPlugins, ILogger<TraitsProvider> logger)
         {
             this.dataTraitModel = dataTraitModel;
             this.metaConfigurationModel = metaConfigurationModel;
+            this.changesetModel = changesetModel;
             this.loadedPlugins = loadedPlugins;
             this.logger = logger;
         }
@@ -74,6 +77,18 @@ namespace Omnikeeper.Model
             var traitEmpty = new TraitEmpty();
             finalTraits.Add(traitEmpty.ID, traitEmpty); // mix in empty trait
             return finalTraits;
+        }
+
+        // returns null if there are no data traits
+        public async Task<DateTimeOffset?> GetLatestChangeToActiveDataTraits(IModelContext trans, TimeThreshold timeThreshold)
+        {
+            // check data traits changes through their changesets
+            var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+            var relevantChangesetIDs = await dataTraitModel.GetRelevantChangesetIDsForAll(metaConfiguration.ConfigLayerset, trans, timeThreshold);
+            if (relevantChangesetIDs.IsEmpty())
+                return null;
+            var relevantChangesets = await changesetModel.GetChangesets(relevantChangesetIDs, trans);
+            return relevantChangesets.Select(c => c.Timestamp).OrderByDescending(c => c).FirstOrDefault(); // TODO: replace with MaxBy()
         }
 
         public async Task<ITrait?> GetActiveTrait(string traitID, IModelContext trans, TimeThreshold timeThreshold)

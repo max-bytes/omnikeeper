@@ -61,7 +61,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public async Task<IDictionary<Guid, T>> GetAllByCIID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ets = await traitEntityModel.GetAllByCIID(layerSet, trans, timeThreshold);
+            var ets = await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerSet, trans, timeThreshold);
             return ets.ToDictionary(kv => kv.Key, kv => GenericTraitEntityHelper.EffectiveTrait2Object<T>(kv.Value, DefaultSerializer));
         }
 
@@ -79,7 +79,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         public async Task<IDictionary<ID, T>> GetAllByDataID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ets = (await traitEntityModel.GetAllByCIID(layerSet, trans, timeThreshold))
+            var ets = (await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerSet, trans, timeThreshold))
                 .Values
                 .OrderBy(et => et.CIID); // we order by CIID to stay consistent even when multiple CIs would match
 
@@ -96,6 +96,13 @@ namespace Omnikeeper.Base.Model.TraitBased
             return ret;
         }
 
+        // returns all relevant changesets that affect/contribute to all trait entities at that time
+        public async Task<ISet<Guid>> GetRelevantChangesetIDsForAll(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            var ets = await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerSet, trans, timeThreshold);
+            var changesetIDs = ets.SelectMany(et => et.Value.GetRelevantChangesetIDs()).ToHashSet();
+            return changesetIDs;
+        }
 
         /*
          * NOTE: this does not care whether or not the CI is actually a trait entity or not
@@ -219,7 +226,8 @@ namespace Omnikeeper.Base.Model.TraitBased
             var tuples = new (T t, Guid ciid)[] { (t, ciid) };
             var attributeFragments = Entities2Fragments(tuples);
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(tuples);
-            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            string? ciName = null;
+            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, ciName, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
 
             var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
 
