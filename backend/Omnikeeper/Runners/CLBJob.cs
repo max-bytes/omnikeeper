@@ -42,7 +42,7 @@ namespace Omnikeeper.Runners
         public async Task Execute(IJobExecutionContext context)
         {
             try {
-                logger.LogInformation("Start");
+                logger.LogTrace("Start");
 
                 var trans = modelContextBuilder.BuildImmediate();
                 var activeLayers = await layerDataModel.GetLayerData(AnchorStateFilter.ActiveAndDeprecated, trans, TimeThreshold.BuildLatest());
@@ -75,7 +75,7 @@ namespace Omnikeeper.Runners
 
                                 if (await clb.CanSkipRun(lastRun, clConfig.CLBrainConfig, logger, modelContextBuilder))
                                 {
-                                    logger.LogInformation($"Skipping run of CLB {clb.Name} on layer {l.LayerID}");
+                                    logger.LogDebug($"Skipping run of CLB {clb.Name} on layer {l.LayerID}");
                                 }
                                 else
                                 {
@@ -120,7 +120,7 @@ namespace Omnikeeper.Runners
                     }
                 }
 
-                logger.LogInformation("Finished");
+                logger.LogTrace("Finished");
             } catch (Exception e)
             {
                 logger.LogError("Error running clb job", e);

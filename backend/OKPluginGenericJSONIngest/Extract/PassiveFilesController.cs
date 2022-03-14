@@ -174,7 +174,7 @@ namespace Omnikeeper.Controllers.Ingest
     {
         private readonly IngestDataService ingestDataService;
         private readonly ILayerModel layerModel;
-        private readonly ILogger<PassiveFilesController> logger;
+        private readonly ILoggerFactory loggerFactory;
         private readonly ICurrentUserAccessor currentUserService;
         private readonly GenericTraitEntityModel<Context, string> contextModel;
         private readonly IModelContextBuilder modelContextBuilder;
@@ -183,11 +183,11 @@ namespace Omnikeeper.Controllers.Ingest
 
         public PassiveFilesController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserAccessor currentUserService,
             GenericTraitEntityModel<Context, string> contextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
-            ILayerBasedAuthorizationService authorizationService, ILogger<PassiveFilesController> logger)
+            ILayerBasedAuthorizationService authorizationService, ILoggerFactory loggerFactory)
         {
             this.ingestDataService = ingestDataService;
             this.layerModel = layerModel;
-            this.logger = logger;
+            this.loggerFactory = loggerFactory;
             this.currentUserService = currentUserService;
             this.contextModel = contextModel;
             this.modelContextBuilder = modelContextBuilder;
@@ -200,6 +200,7 @@ namespace Omnikeeper.Controllers.Ingest
         [RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
         public async Task<ActionResult> Ingest([FromQuery, Required] string context, [FromForm, Required] IEnumerable<IFormFile> files)
         {
+            var logger = loggerFactory.CreateLogger($"GenericJSONIngest_{context}");
             logger.LogInformation($"Starting ingest at context {context}");
             try
             {

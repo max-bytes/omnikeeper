@@ -67,7 +67,7 @@ namespace Omnikeeper.GraphQL
                 latestSchemaCreation = DateTimeOffset.Now;
             }
 
-            logger.LogInformation("Finished initializing GraphQL scheme");
+            logger.LogInformation("Finished initializing GraphQL schema");
         }
     }
 }
