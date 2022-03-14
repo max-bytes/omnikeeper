@@ -94,14 +94,15 @@ namespace Omnikeeper.Controllers
             if (ciids != null && ciids.Length > 0)
                 ciidSelection = SpecificCIIDsSelection.Build(ciids);
 
-            var attributesDict = (await baseAttributeModel.GetAttributes(ciidSelection, AllAttributeSelection.Instance, new string[] { layerID }, trans, timeThreshold)).First();
+            // NOTE: we use GeneratedDataHandlingExclude to ignore generated data
+            var attributesDict = (await baseAttributeModel.GetAttributes(ciidSelection, AllAttributeSelection.Instance, new string[] { layerID }, trans, timeThreshold, GeneratedDataHandlingExclude.Instance)).First();
             var attributesDTO = attributesDict
                 .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                 .SelectMany(kv => kv.Value.Values)
                 .Where(a => a.ChangesetID != GeneratorV1.StaticChangesetID) // HACK: skip generated attributes
                 .Select(a => CIAttributeDTO.Build(a));
 
-            var relations = (await baseRelationModel.GetRelations(RelationSelectionAll.Instance, new string[] { layerID }, trans, timeThreshold))[0];
+            var relations = (await baseRelationModel.GetRelations(RelationSelectionAll.Instance, new string[] { layerID }, trans, timeThreshold, GeneratedDataHandlingExclude.Instance))[0];
 
             // TODO: because there is no proper "RelationSelectionFromAndToInList", we fetch all and select manually afterwards
             if (ciidSelection is SpecificCIIDsSelection specificCIIDsSelection)

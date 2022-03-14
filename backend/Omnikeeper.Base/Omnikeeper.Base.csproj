@@ -11,7 +11,7 @@
     <PackageReference Include="dbup-postgresql" Version="4.5.0" />
     <PackageReference Include="Flurl.Http" Version="3.0.1" />
     <PackageReference Include="GraphQL" Version="4.7.1" />
-    <PackageReference Include="JmesPath.Net" Version="1.0.153" />
+    <PackageReference Include="JmesPath.Net" Version="1.0.182" />
     <PackageReference Include="JsonSubTypes" Version="1.7.0" />
     <PackageReference Include="Keycloak.Net" Version="1.0.16" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.12" />

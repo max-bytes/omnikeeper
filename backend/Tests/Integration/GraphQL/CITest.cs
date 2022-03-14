@@ -45,6 +45,7 @@ namespace Tests.Integration.GraphQL
                                     type
                                     isArray
                                     values
+                                    values
                                 }
                             }
                         }

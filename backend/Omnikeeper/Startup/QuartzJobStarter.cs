@@ -49,6 +49,7 @@ namespace Omnikeeper.Startup
                 await ScheduleJob<ExternalIDManagerJob>(scheduler, "ExternalIDManager", config.ExternalIDManagerRunnerInterval, logger, deleteOnly);
                 await ScheduleJob<ArchiveOldDataJob>(scheduler, "ArchiveOldData", config.ArchiveOldDataRunnerInterval, logger, deleteOnly);
                 await ScheduleJob<UsageDataWriterJob>(scheduler, "UsageDataWriter", "0 * * * * ?", logger, deleteOnly);
+                await ScheduleJob<GraphQLSchemaReloaderJob>(scheduler, "GraphQLSchemaReloader", "0 * * * * ?", logger, deleteOnly);
 
                 await scheduler.Start();
 

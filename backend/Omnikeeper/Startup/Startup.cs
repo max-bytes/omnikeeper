@@ -116,7 +116,7 @@ namespace Omnikeeper.Startup
                 });
 
 
-            services.AddGraphQL(x => { })
+            global::GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(services)
                 .AddErrorInfoProvider(opt => opt.ExposeExceptionStackTrace = CurrentEnvironment.IsDevelopment() || CurrentEnvironment.IsStaging())
                 .AddGraphTypes();
 

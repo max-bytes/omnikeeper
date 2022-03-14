@@ -101,7 +101,7 @@ namespace Omnikeeper.Model
             return command;
         }
 
-        public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
             var tmp = new Dictionary<string, List<Relation>>();
             using (var command = await CreateRelationCommand(rs, layerIDs, trans, atTime))

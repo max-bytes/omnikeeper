@@ -100,6 +100,28 @@ Executing this query against an omnikeeper GraphQL instance could return the fol
 The following diagram shows the structures that data passes through from the core data all the way to the client:
 ![Overview of how trait entites work](assets/drawio/overview-trait-entities.svg)
 
+* An overview of the available trait entity API calls. `*` can be substituted by the corresponding trait entity name.
+  * queries:
+    * `traitEntities.*.all`: gets all trait entities
+    * `traitEntities.*.filtered`: gets trait entities meeting filter criteria
+    * `traitEntities.*.byCIID`: gets a single trait entity by its CIID
+    * `traitEntities.*.byDataID`: gets a single trait entity by its data ID
+  * mutations:
+    * `insertNew_*`: inserts a brand-new entity and CI. Will error if there is already an entity with the same data ID
+    * `updateByCIID_*`: updates a trait entity identified by its CIID
+    * `deleteByCIID_*`: deletes a trait entity identified by its CIID
+    * `upsertByDataID_*`: updates a trait entity identified by its data ID
+    * `deleteByDataID_*`: deletes a trait entity identified by its data ID
+* Trait entity mutations always write the whole entity. It is not possible to - for example - change a single attribute without supplying the rest of the entity to the mutation. That also includes its relations.
+* Some entities below have so-called data IDs, which are unique identifiers for that trait entity. When working with the trait entity API, it ensures that no two entities with the same ID can be created.
+* Many trait entity queries and mutations have variants called `*byCIID*` and `*byDataID*`. As the name implies, they query or mutate data based on their CIID or - if the entity has one - it's data ID. While they operate roughly the same, they sometimes have slightly different semantics. TODO: list differences
+* When working with relations, note that they are always using the CIID for referring to CIs, not the data IDs.
+* When deleting entities, its relations are deleted as well. For example, deleting an entity will also delete the relations between it and other entities/CIs. However, cascading deletes need to be done manually.
+
+## Changes to traits
+
+TODO: write about the different changes that can be applied to a trait and what effects this has: backwards-compatible vs. backwards-incompatible changes, migration strategies, ...
+
 ## Traits vs. ...
 
 Because traits are a complex topic, it makes sense to view them through different lenses that touch on different aspects of them:

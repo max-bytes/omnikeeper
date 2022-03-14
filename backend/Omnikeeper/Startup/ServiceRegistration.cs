@@ -243,8 +243,6 @@ namespace Omnikeeper.Startup
             //builder.RegisterDecorator<CachingLatestLayerChangeRelationModel, IBaseRelationModel>();
             //builder.RegisterDecorator<CachingLatestLayerChangeLayerModel, ILayerModel>();
 
-            builder.RegisterType<CLBLastRunCache>().SingleInstance();
-
             // HACK: are defunct due to circular dependeny regarding LayerDataModel and OnlineAccessProxy
             //if (enableOIA)
             //{
@@ -276,26 +274,16 @@ namespace Omnikeeper.Startup
 
         public static void RegisterGraphQL(ContainerBuilder builder)
         {
-            builder.RegisterType<GraphQLSchema>().As<ISchema>().SingleInstance();
+            builder.RegisterType<GraphQLSchemaHolder>().SingleInstance();
             builder.RegisterType<MyDocumentExecutor>().As<IDocumentExecuter>().SingleInstance(); // custom document executor that does serial queries, required by postgres
             builder.RegisterType<SpanJSONDocumentWriter>().As<IDocumentWriter>().SingleInstance();
             builder.RegisterType<DataLoaderContextAccessor>().As<IDataLoaderContextAccessor>().SingleInstance();
             builder.RegisterType<DataLoaderDocumentListener>().SingleInstance();
             builder.RegisterType<DataLoaderService>().As<IDataLoaderService>().SingleInstance();
 
-            // NOTE: for now, we do not do per-request recreation of the trait entities, but instead require a restart
-            // we do this to not reduce performance, and until we find a better way to to this
             builder.RegisterType<TraitEntitiesQuerySchemaLoader>().SingleInstance();
             builder.RegisterType<TraitEntitiesMutationSchemaLoader>().SingleInstance();
             builder.RegisterType<TypeContainerCreator>().SingleInstance();
-            // HACK, NOTE: overwrite lifetime of the chain of parent graphql elements to instance-per-lifetime
-            // this is necessary to ensure that the TraitEntitiesType is properly re-created on each request
-            // otherwise, changes to traits can not be properly updated/reflected
-            // TODO: once we do not Init() the TraitEntityTypes on every request anymore, we can maybe find a better way to do this
-            //builder.RegisterType<GraphQLSchema>().As<ISchema>().InstancePerLifetimeScope();
-            //builder.RegisterType<TraitEntitiesType>().InstancePerLifetimeScope();
-            //builder.RegisterType<TraitEntitiesQuerySchemaLoader>().InstancePerLifetimeScope();
-            //builder.RegisterType<TraitEntitiesMutationSchemaLoader>().InstancePerLifetimeScope();
         }
 
         internal static void RegisterQuartz(ContainerBuilder builder, string connectionString)
@@ -325,10 +313,12 @@ namespace Omnikeeper.Startup
 
             // jobs
             builder.RegisterType<CLBJob>().InstancePerLifetimeScope();
+            builder.RegisterType<CLBLastRunCache>().SingleInstance();
             builder.RegisterType<ArchiveOldDataJob>().InstancePerLifetimeScope();
             builder.RegisterType<ExternalIDManagerJob>().InstancePerLifetimeScope();
             builder.RegisterType<MarkedForDeletionJob>().InstancePerLifetimeScope();
             builder.RegisterType<UsageDataWriterJob>().InstancePerLifetimeScope();
+            builder.RegisterType<GraphQLSchemaReloaderJob>().InstancePerLifetimeScope();
         }
     }
 }

@@ -13,6 +13,7 @@ using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -136,5 +137,25 @@ namespace Omnikeeper.Runners
         private readonly ILayerDataModel layerDataModel;
         private readonly ILogger<CLBJob> logger;
         private readonly IModelContextBuilder modelContextBuilder;
+    }
+
+    public class CLBLastRunCache
+    {
+        private readonly IDictionary<string, DateTimeOffset> cache = new Dictionary<string, DateTimeOffset>();
+
+        public void UpdateCache(string key, DateTimeOffset latestChange)
+        {
+            cache[key] = latestChange;
+        }
+
+        public void RemoveFromCache(string key)
+        {
+            cache.Remove(key);
+        }
+
+        public bool TryGetValue(string key, [MaybeNullWhen(false)] out DateTimeOffset v)
+        {
+            return cache.TryGetValue(key, out v);
+        }
     }
 }

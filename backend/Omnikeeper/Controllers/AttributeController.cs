@@ -93,7 +93,7 @@ namespace Omnikeeper.Controllers
 
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var attributes = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciidSet), AllAttributeSelection.Instance, layerset, trans, timeThreshold);
+            var attributes = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciidSet), AllAttributeSelection.Instance, layerset, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
             return Ok(attributes.SelectMany(t => t.Value.Select(a => CIAttributeDTO.Build(a.Value))));
         }
 

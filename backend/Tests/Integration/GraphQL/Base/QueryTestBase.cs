@@ -91,7 +91,8 @@ namespace Tests.Integration.GraphQL.Base
         {
             var runResult = Executer.ExecuteAsync(options =>
             {
-                options.Schema = ServiceProvider.GetRequiredService<ISchema>();
+                // TODO: make work with trait entities, reInit through GraphQLSchemaHolder
+                options.Schema = new GraphQLSchema(ServiceProvider);
                 options.Query = query;
                 options.Root = root;
                 options.Inputs = inputs;
@@ -127,7 +128,8 @@ namespace Tests.Integration.GraphQL.Base
         {
             var runResult = Executer.ExecuteAsync(options =>
             {
-                options.Schema = ServiceProvider.GetRequiredService<ISchema>();
+                // TODO: make work with trait entities, reInit through GraphQLSchemaHolder
+                options.Schema = new GraphQLSchema(ServiceProvider);
                 options.Query = query;
                 options.Root = root;
                 options.Inputs = inputs;
