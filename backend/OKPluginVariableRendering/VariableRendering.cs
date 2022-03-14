@@ -120,6 +120,20 @@ namespace OKPluginVariableRendering
 
             var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
 
+            // get active traits here 
+            List<string> allRequiredTraits = new();
+
+            foreach (var mainCI in cfg.BaseCI.FollowRelations)
+            {
+                foreach (var item in mainCI.Follow)
+                {
+                    allRequiredTraits.Add(item.RequiredTrait);
+                }
+            }
+
+            var allActiveTraits = await traitsProvider.GetActiveTraitsByIDs(allRequiredTraits, trans, changesetProxy.TimeThreshold);
+
+
             foreach (var mainCI in mainCIs)
             {
 
@@ -156,12 +170,6 @@ namespace OKPluginVariableRendering
 
                 foreach (var followRelation in cfg.BaseCI.FollowRelations)
                 {
-
-                    // get all active traits here
-
-                    var allRequiredTraits = followRelation.Follow.Select(f => f.RequiredTrait);
-
-                    var allActiveTraits = await traitsProvider.GetActiveTraitsByIDs(allRequiredTraits, trans, changesetProxy.TimeThreshold);
 
                     MergedCI prevCI = mainCI;
 
