@@ -60,7 +60,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DBMigrations\DBMigrations.csproj" />
-    <ProjectReference Include="..\OKPluginVariableRendering\OKPluginVariableRendering.csproj" />
     <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj" />
   </ItemGroup>
   
