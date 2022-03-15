@@ -5,17 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [13.0.0-rc13] - 2022-02-25
+## [13.1.0] - 2022-03-15
 
 ### Added
 - support for masking of attributes and relations
+- GraphQL API:
+  - implemented trait entity filtering for text attributes by regex and exact
+  - trait entities API: implemented ability to set CI name in mutations
+  - implemented automatic reload of trait entities GraphQL schema; fixes #173
 - implemented default behavior for Trait Entities to make it look for matching CIs based on IDs only if it can't find a complete entity
 - implemented "OtherLayersValueHandling", which allows the Trait Entity mutation APIs to skip attribute/relation writes if the data already exists in other layers. This means that data is not needlessly duplicated.
+- implementation and integration of plugin OKPluginVariableRendering; made part of tsa variant
 
 ### Changed
 - GraphQL API:
   - (breaking) improved GraphQL API for (recursive) traits
+  - added safety checks to trait entity mutations 
 - technical frontend:
+  - implemented tree for traits in CI search view
   - small improvements to traits view
   - store layer settings in local storage
   - added copy buttons for various elements, including CIIDs and changeset-IDs
@@ -29,8 +36,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - lots of code refactorings, including areas:
   - completely reworked and simplified mutations in Attribute- and Relation Model
   - tests
+- bumped various libraries to their latest versions
+- reduced chattiness of CLBJob logger 
+- Made PassiveFilesController of GenericJSONIngest properly report its logging category, including context; fixes #174
 
 ### Fixed
+- fixed regression bug causing attribute deletions to occur for generated attributes on every bulk update
+- bugfix for parsing JSON as string from GraphQL API
+- bugfix for cross-request user spilling; fixes #172
+- Technical frontend:
+  - bugfix when removing all generators from layer config
+  - fixed issue with auth role permission UI; fixes #171
 - bugfixes related to UsageTrackingService, Disposal and Autofac
 - improved caching/locking mechanisms of ICurrentUserService implementations
 - bugfix in data loader related to effective traits
