@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8ECAD217-BB60-492D-B682-BDAF7AD95BA1}"
 	ProjectSection(SolutionItems) = preProject
 		..\.github\workflows\build.yml = ..\.github\workflows\build.yml
+		..\.github\workflows\call-package-variants.yml = ..\.github\workflows\call-package-variants.yml
 		..\LICENSE = ..\LICENSE
 		..\.github\workflows\package-variants.yml = ..\.github\workflows\package-variants.yml
 		..\README.md = ..\README.md
@@ -60,7 +61,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginCLBDummy", "OKPlugi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginVariableRendering", "OKPluginVariableRendering\OKPluginVariableRendering.csproj", "{F8F37A3E-69E3-4A35-B0F2-3B89FF41E8FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginVariableRendering.Tests", "OKPluginVariableRendering.Tests\OKPluginVariableRendering.Tests.csproj", "{357F959B-AA9A-4593-B4B1-DDD0AF517FFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginVariableRendering.Tests", "OKPluginVariableRendering.Tests\OKPluginVariableRendering.Tests.csproj", "{357F959B-AA9A-4593-B4B1-DDD0AF517FFA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
