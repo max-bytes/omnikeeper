@@ -69,6 +69,7 @@ namespace Omnikeeper.Startup
             //var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
             //var result = plugin.DBMigration.Migrate(cs);
 
+
             var dotNetFramework = Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
             var frameworkNameProvider = new FrameworkNameProvider(
                 new[] { DefaultFrameworkMappings.Instance },
