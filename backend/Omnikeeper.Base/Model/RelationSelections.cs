@@ -73,23 +73,33 @@ namespace Omnikeeper.Base.Model
     }
     public class RelationSelectionWithPredicate : IRelationSelection, IEquatable<RelationSelectionWithPredicate>
     {
-        public readonly string PredicateID;
+        public readonly ISet<string> PredicateIDs;
 
-        private RelationSelectionWithPredicate(string predicateID)
+        private RelationSelectionWithPredicate(ISet<string> predicateIDs)
         {
-            PredicateID = predicateID;
+            PredicateIDs = predicateIDs;
         }
-        public static RelationSelectionWithPredicate Build(string predicateID)
+        public static RelationSelectionWithPredicate Build(IEnumerable<string> predicateIDs)
         {
-            return new RelationSelectionWithPredicate(predicateID);
+            return new RelationSelectionWithPredicate(predicateIDs.ToHashSet());
+        }
+        public static RelationSelectionWithPredicate Build(params string[] predicateIDs)
+        {
+            return new RelationSelectionWithPredicate(predicateIDs.ToHashSet());
         }
 
         public override int GetHashCode()
         {
-            return PredicateID.GetHashCode();
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = (int)2166136261;
+                foreach (var predicateID in PredicateIDs)
+                    hash = (hash * 16777619) ^ predicateID.GetHashCode();
+                return hash;
+            }
         }
         public override bool Equals(object? obj) => Equals(obj as RelationSelectionWithPredicate);
-        public bool Equals(RelationSelectionWithPredicate? other) => other != null && PredicateID == other.PredicateID;
+        public bool Equals(RelationSelectionWithPredicate? other) => other != null && PredicateIDs.SetEquals(other.PredicateIDs);
     }
 
     public class RelationSelectionSpecific : IRelationSelection, IEquatable<RelationSelectionSpecific>

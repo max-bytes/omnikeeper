@@ -121,13 +121,7 @@ namespace OKPluginVisualization
 
             var nodesWithEdges = new HashSet<string>();
 
-            // TODO: implement multiple predicates selection
-            var relations = new List<MergedRelation>();
-            foreach (var predicateID in predicateIDs)
-            {
-                var r = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(predicateID), layerSet, trans, timeThreshold, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance);
-                relations.AddRange(r);
-            }
+            var relations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(predicateIDs), layerSet, trans, timeThreshold, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance);
 
             var relationEdges = new Dictionary<(string from, string to, string predicateID), IList<MergedRelation>>();
             foreach(var relation in relations)

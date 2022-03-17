@@ -32,7 +32,7 @@ namespace Omnikeeper.Model
                 case RelationSelectionTo rst:
                     return ("(to_ci_id = ANY(@to_ci_ids))", new[] { new NpgsqlParameter("to_ci_ids", rst.ToCIIDs.ToArray()) });
                 case RelationSelectionWithPredicate rsp:
-                    return ("(predicate_id = @predicate_id)", new[] { new NpgsqlParameter("predicate_id", rsp.PredicateID) });
+                    return ("(predicate_id = ANY(@predicate_ids))", new[] { new NpgsqlParameter("predicate_ids", rsp.PredicateIDs.ToArray()) });
                 case RelationSelectionSpecific rss:
                 {
                     var sqlClause = "(" + string.Join(" OR ", rss.Specifics.Select((s, index) => $"(from_ci_id = @from_ci_id{index} AND to_ci_id = @to_ci_id{index} AND predicate_id = @predicate_id{index})")) + ")";
