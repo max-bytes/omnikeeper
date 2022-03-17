@@ -163,21 +163,26 @@ namespace OKPluginVisualization
             {
                 var traitSetKey = kv.Key;
                 var ciids = kv.Value;
-
-                var traitIDsForNode = traitSetKey.Split('#');
-                var affectingLayerIDs = ciids.SelectMany(ciid => layerIDsByCIID[ciid]).ToHashSet();
-
-                var layerColors = affectingLayerIDs.Select(layerID => layerData.GetOrWithClass(layerID, null)?.Color).Where(color => color.HasValue).Select(color => ARGBToHexString(color!.Value));
-
-                var layerColorIcons = string.Join("", layerColors.Select(color => $"<FONT COLOR=\"{color}\">&#9646;</FONT>"));
-
                 if (nodesWithEdges.Contains(traitSetKey))
-                    sb.AppendLine($"\"{traitSetKey}\" [label=<{layerColorIcons} {string.Join(" &amp;&amp; ", traitIDsForNode)}<BR />({kv.Value.Count()})>]");
+                {
+                    var traitIDsForNode = traitSetKey.Split('#');
+                    var affectingLayerIDs = ciids.SelectMany(ciid => layerIDsByCIID[ciid]).ToHashSet();
+                    var layerColors = affectingLayerIDs.Select(layerID => layerData.GetOrWithClass(layerID, null)?.Color).Where(color => color.HasValue).Select(color => ARGBToHexString(color!.Value));
+                    var layerColorIcons = string.Join("", layerColors.Select(color => $"<FONT COLOR=\"{color}\">&#9646;</FONT>"));
+                    var nodeColor = (layerColors.Count() == 1) ? $"\"{layerColors.First()}\"" : "black";
+
+                    sb.AppendLine($"\"{traitSetKey}\" [color={nodeColor}, label=<{layerColorIcons} {string.Join(" &amp;&amp; ", traitIDsForNode)}<BR />({kv.Value.Count()})>]");
+                }
             }
             foreach(var relationEdge in relationEdges)
             {
                 var key = relationEdge.Key;
-                sb.AppendLine($"\"{key.from}\" -> \"{key.to}\" [label=<{key.predicateID}<BR />({relationEdge.Value.Count()})>]");
+                var affectingLayerIDs = relationEdge.Value.Select(r => r.LayerStackIDs.First()).ToHashSet();
+                var layerColors = affectingLayerIDs.Select(layerID => layerData.GetOrWithClass(layerID, null)?.Color).Where(color => color.HasValue).Select(color => ARGBToHexString(color!.Value));
+                var layerColorIcons = string.Join("", layerColors.Select(color => $"<FONT COLOR=\"{color}\">&#9646;</FONT>"));
+                var edgeColor = (layerColors.Count() == 1) ? $"\"{layerColors.First()}\"" : "black";
+
+                sb.AppendLine($"\"{key.from}\" -> \"{key.to}\" [color={edgeColor}, label=<{layerColorIcons} {key.predicateID}<BR />({relationEdge.Value.Count()})>]");
             }
             sb.AppendLine("}");
 
