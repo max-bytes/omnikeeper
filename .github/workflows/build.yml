@@ -113,6 +113,7 @@ jobs:
           buildPublish OKPluginAnsibleInventoryScanIngest
           buildPublish OKPluginActiveDirectoryXMLIngest
           buildPublish OKPluginVariableRendering
+          buildPublish OKPluginVisualization
 
   build-swagger-definition:
     runs-on: ubuntu-20.04

@@ -46,6 +46,20 @@ namespace Omnikeeper.Base.Entity
             return effectiveTrait.TraitAttributes[traitAttributeIdentifier]?.Attribute.Value;
         }
 
+        public static ISet<string> ExtractAffectingLayerIDs(this EffectiveTrait effectiveTrait)
+        {
+            var ret = new HashSet<string>();
+            foreach(var ta in effectiveTrait.TraitAttributes)
+                ret.Add(ta.Value.LayerStackIDs.First());
+            foreach(var tr in effectiveTrait.IncomingTraitRelations)
+                foreach(var r in tr.Value)
+                    ret.Add(r.LayerStackIDs.First());
+            foreach (var tr in effectiveTrait.OutgoingTraitRelations)
+                foreach (var r in tr.Value)
+                    ret.Add(r.LayerStackIDs.First());
+            return ret;
+        }
+
         // returns all changeset IDs that contribute to this effective trait
         public static ISet<Guid> GetRelevantChangesetIDs(this EffectiveTrait effectiveTrait)
         {
