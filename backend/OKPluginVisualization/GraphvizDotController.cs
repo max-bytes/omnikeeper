@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OKPluginVisualization
@@ -54,7 +55,7 @@ namespace OKPluginVisualization
         }
 
         [HttpGet("generate")]
-        public async Task<IActionResult> Generate([FromQuery, Required] string[] layerIDs, [FromQuery] string[] traitIDs)
+        public async Task<IActionResult> Generate([FromQuery, Required] string[] layerIDs, [FromQuery] string[] traitIDs, [FromQuery] string traitIDsRegex)
         {
             if (layerIDs.IsEmpty())
                 return BadRequest("No layer IDs specified");
@@ -68,13 +69,13 @@ namespace OKPluginVisualization
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            //var allTraits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
             IEnumerable<ITrait> traits;
-            if (traitIDs.IsEmpty())
+            if (!traitIDsRegex.IsEmpty())
+                traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values.Where(t => Regex.Match(t.ID, traitIDsRegex).Success);
+            else if (traitIDs.IsEmpty())
                 traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
             else
                 traits = (await traitsProvider.GetActiveTraitsByIDs(traitIDs, trans, timeThreshold)).Values;
-            //var traits = allTraits.Values.Where(t => t.ID != "named");//.Where(t => Regex.Match(t.ID, @"tsa_cmdb\..*").Success || Regex.Match(t.ID, @"monman_v2\..*").Success); // TODO
 
             var predicateIDs = await baseRelationModel.GetPredicateIDs(RelationSelectionAll.Instance, layerSet.LayerIDs, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
 
@@ -165,7 +166,7 @@ namespace OKPluginVisualization
                     var layerColorIcons = string.Join("", layerColors.Select(color => $"<FONT COLOR=\"{color}\">&#9646;</FONT>"));
                     var nodeColor = (layerColors.Count() == 1) ? $"\"{layerColors.First()}\"" : "black";
 
-                    sb.AppendLine($"\"{traitSetKey}\" [color={nodeColor}, label=<{layerColorIcons} {string.Join(" &amp;&amp; ", traitIDsForNode)}<BR />({kv.Value.Count()})>]");
+                    sb.AppendLine($"\"{traitSetKey}\" [shape=box, color={nodeColor}, label=<{string.Join("<BR />", traitIDsForNode)}<BR />{layerColorIcons} ({kv.Value.Count()})>]");
                 }
             }
             foreach(var relationEdge in relationEdges)
