@@ -65,10 +65,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var trans = userContext.Transaction;
 
                         // use filter to reduce list of potential cis
-                        var filters = new List<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)>(); // TODO: support non-text filters
                         var filterCollection = context.GetArgument(typeof(object), "filter") as IDictionary<string, object>;
                         if (filterCollection == null)
                             throw new Exception("Unexpected filter detected");
+                        var attributeFilters = new List<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)>(); // TODO: support non-text filters
                         foreach (var kv in filterCollection)
                         {
                             var inputFieldName = kv.Key;
@@ -84,10 +84,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 throw new Exception($"Could not find input attribute filter {inputFieldName} in trait entity {at.ID}");
                             if (kv.Value is not AttributeScalarTextFilter f)
                                 throw new Exception($"Unknown attribute filter for attribute {inputFieldName} detected");
-                            filters.Add((attribute, f));
+                            attributeFilters.Add((attribute, f));
                         }
 
-                        var matchingCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(attributeModel, filters, layerset, trans, timeThreshold);
+                        var matchingCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(new AllCIIDsSelection(), attributeModel, attributeFilters, layerset, trans, timeThreshold);
 
                         // TODO: use dataloader
                         var ets = await traitEntityModel.GetByCIID(SpecificCIIDsSelection.Build(matchingCIIDs), layerset, trans, timeThreshold);
@@ -308,26 +308,35 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
+    public class RegexOptionsType : EnumerationGraphType<RegexOptions> { }
+
+    public class TextFilterRegexInputType : InputObjectGraphType<TextFilterRegexInput>
+    {
+        public TextFilterRegexInputType()
+        {
+            Field("pattern", x => x.Pattern, nullable: false);
+            Field("options", x => x.Options, nullable: true, type: typeof(ListGraphType<RegexOptionsType>));
+        }
+    }
 
     public class AttributeTextFilterInputType : InputObjectGraphType<AttributeScalarTextFilter>
     {
         public AttributeTextFilterInputType()
         {
-            Field("regex", x => x.Regex, nullable: true, type: typeof(StringGraphType));
+            Field("regex", x => x.Regex, nullable: true, type: typeof(TextFilterRegexInputType));
             Field("exact", x => x.Exact, nullable: true);
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
             var exact = value.TryGetValue("exact", out var e) ? (string?)e : null;
-            var regexStr = value.TryGetValue("regex", out var r) ? (string?)r : null;
-            var regex = (regexStr != null) ? new Regex(regexStr) : null;
-            if (regex == null && exact == null)
+            var regexObj = value.TryGetValue("regex", out var r) ? (TextFilterRegexInput?)r : null;
+            if (regexObj == null && exact == null)
                 throw new Exception("At least one filter option needs to be set for AttributeTextFilter");
 
             return new AttributeScalarTextFilter
             {
-                Regex = regex,
+                Regex = regexObj,
                 Exact = exact
             };
         }

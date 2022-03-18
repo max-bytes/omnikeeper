@@ -110,13 +110,13 @@ namespace Omnikeeper.Base.Model.TraitBased
         /*
          * NOTE: this does not care whether or not the CIs are actually a trait entities or not
          */
-        public static async Task<ISet<Guid>> GetMatchingCIIDsByAttributeFilters(IAttributeModel attributeModel, IEnumerable<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public static async Task<ISet<Guid>> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IEnumerable<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
             var attributeNames = filters.Select(t => t.traitAttribute.AttributeTemplate.Name);
             // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...
-            var cisWithAttributes = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(attributeNames.ToHashSet()), layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
+            var cisWithAttributes = await attributeModel.GetMergedAttributes(ciSelection, NamedAttributesSelection.Build(attributeNames.ToHashSet()), layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
             var ret = new HashSet<Guid>();
             foreach (var t in cisWithAttributes)
             {
