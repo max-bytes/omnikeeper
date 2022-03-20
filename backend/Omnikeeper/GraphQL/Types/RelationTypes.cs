@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Omnikeeper.GraphQL.Types
@@ -48,8 +49,12 @@ namespace Omnikeeper.GraphQL.Types
 
                 IAttributeSelection attributeSelection = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, userContext.Transaction, timeThreshold);
 
-                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.ToCIID), attributeSelection, false, ciModel, layerSet, timeThreshold, userContext.Transaction)
-                    .Then(t => t.First());
+                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.ToCIID), attributeSelection, ciModel, attributeModel, layerSet, timeThreshold, userContext.Transaction)
+                    .Then(t =>
+                    {
+                        // NOTE: we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
+                        return t.FirstOrDefault() ?? new MergedCI(context.Source!.ToCIID, null, layerSet, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty);
+                    });
             });
             FieldAsync<MergedCIType>("fromCI",
             resolve: async (context) =>
@@ -60,8 +65,12 @@ namespace Omnikeeper.GraphQL.Types
 
                 IAttributeSelection attributeSelection = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, userContext.Transaction, timeThreshold);
 
-                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.FromCIID), attributeSelection, false, ciModel, layerSet, timeThreshold, userContext.Transaction)
-                    .Then(t => t.First());
+                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(context.Source!.FromCIID), attributeSelection, ciModel, attributeModel, layerSet, timeThreshold, userContext.Transaction)
+                    .Then(t =>
+                    {
+                        // NOTE: we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
+                        return t.FirstOrDefault() ?? new MergedCI(context.Source!.ToCIID, null, layerSet, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty);
+                    });
             });
         }
     }

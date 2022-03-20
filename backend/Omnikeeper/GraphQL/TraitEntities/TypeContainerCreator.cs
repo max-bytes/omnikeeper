@@ -68,7 +68,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             var elementTypes = new List<ElementTypesContainer>();
 
-            var relatedCIType = new RelatedCIType(traitsProvider, dataLoaderService, ciModel);
+            var relatedCIType = new RelatedCIType(traitsProvider, dataLoaderService, ciModel, attributeModel);
 
             foreach (var at in activeTraits)
             {
@@ -78,10 +78,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 try
                 {
                     var tt = new ElementType(at.Value, relatedCIType);
-                    var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel);
+                    var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel, attributeModel);
                     var filterInputType = FilterInputType.Build(at.Value);
                     var idt = IDInputType.Build(at.Value);
-                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, ciidModel, attributeModel, relationModel, ttWrapper, filterInputType, idt);
+                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, ciidModel, attributeModel, relationModel, dataLoaderService, ttWrapper, filterInputType, idt);
                     var upsertInputType = new UpsertInputType(at.Value);
 
                     // TODO: needed?
