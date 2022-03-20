@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Entity.AttributeValues;
+using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -33,6 +34,19 @@ namespace Omnikeeper.Base.Model.TraitBased
     {
         public TextFilterRegexInput? Regex;
         public string? Exact;
+
+        private AttributeScalarTextFilter() { }
+
+        public static object Build(TextFilterRegexInput? regexObj, string? exact)
+        {
+            if (regexObj == null && exact == null)
+                throw new Exception("At least one filter option needs to be set for AttributeTextFilter");
+            return new AttributeScalarTextFilter()
+            {
+                Exact = exact,
+                Regex = regexObj
+            };
+        }
     }
 
     public static class AttributeFilterHelper

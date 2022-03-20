@@ -1,6 +1,6 @@
-﻿using GraphQL.Types;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using System;
 using System.Collections.Generic;
@@ -45,17 +45,19 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly ITraitsProvider traitsProvider;
         private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
+        private readonly ICIIDModel ciidModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
         private readonly IDataLoaderService dataLoaderService;
         private readonly IChangesetModel changesetModel;
 
-        public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel,
+        public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel,
             IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService, IChangesetModel changesetModel)
         {
             this.traitsProvider = traitsProvider;
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
+            this.ciidModel = ciidModel;
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.dataLoaderService = dataLoaderService;
@@ -79,7 +81,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel);
                     var filterInputType = FilterInputType.Build(at.Value);
                     var idt = IDInputType.Build(at.Value);
-                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel, ttWrapper, filterInputType, idt);
+                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, ciidModel, attributeModel, relationModel, ttWrapper, filterInputType, idt);
                     var upsertInputType = new UpsertInputType(at.Value);
 
                     // TODO: needed?

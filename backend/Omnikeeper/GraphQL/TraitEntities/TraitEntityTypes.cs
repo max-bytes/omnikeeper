@@ -4,6 +4,7 @@ using GraphQL.Resolvers;
 using GraphQL.Types;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
@@ -32,7 +33,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class TraitEntityRootType : ObjectGraphType
     {
-        public TraitEntityRootType(ITrait at, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
+        public TraitEntityRootType(ITrait at, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ICIIDModel ciidModel, IAttributeModel attributeModel, IRelationModel relationModel,
             ElementWrapperType wrapperElementGraphType, FilterInputType? filterGraphType, InputObjectGraphType? idGraphType)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityRootGraphTypeName(at);
@@ -69,6 +70,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (filterCollection == null)
                             throw new Exception("Unexpected filter detected");
                         var attributeFilters = new List<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)>(); // TODO: support non-text filters
+                        var relationFilters = new List<(TraitRelation traitRelation, RelationFilter filter)>();
                         foreach (var kv in filterCollection)
                         {
                             var inputFieldName = kv.Key;
@@ -80,14 +82,49 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 return convertedAttributeFieldName == inputFieldName;
                             });
 
-                            if (attribute == null)
-                                throw new Exception($"Could not find input attribute filter {inputFieldName} in trait entity {at.ID}");
-                            if (kv.Value is not AttributeScalarTextFilter f)
-                                throw new Exception($"Unknown attribute filter for attribute {inputFieldName} detected");
-                            attributeFilters.Add((attribute, f));
+                            if (attribute != null)
+                            {
+                                if (kv.Value is not AttributeScalarTextFilter f)
+                                    throw new Exception($"Unknown attribute filter for attribute {inputFieldName} detected");
+                                attributeFilters.Add((attribute, f));
+                            } else
+                            {
+                                // filter field is not an attribute, try relations
+                                var relation = at.OptionalRelations.FirstOrDefault(r =>
+                                {
+                                    var convertedRelationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
+                                    return convertedRelationFieldName == inputFieldName;
+                                });
+
+                                if (relation != null)
+                                {
+                                    if (kv.Value is not RelationFilter f)
+                                        throw new Exception($"Unknown relation filter for relation {inputFieldName} detected");
+                                    relationFilters.Add((relation, f));
+                                } else
+                                {
+                                    throw new Exception($"Could not find input attribute- or relation-filter {inputFieldName} in trait entity {at.ID}");
+                                }
+
+                            }
                         }
 
-                        var matchingCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(new AllCIIDsSelection(), attributeModel, attributeFilters, layerset, trans, timeThreshold);
+                        ISet<Guid> matchingCIIDs;
+                        if (!relationFilters.IsEmpty() && !attributeFilters.IsEmpty())
+                        {
+                            matchingCIIDs = await TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, relationFilters, layerset, trans, timeThreshold);
+                            matchingCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(SpecificCIIDsSelection.Build(matchingCIIDs), attributeModel, attributeFilters, layerset, trans, timeThreshold);
+                        } else if (!attributeFilters.IsEmpty() && relationFilters.IsEmpty())
+                        {
+                            matchingCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(new AllCIIDsSelection(), attributeModel, attributeFilters, layerset, trans, timeThreshold);
+                        } else if (attributeFilters.IsEmpty() && !relationFilters.IsEmpty())
+                        {
+                            matchingCIIDs = await TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, relationFilters, layerset, trans, timeThreshold);
+                        } else
+                        {
+                            throw new Exception("At least one filter must be set");
+                        }
+
 
                         // TODO: use dataloader
                         var ets = await traitEntityModel.GetByCIID(SpecificCIIDsSelection.Build(matchingCIIDs), layerset, trans, timeThreshold);
@@ -331,14 +368,23 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             var exact = value.TryGetValue("exact", out var e) ? (string?)e : null;
             var regexObj = value.TryGetValue("regex", out var r) ? (TextFilterRegexInput?)r : null;
-            if (regexObj == null && exact == null)
-                throw new Exception("At least one filter option needs to be set for AttributeTextFilter");
 
-            return new AttributeScalarTextFilter
-            {
-                Regex = regexObj,
-                Exact = exact
-            };
+            return AttributeScalarTextFilter.Build(regexObj, exact);
+        }
+    }
+
+    public class RelationFilterInputType : InputObjectGraphType<RelationFilter>
+    {
+        public RelationFilterInputType()
+        {
+            Field("exactAmount", x => x.ExactAmount, nullable: true);
+        }
+
+        public override object ParseDictionary(IDictionary<string, object?> value)
+        {
+            var exactAmount = value.TryGetValue("exactAmount", out var e) ? (uint?)e : null;
+
+            return RelationFilter.Build(exactAmount);
         }
     }
 
@@ -367,6 +413,16 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         });
                     }
                 }
+            }
+
+            foreach(var r in at.OptionalRelations)
+            {
+                var relationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
+                AddField(new FieldType()
+                {
+                    Type = typeof(RelationFilterInputType),
+                    Name = relationFieldName
+                });
             }
         }
 

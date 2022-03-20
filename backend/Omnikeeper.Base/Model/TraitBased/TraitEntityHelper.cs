@@ -107,15 +107,78 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (foundCIID == default) ? null : foundCIID;
         }
 
+        public static async Task<ISet<Guid>> GetMatchingCIIDsByRelationFilters(IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<(TraitRelation traitRelation, RelationFilter filter)> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            if (filters.IsEmpty())
+                throw new Exception("Filtering with empty filter set not supported");
+
+            // TODO: filter ciSelection?
+
+            // TODO: use dataloader
+            var relations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(filters.Select(t => t.traitRelation.RelationTemplate.PredicateID)), layerSet, trans, timeThreshold, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance);
+
+            var relationsLookup = relations.ToLookup(r => r.Relation.PredicateID);
+
+            var isFirstFilter = true;
+            var ret = new HashSet<Guid>();
+            foreach (var filter in filters)
+            {
+                var template = filter.traitRelation.RelationTemplate;
+                var candidateRelations = relationsLookup[template.PredicateID];
+                var ciidGroupedRelations = (template.DirectionForward) ? candidateRelations.GroupBy(r => r.Relation.FromCIID) : candidateRelations.GroupBy(r => r.Relation.ToCIID);
+
+                // NOTE: because the set of cis WITH and cis WITHOUT relations are a partition (i.e. have no overlap), we can do these two loops consecutively, yet isFirstFilter is still correct
+                if (filter.filter.RequiresCheckOfCIsWithNonEmptyRelations())
+                {
+                    foreach (var t in ciidGroupedRelations)
+                    {
+                        if (filter.filter.Matches(t))
+                        {
+                            if (isFirstFilter)
+                                ret.Add(t.Key);
+                        }
+                        else
+                        {
+                            if (!isFirstFilter)
+                                ret.Remove(t.Key);
+                        }
+                    }
+                }
+                if (filter.filter.RequiresCheckOfCIsWithEmptyRelations())
+                {
+                    var allCIIDs = await ciidModel.GetCIIDs(trans);
+                    var ciidsWithoutRelations = allCIIDs.Except(ciidGroupedRelations.Select(g => g.Key));
+                    foreach(var ciidWithoutRelations in ciidsWithoutRelations)
+                    {
+                        if (filter.filter.Matches(Enumerable.Empty<MergedRelation>()))
+                        {
+                            if (isFirstFilter)
+                                ret.Add(ciidWithoutRelations);
+                        }
+                        else
+                        {
+                            if (!isFirstFilter)
+                                ret.Remove(ciidWithoutRelations);
+                        }
+                    }
+                }
+
+                isFirstFilter = false;
+            }
+
+            return ret;
+        }
+
         /*
-         * NOTE: this does not care whether or not the CIs are actually a trait entities or not
-         */
+        * NOTE: this does not care whether or not the CIs are actually a trait entities or not
+        */
         public static async Task<ISet<Guid>> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IEnumerable<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
             var attributeNames = filters.Select(t => t.traitAttribute.AttributeTemplate.Name);
             // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...
+            // TODO: use dataloader
             var cisWithAttributes = await attributeModel.GetMergedAttributes(ciSelection, NamedAttributesSelection.Build(attributeNames.ToHashSet()), layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
             var ret = new HashSet<Guid>();
             foreach (var t in cisWithAttributes)
