@@ -58,7 +58,6 @@ namespace Omnikeeper.Model
 
             var lr = await baseModel.GetRelations(rl, layerset.LayerIDs, trans, atTime, generatedDataHandling);
 
-
             return MergeRelations(lr, layerset.LayerIDs, maskHandling);
         }
 
