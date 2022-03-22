@@ -45,8 +45,8 @@ namespace OKPluginValidation.Tests
                     },
                     optionalRelations: new List<TraitRelation>()
                     {
-                        new TraitRelation("has_issue", new RelationTemplate("__meta.validation.has_issue", false, null, null)),
-                        new TraitRelation("belongs_to_validation", new RelationTemplate("__meta.validation.belongs_to_validation", true, null, null)),
+                        new TraitRelation("affected_cis", new RelationTemplate("__meta.validation.has_issue", false)),
+                        new TraitRelation("belongs_to_validation", new RelationTemplate("__meta.validation.belongs_to_validation", true)),
                     }
                 )
             );

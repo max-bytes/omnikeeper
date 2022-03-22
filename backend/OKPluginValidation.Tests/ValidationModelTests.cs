@@ -44,6 +44,10 @@ namespace OKPluginValidation.Tests
                     },
                     new List<TraitAttribute>() {
                                 new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                    },
+                    new List<TraitRelation>()
+                    {
+                        new TraitRelation("detected_issues", new RelationTemplate("__meta.validation.belongs_to_validation", false))
                     }
                 )
             );
