@@ -91,7 +91,7 @@ namespace Omnikeeper.GraphQL.Types
                 if (traitIDs != null)
                     traitSelection = NamedTraitsSelection.Build(traitIDs);
 
-                var ret = dataLoaderService.SetupAndLoadEffectiveTraitLoader(ci, traitSelection, traitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                var ret = dataLoaderService.SetupAndLoadEffectiveTraits(ci, traitSelection, traitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return ret;
             });
         }

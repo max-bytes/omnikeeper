@@ -53,10 +53,15 @@ namespace Omnikeeper.Base.Model.TraitBased
             // TODO: what if two unsanitized field names map to the same sanitized field name? TODO: detect this and provide a work-around
             return SanitizeFieldName(tr.Identifier);
         }
+        public static string GenerateTraitRelationFieldWithTraitHintName(TraitRelation tr, string traitIDHint)
+        {
+            // TODO: what if two unsanitized field names map to the same sanitized field name? TODO: detect this and provide a work-around
+            return SanitizeFieldName($"{tr.Identifier}_as_{traitIDHint}");
+        }
+
         public static string GenerateTraitIDFieldName(string traitID)
         {
             return SanitizeFieldName(traitID);
         }
-
     }
 }

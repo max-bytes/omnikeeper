@@ -70,6 +70,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
             var relatedCIType = new RelatedCIType(traitsProvider, dataLoaderService, ciModel, attributeModel);
 
+            var elementWrapperTypeDictionary = new Dictionary<string, ElementWrapperType>();
+            var elementTypeDictionary = new Dictionary<string, ElementType>();
+
             foreach (var at in activeTraits)
             {
                 if (at.Key == TraitEmpty.StaticID) // ignore the empty trait
@@ -77,8 +80,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 try
                 {
-                    var tt = new ElementType(at.Value, relatedCIType);
+                    var tt = new ElementType();
+                    elementTypeDictionary.Add(at.Key, tt);
                     var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel, attributeModel);
+                    elementWrapperTypeDictionary.Add(at.Key, ttWrapper);
                     var filterInputType = FilterInputType.Build(at.Value);
                     var idt = IDInputType.Build(at.Value);
                     var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, ciidModel, attributeModel, relationModel, dataLoaderService, ttWrapper, filterInputType, idt);
@@ -91,6 +96,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     logger.LogError(e, $"Could not create types for trait entity with trait ID {at.Key}");
                 }
             }
+
+            // we do a delayed initialization of the ElementType to be able to resolve element wrappers
+            foreach(var kv in elementTypeDictionary)
+            {
+                var trait = activeTraits[kv.Key];
+                kv.Value.Init(trait, relatedCIType, (traitID) => elementWrapperTypeDictionary[traitID], dataLoaderService, effectiveTraitModel, traitsProvider, ciModel, attributeModel);
+            }
+
+            
 
             var w = new MergedCI2TraitEntityWrapper(elementTypes, dataLoaderService, effectiveTraitModel, traitsProvider);
 

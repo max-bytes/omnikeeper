@@ -20,8 +20,7 @@ namespace Omnikeeper.GraphQL
             this.dataLoaderContextAccessor = dataLoaderContextAccessor;
         }
 
-        // TODO: rework to also work with lists of CIs, then use throughout graphql resolvers
-        public IDataLoaderResult<IEnumerable<EffectiveTrait>> SetupAndLoadEffectiveTraitLoader(MergedCI ci, ITraitSelection traitSelection, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public IDataLoaderResult<IEnumerable<EffectiveTrait>> SetupAndLoadEffectiveTraits(MergedCI ci, ITraitSelection traitSelection, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetAllEffectiveTraits_{layerSet}_{timeThreshold}",
                 async (IEnumerable<(MergedCI ci, ITraitSelection traitSelection)> selections) =>
