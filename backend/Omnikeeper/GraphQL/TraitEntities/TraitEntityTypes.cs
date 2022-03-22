@@ -294,10 +294,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
             foreach (var r in underlyingTrait.OptionalRelations)
             {
                 var directionForward = r.RelationTemplate.DirectionForward;
+                var traitHints = r.RelationTemplate.TraitHints;
 
-                string? traitIDHint = null;// "tsa_cmdb.host"; //TODO
-
-                if (traitIDHint != null)
+                foreach(var traitIDHint in traitHints)
                 {
                     var elementWrapperType = elementWrapperTypeLookup(traitIDHint);
                     AddField(new FieldType()

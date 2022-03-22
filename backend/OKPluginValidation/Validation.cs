@@ -23,7 +23,7 @@ namespace OKPluginValidation.Validation
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Name;
 
-        [TraitRelation("detected_issues", "__meta.validation.belongs_to_validation", false, -1, -1)]
+        [TraitRelation("detected_issues", "__meta.validation.belongs_to_validation", false)]
         public readonly Guid[] DetectedIssues;
 
         public Validation(string id, string ruleName, JObject ruleConfig)

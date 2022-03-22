@@ -165,7 +165,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             foreach (var trFieldInfo in relationFieldInfos)
             {
                 var tra = trFieldInfo.TraitRelationAttribute;
-                optionalRelations.Add(new TraitRelation(tra.trName, new RelationTemplate(tra.predicateID, tra.directionForward, tra.minCardinality, tra.maxCardinality)));
+                optionalRelations.Add(new TraitRelation(tra.trName, new RelationTemplate(tra.predicateID, tra.directionForward)));
             }
 
             var traitOrigin = new TraitOriginV1(ta.originType);

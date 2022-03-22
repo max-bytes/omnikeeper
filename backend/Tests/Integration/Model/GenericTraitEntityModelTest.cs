@@ -328,7 +328,7 @@ namespace Tests.Integration.Model
         [TraitEntityID]
         public readonly string ID;
 
-        [TraitRelation("tr", "predicate_id", true, 1, -1)]
+        [TraitRelation("tr", "predicate_id", true)]
         public readonly Guid[] TestRelations;
 
         public TestEntityForOutgoingTraitRelation()
@@ -432,7 +432,7 @@ namespace Tests.Integration.Model
         [TraitEntityID]
         public readonly string ID;
 
-        [TraitRelation("tr", "predicate_id", false, 1, -1)]
+        [TraitRelation("tr", "predicate_id", false)]
         public readonly Guid[] TestRelations;
 
         public TestEntityForIncomingTraitRelation()

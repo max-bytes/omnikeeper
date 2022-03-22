@@ -155,8 +155,7 @@ export const Fragments = {
     template {
       predicateID
       directionForward
-      minCardinality
-      maxCardinality
+      traitHints
     }
   }  
   `,

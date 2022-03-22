@@ -277,7 +277,7 @@ namespace Tests.Integration.Model
             [TraitAttribute("id", "ta.id")]
             public string ID;
 
-            [TraitRelation("related", "predicate", true, -1, -1)]
+            [TraitRelation("related", "predicate", true)]
             public Guid[] Related;
 
             public TestEntity2()

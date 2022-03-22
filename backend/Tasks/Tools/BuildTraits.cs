@@ -117,7 +117,7 @@ namespace Tasks.Tools
                         },optionalRelations: new List<TraitRelation>()
                         {
                             new TraitRelation("interfaces",
-                                new RelationTemplate("has_interface", true, null, null)
+                                new RelationTemplate("has_interface", true)
                             )
                         }
                     ),
