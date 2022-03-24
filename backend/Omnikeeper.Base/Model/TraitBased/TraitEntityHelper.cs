@@ -15,10 +15,9 @@ namespace Omnikeeper.Base.Model.TraitBased
 {
     public static class TraitEntityHelper
     {
-        public static ((string name, IAttributeValue value, bool isID)[], (string predicateID, bool forward, Guid[] relatedCIIDs)[]) InputDictionary2AttributeAndRelationTuples(IDictionary<string, object> inputDict, ITrait trait)
+        public static (string name, IAttributeValue value, bool isID)[] InputDictionary2AttributeTuples(IDictionary<string, object> inputDict, ITrait trait)
         {
             var attributeValues = new List<(string name, IAttributeValue value, bool isID)>();
-            var relationValues = new List<(string predicateID, bool forward, Guid[] relatedCIIDs)>();
 
             foreach (var kv in inputDict)
             {
@@ -33,27 +32,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
                 if (attribute == null)
                 {
-                    // lookup relation
-                    var relation = trait.OptionalRelations.FirstOrDefault(r =>
-                    {
-                        var convertedRelationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
-                        return convertedRelationFieldName == inputFieldName;
-                    });
-
-                    if (relation == null)
-                    {
-                        throw new Exception($"Invalid input field for trait {trait.ID}: {inputFieldName}");
-                    }
-                    else
-                    {
-                        var array = (object[])kv.Value;
-                        var relatedCIIDs = array.Select(a =>
-                        {
-                            var relatedCIID = (Guid)a;
-                            return relatedCIID;
-                        }).ToArray();
-                        relationValues.Add((relation.RelationTemplate.PredicateID, relation.RelationTemplate.DirectionForward, relatedCIIDs));
-                    }
+                    throw new Exception($"Invalid input field for trait {trait.ID}: {inputFieldName}");
                 }
                 else
                 {
@@ -63,34 +42,31 @@ namespace Omnikeeper.Base.Model.TraitBased
                 }
             }
 
-            return (attributeValues.ToArray(), relationValues.ToArray());
+            return attributeValues.ToArray();
         }
 
-        public static (string[] names, IAttributeValue[] values) InputDictionary2IDAttributes(IDictionary<string, object> inputDict, ITrait trait)
+        public static (string name, IAttributeValue value)[] InputDictionary2IDAttributes(IDictionary<string, object> inputDict, ITrait trait)
         {
-            var (attributeValues, _) = InputDictionary2AttributeAndRelationTuples(inputDict, trait);
+            var attributeValues = InputDictionary2AttributeTuples(inputDict, trait);
 
-            return (
-                attributeValues.Where(t => t.isID).Select(t => t.name).ToArray(),
-                attributeValues.Where(t => t.isID).Select(t => t.value).ToArray()
-            );
+            return attributeValues.Where(t => t.isID).Select(t => (t.name, t.value)).ToArray();
         }
 
 
         /*
          * NOTE: this does not care whether or not the CI is actually a trait entity or not
          */
-        public static async Task<Guid?> GetMatchingCIIDByAttributeValues(IAttributeModel attributeModel, string[] attributeNames, IAttributeValue[] attributeValues, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public static async Task<Guid?> GetMatchingCIIDByAttributeValues(IAttributeModel attributeModel, (string name, IAttributeValue value)[] attributeTuples, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...
-            var cisWithIDAttributes = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(attributeNames.ToHashSet()), layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
+            var cisWithIDAttributes = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(attributeTuples.Select(t => t.name).ToHashSet()), layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
 
             var foundCIID = cisWithIDAttributes.Where(t =>
             {
-                for (var i = 0; i < attributeNames.Length; i++)
+                for (var i = 0; i < attributeTuples.Length; i++)
                 {
-                    var attributeName = attributeNames[i];
-                    var attributeValue = attributeValues[i];
+                    var attributeName = attributeTuples[i].name;
+                    var attributeValue = attributeTuples[i].value;
                     if (t.Value.TryGetValue(attributeName, out var ma))
                     {
                         if (!ma.Attribute.Value.Equals(attributeValue))

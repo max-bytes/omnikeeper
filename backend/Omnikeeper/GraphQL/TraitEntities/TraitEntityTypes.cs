@@ -173,10 +173,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (idCollection == null)
                             throw new Exception("Invalid input object for trait entity ID detected");
 
-                        var (idAttributeNames, idAttributeValues) = TraitEntityHelper.InputDictionary2IDAttributes(idCollection, at);
+                        var idAttributeTuples = TraitEntityHelper.InputDictionary2IDAttributes(idCollection, at);
 
                         // TODO: use data loader
-                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeNames, idAttributeValues, layerset, trans, timeThreshold);
+                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
 
                         if (!foundCIID.HasValue)
                         {
@@ -497,6 +497,27 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
+    public class SetRelationsByCIID
+    {
+        public readonly Guid BaseCIID;
+        public readonly Guid[] RelatedCIIDs;
+
+        public SetRelationsByCIID(Guid baseCIID, Guid[] relatedCIIDs)
+        {
+            BaseCIID = baseCIID;
+            RelatedCIIDs = relatedCIIDs;
+        }
+    }
+
+    public class SetRelationsByCIIDInputType : InputObjectGraphType<SetRelationsByCIID>
+    {
+        public SetRelationsByCIIDInputType()
+        {
+            Field("baseCIID", x => x.BaseCIID, type: typeof(GuidGraphType));
+            Field("relatedCIIDs", x => x.RelatedCIIDs, type: typeof(ListGraphType<GuidGraphType>));
+        }
+    }
+
     public class UpsertInputType : InputObjectGraphType
     {
         public UpsertInputType(ITrait at)
@@ -519,15 +540,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 {
                     Name = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta),
                     ResolvedType = graphType
-                });
-            }
-
-            foreach (var rr in at.OptionalRelations)
-            {
-                AddField(new FieldType()
-                {
-                    Name = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(rr),
-                    ResolvedType = new ListGraphType(new GuidGraphType())
                 });
             }
         }

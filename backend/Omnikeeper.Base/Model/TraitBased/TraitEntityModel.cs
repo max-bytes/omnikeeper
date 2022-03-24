@@ -67,9 +67,11 @@ namespace Omnikeeper.Base.Model.TraitBased
             if (!trait.OptionalRelations.IsEmpty())
             {
                 var relevantOutgoingRelations = trait.OptionalRelations.Where(rr => rr.RelationTemplate.DirectionForward).SelectMany(rr => relevantCIIDs.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
-                var relevantIncomingRelations = trait.OptionalRelations.Where(rr => !rr.RelationTemplate.DirectionForward).SelectMany(rr => relevantCIIDs.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
+                var tmpChanged = await WriteRelations(outgoingRelations, relevantOutgoingRelations, true, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+                changed = changed || tmpChanged;
 
-                var tmpChanged = await WriteRelations(outgoingRelations, incomingRelations, relevantOutgoingRelations, relevantIncomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+                var relevantIncomingRelations = trait.OptionalRelations.Where(rr => !rr.RelationTemplate.DirectionForward).SelectMany(rr => relevantCIIDs.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
+                tmpChanged = await WriteRelations(incomingRelations, relevantIncomingRelations, false, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
                 changed = changed || tmpChanged;
             }
 
@@ -77,7 +79,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         }
 
         // NOTE: the ci MUST exist already
-        public async Task<(EffectiveTrait et, bool changed)> InsertOrUpdate(Guid ciid, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
+        public async Task<(EffectiveTrait et, bool changed)> InsertOrUpdateFull(Guid ciid, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
             string? ciName, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
@@ -94,10 +96,32 @@ namespace Omnikeeper.Base.Model.TraitBased
             if (!trait.OptionalRelations.IsEmpty())
             {
                 var relevantOutgoingRelations = trait.OptionalRelations.Where(rr => rr.RelationTemplate.DirectionForward).Select(rr => (ciid, rr.RelationTemplate.PredicateID)).ToHashSet();
+                var tmpChanged = await WriteRelations(outgoingRelations, relevantOutgoingRelations, true, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+                changed = changed || tmpChanged;
+
                 var relevantIncomingRelations = trait.OptionalRelations.Where(rr => !rr.RelationTemplate.DirectionForward).Select(rr => (ciid, rr.RelationTemplate.PredicateID)).ToHashSet();
-                var tmpChanged = await WriteRelations(outgoingRelations, incomingRelations, relevantOutgoingRelations, relevantIncomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+                tmpChanged = await WriteRelations(incomingRelations, relevantIncomingRelations, false, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
                 changed = changed || tmpChanged;
             }
+
+            var dc = await GetSingleByCIID(ciid, layerSet, trans, changesetProxy.TimeThreshold);
+            if (dc == null)
+                throw new Exception("DC does not conform to trait requirements");
+            return (dc, changed);
+        }
+
+        public async Task<(EffectiveTrait et, bool changed)> InsertOrUpdateAttributesOnly(Guid ciid, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
+            string? ciName, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        {
+            var relevantAttributes = relevantAttributesForTrait;
+
+            if (ciName != null)
+            {
+                relevantAttributes = relevantAttributes.Concat(ICIModel.NameAttribute).ToHashSet();
+                attributeFragments = attributeFragments.Concat(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, ICIModel.NameAttribute, new AttributeScalarValueText(ciName)));
+            }
+
+            var changed = await WriteAttributes(attributeFragments, new HashSet<Guid>() { ciid }, relevantAttributes, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
 
             var dc = await GetSingleByCIID(ciid, layerSet, trans, changesetProxy.TimeThreshold);
             if (dc == null)
@@ -115,21 +139,13 @@ namespace Omnikeeper.Base.Model.TraitBased
             return numChanged > 0;
         }
 
-        private async Task<bool> WriteRelations(IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
-            ISet<(Guid thisCIID, string predicateID)> relevantOutgoingRelations, ISet<(Guid thisCIID, string predicateID)> relevantIncomingRelations,
+        private async Task<bool> WriteRelations(IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> relations,
+            ISet<(Guid thisCIID, string predicateID)> relevantRelations, bool outgoing,
             LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            var changed = false;
-            if (!trait.OptionalRelations.IsEmpty())
-            {
-                var otherLayersValueHandling = GetOtherLayersValueHandling(layerSet, writeLayer);
-                var tmpNumChanged = await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayer, outgoingRelations, relevantOutgoingRelations, true), changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
-                changed = changed || tmpNumChanged > 0;
-                tmpNumChanged = await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayer, incomingRelations, relevantIncomingRelations, false), changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
-                changed = changed || tmpNumChanged > 0;
-            }
-
-            return changed;
+            var otherLayersValueHandling = GetOtherLayersValueHandling(layerSet, writeLayer);
+            var tmpNumChanged = await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayer, relations, relevantRelations, outgoing), changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
+            return tmpNumChanged > 0;
         }
 
         // NOTE: assumes that the ciid exists, does not check beforehand if the trait entity is actually present
@@ -178,6 +194,30 @@ namespace Omnikeeper.Base.Model.TraitBased
                     new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>(),
                     incoming, false), changesetProxy, dataOrigin, trans, maskHandlingForRemoval, otherLayersValueHandling);
             }
+        }
+
+        public async Task<(EffectiveTrait et, bool changed)> SetRelations(string traitRelationIdentifier, Guid thisCIID, Guid[] relatedCIIDs, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOriginV1, ChangesetProxy changesetProxy, IModelContext trans, MaskHandlingForRemovalApplyNoMask maskHandlingForRemoval)
+        {
+            var et = await GetSingleByCIID(thisCIID, layerSet, trans, changesetProxy.TimeThreshold);
+            if (et == null)
+                throw new Exception($"Cannot set relations \"{traitRelationIdentifier}\" for trait \"{trait.ID}\": entity does not exist at CIID {thisCIID}");
+
+            var tr = trait.OptionalRelations.FirstOrDefault(tr => tr.Identifier == traitRelationIdentifier);
+            if (tr == null)
+                throw new Exception($"Trait \"{trait.ID}\" does not contain trait relation with identifier \"{traitRelationIdentifier}\"");
+
+            var directionForward = tr.RelationTemplate.DirectionForward;
+            var predicateID = tr.RelationTemplate.PredicateID;
+
+            var relevantRelations = new HashSet<(Guid thisCIID, string predicateID)>() { (thisCIID, predicateID) };
+            var relations = new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>() { (thisCIID, predicateID: tr.RelationTemplate.PredicateID, relatedCIIDs) };
+            var changed = await WriteRelations(relations, relevantRelations, directionForward, layerSet, writeLayerID, dataOriginV1, changesetProxy, trans, maskHandlingForRemoval);
+
+            var dc = await GetSingleByCIID(thisCIID, layerSet, trans, changesetProxy.TimeThreshold);
+            if (dc == null)
+                throw new Exception("DC does not conform to trait requirements");
+            return (dc, changed);
+
         }
     }
 }

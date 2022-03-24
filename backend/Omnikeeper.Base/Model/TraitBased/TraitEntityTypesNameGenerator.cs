@@ -38,6 +38,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public static string GenerateTraitEntityIDInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_ID_Input_" + trait.ID);
         public static string GenerateTraitEntityFilterInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_filter_Input_" + trait.ID);
         public static string GenerateUpsertTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Upsert_Input_" + trait.ID);
+        public static string GenerateSetRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "setRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
         public static string GenerateInsertNewMutationName(string traitID) => "insertNew_" + SanitizeMutationName(traitID);
         public static string GenerateUpdateByCIIDMutationName(string traitID) => "updateByCIID_" + SanitizeMutationName(traitID);
         public static string GenerateDeleteByCIIDMutationName(string traitID) => "deleteByCIID_" + SanitizeMutationName(traitID);

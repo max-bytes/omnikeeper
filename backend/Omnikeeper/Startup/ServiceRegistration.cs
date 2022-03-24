@@ -277,7 +277,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<TypeContainerCreator>().SingleInstance();
         }
 
-        internal static void RegisterQuartz(ContainerBuilder builder, string connectionString)
+        public static void RegisterQuartz(ContainerBuilder builder, string connectionString)
         {
             var schedulerConfig = new NameValueCollection {
                 {"quartz.threadPool.threadCount", "3" },

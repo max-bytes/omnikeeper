@@ -1,5 +1,7 @@
-﻿using NUnit.Framework;
-using System.Text.Json;
+﻿using FluentAssertions;
+using FluentAssertions.Json;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 
 namespace Tests.Integration.GraphQL.Base
 {
@@ -30,9 +32,9 @@ namespace Tests.Integration.GraphQL.Base
         /// <param name="expectedJson">Expected value.</param>
         public static void ShouldBeCrossPlatJson(this string actualJson, string expectedJson)
         {
-            using var actualJsonDoc = JsonDocument.Parse(Normalize(actualJson));
-            using var expectedJsonDoc = JsonDocument.Parse(Normalize(expectedJson));
-            Assert.AreEqual(JsonSerializer.Serialize(expectedJsonDoc.RootElement), JsonSerializer.Serialize(actualJsonDoc.RootElement));
+            var actualJsonDoc = JToken.Parse(Normalize(actualJson));
+            var expectedJsonDoc = JToken.Parse(Normalize(expectedJson));
+            actualJsonDoc.Should().BeEquivalentTo(expectedJsonDoc);
         }
 
         private static string Normalize(this string value) => value.Replace("\r\n", "\n").Replace("\\r\\n", "\\n");

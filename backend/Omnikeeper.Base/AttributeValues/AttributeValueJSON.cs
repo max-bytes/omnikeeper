@@ -7,7 +7,6 @@ using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    //[ProtoContract(Serializer = typeof(AttributeScalarValueJSONSerializer))]
     public class AttributeScalarValueJSON : IAttributeScalarValue<JToken>, IEquatable<AttributeScalarValueJSON>
     {
         public static JToken ErrorValue(string message) => JToken.Parse($"{{\"error\": \"{message}\" }}");
@@ -40,8 +39,7 @@ namespace Omnikeeper.Entity.AttributeValues
             }
             catch (JsonReaderException e)
             {
-                var eJson = ErrorValue(e.Message); // TODO: we need to handling this different, probabl throw the error and have other systems deal with it
-                return new AttributeScalarValueJSON(eJson, eJson.ToString());
+                throw new Exception("Error building JSON attribute value from string", e);
             }
         }
 
@@ -57,44 +55,6 @@ namespace Omnikeeper.Entity.AttributeValues
         }
     }
 
-    //public class AttributeScalarValueJSONSerializer : ISubTypeSerializer<AttributeScalarValueJSON>, ISerializer<AttributeScalarValueJSON>
-    //{
-    //    SerializerFeatures ISerializer<AttributeScalarValueJSON>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
-    //    void ISerializer<AttributeScalarValueJSON>.Write(ref ProtoWriter.State state, AttributeScalarValueJSON value)
-    //        => ((ISubTypeSerializer<AttributeScalarValueJSON>)this).WriteSubType(ref state, value);
-    //    AttributeScalarValueJSON ISerializer<AttributeScalarValueJSON>.Read(ref ProtoReader.State state, AttributeScalarValueJSON value)
-    //        => ((ISubTypeSerializer<AttributeScalarValueJSON>)this).ReadSubType(ref state, SubTypeState<AttributeScalarValueJSON>.Create(state.Context, value));
-
-    //    public void WriteSubType(ref ProtoWriter.State state, AttributeScalarValueJSON value)
-    //    {
-    //        state.WriteFieldHeader(1, WireType.String);
-    //        state.WriteString(value.ValueStr);
-    //    }
-
-    //    public AttributeScalarValueJSON ReadSubType(ref ProtoReader.State state, SubTypeState<AttributeScalarValueJSON> value)
-    //    {
-    //        int field;
-    //        string valueStr = "";
-    //        while ((field = state.ReadFieldHeader()) > 0)
-    //        {
-    //            switch (field)
-    //            {
-    //                case 1:
-    //                    valueStr = state.ReadString();
-    //                    break;
-    //                default:
-    //                    state.SkipField();
-    //                    break;
-    //            }
-    //        }
-    //        if (valueStr != "")
-    //            return AttributeScalarValueJSON.BuildFromString(valueStr);
-    //        else
-    //            throw new Exception("Could not deserialize AttributeScalarValueJSON");
-    //    }
-    //}
-
-    //[ProtoContract]
     public class AttributeArrayValueJSON : AttributeArrayValue<AttributeScalarValueJSON, JToken>
     {
         protected AttributeArrayValueJSON(AttributeScalarValueJSON[] values) : base(values)
@@ -116,8 +76,8 @@ namespace Omnikeeper.Entity.AttributeValues
                     return JToken.Parse(value);
                 }
                 catch (JsonReaderException e)
-                { // TODO: we need to handling this different, probabl throw the error and have other systems deal with it
-                    return AttributeScalarValueJSON.ErrorValue(e.Message);
+                {
+                    throw new Exception("Error building JSON attribute value from string", e);
                 }
             }).ToArray();
             return Build(jsonValues);

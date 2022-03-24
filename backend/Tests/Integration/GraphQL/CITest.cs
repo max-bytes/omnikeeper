@@ -1,6 +1,4 @@
 ﻿using GraphQL;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
@@ -34,6 +32,8 @@ namespace Tests.Integration.GraphQL
                 });
             await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueInteger(3), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
             trans.Commit();
+
+            await ReinitSchema();
 
             string query = @"
                     query($ciids: [Guid]!, $layers: [String]!) {
@@ -78,8 +78,7 @@ namespace Tests.Integration.GraphQL
                         ]
                     }";
 
-            var httpContext = new DefaultHttpContext();
-            AssertQuerySuccess(query, expected, inputs, userContext: new OmnikeeperUserContext(user, ServiceProvider));
+            AssertQuerySuccess(query, expected, new OmnikeeperUserContext(user, ServiceProvider), inputs);
         }
     }
 }

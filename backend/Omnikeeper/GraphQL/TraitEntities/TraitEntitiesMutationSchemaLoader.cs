@@ -34,25 +34,21 @@ namespace Omnikeeper.GraphQL.TraitEntities
             this.changesetModel = changesetModel;
         }
 
-        private async Task<EffectiveTrait> InsertUsingNewCI((string name, IAttributeValue value, bool isID)[] attributeValues, (string predicateID, bool forward, Guid[] relatedCIIDs)[] relationValues, string? ciName, IModelContext trans, IChangesetProxy changeset, TraitEntityModel traitEntityModel, LayerSet layerset, string writeLayerID)
+        private async Task<EffectiveTrait> InsertUsingNewCI((string name, IAttributeValue value, bool isID)[] attributeValues, string? ciName, IModelContext trans, IChangesetProxy changeset, TraitEntityModel traitEntityModel, LayerSet layerset, string writeLayerID)
         {
             var finalCIID = await ciModel.CreateCI(trans);
 
             var attributeFragments = attributeValues.Select(i => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(finalCIID, i.name, i.value));
 
-            IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations = relationValues.Where(rv => !rv.forward).Select(rv => (finalCIID, rv.predicateID, rv.relatedCIIDs)).ToList();
-            IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations = relationValues.Where(rv => rv.forward).Select(rv => (finalCIID, rv.predicateID, rv.relatedCIIDs)).ToList();
-            var t = await traitEntityModel.InsertOrUpdate(finalCIID, attributeFragments, outgoingRelations, incomingRelations, ciName, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            var t = await traitEntityModel.InsertOrUpdateAttributesOnly(finalCIID, attributeFragments, ciName, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return t.et;
         }
 
-        private async Task<EffectiveTrait> Update(Guid ciid, (string name, IAttributeValue value, bool isID)[] attributeValues, (string predicateID, bool forward, Guid[] relatedCIIDs)[] relationValues, string? ciName, IModelContext trans, IChangesetProxy changeset, TraitEntityModel traitEntityModel, LayerSet layerset, string writeLayerID)
+        private async Task<EffectiveTrait> Update(Guid ciid, (string name, IAttributeValue value, bool isID)[] attributeValues, string? ciName, IModelContext trans, IChangesetProxy changeset, TraitEntityModel traitEntityModel, LayerSet layerset, string writeLayerID)
         {
             var attributeFragments = attributeValues.Select(i => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, i.name, i.value));
 
-            IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations = relationValues.Where(rv => !rv.forward).Select(rv => (ciid, rv.predicateID, rv.relatedCIIDs)).ToList();
-            IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations = relationValues.Where(rv => rv.forward).Select(rv => (ciid, rv.predicateID, rv.relatedCIIDs)).ToList();
-            var t = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, ciName, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            var t = await traitEntityModel.InsertOrUpdateAttributesOnly(ciid, attributeFragments, ciName, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return t.et;
         }
 
@@ -90,7 +86,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (context.GetArgument(typeof(object), "input") is not IDictionary<string, object> upsertInputCollection)
                             throw new Exception("Invalid input object for update detected");
 
-                        var (inputAttributeValues, inputRelationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, elementTypeContainer.Trait);
+                        var inputAttributeValues = TraitEntityHelper.InputDictionary2AttributeTuples(upsertInputCollection, elementTypeContainer.Trait);
 
                         var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
@@ -101,7 +97,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             throw new Exception($"Cannot update entity at CI with ID {ciid}: entity does not exist at that CI");
                         }
 
-                        var et = await Update(ciid, inputAttributeValues, inputRelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
+                        var et = await Update(ciid, inputAttributeValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
 
                         return et;
                     });
@@ -130,13 +126,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (context.GetArgument(typeof(object), "input") is not IDictionary<string, object> upsertInputCollection)
                             throw new Exception("Invalid input object for insert detected");
 
-                        var (inputAttributeValues, inputRelationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, elementTypeContainer.Trait);
+                        var inputAttributeValues = TraitEntityHelper.InputDictionary2AttributeTuples(upsertInputCollection, elementTypeContainer.Trait);
 
                         // check if the trait entity has an ID, and if so, check that there is no existing entity with that ID
                         if (elementTypeContainer.IDInputType != null)
                         {
-                            var (idAttributeNames, idAttributeValues) = TraitEntityHelper.InputDictionary2IDAttributes(upsertInputCollection, elementTypeContainer.Trait);
-                            var currentCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeNames, idAttributeValues, layerset, trans, timeThreshold);
+                            var idAttributeTuples = TraitEntityHelper.InputDictionary2IDAttributes(upsertInputCollection, elementTypeContainer.Trait);
+                            var currentCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
                             if (currentCIID.HasValue)
                             { // there is already a trait entity with that ID -> error
                                 throw new Exception($"A CI with that data ID already exists; CIID: {currentCIID.Value})");
@@ -145,7 +141,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
-                        var et = await InsertUsingNewCI(inputAttributeValues, inputRelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
+                        var et = await InsertUsingNewCI(inputAttributeValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
 
                         return et;
                     });
@@ -207,25 +203,24 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (context.GetArgument(typeof(object), "input") is not IDictionary<string, object> upsertInputCollection)
                                 throw new Exception("Invalid input object for upsert detected");
 
-                            var (inputAttributeValues, inputRelationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(upsertInputCollection, elementTypeContainer.Trait);
-                            var (idAttributeNames, idAttributeValues) = TraitEntityHelper.InputDictionary2IDAttributes(upsertInputCollection, elementTypeContainer.Trait);
-
-                            if (idAttributeValues.IsEmpty())
+                            var inputAttributeValues = TraitEntityHelper.InputDictionary2AttributeTuples(upsertInputCollection, elementTypeContainer.Trait);
+                            var idAttributeTuples = TraitEntityHelper.InputDictionary2IDAttributes(upsertInputCollection, elementTypeContainer.Trait);
+                            if (idAttributeTuples.IsEmpty())
                             {
                                 throw new Exception("Cannot mutate trait entity that does not have proper ID field(s)");
                             }
 
-                            var currentCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeNames, idAttributeValues, layerset, trans, timeThreshold);
+                            var currentCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
 
                             var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
                             if (currentCIID.HasValue)
                             {
-                                var et = await Update(currentCIID.Value, inputAttributeValues, inputRelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
+                                var et = await Update(currentCIID.Value, inputAttributeValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
                                 return et;
                             } else
                             {
-                                var et = await InsertUsingNewCI(inputAttributeValues, inputRelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
+                                var et = await InsertUsingNewCI(inputAttributeValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
                                 return et;
                             }
                         });
@@ -258,10 +253,14 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (idCollection == null)
                                 throw new Exception("Invalid input object for trait entity ID detected");
 
-                            var (idAttributeNames, idAttributeValues) = TraitEntityHelper.InputDictionary2IDAttributes(idCollection, elementTypeContainer.Trait);
+                            var idAttributeTuples = TraitEntityHelper.InputDictionary2IDAttributes(idCollection, elementTypeContainer.Trait);
+                            if (idAttributeTuples.IsEmpty())
+                            {
+                                throw new Exception("Cannot mutate trait entity that does not have proper ID field(s)");
+                            }
 
                             // TODO: use data loader?
-                            var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeNames, idAttributeValues, layerset, trans, timeThreshold);
+                            var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
 
                             if (!foundCIID.HasValue)
                                 return false;
@@ -270,6 +269,36 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var removed = await traitEntityModel.TryToDelete(foundCIID.Value, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                             return removed;
+                        });
+                }
+
+                foreach(var tr in elementTypeContainer.Trait.OptionalRelations)
+                {
+                    tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateSetRelationsByCIIDMutationName(traitID, tr), elementTypeContainer.ElementWrapper,
+                        arguments: new QueryArguments(
+                            new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                            new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                            new QueryArgument<NonNullGraphType<SetRelationsByCIIDInputType>> { Name = "input" }),
+                        resolve: async context =>
+                        {
+                            var layerStrings = context.GetArgument<string[]>("layers")!;
+                            var writeLayerID = context.GetArgument<string>("writeLayer")!;
+
+                            var userContext = await context.SetupUserContext()
+                                .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                                .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                            var layerset = userContext.GetLayerSet(context.Path);
+                            var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                            var trans = userContext.Transaction;
+
+                            var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+
+                            var input = context.GetArgument<SetRelationsByCIID>("input")!;
+
+                            var t = await traitEntityModel.SetRelations(tr.Identifier, input.BaseCIID, input.RelatedCIIDs, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            return t.et;
                         });
                 }
             }

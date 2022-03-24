@@ -68,7 +68,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var idAttributeValues = idAttributeInfos.ExtractAttributeValuesFromID(id);
-            var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames(), idAttributeValues, layerSet, trans, timeThreshold);
+            var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames().Zip(idAttributeValues).ToArray(), layerSet, trans, timeThreshold);
 
             if (!foundCIID.HasValue)
                 return default;
@@ -219,7 +219,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             // NOTE: we do a CIID lookup based on the ID attributes and their values, but we DON'T require that the found CI must already be a trait entity
             var id = idAttributeInfos.ExtractIDFromEntity(t);
             var idAttributeValues = idAttributeInfos.ExtractAttributeValuesFromID(id);
-            var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames(), idAttributeValues, layerSet, trans, changesetProxy.TimeThreshold);
+            var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames().Zip(idAttributeValues).ToArray(), layerSet, trans, changesetProxy.TimeThreshold);
 
             var ciid = foundCIID.HasValue ? foundCIID.Value : await ciModel.CreateCI(trans);
 
@@ -227,7 +227,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var attributeFragments = Entities2Fragments(tuples);
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(tuples);
             string? ciName = null;
-            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, ciName, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            var (et, changed) = await traitEntityModel.InsertOrUpdateFull(ciid, attributeFragments, outgoingRelations, incomingRelations, ciName, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
 
             var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, DefaultSerializer);
 
