@@ -2,6 +2,7 @@
 using GraphQL.DataLoader;
 using GraphQL.Resolvers;
 using GraphQL.Types;
+using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.GraphQL;
@@ -13,6 +14,7 @@ using Omnikeeper.GraphQL.Types;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -259,8 +261,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
     {
         public ElementType() {}
 
-        public void Init(ITrait underlyingTrait, RelatedCIType relatedCIType, Func<string, ElementWrapperType> elementWrapperTypeLookup, IDataLoaderService dataLoaderService,
-            IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, ICIModel ciModel, IAttributeModel attributeModel)
+        public delegate bool ElementWrapperTypeLookup(string key, [MaybeNullWhen(false)] out ElementWrapperType ew);
+        public void Init(ITrait underlyingTrait, RelatedCIType relatedCIType, ElementWrapperTypeLookup elementWrapperTypeLookup, IDataLoaderService dataLoaderService,
+            IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, ICIModel ciModel, IAttributeModel attributeModel, ILogger logger)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityGraphTypeName(underlyingTrait);
 
@@ -298,54 +301,59 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 foreach(var traitIDHint in traitHints)
                 {
-                    var elementWrapperType = elementWrapperTypeLookup(traitIDHint);
-                    AddField(new FieldType()
+                    if (elementWrapperTypeLookup(traitIDHint, out var elementWrapperType))
                     {
-                        Name = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldWithTraitHintName(r, traitIDHint),
-                        ResolvedType = new ListGraphType(elementWrapperType),
-                        Resolver = new AsyncFieldResolver<object>(async context =>
+                        AddField(new FieldType()
                         {
-                            var o = context.Source as EffectiveTrait;
-                            if (o == null)
+                            Name = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldWithTraitHintName(r, traitIDHint),
+                            ResolvedType = new ListGraphType(elementWrapperType),
+                            Resolver = new AsyncFieldResolver<object>(async context =>
                             {
-                                return ImmutableList<EffectiveTrait>.Empty;
-                            }
-                            var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                            var layerSet = userContext.GetLayerSet(context.Path);
-                            var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                            var trans = userContext.Transaction;
-
-                            var trs = (directionForward) ? o.OutgoingTraitRelations : o.IncomingTraitRelations;
-                            if (trs.TryGetValue(r.Identifier, out var tr))
-                            {
-                                var otherCIIDs = (directionForward ? tr.Select(r => r.Relation.ToCIID) : tr.Select(r => r.Relation.FromCIID)).ToHashSet();
-
-                                var trait = await traitsProvider.GetActiveTrait(traitIDHint, trans, timeThreshold);
-                                if (trait == null)
+                                var o = context.Source as EffectiveTrait;
+                                if (o == null)
+                                {
                                     return ImmutableList<EffectiveTrait>.Empty;
+                                }
+                                var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                                var layerSet = userContext.GetLayerSet(context.Path);
+                                var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                                var trans = userContext.Transaction;
 
-                                var attributeSelection = NamedAttributesSelection.Build(
-                                    trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Union(
-                                    trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet()
-                                );
+                                var trs = (directionForward) ? o.OutgoingTraitRelations : o.IncomingTraitRelations;
+                                if (trs.TryGetValue(r.Identifier, out var tr))
+                                {
+                                    var otherCIIDs = (directionForward ? tr.Select(r => r.Relation.ToCIID) : tr.Select(r => r.Relation.FromCIID)).ToHashSet();
 
-                                return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(otherCIIDs), attributeSelection, ciModel, attributeModel, layerSet, timeThreshold, trans)
-                                    .Then(cis =>
-                                    {
-                                        var ret = new List<IDataLoaderResult<EffectiveTrait?>>();
-                                        foreach (var ci in cis)
+                                    var trait = await traitsProvider.GetActiveTrait(traitIDHint, trans, timeThreshold);
+                                    if (trait == null)
+                                        return ImmutableList<EffectiveTrait>.Empty;
+
+                                    var attributeSelection = NamedAttributesSelection.Build(
+                                        trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Union(
+                                        trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet()
+                                    );
+
+                                    return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(otherCIIDs), attributeSelection, ciModel, attributeModel, layerSet, timeThreshold, trans)
+                                        .Then(cis =>
                                         {
-                                            var et = dataLoaderService.SetupAndLoadEffectiveTraits(ci, NamedTraitsSelection.Build(traitIDHint), effectiveTraitModel, traitsProvider, layerSet, timeThreshold, trans)
-                                                .Then(ets => ets.FirstOrDefault());
-                                            ret.Add(et);
-                                        }
-                                        return ret.ToResultOfList().Then(items => items.Where(item => item != null));
-                                    });
+                                            var ret = new List<IDataLoaderResult<EffectiveTrait?>>();
+                                            foreach (var ci in cis)
+                                            {
+                                                var et = dataLoaderService.SetupAndLoadEffectiveTraits(ci, NamedTraitsSelection.Build(traitIDHint), effectiveTraitModel, traitsProvider, layerSet, timeThreshold, trans)
+                                                    .Then(ets => ets.FirstOrDefault());
+                                                ret.Add(et);
+                                            }
+                                            return ret.ToResultOfList().Then(items => items.Where(item => item != null));
+                                        });
 
-                            }
-                            else return ImmutableList<EffectiveTrait>.Empty;
-                        })
-                    });
+                                }
+                                else return ImmutableList<EffectiveTrait>.Empty;
+                            })
+                        });
+                    } else
+                    {
+                        logger.LogError($"Could not create trait relation fields for trait-hint: could not find trait with ID \"{traitIDHint}\"");
+                    }
                 }
 
                 // non-trait hinted field

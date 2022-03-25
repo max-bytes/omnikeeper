@@ -98,13 +98,20 @@ namespace Omnikeeper.GraphQL.TraitEntities
             }
 
             // we do a delayed initialization of the ElementType to be able to resolve element wrappers
-            foreach(var kv in elementTypeDictionary)
+            foreach (var kv in elementTypeDictionary)
             {
-                var trait = activeTraits[kv.Key];
-                kv.Value.Init(trait, relatedCIType, (traitID) => elementWrapperTypeDictionary[traitID], dataLoaderService, effectiveTraitModel, traitsProvider, ciModel, attributeModel);
+                try
+                {
+                    var trait = activeTraits[kv.Key];
+                    kv.Value.Init(trait, relatedCIType, elementWrapperTypeDictionary.TryGetValue, dataLoaderService, effectiveTraitModel, traitsProvider, ciModel, attributeModel, logger);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, $"Could not create types for trait entity with trait ID {kv.Key}");
+                }
             }
 
-            
+
 
             var w = new MergedCI2TraitEntityWrapper(elementTypes, dataLoaderService, effectiveTraitModel, traitsProvider);
 
