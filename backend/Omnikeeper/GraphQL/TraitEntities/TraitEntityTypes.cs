@@ -497,27 +497,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
-    public class SetRelationsByCIID
-    {
-        public readonly Guid BaseCIID;
-        public readonly Guid[] RelatedCIIDs;
-
-        public SetRelationsByCIID(Guid baseCIID, Guid[] relatedCIIDs)
-        {
-            BaseCIID = baseCIID;
-            RelatedCIIDs = relatedCIIDs;
-        }
-    }
-
-    public class SetRelationsByCIIDInputType : InputObjectGraphType<SetRelationsByCIID>
-    {
-        public SetRelationsByCIIDInputType()
-        {
-            Field("baseCIID", x => x.BaseCIID, type: typeof(GuidGraphType));
-            Field("relatedCIIDs", x => x.RelatedCIIDs, type: typeof(ListGraphType<GuidGraphType>));
-        }
-    }
-
     public class UpsertInputType : InputObjectGraphType
     {
         public UpsertInputType(ITrait at)

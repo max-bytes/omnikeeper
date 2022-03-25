@@ -1,7 +1,4 @@
 ﻿using GraphQL;
-using GraphQL.Execution;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
@@ -32,6 +29,11 @@ namespace Tests.Integration.GraphQL
                         PermissionUtils.GetManagementPermission() 
                     }),
                 });
+
+            // create CIs to relate to
+            var relatedCIID1 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());
+            var relatedCIID2 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());
+            var relatedCIID3 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());
 
             // force rebuild graphql schema
             await ReinitSchema();
@@ -241,15 +243,13 @@ mutation {
             var ciidEntity1Str = json["data"]!["traitEntities"]!["test_trait_a"]!["byDataID"]!["ciid"]!.Value<string>();
             var ciidEntity1 = Guid.Parse(ciidEntity1Str);
 
-            // create CIs to relate to
-            var relatedCIID1 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());
-            var relatedCIID2 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());
-            var mutationUpdateAssignments = @"
+            var mutationSetAssignments = @"
 mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
   setRelationsByCIID_test_trait_a_assignments (
     layers: [""layer_1""]
     writeLayer: ""layer_1""
-    input: { baseCIID: $baseCIID, relatedCIIDs: $relatedCIIDs }
+    baseCIID: $baseCIID
+    relatedCIIDs: $relatedCIIDs
   ) {
                 entity { id }
   }
@@ -265,7 +265,7 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
   }
 }
 ";
-            AssertQuerySuccess(mutationUpdateAssignments, expected7, new OmnikeeperUserContext(user, ServiceProvider),
+            AssertQuerySuccess(mutationSetAssignments, expected7, new OmnikeeperUserContext(user, ServiceProvider),
                 new Inputs(new Dictionary<string, object?>()
                 {
                     { "baseCIID", ciidEntity1 },
@@ -309,7 +309,7 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
   }
 }
 ";
-            AssertQuerySuccess(mutationUpdateAssignments, expected9, new OmnikeeperUserContext(user, ServiceProvider),
+            AssertQuerySuccess(mutationSetAssignments, expected9, new OmnikeeperUserContext(user, ServiceProvider),
                 new Inputs(new Dictionary<string, object?>()
                 {
                     { "baseCIID", ciidEntity1 },
@@ -339,6 +339,115 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
 }}
 ";
             AssertQuerySuccess(queryTestTraitA, expected10, new OmnikeeperUserContext(user, ServiceProvider));
+
+            // add assignemnts
+            var mutationAddAssignments = @"
+mutation($baseCIID: Guid!, $relatedCIIDsToAdd: [Guid]!) {
+  addRelationsByCIID_test_trait_a_assignments (
+    layers: [""layer_1""]
+    writeLayer: ""layer_1""
+    baseCIID: $baseCIID
+    relatedCIIDsToAdd: $relatedCIIDsToAdd
+  ) {
+                entity { id }
+  }
+        }
+";
+            var expected11 = @"
+{
+  ""addRelationsByCIID_test_trait_a_assignments"": {
+	""entity"": {
+        ""id"": ""entity_1""
+      }
+	}
+  }
+}
+";
+            AssertQuerySuccess(mutationAddAssignments, expected11, new OmnikeeperUserContext(user, ServiceProvider),
+                new Inputs(new Dictionary<string, object?>()
+                {
+                    { "baseCIID", ciidEntity1 },
+                    { "relatedCIIDsToAdd", new Guid[] { relatedCIID2, relatedCIID3 } }
+                }));
+
+            var expected12 = $@"
+{{
+  ""traitEntities"": {{
+	  ""test_trait_a"": {{
+	    ""all"": [
+          {{
+            ""entity"": {{
+              ""id"": ""entity_1"",
+              ""name"": ""Entity 1"",
+              ""optional"": 3,
+              ""assignments"": [
+              {{
+                ""relatedCIID"": ""{relatedCIID2}""
+              }},
+              {{
+                ""relatedCIID"": ""{relatedCIID3}""
+              }}]
+            }}
+          }}
+        ]
+	  }}
+  }}
+}}
+";
+            AssertQuerySuccess(queryTestTraitA, expected12, new OmnikeeperUserContext(user, ServiceProvider));
+
+            // remove assignemnts
+            var mutationRemoveAssignments = @"
+mutation($baseCIID: Guid!, $relatedCIIDsToRemove: [Guid]!) {
+  removeRelationsByCIID_test_trait_a_assignments (
+    layers: [""layer_1""]
+    writeLayer: ""layer_1""
+    baseCIID: $baseCIID
+    relatedCIIDsToRemove: $relatedCIIDsToRemove
+  ) {
+                entity { id }
+  }
+        }
+";
+            var expected13 = @"
+{
+  ""removeRelationsByCIID_test_trait_a_assignments"": {
+	""entity"": {
+        ""id"": ""entity_1""
+      }
+	}
+  }
+}
+";
+            AssertQuerySuccess(mutationRemoveAssignments, expected13, new OmnikeeperUserContext(user, ServiceProvider),
+                new Inputs(new Dictionary<string, object?>()
+                {
+                    { "baseCIID", ciidEntity1 },
+                    { "relatedCIIDsToRemove", new Guid[] { relatedCIID1, relatedCIID2 } }
+                }));
+
+            var expected14 = $@"
+{{
+  ""traitEntities"": {{
+	  ""test_trait_a"": {{
+	    ""all"": [
+          {{
+            ""entity"": {{
+              ""id"": ""entity_1"",
+              ""name"": ""Entity 1"",
+              ""optional"": 3,
+              ""assignments"": [
+              {{
+                ""relatedCIID"": ""{relatedCIID3}""
+              }}]
+            }}
+          }}
+        ]
+	  }}
+  }}
+}}
+";
+            AssertQuerySuccess(queryTestTraitA, expected14, new OmnikeeperUserContext(user, ServiceProvider));
         }
     }
 }

@@ -272,13 +272,16 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         });
                 }
 
+                // relation mutations
                 foreach(var tr in elementTypeContainer.Trait.OptionalRelations)
                 {
+                    // set complete relations set
                     tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateSetRelationsByCIIDMutationName(traitID, tr), elementTypeContainer.ElementWrapper,
                         arguments: new QueryArguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                            new QueryArgument<NonNullGraphType<SetRelationsByCIIDInputType>> { Name = "input" }),
+                            new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "baseCIID" },
+                            new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>> { Name = "relatedCIIDs" }),
                         resolve: async context =>
                         {
                             var layerStrings = context.GetArgument<string[]>("layers")!;
@@ -295,9 +298,70 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
-                            var input = context.GetArgument<SetRelationsByCIID>("input")!;
+                            var baseCIID = context.GetArgument<Guid>("baseCIID")!;
+                            var relatedCIIDs = context.GetArgument<Guid[]>("relatedCIIDs")!;
 
-                            var t = await traitEntityModel.SetRelations(tr.Identifier, input.BaseCIID, input.RelatedCIIDs, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var t = await traitEntityModel.SetRelations(tr, baseCIID, relatedCIIDs, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            return t.et;
+                        });
+
+                    // add related CIs to relations set
+                    tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateAddRelationsByCIIDMutationName(traitID, tr), elementTypeContainer.ElementWrapper,
+                        arguments: new QueryArguments(
+                            new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                            new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                            new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "baseCIID" },
+                            new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>> { Name = "relatedCIIDsToAdd" }),
+                        resolve: async context =>
+                        {
+                            var layerStrings = context.GetArgument<string[]>("layers")!;
+                            var writeLayerID = context.GetArgument<string>("writeLayer")!;
+
+                            var userContext = await context.SetupUserContext()
+                                .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                                .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                            var layerset = userContext.GetLayerSet(context.Path);
+                            var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                            var trans = userContext.Transaction;
+
+                            var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+
+                            var baseCIID = context.GetArgument<Guid>("baseCIID")!;
+                            var relatedCIIDsToAdd = context.GetArgument<Guid[]>("relatedCIIDsToAdd")!;
+
+                            var t = await traitEntityModel.AddRelations(tr, baseCIID, relatedCIIDsToAdd, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            return t.et;
+                        });
+
+                    // remove related CIs from relations set
+                    tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateRemoveRelationsByCIIDMutationName(traitID, tr), elementTypeContainer.ElementWrapper,
+                        arguments: new QueryArguments(
+                            new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                            new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                            new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "baseCIID" },
+                            new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>> { Name = "relatedCIIDsToRemove" }),
+                        resolve: async context =>
+                        {
+                            var layerStrings = context.GetArgument<string[]>("layers")!;
+                            var writeLayerID = context.GetArgument<string>("writeLayer")!;
+
+                            var userContext = await context.SetupUserContext()
+                                .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                                .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                            var layerset = userContext.GetLayerSet(context.Path);
+                            var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                            var trans = userContext.Transaction;
+
+                            var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+
+                            var baseCIID = context.GetArgument<Guid>("baseCIID")!;
+                            var relatedCIIDsToRemove = context.GetArgument<Guid[]>("relatedCIIDsToRemove")!;
+
+                            var t = await traitEntityModel.RemoveRelations(tr, baseCIID, relatedCIIDsToRemove, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                             return t.et;
                         });
                 }
