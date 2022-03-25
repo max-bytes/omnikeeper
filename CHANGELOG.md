@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [14.0.0] - 2022-03-19
+
+### Changed
+- GraphQL API:
+  - (breaking) implemented regex options for trait entity attribute filtering
+
 ## [13.2.0] - 2022-03-17
 
 ### Added
