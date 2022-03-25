@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [15.0.0-rc*] - 2022-03-25
+
+### Added
+- GraphQL API:
+  - (breaking) reworked trait relation mutations: modifying trait relations are now separate methods and not part of the trait entity mutations anymore, allowing more fine-grained control
+  - implemented trait-hints for trait relations to simplify typed access to related CIs with traits
+  - added support for relation-based filters
+
+### Changes
+- GraphQL API:
+  - Dataloader-related performance improvements and restructurings
+  - (breaking) removed min- and max-cardinality from trait relations
+
 ## [14.0.0] - 2022-03-19
 
 ### Changed

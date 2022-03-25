@@ -100,7 +100,7 @@ Executing this query against an omnikeeper GraphQL instance could return the fol
 The following diagram shows the structures that data passes through from the core data all the way to the client:
 ![Overview of how trait entites work](assets/drawio/overview-trait-entities.svg)
 
-* An overview of the available trait entity API calls. `*` can be substituted by the corresponding trait entity name.
+* An overview of the available trait entity API calls. `*` should be substituted by the corresponding trait entity name.
   * queries:
     * `traitEntities.*.all`: gets all trait entities
     * `traitEntities.*.filtered`: gets trait entities meeting filter criteria
@@ -112,11 +112,18 @@ The following diagram shows the structures that data passes through from the cor
     * `deleteByCIID_*`: deletes a trait entity identified by its CIID
     * `upsertByDataID_*`: updates a trait entity identified by its data ID
     * `deleteByDataID_*`: deletes a trait entity identified by its data ID
-* Trait entity mutations always write the whole entity. It is not possible to - for example - change a single attribute without supplying the rest of the entity to the mutation. That also includes its relations.
+  * mutations for relations (`$` should be substituted by the corresponding trait relation identifier):
+    * `setRelationsByCIID_*_$`: completely replace the relations for a trait entity's trait relation
+    * `addRelationsByCIID_*_$`: add a list of related CIs to an trait entity's trait relation
+    * `removeRelationsByCIID_*_$`: remove a list of related CIs from an trait entity's trait relation
+* Trait entity mutations always write the whole entity, excluding relations. It is not possible to - for example - change a single attribute without supplying the rest of the entity to the mutation. For modifying relations, see the corresponding mutations.
 * Some entities below have so-called data IDs, which are unique identifiers for that trait entity. When working with the trait entity API, it ensures that no two entities with the same ID can be created.
 * Many trait entity queries and mutations have variants called `*byCIID*` and `*byDataID*`. As the name implies, they query or mutate data based on their CIID or - if the entity has one - it's data ID. While they operate roughly the same, they sometimes have slightly different semantics. TODO: list differences
 * When working with relations, note that they are always using the CIID for referring to CIs, not the data IDs.
 * When deleting entities, its relations are deleted as well. For example, deleting an entity will also delete the relations between it and other entities/CIs. However, cascading deletes need to be done manually.
+
+## trait-hints in trait relations
+TODO
 
 ## Changes to traits
 
