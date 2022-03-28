@@ -47,10 +47,9 @@ namespace Omnikeeper.Startup
     {
         private IMvcBuilder? mvcBuilder;
 
-        public Startup(IConfiguration configuration, IWebHostEnvironment env)
+        public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            CurrentEnvironment = env;
         }
 
         public IConfiguration Configuration { get; }
@@ -148,7 +147,7 @@ namespace Omnikeeper.Startup
                     OnTokenValidated = c =>
                     {
                         var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerChallengeContext>>();
-                        logger.LogInformation($"Validated token for user {HttpUserUtils.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
+                        logger.LogInformation($"Validated token for user {HttpUserUtils.GetUsernameFromClaims(c.Principal!.Claims) ?? "Unknown User"}");
                         return Task.CompletedTask;
                     },
                     OnAuthenticationFailed = c =>
@@ -303,11 +302,9 @@ namespace Omnikeeper.Startup
             // load controllers from plugins
             foreach (var assembly in assemblies)
             {
-                mvcBuilder.AddApplicationPart(assembly);
+                mvcBuilder!.AddApplicationPart(assembly);
             }
         }
-
-        private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime,
