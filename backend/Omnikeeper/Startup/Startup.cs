@@ -109,9 +109,7 @@ namespace Omnikeeper.Startup
 
                     config.OutputFormatters.Clear();
                     config.OutputFormatters.Add(new MySuperJsonOutputFormatter());
-                    config.OutputFormatters.Add(new NewtonsoftJsonOutputFormatter(
-                        newtonJsonOpts.Value.SerializerSettings, charPool, config
-                    ));
+                    config.OutputFormatters.Add(new NewtonsoftJsonOutputFormatter(newtonJsonOpts.Value.SerializerSettings, charPool, config, null));
                     config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
                 });
 
