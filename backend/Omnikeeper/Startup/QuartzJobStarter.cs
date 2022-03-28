@@ -68,7 +68,7 @@ namespace Omnikeeper.Startup
                 }
             } catch (Exception e)
             {
-                logger.LogError("Error setting up Quartz scheduler: ", e);
+                logger.LogError($"Error setting up Quartz scheduler: {e.Message}", e);
             }
         }
 
