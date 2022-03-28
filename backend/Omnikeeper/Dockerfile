@@ -4,6 +4,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
+RUN apk add --no-cache tzdata # needed so .Net can properly query timezones, see https://www.stevejgordon.co.uk/timezonenotfoundexception-in-alpine-based-docker-images
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS build
 ARG version
