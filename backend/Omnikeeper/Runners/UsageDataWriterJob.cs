@@ -50,7 +50,7 @@ namespace Omnikeeper.Runners
             }
             catch (Exception e)
             {
-                logger.LogError("Error running usage-data-writer job", e);
+                logger.LogError(e, "Error running usage-data-writer job");
             }
         }
     }

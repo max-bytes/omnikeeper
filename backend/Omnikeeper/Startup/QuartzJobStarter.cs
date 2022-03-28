@@ -68,7 +68,7 @@ namespace Omnikeeper.Startup
                 }
             } catch (Exception e)
             {
-                logger.LogError($"Error setting up Quartz scheduler: {e.Message}", e);
+                logger.LogError(e, "Error setting up Quartz scheduler");
             }
         }
 
@@ -95,7 +95,7 @@ namespace Omnikeeper.Startup
             }
             catch (Exception e)
             {
-                logger.LogError($"Error scheduling job {jobKey.Name}, skipping", e);
+                logger.LogError(e, $"Error scheduling job {jobKey.Name}, skipping");
             }
         }
     }

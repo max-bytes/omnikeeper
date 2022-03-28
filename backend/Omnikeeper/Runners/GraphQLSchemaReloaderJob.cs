@@ -61,7 +61,7 @@ namespace Omnikeeper.Runners
             }
             catch (Exception e)
             {
-                logger.LogError("Error running graphql-schema-reloader job", e);
+                logger.LogError(e, "Error running graphql-schema-reloader job");
             }
         }
     }

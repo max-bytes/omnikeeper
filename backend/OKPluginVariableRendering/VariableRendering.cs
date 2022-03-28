@@ -68,7 +68,7 @@ namespace OKPluginVariableRendering
             }
             catch (Exception ex)
             {
-                logger.LogError("An error ocurred while creating configuration instance.", ex);
+                logger.LogError(ex, "An error ocurred while creating configuration instance.");
                 return false;
             }
 
