@@ -25,7 +25,7 @@
     <PackageReference Include="Npgsql" Version="5.0.7" />
     <PackageReference Include="Npgsql.Json.NET" Version="5.0.7" />
     <PackageReference Include="Scriban" Version="4.0.2" />
-    <PackageReference Include="SpanJson" Version="3.1.0" />
+    <PackageReference Include="SpanJson" Version="3.2.0" />
     <PackageReference Include="System.Collections.Immutable" Version="6.0.0" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
