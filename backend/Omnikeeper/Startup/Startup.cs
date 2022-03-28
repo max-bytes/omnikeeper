@@ -395,14 +395,14 @@ namespace Omnikeeper.Startup
                     cv.WithMetadata(new AllowAnonymousAttribute());
 
                 // odata
-                var builder = new ODataConventionModelBuilder(app.ApplicationServices);
-                builder.EntitySet<Omnikeeper.Controllers.OData.AttributeDTO>("Attributes");
-                builder.EntitySet<Omnikeeper.Controllers.OData.RelationDTO>("Relations");
+                // DEFUNCT
+                //var builder = new ODataConventionModelBuilder(app.ApplicationServices);
+                //builder.EntitySet<Omnikeeper.Controllers.OData.AttributeDTO>("Attributes");
+                //builder.EntitySet<Omnikeeper.Controllers.OData.RelationDTO>("Relations");
                 //endpoints.EnableDependencyInjection();
-                endpoints.Select().Expand().Filter().OrderBy().Count();
-                var edmModel = builder.GetEdmModel();
-                //endpoints.MapODataRoute("odata", "api/v{version:apiVersion}/odata/{context}", edmModel);
-                endpoints.MapODataRoute("odata", "api/odata/{context}", edmModel);
+                //endpoints.Select().Expand().Filter().OrderBy().Count();
+                //var edmModel = builder.GetEdmModel();
+                //endpoints.MapODataRoute("odata", "api/odata/{context}", edmModel);
 
                 endpoints.MapHub<SignalRHubLogging>("/api/signalr/logging");
             });
