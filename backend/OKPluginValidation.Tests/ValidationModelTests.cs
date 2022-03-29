@@ -4,20 +4,17 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
-using OKPluginValidation.Validation;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Entity.AttributeValues;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tests.Integration.Model;
-using Omnikeeper.Base.Model.TraitBased;
 
 namespace OKPluginValidation.Tests
 {
-    class ValidationModelTests : GenericTraitEntityModelTestBase<Validation.Validation, string>
+    class ValidationModelTests : GenericTraitEntityModelTestBase<Validation, string>
     {
         protected override void InitServices(ContainerBuilder builder)
         {
@@ -28,12 +25,14 @@ namespace OKPluginValidation.Tests
             var serviceCollection = new ServiceCollection();
             plugin.RegisterServices(serviceCollection);
             builder.Populate(serviceCollection);
+
+            builder.RegisterType<ValidationModel>().As<GenericTraitEntityModel<Validation, string>>();
         }
 
         [Test]
         public void TestTraitGeneration()
         {
-            var et = GenericTraitEntityHelper.Class2RecursiveTrait<Validation.Validation>();
+            var et = GenericTraitEntityHelper.Class2RecursiveTrait<Validation>();
 
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.validation.validation", new TraitOriginV1(TraitOriginType.Plugin),
@@ -57,8 +56,8 @@ namespace OKPluginValidation.Tests
         public async Task TestGenericOperations()
         {
             await TestGenericModelOperations(
-                () => new Validation.Validation("validation1", "rule1", JObject.Parse(@"{""foo"": ""bar""}")),
-                () => new Validation.Validation("validation2", "rule2", JObject.Parse(@"{""blub"": true}")),
+                () => new Validation("validation1", "rule1", JObject.Parse(@"{""foo"": ""bar""}")),
+                () => new Validation("validation2", "rule2", JObject.Parse(@"{""blub"": true}")),
                 "validation1", "validation2", "non_existant_id"
                 );
         }
@@ -66,8 +65,8 @@ namespace OKPluginValidation.Tests
         public async Task TestGetByDataID()
         {
             await TestGenericModelGetByDataID(
-                () => new Validation.Validation("validation1", "rule1", JObject.Parse(@"{""foo"": ""bar""}")),
-                () => new Validation.Validation("validation2", "rule2", JObject.Parse(@"{""blub"": true}")),
+                () => new Validation("validation1", "rule1", JObject.Parse(@"{""foo"": ""bar""}")),
+                () => new Validation("validation2", "rule2", JObject.Parse(@"{""blub"": true}")),
                 "validation1", "validation2", "non_existant_id"
                 );
         }

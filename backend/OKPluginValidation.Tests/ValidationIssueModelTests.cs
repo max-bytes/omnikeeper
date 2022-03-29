@@ -3,7 +3,6 @@ using Autofac.Extensions.DependencyInjection;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
-using OKPluginValidation.Validation;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -27,6 +26,8 @@ namespace OKPluginValidation.Tests
             var serviceCollection = new ServiceCollection();
             plugin.RegisterServices(serviceCollection);
             builder.Populate(serviceCollection);
+
+            builder.RegisterType<ValidationIssueModel>().As<GenericTraitEntityModel<ValidationIssue, string>>();
         }
 
         [Test]
