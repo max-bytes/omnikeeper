@@ -52,7 +52,7 @@ namespace Omnikeeper.Base.Entity.Config
 
         public static MyJSONSerializer<BaseConfigurationV2> Serializer = new MyJSONSerializer<BaseConfigurationV2>(new JsonSerializerSettings()
         {
-            TypeNameHandling = TypeNameHandling.Objects,
+            TypeNameHandling = TypeNameHandling.None,
             MissingMemberHandling = MissingMemberHandling.Error
         });
 
