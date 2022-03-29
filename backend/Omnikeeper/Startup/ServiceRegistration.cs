@@ -5,7 +5,6 @@ using GraphQL;
 using GraphQL.DataLoader;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
-using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Inbound;
@@ -18,7 +17,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
 using Omnikeeper.GraphQL.TraitEntities;
-using Omnikeeper.GridView.Entity;
+using Omnikeeper.GridView;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
@@ -203,13 +202,13 @@ namespace Omnikeeper.Startup
             builder.RegisterType<MetaConfigurationModel>().As<IMetaConfigurationModel>().SingleInstance();
             builder.RegisterType<OIAContextModel>().As<IOIAContextModel>().SingleInstance();
             builder.RegisterType<PartitionModel>().As<IPartitionModel>().SingleInstance();
-            builder.RegisterType<GenericTraitEntityModel<GeneratorV1, string>>().SingleInstance(); // TODO: ok this way?
-            builder.RegisterType<GenericTraitEntityModel<CLConfigV1, string>>().SingleInstance(); // TODO: ok this way?
-            builder.RegisterType<GenericTraitEntityModel<AuthRole, string>>().SingleInstance(); // TODO: ok this way?
-            builder.RegisterType<GenericTraitEntityModel<Predicate, string>>().SingleInstance(); // TODO: ok this way?
-            builder.RegisterType<GenericTraitEntityModel<RecursiveTrait, string>>().SingleInstance(); // TODO: ok this way?
-            builder.RegisterType<GenericTraitEntityModel<GridViewContext, string>>().SingleInstance(); // TODO: ok this way?
-            builder.RegisterType<GenericTraitEntityModel<LayerData, string>>().SingleInstance(); // TODO: ok this way?
+            builder.RegisterType<GeneratorV1Model>().SingleInstance();
+            builder.RegisterType<CLConfigV1Model>().SingleInstance();
+            builder.RegisterType<AuthRoleModel>().SingleInstance();
+            builder.RegisterType<PredicateModel>().SingleInstance();
+            builder.RegisterType<RecursiveTraitModel>().SingleInstance();
+            builder.RegisterType<GridViewContextModel>().SingleInstance();
+            builder.RegisterType<InnerLayerDataModel>().SingleInstance();
             builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
 
             // these aren't real models, but we keep them here because they are closely related to models

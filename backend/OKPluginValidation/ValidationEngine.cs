@@ -3,7 +3,6 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -11,19 +10,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace OKPluginValidation.Validation
+namespace OKPluginValidation
 {
     public class ValidationEngine : IValidationEngine
     {
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly GenericTraitEntityModel<ValidationIssue, string> validationIssueModel;
-        private readonly GenericTraitEntityModel<Validation, string> validationModel;
+        private readonly ValidationIssueModel validationIssueModel;
+        private readonly ValidationModel validationModel;
         private readonly IChangesetModel changesetModel;
         private readonly IUserInDatabaseModel userInDatabaseModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IDictionary<string, IValidationRule> availableValidationRules;
 
-        public ValidationEngine(IModelContextBuilder modelContextBuilder, GenericTraitEntityModel<ValidationIssue, string> validationIssueModel, GenericTraitEntityModel<Validation, string> validationModel, 
+        public ValidationEngine(IModelContextBuilder modelContextBuilder, ValidationIssueModel validationIssueModel, ValidationModel validationModel,
             IChangesetModel changesetModel, IUserInDatabaseModel userInDatabaseModel, IEnumerable<IValidationRule> availableValidationRules, IMetaConfigurationModel metaConfigurationModel)
         {
             this.modelContextBuilder = modelContextBuilder;

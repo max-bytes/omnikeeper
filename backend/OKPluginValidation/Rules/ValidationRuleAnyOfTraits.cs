@@ -1,6 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using OKPluginValidation.Validation;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
@@ -10,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.Validation.Rules
+namespace OKPluginValidation.Rules
 {
     public class ValidationRuleAnyOfTraits : IValidationRule
     {
@@ -49,7 +47,7 @@ namespace Omnikeeper.Validation.Rules
             this.effectiveTraitModel = effectiveTraitModel;
         }
 
-        public async Task<IEnumerable<ValidationIssue>> PerformValidation(OKPluginValidation.Validation.Validation validation, Guid validationCIID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<ValidationIssue>> PerformValidation(Validation validation, Guid validationCIID, IModelContext trans, TimeThreshold atTime)
         {
             Config parsedConfig;
             try
@@ -74,7 +72,7 @@ namespace Omnikeeper.Validation.Rules
 
             var issueID = $"{Name}:{layerset}"; // TODO: name clashes possible? IDs need to be unique after all
 
-            return new ValidationIssue[] { new ValidationIssue(issueID, $"CI does not have any of the traits {string.Join(", ",parsedConfig.TraitIDs)} in layerset {layerset}", cisThatDontHaveAnyTrait.Select(ci => ci.ID).ToArray(), validationCIID) };
+            return new ValidationIssue[] { new ValidationIssue(issueID, $"CI does not have any of the traits {string.Join(", ", parsedConfig.TraitIDs)} in layerset {layerset}", cisThatDontHaveAnyTrait.Select(ci => ci.ID).ToArray(), validationCIID) };
         }
     }
 }

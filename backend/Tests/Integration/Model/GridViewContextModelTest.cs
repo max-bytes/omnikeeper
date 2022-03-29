@@ -1,10 +1,12 @@
-﻿using FluentAssertions;
+﻿using Autofac;
+using FluentAssertions;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.GridView;
 using Omnikeeper.GridView.Entity;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,6 +15,13 @@ namespace Tests.Integration.Model
 {
     class GridViewContextModelTest : GenericTraitEntityModelTestBase<GridViewContext, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GridViewContextModel>().As<GenericTraitEntityModel<GridViewContext, string>>();
+        }
+
         [Test]
         public void TestTraitGeneration()
         {

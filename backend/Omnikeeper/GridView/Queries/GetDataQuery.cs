@@ -4,7 +4,6 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -42,7 +41,7 @@ namespace Omnikeeper.GridView.Queries
 
         public class GetDataQueryHandler : IRequestHandler<Query, (GetDataResponse?, Exception?)>
         {
-            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
+            private readonly GridViewContextModel gridViewContextModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
             private readonly IRelationModel relationModel;
             private readonly ICIModel ciModel;
@@ -53,7 +52,7 @@ namespace Omnikeeper.GridView.Queries
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly ICurrentUserAccessor currentUserService;
 
-            public GetDataQueryHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IEffectiveTraitModel effectiveTraitModel, IRelationModel relationModel, ICIModel ciModel,
+            public GetDataQueryHandler(GridViewContextModel gridViewContextModel, IEffectiveTraitModel effectiveTraitModel, IRelationModel relationModel, ICIModel ciModel,
                 ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
                 ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserAccessor currentUserService)
             {

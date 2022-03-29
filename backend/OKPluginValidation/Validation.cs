@@ -2,7 +2,7 @@
 using Omnikeeper.Base.Entity;
 using System;
 
-namespace OKPluginValidation.Validation
+namespace OKPluginValidation
 {
     [TraitEntity("__meta.validation.validation", TraitOriginType.Plugin)]
     public class Validation : TraitEntity

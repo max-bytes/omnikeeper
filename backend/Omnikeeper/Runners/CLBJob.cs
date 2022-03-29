@@ -22,7 +22,7 @@ namespace Omnikeeper.Runners
     [DisallowConcurrentExecution]
     public class CLBJob : IJob
     {
-        public CLBJob(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
+        public CLBJob(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, CLConfigV1Model clConfigModel,
             IMetaConfigurationModel metaConfigurationModel, ILifetimeScope parentLifetimeScope,
             IChangesetModel changesetModel, ScopedLifetimeAccessor scopedLifetimeAccessor, CLBLastRunCache clbLastRunCache,
             ILayerDataModel layerDataModel, ILogger<CLBJob> logger, IModelContextBuilder modelContextBuilder)
@@ -128,7 +128,7 @@ namespace Omnikeeper.Runners
         }
 
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
-        private readonly GenericTraitEntityModel<CLConfigV1, string> clConfigModel;
+        private readonly CLConfigV1Model clConfigModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ILifetimeScope lifetimeScope;
         private readonly IChangesetModel changesetModel;

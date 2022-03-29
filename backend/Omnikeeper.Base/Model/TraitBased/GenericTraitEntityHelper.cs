@@ -71,7 +71,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return new GenericTraitEntityIDAttributeInfos<C, ID>(outFields);
         }
 
-        public static C EffectiveTrait2Object<C>(EffectiveTrait et, MyJSONSerializer<object> jsonSerializer) where C : TraitEntity, new()
+        public static C EffectiveTrait2Object<C>(EffectiveTrait et, MyJSONSerializer<object>? jsonSerializer) where C : TraitEntity, new()
         {
             var (_, attributeFieldInfos, relationFieldInfos) = ExtractFieldInfos<C>();
 
@@ -86,6 +86,9 @@ namespace Omnikeeper.Base.Model.TraitBased
                     // support JSON serializer
                     if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.TraitAttributeAttribute.isJSONSerialized)
                     {
+                        if (jsonSerializer == null)
+                            throw new Exception($"Field {taFieldInfo.FieldInfo.Name} is marked as JSONSerialized, but Model has no JSONSerializer specified");
+
                         // deserialize before setting field in entity
                         if (taFieldInfo.IsArray)
                         {

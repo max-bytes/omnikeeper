@@ -1,11 +1,10 @@
-﻿using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.Utils;
+﻿using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace OKPluginValidation.Validation
+namespace OKPluginValidation
 {
     public interface IValidationRule
     {

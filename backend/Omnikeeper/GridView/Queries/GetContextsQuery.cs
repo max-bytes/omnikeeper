@@ -1,10 +1,8 @@
 ﻿using MediatR;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Response;
 using System;
 using System.Linq;
@@ -22,13 +20,13 @@ namespace Omnikeeper.GridView.Queries
 
         public class GetContextsQueryHandler : IRequestHandler<Query, (GetContextsResponse?, Exception?)>
         {
-            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
+            private readonly GridViewContextModel gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly ICurrentUserAccessor currentUserService;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
-            public GetContextsQueryHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IModelContextBuilder modelContextBuilder,
+            public GetContextsQueryHandler(GridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder,
                 IMetaConfigurationModel metaConfigurationModel, ICurrentUserAccessor currentUserService, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.gridViewContextModel = gridViewContextModel;

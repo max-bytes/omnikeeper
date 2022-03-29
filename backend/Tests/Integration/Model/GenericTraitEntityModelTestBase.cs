@@ -381,12 +381,12 @@ namespace Tests.Integration.Model
             });
             currentUserServiceMock.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
-            var effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
-            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
-            var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
-            var relationModel = ServiceProvider.GetRequiredService<IRelationModel>();
+            //var effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
+            //var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            //var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
+            //var relationModel = ServiceProvider.GetRequiredService<IRelationModel>();
 
-            var model = new GenericTraitEntityModel<T, ID>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var model = ServiceProvider.GetRequiredService<GenericTraitEntityModel<T, ID>>();// new GenericTraitEntityModel<T, ID>(effectiveTraitModel, ciModel, attributeModel, relationModel);
 
             return (model, layer1.ID, layer2.ID, () => new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>()));
         }

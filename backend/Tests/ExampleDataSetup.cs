@@ -25,7 +25,7 @@ namespace Tests
             var attributeModel = serviceProvider.GetRequiredService<IAttributeModel>();
             var ciModel = serviceProvider.GetRequiredService<ICIModel>();
             var userModel = serviceProvider.GetRequiredService<IUserInDatabaseModel>();
-            var traitModel = serviceProvider.GetRequiredService<GenericTraitEntityModel<RecursiveTrait, string>>();
+            var traitModel = serviceProvider.GetRequiredService<RecursiveTraitModel>();
             var user = await DBSetup.SetupUser(userModel, modelContextBuilder.BuildImmediate());
             var metaConfigurationModel = serviceProvider.GetRequiredService<IMetaConfigurationModel>();
 

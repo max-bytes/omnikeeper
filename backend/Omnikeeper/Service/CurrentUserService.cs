@@ -50,7 +50,7 @@ namespace Omnikeeper.Service
         public CurrentAuthorizedHttpUserService(IHttpContextAccessor httpContextAccessor,
             ILayerModel layerModel, IMetaConfigurationModel metaConfigurationModel,
             IUserInDatabaseModel userModel, IConfiguration configuration, ILogger<CurrentAuthorizedHttpUserService> logger,
-            GenericTraitEntityModel<AuthRole, string> authRoleModel)
+            AuthRoleModel authRoleModel)
         {
             HttpContextAccessor = httpContextAccessor;
             LayerModel = layerModel;
@@ -68,7 +68,7 @@ namespace Omnikeeper.Service
         private AuthenticatedUser? cached = null;
         private readonly SemaphoreLocker cachedLock = new SemaphoreLocker();
 
-        private GenericTraitEntityModel<AuthRole, string> AuthRoleModel { get; }
+        private AuthRoleModel AuthRoleModel { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
         public ILayerModel LayerModel { get; }
         public IMetaConfigurationModel MetaConfigurationModel { get; }
@@ -226,7 +226,7 @@ namespace Omnikeeper.Service
         }
 
         public static async Task<AuthenticatedUser> CreateAuthenticationUserFromHTTPUser(HttpUser httpUser, IUserInDatabaseModel userModel, ILayerModel LayerModel, 
-            IMetaConfigurationModel MetaConfigurationModel, GenericTraitEntityModel<AuthRole, string> AuthRoleModel, IModelContext trans)
+            IMetaConfigurationModel MetaConfigurationModel, AuthRoleModel AuthRoleModel, IModelContext trans)
         {
             var userInDatabase = await userModel.UpsertUser(httpUser.Username, httpUser.DisplayName, httpUser.UserID, httpUser.UserType, trans);
 

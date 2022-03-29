@@ -1,9 +1,11 @@
-﻿using FluentAssertions;
+﻿using Autofac;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -38,6 +40,12 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithStringIDModelTest : GenericTraitEntityModelTestBase<TestEntityForStringID, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForStringID, string>>().WithParameter("jsonSerializer", null!);
+        }
 
         [Test]
         public async Task TestOptionalAttributeHandling()
@@ -127,6 +135,13 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithLongIDModelTest : GenericTraitEntityModelTestBase<TestEntityForLongID, long>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForLongID, long>>().WithParameter("jsonSerializer", null!);
+        }
+
         [Test]
         public async Task TestLongBasedID()
         {
@@ -231,6 +246,13 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithTupleIDModelTest : GenericTraitEntityModelTestBase<TestEntityForTupleID, (long, string)>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForTupleID, (long, string)>>().WithParameter("jsonSerializer", null!);
+        }
+
         [Test]
         public async Task TestTupleBasedID()
         {
@@ -346,6 +368,13 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithTraitRelationTest : GenericTraitEntityModelTestBase<TestEntityForOutgoingTraitRelation, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForOutgoingTraitRelation, string>>().WithParameter("jsonSerializer", null!);
+        }
+
         [Test]
         public async Task TestGenericOperations()
         {
@@ -450,6 +479,13 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithIncomingTraitRelationTest : GenericTraitEntityModelTestBase<TestEntityForIncomingTraitRelation, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForIncomingTraitRelation, string>>().WithParameter("jsonSerializer", null!);
+        }
+
         [Test]
         public async Task TestGenericOperations()
         {
@@ -554,6 +590,13 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithPartialEntityModelTest : GenericTraitEntityModelTestBase<TestEntityForPartialEntity, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForPartialEntity, string>>().WithParameter("jsonSerializer", null!);
+        }
+
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {

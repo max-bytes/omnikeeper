@@ -1,7 +1,6 @@
 ﻿using FluentValidation;
 using MediatR;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -36,11 +35,11 @@ namespace Omnikeeper.GridView.Queries
 
         public class GetSchemaQueryHandler : IRequestHandler<Query, (GetSchemaResponse?, Exception?)>
         {
-            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
+            private readonly GridViewContextModel gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IMetaConfigurationModel metaConfigurationModel;
 
-            public GetSchemaQueryHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel)
+            public GetSchemaQueryHandler(GridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.modelContextBuilder = modelContextBuilder;

@@ -17,13 +17,13 @@ namespace Omnikeeper.Model
 {
     public class TraitsProvider : ITraitsProvider
     {
-        private readonly GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel;
+        private readonly RecursiveTraitModel dataTraitModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IChangesetModel changesetModel;
         private readonly IEnumerable<IPluginRegistration> loadedPlugins;
         private readonly ILogger<TraitsProvider> logger;
 
-        public TraitsProvider(GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel, 
+        public TraitsProvider(RecursiveTraitModel dataTraitModel, 
             IMetaConfigurationModel metaConfigurationModel, IChangesetModel changesetModel, IEnumerable<IPluginRegistration> loadedPlugins, ILogger<TraitsProvider> logger)
         {
             this.dataTraitModel = dataTraitModel;

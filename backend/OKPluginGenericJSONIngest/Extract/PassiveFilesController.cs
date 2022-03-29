@@ -11,7 +11,6 @@ using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -176,13 +175,13 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ILayerModel layerModel;
         private readonly ILoggerFactory loggerFactory;
         private readonly ICurrentUserAccessor currentUserService;
-        private readonly GenericTraitEntityModel<Context, string> contextModel;
+        private readonly ContextModel contextModel;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
         public PassiveFilesController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserAccessor currentUserService,
-            GenericTraitEntityModel<Context, string> contextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
+            ContextModel contextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
             ILayerBasedAuthorizationService authorizationService, ILoggerFactory loggerFactory)
         {
             this.ingestDataService = ingestDataService;

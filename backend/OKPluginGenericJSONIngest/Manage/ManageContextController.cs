@@ -5,7 +5,6 @@ using OKPluginGenericJSONIngest;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -23,14 +22,14 @@ namespace Omnikeeper.Controllers.Ingest
     [ApiExplorerSettings(GroupName = "OKPluginGenericJSONIngest")]
     public class ManageContextController : ControllerBase
     {
-        private readonly GenericTraitEntityModel<Context, string> contextModel;
+        private readonly ContextModel contextModel;
         private readonly ICurrentUserAccessor currentUserService;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly IChangesetModel changesetModel;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly IMetaConfigurationModel metaConfigurationModel;
 
-        public ManageContextController(GenericTraitEntityModel<Context, string> contextModel, ICurrentUserAccessor currentUserService, IManagementAuthorizationService managementAuthorizationService,
+        public ManageContextController(ContextModel contextModel, ICurrentUserAccessor currentUserService, IManagementAuthorizationService managementAuthorizationService,
             IChangesetModel changesetModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel)
         {
             this.contextModel = contextModel;
