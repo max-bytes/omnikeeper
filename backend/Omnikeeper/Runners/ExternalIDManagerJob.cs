@@ -128,7 +128,7 @@ namespace Omnikeeper.Runners
             }
             catch (Exception e)
             {
-                logger.LogError("Error running external-id-manager job", e);
+                logger.LogError(e, "Error running external-id-manager job");
             }
         }
     }

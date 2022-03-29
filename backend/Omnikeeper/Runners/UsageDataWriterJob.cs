@@ -22,7 +22,7 @@ namespace Omnikeeper.Runners
             this.logger = logger;
         }
 
-        public async Task Execute(IJobExecutionContext context)
+        public Task Execute(IJobExecutionContext context)
         {
             try
             {
@@ -50,8 +50,10 @@ namespace Omnikeeper.Runners
             }
             catch (Exception e)
             {
-                logger.LogError("Error running usage-data-writer job", e);
+                logger.LogError(e, "Error running usage-data-writer job");
             }
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -123,7 +123,7 @@ namespace Omnikeeper.Runners
                 logger.LogTrace("Finished");
             } catch (Exception e)
             {
-                logger.LogError("Error running clb job", e);
+                logger.LogError(e, "Error running clb job");
             }
         }
 

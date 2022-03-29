@@ -15,12 +15,12 @@ namespace Omnikeeper.Utils
             this.logReceiver = logReceiver;
         }
 
-        public IDisposable? BeginScope<TState>(TState state) => null;
+        public IDisposable BeginScope<TState>(TState state) => System.Reactive.Disposables.Disposable.Empty;
 
         public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Debug;
 
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             if (!IsEnabled(logLevel))
                 return;

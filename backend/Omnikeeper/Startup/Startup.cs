@@ -47,10 +47,9 @@ namespace Omnikeeper.Startup
     {
         private IMvcBuilder? mvcBuilder;
 
-        public Startup(IConfiguration configuration, IWebHostEnvironment env)
+        public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            CurrentEnvironment = env;
         }
 
         public IConfiguration Configuration { get; }
@@ -109,9 +108,7 @@ namespace Omnikeeper.Startup
 
                     config.OutputFormatters.Clear();
                     config.OutputFormatters.Add(new MySuperJsonOutputFormatter());
-                    config.OutputFormatters.Add(new NewtonsoftJsonOutputFormatter(
-                        newtonJsonOpts.Value.SerializerSettings, charPool, config
-                    ));
+                    config.OutputFormatters.Add(new NewtonsoftJsonOutputFormatter(newtonJsonOpts.Value.SerializerSettings, charPool, config, null));
                     config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
                 });
 
@@ -150,7 +147,7 @@ namespace Omnikeeper.Startup
                     OnTokenValidated = c =>
                     {
                         var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerChallengeContext>>();
-                        logger.LogInformation($"Validated token for user {HttpUserUtils.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
+                        logger.LogInformation($"Validated token for user {HttpUserUtils.GetUsernameFromClaims(c.Principal!.Claims) ?? "Unknown User"}");
                         return Task.CompletedTask;
                     },
                     OnAuthenticationFailed = c =>
@@ -305,11 +302,9 @@ namespace Omnikeeper.Startup
             // load controllers from plugins
             foreach (var assembly in assemblies)
             {
-                mvcBuilder.AddApplicationPart(assembly);
+                mvcBuilder!.AddApplicationPart(assembly);
             }
         }
-
-        private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime,
@@ -395,14 +390,14 @@ namespace Omnikeeper.Startup
                     cv.WithMetadata(new AllowAnonymousAttribute());
 
                 // odata
-                var builder = new ODataConventionModelBuilder(app.ApplicationServices);
-                builder.EntitySet<Omnikeeper.Controllers.OData.AttributeDTO>("Attributes");
-                builder.EntitySet<Omnikeeper.Controllers.OData.RelationDTO>("Relations");
+                // DEFUNCT
+                //var builder = new ODataConventionModelBuilder(app.ApplicationServices);
+                //builder.EntitySet<Omnikeeper.Controllers.OData.AttributeDTO>("Attributes");
+                //builder.EntitySet<Omnikeeper.Controllers.OData.RelationDTO>("Relations");
                 //endpoints.EnableDependencyInjection();
-                endpoints.Select().Expand().Filter().OrderBy().Count();
-                var edmModel = builder.GetEdmModel();
-                //endpoints.MapODataRoute("odata", "api/v{version:apiVersion}/odata/{context}", edmModel);
-                endpoints.MapODataRoute("odata", "api/odata/{context}", edmModel);
+                //endpoints.Select().Expand().Filter().OrderBy().Count();
+                //var edmModel = builder.GetEdmModel();
+                //endpoints.MapODataRoute("odata", "api/odata/{context}", edmModel);
 
                 endpoints.MapHub<SignalRHubLogging>("/api/signalr/logging");
             });
