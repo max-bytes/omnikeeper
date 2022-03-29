@@ -18,7 +18,7 @@ namespace Omnikeeper.Base.Entity.Config
 
         public static MyJSONSerializer<MetaConfiguration> Serializer = new MyJSONSerializer<MetaConfiguration>(new JsonSerializerSettings()
         {
-            TypeNameHandling = TypeNameHandling.Objects,
+            TypeNameHandling = TypeNameHandling.None,
             MissingMemberHandling = MissingMemberHandling.Error
         });
 
