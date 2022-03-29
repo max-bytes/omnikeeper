@@ -75,6 +75,8 @@ namespace Omnikeeper.Controllers
 
             var schema = _schemaHolder.GetSchema();
 
+            using var userContext = new OmnikeeperUserContext(user, HttpContext.RequestServices);
+
             var inputs = query.Variables?.ToInputs();
             var result = await _documentExecuter.ExecuteAsync(options =>
             {
@@ -82,7 +84,7 @@ namespace Omnikeeper.Controllers
                 options.Query = query.Query;
                 options.Inputs = inputs;
                 options.EnableMetrics = false;
-                options.UserContext = new OmnikeeperUserContext(user, HttpContext.RequestServices);
+                options.UserContext = userContext;
                 options.ValidationRules = DocumentValidator.CoreRules.Concat(_validationRules).ToList();
                 options.RequestServices = HttpContext.RequestServices;
                 options.Listeners.Add(dataLoaderDocumentListener);

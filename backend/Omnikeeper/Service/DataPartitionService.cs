@@ -26,7 +26,7 @@ namespace Omnikeeper.Service
             try
             {
                 var timeThreshold = TimeThreshold.BuildLatest();
-                var mc = modelContextBuilder.BuildDeferred();// TODO: explore isolation level System.Data.IsolationLevel.Serializable
+                using var mc = modelContextBuilder.BuildDeferred();// TODO: explore isolation level System.Data.IsolationLevel.Serializable
                 await partitionModel.StartNewPartition(timeThreshold, mc);
                 mc.Commit();
             }

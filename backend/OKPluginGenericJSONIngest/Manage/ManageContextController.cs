@@ -100,7 +100,7 @@ namespace Omnikeeper.Controllers.Ingest
                         throw new Exception("Invalid transform config");
                 }
                 var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-                var mc = modelContextBuilder.BuildDeferred();
+                using var mc = modelContextBuilder.BuildDeferred();
                 var updated = new Context(contextCandidate.ID, contextCandidate.ExtractConfig, contextCandidate.TransformConfig, contextCandidate.LoadConfig);
                 var (context, _) = await contextModel.InsertOrUpdate(updated, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                     new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
@@ -127,7 +127,7 @@ namespace Omnikeeper.Controllers.Ingest
                     return Forbid($"User \"{user.Username}\" does not have permission to modify contexts: {message}");
 
                 var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-                var mc = modelContextBuilder.BuildDeferred();
+                using var mc = modelContextBuilder.BuildDeferred();
                 var deleted = await contextModel.TryToDelete(id,
                     metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                     new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),

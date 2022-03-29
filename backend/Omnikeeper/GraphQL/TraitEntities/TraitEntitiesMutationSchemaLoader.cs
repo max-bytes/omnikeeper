@@ -116,7 +116,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         var userContext = await context.SetupUserContext()
                             .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                            .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                            .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
                             .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                         var layerset = userContext.GetLayerSet(context.Path);
@@ -143,6 +143,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         var et = await InsertUsingNewCI(inputAttributeValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
 
+                        userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+
                         return et;
                     });
 
@@ -163,7 +165,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         var userContext = await context.SetupUserContext()
                             .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                            .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                            .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
                             .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                         var layerset = userContext.GetLayerSet(context.Path);
@@ -193,7 +195,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
                                 .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                             var layerset = userContext.GetLayerSet(context.Path);
@@ -217,10 +219,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (currentCIID.HasValue)
                             {
                                 var et = await Update(currentCIID.Value, inputAttributeValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
+                                userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
                                 return et;
                             } else
                             {
                                 var et = await InsertUsingNewCI(inputAttributeValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
+                                userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
                                 return et;
                             }
                         });
@@ -241,7 +245,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
                                 .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                             var layerset = userContext.GetLayerSet(context.Path);
@@ -268,6 +272,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
                             var removed = await traitEntityModel.TryToDelete(foundCIID.Value, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
+                            userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+
                             return removed;
                         });
                 }
@@ -289,7 +295,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
                                 .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                             var layerset = userContext.GetLayerSet(context.Path);
@@ -302,6 +308,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var relatedCIIDs = context.GetArgument<Guid[]>("relatedCIIDs")!;
 
                             var t = await traitEntityModel.SetRelations(tr, baseCIID, relatedCIIDs, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
                             return t.et;
                         });
 
@@ -319,7 +326,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
                                 .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                             var layerset = userContext.GetLayerSet(context.Path);
@@ -332,6 +339,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var relatedCIIDsToAdd = context.GetArgument<Guid[]>("relatedCIIDsToAdd")!;
 
                             var t = await traitEntityModel.AddRelations(tr, baseCIID, relatedCIIDsToAdd, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
                             return t.et;
                         });
 
@@ -349,7 +357,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
                                 .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                             var layerset = userContext.GetLayerSet(context.Path);
@@ -362,6 +370,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var relatedCIIDsToRemove = context.GetArgument<Guid[]>("relatedCIIDsToRemove")!;
 
                             var t = await traitEntityModel.RemoveRelations(tr, baseCIID, relatedCIIDsToRemove, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
                             return t.et;
                         });
                 }

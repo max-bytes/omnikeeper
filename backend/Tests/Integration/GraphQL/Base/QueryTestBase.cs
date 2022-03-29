@@ -6,15 +6,13 @@ using GraphQL.NewtonsoftJson;
 using GraphQL.Server;
 using GraphQL.Validation;
 using GraphQL.Validation.Complexity;
-using GraphQLParser.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using NUnit.Framework;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -61,19 +59,45 @@ namespace Tests.Integration.GraphQL.Base
         protected IDocumentExecuter Executer { get; private set; }
         protected IDocumentWriter Writer { get; private set; }
 
-        public ExecutionResult AssertQuerySuccess(
+        public void AssertQuerySuccess(
             string query,
             string expected,
-            IDictionary<string, object?> userContext,
+            AuthenticatedUser user,
             Inputs? inputs = null)
         {
-            var queryResult = CreateQueryResult(expected);
-            return AssertQuery(query, queryResult, userContext, inputs);
+            var expectedExecutionResult = CreateQueryResult(expected);
+            var expectedResult = Writer.WriteToStringAsync(expectedExecutionResult).GetAwaiter().GetResult();
+
+            var (runResult, writtenResult) = RunQuery(query, user, inputs);
+
+            //string? additionalInfo = null;
+
+            //if (runResult.Errors?.Any() == true)
+            //{
+            //    additionalInfo = string.Join(Environment.NewLine, runResult.Errors
+            //        .Where(x => x.InnerException is GraphQLSyntaxErrorException)
+            //        .Select(x => x?.InnerException?.Message));
+            //}
+
+            writtenResult.ShouldBeCrossPlatJson(expectedResult);
         }
 
-        public (ExecutionResult result, string json) RunQuery(string query, IDictionary<string, object?> userContext, Inputs? inputs = null)
+        public void AssertQueryHasErrors(
+            string query,
+            AuthenticatedUser user,
+            Inputs? inputs = null)
+        {
+            var (runResult, _) = RunQuery(query, user, inputs);
+
+            Assert.NotNull(runResult.Errors);
+            Assert.Greater(runResult.Errors!.Count, 0);
+        }
+
+        public (ExecutionResult result, string json) RunQuery(string query, AuthenticatedUser user, Inputs? inputs = null)
         {
             var schema = GetService<GraphQLSchemaHolder>().GetSchema();
+
+            using var userContext = new OmnikeeperUserContext(user, ServiceProvider);
 
             var runResult = Executer.ExecuteAsync(options =>
             {
@@ -90,30 +114,6 @@ namespace Tests.Integration.GraphQL.Base
 
             var writtenResult = Writer.WriteToStringAsync(runResult).GetAwaiter().GetResult();
             return (runResult, writtenResult);
-        }
-
-        private ExecutionResult AssertQuery(
-            string query,
-            ExecutionResult expectedExecutionResult,
-            IDictionary<string, object?> userContext,
-            Inputs? inputs)
-        {
-            var (runResult, writtenResult) = RunQuery(query, userContext, inputs);
-
-            var expectedResult = Writer.WriteToStringAsync(expectedExecutionResult).GetAwaiter().GetResult();
-
-            string? additionalInfo = null;
-
-            if (runResult.Errors?.Any() == true)
-            {
-                additionalInfo = string.Join(Environment.NewLine, runResult.Errors
-                    .Where(x => x.InnerException is GraphQLSyntaxErrorException)
-                    .Select(x => x?.InnerException?.Message));
-            }
-
-            writtenResult.ShouldBeCrossPlatJson(expectedResult);
-
-            return runResult;
         }
 
         public static ExecutionResult CreateQueryResult(string result, ExecutionErrors? errors = null)

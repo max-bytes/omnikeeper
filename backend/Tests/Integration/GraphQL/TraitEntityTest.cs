@@ -4,7 +4,6 @@ using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.GraphQL;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,7 +14,7 @@ namespace Tests.Integration.GraphQL
     class TraitEntityTest : QueryTestBase
     {
         [Test]
-        public async Task TestBasicQuery()
+        public async Task TestBasics()
         {
             var userInDatabase = await SetupDefaultUser();
             var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
@@ -101,7 +100,7 @@ mutation {
             ""id"": ""test_trait_a""
         }
 }";
-            AssertQuerySuccess(mutationCreateTrait, expected1, new OmnikeeperUserContext(user, ServiceProvider));
+            AssertQuerySuccess(mutationCreateTrait, expected1, user);
 
             // force rebuild graphql schema
             await ReinitSchema();
@@ -132,7 +131,7 @@ mutation {
   }
 }
 ";
-            AssertQuerySuccess(queryTestTraitA, expected2, new OmnikeeperUserContext(user, ServiceProvider));
+            AssertQuerySuccess(queryTestTraitA, expected2, user);
 
             var mutationInsert = @"
 mutation {
@@ -157,7 +156,7 @@ mutation {
   }
 }
 ";
-            AssertQuerySuccess(mutationInsert, expected3, new OmnikeeperUserContext(user, ServiceProvider));
+            AssertQuerySuccess(mutationInsert, expected3, user);
 
 
             var expected4 = @"
@@ -178,7 +177,7 @@ mutation {
   }
 }
 ";
-            AssertQuerySuccess(queryTestTraitA, expected4, new OmnikeeperUserContext(user, ServiceProvider));
+            AssertQuerySuccess(queryTestTraitA, expected4, user);
 
 
 
@@ -203,7 +202,7 @@ mutation {
   }
 }
 ";
-            AssertQuerySuccess(mutationUpdateAttribute, expected5, new OmnikeeperUserContext(user, ServiceProvider));
+            AssertQuerySuccess(mutationUpdateAttribute, expected5, user);
 
             var expected6 = @"
 {
@@ -223,7 +222,7 @@ mutation {
   }
 }
 ";
-            AssertQuerySuccess(queryTestTraitA, expected6, new OmnikeeperUserContext(user, ServiceProvider));
+            AssertQuerySuccess(queryTestTraitA, expected6, user);
 
             // update relations
             var queryCIID = @"
@@ -237,7 +236,7 @@ mutation {
         }
     }
 ";
-            var (_, jsonStr) = RunQuery(queryCIID, new OmnikeeperUserContext(user, ServiceProvider));
+            var (_, jsonStr) = RunQuery(queryCIID, user);
             var json = JToken.Parse(jsonStr);
 
             var ciidEntity1Str = json["data"]!["traitEntities"]!["test_trait_a"]!["byDataID"]!["ciid"]!.Value<string>();
@@ -265,7 +264,7 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
   }
 }
 ";
-            AssertQuerySuccess(mutationSetAssignments, expected7, new OmnikeeperUserContext(user, ServiceProvider),
+            AssertQuerySuccess(mutationSetAssignments, expected7, user,
                 new Inputs(new Dictionary<string, object?>()
                 {
                     { "baseCIID", ciidEntity1 },
@@ -296,7 +295,7 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
   }}
 }}
 ";
-            AssertQuerySuccess(queryTestTraitA, expected8, new OmnikeeperUserContext(user, ServiceProvider));
+            AssertQuerySuccess(queryTestTraitA, expected8, user);
 
 
             var expected9 = @"
@@ -309,7 +308,7 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
   }
 }
 ";
-            AssertQuerySuccess(mutationSetAssignments, expected9, new OmnikeeperUserContext(user, ServiceProvider),
+            AssertQuerySuccess(mutationSetAssignments, expected9, user,
                 new Inputs(new Dictionary<string, object?>()
                 {
                     { "baseCIID", ciidEntity1 },
@@ -338,7 +337,7 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
   }}
 }}
 ";
-            AssertQuerySuccess(queryTestTraitA, expected10, new OmnikeeperUserContext(user, ServiceProvider));
+            AssertQuerySuccess(queryTestTraitA, expected10, user);
 
             // add assignemnts
             var mutationAddAssignments = @"
@@ -363,7 +362,7 @@ mutation($baseCIID: Guid!, $relatedCIIDsToAdd: [Guid]!) {
   }
 }
 ";
-            AssertQuerySuccess(mutationAddAssignments, expected11, new OmnikeeperUserContext(user, ServiceProvider),
+            AssertQuerySuccess(mutationAddAssignments, expected11, user,
                 new Inputs(new Dictionary<string, object?>()
                 {
                     { "baseCIID", ciidEntity1 },
@@ -394,7 +393,7 @@ mutation($baseCIID: Guid!, $relatedCIIDsToAdd: [Guid]!) {
   }}
 }}
 ";
-            AssertQuerySuccess(queryTestTraitA, expected12, new OmnikeeperUserContext(user, ServiceProvider));
+            AssertQuerySuccess(queryTestTraitA, expected12, user);
 
             // remove assignemnts
             var mutationRemoveAssignments = @"
@@ -419,7 +418,7 @@ mutation($baseCIID: Guid!, $relatedCIIDsToRemove: [Guid]!) {
   }
 }
 ";
-            AssertQuerySuccess(mutationRemoveAssignments, expected13, new OmnikeeperUserContext(user, ServiceProvider),
+            AssertQuerySuccess(mutationRemoveAssignments, expected13, user,
                 new Inputs(new Dictionary<string, object?>()
                 {
                     { "baseCIID", ciidEntity1 },
@@ -447,7 +446,123 @@ mutation($baseCIID: Guid!, $relatedCIIDsToRemove: [Guid]!) {
   }}
 }}
 ";
-            AssertQuerySuccess(queryTestTraitA, expected14, new OmnikeeperUserContext(user, ServiceProvider));
+            AssertQuerySuccess(queryTestTraitA, expected14, user);
+        }
+
+        [Test]
+        public async Task TestIncorrectInsert()
+        {
+            var userInDatabase = await SetupDefaultUser();
+            var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", ModelContextBuilder.BuildImmediate());
+            var user = new AuthenticatedUser(userInDatabase,
+                new AuthRole[]
+                {
+                    new AuthRole("ar1", new string[] {
+                        PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),
+                        PermissionUtils.GetLayerReadPermission(layerOkConfig), PermissionUtils.GetLayerWritePermission(layerOkConfig),
+                        PermissionUtils.GetManagementPermission()
+                    }),
+                });
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            string mutationCreateTrait = @"
+mutation {
+  manage_upsertRecursiveTrait(
+    trait: {
+      id: ""test_trait_a""
+      requiredAttributes: [
+        {
+          identifier: ""id""
+          template: {
+            name: ""test_trait_a.id""
+            type: TEXT
+            isID: true
+            isArray: false
+            valueConstraints: [
+                """"""{""$type"":""Omnikeeper.Base.Entity.CIAttributeValueConstraintTextLength, Omnikeeper.Base"",""Minimum"":1,""Maximum"":null}""""""
+            ]
+          }
+        }
+        {
+          identifier: ""name""
+          template: {
+            name: ""test_trait_a.name""
+            type: TEXT
+            isID: false
+            isArray: false
+            valueConstraints: []
+          }
+        }
+      ]
+      optionalAttributes: []
+      optionalRelations: [],
+      requiredTraits: []
+    }
+  ) {
+    id
+  }
+}
+";
+            var expected1 = @"
+{
+    ""manage_upsertRecursiveTrait"":
+        {
+            ""id"": ""test_trait_a""
+        }
+}";
+            AssertQuerySuccess(mutationCreateTrait, expected1, user);
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            var mutationInsert = @"
+mutation {
+  insertNew_test_trait_a(
+    layers: [""layer_1""]
+    writeLayer: ""layer_1""
+    ciName: ""Entity 1""
+    input: { id: """", name: ""Entity 1"" }
+  ) {
+                entity { id }
+  }
+        }
+";
+
+            AssertQueryHasErrors(mutationInsert, user);
+
+            // there must not be an entity
+            var queryTestTraitA = @"
+{
+  traitEntities(layers: [""layer_1""]) {
+    test_trait_a {
+                all {
+                    entity {
+                        id
+                        name
+                    }
+                }
+            }
+        }
+    }
+";
+            var expected4 = @"
+{
+  ""traitEntities"": {
+	  ""test_trait_a"": {
+	    ""all"": []
+	  }
+  }
+}
+";
+            AssertQuerySuccess(queryTestTraitA, expected4, user);
+
+
+            // no CI must be created
+            var isLayerEmpty = await GetService<ILayerStatisticsModel>().IsLayerEmpty(layer1.ID, ModelContextBuilder.BuildImmediate());
+            Assert.IsTrue(isLayerEmpty);
         }
     }
 }

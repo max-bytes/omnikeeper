@@ -5,7 +5,6 @@ using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.GraphQL;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -78,7 +77,7 @@ namespace Tests.Integration.GraphQL
                         ]
                     }";
 
-            AssertQuerySuccess(query, expected, new OmnikeeperUserContext(user, ServiceProvider), inputs);
+            AssertQuerySuccess(query, expected, user, inputs);
         }
     }
 }
