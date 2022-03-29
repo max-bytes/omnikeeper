@@ -29,7 +29,7 @@ namespace OKPluginValidation.Rules
                 Layerset = layerset;
             }
 
-            public static readonly MyJSONSerializer<Config> Serializer = new MyJSONSerializer<Config>(() =>
+            public static readonly NewtonSoftJSONSerializer<Config> Serializer = new NewtonSoftJSONSerializer<Config>(() =>
             {
                 var s = new JsonSerializerSettings()
                 {

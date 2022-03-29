@@ -71,7 +71,7 @@ namespace Omnikeeper.Controllers
                 Relations = relations;
             }
 
-            public static MyJSONSerializer<ExportedLayerDataV1> Serializer = new MyJSONSerializer<ExportedLayerDataV1>(new JsonSerializerSettings()
+            public static NewtonSoftJSONSerializer<ExportedLayerDataV1> Serializer = new NewtonSoftJSONSerializer<ExportedLayerDataV1>(new JsonSerializerSettings()
             {
                 TypeNameHandling = TypeNameHandling.None
             });

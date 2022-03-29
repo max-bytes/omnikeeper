@@ -13,7 +13,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         {
         }
 
-        private static readonly MyJSONSerializer<object> serializer = new MyJSONSerializer<object>(() =>
+        private static readonly NewtonSoftJSONSerializer<object> serializer = new NewtonSoftJSONSerializer<object>(() =>
         {
             var s = new JsonSerializerSettings()
             {

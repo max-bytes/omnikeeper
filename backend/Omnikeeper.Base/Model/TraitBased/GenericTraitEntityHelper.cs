@@ -71,7 +71,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return new GenericTraitEntityIDAttributeInfos<C, ID>(outFields);
         }
 
-        public static C EffectiveTrait2Object<C>(EffectiveTrait et, MyJSONSerializer<object>? jsonSerializer) where C : TraitEntity, new()
+        public static C EffectiveTrait2Object<C>(EffectiveTrait et, NewtonSoftJSONSerializer<object>? jsonSerializer) where C : TraitEntity, new()
         {
             var (_, attributeFieldInfos, relationFieldInfos) = ExtractFieldInfos<C>();
 

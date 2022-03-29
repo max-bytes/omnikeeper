@@ -131,7 +131,7 @@ namespace Omnikeeper.Base.Inbound
             public string BuilderName { get; }
             public string MapperScope { get; }
 
-            public static MyJSONSerializer<IConfig> Serializer = new MyJSONSerializer<IConfig>(new JsonSerializerSettings()
+            public static NewtonSoftJSONSerializer<IConfig> Serializer = new NewtonSoftJSONSerializer<IConfig>(new JsonSerializerSettings()
             {
                 TypeNameHandling = TypeNameHandling.Objects
             });

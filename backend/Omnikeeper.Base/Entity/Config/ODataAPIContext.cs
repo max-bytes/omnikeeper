@@ -31,7 +31,7 @@ namespace Omnikeeper.Base.Entity
         //[ProtoMember(2)] 
         public IConfig CConfig { get; set; }
 
-        public static MyJSONSerializer<IConfig> ConfigSerializer = new MyJSONSerializer<IConfig>(new JsonSerializerSettings()
+        public static NewtonSoftJSONSerializer<IConfig> ConfigSerializer = new NewtonSoftJSONSerializer<IConfig>(new JsonSerializerSettings()
         {
             TypeNameHandling = TypeNameHandling.Objects
         });

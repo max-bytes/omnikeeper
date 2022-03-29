@@ -24,7 +24,7 @@ namespace Omnikeeper.GridView.Entity
 
         private GridViewConfiguration() { }
 
-        public static MyJSONSerializer<GridViewConfiguration> Serializer = new MyJSONSerializer<GridViewConfiguration>(new JsonSerializerSettings()
+        public static NewtonSoftJSONSerializer<GridViewConfiguration> Serializer = new NewtonSoftJSONSerializer<GridViewConfiguration>(new JsonSerializerSettings()
         {
             TypeNameHandling = TypeNameHandling.Objects,
             MissingMemberHandling = MissingMemberHandling.Error

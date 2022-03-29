@@ -16,7 +16,7 @@ namespace Omnikeeper.Base.Entity.Config
         [JsonIgnore]
         public LayerSet ConfigLayerset => new LayerSet(configLayers);
 
-        public static MyJSONSerializer<MetaConfiguration> Serializer = new MyJSONSerializer<MetaConfiguration>(new JsonSerializerSettings()
+        public static NewtonSoftJSONSerializer<MetaConfiguration> Serializer = new NewtonSoftJSONSerializer<MetaConfiguration>(new JsonSerializerSettings()
         {
             TypeNameHandling = TypeNameHandling.None,
             MissingMemberHandling = MissingMemberHandling.Error

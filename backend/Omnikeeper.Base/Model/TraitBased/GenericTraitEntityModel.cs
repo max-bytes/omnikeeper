@@ -18,7 +18,7 @@ namespace Omnikeeper.Base.Model.TraitBased
     {
         protected readonly ICIModel ciModel;
         private readonly IAttributeModel attributeModel;
-        private readonly MyJSONSerializer<object>? jsonSerializer;
+        private readonly NewtonSoftJSONSerializer<object>? jsonSerializer;
         private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
         private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
@@ -26,7 +26,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         private readonly TraitEntityModel traitEntityModel;
 
-        public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, MyJSONSerializer<object>? jsonSerializer)
+        public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, NewtonSoftJSONSerializer<object>? jsonSerializer)
         {
             this.ciModel = ciModel;
             this.attributeModel = attributeModel;
