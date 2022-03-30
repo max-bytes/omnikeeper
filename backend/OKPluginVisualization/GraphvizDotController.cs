@@ -127,10 +127,8 @@ namespace OKPluginVisualization
             var relationEdges = new Dictionary<(string from, string to, string predicateID), IList<MergedRelation>>();
             foreach(var relation in relations)
             {
-                string? fromTraitSetKey = null;
-                traitSetsByCIID.TryGetValue(relation.Relation.FromCIID, out fromTraitSetKey);
-                string? toTraitSetKey = null;
-                traitSetsByCIID.TryGetValue(relation.Relation.ToCIID, out toTraitSetKey);
+                traitSetsByCIID.TryGetValue(relation.Relation.FromCIID, out string? fromTraitSetKey);
+                traitSetsByCIID.TryGetValue(relation.Relation.ToCIID, out string? toTraitSetKey);
 
                 if (fromTraitSetKey != null && toTraitSetKey != null)
                 {
