@@ -55,7 +55,7 @@ namespace OKPluginVisualization
         }
 
         [HttpGet("generate")]
-        public async Task<IActionResult> Generate([FromQuery, Required] string[] layerIDs, [FromQuery] string[] traitIDs, [FromQuery] string traitIDsRegex)
+        public async Task<IActionResult> Generate([FromQuery, Required] string[] layerIDs, [FromQuery] string[]? traitIDs, [FromQuery] string? traitIDsRegex)
         {
             if (layerIDs.IsEmpty())
                 return BadRequest("No layer IDs specified");
@@ -70,12 +70,12 @@ namespace OKPluginVisualization
             var timeThreshold = TimeThreshold.BuildLatest();
 
             IEnumerable<ITrait> traits;
-            if (!traitIDsRegex.IsEmpty())
+            if (traitIDsRegex != null && !traitIDsRegex.IsEmpty())
                 traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values.Where(t => Regex.Match(t.ID, traitIDsRegex).Success);
-            else if (traitIDs.IsEmpty())
-                traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
-            else
+            else if (traitIDs != null && !traitIDs.IsEmpty())
                 traits = (await traitsProvider.GetActiveTraitsByIDs(traitIDs, trans, timeThreshold)).Values;
+            else
+                traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
 
             var predicateIDs = await baseRelationModel.GetPredicateIDs(RelationSelectionAll.Instance, layerSet.LayerIDs, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
 
