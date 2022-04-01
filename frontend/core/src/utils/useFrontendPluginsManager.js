@@ -41,7 +41,7 @@ export default function useFrontendPluginsManager() {
                     } 
                     break;
                 default:
-                    throw new Error("Cannot find module '" + wantedPluginName + "'"); // All available frontend-plugins should be listed in this switch. If not, throw error.
+                    console.error("Cannot find module '" + wantedPluginName + "'"); // All available frontend-plugins should be listed in this switch. If not, output error
             }
 
             const PluginComponents = plugin.default(); // thows and error, if plugin doesn't have a default export
