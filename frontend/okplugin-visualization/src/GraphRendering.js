@@ -90,9 +90,20 @@ export default function GraphRendering(props) {
                             const traitParams = selectedValidTraitIDs.map(traitID => `traitIDs=${encodeURIComponent(traitID)}`).join('&');
                             const params = [layerIDParams, traitParams].join('&');
                             const backendURL = `${env('BACKEND_URL')}/api/v1/GraphvizDot/generate?${params}`;
+                            const token = localStorage.getItem('token');
                             setGraphDefinitionLoading(true);
-                            fetch(backendURL)
-                                .then(response => response.text())
+                            fetch(backendURL, {
+                                headers: new Headers({
+                                    'Authorization': `Bearer ${token}`, 
+                                })
+                            })
+                                .then(response => {
+                                    if (response.status != 200) {
+                                        throw new Exception(`Loading graph definition failed with status code ${response.status}: ${response.text()}`);
+                                    } else {
+                                        return response.text();
+                                    }
+                                })
                                 .then(data => setGraphDefinition(data))
                                 .catch(e => console.log(e))
                                 .finally(() => setGraphDefinitionLoading(false));
