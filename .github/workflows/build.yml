@@ -86,6 +86,29 @@ jobs:
             npm version ${{ env.VERSION }} # set version
             npm publish
 
+  build-publish-frontend-okplugin-visualization:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set version
+        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Build and publish
+        env:
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOURL: npm.pkg.github.com/
+          PLUGIN_FOLDER: okplugin-visualization
+        run: |
+            cd frontend/$PLUGIN_FOLDER
+            npm config set unsafe-perm true # needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
+            npm ci
+            cat <<'EOF' > .npmrc
+            //${REPOURL}:_authToken=${ACCESS_TOKEN}
+            @max-bytes:registry=https://npm.pkg.github.com
+            EOF
+            npm version ${{ env.VERSION }} # set version
+            npm publish
+
   build-publish-backend-okplugins:
     runs-on: ubuntu-20.04
     steps:
@@ -156,7 +179,7 @@ jobs:
           bash clients/scripts/powershell/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_POWERSHELL }}"
   call-package-variants:
     runs-on: ubuntu-20.04
-    needs: [build-backend-vanilla, build-publish-backend-okplugins, build-publish-frontend-okplugin-generic-json-ingest]
+    needs: [build-backend-vanilla, build-publish-backend-okplugins, build-publish-frontend-okplugin-generic-json-ingest, build-publish-frontend-okplugin-visualization]
     steps:
     - name: Set version
       run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
