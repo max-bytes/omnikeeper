@@ -52,7 +52,7 @@ function TraitList(props) {
                 <Space style={styles.traitElement}>
                     <h4 style={styles.title}>Traits</h4>
                     <span style={styles.reset}>
-                        <Button onClick={() => setChecked([])} size="small">Reset</Button>
+                        <Button onClick={() => onCheck([])} size="small">Reset</Button>
                     </span>
                 </Space>
 
