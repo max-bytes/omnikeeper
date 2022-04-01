@@ -75,7 +75,7 @@ namespace OKPluginVisualization
             else if (traitIDs != null && !traitIDs.IsEmpty())
                 traits = (await traitsProvider.GetActiveTraitsByIDs(traitIDs, trans, timeThreshold)).Values;
             else
-                traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
+                return BadRequest("No trait IDs specified");
 
             var predicateIDs = await baseRelationModel.GetPredicateIDs(RelationSelectionAll.Instance, layerSet.LayerIDs, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
 
@@ -120,7 +120,7 @@ namespace OKPluginVisualization
                     traitSetsByCIID[ciid] = kv.Key;
             }
 
-            var nodesWithEdges = new HashSet<string>();
+            //var nodesWithEdges = new HashSet<string>();
 
             var relations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(predicateIDs), layerSet, trans, timeThreshold, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance);
 
@@ -142,8 +142,8 @@ namespace OKPluginVisualization
                         relationEdges[key] = new List<MergedRelation>() { relation };
                     }
 
-                    nodesWithEdges.Add(fromTraitSetKey);
-                    nodesWithEdges.Add(toTraitSetKey);
+                    //nodesWithEdges.Add(fromTraitSetKey);
+                    //nodesWithEdges.Add(toTraitSetKey);
                 }
             }
 
@@ -156,8 +156,8 @@ namespace OKPluginVisualization
             {
                 var traitSetKey = kv.Key;
                 var ciids = kv.Value;
-                if (nodesWithEdges.Contains(traitSetKey))
-                {
+                //if (nodesWithEdges.Contains(traitSetKey))
+                //{
                     var traitIDsForNode = traitSetKey.Split('#');
                     var affectingLayerIDs = ciids.SelectMany(ciid => layerIDsByCIID[ciid]).ToHashSet();
                     var layerColors = affectingLayerIDs.Select(layerID => layerData.GetOrWithClass(layerID, null)?.Color).Where(color => color.HasValue).Select(color => ARGBToHexString(color!.Value));
@@ -165,7 +165,7 @@ namespace OKPluginVisualization
                     var nodeColor = (layerColors.Count() == 1) ? $"\"{layerColors.First()}\"" : "black";
 
                     sb.AppendLine($"\"{traitSetKey}\" [shape=box, color={nodeColor}, label=<{string.Join("<BR />", traitIDsForNode)}<BR />{layerColorIcons} ({kv.Value.Count()})>]");
-                }
+                //}
             }
             foreach(var relationEdge in relationEdges)
             {
