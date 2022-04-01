@@ -9,7 +9,7 @@ import { useLocalStorage } from 'utils/useLocalStorage';
 
 function TraitList(props) {
 
-    const {checked, setChecked, showMetaTraits, setShowMetaTraits, showEmptyTrait, setShowEmptyTrait, traitList} = props;
+    const {checked, setChecked, traitList} = props;
 
     function onReset() {
         var newChecked = {};
@@ -17,8 +17,6 @@ function TraitList(props) {
             newChecked[et] = 0;
         }
         setChecked(newChecked);
-        setShowMetaTraits(false);
-        setShowEmptyTrait(false);
     }
 
     function onChange(effectiveTrait, e) {
@@ -26,42 +24,9 @@ function TraitList(props) {
         setChecked({...checked, [effectiveTrait.id]: value});
     }
 
-    const isMetaTraitID = useCallback((id) => {
-        return id.startsWith("__meta");
-    }, []);
-
-    const emptyTraitID = "empty";
-    const isEmptyTraitID = useCallback((id) => {
-        return id === emptyTraitID;
-    }, [emptyTraitID]); 
-
-    // reset meta traits when the show-meta-traits checkbox is unchecked
-    useEffect(() => {
-        if (!showMetaTraits) {
-            var newUnchecked = {};
-            for(const et in checked) {
-                if (checked[et] !== 0 && isMetaTraitID(et))
-                    newUnchecked[et] = 0;
-            }
-            if (!_.isEmpty(newUnchecked)) {
-                setChecked(oldChecked => {return {...oldChecked, ...newUnchecked}});
-            }
-        }
-    }, [showMetaTraits, isMetaTraitID, setChecked, checked]);
-
-    // reset empty trait to "may"/0 when the show-empty-trait checkbox is unchecked
-    useEffect(() => {
-        if (!showEmptyTrait) {
-            if (checked[emptyTraitID] !== 0) {
-                setChecked(oldChecked => {return {...oldChecked, [emptyTraitID]: 0}});
-            }
-        }
-    }, [showEmptyTrait, emptyTraitID, setChecked, checked]);
-
     const [expandedKeys, setExpandedKeys] = useLocalStorage('searchTraitsExpanded', []);
 
     const traitTuples = traitList
-        .filter(effectiveTrait => (showMetaTraits || !isMetaTraitID(effectiveTrait.id)) && (showEmptyTrait || !isEmptyTraitID(effectiveTrait.id)))
         .map(t => {return {trait: t, treeKey: t.id.split('.')};});
     function groupByTraitID(traitTuples, parentTreeKey) {
         return _.values(
@@ -100,14 +65,6 @@ function TraitList(props) {
                 <Space style={styles.traitElement}>
                     <h4 style={styles.title}>Traits</h4>
                     <span style={styles.reset}>
-                        <Checkbox
-                            checked={showEmptyTrait}
-                            onChange={(e) => setShowEmptyTrait(e.target.checked)}
-                        >Show empty</Checkbox>
-                        <Checkbox
-                            checked={showMetaTraits}
-                            onChange={(e) => setShowMetaTraits(e.target.checked)}
-                        >Show meta</Checkbox>
                         <Button onClick={onReset} size="small">Reset</Button>
                     </span>
                 </Space>

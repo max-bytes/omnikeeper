@@ -17,8 +17,6 @@ function SearchCIAdvanced(props) {
     const { data: visibleLayers, loading: loadingLayers, error: errorLayers } = useExplorerLayers(true);
 
     const [searchString, setSearchString] = useState(urlParams.searchString);
-    const [showMetaTraits, setShowMetaTraits] = useState(urlParams.showMetaTraits);
-    const [showEmptyTrait, setShowEmptyTrait] = useState(urlParams.showEmptyTrait);
     
 
     const [loadActiveTraits, { data: activeTraits, loading: loadingActiveTraits, error: errorActiveTraits }] = useLazyQuery(queries.ActiveTraits);
@@ -50,10 +48,10 @@ function SearchCIAdvanced(props) {
     useEffect(() => {
         if (_.keys(checkedTraits).length !== 0) // we only start updating the url/history once the checkedTraits are loaded
         {
-            const search = stringifyURLQuery(searchString, checkedTraits, showMetaTraits, showEmptyTrait);
+            const search = stringifyURLQuery(searchString, checkedTraits);
             props.history.replace({search: `?${search}`});
         }
-      }, [searchString, checkedTraits, showMetaTraits, showEmptyTrait, props.history]);
+      }, [searchString, checkedTraits, props.history]);
 
     // TODO: we would like to keep the old data around while loading, and recent graphql (3.3.0+) recommends using
     // return variable "previousData"... but there is a bug that prevents this from working with useLazyQuery:
@@ -101,10 +99,7 @@ function SearchCIAdvanced(props) {
                     </div>
                     <div style={{marginBottom: "10px", display: "flex", overflow: "hidden", flexGrow: 1}}>
                         {activeTraits && 
-                            <TraitList traitList={activeTraits.activeTraits} 
-                            checked={checkedTraits} setChecked={setCheckedTraits}
-                            showMetaTraits={showMetaTraits} setShowMetaTraits={setShowMetaTraits}
-                            showEmptyTrait={showEmptyTrait} setShowEmptyTrait={setShowEmptyTrait} />
+                            <TraitList traitList={activeTraits.activeTraits} checked={checkedTraits} setChecked={setCheckedTraits} />
                         }
                     </div>
                     <div style={{display: "flex", justifyContent: "flex-end"}}>
@@ -124,13 +119,11 @@ function SearchCIAdvanced(props) {
 
 export default withRouter(SearchCIAdvanced);
 
-function stringifyURLQuery(searchString, checkedTraits, showMetaTraits, showEmptyTrait) {
+function stringifyURLQuery(searchString, checkedTraits) {
     return queryString.stringify({
         searchString: (searchString) ? searchString : undefined,
         rt: _.toPairs(checkedTraits).filter(t => t[1] === 1).map(t => t[0]),
         dt: _.toPairs(checkedTraits).filter(t => t[1] === -1).map(t => t[0]),
-        mt: (showMetaTraits) ? showMetaTraits : undefined,
-        et: (showEmptyTrait) ? showEmptyTrait : undefined,
     }, {arrayFormat: 'comma'});
   }
 
@@ -144,8 +137,6 @@ function parseURLQuery(search) {
       searchString: p.searchString ?? "",
       requiredTraits: [].concat(rt),
       disallowedTraits: [].concat(dt),
-      showMetaTraits: p.mt === 'true',
-      showEmptyTrait: p.et === 'true',
     };
   }
 
