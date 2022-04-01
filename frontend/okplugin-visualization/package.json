@@ -13,8 +13,7 @@
   "author": "Maximilian Csuk",
   "peerDependencies": {
     "react": "^16.14.0",
-    "react-dom": "^16.14.0",
-    "@max-bytes/omnikeeper-frontend": "0.1.0"
+    "react-dom": "^16.14.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.6",
