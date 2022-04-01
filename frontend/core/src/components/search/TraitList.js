@@ -137,7 +137,7 @@ function TraitList(props) {
 function EffectiveTraitSelectGroup(props) {
     const {title} = props;
     return <div style={styles.traitElement}>
-        <span style={styles.traitsIcon}>
+        <span>
             <FontAwesomeIcon icon={faFolder} style={{ marginRight: "0.5rem" }}/>
         </span>
         <span style={styles.traitsID}>
