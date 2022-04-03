@@ -10,22 +10,19 @@ export function PrivateRoute(props) {
 
   if (!initialized) return "Loading...";
 
-  return (
-    <Route
+  return <Route
       {...rest}
       render={pprops => {
-        return keycloak.authenticated ? 
-          props.children
-         : (
-          <Redirect
+        if (keycloak.authenticated) {
+            return children;
+        } else {
+          return <Redirect
             to={{
               pathname: '/login',
               state: { from: pprops.location }
             }}
-          />
-        );
-        }
+          />;
+        }}
       }
-    />
-  )
+    />;
 }
