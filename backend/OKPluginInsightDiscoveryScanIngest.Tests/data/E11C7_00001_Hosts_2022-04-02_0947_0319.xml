@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfHostInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <HostInfo>
+        <ObjectHash>B64274E79A2520625465E70BCE617CDF</ObjectHash>
+        <Hostname>openssh-server</Hostname>
+        <SystemUpTime>2d 23h 38m</SystemUpTime>
+        <Vendor>[?2004lcat: /sys/class/dmi/id/sys_vendor: No such file or directory
+[?2004hopenssh-server:~$</Vendor>
+        <SystemUpTimeMinutes>4299</SystemUpTimeMinutes>
+        <RAM>16005</RAM>
+        <ScanInfo>
+            <ObjectHash>7CF27FDD1EDC191C848876EA127D7127</ObjectHash>
+            <ObjectID>9e8a2383-84cf-4eff-8d7c-a871cf51d4e1</ObjectID>
+            <UsedCredentialID>eb20fc29-8120-4f80-a361-8b962abf659a</UsedCredentialID>
+            <NetworkInterfaceInfo>
+                <ObjectHash>8A14179A129CC5491F682AAF1B850F56</ObjectHash>
+                <DeviceID>noID</DeviceID>
+                <MACAddress>00:15:5d:63:65:d1</MACAddress>
+                <IP4>172.19.22.95</IP4>
+                <AddressSpace>Private</AddressSpace>
+            </NetworkInterfaceInfo>
+            <DiscoveryID>E11C7</DiscoveryID>
+            <ScanSettingID>00001</ScanSettingID>
+            <DiscoveryVersion>3.1.1.0</DiscoveryVersion>
+            <ScanTime>2022-04-02_09:45</ScanTime>
+            <ScanningTimeElapsed>91.9204881</ScanningTimeElapsed>
+        </ScanInfo>
+        <NetworkInterfaces>
+            <NetworkInterfaceInfo>
+                <ObjectHash>885C3CE1C95265E83F54A9672FCB5D70</ObjectHash>
+                <DeviceID>eth0</DeviceID>
+                <MACAddress>02:42:ac:11:00:03</MACAddress>
+                <IP4>172.17.0.3</IP4>
+                <Subnet4>255.255.0.0</Subnet4>
+                <Gateway>172.17.0.1</Gateway>
+                <AddressSpace>Private</AddressSpace>
+            </NetworkInterfaceInfo>
+            <NetworkInterfaceInfo>
+                <ObjectHash>885C3CE1C95265E83F54A9672FCB5D70</ObjectHash>
+                <DeviceID>eth0@if210</DeviceID>
+                <MACAddress>02:42:ac:11:00:03</MACAddress>
+                <IP4>172.17.0.3</IP4>
+                <AddressSpace>Private</AddressSpace>
+            </NetworkInterfaceInfo>
+            <NetworkInterfaceInfo>
+                <ObjectHash>8A14179A129CC5491F682AAF1B850F56</ObjectHash>
+                <DeviceID>noID</DeviceID>
+                <MACAddress>00:15:5d:63:65:d1</MACAddress>
+                <IP4>172.19.22.95</IP4>
+                <AddressSpace>Private</AddressSpace>
+            </NetworkInterfaceInfo>
+        </NetworkInterfaces>
+        <ReferencedHosts />
+        <Timezone>BST +0100
+</Timezone>
+        <CPUCount>1</CPUCount>
+        <OS>
+            <ObjectHash>AE9A41D766739B693DCF08AB0543B198</ObjectHash>
+            <OSName>GNU/Linux</OSName>
+            <OSArchitecture>x86_64</OSArchitecture>
+            <Kernel>5.10.60.1-microsoft-standard-WSL2</Kernel>
+        </OS>
+        <CPUs>
+            <CPUInfo>
+                <ObjectHash>0CA4D3E73AF27B56CFF0D3D987974A06</ObjectHash>
+                <DeviceID>0</DeviceID>
+                <CPUType>Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz</CPUType>
+                <CoresPerProcessor>6</CoresPerProcessor>
+                <MaxCPUSpeed>2712</MaxCPUSpeed>
+            </CPUInfo>
+        </CPUs>
+        <FileSystem>
+            <FileSystemInfo>
+                <ObjectHash>3A5CF39F81D46B34FDFF03A7FA054E16</ObjectHash>
+                <Name>/dev/sdd</Name>
+                <Mount>/etc/hosts</Mount>
+                <Size>255731</Size>
+                <Used>47430</Used>
+                <Free>208301</Free>
+            </FileSystemInfo>
+        </FileSystem>
+        <StorageDevice />
+        <ApplicationServices />
+        <Applications />
+    </HostInfo>
+</ArrayOfHostInfo>

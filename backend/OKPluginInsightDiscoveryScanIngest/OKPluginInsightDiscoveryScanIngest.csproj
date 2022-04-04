@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="DiscoTools">
+      <HintPath>contrib\dlls\DiscoTools.dll</HintPath>
+    </Reference>
+    <Reference Include="InfoClasses">
+      <HintPath>contrib\dlls\InfoClasses.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
