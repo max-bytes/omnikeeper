@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -22,9 +23,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly ICIModel ciModel;
         private readonly ILayerModel layerModel;
         private readonly IChangesetModel changesetModel;
+        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public TraitEntitiesMutationSchemaLoader(IAttributeModel attributeModel, IRelationModel relationModel,
-            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel)
+            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
@@ -32,6 +34,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             this.ciModel = ciModel;
             this.layerModel = layerModel;
             this.changesetModel = changesetModel;
+            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
         }
 
         private async Task<EffectiveTrait> InsertUsingNewCI((string name, IAttributeValue value, bool isID)[] attributeValues, string? ciName, IModelContext trans, IChangesetProxy changeset, TraitEntityModel traitEntityModel, LayerSet layerset, string writeLayerID)
@@ -83,6 +86,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
 
+                        if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
+                        if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+
                         if (context.GetArgument(typeof(object), "input") is not IDictionary<string, object> upsertInputCollection)
                             throw new Exception("Invalid input object for update detected");
 
@@ -122,6 +130,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var layerset = userContext.GetLayerSet(context.Path);
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
+
+                        if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
+                        if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
 
                         if (context.GetArgument(typeof(object), "input") is not IDictionary<string, object> upsertInputCollection)
                             throw new Exception("Invalid input object for insert detected");
@@ -172,6 +185,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
 
+                        if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
+                        if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+
                         var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
                         var removed = await traitEntityModel.TryToDelete(ciid, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
@@ -201,6 +219,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var layerset = userContext.GetLayerSet(context.Path);
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
+
+                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
+                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
 
                             if (context.GetArgument(typeof(object), "input") is not IDictionary<string, object> upsertInputCollection)
                                 throw new Exception("Invalid input object for upsert detected");
@@ -252,6 +275,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
+                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
+                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+
                             var idCollection = context.GetArgument(typeof(object), "id") as IDictionary<string, object>;
 
                             if (idCollection == null)
@@ -302,6 +330,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
+                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
+                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+
                             var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
@@ -333,6 +366,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
+                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
+                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+
                             var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
@@ -363,6 +401,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var layerset = userContext.GetLayerSet(context.Path);
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
+
+                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
+                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
 
                             var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
