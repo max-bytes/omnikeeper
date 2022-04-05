@@ -56,7 +56,7 @@ namespace Tests.Integration.Model
                 await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text2"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 
                 var a1 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
-                Assert.AreEqual(1, a1.Count());
+                Assert.AreEqual(1, a1.Count);
                 var aa1 = a1.First().Value;
                 Assert.AreEqual(ciid1, aa1.Attribute.CIID);
                 Assert.AreEqual("a1", aa1.Attribute.Name);
@@ -71,13 +71,13 @@ namespace Tests.Integration.Model
                 await GetService<IAttributeModel>().RemoveAttribute("a1", ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 
                 var a2 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values;
-                Assert.AreEqual(0, a2.Count());
+                Assert.AreEqual(0, a2.Count);
 
                 // compare fetching merged vs non-merged
                 var ma3 = await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
                 var a3 = await GetService<IBaseAttributeModel>().GetAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset.LayerIDs, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
                 Assert.AreEqual(0, ma3.Count);
-                Assert.AreEqual(0, a3[0].Count());
+                Assert.AreEqual(0, a3[0].Count);
 
                 trans.Commit();
             }
@@ -88,7 +88,7 @@ namespace Tests.Integration.Model
                 await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text3"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 
                 var a4 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
-                Assert.AreEqual(1, a4.Count());
+                Assert.AreEqual(1, a4.Count);
                 var aa4 = a4.First().Value;
                 Assert.AreEqual(new AttributeScalarValueText("text3"), aa4.Attribute.Value);
             }
@@ -109,7 +109,7 @@ namespace Tests.Integration.Model
                 var changeset = await CreateChangesetProxy();
                 await GetService<IAttributeModel>().InsertAttribute("a1", AttributeArrayValueText.BuildFromString(new string[] { "a", "b", "c" }), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 var a1 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset1, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
-                Assert.AreEqual(1, a1.Count());
+                Assert.AreEqual(1, a1.Count);
                 Assert.AreEqual(AttributeArrayValueText.BuildFromString(new string[] { "a", "b", "c" }), a1.First().Value.Attribute.Value);
             }
 
@@ -118,7 +118,7 @@ namespace Tests.Integration.Model
                 var changeset = await CreateChangesetProxy();
                 await GetService<IAttributeModel>().InsertAttribute("a1", AttributeArrayValueText.BuildFromString(new string[] { "a,", "b,b", ",c", "\\d", "\\,e" }), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 var a1 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset1, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
-                Assert.AreEqual(1, a1.Count());
+                Assert.AreEqual(1, a1.Count);
                 Assert.AreEqual(AttributeArrayValueText.BuildFromString(new string[] { "a,", "b,b", ",c", "\\d", "\\,e" }), a1.First().Value.Attribute.Value);
             }
 
@@ -127,7 +127,7 @@ namespace Tests.Integration.Model
                 var changeset = await CreateChangesetProxy();
                 await GetService<IAttributeModel>().InsertAttribute("a1", AttributeArrayValueInteger.Build(new long[] { 1, 2, 3, 4 }), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 var a1 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset1, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
-                Assert.AreEqual(1, a1.Count());
+                Assert.AreEqual(1, a1.Count);
                 Assert.AreEqual(AttributeArrayValueInteger.Build(new long[] { 1, 2, 3, 4 }), a1.First().Value.Attribute.Value);
             }
         }
@@ -148,7 +148,7 @@ namespace Tests.Integration.Model
                 var changeset = await CreateChangesetProxy();
                 await GetService<IAttributeModel>().InsertAttribute("a1", AttributeArrayValueInteger.Build(new long[] { 4, 3, -2 }), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 var a1 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset1, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
-                Assert.AreEqual(1, a1.Count());
+                Assert.AreEqual(1, a1.Count);
                 Assert.AreEqual(AttributeArrayValueInteger.Build(new long[] { 4, 3, -2 }), a1.First().Value.Attribute.Value);
             }
 
@@ -157,7 +157,7 @@ namespace Tests.Integration.Model
                 var changeset = await CreateChangesetProxy();
                 await GetService<IAttributeModel>().InsertAttribute("a1", AttributeArrayValueJSON.BuildFromString(new string[] { "{}", "{\"foo\":\"var\" }" }), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 var a1 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset1, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
-                Assert.AreEqual(1, a1.Count());
+                Assert.AreEqual(1, a1.Count);
                 Assert.AreEqual(AttributeArrayValueJSON.BuildFromString(new string[] { "{}", "{\"foo\":\"var\" }" }), a1.First().Value.Attribute.Value);
             }
         }
@@ -211,7 +211,7 @@ namespace Tests.Integration.Model
                 var changeset = await CreateChangesetProxy();
                 await GetService<IAttributeModel>().InsertAttribute("a1", scalarImage, ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 var a1 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset1, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
-                Assert.AreEqual(1, a1.Count());
+                Assert.AreEqual(1, a1.Count);
                 Assert.AreEqual(scalarImage, a1.First().Value.Attribute.Value);
                 var returnedProxy = (a1.First().Value.Attribute.Value as AttributeScalarValueImage)!.Value;
                 Assert.IsFalse(returnedProxy.HasFullData());
@@ -222,7 +222,7 @@ namespace Tests.Integration.Model
                 var changeset = await CreateChangesetProxy();
                 await GetService<IAttributeModel>().InsertAttribute("a1", imageArray, ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 var a1 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset1, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
-                Assert.AreEqual(1, a1.Count());
+                Assert.AreEqual(1, a1.Count);
                 Assert.AreEqual(imageArray, a1.First().Value.Attribute.Value);
                 var returnedProxy = (a1.First().Value.Attribute.Value as AttributeArrayValueImage)!.Values;
                 Assert.IsFalse(returnedProxy.Any(p => p.Value.HasFullData()));
@@ -251,7 +251,7 @@ namespace Tests.Integration.Model
             Assert.IsFalse(changed2);
 
             var a1 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset1, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
-            Assert.AreEqual(1, a1.Count());
+            Assert.AreEqual(1, a1.Count);
         }
 
         [Test]
@@ -430,8 +430,57 @@ namespace Tests.Integration.Model
             }
 
             var a1 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset1, transI, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
-            Assert.AreEqual(1, a1.Count()); // layerID1 shines through deleted
+            Assert.AreEqual(1, a1.Count); // layerID1 shines through deleted
             Assert.AreEqual(new AttributeScalarValueText("textL1"), a1.First().Value.Attribute.Value);
         }
+
+
+        [Test]
+        public async Task TestAttributeValueDouble()
+        {
+            var transI = ModelContextBuilder.BuildImmediate();
+            Guid ciid1;
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                ciid1 = await GetService<ICIModel>().CreateCI(trans);
+                trans.Commit();
+            }
+
+            string layerID1;
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans);
+                layerID1 = layer1.ID;
+                Assert.AreEqual("l1", layerID1);
+                trans.Commit();
+            }
+
+            var layerset = await GetService<ILayerModel>().BuildLayerSet(new string[] { "l1" }, transI);
+
+            var a1Value = new AttributeScalarValueDouble(1.1);
+            var a2Value = AttributeArrayValueDouble.Build(new double[] { -0.0, 2.1, double.MaxValue, double.MinValue, 0, -double.Epsilon });
+
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var changeset = await CreateChangesetProxy();
+                await GetService<IAttributeModel>().InsertAttribute("a1", a1Value, ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a2", a2Value, ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+
+                trans.Commit();
+            }
+
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var cis = await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
+                Assert.AreEqual(1, cis.Count);
+                var attributes = cis.First().Value;
+                Assert.AreEqual(2, attributes.Count);
+                
+                Assert.AreEqual(a1Value, attributes["a1"].Attribute.Value);
+                Assert.AreEqual(a2Value, attributes["a2"].Attribute.Value);
+                trans.Commit();
+            }
+        }
+
     }
 }

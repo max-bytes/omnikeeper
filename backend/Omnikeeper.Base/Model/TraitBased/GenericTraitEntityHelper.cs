@@ -226,6 +226,8 @@ namespace Omnikeeper.Base.Model.TraitBased
                 }
                 else if (elementType == typeof(long))
                     avt = AttributeValueType.Integer;
+                else if (elementType == typeof(double))
+                    avt = AttributeValueType.Double;
                 else if (elementType == typeof(JObject))
                     avt = AttributeValueType.JSON;
                 else
