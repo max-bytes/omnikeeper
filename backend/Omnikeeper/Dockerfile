@@ -43,4 +43,3 @@ RUN chmod +x entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:80
-HEALTHCHECK CMD curl --fail http://localhost:5000/health || exit
