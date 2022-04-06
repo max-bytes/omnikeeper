@@ -16,6 +16,7 @@
   * [layers](./layers)
   * meta
     * [code of conduct](./meta_code-of-conduct)
+  * [monitoring](./monitoring)
   * [plugins](./plugins)
   * [traits](./traits)
 
