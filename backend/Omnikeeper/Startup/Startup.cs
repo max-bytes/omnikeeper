@@ -316,13 +316,15 @@ namespace Omnikeeper.Startup
             var version = VersionService.GetVersion();
             logger.LogInformation($"Running version: {version}");
 
+            // must be really early, because it affects later parts
+            app.UsePathBase(Configuration.GetValue<string>("BaseURL"));
+
             app.UseHealthChecks("/health", HealthCheckSettings.Options);
 
             app.UseResponseCompression(); // response compression
 
             app.UseCors("DefaultCORSPolicy");
 
-            app.UsePathBase(Configuration.GetValue<string>("BaseURL"));
 
             // make application properly consider headers (and populate httprequest object) when behind reverse proxy
             var forwardedHeaderOptions = new ForwardedHeadersOptions
