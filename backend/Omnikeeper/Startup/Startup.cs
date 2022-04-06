@@ -67,6 +67,9 @@ namespace Omnikeeper.Startup
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var csOmnikeeper = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
+            services.AddHealthChecks().AddNpgSql(csOmnikeeper);
+
             services.AddResponseCompression(options =>
             {
                 options.Providers.Add<BrotliCompressionProvider>();
@@ -312,6 +315,8 @@ namespace Omnikeeper.Startup
         {
             var version = VersionService.GetVersion();
             logger.LogInformation($"Running version: {version}");
+
+            app.UseHealthChecks("/health", HealthCheckSettings.Options);
 
             app.UseResponseCompression(); // response compression
 

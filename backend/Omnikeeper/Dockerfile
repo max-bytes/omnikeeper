@@ -5,6 +5,7 @@ WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 RUN apk add --no-cache tzdata # needed so .Net can properly query timezones, see https://www.stevejgordon.co.uk/timezonenotfoundexception-in-alpine-based-docker-images
+RUN apk add --no-cache curl # needed for docker healthcheck
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS build
 ARG version
@@ -42,3 +43,4 @@ RUN chmod +x entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:80
+HEALTHCHECK CMD curl --fail http://localhost:5000/health || exit
