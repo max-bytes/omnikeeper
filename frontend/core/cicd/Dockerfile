@@ -18,7 +18,7 @@ COPY package-lock.json ./
 RUN echo -e "@max-bytes:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=${npm_repo_key}" > .npmrc
 
 # fetch dependencies
-RUN npm ci --only=production
+RUN npm ci
 
 # install plugins, if any are defined
 RUN ([[ ! -z "$plugins" ]] && npm install $plugins) || true
