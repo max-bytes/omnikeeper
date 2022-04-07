@@ -447,6 +447,36 @@ mutation($baseCIID: Guid!, $relatedCIIDsToRemove: [Guid]!) {
 }}
 ";
             AssertQuerySuccess(queryTestTraitA, expected14, user);
+
+            // delete entity
+            var mutationDeleteEntity = @"
+mutation($ciid: Guid!) {
+  deleteByCIID_test_trait_a (
+    layers: [""layer_1""]
+    writeLayer: ""layer_1""
+    ciid: $ciid
+  )
+        }
+";
+            var expected15 = @"
+{
+  ""deleteByCIID_test_trait_a"": true
+}";
+            AssertQuerySuccess(mutationDeleteEntity, expected15, user, new Inputs(new Dictionary<string, object?>()
+                {
+                    { "ciid", ciidEntity1 }
+                }));
+
+            var expected16 = $@"
+{{
+  ""traitEntities"": {{
+	  ""test_trait_a"": {{
+	    ""all"": []
+	  }}
+  }}
+}}
+";
+            AssertQuerySuccess(queryTestTraitA, expected16, user);
         }
 
         [Test]

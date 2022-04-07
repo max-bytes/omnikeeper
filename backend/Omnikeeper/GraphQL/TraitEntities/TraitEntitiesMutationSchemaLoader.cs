@@ -107,6 +107,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         var et = await Update(ciid, inputAttributeValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
 
+                        userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+
                         return et;
                     });
 
@@ -192,6 +194,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
                         var removed = await traitEntityModel.TryToDelete(ciid, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+
+                        userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
 
                         return removed;
                     });
