@@ -23,6 +23,12 @@ namespace Omnikeeper.Base.Model.TraitBased
             {
                 var inputFieldName = kv.Key;
 
+                if (kv.Value == null)
+                {
+                    // input field is specified, but its value is null, so we treat it like it was not specified and skip it
+                    continue;
+                }
+
                 // lookup value type based on input attribute name
                 var attribute = trait.RequiredAttributes.Concat(trait.OptionalAttributes).FirstOrDefault(ra =>
                 {
@@ -34,12 +40,10 @@ namespace Omnikeeper.Base.Model.TraitBased
                 {
                     throw new Exception($"Invalid input field for trait {trait.ID}: {inputFieldName}");
                 }
-                else
-                {
-                    var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
-                    IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, kv.Value);
-                    attributeValues.Add((attribute.AttributeTemplate.Name, attributeValue, attribute.AttributeTemplate.IsID.GetValueOrDefault(false)));
-                }
+
+                var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
+                IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, kv.Value);
+                attributeValues.Add((attribute.AttributeTemplate.Name, attributeValue, attribute.AttributeTemplate.IsID.GetValueOrDefault(false)));
             }
 
             return attributeValues.ToArray();

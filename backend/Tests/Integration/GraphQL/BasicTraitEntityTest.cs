@@ -11,7 +11,7 @@ using Tests.Integration.GraphQL.Base;
 
 namespace Tests.Integration.GraphQL
 {
-    class TraitEntityTest : QueryTestBase
+    class BasicTraitEntityTest : QueryTestBase
     {
         [Test]
         public async Task TestBasics()
