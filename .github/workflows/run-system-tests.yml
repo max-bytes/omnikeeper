@@ -1,0 +1,22 @@
+---
+name: run-system-tests
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: Run system tests
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup .NET 6.0.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+      - name: Run tests
+        run: |
+          cd backend
+          dotnet nuget update source "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+          dotnet test SystemTests # -- StopOnError=true
