@@ -22,7 +22,7 @@ jobs:
       with:
         workflow: package-variants
         token: ${{ secrets.PAT }}
-        inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "pluginsFrontend": "${{ env.pluginsFrontend }}", "runSystemTests": false }'
+        inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "pluginsFrontend": "${{ env.pluginsFrontend }}", "runSystemTests": "false" }'
   call-package-variant-internal:
     runs-on: ubuntu-20.04
     steps:
@@ -37,4 +37,4 @@ jobs:
       with:
         workflow: package-variants
         token: ${{ secrets.PAT }}
-        inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "pluginsFrontend": "${{ env.pluginsFrontend }}", "runSystemTests": true }'
+        inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "pluginsFrontend": "${{ env.pluginsFrontend }}", "runSystemTests": "true" }'

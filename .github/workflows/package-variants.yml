@@ -86,7 +86,7 @@ jobs:
           labels: ${{ steps.meta_backend.outputs.labels }}
       - name: "Invoke system tests"
         uses: benc-uk/workflow-dispatch@v1
-        if: ${{ github.event.inputs.runSystemTests }}
+        if: github.event.inputs.runSystemTests == "true"
         with:
           workflow: run-tests
           token: ${{ secrets.PAT }}
