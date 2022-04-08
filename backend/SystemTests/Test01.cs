@@ -1,27 +1,17 @@
-﻿using NUnit.Framework;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+﻿using FluentAssertions;
 using GraphQL;
-using GraphQL.Client.Http;
 using GraphQL.Client.Abstractions;
-using GraphQL.Client.Serializer.SystemTextJson;
+using NUnit.Framework;
 using System;
-using System.Diagnostics;
-using DotNet.Testcontainers.Containers.Modules;
-using DotNet.Testcontainers.Networks;
-using DotNet.Testcontainers.Networks.Builders;
-using DotNet.Testcontainers.Networks.Configurations;
-using DotNet.Testcontainers.Containers.Builders;
-using DotNet.Testcontainers.Containers.WaitStrategies;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Threading.Tasks;
+using SystemTests.Base;
 
 namespace SystemTests
 {
-    public class Test01
+    public class Test01 : GraphQLTestBase
     {
-        private TestcontainersContainer postgresContainer;
-        private TestcontainersContainer omnikeeperContainer;
-        private IDockerNetwork network;
-
         [Test]
         public async Task TestBasics()
         {
@@ -32,67 +22,154 @@ namespace SystemTests
                     ciids
                 }"
             };
-            var graphQLClient = new GraphQLHttpClient("http://localhost:8080/graphql", new SystemTextJsonSerializer());
-            var graphQLResponse = await graphQLClient.SendQueryAsync(ciidsRequest, () => new { ciids = new List<Guid>() });
+            var graphQLResponse = await Query(ciidsRequest, () => new { ciids = new List<Guid>() });
 
             Assert.IsNull(graphQLResponse.Errors);
             Assert.AreEqual(0, graphQLResponse.Data.ciids.Count);
         }
 
-        [SetUp]
-        public async Task SetUp()
+
+        [Test]
+        public async Task TestTraitEntities()
         {
-            //using var loggerFactory = LoggerFactory.Create(builder => builder.AddDebug());
-            //var logger = loggerFactory.CreateLogger<Test01>();
-            //TestcontainersSettings.Logger = logger;
+            var createTrait = new GraphQLRequest
+            {
+                Query = @"
+mutation {
+  manage_upsertRecursiveTrait(
+    trait: {
+      id: ""test_trait_a""
+      requiredAttributes: [
+        {
+          identifier: ""id""
+          template: {
+            name: ""test_trait_a.id""
+            type: TEXT
+            isID: true
+            isArray: false
+            valueConstraints: []
+          }
+        }
+        {
+          identifier: ""name""
+          template: {
+            name: ""test_trait_a.name""
+            type: TEXT
+            isID: false
+            isArray: false
+            valueConstraints: []
+          }
+        }
+      ]
+      optionalAttributes: [
+        {
+          identifier: ""optional""
+          template: {
+            name: ""test_trait_a.optional""
+            type: INTEGER
+            isID: false
+            isArray: false
+            valueConstraints: []
+          }
+        }
+      ]
+      optionalRelations: [
+        {
+          identifier: ""assignments""
+          template: { 
+            predicateID: ""is_assigned_to""
+            directionForward: true
+            traitHints: [""test_trait_a""]
+          }
+        }
+      ],
+      requiredTraits: []
+    }
+  ) {
+    id
+  }
+}
+"
+        };
+            var r1 = await Query(createTrait, () => new { manage_upsertRecursiveTrait = new { id = "" } });
+            Assert.IsNull(r1.Errors);
+            Assert.AreEqual("test_trait_a", r1.Data.manage_upsertRecursiveTrait.id);
 
-            // TODO: needed?
-            network = new TestcontainersNetworkBuilder()
-                .WithDriver(NetworkDriver.Bridge)
-                .WithName("omnikeeper-system-tests")
-                .Build();
-            await network.CreateAsync();
+            // create layer_1
+            var createLayer = new GraphQLRequest
+            {
+                Query = @"mutation {
+                manage_createLayer(id: ""layer_1"") {
+                    id
+                }
+            }"}; 
+            var r2 = await Query(createLayer, () => new { manage_createLayer = new { id = "" } });
+            Assert.IsNull(r2.Errors);
 
-            postgresContainer = new TestcontainersBuilder<TestcontainersContainer>()
-                .WithImage("postgres:12")
-                .WithName("database")
-                .WithEnvironment("POSTGRES_DB", "omnikeeper")
-                .WithEnvironment("POSTGRES_USER", "postgres")
-                .WithEnvironment("POSTGRES_PASSWORD", "postgres")
-                .WithNetwork(network)
-                .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5432))
-                .Build();
 
-            await postgresContainer.StartAsync();
+            var insertNew = new GraphQLRequest
+            {
+                Query = @"
+mutation {
+  insertNew_test_trait_a(
+    layers: [""layer_1""]
+    writeLayer: ""layer_1""
+    ciName: ""Entity 1""
+    input: { id: ""entity_1"", name: ""Entity 1"" }
+  ) {
+                entity { id }
+  }
+        }
+"
+            };
+            var r3 = await Query(insertNew, () => new { insertNew_test_trait_a = new { entity = new { id = "" } } });
+            Assert.IsNull(r3.Errors);
+            Assert.AreEqual("entity_1", r3.Data.insertNew_test_trait_a.entity.id);
 
-            omnikeeperContainer = new TestcontainersBuilder<TestcontainersContainer>()
-                .WithImage("ghcr.io/max-bytes/omnikeeper/variants/backend/internal:latest")
-                .WithName("omnikeeper")
-                .WithEnvironment("ConnectionStrings__OmnikeeperDatabaseConnection", $"Server=database; User Id=postgres; Password=postgres; Database=omnikeeper; Port=5432; Pooling = true; Keepalive = 1024; Timeout = 1024; CommandTimeout = 1024")
-                .WithEnvironment("ConnectionStrings__QuartzDatabaseConnection", $"Server=database; User Id=postgres; Password=postgres; Database=omnikeeper; Port=5432; Pooling = true; Keepalive = 1024; Timeout = 1024; CommandTimeout = 1024")
-                .WithEnvironment("Authentication__Audience", "omnikeeper")
-                .WithEnvironment("Authentication__Authority", "http://keycloak:8080/auth/realms/omnikeeper")
-                .WithEnvironment("Authentication__ValidateIssuer", "false") // TODO: needed?
-                .WithEnvironment("Authentication__debugAllowAll", "true")
-                .WithEnvironment("Authorization__debugAllowAll", "true")
-                .WithEnvironment("CORS__AllowedHosts", "") // TODO: needed?
-                .WithEnvironment("ShowPII", "true")
-                .WithNetwork(network)
-                .WithPortBinding(8080, 80)
-                .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(80))
-                .Build();
-            await omnikeeperContainer.StartAsync();
+
+            var fetchAll = new GraphQLRequest
+            {
+                Query = @"
+{
+  traitEntities(layers: [""layer_1""]) {
+    test_trait_a {
+                all {
+                    entity {
+                        id
+                        name
+                        optional
+                        assignments { relatedCIID }
+                    }
+                }
+            }
+        }
+    }
+"
+            };
+            var r4 = await Query(fetchAll, () => new { traitEntities = new { test_trait_a = new { all = new List<EntityWrapperType>() } } });
+            Assert.IsNull(r4.Errors);
+            r4.Data.traitEntities.test_trait_a.all.Should().BeEquivalentTo(new EntityWrapperType[]
+            {
+                new EntityWrapperType{ Entity = new EntityType() { Id = "entity_1", Name = "Entity 1", Assignments = ImmutableList<RelatedAssignmentsType>.Empty}}
+            });
+
         }
 
-        [TearDown]
-        public async Task TearDown()
+        class EntityWrapperType
         {
-            if (omnikeeperContainer != null)
-                await omnikeeperContainer.DisposeAsync();
-            if (postgresContainer != null)
-                await postgresContainer.DisposeAsync();
-            if (network != null)
-                await network.DeleteAsync();
+            public EntityType Entity { get;set; }
+        }
+        class EntityType
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+            public long? Optional { get; set; }
+            public IList<RelatedAssignmentsType> Assignments { get; set; }
+        }
+
+        class RelatedAssignmentsType
+        {
+            public Guid RelatedCIID { get; set; }
         }
     }
 }
