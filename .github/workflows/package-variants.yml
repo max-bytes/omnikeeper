@@ -20,6 +20,9 @@ on:
       pluginsFrontend: 
         description: "Frontend-Plugin spec; example: okplugin-generic-json-ingest@0.14.80 okplugin-plugin2@0.14.80"
         required: true
+      runSystemTests:
+        description: "Whether or not to run system tests after a successful image build/publish; \"true\" or \"false\""
+        required: true
 
 jobs:
   build-publish-variant-backend:
