@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\.github\workflows\package-variants.yml = ..\.github\workflows\package-variants.yml
 		..\README.md = ..\README.md
 		..\.github\workflows\run-perf-tests.yml = ..\.github\workflows\run-perf-tests.yml
+		..\.github\workflows\run-system-tests.yml = ..\.github\workflows\run-system-tests.yml
 		..\.github\workflows\run-tests.yml = ..\.github\workflows\run-tests.yml
 		..\.github\workflows\update-wiki.yml = ..\.github\workflows\update-wiki.yml
 	EndProjectSection
@@ -65,7 +66,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginVariableRendering.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginVisualization", "OKPluginVisualization\OKPluginVisualization.csproj", "{4E28E7A8-1C66-4C31-B128-9E2FA4B932B4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SystemTests", "SystemTests\SystemTests.csproj", "{19CD96DC-5E6B-4D70-8318-AB036190EC92}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SystemTests", "SystemTests\SystemTests.csproj", "{19CD96DC-5E6B-4D70-8318-AB036190EC92}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
