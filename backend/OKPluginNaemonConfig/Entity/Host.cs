@@ -46,10 +46,10 @@ namespace OKPluginNaemonConfig.Entity
         //[TraitAttribute("suppApp", "")]
         //public readonly string SuppApp;
 
-        [TraitRelation("category", "has_category_member", false, 1, -1)]
+        [TraitRelation("category", "has_category_member", false)]
         public readonly Guid[] CategoriesIds;
 
-        [TraitRelation("interface", "has_interface", true, 1, -1)]
+        [TraitRelation("interface", "has_interface", true)]
         public readonly Guid[] InterfacesIds;
 
         public Host()
