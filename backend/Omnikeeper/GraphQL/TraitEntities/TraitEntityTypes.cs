@@ -16,7 +16,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Omnikeeper.GraphQL.TraitEntities
 {
@@ -70,8 +69,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var trans = userContext.Transaction;
 
                         // use filter to reduce list of potential cis
-                        var filterCollection = context.GetArgument(typeof(object), "filter") as IDictionary<string, object>;
-                        if (filterCollection == null)
+                        if (context.GetArgument(typeof(object), "filter") is not IDictionary<string, object> filterCollection)
                             throw new Exception("Unexpected filter detected");
                         var attributeFilters = new List<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)>(); // TODO: support non-text filters
                         var relationFilters = new List<(TraitRelation traitRelation, RelationFilter filter)>();
@@ -263,19 +261,19 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityGraphTypeName(underlyingTrait);
 
-            foreach (var ta in underlyingTrait.RequiredAttributes.Concat(underlyingTrait.OptionalAttributes))
+            void Add(TraitAttribute ta, bool isRequired)
             {
                 var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
 
                 var attributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta);
+                var resolvedType = (isRequired) ? new NonNullGraphType(graphType) : graphType;
                 AddField(new FieldType()
                 {
                     Name = attributeFieldName,
-                    ResolvedType = graphType, // TODO: add new NonNullGraphType() wrap for required attributes
+                    ResolvedType = resolvedType,
                     Resolver = new FuncFieldResolver<object>(ctx =>
                     {
-                        var o = ctx.Source as EffectiveTrait;
-                        if (o == null)
+                        if (ctx.Source is not EffectiveTrait o)
                         {
                             return null;
                         }
@@ -288,6 +286,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         else return null;
                     })
                 });
+            }
+
+            foreach (var ta in underlyingTrait.RequiredAttributes)
+            {
+                Add(ta, true);
+            }
+            foreach (var ta in underlyingTrait.OptionalAttributes)
+            {
+                Add(ta, false);
             }
 
             foreach (var r in underlyingTrait.OptionalRelations)
@@ -305,8 +312,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             ResolvedType = new ListGraphType(elementWrapperType),
                             Resolver = new AsyncFieldResolver<object>(async context =>
                             {
-                                var o = context.Source as EffectiveTrait;
-                                if (o == null)
+                                if (context.Source is not EffectiveTrait o)
                                 {
                                     return ImmutableList<EffectiveTrait>.Empty;
                                 }
@@ -359,8 +365,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     ResolvedType = new ListGraphType(relatedCIType),
                     Resolver = new FuncFieldResolver<object>(ctx =>
                     {
-                        var o = ctx.Source as EffectiveTrait;
-                        if (o == null)
+                        if (ctx.Source is not EffectiveTrait o)
                         {
                             return ImmutableList<(MergedRelation relation, bool outgoing)>.Empty;
                         }
@@ -439,9 +444,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 this.Field(fieldName, typeContainer.ElementWrapper, resolve: context =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    var ci = context.Parent?.Source as MergedCI;
 
-                    if (ci == null)
+                    if (context.Parent?.Source is not MergedCI ci)
                         throw new Exception("Could not get MergedCI from context... implementation bug?");
 
                     // NOTE: we assume here that the ci has all relevant attributes loaded for properly checking for effective trait/trait entity
