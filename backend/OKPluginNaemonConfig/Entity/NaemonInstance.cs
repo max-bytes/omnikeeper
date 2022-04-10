@@ -16,10 +16,15 @@ namespace OKPluginNaemonConfig.Entity
 
         [TraitAttribute("config", "config", optional: true)]
         public readonly JObject Config;
+
+        [TraitAttribute("finalConfig", "final_config", optional: true)]
+        public readonly string FinalConfig;
         public NaemonInstance()
         {
             Id = "";
             Name = "";
+            FinalConfig = "";
+            Config = new();
         }
 
     }
