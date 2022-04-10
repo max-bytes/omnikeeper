@@ -127,7 +127,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
     {
         private readonly ITrait trait;
 
-        private FilterInputType(ITrait trait)
+        public FilterInputType(ITrait trait)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityFilterInputGraphTypeName(trait);
 
