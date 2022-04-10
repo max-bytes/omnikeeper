@@ -69,61 +69,21 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var trans = userContext.Transaction;
 
                         // use filter to reduce list of potential cis
-                        if (context.GetArgument(typeof(object), "filter") is not IDictionary<string, object> filterCollection)
-                            throw new Exception("Unexpected filter detected");
-                        var attributeFilters = new List<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)>(); // TODO: support non-text filters
-                        var relationFilters = new List<(TraitRelation traitRelation, RelationFilter filter)>();
-                        foreach (var kv in filterCollection)
-                        {
-                            var inputFieldName = kv.Key;
-
-                            // lookup value type based on input attribute name
-                            var attribute = at.RequiredAttributes.Concat(at.OptionalAttributes).FirstOrDefault(ra =>
-                            {
-                                var convertedAttributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ra);
-                                return convertedAttributeFieldName == inputFieldName;
-                            });
-
-                            if (attribute != null)
-                            {
-                                if (kv.Value is not AttributeScalarTextFilter f)
-                                    throw new Exception($"Unknown attribute filter for attribute {inputFieldName} detected");
-                                attributeFilters.Add((attribute, f));
-                            } else
-                            {
-                                // filter field is not an attribute, try relations
-                                var relation = at.OptionalRelations.FirstOrDefault(r =>
-                                {
-                                    var convertedRelationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
-                                    return convertedRelationFieldName == inputFieldName;
-                                });
-
-                                if (relation != null)
-                                {
-                                    if (kv.Value is not RelationFilter f)
-                                        throw new Exception($"Unknown relation filter for relation {inputFieldName} detected");
-                                    relationFilters.Add((relation, f));
-                                } else
-                                {
-                                    throw new Exception($"Could not find input attribute- or relation-filter {inputFieldName} in trait entity {at.ID}");
-                                }
-
-                            }
-                        }
+                        var filter = context.GetArgument<FilterInput>("filter");
 
                         IDataLoaderResult<ISet<Guid>> matchingCIIDs;
-                        if (!relationFilters.IsEmpty() && !attributeFilters.IsEmpty())
+                        if (!filter.RelationFilters.IsEmpty() && !filter.AttributeFilters.IsEmpty())
                         {
-                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, relationFilters, layerset, trans, timeThreshold, dataLoaderService)
-                            .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(SpecificCIIDsSelection.Build(matchingCIIDs), attributeModel, attributeFilters, layerset, trans, timeThreshold, dataLoaderService))
+                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService)
+                            .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(SpecificCIIDsSelection.Build(matchingCIIDs), attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService))
                             .ResolveNestedResults(); // resolve one level to be correct type again
 
-                        } else if (!attributeFilters.IsEmpty() && relationFilters.IsEmpty())
+                        } else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
                         {
-                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(new AllCIIDsSelection(), attributeModel, attributeFilters, layerset, trans, timeThreshold, dataLoaderService);
-                        } else if (attributeFilters.IsEmpty() && !relationFilters.IsEmpty())
+                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(new AllCIIDsSelection(), attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService);
+                        } else if (filter.AttributeFilters.IsEmpty() && !filter.RelationFilters.IsEmpty())
                         {
-                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, relationFilters, layerset, trans, timeThreshold, dataLoaderService);
+                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService);
                         } else
                         {
                             throw new Exception("At least one filter must be set");

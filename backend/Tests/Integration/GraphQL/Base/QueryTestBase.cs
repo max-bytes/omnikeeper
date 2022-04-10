@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Server;
@@ -96,6 +97,7 @@ namespace Tests.Integration.GraphQL.Base
         public (ExecutionResult result, string json) RunQuery(string query, AuthenticatedUser user, Inputs? inputs = null)
         {
             var schema = GetService<GraphQLSchemaHolder>().GetSchema();
+            var dataLoaderDocumentListener = GetService<DataLoaderDocumentListener>();
 
             using var userContext = new OmnikeeperUserContext(user, ServiceProvider);
 
@@ -110,6 +112,7 @@ namespace Tests.Integration.GraphQL.Base
                 options.ValidationRules = null;
                 options.UnhandledExceptionDelegate = (ctx => { });
                 options.RequestServices = ServiceProvider;
+                options.Listeners.Add(dataLoaderDocumentListener);
             }).GetAwaiter().GetResult();
 
             var writtenResult = Writer.WriteToStringAsync(runResult).GetAwaiter().GetResult();
