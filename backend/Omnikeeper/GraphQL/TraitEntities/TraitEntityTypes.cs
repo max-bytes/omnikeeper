@@ -38,7 +38,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
     {
         public TraitEntityRootType(ITrait at, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ICIIDModel ciidModel, IAttributeModel attributeModel, IRelationModel relationModel,
             IDataLoaderService dataLoaderService,
-            ElementWrapperType wrapperElementGraphType, FilterInputType? filterGraphType, InputObjectGraphType? idGraphType)
+            ElementWrapperType wrapperElementGraphType, FilterInputType? filterGraphType, IDInputType? idGraphType)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityRootGraphTypeName(at);
 
@@ -170,15 +170,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var layerset = userContext.GetLayerSet(context.Path);
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
-                        var idCollection = context.GetArgument(typeof(object), "id") as IDictionary<string, object>;
 
-                        if (idCollection == null)
-                            throw new Exception("Invalid input object for trait entity ID detected");
-
-                        var idAttributeTuples = TraitEntityHelper.InputDictionary2IDAttributes(idCollection, at);
+                        var id = context.GetArgument<IDInput>("id");
 
                         // TODO: use data loader
-                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
+                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, id.AttributeValues, layerset, trans, timeThreshold);
 
                         if (!foundCIID.HasValue)
                         {
@@ -381,15 +377,24 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
-    public class IDInputType : InputObjectGraphType
+    public class IDInput
     {
-        public IDInputType() { }
-
-        private IDInputType(ITrait at)
+        public readonly (string name, IAttributeValue value)[] AttributeValues;
+        public IDInput((string name, IAttributeValue value)[] attributeValues)
         {
-            Name = TraitEntityTypesNameGenerator.GenerateTraitEntityIDInputGraphTypeName(at);
+            AttributeValues = attributeValues;
+        }
+    }
 
-            foreach (var ta in at.RequiredAttributes)
+    public class IDInputType : InputObjectGraphType<IDInput>
+    {
+        private readonly ITrait trait;
+
+        public IDInputType(ITrait trait)
+        {
+            Name = TraitEntityTypesNameGenerator.GenerateTraitEntityIDInputGraphTypeName(trait);
+
+            foreach (var ta in trait.RequiredAttributes)
             {
                 var attributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta);
 
@@ -404,6 +409,19 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     });
                 }
             }
+
+            this.trait = trait;
+        }
+
+        public override object ParseDictionary(IDictionary<string, object?> value)
+        {
+            var (attributeValues, relationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(value, trait);
+
+            if (relationValues.Length != 0)
+                throw new Exception($"Encountered unexpected input field(s)");
+
+            var t = attributeValues.Where(t => t.isID).Select(t => (t.name, t.value)).ToArray();
+            return new IDInput(t);
         }
 
         public static IDInputType? Build(ITrait at)
@@ -505,13 +523,24 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
-    public class UpsertInputType : InputObjectGraphType
+    public class UpsertInput
     {
-        public UpsertInputType(ITrait at)
+        public readonly (string name, IAttributeValue value, bool isID)[] AttributeValues;
+        public UpsertInput((string name, IAttributeValue value, bool isID)[] attributeValues)
         {
-            Name = TraitEntityTypesNameGenerator.GenerateUpsertTraitEntityInputGraphTypeName(at);
+            AttributeValues = attributeValues;
+        }
+    }
 
-            foreach (var ta in at.RequiredAttributes)
+    public class UpsertInputType : InputObjectGraphType<UpsertInput>
+    {
+        private readonly ITrait trait;
+
+        public UpsertInputType(ITrait trait)
+        {
+            Name = TraitEntityTypesNameGenerator.GenerateUpsertTraitEntityInputGraphTypeName(trait);
+
+            foreach (var ta in trait.RequiredAttributes)
             {
                 var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
                 AddField(new FieldType()
@@ -520,7 +549,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     ResolvedType = new NonNullGraphType(graphType)
                 });
             }
-            foreach (var ta in at.OptionalAttributes)
+            foreach (var ta in trait.OptionalAttributes)
             {
                 var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
                 AddField(new FieldType()
@@ -529,6 +558,73 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     ResolvedType = graphType
                 });
             }
+
+            this.trait = trait;
+        }
+        public override object ParseDictionary(IDictionary<string, object?> value)
+        {
+            var (attributeValues, relationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(value, trait);
+
+            if (relationValues.Length != 0)
+                throw new Exception($"Encountered unexpected input field(s)");
+
+            return new UpsertInput(attributeValues);
+        }
+    }
+
+    public class InsertInput
+    {
+        public readonly (string name, IAttributeValue value, bool isID)[] AttributeValues;
+        public readonly (string predicateID, bool forward, Guid[] relatedCIIDs)[] RelationValues;
+        public InsertInput((string name, IAttributeValue value, bool isID)[] attributeValues, (string predicateID, bool forward, Guid[] relatedCIIDs)[] relationValues)
+        {
+            AttributeValues = attributeValues;
+            RelationValues = relationValues;
+        }
+    }
+
+    public class InsertInputType : InputObjectGraphType<InsertInput>
+    {
+        private readonly ITrait trait;
+
+        public InsertInputType(ITrait trait)
+        {
+            Name = TraitEntityTypesNameGenerator.GenerateInsertTraitEntityInputGraphTypeName(trait);
+
+            foreach (var ta in trait.RequiredAttributes)
+            {
+                var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
+                AddField(new FieldType()
+                {
+                    Name = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta),
+                    ResolvedType = new NonNullGraphType(graphType)
+                });
+            }
+            foreach (var ta in trait.OptionalAttributes)
+            {
+                var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
+                AddField(new FieldType()
+                {
+                    Name = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta),
+                    ResolvedType = graphType
+                });
+            }
+            foreach (var rr in trait.OptionalRelations)
+            {
+                AddField(new FieldType()
+                {
+                    Name = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(rr),
+                    ResolvedType = new ListGraphType(new GuidGraphType())
+                });
+            }
+
+            this.trait = trait;
+        }
+
+        public override object ParseDictionary(IDictionary<string, object?> value)
+        {
+            var t = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(value, trait);
+            return new InsertInput(t.Item1, t.Item2);
         }
     }
 

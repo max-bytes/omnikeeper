@@ -139,7 +139,7 @@ mutation {
     layers: [""layer_1""]
     writeLayer: ""layer_1""
     ciName: ""Entity 1""
-    input: { id: ""entity_1"", name: ""Entity 1"" }
+    input: { id: ""entity_1"", name: ""Entity 1"", assignments: [""" + $"{relatedCIID3}" + @"""] }
   ) {
                 entity { id }
   }
@@ -169,7 +169,10 @@ mutation {
               ""id"": ""entity_1"",
               ""name"": ""Entity 1"",
               ""optional"": null,
-              ""assignments"": []
+              ""assignments"": [
+              {
+                    ""relatedCIID"": """ + $"{relatedCIID3}" + @"""
+              }]
             }
           }
         ]
@@ -214,7 +217,10 @@ mutation {
               ""id"": ""entity_1"",
               ""name"": ""Entity 1"",
               ""optional"": 3,
-              ""assignments"": []
+              ""assignments"": [
+              {
+                    ""relatedCIID"": """ + $"{relatedCIID3}" + @"""
+              }]
             }
           }
         ]
@@ -240,7 +246,7 @@ mutation {
             var json = JToken.Parse(jsonStr);
 
             var ciidEntity1Str = json["data"]!["traitEntities"]!["test_trait_a"]!["byDataID"]!["ciid"]!.Value<string>();
-            var ciidEntity1 = Guid.Parse(ciidEntity1Str);
+            var ciidEntity1 = Guid.Parse(ciidEntity1Str!);
 
             var mutationSetAssignments = @"
 mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {

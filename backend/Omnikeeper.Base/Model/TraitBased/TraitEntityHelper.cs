@@ -15,9 +15,10 @@ namespace Omnikeeper.Base.Model.TraitBased
 {
     public static class TraitEntityHelper
     {
-        public static (string name, IAttributeValue value, bool isID)[] InputDictionary2AttributeTuples(IDictionary<string, object> inputDict, ITrait trait)
+        public static ((string name, IAttributeValue value, bool isID)[], (string predicateID, bool forward, Guid[] relatedCIIDs)[]) InputDictionary2AttributeAndRelationTuples(IDictionary<string, object?> inputDict, ITrait trait)
         {
             var attributeValues = new List<(string name, IAttributeValue value, bool isID)>();
+            var relationValues = new List<(string predicateID, bool forward, Guid[] relatedCIIDs)>();
 
             foreach (var kv in inputDict)
             {
@@ -38,22 +39,37 @@ namespace Omnikeeper.Base.Model.TraitBased
 
                 if (attribute == null)
                 {
-                    throw new Exception($"Invalid input field for trait {trait.ID}: {inputFieldName}");
-                }
+                    // lookup relation
+                    var relation = trait.OptionalRelations.FirstOrDefault(r =>
+                    {
+                        var convertedRelationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
+                        return convertedRelationFieldName == inputFieldName;
+                    });
 
-                var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
-                IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, kv.Value);
-                attributeValues.Add((attribute.AttributeTemplate.Name, attributeValue, attribute.AttributeTemplate.IsID.GetValueOrDefault(false)));
+                    if (relation == null)
+                    {
+                        throw new Exception($"Invalid input field for trait {trait.ID}: {inputFieldName}");
+                    }
+                    else
+                    {
+                        var array = (object[])kv.Value;
+                        var relatedCIIDs = array.Select(a =>
+                        {
+                            var relatedCIID = (Guid)a;
+                            return relatedCIID;
+                        }).ToArray();
+                        relationValues.Add((relation.RelationTemplate.PredicateID, relation.RelationTemplate.DirectionForward, relatedCIIDs));
+                    }
+                }
+                else
+                {
+                    var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
+                    IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, kv.Value);
+                    attributeValues.Add((attribute.AttributeTemplate.Name, attributeValue, attribute.AttributeTemplate.IsID.GetValueOrDefault(false)));
+                }
             }
 
-            return attributeValues.ToArray();
-        }
-
-        public static (string name, IAttributeValue value)[] InputDictionary2IDAttributes(IDictionary<string, object> inputDict, ITrait trait)
-        {
-            var attributeValues = InputDictionary2AttributeTuples(inputDict, trait);
-
-            return attributeValues.Where(t => t.isID).Select(t => (t.name, t.value)).ToArray();
+            return (attributeValues.ToArray(), relationValues.ToArray());
         }
 
 
