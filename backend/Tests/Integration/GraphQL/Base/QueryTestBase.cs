@@ -1,20 +1,21 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Server;
-using GraphQL.Types;
 using GraphQL.Validation;
 using GraphQL.Validation.Complexity;
-using GraphQLParser.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Tests.Integration.GraphQL.Base
 {
@@ -28,135 +29,94 @@ namespace Tests.Integration.GraphQL.Base
             DBSetup.Setup();
         }
 
+        protected async Task ReinitSchema()
+        {
+            // force rebuild graphql schema
+            using var trans = ModelContextBuilder.BuildDeferred();
+            var timeThreshold = TimeThreshold.BuildLatest();
+            var activeTraits = await GetService<ITraitsProvider>().GetActiveTraits(trans, timeThreshold);
+            GetService<GraphQLSchemaHolder>().ReInitSchema(ServiceProvider, activeTraits, NullLogger.Instance);
+            trans.Commit();
+        }
+
         protected override void InitServices(ContainerBuilder builder)
         {
             base.InitServices(builder);
 
             var serviceCollection = new ServiceCollection();
-            serviceCollection.AddGraphQL().AddGraphTypes(typeof(GraphQLSchema));
+
+            global::GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(serviceCollection)
+                .AddErrorInfoProvider(opt => {
+                    opt.ExposeExceptionStackTrace = true;
+                    opt.ExposeData = true;
+                    opt.ExposeCode = true;
+                    opt.ExposeCodes = true;
+                })
+                .AddGraphTypes(Assembly.GetAssembly(typeof(GraphQLSchema))!);
+
             builder.Populate(serviceCollection);
         }
 
         protected IDocumentExecuter Executer { get; private set; }
         protected IDocumentWriter Writer { get; private set; }
 
-        public ExecutionResult AssertQuerySuccess(
+        public void AssertQuerySuccess(
             string query,
             string expected,
-            Inputs? inputs = null,
-            object? root = null,
-            IDictionary<string, object?>? userContext = null,
-            CancellationToken cancellationToken = default,
-            IEnumerable<IValidationRule>? rules = null,
-            IDocumentWriter? writer = null)
+            AuthenticatedUser user,
+            Inputs? inputs = null)
         {
-            var queryResult = CreateQueryResult(expected);
-            return AssertQuery(query, queryResult, inputs, root, userContext, cancellationToken, rules, null, writer);
-        }
-
-        public ExecutionResult AssertQueryWithErrors(
-            string query,
-            string expected,
-            Inputs? inputs = null,
-            object? root = null,
-            IDictionary<string, object?>? userContext = null,
-            CancellationToken cancellationToken = default,
-            int expectedErrorCount = 0,
-            bool renderErrors = false,
-            Action<UnhandledExceptionContext>? unhandledExceptionDelegate = null)
-        {
-            var queryResult = CreateQueryResult(expected);
-            return AssertQueryIgnoreErrors(
-                query,
-                queryResult,
-                inputs,
-                root,
-                userContext,
-                cancellationToken,
-                expectedErrorCount,
-                renderErrors,
-                unhandledExceptionDelegate);
-        }
-
-        public ExecutionResult AssertQueryIgnoreErrors(
-            string query,
-            ExecutionResult expectedExecutionResult,
-            Inputs? inputs = null,
-            object? root = null,
-            IDictionary<string, object?>? userContext = null,
-            CancellationToken cancellationToken = default,
-            int expectedErrorCount = 0,
-            bool renderErrors = false,
-            Action<UnhandledExceptionContext>? unhandledExceptionDelegate = null)
-        {
-            var runResult = Executer.ExecuteAsync(options =>
-            {
-                // TODO: make work with trait entities, reInit through GraphQLSchemaHolder
-                options.Schema = new GraphQLSchema(ServiceProvider);
-                options.Query = query;
-                options.Root = root;
-                options.Inputs = inputs;
-                options.UserContext = userContext ?? new Dictionary<string, object?>();
-                options.CancellationToken = cancellationToken;
-                options.UnhandledExceptionDelegate = unhandledExceptionDelegate ?? (ctx => { });
-            }).GetAwaiter().GetResult();
-
-            var renderResult = renderErrors ? runResult : new ExecutionResult { Data = runResult.Data };
-
-            var writtenResult = Writer.WriteToStringAsync(renderResult).GetAwaiter().GetResult();
+            var expectedExecutionResult = CreateQueryResult(expected);
             var expectedResult = Writer.WriteToStringAsync(expectedExecutionResult).GetAwaiter().GetResult();
 
-            writtenResult.ShouldBeCrossPlat(expectedResult);
+            var (runResult, writtenResult) = RunQuery(query, user, inputs);
 
-            var errors = runResult.Errors ?? new ExecutionErrors();
+            //string? additionalInfo = null;
 
-            Assert.AreEqual(expectedErrorCount, errors.Count());
+            //if (runResult.Errors?.Any() == true)
+            //{
+            //    additionalInfo = string.Join(Environment.NewLine, runResult.Errors
+            //        .Where(x => x.InnerException is GraphQLSyntaxErrorException)
+            //        .Select(x => x?.InnerException?.Message));
+            //}
 
-            return runResult;
+            writtenResult.ShouldBeCrossPlatJson(expectedResult);
         }
 
-        public ExecutionResult AssertQuery(
+        public void AssertQueryHasErrors(
             string query,
-            ExecutionResult expectedExecutionResult,
-            Inputs? inputs,
-            object? root,
-            IDictionary<string, object?>? userContext = null,
-            CancellationToken cancellationToken = default,
-            IEnumerable<IValidationRule>? rules = null,
-            Action<UnhandledExceptionContext>? unhandledExceptionDelegate = null,
-            IDocumentWriter? writer = null)
+            AuthenticatedUser user,
+            Inputs? inputs = null)
         {
+            var (runResult, _) = RunQuery(query, user, inputs);
+
+            Assert.NotNull(runResult.Errors);
+            Assert.Greater(runResult.Errors!.Count, 0);
+        }
+
+        public (ExecutionResult result, string json) RunQuery(string query, AuthenticatedUser user, Inputs? inputs = null)
+        {
+            var schema = GetService<GraphQLSchemaHolder>().GetSchema();
+            var dataLoaderDocumentListener = GetService<DataLoaderDocumentListener>();
+
+            using var userContext = new OmnikeeperUserContext(user, ServiceProvider);
+
             var runResult = Executer.ExecuteAsync(options =>
             {
-                // TODO: make work with trait entities, reInit through GraphQLSchemaHolder
-                options.Schema = new GraphQLSchema(ServiceProvider);
+                options.Schema = schema;
                 options.Query = query;
-                options.Root = root;
+                options.Root = null;
                 options.Inputs = inputs;
-                options.UserContext = userContext ?? new Dictionary<string, object?>();
-                options.CancellationToken = cancellationToken;
-                options.ValidationRules = rules;
-                options.UnhandledExceptionDelegate = unhandledExceptionDelegate ?? (ctx => { });
+                options.UserContext = userContext;
+                options.CancellationToken = default;
+                options.ValidationRules = null;
+                options.UnhandledExceptionDelegate = (ctx => { });
                 options.RequestServices = ServiceProvider;
+                options.Listeners.Add(dataLoaderDocumentListener);
             }).GetAwaiter().GetResult();
-
-            writer ??= Writer;
 
             var writtenResult = Writer.WriteToStringAsync(runResult).GetAwaiter().GetResult();
-            var expectedResult = Writer.WriteToStringAsync(expectedExecutionResult).GetAwaiter().GetResult();
-
-            string? additionalInfo = null;
-
-            if (runResult.Errors?.Any() == true)
-            {
-                additionalInfo = string.Join(Environment.NewLine, runResult.Errors
-                    .Where(x => x.InnerException is GraphQLSyntaxErrorException)
-                    .Select(x => x?.InnerException?.Message));
-            }
-
-            writtenResult.ShouldBeCrossPlat(expectedResult, additionalInfo);
-
-            return runResult;
+            return (runResult, writtenResult);
         }
 
         public static ExecutionResult CreateQueryResult(string result, ExecutionErrors? errors = null)

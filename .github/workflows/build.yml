@@ -7,7 +7,7 @@ env:
 on:
   push:
     tags:
-      - '**[0-9]+.[0-9]+.[0-9]+-rc[0-9]+'
+      - '*.*.*'
 
 jobs:
   build-publish-backend-base:
@@ -15,10 +15,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Setup .NET 5.0.x
+      - name: Setup .NET 6.0.x
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '5.0.x'
+          dotnet-version: '6.0.x'
       - name: Set version
         run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Build and publish
@@ -86,15 +86,38 @@ jobs:
             npm version ${{ env.VERSION }} # set version
             npm publish
 
+  build-publish-frontend-okplugin-visualization:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set version
+        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Build and publish
+        env:
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOURL: npm.pkg.github.com/
+          PLUGIN_FOLDER: okplugin-visualization
+        run: |
+            cd frontend/$PLUGIN_FOLDER
+            npm config set unsafe-perm true # needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
+            npm ci
+            cat <<'EOF' > .npmrc
+            //${REPOURL}:_authToken=${ACCESS_TOKEN}
+            @max-bytes:registry=https://npm.pkg.github.com
+            EOF
+            npm version ${{ env.VERSION }} # set version
+            npm publish
+
   build-publish-backend-okplugins:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Setup .NET 5.0.x
+      - name: Setup .NET 6.0.x
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '5.0.x'
+          dotnet-version: '6.0.x'
       - name: Set version
         run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Build and publish
@@ -112,6 +135,8 @@ jobs:
           buildPublish OKPluginCLBMonitoring
           buildPublish OKPluginAnsibleInventoryScanIngest
           buildPublish OKPluginActiveDirectoryXMLIngest
+          buildPublish OKPluginVariableRendering
+          buildPublish OKPluginVisualization
 
   build-swagger-definition:
     runs-on: ubuntu-20.04
@@ -128,7 +153,7 @@ jobs:
             # dotnet build "Omnikeeper/Omnikeeper.csproj" -c Release
             # cd Omnikeeper
             # dotnet tool restore
-            # dotnet swagger tofile --output ../../omnikeeper.json ./bin/Release/net5.0/Omnikeeper.dll v1
+            # dotnet swagger tofile --output ../../omnikeeper.json ./bin/Release/net6.0/Omnikeeper.dll v1
       - uses: actions/upload-artifact@v2
         with:
           name: omnikeeper-swagger-json
@@ -154,7 +179,7 @@ jobs:
           bash clients/scripts/powershell/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_POWERSHELL }}"
   call-package-variants:
     runs-on: ubuntu-20.04
-    needs: [build-backend-vanilla, build-publish-backend-okplugins, build-publish-frontend-okplugin-generic-json-ingest]
+    needs: [build-backend-vanilla, build-publish-backend-okplugins, build-publish-frontend-okplugin-generic-json-ingest, build-publish-frontend-okplugin-visualization]
     steps:
     - name: Set version
       run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV

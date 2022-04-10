@@ -1,5 +1,4 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Utils;
+﻿using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -11,7 +10,7 @@ namespace Omnikeeper.Base.Model
     public interface ICIIDSelection
     {
         public bool Contains(Guid ciid);
-        IEnumerable<MergedCI> FilterDictionary(IDictionary<Guid, MergedCI> cis);
+        IDictionary<Guid, T> FilterDictionary2Dictionary<T>(IDictionary<Guid, T> items);
     }
 
     public class SpecificCIIDsSelection : ICIIDSelection, IEquatable<SpecificCIIDsSelection>
@@ -24,9 +23,9 @@ namespace Omnikeeper.Base.Model
 
         public bool Contains(Guid ciid) => CIIDs.Contains(ciid);
 
-        public IEnumerable<MergedCI> FilterDictionary(IDictionary<Guid, MergedCI> cis)
+        public IDictionary<Guid, T> FilterDictionary2Dictionary<T>(IDictionary<Guid, T> items)
         {
-            return CIIDs.Where(cis.ContainsKey).Select(ciid => cis[ciid]);
+            return CIIDs.Where(items.ContainsKey).ToDictionary(ciid => ciid, ciid => items[ciid]);
         }
 
         public static ICIIDSelection Build(ISet<Guid> ciids)
@@ -62,9 +61,9 @@ namespace Omnikeeper.Base.Model
         }
 
         public bool Contains(Guid ciid) => !ExceptCIIDs.Contains(ciid);
-        public IEnumerable<MergedCI> FilterDictionary(IDictionary<Guid, MergedCI> cis)
+        public IDictionary<Guid, T> FilterDictionary2Dictionary<T>(IDictionary<Guid, T> items)
         {
-            return cis.Where(kv => !ExceptCIIDs.Contains(kv.Key)).Select(kv => kv.Value);
+            return items.Where(kv => !ExceptCIIDs.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
         public static ICIIDSelection Build(ISet<Guid> ciids)
@@ -94,7 +93,7 @@ namespace Omnikeeper.Base.Model
     public class AllCIIDsSelection : ICIIDSelection, IEquatable<AllCIIDsSelection>
     {
         public bool Contains(Guid ciid) => true;
-        public IEnumerable<MergedCI> FilterDictionary(IDictionary<Guid, MergedCI> cis) => cis.Values;
+        public IDictionary<Guid, T> FilterDictionary2Dictionary<T>(IDictionary<Guid, T> items) => items;
 
         public override int GetHashCode() => 0;
         public override bool Equals(object? obj) => Equals(obj as AllCIIDsSelection);
@@ -104,7 +103,7 @@ namespace Omnikeeper.Base.Model
     public class NoCIIDsSelection : ICIIDSelection, IEquatable<NoCIIDsSelection>
     {
         public bool Contains(Guid ciid) => false;
-        public IEnumerable<MergedCI> FilterDictionary(IDictionary<Guid, MergedCI> cis) => ImmutableList<MergedCI>.Empty;
+        public IDictionary<Guid, T> FilterDictionary2Dictionary<T>(IDictionary<Guid, T> items) => ImmutableDictionary<Guid, T>.Empty;
 
         public override int GetHashCode() => 0;
         public override bool Equals(object? obj) => Equals(obj as NoCIIDsSelection);

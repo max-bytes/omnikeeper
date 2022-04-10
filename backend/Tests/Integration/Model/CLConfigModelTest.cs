@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using Autofac;
+using FluentAssertions;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
@@ -13,6 +14,13 @@ namespace Tests.Integration.Model
 {
     class CLConfigModelTest : GenericTraitEntityModelTestBase<CLConfigV1, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<CLConfigV1Model>().As<GenericTraitEntityModel<CLConfigV1, string>>();
+        }
+
         [Test]
         public void TestTraitGeneration()
         {

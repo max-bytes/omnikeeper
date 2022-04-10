@@ -50,9 +50,9 @@ namespace Omnikeeper.Base.Entity.Config
         [JsonProperty(Required = Required.Always)]
         public string ArchiveOldDataRunnerInterval => archiveOldDataRunnerInterval;
 
-        public static MyJSONSerializer<BaseConfigurationV2> Serializer = new MyJSONSerializer<BaseConfigurationV2>(new JsonSerializerSettings()
+        public static NewtonSoftJSONSerializer<BaseConfigurationV2> Serializer = new NewtonSoftJSONSerializer<BaseConfigurationV2>(new JsonSerializerSettings()
         {
-            TypeNameHandling = TypeNameHandling.Objects,
+            TypeNameHandling = TypeNameHandling.None,
             MissingMemberHandling = MissingMemberHandling.Error
         });
 

@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using OKPluginValidation.Validation;
+using OKPluginValidation.Rules;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
-using Omnikeeper.Validation.Rules;
 using System.Collections.Generic;
 
 namespace OKPluginValidation
@@ -12,8 +11,8 @@ namespace OKPluginValidation
     {
         public override void RegisterServices(IServiceCollection sc)
         {
-            sc.AddSingleton<GenericTraitEntityModel<ValidationIssue, string>>();
-            sc.AddSingleton<GenericTraitEntityModel<Validation.Validation, string>>();
+            sc.AddSingleton<ValidationIssueModel>();
+            sc.AddSingleton<ValidationModel>();
             sc.AddScoped<IValidationEngine, ValidationEngine>();
             //sc.AddScoped<ValidationEngineRunner>();
 
@@ -22,7 +21,7 @@ namespace OKPluginValidation
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => new RecursiveTrait[] {
-            GenericTraitEntityHelper.Class2RecursiveTrait<Validation.Validation>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<Validation>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<ValidationIssue>(),
         };
 

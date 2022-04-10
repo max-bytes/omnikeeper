@@ -46,5 +46,12 @@ namespace Omnikeeper.Model.Decorators
         {
             return await model.GetRelationsOfChangeset(changesetID, getRemoved, trans);
         }
+
+        public async Task<ISet<string>> GetPredicateIDs(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        {
+            foreach (var layerID in layerIDs)
+                TrackLayerUsage(layerID);
+            return await model.GetPredicateIDs(rs, layerIDs, trans, atTime, generatedDataHandling);
+        }
     }
 }

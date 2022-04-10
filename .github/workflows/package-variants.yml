@@ -20,6 +20,9 @@ on:
       pluginsFrontend: 
         description: "Frontend-Plugin spec; example: okplugin-generic-json-ingest@0.14.80 okplugin-plugin2@0.14.80"
         required: true
+      runSystemTests:
+        description: "Whether or not to run system tests after a successful image build/publish; \"true\" or \"false\""
+        required: true
 
 jobs:
   build-publish-variant-backend:
@@ -84,6 +87,12 @@ jobs:
             base_image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/core/backend:${{ env.BASE_VERSION }}
           tags: ${{ steps.meta_backend.outputs.tags }}
           labels: ${{ steps.meta_backend.outputs.labels }}
+      - name: "Invoke system tests"
+        uses: benc-uk/workflow-dispatch@v1
+        if: github.event.inputs.runSystemTests == 'true'
+        with:
+          workflow: run-tests
+          token: ${{ secrets.PAT }}
 
   build-publish-variant-frontend:
     runs-on: ubuntu-20.04

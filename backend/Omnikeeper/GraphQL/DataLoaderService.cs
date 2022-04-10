@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using GraphQL.DataLoader;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -19,8 +20,7 @@ namespace Omnikeeper.GraphQL
             this.dataLoaderContextAccessor = dataLoaderContextAccessor;
         }
 
-        // TODO: rework to also work with lists of CIs, then use throughout graphql resolvers
-        public IDataLoaderResult<IEnumerable<EffectiveTrait>> SetupAndLoadEffectiveTraitLoader(MergedCI ci, ITraitSelection traitSelection, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public IDataLoaderResult<IEnumerable<EffectiveTrait>> SetupAndLoadEffectiveTraits(MergedCI ci, ITraitSelection traitSelection, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetAllEffectiveTraits_{layerSet}_{timeThreshold}",
                 async (IEnumerable<(MergedCI ci, ITraitSelection traitSelection)> selections) =>
@@ -77,28 +77,35 @@ namespace Omnikeeper.GraphQL
             }
         }
 
-        public IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, bool includeEmptyCIs, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public IDataLoaderResult<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> SetupAndLoadMergedAttributes(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, IAttributeModel attributeModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedCIs_{layerSet}_{timeThreshold}_{includeEmptyCIs}",
+            var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader<(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection), IDictionary<Guid, IDictionary<string, MergedCIAttribute>>>($"GetMergedAttributes_{layerSet}_{timeThreshold}",
                     async (IEnumerable<(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection)> selections) =>
                     {
                         var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(selections.Select(s => s.ciidSelection));
                         var combinedAttributeSelection = AttributeSelectionExtensions.UnionAll(selections.Select(s => s.attributeSelection));
 
-                        var combinedCIs = (await ciModel.GetMergedCIs(combinedCIIDSelection, layerSet, includeEmptyCIs, combinedAttributeSelection, trans, timeThreshold)).ToDictionary(ci => ci.ID);
+                        var combinedAttributes = await attributeModel.GetMergedAttributes(combinedCIIDSelection, combinedAttributeSelection, layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
 
-                        var ret = new List<((ICIIDSelection ciidSelection, IAttributeSelection attributeSelection), MergedCI)>(); // NOTE: seems weird, cant lookup be created better?
+                        var ret = new Dictionary<(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection), IDictionary<Guid, IDictionary<string, MergedCIAttribute>>>(); // NOTE: seems weird, cant lookup be created better?
                         foreach (var s in selections)
                         {
-                            var selectedCIs = s.ciidSelection.FilterDictionary(combinedCIs);
+                            var selectedAttributes = s.ciidSelection.FilterDictionary2Dictionary(combinedAttributes);
 
-                            // NOTE: we are NOT reducing the attributes again here, which means it's possible that this returns more attributes for some CIs than requested according to attributeSelection
+                            // NOTE: we are NOT reducing the attributes again here, which means it's possible that this returns more attributes than requested according to attributeSelection
 
-                            ret.AddRange(selectedCIs.Select(ci => (s, ci)));
+                            ret.Add(s, selectedAttributes);
                         }
-                        return ret.ToLookup(t => t.Item1, t => t.Item2);
+                        return ret;
                     });
             return loader.LoadAsync((ciidSelection, attributeSelection));
+        }
+
+        public IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, ICIModel ciModel, IAttributeModel attributeModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        {
+            var attributeLoader = SetupAndLoadMergedAttributes(ciidSelection, attributeSelection, attributeModel, layerSet, timeThreshold, trans);
+
+            return attributeLoader.Then(attributes => (IEnumerable<MergedCI>)ciModel.BuildMergedCIs(attributes, layerSet, timeThreshold));
         }
 
         public IDataLoaderResult<IEnumerable<Changeset>> SetupAndLoadChangesets(ISet<Guid> ids, IChangesetModel changesetModel, IModelContext trans)
@@ -150,6 +157,7 @@ namespace Omnikeeper.GraphQL
                 RelationSelectionFrom f => SetupRelationFetchingFrom(relationModel, layerSet, timeThreshold, trans).LoadAsync(f),
                 RelationSelectionTo t => SetupRelationFetchingTo(relationModel, layerSet, timeThreshold, trans).LoadAsync(t),
                 RelationSelectionAll a => SetupRelationFetchingAll(relationModel, layerSet, timeThreshold, trans).LoadAsync(a),
+                RelationSelectionWithPredicate p => SetupRelationFetchingWithPredicate(relationModel, layerSet, timeThreshold, trans).LoadAsync(p),
                 _ => throw new Exception("Not support yet")
             };
         }
@@ -207,16 +215,27 @@ namespace Omnikeeper.GraphQL
                 });
             return loader;
         }
-    }
 
 
-    public interface IDataLoaderService
-    {
-        IDataLoaderResult<IEnumerable<Changeset>> SetupAndLoadChangesets(ISet<Guid> ids, IChangesetModel changesetModel, IModelContext trans);
-        IDataLoaderResult<IEnumerable<EffectiveTrait>> SetupAndLoadEffectiveTraitLoader(MergedCI ci, ITraitSelection traitSelection, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
-        IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, bool includeEmptyCIs, ICIModel ciModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
-        IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
-        IDataLoaderResult<IDictionary<string, LayerData>> SetupAndLoadAllLayers(ILayerDataModel layerDataModel, TimeThreshold timeThreshold, IModelContext trans);
-        IDataLoaderResult<IEnumerable<MergedRelation>> SetupAndLoadRelation(IRelationSelection rs, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
+        private IDataLoader<RelationSelectionWithPredicate, IEnumerable<MergedRelation>> SetupRelationFetchingWithPredicate(IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        {
+            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsWithredicate_{layerSet}_{timeThreshold}",
+                async (IEnumerable<RelationSelectionWithPredicate> relationSelections) =>
+                {
+                    var combinedRelationPredicateIDs = new HashSet<string>();
+                    foreach (var rs in relationSelections)
+                        combinedRelationPredicateIDs.UnionWith(rs.PredicateIDs);
+
+                    // TODO: masking
+                    var relationsWithPredicate = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(combinedRelationPredicateIDs), layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+                    var relationsWithPredicateMap = relationsWithPredicate.ToLookup(t => t.Relation.PredicateID);
+
+                    var ret = new List<(RelationSelectionWithPredicate, MergedRelation)>();
+                    foreach (var rs in relationSelections)
+                        foreach (var predicateID in rs.PredicateIDs) ret.AddRange(relationsWithPredicateMap[predicateID].Select(t => (rs, t)));
+                    return ret.ToLookup(t => t.Item1, t => t.Item2);
+                });
+            return loader;
+        }
     }
 }

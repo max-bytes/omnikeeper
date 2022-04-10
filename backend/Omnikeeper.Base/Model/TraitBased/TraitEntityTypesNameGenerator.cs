@@ -38,6 +38,10 @@ namespace Omnikeeper.Base.Model.TraitBased
         public static string GenerateTraitEntityIDInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_ID_Input_" + trait.ID);
         public static string GenerateTraitEntityFilterInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_filter_Input_" + trait.ID);
         public static string GenerateUpsertTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Upsert_Input_" + trait.ID);
+        public static string GenerateInsertTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Insert_Input_" + trait.ID);
+        public static string GenerateSetRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "setRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
+        public static string GenerateAddRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "addRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
+        public static string GenerateRemoveRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "removeRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
         public static string GenerateInsertNewMutationName(string traitID) => "insertNew_" + SanitizeMutationName(traitID);
         public static string GenerateUpdateByCIIDMutationName(string traitID) => "updateByCIID_" + SanitizeMutationName(traitID);
         public static string GenerateDeleteByCIIDMutationName(string traitID) => "deleteByCIID_" + SanitizeMutationName(traitID);
@@ -53,10 +57,15 @@ namespace Omnikeeper.Base.Model.TraitBased
             // TODO: what if two unsanitized field names map to the same sanitized field name? TODO: detect this and provide a work-around
             return SanitizeFieldName(tr.Identifier);
         }
+        public static string GenerateTraitRelationFieldWithTraitHintName(TraitRelation tr, string traitIDHint)
+        {
+            // TODO: what if two unsanitized field names map to the same sanitized field name? TODO: detect this and provide a work-around
+            return SanitizeFieldName($"{tr.Identifier}_as_{traitIDHint}");
+        }
+
         public static string GenerateTraitIDFieldName(string traitID)
         {
             return SanitizeFieldName(traitID);
         }
-
     }
 }

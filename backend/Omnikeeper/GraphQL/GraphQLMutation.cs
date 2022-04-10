@@ -3,7 +3,6 @@ using GraphQL.Types;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
-using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
@@ -11,6 +10,7 @@ using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL.Types;
+using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,29 +20,30 @@ namespace Omnikeeper.GraphQL
     public partial class GraphQLMutation : ObjectGraphType
     {
         private readonly ILayerModel layerModel;
-        private readonly GenericTraitEntityModel<Predicate, string> predicateModel;
+        private readonly PredicateModel predicateModel;
         private readonly IChangesetModel changesetModel;
-        private readonly GenericTraitEntityModel<GeneratorV1, string> generatorModel;
+        private readonly GeneratorV1Model generatorModel;
         private readonly IOIAContextModel oiaContextModel;
         private readonly IODataAPIContextModel odataAPIContextModel;
-        private readonly GenericTraitEntityModel<AuthRole, string> authRoleModel;
-        private readonly GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel;
+        private readonly AuthRoleModel authRoleModel;
+        private readonly RecursiveTraitModel recursiveDataTraitModel;
         private readonly ILayerDataModel layerDataModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
-        private readonly GenericTraitEntityModel<CLConfigV1, string> clConfigModel;
+        private readonly CLConfigV1Model clConfigModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
+        private readonly IScheduler scheduler;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
-            GenericTraitEntityModel<Predicate, string> predicateModel, IChangesetModel changesetModel, GenericTraitEntityModel<GeneratorV1, string> generatorModel,
-            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel,
-            GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
-            IManagementAuthorizationService managementAuthorizationService, GenericTraitEntityModel<CLConfigV1, string> clConfigModel, IMetaConfigurationModel metaConfigurationModel,
+            PredicateModel predicateModel, IChangesetModel changesetModel, GeneratorV1Model generatorModel,
+            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel,
+            RecursiveTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
+            IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
-            IEnumerable<IPluginRegistration> plugins,
+            IEnumerable<IPluginRegistration> plugins, IScheduler scheduler,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, ILayerDataModel layerDataModel)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
@@ -70,7 +71,7 @@ namespace Omnikeeper.GraphQL
 
                     if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, readLayerIDs))
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', readLayerIDs)}");
 
                     var writeCIIDs = insertAttributes.Select(a => a.CI)
@@ -201,6 +202,7 @@ namespace Omnikeeper.GraphQL
             this.metaConfigurationModel = metaConfigurationModel;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
+            this.scheduler = scheduler;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.layerDataModel = layerDataModel;
 

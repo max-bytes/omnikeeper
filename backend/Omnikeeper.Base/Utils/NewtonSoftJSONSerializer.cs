@@ -5,12 +5,12 @@ using System.IO;
 
 namespace Omnikeeper.Base.Utils
 {
-    public class MyJSONSerializer<T> where T : class
+    public class NewtonSoftJSONSerializer<T> where T : class
     {
-        public MyJSONSerializer(Func<JsonSerializerSettings> serializerSettingsF) : this(serializerSettingsF())
+        public NewtonSoftJSONSerializer(Func<JsonSerializerSettings> serializerSettingsF) : this(serializerSettingsF())
         {
         }
-        public MyJSONSerializer(JsonSerializerSettings serializerSettings)
+        public NewtonSoftJSONSerializer(JsonSerializerSettings serializerSettings)
         {
             SerializerSettings = serializerSettings;
             Serializer = JsonSerializer.Create(SerializerSettings);
@@ -18,18 +18,18 @@ namespace Omnikeeper.Base.Utils
         private readonly JsonSerializerSettings SerializerSettings;
         private readonly JsonSerializer Serializer;
 
-        public T Deserialize(JObject jo)
+        public T Deserialize(JToken jo)
         {
             var r = Serializer.Deserialize<T>(new JTokenReader(jo));
             if (r == null)
-                throw new Exception("Could not deserialize JObject");
+                throw new Exception("Could not deserialize JToken");
             return r;
         }
         public object Deserialize(JToken jo, Type type)
         {
             var r = Serializer.Deserialize(new JTokenReader(jo), type);
             if (r == null)
-                throw new Exception("Could not deserialize JObject");
+                throw new Exception("Could not deserialize JToken");
             return r;
         }
         public T Deserialize(string str)

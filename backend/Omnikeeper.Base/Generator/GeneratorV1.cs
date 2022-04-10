@@ -155,11 +155,11 @@ namespace Omnikeeper.Base.Generator
 
     public class EffectiveGeneratorProvider : IEffectiveGeneratorProvider
     {
-        private readonly GenericTraitEntityModel<GeneratorV1, string> generatorModel;
+        private readonly GeneratorV1Model generatorModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ILayerDataModel layerDataModel;
 
-        public EffectiveGeneratorProvider(GenericTraitEntityModel<GeneratorV1, string> generatorModel, IMetaConfigurationModel metaConfigurationModel, ILayerDataModel layerDataModel)
+        public EffectiveGeneratorProvider(GeneratorV1Model generatorModel, IMetaConfigurationModel metaConfigurationModel, ILayerDataModel layerDataModel)
         {
             this.generatorModel = generatorModel;
             this.metaConfigurationModel = metaConfigurationModel;

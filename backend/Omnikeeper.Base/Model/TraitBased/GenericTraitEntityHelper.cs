@@ -71,7 +71,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return new GenericTraitEntityIDAttributeInfos<C, ID>(outFields);
         }
 
-        public static C EffectiveTrait2Object<C>(EffectiveTrait et, MyJSONSerializer<object> jsonSerializer) where C : TraitEntity, new()
+        public static C EffectiveTrait2Object<C>(EffectiveTrait et, NewtonSoftJSONSerializer<object>? jsonSerializer) where C : TraitEntity, new()
         {
             var (_, attributeFieldInfos, relationFieldInfos) = ExtractFieldInfos<C>();
 
@@ -86,6 +86,9 @@ namespace Omnikeeper.Base.Model.TraitBased
                     // support JSON serializer
                     if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.TraitAttributeAttribute.isJSONSerialized)
                     {
+                        if (jsonSerializer == null)
+                            throw new Exception($"Field {taFieldInfo.FieldInfo.Name} is marked as JSONSerialized, but Model has no JSONSerializer specified");
+
                         // deserialize before setting field in entity
                         if (taFieldInfo.IsArray)
                         {
@@ -165,7 +168,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             foreach (var trFieldInfo in relationFieldInfos)
             {
                 var tra = trFieldInfo.TraitRelationAttribute;
-                optionalRelations.Add(new TraitRelation(tra.trName, new RelationTemplate(tra.predicateID, tra.directionForward, tra.minCardinality, tra.maxCardinality)));
+                optionalRelations.Add(new TraitRelation(tra.trName, new RelationTemplate(tra.predicateID, tra.directionForward)));
             }
 
             var traitOrigin = new TraitOriginV1(ta.originType);
@@ -223,6 +226,8 @@ namespace Omnikeeper.Base.Model.TraitBased
                 }
                 else if (elementType == typeof(long))
                     avt = AttributeValueType.Integer;
+                else if (elementType == typeof(double))
+                    avt = AttributeValueType.Double;
                 else if (elementType == typeof(JObject))
                     avt = AttributeValueType.JSON;
                 else

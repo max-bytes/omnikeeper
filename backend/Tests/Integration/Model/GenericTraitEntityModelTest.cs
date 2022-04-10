@@ -1,9 +1,11 @@
-﻿using FluentAssertions;
+﻿using Autofac;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -38,6 +40,12 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithStringIDModelTest : GenericTraitEntityModelTestBase<TestEntityForStringID, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForStringID, string>>().WithParameter("jsonSerializer", null!);
+        }
 
         [Test]
         public async Task TestOptionalAttributeHandling()
@@ -127,6 +135,13 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithLongIDModelTest : GenericTraitEntityModelTestBase<TestEntityForLongID, long>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForLongID, long>>().WithParameter("jsonSerializer", null!);
+        }
+
         [Test]
         public async Task TestLongBasedID()
         {
@@ -231,6 +246,13 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithTupleIDModelTest : GenericTraitEntityModelTestBase<TestEntityForTupleID, (long, string)>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForTupleID, (long, string)>>().WithParameter("jsonSerializer", null!);
+        }
+
         [Test]
         public async Task TestTupleBasedID()
         {
@@ -328,7 +350,7 @@ namespace Tests.Integration.Model
         [TraitEntityID]
         public readonly string ID;
 
-        [TraitRelation("tr", "predicate_id", true, 1, -1)]
+        [TraitRelation("tr", "predicate_id", true)]
         public readonly Guid[] TestRelations;
 
         public TestEntityForOutgoingTraitRelation()
@@ -346,6 +368,13 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithTraitRelationTest : GenericTraitEntityModelTestBase<TestEntityForOutgoingTraitRelation, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForOutgoingTraitRelation, string>>().WithParameter("jsonSerializer", null!);
+        }
+
         [Test]
         public async Task TestGenericOperations()
         {
@@ -432,7 +461,7 @@ namespace Tests.Integration.Model
         [TraitEntityID]
         public readonly string ID;
 
-        [TraitRelation("tr", "predicate_id", false, 1, -1)]
+        [TraitRelation("tr", "predicate_id", false)]
         public readonly Guid[] TestRelations;
 
         public TestEntityForIncomingTraitRelation()
@@ -450,6 +479,13 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithIncomingTraitRelationTest : GenericTraitEntityModelTestBase<TestEntityForIncomingTraitRelation, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForIncomingTraitRelation, string>>().WithParameter("jsonSerializer", null!);
+        }
+
         [Test]
         public async Task TestGenericOperations()
         {
@@ -554,6 +590,13 @@ namespace Tests.Integration.Model
 
     class GenericTraitEntityWithPartialEntityModelTest : GenericTraitEntityModelTestBase<TestEntityForPartialEntity, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForPartialEntity, string>>().WithParameter("jsonSerializer", null!);
+        }
+
         [Test]
         public async Task TestUpdateIncompleteTraitEntity()
         {
@@ -564,6 +607,87 @@ namespace Tests.Integration.Model
         public async Task TestOtherLayersValueHandling()
         {
             await TestGenericModelOtherLayersValueHandling(() => new TestEntityForPartialEntity("ID1", "foo"), "ID1");
+        }
+    }
+
+
+
+
+
+
+
+    [TraitEntity("test_entity1", TraitOriginType.Data)]
+    class TestEntityForDouble : TraitEntity
+    {
+        [TraitAttribute("id", "id")]
+        [TraitEntityID]
+        public readonly long ID;
+
+        [TraitAttribute("test_attribute_a", "test_attribute_a")]
+        public readonly double TestAttributeA;
+
+        public TestEntityForDouble()
+        {
+            ID = 0L;
+            TestAttributeA = 0.0;
+        }
+
+        public TestEntityForDouble(long id, double testAttributeA)
+        {
+            ID = id;
+            TestAttributeA = testAttributeA;
+        }
+    }
+
+    class GenericTraitEntityWithDoubleModelTest : GenericTraitEntityModelTestBase<TestEntityForDouble, long>
+    {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForDouble, long>>().WithParameter("jsonSerializer", null!);
+        }
+
+        [Test]
+        public async Task TestGenericOperations()
+        {
+            await TestGenericModelOperations(
+                () => new TestEntityForDouble(1L, -1.2),
+                () => new TestEntityForDouble(2L, 3.1),
+                1L, 2L, 3L
+                );
+        }
+        [Test]
+        public async Task TestGetByDataID()
+        {
+            await TestGenericModelGetByDataID(
+                () => new TestEntityForDouble(1L, -1.2),
+                () => new TestEntityForDouble(2L, 3.1),
+                1L, 2L, 3L
+                );
+        }
+
+        [Test]
+        public async Task TestBulkReplace()
+        {
+            await TestGenericModelBulkReplace(
+                () => new TestEntityForDouble(1L, -1.2),
+                () => new TestEntityForDouble(2L, 3.1),
+                () => new TestEntityForDouble(2L, 0.0),
+                1L, 2L
+                );
+        }
+
+        [Test]
+        public async Task TestUpdateIncompleteTraitEntity()
+        {
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForDouble(1L, -912.12), 1L, false, false);
+        }
+
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForDouble(1L, 34.12), 1L);
         }
     }
 }

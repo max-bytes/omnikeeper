@@ -6,7 +6,6 @@ using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -52,7 +51,7 @@ namespace Omnikeeper.GridView.Commands
             private readonly IRelationModel relationModel;
             private readonly IChangesetModel changesetModel;
             private readonly ICurrentUserAccessor currentUserService;
-            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
+            private readonly GridViewContextModel gridViewContextModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
             private readonly ITraitsProvider traitsProvider;
             private readonly IModelContextBuilder modelContextBuilder;
@@ -61,7 +60,7 @@ namespace Omnikeeper.GridView.Commands
             private readonly IMetaConfigurationModel metaConfigurationModel;
 
             public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
-                IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, GenericTraitEntityModel<GridViewContext, string> gridViewContextModel,
+                IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, GridViewContextModel gridViewContextModel,
                 IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
                 ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService,
                 IMetaConfigurationModel metaConfigurationModel)

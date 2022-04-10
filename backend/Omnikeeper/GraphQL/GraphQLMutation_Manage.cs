@@ -8,6 +8,7 @@ using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL.Types;
+using Omnikeeper.Startup;
 using System;
 using System.Linq;
 
@@ -346,6 +347,9 @@ namespace Omnikeeper.GraphQL
                       changesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
+                  // trigger job to reload GraphQL schema
+                  await scheduler.TriggerJob(QuartzJobStarter.JKGraphQLSchemaReloader);
+
                   return newTrait.dc;
               });
 
@@ -369,6 +373,9 @@ namespace Omnikeeper.GraphQL
                   var deleted = await recursiveDataTraitModel.TryToDelete(traitID, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+
+                  // trigger job to reload GraphQL schema
+                  await scheduler.TriggerJob(QuartzJobStarter.JKGraphQLSchemaReloader);
 
                   return deleted;
               });

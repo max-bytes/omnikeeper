@@ -13,7 +13,7 @@ namespace OKPluginGenericJSONIngest
 
         public override void RegisterServices(IServiceCollection sc)
         {
-            sc.AddSingleton<GenericTraitEntityModel<Context, string>>();
+            sc.AddSingleton<ContextModel>();
             sc.AddSingleton<PassiveFilesController>();
             sc.AddSingleton<ManageContextController>();
         }

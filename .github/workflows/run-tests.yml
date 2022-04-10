@@ -20,10 +20,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Setup .NET 5.0.x
+      - name: Setup .NET 6.0.x
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '5.0.x'
+          dotnet-version: '6.0.x'
       - name: Run tests
         env:
           ConnectionStrings__DatabaseConnection: Server=localhost;Port=5432;User Id=postgres;Password=postgres;Database=omnikeeper_tests;Pooling=false

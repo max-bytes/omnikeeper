@@ -1,0 +1,28 @@
+{
+  "name": "@max-bytes/okplugin-visualization",
+  "repository": "https://github.com/max-bytes/omnikeeper",
+  "version": "0.0.0-src",
+  "description": "Omnikeeper Plugin for visualization",
+  "main": "dist/index.js",
+  "module": "src/index.js",
+  "scripts": {
+    "build": "./node_modules/.bin/babel src --out-dir dist --copy-files",
+    "copy": "ncp ./package.json ./dist/package.json",
+    "prepublishOnly": "npm run build && npm run copy"
+  },
+  "author": "Maximilian Csuk",
+  "peerDependencies": {
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.17.6",
+    "@babel/core": "^7.17.5",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-react": "^7.16.7",
+    "ncp": "^2.0.0"
+  },
+  "dependencies": {
+    "d3-graphviz": "^4.1.0"
+  }
+}

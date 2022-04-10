@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Input } from 'antd';
+import { Form, Input, InputNumber } from 'antd';
 import 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import AceEditor from "react-ace";
@@ -26,6 +26,10 @@ export const AttributeTypes = [
         name: 'Integer'
     },
     {
+        id: 'DOUBLE',
+        name: 'Double'
+    },
+    {
         id: 'JSON',
         name: 'JSON'
     },
@@ -43,12 +47,20 @@ export const AttributeTypes = [
     }
 ];
 
-function attributeType2InputProps(type) {
+function InputElementForAttributeType(props) {
+    const {type, onChange, ...rest} = props;
+
     switch(type) {
-      case 'INTEGER': return {type: 'number' };
-      default: return {type: 'text' };
-    }
-};
+        case 'INTEGER':
+            return <InputNumber {...rest} stringMode onChange={onChange} />;
+        case 'DOUBLE':
+            return <InputNumber {...rest} stringMode onChange={onChange} />;
+        default: 
+            // HACK: onChange is implemented inconsistently between InputNumber and Input, need to consolidate
+            const compatibleOnChange = (e) => onChange(e.target.value);
+            return <Input {...rest} onChange={compatibleOnChange} />;
+      }
+}
 
 function generateImageURL(ciid, layers, attributeName, index) {
     const url = buildUrl(env('BACKEND_URL'), {
@@ -120,14 +132,14 @@ export function InputControl(props) {
         // simple type, simple handling
         return (
             <Form.Item style={{ marginBottom: 0 }} labelCol={props.hideNameLabel ? {} : { span: "4" }} name={props.name} label={props.hideNameLabel ? "" : props.name} initialValue={props.value ?? ""}>
-                <Input
-                    style={{ flexGrow: 1, alignSelf: "center" }}
-                    {...attributeType2InputProps(props.type)}
+                <InputElementForAttributeType
+                    type={props.type}
+                    style={{ flexGrow: 1, alignSelf: "center", minWidth: "150px" }}
                     autoFocus={props.autoFocus}
                     disabled={props.disabled}
                     placeholder={props.disabled ? "[Empty]" : "[Empty], enter value"}
                     value={props.value ?? ""}
-                    onChange={(e) => props.onChange(e.target.value)}
+                    onChange={(v) => props.onChange(v)}
                 />
             </Form.Item>
         );

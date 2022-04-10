@@ -1,7 +1,7 @@
 ﻿using Omnikeeper.Base.Entity;
 using System;
 
-namespace OKPluginValidation.Validation
+namespace OKPluginValidation
 {
     [TraitEntity("__meta.validation.validation_issue", TraitOriginType.Plugin)]
     public class ValidationIssue : TraitEntity
@@ -19,10 +19,10 @@ namespace OKPluginValidation.Validation
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Name;
 
-        [TraitRelation("affected_cis", "__meta.validation.has_issue", false, -1, -1)]
+        [TraitRelation("affected_cis", "__meta.validation.has_issue", false)]
         public readonly Guid[] AffectedCIs;
 
-        [TraitRelation("belongs_to_validation", "__meta.validation.belongs_to_validation", true, -1, -1)]
+        [TraitRelation("belongs_to_validation", "__meta.validation.belongs_to_validation", true)]
         public readonly Guid[] BelongsToValidation;
 
         public ValidationIssue()

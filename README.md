@@ -11,6 +11,7 @@
 
 [![license](https://img.shields.io/github/license/max-bytes/omnikeeper)](LICENSE)
 ![tests](https://github.com/max-bytes/omnikeeper/actions/workflows/run-tests.yml/badge.svg)
+![system-tests](https://github.com/max-bytes/omnikeeper/actions/workflows/run-system-tests.yml/badge.svg)
 
 </div>
 

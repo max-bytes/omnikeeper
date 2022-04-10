@@ -5,7 +5,7 @@ import Diffing from './components/diffing/Diffing';
 import 'antd/dist/antd.min.css';
 import Keycloak from 'keycloak-js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faList, faLayerGroup, faPlayCircle } from '@fortawesome/free-solid-svg-icons';
+import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faList, faLayerGroup, faPlayCircle, faCog } from '@fortawesome/free-solid-svg-icons';
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/cis/AddNewCI'
@@ -25,6 +25,8 @@ import Trait from "components/traits/Trait";
 import Breadcrumbs from "utils/Breadcrumbs";
 import GraphQLPlayground from "components/GraphQLPlayground";
 import Dashboard from "components/dashboard/Dashboard";
+import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
+import SubMenu from "antd/lib/menu/SubMenu";
 const { Header, Content } = Layout;
 
 const keycloak = new Keycloak({
@@ -52,6 +54,9 @@ function App() {
 
   const BR = () => {
     const [layerDrawerVisible, setLayerDrawerVisible] = useState(false);
+
+    const frontendPluginsManager = useFrontendPluginsManager();
+    const frontendPlugins = frontendPluginsManager.allFrontendPlugins;
   
     return <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
       <Layout style={{height: '100vh', backgroundColor: 'unset'}}>
@@ -79,12 +84,28 @@ function App() {
               render={({ location }) =>  (
                 <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{justifyContent: 'flex-end'}}>
                   <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Explore CIs</Link></Menu.Item>
-                  <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
+                  <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faCog} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
                   <Menu.Item key="changesets"><Link to="/changesets"><FontAwesomeIcon icon={faList} style={{ marginRight: "0.5rem" }}/> Changesets</Link></Menu.Item>
-                  <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
-                  <Menu.Item key="grid-view"><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
                   <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
-                  <Menu.Item key="graphql-playground"><Link to="/graphql-playground"><FontAwesomeIcon icon={faPlayCircle} style={{ marginRight: "0.5rem" }}/> GraphQL Playground</Link></Menu.Item>
+                  <SubMenu key="tools" title={<span><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/>Tools</span>}>
+                    <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
+                    <Menu.Item key="grid-view"><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
+                    <Menu.Item key="graphql-playground"><Link to="/graphql-playground"><FontAwesomeIcon icon={faPlayCircle} style={{ marginRight: "0.5rem" }}/> GraphQL Playground</Link></Menu.Item>
+                    {
+                      frontendPlugins.flatMap(plugin => {
+                          if (plugin.components.menuComponents)
+                          {
+                            const items = plugin.components.menuComponents.map(mc =>
+                              <Menu.Item key={mc.url} style={{ marginRight: "60px" }}><Link to={`${mc.url}`}><FontAwesomeIcon icon={mc.icon} style={{ marginRight: "0.5rem" }}/> {mc.title}</Link></Menu.Item>
+                            ); 
+                            return items;
+                          }
+                          else
+                              return [];
+                      })
+                    }
+                  </SubMenu>
+                  
                 </Menu>
               )}
             />
@@ -127,6 +148,23 @@ function App() {
                 <PrivateRoute path="/traits/:traitID">
                   <Trait />
                 </PrivateRoute>
+
+                {
+                  frontendPlugins.flatMap(plugin => {
+                    if (plugin.components.menuComponents)
+                    {
+                      const items = plugin.components.menuComponents.map(mc =>
+                        <PrivateRoute key={mc.url} path={mc.url}>
+                          {mc.component()}
+                        </PrivateRoute>
+                      ); 
+                      return items;
+                    }
+                    else
+                      return [];
+                  })
+                }
+
                 <PrivateRoute path="/">
                   <Dashboard />
                 </PrivateRoute>

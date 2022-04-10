@@ -128,8 +128,7 @@ namespace Omnikeeper.GraphQL.Types
         public RelationTemplateType() {
             Field("predicateID", x => x.PredicateID);
             Field("directionForward", x => x.DirectionForward);
-            Field("minCardinality", x => x.MinCardinality, type: typeof(IntGraphType));
-            Field("maxCardinality", x => x.MaxCardinality, type: typeof(IntGraphType));
+            Field("traitHints", x => x.TraitHints);
         }
     }
 

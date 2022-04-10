@@ -20,8 +20,8 @@ namespace Tests.Integration.Model
             base.InitServices(builder);
 
             // add controller
-            builder.RegisterType<GenericTraitEntityModel<TestEntity1, string>>().InstancePerLifetimeScope();
-            builder.RegisterType<GenericTraitEntityModel<TestEntity2, string>>().InstancePerLifetimeScope();
+            builder.RegisterType<GenericTraitEntityModel<TestEntity1, string>>().WithParameter("jsonSerializer", null!).InstancePerLifetimeScope();
+            builder.RegisterType<GenericTraitEntityModel<TestEntity2, string>>().WithParameter("jsonSerializer", null!).InstancePerLifetimeScope();
         }
 
         [Test]
@@ -277,7 +277,7 @@ namespace Tests.Integration.Model
             [TraitAttribute("id", "ta.id")]
             public string ID;
 
-            [TraitRelation("related", "predicate", true, -1, -1)]
+            [TraitRelation("related", "predicate", true)]
             public Guid[] Related;
 
             public TestEntity2()

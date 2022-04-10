@@ -22,10 +22,8 @@ export default function Manage(props) {
     let { path, url } = useRouteMatch();
     const { pathname } = useLocation();
 
-    const { data: frontendPluginsManager, error: frontendPluginsmanagerError } = useFrontendPluginsManager();
-    const frontendPlugins = frontendPluginsManager?.getAllFrontendPlugins();
-
-    if (frontendPluginsmanagerError) return "Error:" + frontendPluginsmanagerError;
+    const frontendPluginsManager = useFrontendPluginsManager();
+    const frontendPlugins = frontendPluginsManager.allFrontendPlugins;
 
     return (
         <Switch>

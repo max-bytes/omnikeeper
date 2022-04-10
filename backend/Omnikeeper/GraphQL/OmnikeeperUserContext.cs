@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL
 {
-    public class OmnikeeperUserContext : Dictionary<string, object?>
+    public class OmnikeeperUserContext : Dictionary<string, object?>, IDisposable
     {
         public AuthenticatedUser User { get; private set; }
         public IServiceProvider ServiceProvider { get; }
@@ -144,6 +144,15 @@ namespace Omnikeeper.GraphQL
             Transaction.Commit();
             var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
             Transaction = f(modelContextBuilder);
+        }
+
+        public void Dispose()
+        {
+            if (TryGetValue("Transaction", out var t))
+            {
+                if (t is IModelContext mc)
+                    mc.Dispose();
+            }
         }
     }
 }

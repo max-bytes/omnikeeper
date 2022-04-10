@@ -1,6 +1,6 @@
-﻿using GraphQL.Types;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using System;
 using System.Collections.Generic;
@@ -15,9 +15,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public readonly TraitEntityRootType RootQueryType;
         public readonly IDInputType? IDInputType;
         public readonly UpsertInputType UpsertInputType;
+        public readonly InsertInputType InsertInputType;
 
         public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType,
-            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType)
+            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, InsertInputType insertInputType)
         {
             Trait = trait;
             Element = element;
@@ -25,6 +26,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             IDInputType = iDInputType;
             RootQueryType = rootQueryType;
             UpsertInputType = upsertInputType;
+            InsertInputType = insertInputType;
         }
     }
 
@@ -45,17 +47,19 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly ITraitsProvider traitsProvider;
         private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
+        private readonly ICIIDModel ciidModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
         private readonly IDataLoaderService dataLoaderService;
         private readonly IChangesetModel changesetModel;
 
-        public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel,
+        public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel,
             IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService, IChangesetModel changesetModel)
         {
             this.traitsProvider = traitsProvider;
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
+            this.ciidModel = ciidModel;
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.dataLoaderService = dataLoaderService;
@@ -66,7 +70,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             var elementTypes = new List<ElementTypesContainer>();
 
-            var relatedCIType = new RelatedCIType(traitsProvider, dataLoaderService, ciModel);
+            var relatedCIType = new RelatedCIType(traitsProvider, dataLoaderService, ciModel, attributeModel);
+
+            var elementWrapperTypeDictionary = new Dictionary<string, ElementWrapperType>();
+            var elementTypeDictionary = new Dictionary<string, ElementType>();
 
             foreach (var at in activeTraits)
             {
@@ -75,23 +82,39 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 try
                 {
-                    var tt = new ElementType(at.Value, relatedCIType);
-                    var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel);
+                    var tt = new ElementType();
+                    elementTypeDictionary.Add(at.Key, tt);
+                    var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel, attributeModel);
+                    elementWrapperTypeDictionary.Add(at.Key, ttWrapper);
                     var filterInputType = FilterInputType.Build(at.Value);
                     var idt = IDInputType.Build(at.Value);
-                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel, ttWrapper, filterInputType, idt);
+                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, ciidModel, attributeModel, relationModel, dataLoaderService, ttWrapper, filterInputType, idt);
                     var upsertInputType = new UpsertInputType(at.Value);
+                    var insertInputType = new InsertInputType(at.Value);
 
-                    // TODO: needed?
-                    //schema.RegisterTypes(upsertInputType, t);
-
-                    elementTypes.Add(new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType));
+                    elementTypes.Add(new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType, insertInputType));
                 }
                 catch (Exception e)
                 {
                     logger.LogError(e, $"Could not create types for trait entity with trait ID {at.Key}");
                 }
             }
+
+            // we do a delayed initialization of the ElementType to be able to resolve element wrappers
+            foreach (var kv in elementTypeDictionary)
+            {
+                try
+                {
+                    var trait = activeTraits[kv.Key];
+                    kv.Value.Init(trait, relatedCIType, elementWrapperTypeDictionary.TryGetValue, dataLoaderService, effectiveTraitModel, traitsProvider, ciModel, attributeModel, logger);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, $"Could not create types for trait entity with trait ID {kv.Key}");
+                }
+            }
+
+
 
             var w = new MergedCI2TraitEntityWrapper(elementTypes, dataLoaderService, effectiveTraitModel, traitsProvider);
 

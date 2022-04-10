@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -84,6 +85,7 @@ namespace Tests.Integration
             ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching, false, false, false);
             ServiceRegistration.RegisterServices(builder);
             ServiceRegistration.RegisterGraphQL(builder);
+            ServiceRegistration.RegisterQuartz(builder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly));
 
             builder.Register<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance).SingleInstance();
             builder.Register<ILogger<MetaConfigurationModel>>((sp) => NullLogger<MetaConfigurationModel>.Instance).SingleInstance();
@@ -104,7 +106,10 @@ namespace Tests.Integration
             builder.Register<ILogger<DataPartitionService>>((sp) => NullLogger<DataPartitionService>.Instance).SingleInstance();
 
             // override authorization
-            builder.Register((sp) => new Mock<IManagementAuthorizationService>().Object).SingleInstance();
+            var mas = new Mock<IManagementAuthorizationService>();
+            string? tmpStr;
+            mas.Setup(x => x.CanModifyManagement(It.IsAny<AuthenticatedUser>(), It.IsAny<MetaConfiguration>(), out tmpStr)).Returns(true);
+            builder.Register((sp) => mas.Object).SingleInstance();
 
             var lbas = new Mock<ILayerBasedAuthorizationService>();
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
@@ -121,6 +126,10 @@ namespace Tests.Integration
             Guid? tmp;
             cibas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
             builder.Register((sp) => cibas.Object).SingleInstance();
+
+            // override quartz scheduler
+            var scheduler = new Mock<Quartz.IScheduler>();
+            builder.Register<Quartz.IScheduler>(sp => scheduler.Object).SingleInstance();
         }
     }
 }

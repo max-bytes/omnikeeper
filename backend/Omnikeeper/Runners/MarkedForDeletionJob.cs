@@ -100,7 +100,7 @@ namespace Omnikeeper.Runners
             }
             catch (Exception e)
             {
-                logger.LogError("Error running marked-for-deletion job", e);
+                logger.LogError(e, "Error running marked-for-deletion job");
             }
         }
     }

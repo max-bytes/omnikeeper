@@ -2,7 +2,6 @@
 using MediatR;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -46,14 +45,14 @@ namespace Omnikeeper.GridView.Commands
 
         public class EditContextCommandHandler : IRequestHandler<Command, Exception?>
         {
-            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
+            private readonly GridViewContextModel gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly ICurrentUserAccessor currentUserService;
             private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly IChangesetModel changesetModel;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
-            public EditContextCommandHandler(IModelContextBuilder modelContextBuilder, GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, ICurrentUserAccessor currentUserService,
+            public EditContextCommandHandler(IModelContextBuilder modelContextBuilder, GridViewContextModel gridViewContextModel, ICurrentUserAccessor currentUserService,
                 IMetaConfigurationModel metaConfigurationModel, IChangesetModel changesetModel, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.modelContextBuilder = modelContextBuilder;

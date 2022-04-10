@@ -27,6 +27,8 @@ namespace OKPluginGenericJSONIngest
             var serviceCollection = new ServiceCollection();
             plugin.RegisterServices(serviceCollection);
             builder.Populate(serviceCollection);
+
+            builder.RegisterType<ContextModel>().As<GenericTraitEntityModel<Context, string>>();
         }
 
         [Test]

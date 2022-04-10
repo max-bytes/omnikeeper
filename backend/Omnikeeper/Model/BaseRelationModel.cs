@@ -32,7 +32,7 @@ namespace Omnikeeper.Model
                 case RelationSelectionTo rst:
                     return ("(to_ci_id = ANY(@to_ci_ids))", new[] { new NpgsqlParameter("to_ci_ids", rst.ToCIIDs.ToArray()) });
                 case RelationSelectionWithPredicate rsp:
-                    return ("(predicate_id = @predicate_id)", new[] { new NpgsqlParameter("predicate_id", rsp.PredicateID) });
+                    return ("(predicate_id = ANY(@predicate_ids))", new[] { new NpgsqlParameter("predicate_ids", rsp.PredicateIDs.ToArray()) });
                 case RelationSelectionSpecific rss:
                 {
                     var sqlClause = "(" + string.Join(" OR ", rss.Specifics.Select((s, index) => $"(from_ci_id = @from_ci_id{index} AND to_ci_id = @to_ci_id{index} AND predicate_id = @predicate_id{index})")) + ")";
@@ -55,19 +55,25 @@ namespace Omnikeeper.Model
             }
         }
 
-        // TODO: rework to use CTEs, like attributes use -> performs much better
-        private async Task<NpgsqlCommand> CreateRelationCommand(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        private (string whereClause, List<NpgsqlParameter> parameters) CalculateParameters(IRelationSelection rl)
         {
-            var innerWhereClauses = new List<string>();
             var parameters = new List<NpgsqlParameter>();
 
             var (rlInnerWhereClause, rlParameters) = Eval(rl);
+            var innerWhereClauses = new List<string>();
             if (rlInnerWhereClause != null)
                 innerWhereClauses.Add(rlInnerWhereClause);
             parameters.AddRange(rlParameters);
 
             var innerWhereClause = string.Join(" AND ", innerWhereClauses);
             if (innerWhereClause == "") innerWhereClause = "1=1";
+            return (innerWhereClause, parameters);
+        }
+
+        // TODO: rework to use CTEs, like attributes use -> performs much better
+        private async Task<NpgsqlCommand> CreateRelationCommand(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        {
+            var (innerWhereClause, parameters) = CalculateParameters(rl);
 
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
@@ -137,6 +143,58 @@ namespace Omnikeeper.Model
             }
 
             return relations;
+        }
+
+        public async Task<ISet<string>> GetPredicateIDs(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        {
+            async Task<NpgsqlCommand> CreateCommand()
+            {
+                var (innerWhereClause, parameters) = CalculateParameters(rs);
+
+                NpgsqlCommand command;
+                if (atTime.IsLatest && _USE_LATEST_TABLE)
+                {
+                    var query = $@"select distinct predicate_id from relation_latest
+                        where layer_id = ANY(@layer_ids) and ({innerWhereClause})";
+                    command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
+                    foreach (var p in parameters)
+                        command.Parameters.Add(p);
+                    command.Parameters.AddWithValue("layer_ids", layerIDs);
+                    command.Prepare();
+                }
+                else
+                {
+                    var query = $@"select distinct predicate_id from (
+                    select distinct on (from_ci_id, to_ci_id, predicate_id) id, from_ci_id, to_ci_id, predicate_id, removed, changeset_id, layer_id, mask from relation 
+                        where timestamp <= @time_threshold and ({innerWhereClause}) and layer_id = ANY(@layer_ids)
+                        and partition_index >= @partition_index
+                        order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST
+                    ) i where i.removed = false
+                    "; // TODO: remove order by layer_id, but consider not breaking indices first
+                    var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
+                    command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
+                    foreach (var p in parameters)
+                        command.Parameters.Add(p);
+                    command.Parameters.AddWithValue("time_threshold", atTime.Time);
+                    command.Parameters.AddWithValue("layer_ids", layerIDs);
+                    command.Parameters.AddWithValue("partition_index", partitionIndex);
+                    command.Prepare();
+                }
+                return command;
+            }
+
+            var ret = new HashSet<string>();
+            using (var command = await CreateCommand())
+            {
+                using var dr = await command.ExecuteReaderAsync();
+
+                while (await dr.ReadAsync())
+                {
+                    var predicateID = dr.GetString(0);
+                    ret.Add(predicateID);
+                }
+            }
+            return ret;
         }
 
         public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)

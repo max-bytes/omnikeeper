@@ -52,8 +52,9 @@ namespace Omnikeeper.GraphQL
                     traitEntitiesMutationSchemaLoader.Init(mutation!, typeContainer);
 
                     // NOTE: manually register the types we modified, so that graphql takes our types instead of the default ones coming from the DI
-                    schema.RegisterType(tet);
+                    // NOTE: order is important here: register types in so that types that are dependencies of others are registered first
                     schema.RegisterType(mergedCIType);
+                    schema.RegisterType(tet);
                     schema.RegisterType(mutation!);
                 }
                 catch (Exception e)
@@ -67,7 +68,7 @@ namespace Omnikeeper.GraphQL
                 latestSchemaCreation = DateTimeOffset.Now;
             }
 
-            logger.LogInformation("Finished initializing GraphQL scheme");
+            logger.LogInformation("Finished initializing GraphQL schema");
         }
     }
 }

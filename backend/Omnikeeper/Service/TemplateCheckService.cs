@@ -22,11 +22,6 @@ namespace Omnikeeper.Service
         {
             var relevantRelations = (rt.DirectionForward) ? fromRelations : toRelations;
             relevantRelations = relevantRelations.Where(r => r.Relation.PredicateID == rt.PredicateID);
-
-            if (rt.MaxCardinality.HasValue && relevantRelations.Count() > rt.MaxCardinality.Value)
-                return (null, true);
-            if (rt.MinCardinality.HasValue && relevantRelations.Count() < rt.MinCardinality.Value)
-                return (null, true);
             return (relevantRelations, false);
         }
 

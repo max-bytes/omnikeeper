@@ -17,7 +17,7 @@ namespace Omnikeeper.Base.Entity
         public string type { get; }
         bool HasErrors(IAttributeValue value);
 
-        public static readonly MyJSONSerializer<ICIAttributeValueConstraint> Serializer = new MyJSONSerializer<ICIAttributeValueConstraint>(() =>
+        public static readonly NewtonSoftJSONSerializer<ICIAttributeValueConstraint> Serializer = new NewtonSoftJSONSerializer<ICIAttributeValueConstraint>(() =>
         {
             var s = new JsonSerializerSettings()
             {

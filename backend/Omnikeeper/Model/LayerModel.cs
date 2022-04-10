@@ -79,9 +79,9 @@ namespace Omnikeeper.Model
     {
         private readonly ILayerModel layerModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
-        private readonly GenericTraitEntityModel<LayerData, string> innerModel;
+        private readonly InnerLayerDataModel innerModel;
 
-        public LayerDataModel(ILayerModel layerModel, IMetaConfigurationModel metaConfigurationModel, GenericTraitEntityModel<LayerData, string> innerModel)
+        public LayerDataModel(ILayerModel layerModel, IMetaConfigurationModel metaConfigurationModel, InnerLayerDataModel innerModel)
         {
             this.layerModel = layerModel;
             this.metaConfigurationModel = metaConfigurationModel;

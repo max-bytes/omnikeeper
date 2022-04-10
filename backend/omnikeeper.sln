@@ -1,17 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29519.181
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{71F3EF2A-D7B8-4C1B-AA2F-C725E7C7B48D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8ECAD217-BB60-492D-B682-BDAF7AD95BA1}"
 	ProjectSection(SolutionItems) = preProject
 		..\.github\workflows\build.yml = ..\.github\workflows\build.yml
+		..\.github\workflows\call-package-variants.yml = ..\.github\workflows\call-package-variants.yml
 		..\LICENSE = ..\LICENSE
 		..\.github\workflows\package-variants.yml = ..\.github\workflows\package-variants.yml
 		..\README.md = ..\README.md
 		..\.github\workflows\run-perf-tests.yml = ..\.github\workflows\run-perf-tests.yml
+		..\.github\workflows\run-system-tests.yml = ..\.github\workflows\run-system-tests.yml
 		..\.github\workflows\run-tests.yml = ..\.github\workflows\run-tests.yml
 		..\.github\workflows\update-wiki.yml = ..\.github\workflows\update-wiki.yml
 	EndProjectSection
@@ -57,6 +59,14 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PerfProfiling", "PerfProfiling\PerfProfiling.csproj", "{0F738348-7BBB-4D87-8F09-D14CA4966C9D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginCLBDummy", "OKPluginCLBDummy\OKPluginCLBDummy.csproj", "{0455684C-4FD2-490D-B17A-273AE4E0EB1C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginVariableRendering", "OKPluginVariableRendering\OKPluginVariableRendering.csproj", "{F8F37A3E-69E3-4A35-B0F2-3B89FF41E8FB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginVariableRendering.Tests", "OKPluginVariableRendering.Tests\OKPluginVariableRendering.Tests.csproj", "{357F959B-AA9A-4593-B4B1-DDD0AF517FFA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginVisualization", "OKPluginVisualization\OKPluginVisualization.csproj", "{4E28E7A8-1C66-4C31-B128-9E2FA4B932B4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SystemTests", "SystemTests\SystemTests.csproj", "{19CD96DC-5E6B-4D70-8318-AB036190EC92}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginNaemonConfig", "OKPluginNaemonConfig\OKPluginNaemonConfig.csproj", "{002EF272-C890-4310-B830-35564D7A7E46}"
 EndProject
@@ -154,6 +164,22 @@ Global
 		{0455684C-4FD2-490D-B17A-273AE4E0EB1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0455684C-4FD2-490D-B17A-273AE4E0EB1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0455684C-4FD2-490D-B17A-273AE4E0EB1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8F37A3E-69E3-4A35-B0F2-3B89FF41E8FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8F37A3E-69E3-4A35-B0F2-3B89FF41E8FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8F37A3E-69E3-4A35-B0F2-3B89FF41E8FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8F37A3E-69E3-4A35-B0F2-3B89FF41E8FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{357F959B-AA9A-4593-B4B1-DDD0AF517FFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{357F959B-AA9A-4593-B4B1-DDD0AF517FFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{357F959B-AA9A-4593-B4B1-DDD0AF517FFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{357F959B-AA9A-4593-B4B1-DDD0AF517FFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E28E7A8-1C66-4C31-B128-9E2FA4B932B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E28E7A8-1C66-4C31-B128-9E2FA4B932B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E28E7A8-1C66-4C31-B128-9E2FA4B932B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E28E7A8-1C66-4C31-B128-9E2FA4B932B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19CD96DC-5E6B-4D70-8318-AB036190EC92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19CD96DC-5E6B-4D70-8318-AB036190EC92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19CD96DC-5E6B-4D70-8318-AB036190EC92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19CD96DC-5E6B-4D70-8318-AB036190EC92}.Release|Any CPU.Build.0 = Release|Any CPU
 		{002EF272-C890-4310-B830-35564D7A7E46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{002EF272-C890-4310-B830-35564D7A7E46}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{002EF272-C890-4310-B830-35564D7A7E46}.Release|Any CPU.ActiveCfg = Release|Any CPU

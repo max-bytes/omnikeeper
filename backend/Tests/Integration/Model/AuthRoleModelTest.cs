@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using Autofac;
+using FluentAssertions;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -11,6 +12,13 @@ namespace Tests.Integration.Model
 {
     class AuthRoleModelTest : GenericTraitEntityModelTestBase<AuthRole, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<AuthRoleModel>().As<GenericTraitEntityModel<AuthRole, string>>();
+        }
+
         [Test]
         public void TestTraitGeneration()
         {

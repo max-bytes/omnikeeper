@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using Autofac;
+using FluentAssertions;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
@@ -11,8 +12,16 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
+
     class GeneratorModelTest : GenericTraitEntityModelTestBase<GeneratorV1, string>
     {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GeneratorV1Model>().As<GenericTraitEntityModel<GeneratorV1, string>>();
+        }
+
         [Test]
         public void TestTraitGeneration()
         {

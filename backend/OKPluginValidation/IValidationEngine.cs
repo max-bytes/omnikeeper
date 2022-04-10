@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace OKPluginValidation.Validation
+namespace OKPluginValidation
 {
     public interface IValidationEngine
     {
