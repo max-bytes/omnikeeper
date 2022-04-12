@@ -47,11 +47,10 @@ namespace Omnikeeper.Base.Model.TraitBased
                 Regex = regexObj
             };
         }
-    }
 
-    public static class AttributeFilterHelper
-    {
-        public static bool Matches(IAttributeValue attributeValue, AttributeScalarTextFilter filter)
+        // .Net based implementation of this filter
+        // must be equivalent to the Postgres based implementation in BaseAttributeModel
+        public bool Contains(IAttributeValue attributeValue)
         {
             // type check
             if (attributeValue.Type != AttributeValueType.Text && attributeValue.Type != AttributeValueType.MultilineText)
@@ -61,18 +60,18 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             var v = attributeValue.Value2String();
 
-            if (filter.Exact != null)
+            if (Exact != null)
             {
-                if (v != filter.Exact)
+                if (v != Exact)
                     return false;
             }
-            if (filter.Regex != null)
+            if (Regex != null)
             {
-                if (!filter.Regex.IsMatch(v))
+                if (!Regex.IsMatch(v))
                     return false;
             }
             return true;
+
         }
     }
-
 }

@@ -5,6 +5,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Threading;
 using System.Threading.Tasks;
 using SystemTests.Base;
 
@@ -94,6 +95,8 @@ mutation {
             var r1 = await Query(createTrait, () => new { manage_upsertRecursiveTrait = new { id = "" } });
             Assert.IsNull(r1.Errors);
             Assert.AreEqual("test_trait_a", r1.Data.manage_upsertRecursiveTrait.id);
+
+            Thread.Sleep(1000); // sleep for a bit to let omnikeeper update its trait entity schema
 
             // create layer_1
             var createLayer = new GraphQLRequest

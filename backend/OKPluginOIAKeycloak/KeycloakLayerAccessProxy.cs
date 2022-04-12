@@ -34,15 +34,19 @@ namespace OKPluginOIAKeycloak
 
         private bool BuildAttribute(string name, Guid ciid, IAttributeValue value, Guid changesetID, IAttributeSelection attributeSelection, [MaybeNullWhen(false)] out CIAttribute ret)
         {
-            if (!attributeSelection.Contains(name))
+            // create a deterministic, dependent guid from the ciid + attribute name + value
+            var id = GuidUtility.Create(ciid, name + layer.ID.ToString() + value.Value2String()); // NOTE: id must change when the value changes
+            var r = new CIAttribute(id, name, ciid, value, changesetID);
+
+            if (!attributeSelection.ContainsAttribute(r))
             {
                 ret = null;
                 return false;
+            } else
+            {
+                ret = r;
+                return true;
             }
-            // create a deterministic, dependent guid from the ciid + attribute name + value
-            var id = GuidUtility.Create(ciid, name + layer.ID.ToString() + value.Value2String()); // NOTE: id must change when the value changes
-            ret = new CIAttribute(id, name, ciid, value, changesetID);
-            return true;
         }
 
         private IEnumerable<CIAttribute> BuildAttributesFromUser(Keycloak.Net.Models.Users.User user, Guid ciid, Keycloak.Net.Models.Common.Mapping? roleMappings, IAttributeSelection attributeSelection)

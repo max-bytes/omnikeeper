@@ -4,7 +4,6 @@ using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using MediatR;
-using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -29,6 +28,7 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
+using Omnikeeper.GraphQL;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using SpanJson.AspNetCore.Formatter;
@@ -122,7 +122,8 @@ namespace Omnikeeper.Startup
                      opt.ExposeExceptionStackTrace = true;
                      opt.ExposeData = true;
                  })
-                .AddGraphTypes();
+                .AddGraphTypes()
+                .AddSerializer<SpanJSONGraphQLSerializer>();
             });
 
             services.AddAuthentication(options =>

@@ -29,15 +29,17 @@ namespace Tests.Integration
         private AutofacServiceProvider? serviceProvider;
 
         protected bool enablePerRequestModelCaching;
+        private readonly bool enableGenerators;
         protected Mock<ICurrentUserAccessor> currentUserServiceMock;
 
-        protected DIServicedTestBase(bool enablePerRequestModelCaching)
+        protected DIServicedTestBase(bool enablePerRequestModelCaching, bool enableGenerators)
         {
             this.enablePerRequestModelCaching = enablePerRequestModelCaching;
+            this.enableGenerators = enableGenerators;
             currentUserServiceMock = new Mock<ICurrentUserAccessor>();
         }
 
-        protected DIServicedTestBase() : this(false) { }
+        protected DIServicedTestBase() : this(false, false) { }
 
         [SetUp]
         public override void Setup()
@@ -82,7 +84,7 @@ namespace Tests.Integration
             ServiceRegistration.RegisterLogging(builder);
             ServiceRegistration.RegisterDB(builder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(builder);
-            ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching, false, false, false);
+            ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching, false, enableGenerators, false);
             ServiceRegistration.RegisterServices(builder);
             ServiceRegistration.RegisterGraphQL(builder);
             ServiceRegistration.RegisterQuartz(builder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly));
@@ -109,6 +111,7 @@ namespace Tests.Integration
             var mas = new Mock<IManagementAuthorizationService>();
             string? tmpStr;
             mas.Setup(x => x.CanModifyManagement(It.IsAny<AuthenticatedUser>(), It.IsAny<MetaConfiguration>(), out tmpStr)).Returns(true);
+            mas.Setup(x => x.HasManagementPermission(It.IsAny<AuthenticatedUser>())).Returns(true);
             builder.Register((sp) => mas.Object).SingleInstance();
 
             var lbas = new Mock<ILayerBasedAuthorizationService>();

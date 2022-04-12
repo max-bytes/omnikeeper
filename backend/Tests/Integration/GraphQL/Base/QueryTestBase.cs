@@ -2,10 +2,7 @@
 using Autofac.Extensions.DependencyInjection;
 using GraphQL;
 using GraphQL.DataLoader;
-using GraphQL.Execution;
 using GraphQL.Server;
-using GraphQL.Validation;
-using GraphQL.Validation.Complexity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
@@ -20,11 +17,8 @@ namespace Tests.Integration.GraphQL.Base
 {
     abstract class QueryTestBase : DIServicedTestBase
     {
-        public QueryTestBase() : base(false)
+        public QueryTestBase() : base(false, true)
         {
-            Executer = new DocumentExecuter(new GraphQLDocumentBuilder(), new DocumentValidator(), new ComplexityAnalyzer());
-            Serializer = new SpanJSONGraphQLSerializer(new ErrorInfoProvider());
-
             DBSetup.Setup();
         }
 
@@ -53,14 +47,12 @@ namespace Tests.Integration.GraphQL.Base
                      opt.ExposeCode = true;
                      opt.ExposeCodes = true;
                  })
-                 .AddGraphTypes(Assembly.GetAssembly(typeof(GraphQLSchema))!);
+                 .AddGraphTypes(Assembly.GetAssembly(typeof(GraphQLSchema))!)
+                 .AddSerializer<SpanJSONGraphQLSerializer>();
              });
 
             builder.Populate(serviceCollection);
         }
-
-        protected IDocumentExecuter Executer { get; private set; }
-        protected IGraphQLTextSerializer Serializer { get; private set; }
 
         public void AssertQuerySuccess(
             string query,
@@ -100,10 +92,11 @@ namespace Tests.Integration.GraphQL.Base
         {
             var schema = GetService<GraphQLSchemaHolder>().GetSchema();
             var dataLoaderDocumentListener = GetService<DataLoaderDocumentListener>();
+            var executor = GetService<IDocumentExecuter>();
 
             using var userContext = new OmnikeeperUserContext(user, ServiceProvider);
 
-            var runResult = Executer.ExecuteAsync(options =>
+            var runResult = executor.ExecuteAsync(options =>
             {
                 options.Schema = schema;
                 options.Query = query;
@@ -116,7 +109,8 @@ namespace Tests.Integration.GraphQL.Base
                 options.Listeners.Add(dataLoaderDocumentListener);
             }).GetAwaiter().GetResult();
 
-            var writtenResult = Serializer.Serialize(runResult);
+            var serializer = GetService<IGraphQLTextSerializer>();
+            var writtenResult = serializer.Serialize(runResult);
             return (runResult, writtenResult);
         }
     }

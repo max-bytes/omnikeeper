@@ -317,6 +317,11 @@ namespace Omnikeeper.Base.AttributeValues
             }
         }
 
+        public static string BuildSQLIsScalarCheckClause(string fieldNameContainingValueControl = "value_control")
+        {
+            return $"(NOT (get_byte({fieldNameContainingValueControl}, 0) = 2 AND get_byte({fieldNameContainingValueControl}, 1) = 2))";
+        }
+
         public static (string text, byte[] binary, byte[] control) Marshal(IAttributeValue value)
         {
             byte version = 0x02;
