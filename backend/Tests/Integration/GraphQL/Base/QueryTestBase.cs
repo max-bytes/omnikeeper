@@ -3,7 +3,6 @@ using Autofac.Extensions.DependencyInjection;
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Execution;
-using GraphQL.NewtonsoftJson;
 using GraphQL.Server;
 using GraphQL.Validation;
 using GraphQL.Validation.Complexity;
@@ -24,7 +23,7 @@ namespace Tests.Integration.GraphQL.Base
         public QueryTestBase() : base(false)
         {
             Executer = new DocumentExecuter(new GraphQLDocumentBuilder(), new DocumentValidator(), new ComplexityAnalyzer());
-            Writer = new DocumentWriter(indent: true);
+            Serializer = new SpanJSONGraphQLSerializer(new ErrorInfoProvider());
 
             DBSetup.Setup();
         }
@@ -45,20 +44,23 @@ namespace Tests.Integration.GraphQL.Base
 
             var serviceCollection = new ServiceCollection();
 
-            global::GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(serviceCollection)
-                .AddErrorInfoProvider(opt => {
-                    opt.ExposeExceptionStackTrace = true;
-                    opt.ExposeData = true;
-                    opt.ExposeCode = true;
-                    opt.ExposeCodes = true;
-                })
-                .AddGraphTypes(Assembly.GetAssembly(typeof(GraphQLSchema))!);
+            global::GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(serviceCollection, c =>
+             {
+                 c.AddErrorInfoProvider(opt =>
+                 {
+                     opt.ExposeExceptionStackTrace = true;
+                     opt.ExposeData = true;
+                     opt.ExposeCode = true;
+                     opt.ExposeCodes = true;
+                 })
+                 .AddGraphTypes(Assembly.GetAssembly(typeof(GraphQLSchema))!);
+             });
 
             builder.Populate(serviceCollection);
         }
 
         protected IDocumentExecuter Executer { get; private set; }
-        protected IDocumentWriter Writer { get; private set; }
+        protected IGraphQLTextSerializer Serializer { get; private set; }
 
         public void AssertQuerySuccess(
             string query,
@@ -66,8 +68,8 @@ namespace Tests.Integration.GraphQL.Base
             AuthenticatedUser user,
             Inputs? inputs = null)
         {
-            var expectedExecutionResult = CreateQueryResult(expected);
-            var expectedResult = Writer.WriteToStringAsync(expectedExecutionResult).GetAwaiter().GetResult();
+            // wrap expectedResult in data object
+            var expectedResult = $"{{ \"data\": {expected} }}";
 
             var (runResult, writtenResult) = RunQuery(query, user, inputs);
 
@@ -106,27 +108,16 @@ namespace Tests.Integration.GraphQL.Base
                 options.Schema = schema;
                 options.Query = query;
                 options.Root = null;
-                options.Inputs = inputs;
+                options.Variables = inputs;
                 options.UserContext = userContext;
                 options.CancellationToken = default;
                 options.ValidationRules = null;
-                options.UnhandledExceptionDelegate = (ctx => { });
                 options.RequestServices = ServiceProvider;
                 options.Listeners.Add(dataLoaderDocumentListener);
             }).GetAwaiter().GetResult();
 
-            var writtenResult = Writer.WriteToStringAsync(runResult).GetAwaiter().GetResult();
+            var writtenResult = Serializer.Serialize(runResult);
             return (runResult, writtenResult);
-        }
-
-        public static ExecutionResult CreateQueryResult(string result, ExecutionErrors? errors = null)
-        {
-            return new ExecutionResult
-            {
-                Data = string.IsNullOrWhiteSpace(result) ? null : result.ToInputs(),
-                Errors = errors,
-                Executed = true
-            };
         }
     }
 }

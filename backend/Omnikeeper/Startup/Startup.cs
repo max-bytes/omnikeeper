@@ -116,12 +116,14 @@ namespace Omnikeeper.Startup
                 });
 
 
-            global::GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(services)
-                .AddErrorInfoProvider(opt => {
-                    opt.ExposeExceptionStackTrace = true;
-                    opt.ExposeData = true;
-                })
+            global::GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(services, c =>
+            {
+                c.AddErrorInfoProvider(opt => {
+                     opt.ExposeExceptionStackTrace = true;
+                     opt.ExposeData = true;
+                 })
                 .AddGraphTypes();
+            });
 
             services.AddAuthentication(options =>
             {

@@ -154,7 +154,6 @@ mutation {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationInsert, expected3, user);
 
@@ -203,7 +202,6 @@ mutation {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationUpdateAttribute, expected5, user);
 
@@ -268,7 +266,6 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationSetAssignments, expected7, user,
                 new Inputs(new Dictionary<string, object?>()
@@ -312,7 +309,6 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationSetAssignments, expected9, user,
                 new Inputs(new Dictionary<string, object?>()
@@ -366,7 +362,6 @@ mutation($baseCIID: Guid!, $relatedCIIDsToAdd: [Guid]!) {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationAddAssignments, expected11, user,
                 new Inputs(new Dictionary<string, object?>()
@@ -422,7 +417,6 @@ mutation($baseCIID: Guid!, $relatedCIIDsToRemove: [Guid]!) {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationRemoveAssignments, expected13, user,
                 new Inputs(new Dictionary<string, object?>()

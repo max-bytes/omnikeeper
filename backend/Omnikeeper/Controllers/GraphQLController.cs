@@ -24,7 +24,7 @@ namespace Omnikeeper.Controllers
     {
         private GraphQLSchemaHolder _schemaHolder;
         private readonly IDocumentExecuter _documentExecuter;
-        private readonly IDocumentWriter _documentWriter;
+        private readonly IGraphQLTextSerializer _serializer;
         private readonly IModelContextBuilder _modelContextBuilder;
         private readonly DataLoaderDocumentListener dataLoaderDocumentListener;
         private readonly IEnumerable<IValidationRule> _validationRules;
@@ -32,14 +32,14 @@ namespace Omnikeeper.Controllers
         private readonly ICurrentUserAccessor _currentUserService;
 
         public GraphQLController(ICurrentUserAccessor currentUserService, GraphQLSchemaHolder schemaHolder,
-            IDocumentExecuter documentExecuter, IDocumentWriter documentWriter,
+            IDocumentExecuter documentExecuter, IGraphQLTextSerializer serializer,
             IModelContextBuilder modelContextBuilder, DataLoaderDocumentListener dataLoaderDocumentListener,
             IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env)
         {
             _schemaHolder = schemaHolder;
             _currentUserService = currentUserService;
             _documentExecuter = documentExecuter;
-            _documentWriter = documentWriter;
+            _serializer = serializer;
             _modelContextBuilder = modelContextBuilder;
             this.dataLoaderDocumentListener = dataLoaderDocumentListener;
             _validationRules = validationRules;
@@ -82,7 +82,7 @@ namespace Omnikeeper.Controllers
             {
                 options.Schema = schema;
                 options.Query = query.Query;
-                options.Inputs = inputs;
+                options.Variables = inputs;
                 options.EnableMetrics = false;
                 options.UserContext = userContext;
                 options.ValidationRules = DocumentValidator.CoreRules.Concat(_validationRules).ToList();
@@ -90,7 +90,7 @@ namespace Omnikeeper.Controllers
                 options.Listeners.Add(dataLoaderDocumentListener);
             });
 
-            var json = await _documentWriter.WriteToStringAsync(result);
+            var json = _serializer.Serialize(result);
 
             var ret = Content(json, "application/json");
             if (result.Errors?.Count > 0)

@@ -270,7 +270,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         {
                             Name = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldWithTraitHintName(r, traitIDHint),
                             ResolvedType = new ListGraphType(elementWrapperType),
-                            Resolver = new AsyncFieldResolver<object>(async context =>
+                            Resolver = new FuncFieldResolver<object>(async context =>
                             {
                                 if (context.Source is not EffectiveTrait o)
                                 {
