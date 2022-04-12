@@ -16,6 +16,8 @@ namespace Omnikeeper.GraphQL
 {
     public partial class GraphQLMutation
     {
+        // TODO: fix/rework authz for management... what is the difference between CheckManagementPermissionThrow() and CheckModifyManagementThrow?
+        // and when to use what?
         private void CheckManagementPermissionThrow(OmnikeeperUserContext userContext, string reasonForCheck)
         {
             if (!managementAuthorizationService.HasManagementPermission(userContext.User))
