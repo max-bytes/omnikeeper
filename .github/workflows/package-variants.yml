@@ -91,7 +91,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         if: github.event.inputs.runSystemTests == 'true'
         with:
-          workflow: run-tests
+          workflow: run-system-tests
           token: ${{ secrets.PAT }}
 
   build-publish-variant-frontend:
