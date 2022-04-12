@@ -39,6 +39,14 @@ namespace Omnikeeper.Base.Utils
                 throw new Exception("Could not deserialize string");
             return r;
         }
+        public T Deserialize(ReadOnlySpan<char> span)
+        {
+            var str = span.ToString(); // TODO: newtonsoft JSON does not support working with spans directly, so we need to transform to a string, losing perf
+            var r = JsonConvert.DeserializeObject<T>(str, SerializerSettings);
+            if (r == null)
+                throw new Exception("Could not deserialize span");
+            return r;
+        }
 
         public JObject SerializeToJObject(T config)
         {

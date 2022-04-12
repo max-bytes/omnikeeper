@@ -1,6 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.Execution;
-using GraphQL.Language.AST;
+using GraphQLParser.AST;
 
 namespace Omnikeeper.GraphQL
 {
@@ -8,7 +8,7 @@ namespace Omnikeeper.GraphQL
     {
         protected override IExecutionStrategy SelectExecutionStrategy(ExecutionContext context)
         {
-            return context.Operation.OperationType switch
+            return context.Operation.Operation switch
             {
                 OperationType.Query => SerialExecutionStrategy.Instance,
                 _ => base.SelectExecutionStrategy(context)

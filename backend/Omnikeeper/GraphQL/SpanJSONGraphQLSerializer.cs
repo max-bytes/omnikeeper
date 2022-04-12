@@ -25,16 +25,46 @@ namespace Omnikeeper.GraphQL
         }
     }
 
-    public class SpanJSONDocumentWriter : IDocumentWriter
+    public class SpanJSONGraphQLSerializer : IGraphQLTextSerializer
     {
         private readonly IErrorInfoProvider errorInfoProvider;
 
-        public SpanJSONDocumentWriter(IErrorInfoProvider errorInfoProvider)
+        public SpanJSONGraphQLSerializer(IErrorInfoProvider errorInfoProvider)
         {
             this.errorInfoProvider = errorInfoProvider;
         }
-        public async Task WriteAsync<T>(Stream stream, T value, CancellationToken cancellationToken = default)
+
+        public T? Deserialize<T>(string? value)
         {
+            var t = JsonSerializer.Generic.Utf16.Deserialize<T, Resolver<char>>(value);
+            return t;
+        }
+
+        public ValueTask<T?> ReadAsync<T>(Stream stream, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public T? ReadNode<T>(object? value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string Serialize<T>(T? value)
+        {
+            if (value is not ExecutionResult er)
+                throw new Exception("Serialization is only supported for type ExecutionResult");
+            // HACK: this is a really weird way to "inject" the errorInfoProvider into the formatter, but with SpanJSON, there seems to be no other way
+            ExecutionResultFormatter.Default.ErrorInfoProvider = errorInfoProvider;
+            var str = JsonSerializer.Generic.Utf16.Serialize<ExecutionResult, Resolver<char>>(er);
+            return str;
+        }
+
+        public async Task WriteAsync<T>(Stream stream, T? value, CancellationToken cancellationToken = default)
+        {
+            if (value == null)
+                throw new Exception("Encountered null value to write, not supported");
+
             // HACK: this is a really weird way to "inject" the errorInfoProvider into the formatter, but with SpanJSON, there seems to be no other way
             ExecutionResultFormatter.Default.ErrorInfoProvider = errorInfoProvider;
             await JsonSerializer.Generic.Utf8.SerializeAsync<ExecutionResult, Resolver<byte>>((value as ExecutionResult)!, stream, cancellationToken);
@@ -49,9 +79,9 @@ namespace Omnikeeper.GraphQL
 
         public IErrorInfoProvider? ErrorInfoProvider;// = new ErrorInfoProvider(); // TODO: make configurable?
 
-        public void Serialize(ref JsonWriter<byte> writer, ExecutionResult value)
+        public void Serialize<C>(ref JsonWriter<C> writer, ExecutionResult value) where C : struct
         {
-            writer.WriteUtf8BeginObject();
+            writer.WriteBeginObject();
             var shouldWriteData = (value.Errors == null || value.Errors.Count == 0) && value.Data != null;
             var shouldWriteErrors = value.Errors != null && value.Errors.Count > 0;
             //var shouldWriteExtensions = value.Data != null && value.Extensions != null && value.Extensions.Count > 0;
@@ -64,7 +94,7 @@ namespace Omnikeeper.GraphQL
 
             if (shouldWriteErrors)
             {
-                if (separated) writer.WriteUtf8ValueSeparator();
+                if (separated) writer.WriteValueSeparator();
                 WriteErrors(ref writer, value.Errors!);
                 separated = true;
             }
@@ -73,53 +103,53 @@ namespace Omnikeeper.GraphQL
             //{
             //    if (separated)
             //    {
-            //        writer.WriteUtf8ValueSeparator();
+            //        writer.WriteValueSeparator();
             //    }
             //    WriteExtensions(ref writer, value);
             //}
 
-            writer.WriteUtf8EndObject();
+            writer.WriteEndObject();
         }
 
-        private void WriteData(ref JsonWriter<byte> writer, ExecutionResult result)
+        private void WriteData<C>(ref JsonWriter<C> writer, ExecutionResult result) where C : struct
         {
             if (result.Executed)
             {
-                writer.WriteUtf8Name("data");
+                writer.WriteName("data");
                 if (result.Data is ExecutionNode executionNode)
                 {
                     WriteExecutionNode(ref writer, executionNode);
                 }
                 else
                 {
-                    ComplexClassFormatter<object, byte, IncludeNullsCamelCaseResolver<byte>>.Default.Serialize(ref writer, result.Data!);
+                    ComplexClassFormatter<object, C, IncludeNullsCamelCaseResolver<C>>.Default.Serialize(ref writer, result.Data!);
                 }
             }
         }
 
-        private void WriteExecutionNode(ref JsonWriter<byte> writer, ExecutionNode node)
+        private void WriteExecutionNode<C>(ref JsonWriter<C> writer, ExecutionNode node) where C : struct
         {
             if (node is ValueExecutionNode valueExecutionNode)
             {
                 var v = valueExecutionNode.ToValue();
                 if (v is string s)
-                    writer.WriteUtf8String(s);
+                    writer.WriteString(s);
                 else if (v is null)
-                    writer.WriteUtf8Null();
+                    writer.WriteNull();
                 else if (v is bool b)
-                    writer.WriteUtf8Boolean(b);
+                    writer.WriteBoolean(b);
                 else if (v is int i)
-                    writer.WriteUtf8Int32(i);
+                    writer.WriteInt32(i);
                 else if (v is long l)
-                    writer.WriteUtf8Int64(l);
+                    writer.WriteInt64(l);
                 else if (v is float f)
-                    writer.WriteUtf8Single(f);
+                    writer.WriteSingle(f);
                 else if (v is double d)
-                    writer.WriteUtf8Double(d);
+                    writer.WriteDouble(d);
                 else if (v is DateTime dt)
-                    writer.WriteUtf8DateTime(dt);
+                    writer.WriteDateTime(dt);
                 else if (v is DateTime dto)
-                    writer.WriteUtf8DateTimeOffset(dto);
+                    writer.WriteDateTimeOffset(dto);
                 else
                     throw new Exception("Unknown value type detected!");
             }
@@ -127,20 +157,20 @@ namespace Omnikeeper.GraphQL
             {
                 if (objectExecutionNode.SubFields == null)
                 {
-                    writer.WriteUtf8Null();
+                    writer.WriteNull();
                 }
                 else
                 {
                     var separated = false;
-                    writer.WriteUtf8BeginObject();
+                    writer.WriteBeginObject();
                     foreach (var childNode in objectExecutionNode.SubFields)
                     {
-                        if (separated) writer.WriteUtf8ValueSeparator();
-                        writer.WriteUtf8Name(childNode.Name);
+                        if (separated) writer.WriteValueSeparator();
+                        writer.WriteName(childNode.Name);
                         WriteExecutionNode(ref writer, childNode);
                         separated = true;
                     }
-                    writer.WriteUtf8EndObject();
+                    writer.WriteEndObject();
                 }
             }
             else if (node is ArrayExecutionNode arrayExecutionNode)
@@ -148,97 +178,97 @@ namespace Omnikeeper.GraphQL
                 var items = arrayExecutionNode.Items;
                 if (items == null)
                 {
-                    writer.WriteUtf8Null();
+                    writer.WriteNull();
                 }
                 else
                 {
                     var separated = false;
-                    writer.WriteUtf8BeginArray();
+                    writer.WriteBeginArray();
                     foreach (var childNode in items)
                     {
-                        if (separated) writer.WriteUtf8ValueSeparator();
+                        if (separated) writer.WriteValueSeparator();
                         WriteExecutionNode(ref writer, childNode);
                         separated = true;
                     }
-                    writer.WriteUtf8EndArray();
+                    writer.WriteEndArray();
                 }
             }
             else if (node == null || node is NullExecutionNode)
             {
-                writer.WriteUtf8Null();
+                writer.WriteNull();
             }
             else
             {
-                ComplexClassFormatter<object, byte, IncludeNullsCamelCaseResolver<byte>>.Default.Serialize(ref writer, node.ToValue()!);
+                ComplexClassFormatter<object, C, IncludeNullsCamelCaseResolver<C>>.Default.Serialize(ref writer, node.ToValue()!);
             }
         }
 
-        private void WriteErrors(ref JsonWriter<byte> writer, ExecutionErrors errors)
+        private void WriteErrors<C>(ref JsonWriter<C> writer, ExecutionErrors errors) where C : struct
         {
             if (errors == null || errors.Count == 0)
             {
                 return;
             }
 
-            writer.WriteUtf8Name("errors");
+            writer.WriteName("errors");
 
-            writer.WriteUtf8BeginArray();
+            writer.WriteBeginArray();
             var separated = false;
             foreach (var error in errors)
             {
                 var info = ErrorInfoProvider!.GetInfo(error);
 
-                if (separated) writer.WriteUtf8ValueSeparator();
+                if (separated) writer.WriteValueSeparator();
 
-                writer.WriteUtf8BeginObject();
+                writer.WriteBeginObject();
 
-                writer.WriteUtf8Name("message");
-                writer.WriteUtf8String(info.Message);
+                writer.WriteName("message");
+                writer.WriteString(info.Message);
 
                 if (error.Locations != null)
                 {
-                    writer.WriteUtf8ValueSeparator();
-                    writer.WriteUtf8Name("locations");
-                    writer.WriteUtf8BeginArray();
+                    writer.WriteValueSeparator();
+                    writer.WriteName("locations");
+                    writer.WriteBeginArray();
                     var separatedInner = false;
                     foreach (var location in error.Locations)
                     {
-                        if (separatedInner) writer.WriteUtf8ValueSeparator();
-                        writer.WriteUtf8BeginObject();
-                        writer.WriteUtf8Name("line");
-                        writer.WriteUtf8Int32(location.Line);
-                        writer.WriteUtf8ValueSeparator();
-                        writer.WriteUtf8Name("column");
-                        writer.WriteUtf8Int32(location.Column);
-                        writer.WriteUtf8EndObject();
+                        if (separatedInner) writer.WriteValueSeparator();
+                        writer.WriteBeginObject();
+                        writer.WriteName("line");
+                        writer.WriteInt32(location.Line);
+                        writer.WriteValueSeparator();
+                        writer.WriteName("column");
+                        writer.WriteInt32(location.Column);
+                        writer.WriteEndObject();
                         separatedInner = true;
                     }
-                    writer.WriteUtf8EndArray();
+                    writer.WriteEndArray();
                 }
 
                 if (error.Path != null && error.Path.Any())
                 {
-                    writer.WriteUtf8ValueSeparator();
-                    writer.WriteUtf8Name("path");
+                    writer.WriteValueSeparator();
+                    writer.WriteName("path");
                     if (error.Path == null)
-                        writer.WriteUtf8Null();
+                        writer.WriteNull();
                     else
-                        ListFormatter<IList<object>, object, byte, IncludeNullsCamelCaseResolver<byte>>.Default.Serialize(ref writer, error.Path.ToList());
+                        ListFormatter<IList<object>, object, C, IncludeNullsCamelCaseResolver<C>>.Default.Serialize(ref writer, error.Path.ToList());
                 }
 
                 if (info.Extensions?.Count > 0)
                 {
-                    //writer.WriteUtf8Name("extensions");
-                    //writer.WriteUtf8String(info.Extensions);
+                    //writer.WriteName("extensions");
+                    //writer.WriteString(info.Extensions);
                     //serializer.Serialize(writer, info.Extensions);
                 }
 
-                writer.WriteUtf8EndObject();
+                writer.WriteEndObject();
 
                 separated = true;
             }
 
-            writer.WriteUtf8EndArray();
+            writer.WriteEndArray();
         }
 
         public ExecutionResult Deserialize(ref JsonReader<byte> reader)
@@ -253,7 +283,12 @@ namespace Omnikeeper.GraphQL
 
         public void Serialize(ref JsonWriter<char> writer, ExecutionResult value)
         {
-            throw new NotImplementedException();
+            Serialize<char>(ref writer, value);
+        }
+
+        public void Serialize(ref JsonWriter<byte> writer, ExecutionResult value)
+        {
+            Serialize<byte>(ref writer, value);
         }
     }
 }

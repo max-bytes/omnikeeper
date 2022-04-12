@@ -129,7 +129,6 @@ mutation {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationInsert, expected3, user);
 
@@ -168,7 +167,6 @@ mutation {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationUpdateAttribute, expected5, user);
 
@@ -191,7 +189,6 @@ mutation {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationUpdateAttributeAgain, expected6, user);
 

@@ -1,8 +1,8 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Execution;
-using GraphQL.Language.AST;
 using GraphQL.Types;
+using GraphQLParser.AST;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
@@ -13,7 +13,6 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GraphQL.TraitEntities;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -107,16 +106,17 @@ namespace Omnikeeper.GraphQL.Types
             if (context.SubFields != null && context.SubFields.TryGetValue("mergedAttributes", out var mergedAttributesField))
             {
                 // check whether or not the attributeNames parameter was set, in which case we can reduce the attributes to query for
-                var attributeNamesArgument = mergedAttributesField.Arguments?.FirstOrDefault(a => a.Name == "attributeNames");
-                if (attributeNamesArgument != null && attributeNamesArgument.Value is ListValue lv)
+                var attributeNamesArgument = mergedAttributesField.Field.Arguments?.FirstOrDefault(a => a.Name == "attributeNames");
+                if (attributeNamesArgument != null && attributeNamesArgument.Value is GraphQLListValue lv)
                 {
+                    if (lv.Values == null)
+                        throw new Exception("Unknown error");
                     var attributeNames = lv.Values.Select(v =>
                     {
-                        if (v is StringValue sv)
-                            return sv.Value;
-                        return null;
-                    }).Where(v => v != null).Select(v => v!).ToHashSet();
-
+                        if (v is not GraphQLStringValue sv)
+                            throw new Exception("argumentNames must be specified as list of strings");
+                        return sv.Value.ToString();
+                    }).ToHashSet();
                     attributeSelectionBecauseOfMergedAttributes = NamedAttributesSelection.Build(attributeNames);
                 }
                 else
@@ -128,15 +128,17 @@ namespace Omnikeeper.GraphQL.Types
             if (context.SubFields != null && context.SubFields.TryGetValue("effectiveTraits", out var effectiveTraitsField))
             {
                 // reduce the required attributes by checking the requested effective traits and respecting their required and optional attributes
-                var traitIDsArgument = effectiveTraitsField.Arguments?.FirstOrDefault(a => a.Name == "traitIDs");
-                if (traitIDsArgument != null && traitIDsArgument.Value is ListValue lv)
+                var traitIDsArgument = effectiveTraitsField.Field.Arguments?.FirstOrDefault(a => a.Name.StringValue == "traitIDs");
+                if (traitIDsArgument != null && traitIDsArgument.Value is GraphQLListValue lv)
                 {
+                    if (lv.Values == null)
+                        throw new Exception("Unknown error");
                     var requestedTraitIDs = lv.Values.Select(v =>
                     {
-                        if (v is StringValue sv)
-                            return sv.Value;
-                        return null;
-                    }).Where(v => v != null).Select(v => v!).ToHashSet();
+                        if (v is not GraphQLStringValue sv)
+                            throw new Exception("traitIDs must be specified as list of strings");
+                        return sv.Value.ToString();
+                    }).ToHashSet();
 
                     // TODO: more performant, rely on dictionary
                     var allTraits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
@@ -156,18 +158,19 @@ namespace Omnikeeper.GraphQL.Types
             }
             if (context.SubFields != null && context.SubFields.TryGetValue("traitEntity", out var traitEntityField))
             {
-                var selectedTraitEntityFields = traitEntityField.SelectionSet?.Selections;
+                var selectedTraitEntityFields = traitEntityField.Field.SelectionSet?.Selections;
 
                 if (selectedTraitEntityFields != null)
                 {
-                    var parentGraphType = context.Schema.AllTypes.FirstOrDefault(t => t.Name == MergedCI2TraitEntityWrapper.StaticName) as IObjectGraphType;
+                    var parentGraphType = traitEntityField.FieldType.ResolvedType as IObjectGraphType;
                     if (parentGraphType == null) throw new Exception();
 
                     // from the field name, resolve the actual trait entity name
                     foreach (var selection in selectedTraitEntityFields)
                     {
-                        var field = selection as Field;
+                        var field = selection as GraphQLField;
                         if (field == null) throw new Exception();
+                        // TODO: can this be improved?
                         var ft = _GetAroundProtectedFunctions.PublicGetFieldDefinition(context.Schema, parentGraphType, field);
                         var rt = ft?.ResolvedType as ElementWrapperType;
                         var underlyingTrait = rt?.UnderlyingTrait;
@@ -192,19 +195,15 @@ namespace Omnikeeper.GraphQL.Types
 
         private class GetAroundProtectedFunctions : ExecutionStrategy
         {
-            protected override Task ExecuteNodeTreeAsync(ExecutionContext context, ObjectExecutionNode rootNode)
-            {
-                throw new System.NotImplementedException();
-            }
 
-            public Dictionary<string, Field> PublicCollectFieldsFrom(ExecutionContext context, IGraphType specificType, SelectionSet selectionSet, Dictionary<string, Field>? fields)
-            {
-                return base.CollectFieldsFrom(context, specificType, selectionSet, fields);
-            }
-
-            public FieldType? PublicGetFieldDefinition(ISchema schema, IObjectGraphType parentType, Field field)
+            public FieldType? PublicGetFieldDefinition(ISchema schema, IObjectGraphType parentType, GraphQLField field)
             {
                 return base.GetFieldDefinition(schema, parentType, field);
+            }
+
+            public override Task ExecuteNodeTreeAsync(ExecutionContext context, ExecutionNode rootNode)
+            {
+                throw new NotImplementedException();
             }
         }
     }
