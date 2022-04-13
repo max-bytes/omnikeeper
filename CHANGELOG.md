@@ -5,18 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [15.0.0-rc*] - 2022-03-25
+## [15.0.0-rc*] - 2022-04-13
 
 ### Added
 - GraphQL API:
   - (breaking) reworked trait relation mutations: modifying trait relations are now separate methods and not part of the trait entity mutations anymore, allowing more fine-grained control
+  - (re-)added possibility to insert relations when inserting new trait entity
   - implemented trait-hints for trait relations to simplify typed access to related CIs with traits
   - added support for relation-based filters
+  - added NonNullGraphType wrapper for certain trait entity attribute fields
+- technical frontend:
+  - implementation of visualization frontend plugin
+- implementation of double attribute value type; closes #189
+- implemented basic application health check
+- implemented system-test infrastructure and initial test cases; added system-tests to ci/cd pipeline
+- implemented attribute selection for name+value filters
 
 ### Changes
 - GraphQL API:
-  - Dataloader-related performance improvements and restructurings
+  - dataloader-related performance improvements and restructurings
   - (breaking) removed min- and max-cardinality from trait relations
+  - big performance improvement changes to trait entity filtering
+- technical frontend:
+  - removed trait select filters for empty and meta @ ci search
+  - rework of frontend plugin management and infrastructure
+- updated to .Net 6.0
+- disabled OData support for now
+- switched to smaller alpine based docker image for backend container
+- updated SpanJSON to latest version
+- updated Graphql-Dotnet to 5.1.0
+- removed obsolete REST API endpoints
+
+### Fixes
+- lots of improvements to JSON handling in various levels
+- fixed memory leak related to ModelContexts and using them in GraphQL resolvers
+- fixed bug in trait entity GraphQL mutations where errors would still commit the data to the database
+- added layer based authz checks for multiple graphQL queries and mutations
+- fix for #59
+- bugfix for trait entities: updating-by-CIID and deleting-by-CIID had no effect because database transaction was not commited
+
 
 ## [14.0.0] - 2022-03-19
 
