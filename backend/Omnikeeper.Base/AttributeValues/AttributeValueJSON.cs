@@ -9,8 +9,6 @@ namespace Omnikeeper.Entity.AttributeValues
 {
     public class AttributeScalarValueJSON : IAttributeScalarValue<JToken>, IEquatable<AttributeScalarValueJSON>
     {
-        public static JToken ErrorValue(string message) => JToken.Parse($"{{\"error\": \"{message}\" }}");
-
         public override string ToString() => $"AV-JSON: {Value2String()}";
 
         private readonly JToken value;
