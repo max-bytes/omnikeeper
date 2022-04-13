@@ -5,19 +5,29 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Entity
 {
-    [JsonConverter(typeof(JsonSubtypes), "type")]
+    public class AttributeValueConstraintTypeDiscriminatorConverter : TypeDiscriminatorConverter<ICIAttributeValueConstraint> 
+    {
+        public AttributeValueConstraintTypeDiscriminatorConverter() : base("type", "$type")
+        {
+        }
+    }
+
+    [Newtonsoft.Json.JsonConverter(typeof(JsonSubtypes), "type")]
     [JsonSubtypes.KnownSubType(typeof(CIAttributeValueConstraintTextRegex), "textRegex")]
     [JsonSubtypes.KnownSubType(typeof(CIAttributeValueConstraintTextLength), "textLength")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(AttributeValueConstraintTypeDiscriminatorConverter))]
     public interface ICIAttributeValueConstraint
     {
         public string type { get; }
+        public string ttype { get; }
         bool HasErrors(IAttributeValue value);
 
-        public static readonly NewtonSoftJSONSerializer<ICIAttributeValueConstraint> Serializer = new NewtonSoftJSONSerializer<ICIAttributeValueConstraint>(() =>
+        public static readonly NewtonSoftJSONSerializer<ICIAttributeValueConstraint> NewtonsoftSerializer = new NewtonSoftJSONSerializer<ICIAttributeValueConstraint>(() =>
         {
             var s = new JsonSerializerSettings()
             {
@@ -25,6 +35,17 @@ namespace Omnikeeper.Base.Entity
             };
             s.Converters.Add(new StringEnumConverter());
             return s;
+        });
+
+        public static readonly SystemTextJSONSerializer<ICIAttributeValueConstraint> SystemTextJSONSerializer = new SystemTextJSONSerializer<ICIAttributeValueConstraint>(() =>
+        {
+            return new System.Text.Json.JsonSerializerOptions()
+            {
+                Converters = {
+                    new JsonStringEnumConverter()
+                },
+                IncludeFields = true
+            };
         });
     }
 
@@ -39,8 +60,13 @@ namespace Omnikeeper.Base.Entity
             Maximum = maximum;
         }
 
-        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public string type => "textLength";
+
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonPropertyName("$type")]
+        public string ttype => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
         public static CIAttributeValueConstraintTextLength Build(int? min, int? max)
         {
@@ -73,8 +99,13 @@ namespace Omnikeeper.Base.Entity
             Maximum = maximum;
         }
 
-        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public string type => "arrayLength";
+
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonPropertyName("$type")]
+        public string ttype => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
         public static CIAttributeValueConstraintArrayLength Build(int? min, int? max)
         {
@@ -107,10 +138,16 @@ namespace Omnikeeper.Base.Entity
         public readonly string RegexStr;
         public readonly RegexOptions RegexOptions;
 
-        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public string type => "textRegex";
 
-        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonPropertyName("$type")]
+        public string ttype => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         [NonSerialized]
         private Regex? regex;
 
@@ -121,7 +158,8 @@ namespace Omnikeeper.Base.Entity
             regex = r;
         }
 
-        [JsonConstructor]
+        [Newtonsoft.Json.JsonConstructor]
+        [System.Text.Json.Serialization.JsonConstructor]
         public CIAttributeValueConstraintTextRegex(string regexStr, RegexOptions regexOptions)
         {
             RegexStr = regexStr;
@@ -143,46 +181,6 @@ namespace Omnikeeper.Base.Entity
                 return true;
             }
         }
-
-        //public class Serializer : ISubTypeSerializer<CIAttributeValueConstraintTextRegex>, ISerializer<CIAttributeValueConstraintTextRegex>
-        //{
-        //    SerializerFeatures ISerializer<CIAttributeValueConstraintTextRegex>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
-        //    void ISerializer<CIAttributeValueConstraintTextRegex>.Write(ref ProtoWriter.State state, CIAttributeValueConstraintTextRegex value)
-        //        => ((ISubTypeSerializer<CIAttributeValueConstraintTextRegex>)this).WriteSubType(ref state, value);
-        //    CIAttributeValueConstraintTextRegex ISerializer<CIAttributeValueConstraintTextRegex>.Read(ref ProtoReader.State state, CIAttributeValueConstraintTextRegex value)
-        //        => ((ISubTypeSerializer<CIAttributeValueConstraintTextRegex>)this).ReadSubType(ref state, SubTypeState<CIAttributeValueConstraintTextRegex>.Create(state.Context, value));
-
-        //    public void WriteSubType(ref ProtoWriter.State state, CIAttributeValueConstraintTextRegex value)
-        //    {
-        //        state.WriteFieldHeader(1, WireType.String);
-        //        state.WriteString(value.RegexStr);
-        //        state.WriteFieldHeader(2, WireType.Varint);
-        //        state.WriteInt32((int)value.RegexOptions);
-        //    }
-
-        //    public CIAttributeValueConstraintTextRegex ReadSubType(ref ProtoReader.State state, SubTypeState<CIAttributeValueConstraintTextRegex> value)
-        //    {
-        //        int field;
-        //        string regexStr = "";
-        //        RegexOptions regexOptions = default;
-        //        while ((field = state.ReadFieldHeader()) > 0)
-        //        {
-        //            switch (field)
-        //            {
-        //                case 1:
-        //                    regexStr = state.ReadString();
-        //                    break;
-        //                case 2:
-        //                    regexOptions = (RegexOptions)state.ReadInt32();
-        //                    break;
-        //                default:
-        //                    state.SkipField();
-        //                    break;
-        //            }
-        //        }
-        //        return new CIAttributeValueConstraintTextRegex(regexStr, regexOptions);
-        //    }
-        //}
     }
 
     public class CIAttributeTemplate

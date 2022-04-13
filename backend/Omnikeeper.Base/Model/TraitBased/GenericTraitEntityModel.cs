@@ -18,7 +18,6 @@ namespace Omnikeeper.Base.Model.TraitBased
     {
         protected readonly ICIModel ciModel;
         private readonly IAttributeModel attributeModel;
-        private readonly NewtonSoftJSONSerializer<object>? jsonSerializer;
         private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
         private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
@@ -26,11 +25,10 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         private readonly TraitEntityModel traitEntityModel;
 
-        public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, NewtonSoftJSONSerializer<object>? jsonSerializer)
+        public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
         {
             this.ciModel = ciModel;
             this.attributeModel = attributeModel;
-            this.jsonSerializer = jsonSerializer;
             var trait = RecursiveTraitService.FlattenSingleRecursiveTrait(GenericTraitEntityHelper.Class2RecursiveTrait<T>());
 
             (_, attributeFieldInfos, relationFieldInfos) = GenericTraitEntityHelper.ExtractFieldInfos<T>();
@@ -45,14 +43,14 @@ namespace Omnikeeper.Base.Model.TraitBased
             var et = await traitEntityModel.GetSingleByCIID(ciid, layerSet, trans, timeThreshold);
             if (et == null)
                 return default;
-            var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, jsonSerializer);
+            var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et);
             return (dc, ciid);
         }
 
         public async Task<IDictionary<Guid, T>> GetAllByCIID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var ets = await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerSet, trans, timeThreshold);
-            return ets.ToDictionary(kv => kv.Key, kv => GenericTraitEntityHelper.EffectiveTrait2Object<T>(kv.Value, jsonSerializer));
+            return ets.ToDictionary(kv => kv.Key, kv => GenericTraitEntityHelper.EffectiveTrait2Object<T>(kv.Value));
         }
 
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
@@ -76,7 +74,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var ret = new Dictionary<ID, T>();
             foreach (var et in ets)
             {
-                var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, jsonSerializer);
+                var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et);
                 var id = idAttributeInfos.ExtractIDFromEntity(dc);
                 if (!ret.ContainsKey(id))
                 {
@@ -219,7 +217,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             string? ciName = null;
             var (et, changed) = await traitEntityModel.InsertOrUpdateFull(ciid, attributeFragments, outgoingRelations, incomingRelations, ciName, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
 
-            var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, jsonSerializer);
+            var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et);
 
             return (dc, changed);
         }
@@ -236,11 +234,8 @@ namespace Omnikeeper.Base.Model.TraitBased
 
                     if (entityValue != null)
                     {
-                        if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.TraitAttributeAttribute.isJSONSerialized)
+                        if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.JsonSerializer != null)
                         {
-                            if (jsonSerializer == null)
-                                throw new Exception($"Field {taFieldInfo.FieldInfo.Name} is marked as JSONSerialized, but Model has no JSONSerializer specified");
-
                             // serialize before storing as attribute
                             if (taFieldInfo.IsArray)
                             {
@@ -248,14 +243,14 @@ namespace Omnikeeper.Base.Model.TraitBased
                                 var serialized = new JObject[a.Length];
                                 for (int i = 0; i < a.Length; i++)
                                 {
-                                    var e = jsonSerializer.SerializeToJObject(a[i]);
+                                    var e = taFieldInfo.JsonSerializer.SerializeToJObject(a[i]);
                                     serialized[i] = e;
                                 }
                                 entityValue = serialized;
                             }
                             else
                             {
-                                entityValue = jsonSerializer.SerializeToJObject(entityValue);
+                                entityValue = taFieldInfo.JsonSerializer.SerializeToJObject(entityValue);
                             }
                         }
 
@@ -336,14 +331,16 @@ namespace Omnikeeper.Base.Model.TraitBased
         public readonly AttributeValueType AttributeValueType;
         public readonly bool IsArray;
         public readonly bool IsID;
+        public readonly IAttributeJSONSerializer? JsonSerializer;
 
-        public TraitAttributeFieldInfo(FieldInfo fieldInfo, TraitAttributeAttribute traitAttributeAttribute, AttributeValueType attributeValueType, bool isArray, bool isID)
+        public TraitAttributeFieldInfo(FieldInfo fieldInfo, TraitAttributeAttribute traitAttributeAttribute, AttributeValueType attributeValueType, bool isArray, bool isID, IAttributeJSONSerializer? jsonSerializer)
         {
             FieldInfo = fieldInfo;
             TraitAttributeAttribute = traitAttributeAttribute;
             AttributeValueType = attributeValueType;
             IsArray = isArray;
             IsID = isID;
+            JsonSerializer = jsonSerializer;
         }
     }
 

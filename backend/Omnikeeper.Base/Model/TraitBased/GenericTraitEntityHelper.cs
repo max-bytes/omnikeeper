@@ -33,8 +33,17 @@ namespace Omnikeeper.Base.Model.TraitBased
                     {
                         var isID = Attribute.GetCustomAttribute(fInfo, typeof(TraitEntityIDAttribute)) != null;
 
+                        IAttributeJSONSerializer? jsonSerializer = null;
+                        if (taa.jsonSerializer != null)
+                        {
+                            jsonSerializer = (IAttributeJSONSerializer?)Activator.CreateInstance(taa.jsonSerializer);
+                            if (jsonSerializer == null)
+                                throw new Exception($"Trait class {type.Name}: Field {fInfo.Name} has invalid jsonSerializer");
+                        }
+
+
                         var (attributeValueType, isArray) = Type2AttributeValueType(fInfo, taa);
-                        attributeFieldInfos.Add(new TraitAttributeFieldInfo(fInfo, taa, attributeValueType, isArray, isID));
+                        attributeFieldInfos.Add(new TraitAttributeFieldInfo(fInfo, taa, attributeValueType, isArray, isID, jsonSerializer));
                     }
                     else if (tra != null)
                     {
@@ -71,7 +80,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return new GenericTraitEntityIDAttributeInfos<C, ID>(outFields);
         }
 
-        public static C EffectiveTrait2Object<C>(EffectiveTrait et, NewtonSoftJSONSerializer<object>? jsonSerializer) where C : TraitEntity, new()
+        public static C EffectiveTrait2Object<C>(EffectiveTrait et) where C : TraitEntity, new()
         {
             var (_, attributeFieldInfos, relationFieldInfos) = ExtractFieldInfos<C>();
 
@@ -84,11 +93,8 @@ namespace Omnikeeper.Base.Model.TraitBased
                 {
                     var entityFieldValue = attribute.Attribute.Value.ToGenericObject();
                     // support JSON serializer
-                    if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.TraitAttributeAttribute.isJSONSerialized)
+                    if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.JsonSerializer != null)
                     {
-                        if (jsonSerializer == null)
-                            throw new Exception($"Field {taFieldInfo.FieldInfo.Name} is marked as JSONSerialized, but Model has no JSONSerializer specified");
-
                         // deserialize before setting field in entity
                         if (taFieldInfo.IsArray)
                         {
@@ -99,7 +105,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                             var deserialized = Array.CreateInstance(fieldType, tokens.Length);
                             for (int i = 0; i < tokens.Length; i++)
                             {
-                                var e = jsonSerializer.Deserialize(tokens[i], fieldType);
+                                var e = taFieldInfo.JsonSerializer.Deserialize(tokens[i], fieldType);
                                 if (e == null)
                                     throw new Exception(); // TODO
                                 deserialized.SetValue(e, i);
@@ -109,7 +115,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                         else
                         {
                             var fieldType = taFieldInfo.FieldInfo.FieldType;
-                            entityFieldValue = jsonSerializer.Deserialize((JToken)entityFieldValue, fieldType);
+                            entityFieldValue = taFieldInfo.JsonSerializer.Deserialize((JToken)entityFieldValue, fieldType);
                         }
                     }
                     taFieldInfo.FieldInfo.SetValue(ret, entityFieldValue);
@@ -210,7 +216,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var isArray = fieldType.IsArray;
 
             AttributeValueType avt;
-            if (taa.isJSONSerialized)
+            if (taa.jsonSerializer != null)
             {
                 avt = AttributeValueType.JSON;
             }

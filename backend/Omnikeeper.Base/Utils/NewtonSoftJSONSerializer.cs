@@ -48,9 +48,9 @@ namespace Omnikeeper.Base.Utils
             return r;
         }
 
-        public JObject SerializeToJObject(T config)
+        public JObject SerializeToJObject(object o)
         {
-            return JObject.FromObject(config, Serializer);
+            return JObject.FromObject(o, Serializer);
         }
         public string SerializeToString(T config)
         {

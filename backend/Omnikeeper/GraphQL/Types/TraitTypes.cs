@@ -100,9 +100,9 @@ namespace Omnikeeper.GraphQL.Types
                 return null;
 
             if (value is ROM valueROM)
-                return ICIAttributeValueConstraint.Serializer.Deserialize(valueROM.Span);
+                return ICIAttributeValueConstraint.NewtonsoftSerializer.Deserialize(valueROM.Span);
             if (value is string valueStr)
-                return ICIAttributeValueConstraint.Serializer.Deserialize(valueStr);
+                return ICIAttributeValueConstraint.NewtonsoftSerializer.Deserialize(valueStr);
             return ThrowValueConversionError(value);
         }
 
@@ -112,7 +112,7 @@ namespace Omnikeeper.GraphQL.Types
                 return null;
 
             if (value is ICIAttributeValueConstraint vc)
-                return ICIAttributeValueConstraint.Serializer.SerializeToString(vc);
+                return ICIAttributeValueConstraint.NewtonsoftSerializer.SerializeToString(vc);
             return ThrowSerializationError(value);
         }
     }

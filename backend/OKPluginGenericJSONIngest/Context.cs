@@ -17,15 +17,15 @@ namespace OKPluginGenericJSONIngest
         [TraitEntityID]
         public readonly string ID;
 
-        [TraitAttribute("extract_config", "gji_context.extract_config", isJSONSerialized: true)]
+        [TraitAttribute("extract_config", "gji_context.extract_config", jsonSerializer: typeof(ContextModel.ExtractConfigSerializer))]
         [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly IExtractConfig ExtractConfig;
 
-        [TraitAttribute("transform_config", "gji_context.transform_config", isJSONSerialized: true)]
+        [TraitAttribute("transform_config", "gji_context.transform_config", jsonSerializer: typeof(ContextModel.TransformConfigSerializer))]
         [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly ITransformConfig TransformConfig;
 
-        [TraitAttribute("load_config", "gji_context.load_config", isJSONSerialized: true)]
+        [TraitAttribute("load_config", "gji_context.load_config", jsonSerializer: typeof(ContextModel.LoadConfigSerializer))]
         [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly ILoadConfig LoadConfig;
 

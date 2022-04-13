@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Entity
@@ -21,21 +22,27 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    public interface IAttributeJSONSerializer
+    {
+        public object Deserialize(JToken jo, Type type);
+        public JObject SerializeToJObject(object o);
+    }
+
     [AttributeUsage(AttributeTargets.Field)]
     public sealed class TraitAttributeAttribute : Attribute
     {
         public readonly string taName;
         public readonly string aName;
         public readonly bool optional;
-        public readonly bool isJSONSerialized;
+        public readonly Type? jsonSerializer;
         public readonly bool multilineTextHint;
 
-        public TraitAttributeAttribute(string taName, string aName, bool optional = false, bool isJSONSerialized = false, bool multilineTextHint = false)
+        public TraitAttributeAttribute(string taName, string aName, bool optional = false, Type? jsonSerializer = null, bool multilineTextHint = false)
         {
             this.taName = taName;
             this.aName = aName;
             this.optional = optional;
-            this.isJSONSerialized = isJSONSerialized;
+            this.jsonSerializer = jsonSerializer;
             this.multilineTextHint = multilineTextHint;
         }
     }
