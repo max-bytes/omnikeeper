@@ -24,6 +24,7 @@ namespace Omnikeeper.Model
             this.ciidModel = ciidModel;
         }
 
+        // TODO: integrate into _GetAttributes()
         private async Task<CIAttribute?> _GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary)
         {
             NpgsqlCommand command;
