@@ -65,6 +65,15 @@ namespace Omnikeeper.Controllers
             return await ProcessQuery(query);
         }
 
+        // NOTE: be aware of https://github.com/dotnet/aspnetcore/issues/37360
+        [HttpGet]
+        [Route("/graphql")]
+        [UseSpanJson]
+        public async Task<IActionResult> Get([FromQuery] Omnikeeper.Base.Entity.GraphQLQuery q)
+        {
+            return await ProcessQuery(q);
+        }
+
         private async Task<IActionResult> ProcessQuery(Omnikeeper.Base.Entity.GraphQLQuery query)
         {
             if (query == null)
