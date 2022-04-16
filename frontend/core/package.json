@@ -39,7 +39,7 @@
     "react-flip-toolkit": "^7.0.12",
     "react-json-view": "^1.19.1",
     "react-loading-overlay": "^1.0.1",
-    "react-router-dom": "^5.2.0",
+    "react-router-dom": "^5.3.0",
     "react-scripts": "5.0.0",
     "react-virtualized-auto-sizer": "^1.0.3",
     "react-virtuoso": "^2.2.6",

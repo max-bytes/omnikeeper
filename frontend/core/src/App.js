@@ -153,10 +153,12 @@ function App() {
                   frontendPlugins.flatMap(plugin => {
                     if (plugin.components.menuComponents)
                     {
-                      const items = plugin.components.menuComponents.map(mc =>
-                        <PrivateRoute key={mc.url} path={mc.url}>
-                          {mc.component()}
-                        </PrivateRoute>
+                      const items = plugin.components.menuComponents.map(mc => {
+                          const Component = mc.component;
+                          return <PrivateRoute key={mc.url} path={mc.url}>
+                            <Component />
+                          </PrivateRoute>
+                        }
                       ); 
                       return items;
                     }
