@@ -1,5 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
 using System;
+using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Entity
@@ -24,8 +27,63 @@ namespace Omnikeeper.Base.Entity
 
     public interface IAttributeJSONSerializer
     {
-        public object Deserialize(JToken jo, Type type);
-        public JObject SerializeToJObject(object o);
+        public object Deserialize(IAttributeValue attribute, Type type);
+        public IAttributeValue Serialize(object o, bool isArray);
+    }
+
+    public abstract class AttributeJSONSerializer<T> : IAttributeJSONSerializer where T : class
+    {
+        private readonly SystemTextJSONSerializer<T> systemTextJsonSerializer;
+
+        protected AttributeJSONSerializer(Func<JsonSerializerOptions> serializerOptions)
+        {
+            systemTextJsonSerializer = new SystemTextJSONSerializer<T>(serializerOptions);
+        }
+
+        public object Deserialize(IAttributeValue attribute, Type type)
+        {
+            if (attribute is AttributeScalarValueJSONNew @as)
+            {
+                return systemTextJsonSerializer.Deserialize(@as.Value, type);
+            }
+            else if (attribute is AttributeArrayValueJSONNew aa)
+            {
+                var tokens = aa.Values.Select(v => v.Value).ToArray();
+                var deserialized = Array.CreateInstance(type, tokens.Length); // TODO: use proper generic types instead of Type
+                for (int i = 0; i < tokens.Length; i++)
+                {
+                    var e = systemTextJsonSerializer.Deserialize(tokens[i], type);
+                    if (e == null)
+                        throw new Exception(); // TODO
+                    deserialized.SetValue(e, i);
+                }
+                return deserialized;
+            }
+            else
+            {
+                throw new Exception("Unexpected attribute value type encountered; expected JSON attribute value");
+            }
+        }
+
+        public IAttributeValue Serialize(object o, bool isArray)
+        {
+            if (isArray)
+            {
+                var a = (object[])o;
+                var serialized = new JsonDocument[a.Length];
+                for (int i = 0; i < a.Length; i++)
+                {
+                    var e = systemTextJsonSerializer.SerializeToJsonDocument(a[i]);
+                    serialized[i] = e;
+                }
+                return AttributeArrayValueJSONNew.Build(serialized);
+            }
+            else
+            {
+                var jo = systemTextJsonSerializer.SerializeToJsonDocument(o);
+                return AttributeScalarValueJSONNew.Build(jo);
+            }
+        }
     }
 
     [AttributeUsage(AttributeTargets.Field)]

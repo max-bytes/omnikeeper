@@ -1,14 +1,12 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
 using OKPluginGenericJSONIngest.Extract;
 using OKPluginGenericJSONIngest.Load;
 using OKPluginGenericJSONIngest.Transform;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
-using Omnikeeper.Base.Utils;
-using System;
+using System.Text.Json.Serialization;
 
 namespace OKPluginGenericJSONIngest
 {
@@ -17,72 +15,51 @@ namespace OKPluginGenericJSONIngest
         public ContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
-        public class ExtractConfigSerializer : IAttributeJSONSerializer
+        public class ExtractConfigSerializer : AttributeJSONSerializer<IExtractConfig>
         {
-            private readonly NewtonSoftJSONSerializer<IExtractConfig> serializer = new NewtonSoftJSONSerializer<IExtractConfig>(() =>
+            public ExtractConfigSerializer() : base(() =>
             {
-                var s = new JsonSerializerSettings()
+                return new System.Text.Json.JsonSerializerOptions()
                 {
-                    TypeNameHandling = TypeNameHandling.Objects
+                    Converters = {
+                        new JsonStringEnumConverter()
+                    },
+                    IncludeFields = true
                 };
-                s.Converters.Add(new StringEnumConverter());
-                return s;
-            });
-
-            public object Deserialize(JToken jo, Type type)
+            })
             {
-                return serializer.Deserialize(jo, type);
-            }
-
-            public JObject SerializeToJObject(object o)
-            {
-                return serializer.SerializeToJObject(o);
             }
         }
 
-        public class TransformConfigSerializer : IAttributeJSONSerializer
+        public class TransformConfigSerializer : AttributeJSONSerializer<ITransformConfig>
         {
-            private readonly NewtonSoftJSONSerializer<ITransformConfig> serializer = new NewtonSoftJSONSerializer<ITransformConfig>(() =>
+            public TransformConfigSerializer() : base(() =>
             {
-                var s = new JsonSerializerSettings()
+                return new System.Text.Json.JsonSerializerOptions()
                 {
-                    TypeNameHandling = TypeNameHandling.Objects
+                    Converters = {
+                        new JsonStringEnumConverter()
+                    },
+                    IncludeFields = true
                 };
-                s.Converters.Add(new StringEnumConverter());
-                return s;
-            });
-
-            public object Deserialize(JToken jo, Type type)
+            })
             {
-                return serializer.Deserialize(jo, type);
-            }
-
-            public JObject SerializeToJObject(object o)
-            {
-                return serializer.SerializeToJObject(o);
             }
         }
 
-        public class LoadConfigSerializer : IAttributeJSONSerializer
+        public class LoadConfigSerializer : AttributeJSONSerializer<ILoadConfig>
         {
-            private readonly NewtonSoftJSONSerializer<ILoadConfig> serializer = new NewtonSoftJSONSerializer<ILoadConfig>(() =>
+            public LoadConfigSerializer() : base(() =>
             {
-                var s = new JsonSerializerSettings()
+                return new System.Text.Json.JsonSerializerOptions()
                 {
-                    TypeNameHandling = TypeNameHandling.Objects
+                    Converters = {
+                        new JsonStringEnumConverter()
+                    },
+                    IncludeFields = true
                 };
-                s.Converters.Add(new StringEnumConverter());
-                return s;
-            });
-
-            public object Deserialize(JToken jo, Type type)
+            })
             {
-                return serializer.Deserialize(jo, type);
-            }
-
-            public JObject SerializeToJObject(object o)
-            {
-                return serializer.SerializeToJObject(o);
             }
         }
     }

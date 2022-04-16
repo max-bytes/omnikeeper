@@ -155,10 +155,10 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await GetService<IAttributeModel>().InsertAttribute("a1", AttributeArrayValueJSON.BuildFromString(new string[] { "{}", "{\"foo\":\"var\" }" }), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a1", AttributeArrayValueJSONNew.BuildFromString(new string[] { "{}", "{\"foo\":\"var\" }" }), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 var a1 = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset1, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).Values.First();
                 Assert.AreEqual(1, a1.Count);
-                Assert.AreEqual(AttributeArrayValueJSON.BuildFromString(new string[] { "{}", "{\"foo\":\"var\" }" }), a1.First().Value.Attribute.Value);
+                Assert.AreEqual(AttributeArrayValueJSONNew.BuildFromString(new string[] { "{}", "{\"foo\":\"var\" }" }), a1.First().Value.Attribute.Value);
             }
         }
 

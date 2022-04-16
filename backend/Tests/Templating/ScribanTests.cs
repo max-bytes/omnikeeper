@@ -28,7 +28,7 @@ namespace Tests.Templating
                     new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a", Guid.NewGuid(), new AttributeScalarValueText("a-value"), staticChangesetID), new string[0]),
                     new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.b", Guid.NewGuid(), new AttributeScalarValueText("b-value"), staticChangesetID), new string[0]),
                     new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.c", Guid.NewGuid(), AttributeArrayValueText.BuildFromString(new string[] { "c-value0", "c-value1" }), staticChangesetID), new string[0]),
-                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.json", Guid.NewGuid(), AttributeArrayValueJSON.BuildFromString(
+                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.json", Guid.NewGuid(), AttributeArrayValueJSONNew.BuildFromString(
                         new string[] { @"{ ""foo"": ""bar""}", @"{ ""second"": { ""yes"": true } }" }), staticChangesetID), new string[0])
                     //new MergedCIAttribute(new CIAttribute(0, "a.json", Guid.NewGuid(), AttributeValueJSONScalar.Build(
                     //    JObject.Parse(@"{ ""foo"": ""bar""}")), AttributeState.New, 0), new long[0])

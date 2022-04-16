@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Tests.Serialization
 {
@@ -14,7 +15,8 @@ namespace Tests.Serialization
             var t = new TraitAttribute("traitIdentifier",
                 new CIAttributeTemplate("attributeName", Omnikeeper.Entity.AttributeValues.AttributeValueType.MultilineText, true, false, new List<ICIAttributeValueConstraint>()
                 {
-                    new CIAttributeValueConstraintTextRegex("foo[12]", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.ECMAScript)
+                    new CIAttributeValueConstraintTextRegex("foo[12]", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.ECMAScript),
+                    new CIAttributeValueConstraintTextLength(null, 2),
                 }));
 
             var newtonSoftSerializer = new NewtonSoftJSONSerializer<TraitAttribute>(() =>
@@ -39,13 +41,16 @@ namespace Tests.Serialization
             });
 
 
-            var expectedSerialized = "{\"$type\":\"Omnikeeper.Base.Entity.TraitAttribute, Omnikeeper.Base\",\"AttributeTemplate\":{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeTemplate, Omnikeeper.Base\",\"Name\":\"attributeName\",\"Type\":\"MultilineText\",\"IsArray\":true,\"ValueConstraints\":[{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeValueConstraintTextRegex, Omnikeeper.Base\",\"RegexStr\":\"foo[12]\",\"RegexOptions\":\"IgnoreCase, ECMAScript\"}],\"IsID\":false},\"Identifier\":\"traitIdentifier\"}";
+            var expectedSerializedNewtonsoft = "{\"$type\":\"Omnikeeper.Base.Entity.TraitAttribute, Omnikeeper.Base\",\"AttributeTemplate\":{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeTemplate, Omnikeeper.Base\",\"Name\":\"attributeName\",\"Type\":\"MultilineText\",\"IsArray\":true,\"ValueConstraints\":[{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeValueConstraintTextRegex, Omnikeeper.Base\",\"RegexStr\":\"foo[12]\",\"RegexOptions\":\"IgnoreCase, ECMAScript\"},{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeValueConstraintTextLength, Omnikeeper.Base\",\"Minimum\":null,\"Maximum\":2}],\"IsID\":false},\"Identifier\":\"traitIdentifier\"}";
+            var expectedSerializedSystemTextJson = "{\"AttributeTemplate\":{\"Name\":\"attributeName\",\"Type\":\"MultilineText\",\"IsArray\":true,\"ValueConstraints\":[{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeValueConstraintTextRegex, Omnikeeper.Base\",\"RegexStr\":\"foo[12]\",\"RegexOptions\":\"IgnoreCase, ECMAScript\"},{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeValueConstraintTextLength, Omnikeeper.Base\",\"Minimum\":null,\"Maximum\":2}],\"IsID\":false},\"Identifier\":\"traitIdentifier\"}";
 
             var sNewtonsoft = newtonSoftSerializer.SerializeToString(t);
-            Assert.AreEqual(expectedSerialized, sNewtonsoft);
+            // comparison taken from https://github.com/fluentassertions/fluentassertions/issues/1212
+            JsonDocument.Parse(sNewtonsoft).RootElement.Should().BeEquivalentTo(JsonDocument.Parse(expectedSerializedNewtonsoft).RootElement, opt => opt.ComparingByMembers<JsonElement>());
 
             var sSystemTextJson = systemTextJSONSerializer.SerializeToString(t);
-            //Assert.AreEqual(expectedSerialized, sSystemTextJson); // we can't expect these to be equal because our new serializer works differently
+            JsonDocument.Parse(expectedSerializedSystemTextJson).RootElement.Should().BeEquivalentTo(JsonDocument.Parse(sSystemTextJson).RootElement, opt => opt.ComparingByMembers<JsonElement>());
+            //Assert.AreEqual(expectedSerializedSystemTextJson, sSystemTextJson);
 
             var tNewtonsoft = newtonSoftSerializer.Deserialize(sNewtonsoft);
             tNewtonsoft.Should().BeEquivalentTo(t);

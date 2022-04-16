@@ -1,11 +1,11 @@
 ﻿using GraphQL.Types;
-using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 namespace Omnikeeper.Base.AttributeValues
 {
@@ -75,38 +75,78 @@ namespace Omnikeeper.Base.AttributeValues
                         {
                             if (o == null)
                                 throw new Exception($"Expected object {o} to not be null, found null");
-                            else if (o is JArray a) // TODO: stricter array null handling
-                                return AttributeArrayValueJSON.Build(a.Children().ToArray());
                             else if (o is object[] oa)
                             {
                                 if (oa.Length == 0) // if the length of the array is zero, we don't have good type information, so we treat this case separately
-                                    return AttributeArrayValueJSON.Build(Enumerable.Empty<JToken>());
+                                    return AttributeArrayValueJSONNew.Build(Enumerable.Empty<JsonDocument>());
                                 if (o is string[] sa)
-                                    return AttributeArrayValueJSON.BuildFromString(sa);
-                                else if (o is JToken[] ja)
-                                    return AttributeArrayValueJSON.Build(ja);
+                                    return AttributeArrayValueJSONNew.BuildFromString(sa);
+                                else if (o is JsonDocument[] ja)
+                                    return AttributeArrayValueJSONNew.Build(ja);
                                 else
                                 {
                                     var stringArray = new string[oa.Length];
-                                    for(var i = 0;i < oa.Length;i++)
+                                    for (var i = 0; i < oa.Length; i++)
                                     {
                                         var s = oa[i].ToString();
                                         if (s == null)
-                                            throw new Exception($"Cannot deal with object {o}, that is an array, but neither string array nor JToken array");
+                                            throw new Exception($"Cannot deal with object {o}, that is an array, but neither string array nor JsonDocument array");
                                         stringArray[i] = s;
                                     }
-                                    return AttributeArrayValueJSON.BuildFromString(stringArray);
+                                    return AttributeArrayValueJSONNew.BuildFromString(stringArray);
                                 }
                             }
                             else
                             {
-                                if (o is JToken t)
-                                    return AttributeScalarValueJSON.Build(t);
+                                if (o is JsonDocument t)
+                                    return AttributeScalarValueJSONNew.Build(t);
                                 else if (o is string so)
-                                    return AttributeScalarValueJSON.BuildFromString(so);
+                                    return AttributeScalarValueJSONNew.BuildFromString(so);
                                 else
-                                    throw new Exception($"Expected object {o} to be JToken, found {o.GetType().Name}");
+                                {
+                                    // HACK, TODO: some parts of omnikeeper still produce Newtonsoft.Json objects, like the GenericJSONIngest
+                                    // so we support this for now, but try to remove ASAP
+                                    if (o is Newtonsoft.Json.Linq.JToken jo)
+                                    {
+                                        return AttributeScalarValueJSONNew.BuildFromString(jo.ToString());
+                                    }
+                                    throw new Exception($"Expected object {o} to be JsonDocument or string, found {o.GetType().Name}");
+                                }
                             }
+                            //if (o == null)
+                            //    throw new Exception($"Expected object {o} to not be null, found null");
+                            //else if (o is JArray a) // TODO: stricter array null handling
+                            //    return AttributeArrayValueJSON.Build(a.Children().ToArray());
+                            //else if (o is object[] oa)
+                            //{
+                            //    if (oa.Length == 0) // if the length of the array is zero, we don't have good type information, so we treat this case separately
+                            //        return AttributeArrayValueJSON.Build(Enumerable.Empty<JToken>());
+                            //    if (o is string[] sa)
+                            //        return AttributeArrayValueJSON.BuildFromString(sa);
+                            //    else if (o is JToken[] ja)
+                            //        return AttributeArrayValueJSON.Build(ja);
+                            //    else
+                            //    {
+                            //        var stringArray = new string[oa.Length];
+                            //        for(var i = 0;i < oa.Length;i++)
+                            //        {
+                            //            var s = oa[i].ToString();
+                            //            if (s == null)
+                            //                throw new Exception($"Cannot deal with object {o}, that is an array, but neither string array nor JToken array");
+                            //            stringArray[i] = s;
+                            //        }
+                            //        return AttributeArrayValueJSON.BuildFromString(stringArray);
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    if (o is JToken t)
+                            //        return AttributeScalarValueJSON.Build(t);
+                            //    else if (o is string so)
+                            //        return AttributeScalarValueJSON.BuildFromString(so);
+                            //    else
+                            //        throw new Exception($"Expected object {o} to be JToken, found {o.GetType().Name}");
+                            //}
                         }
                     case AttributeValueType.YAML:
                         {
@@ -145,7 +185,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.MultilineText => AttributeArrayValueText.BuildFromString(generic.Values, true),
                     AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(generic.Values),
                     AttributeValueType.Double => AttributeArrayValueDouble.BuildFromString(generic.Values),
-                    AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(generic.Values),
+                    AttributeValueType.JSON => AttributeArrayValueJSONNew.BuildFromString(generic.Values),
                     AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(generic.Values),
                     AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                     AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
@@ -158,7 +198,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.MultilineText => new AttributeScalarValueText(generic.Values[0], true),
                     AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(generic.Values[0]),
                     AttributeValueType.Double => AttributeScalarValueDouble.BuildFromString(generic.Values[0]),
-                    AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(generic.Values[0]),
+                    AttributeValueType.JSON => AttributeScalarValueJSONNew.BuildFromString(generic.Values[0]),
                     AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(generic.Values[0]),
                     AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                     AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
@@ -202,7 +242,7 @@ namespace Omnikeeper.Base.AttributeValues
                         AttributeValueType.MultilineText => AttributeArrayValueText.BuildFromString(finalValues, true),
                         AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(finalValues),
                         AttributeValueType.Double => AttributeArrayValueDouble.BuildFromString(finalValues),
-                        AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(finalValues),
+                        AttributeValueType.JSON => AttributeArrayValueJSONNew.BuildFromString(finalValues),
                         AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(finalValues),
                         AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                         _ => throw new Exception($"Unknown type {type} encountered"),
@@ -216,7 +256,7 @@ namespace Omnikeeper.Base.AttributeValues
                         AttributeValueType.MultilineText => new AttributeScalarValueText(finalValue, true),
                         AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(finalValue),
                         AttributeValueType.Double => AttributeScalarValueDouble.BuildFromString(finalValue),
-                        AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(finalValue),
+                        AttributeValueType.JSON => AttributeScalarValueJSONNew.BuildFromString(finalValue),
                         AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(finalValue),
                         AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                         _ => throw new Exception($"Unknown type {type} encountered"),
@@ -275,9 +315,9 @@ namespace Omnikeeper.Base.AttributeValues
                     case AttributeValueType.JSON:
                         {
                             if (isArray)
-                                return AttributeArrayValueJSON.BuildFromString(UnmarshalStringArrayV2(valueText, valueControl));
+                                return AttributeArrayValueJSONNew.BuildFromString(UnmarshalStringArrayV2(valueText, valueControl));
                             else
-                                return AttributeScalarValueJSON.BuildFromString(UnmarshalStringV2(valueText, valueControl));
+                                return AttributeScalarValueJSONNew.BuildFromString(UnmarshalStringV2(valueText, valueControl));
                         }
                     case AttributeValueType.YAML:
                         {
@@ -363,8 +403,10 @@ namespace Omnikeeper.Base.AttributeValues
                 AttributeArrayValueDouble a => MarshalSimpleBinaryArrayV2(a.Values.Select(v => v.ToBytes())),
                 // TODO: better JSON marshalling than a simple toString()
                 // JToken even supports casting to byte[], maybe use that? https://www.newtonsoft.com/json/help/html/M_Newtonsoft_Json_Linq_JToken_op_Explicit_31.htm
-                AttributeScalarValueJSON a => MarshalStringV2(a.Value.ToString()),
-                AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
+                //AttributeScalarValueJSON a => MarshalStringV2(a.Value.ToString()), // TODO: remove
+                //AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())), // TODO: remove
+                AttributeScalarValueJSONNew a => MarshalStringV2(a.Value.RootElement.GetRawText()), // TODO: better performance possible?
+                AttributeArrayValueJSONNew a => MarshalStringArrayV2(a.Values.Select(v => v.Value.RootElement.GetRawText())), // TODO: better performance possible?
                 AttributeScalarValueYAML a => MarshalStringV2((a.Value.ToString())!),
                 AttributeArrayValueYAML a => MarshalStringArrayV2(a.Values.Select(v => (v.Value.ToString())!)),
                 AttributeScalarValueMask a => MarshalStringV2(""),

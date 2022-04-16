@@ -59,6 +59,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             var r = resultJson.ToObject<GenericInboundData>(serializer);
             if (r == null)
                 throw new Exception("Could not deserialize JSON into GenericInboundData");
+
             return r;
         }
 

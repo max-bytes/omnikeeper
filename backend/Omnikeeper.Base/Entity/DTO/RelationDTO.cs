@@ -1,47 +1,46 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.Base.Entity.DTO
 {
     public class RelationDTO
     {
-        [JsonConstructor]
-        private RelationDTO(Guid iD, Guid fromCIID, Guid toCIID, string predicateID, bool mask)
-        {
-            ID = iD;
-            FromCIID = fromCIID;
-            ToCIID = toCIID;
-            PredicateID = predicateID;
-            Mask = mask;
-        }
+        //private RelationDTO(Guid iD, Guid fromCIID, Guid toCIID, string predicateID, bool mask)
+        //{
+        //    ID = iD;
+        //    FromCIID = fromCIID;
+        //    ToCIID = toCIID;
+        //    PredicateID = predicateID;
+        //    Mask = mask;
+        //}
 
-        [Required] public Guid ID { get; set; }
-        [Required] public Guid FromCIID { get; set; }
-        [Required] public Guid ToCIID { get; set; }
-        [Required] public string PredicateID { get; set; }
-        [Required] public bool Mask { get; set; }
+        public Guid ID { get; set; }
+        public Guid FromCIID { get; set; }
+        public Guid ToCIID { get; set; }
+        public string PredicateID { get; set; } = "";
+        public bool Mask { get; set; }
 
         public static RelationDTO BuildFromMergedRelation(MergedRelation r)
         {
-            return new RelationDTO(
-                r.Relation.ID,
-                r.Relation.FromCIID,
-                r.Relation.ToCIID,
-                r.Relation.PredicateID,
-                r.Relation.Mask
-            );
+            return new RelationDTO() {
+                ID = r.Relation.ID,
+                FromCIID = r.Relation.FromCIID,
+                ToCIID = r.Relation.ToCIID,
+                PredicateID = r.Relation.PredicateID,
+                Mask = r.Relation.Mask
+            };
         }
 
         public static RelationDTO BuildFromRelation(Relation r)
         {
-            return new RelationDTO(
-                r.ID,
-                r.FromCIID,
-                r.ToCIID,
-                r.PredicateID,
-                r.Mask
-            );
+            return new RelationDTO() {
+                ID = r.ID,
+                FromCIID = r.FromCIID,
+                ToCIID = r.ToCIID,
+                PredicateID = r.PredicateID,
+                Mask = r.Mask
+            };
         }
     }
 

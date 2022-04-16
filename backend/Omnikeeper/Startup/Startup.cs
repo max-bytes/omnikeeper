@@ -95,7 +95,11 @@ namespace Omnikeeper.Startup
             services.AddSignalR();
 
             // HACK: member is set here and used later
-            mvcBuilder = services.AddControllers();
+            mvcBuilder = services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.IncludeFields = true;
+                options.JsonSerializerOptions.Converters.Add(new ExceptionConverter()); // System.Text.Json does not support serializing exceptions, so we add a custom converter
+            });
 
             // add input and output formatters
             services.AddOptions<MvcOptions>()
@@ -104,6 +108,7 @@ namespace Omnikeeper.Startup
 
                     config.InputFormatters.Clear();
                     config.InputFormatters.Add(new MySuperJsonInputFormatter());
+                    config.InputFormatters.Add(new SystemTextJsonInputFormatter(jsonOpts.Value, loggerFactory.CreateLogger<SystemTextJsonInputFormatter>()));
                     config.InputFormatters.Add(new NewtonsoftJsonInputFormatter(
                         loggerFactory.CreateLogger<NewtonsoftJsonInputFormatter>(), newtonJsonOpts.Value.SerializerSettings, charPool, objectPoolProvider, config, newtonJsonOpts.Value
                     ));
@@ -111,6 +116,7 @@ namespace Omnikeeper.Startup
 
                     config.OutputFormatters.Clear();
                     config.OutputFormatters.Add(new MySuperJsonOutputFormatter());
+                    config.OutputFormatters.Add(new SystemTextJsonOutputFormatter(jsonOpts.Value.JsonSerializerOptions));
                     config.OutputFormatters.Add(new NewtonsoftJsonOutputFormatter(newtonJsonOpts.Value.SerializerSettings, charPool, config, null));
                     config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
                 });

@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Tasks.Tools
 {
@@ -125,12 +125,19 @@ namespace Tasks.Tools
 
             foreach (var trait in traits)
             {
-                var s = new JsonSerializerSettings()
+                //var s = new JsonSerializerSettings()
+                //{
+                //    TypeNameHandling = TypeNameHandling.Objects
+                //};
+                //s.Converters.Add(new StringEnumConverter());
+                var serializerOptions = new System.Text.Json.JsonSerializerOptions()
                 {
-                    TypeNameHandling = TypeNameHandling.Objects
+                    Converters = {
+                        new JsonStringEnumConverter()
+                    },
+                    IncludeFields = true
                 };
-                s.Converters.Add(new StringEnumConverter());
-                Console.WriteLine(JsonConvert.SerializeObject(trait, Formatting.Indented, s));
+                Console.WriteLine(JsonSerializer.Serialize(trait, serializerOptions));
 
             }
         }

@@ -1,11 +1,11 @@
 ﻿using GraphQL;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Tests.Integration.GraphQL.Base;
 
@@ -241,10 +241,9 @@ mutation {
     }
 ";
             var (_, jsonStr) = RunQuery(queryCIID, user);
-            var json = JToken.Parse(jsonStr);
+            var json = JsonDocument.Parse(jsonStr);
 
-            var ciidEntity1Str = json["data"]!["traitEntities"]!["test_trait_a"]!["byDataID"]!["ciid"]!.Value<string>();
-            var ciidEntity1 = Guid.Parse(ciidEntity1Str!);
+            var ciidEntity1 = json.RootElement.GetProperty("data").GetProperty("traitEntities").GetProperty("test_trait_a").GetProperty("byDataID").GetProperty("ciid").GetGuid();
 
             var mutationSetAssignments = @"
 mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {

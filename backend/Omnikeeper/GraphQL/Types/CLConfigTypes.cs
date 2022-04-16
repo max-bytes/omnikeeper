@@ -9,7 +9,7 @@ namespace Omnikeeper.GraphQL.Types
         {
             Field("id", x => x.ID);
             Field("clBrainReference", x => x.CLBrainReference);
-            Field("clBrainConfig", x => x.CLBrainConfig.ToString());
+            Field("clBrainConfig", x => x.CLBrainConfig.RootElement.GetRawText());
         }
     }
 }

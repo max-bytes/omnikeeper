@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.AttributeValues;
+﻿using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Service;
@@ -234,28 +233,15 @@ namespace Omnikeeper.Base.Model.TraitBased
 
                     if (entityValue != null)
                     {
+                        IAttributeValue value;
                         if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.JsonSerializer != null)
-                        {
-                            // serialize before storing as attribute
-                            if (taFieldInfo.IsArray)
-                            {
-                                var a = (object[])entityValue;
-                                var serialized = new JObject[a.Length];
-                                for (int i = 0; i < a.Length; i++)
-                                {
-                                    var e = taFieldInfo.JsonSerializer.SerializeToJObject(a[i]);
-                                    serialized[i] = e;
-                                }
-                                entityValue = serialized;
-                            }
-                            else
-                            {
-                                entityValue = taFieldInfo.JsonSerializer.SerializeToJObject(entityValue);
-                            }
+                        { // json with serializer
+                            value = taFieldInfo.JsonSerializer.Serialize(entityValue, taFieldInfo.IsArray);
                         }
-
-                        var value = AttributeValueHelper.BuildFromTypeAndObject(taFieldInfo.AttributeValueType, entityValue);
-
+                        else
+                        { // general attribute
+                            value = AttributeValueHelper.BuildFromTypeAndObject(taFieldInfo.AttributeValueType, entityValue);
+                        }
                         fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, attributeName, value));
                     }
                     else

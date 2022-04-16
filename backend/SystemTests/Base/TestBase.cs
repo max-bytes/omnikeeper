@@ -12,12 +12,14 @@ using System.Threading.Tasks;
 
 namespace SystemTests.Base
 {
-    public abstract class GraphQLTestBase
+    public abstract class TestBase
     {
         private TestcontainersContainer postgresContainer;
         private TestcontainersContainer omnikeeperContainer;
         private IDockerNetwork network;
         private GraphQLHttpClient graphQLClient;
+
+        protected readonly string BaseUrl = "http://localhost:8080";
 
         protected async Task<GraphQLResponse<TResponse>> Query<TResponse>(string query, Func<TResponse> defineResponseType)
         {
@@ -80,7 +82,7 @@ namespace SystemTests.Base
                 .Build();
             await omnikeeperContainer.StartAsync();
 
-            graphQLClient = new GraphQLHttpClient("http://localhost:8080/graphql", new SystemTextJsonSerializer());
+            graphQLClient = new GraphQLHttpClient($"{BaseUrl}/graphql", new SystemTextJsonSerializer());
         }
 
         [TearDown]

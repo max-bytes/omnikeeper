@@ -1,12 +1,8 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
-using Omnikeeper.Base.Utils;
 using Omnikeeper.GridView.Entity;
-using System;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.GridView
 {
@@ -16,26 +12,19 @@ namespace Omnikeeper.GridView
         {
         }
 
-        public class ConfigSerializer : IAttributeJSONSerializer
+        public class ConfigSerializer : AttributeJSONSerializer<GridViewConfiguration>
         {
-            private readonly NewtonSoftJSONSerializer<GridViewConfiguration> serializer = new NewtonSoftJSONSerializer<GridViewConfiguration>(() =>
+            public ConfigSerializer() : base(() =>
             {
-                var s = new JsonSerializerSettings()
+                return new System.Text.Json.JsonSerializerOptions()
                 {
-                    TypeNameHandling = TypeNameHandling.Objects
+                    Converters = {
+                        new JsonStringEnumConverter()
+                    },
+                    IncludeFields = true
                 };
-                s.Converters.Add(new StringEnumConverter());
-                return s;
-            });
-
-            public object Deserialize(JToken jo, Type type)
+            })
             {
-                return serializer.Deserialize(jo, type);
-            }
-
-            public JObject SerializeToJObject(object o)
-            {
-                return serializer.SerializeToJObject(o);
             }
         }
     }

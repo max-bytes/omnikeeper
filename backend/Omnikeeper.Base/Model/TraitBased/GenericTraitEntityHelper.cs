@@ -1,11 +1,10 @@
-﻿using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Utils;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
@@ -91,32 +90,19 @@ namespace Omnikeeper.Base.Model.TraitBased
                 // get value from effective trait
                 if (et.TraitAttributes.TryGetValue(taFieldInfo.TraitAttributeAttribute.taName, out var attribute))
                 {
-                    var entityFieldValue = attribute.Attribute.Value.ToGenericObject();
+                    object entityFieldValue;
                     // support JSON serializer
                     if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.JsonSerializer != null)
                     {
                         // deserialize before setting field in entity
-                        if (taFieldInfo.IsArray)
-                        {
-                            var fieldType = taFieldInfo.FieldInfo.FieldType.GetElementType();
-                            if (fieldType == null)
-                                throw new Exception(); // TODO
-                            var tokens = (JToken[])entityFieldValue;
-                            var deserialized = Array.CreateInstance(fieldType, tokens.Length);
-                            for (int i = 0; i < tokens.Length; i++)
-                            {
-                                var e = taFieldInfo.JsonSerializer.Deserialize(tokens[i], fieldType);
-                                if (e == null)
-                                    throw new Exception(); // TODO
-                                deserialized.SetValue(e, i);
-                            }
-                            entityFieldValue = deserialized;
-                        }
-                        else
-                        {
-                            var fieldType = taFieldInfo.FieldInfo.FieldType;
-                            entityFieldValue = taFieldInfo.JsonSerializer.Deserialize((JToken)entityFieldValue, fieldType);
-                        }
+                        var fieldType = (taFieldInfo.IsArray) ? taFieldInfo.FieldInfo.FieldType.GetElementType() : taFieldInfo.FieldInfo.FieldType;
+                        if (fieldType == null)
+                            throw new Exception(); // TODO
+                        entityFieldValue = taFieldInfo.JsonSerializer.Deserialize(attribute.Attribute.Value, fieldType);
+                    } 
+                    else
+                    {
+                        entityFieldValue = attribute.Attribute.Value.ToGenericObject();
                     }
                     taFieldInfo.FieldInfo.SetValue(ret, entityFieldValue);
                 }
@@ -234,7 +220,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     avt = AttributeValueType.Integer;
                 else if (elementType == typeof(double))
                     avt = AttributeValueType.Double;
-                else if (elementType == typeof(JObject))
+                else if (elementType == typeof(JsonDocument))
                     avt = AttributeValueType.JSON;
                 else
                     throw new Exception("Not supported (yet)");

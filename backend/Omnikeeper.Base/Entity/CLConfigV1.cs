@@ -1,13 +1,13 @@
-﻿using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.Utils;
+﻿using Omnikeeper.Base.Utils;
 using System;
+using System.Text.Json;
 
 namespace Omnikeeper.Base.Entity
 {
     [TraitEntity("__meta.config.cl_config", TraitOriginType.Core)]
     public class CLConfigV1 : TraitEntity, IEquatable<CLConfigV1>
     {
-        public CLConfigV1(string id, string clBrainReference, JObject clBrainConfig)
+        public CLConfigV1(string id, string clBrainReference, JsonDocument clBrainConfig)
         {
             ID = id;
             CLBrainReference = clBrainReference;
@@ -19,7 +19,7 @@ namespace Omnikeeper.Base.Entity
         {
             ID = "";
             CLBrainReference = "";
-            CLBrainConfig = JObject.Parse("{}");
+            CLBrainConfig = JsonDocument.Parse("{}");
             Name = "";
         }
 
@@ -34,7 +34,7 @@ namespace Omnikeeper.Base.Entity
         public readonly string CLBrainReference;
 
         [TraitAttribute("cl_brain_config", "cl_config.cl_brain_config")]
-        public readonly JObject CLBrainConfig;
+        public readonly JsonDocument CLBrainConfig;
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
@@ -46,7 +46,7 @@ namespace Omnikeeper.Base.Entity
             return other != null && ID == other.ID &&
                    CLBrainReference == other.CLBrainReference &&
                    Name == other.Name &&
-                   JToken.DeepEquals(CLBrainConfig, other.CLBrainConfig);
+                   CLBrainConfig.RootElement.GetRawText() == other.CLBrainConfig.RootElement.GetRawText(); // TODO: implement proper deep equality
         }
         public override int GetHashCode() => HashCode.Combine(ID, CLBrainReference, CLBrainConfig, Name);
     }

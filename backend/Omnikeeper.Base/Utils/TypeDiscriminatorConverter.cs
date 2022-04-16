@@ -9,18 +9,16 @@ namespace Omnikeeper.Base.Utils
     public class TypeDiscriminatorConverter<T> : JsonConverter<T> where T : class
     {
         private readonly IDictionary<string, Type> validTypeNames;
-        private readonly string discriminatorPropertyName; // TODO: needed?
         private readonly string jsonPropertyName;
 
-        public TypeDiscriminatorConverter(string discriminatorPropertyName, string? jsonPropertyName)
+        public TypeDiscriminatorConverter(string jsonPropertyName)
         {
             var type = typeof(T);
             validTypeNames = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(s => s.GetTypes())
                 .Where(p => type.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract)
                 .ToDictionary(t => SystemTextJSONSerializerMigrationHelper.GetTypeString(t), t => t);
-            this.discriminatorPropertyName = discriminatorPropertyName;
-            this.jsonPropertyName = jsonPropertyName ?? discriminatorPropertyName;
+            this.jsonPropertyName = jsonPropertyName;
         }
 
         public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
