@@ -21,6 +21,8 @@ namespace Omnikeeper.Base.Utils
             this.jsonPropertyName = jsonPropertyName;
         }
 
+        // TODO: apparently, this converter does not work when the $type field is not the first field in the object, for some reason, investigate
+
         public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartObject)

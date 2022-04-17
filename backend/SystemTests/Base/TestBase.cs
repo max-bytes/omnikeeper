@@ -8,6 +8,7 @@ using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
 using NUnit.Framework;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SystemTests.Base
@@ -83,6 +84,8 @@ namespace SystemTests.Base
             await omnikeeperContainer.StartAsync();
 
             graphQLClient = new GraphQLHttpClient($"{BaseUrl}/graphql", new SystemTextJsonSerializer());
+
+            Thread.Sleep(2000); // wait a bit more to make sure omnikeeper is fully initialized (f.e. trait rebuilding)
         }
 
         [TearDown]
