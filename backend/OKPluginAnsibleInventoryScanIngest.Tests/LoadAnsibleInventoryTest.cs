@@ -109,20 +109,21 @@ namespace Tests.Ingest
             var setupFacts = hosts.ToDictionary(fqdn => $"{fqdn}.json", fqdn =>
             {
                 var f = LoadFile($"{fqdn}\\setup_facts.json");
+                return f;
 
-                using var jsonReader = new JsonTextReader(new StringReader(f))
-                {
-                    DateParseHandling = DateParseHandling.None // TODO: ensure that we always set this!
-                };
-                var data = JToken.ReadFrom(jsonReader) as JObject;
-                return data!;
+                //using var jsonReader = new JsonTextReader(new StringReader(f))
+                //{
+                //    DateParseHandling = DateParseHandling.None // TODO: ensure that we always set this!
+                //};
+                //var data = JToken.ReadFrom(jsonReader) as JObject;
+                //return data!;
             });
 
             var response = await controller.IngestAnsibleInventoryScan(insertLayer.ID, searchLayerSet.LayerIDs, new AnsibleInventoryScanDTO(
                 setupFacts,
-                new Dictionary<string, JObject>() { },
-                new Dictionary<string, JObject>() { },
-                new Dictionary<string, JObject>() { }
+                new Dictionary<string, string>() { },
+                new Dictionary<string, string>() { },
+                new Dictionary<string, string>() { }
             ));
             return response;
         }

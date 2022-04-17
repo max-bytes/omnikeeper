@@ -34,17 +34,17 @@ namespace Omnikeeper.Base.Utils
             {
                 if (!jsonDocument.RootElement.TryGetProperty(jsonPropertyName, out var typeProperty))
                 {
-                    throw new JsonException();
+                    throw new JsonException($"JSON object does not contain property \"{jsonPropertyName}\" required for polymorphic type deserializion");
                 }
 
                 var typeName = typeProperty.GetString();
                 if (typeName == null)
                 {
-                    throw new JsonException();
+                    throw new JsonException($"JSON property value of \"{jsonPropertyName}\", required for polymorphic type deserializion, is not a proper string");
                 }
                 if (!validTypeNames.TryGetValue(typeName, out var type))
                 {
-                    throw new JsonException();
+                    throw new JsonException($"JSON property value \"{typeName}\" of \"{jsonPropertyName}\" is not one of the allowed values");
                 }
 
                 var result = (T?)JsonSerializer.Deserialize(jsonDocument, type, options);

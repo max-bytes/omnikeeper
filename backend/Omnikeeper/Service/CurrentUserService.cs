@@ -281,7 +281,7 @@ namespace Omnikeeper.Service
                 {
                     throw new Exception("Cannot parse roles in user token: key \"resource_access\" not found");
                 }
-                var resourceAccess = JsonDocument.Parse(resourceAccessStr);
+                using var resourceAccess = JsonDocument.Parse(resourceAccessStr);
                 if (resourceAccess == null)
                 {
                     throw new Exception("Cannot parse roles in user token: Cannot parse resource_access JSON value");

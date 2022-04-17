@@ -103,21 +103,17 @@ namespace Omnikeeper.Startup
 
             // add input and output formatters
             services.AddOptions<MvcOptions>()
-                .PostConfigure<IOptions<JsonOptions>, IOptions<MvcNewtonsoftJsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, newtonJsonOpts, charPool, objectPoolProvider, loggerFactory) =>
+                .PostConfigure<IOptions<JsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, charPool, objectPoolProvider, loggerFactory) =>
                 {
 
                     config.InputFormatters.Clear();
                     config.InputFormatters.Add(new MySuperJsonInputFormatter());
                     config.InputFormatters.Add(new SystemTextJsonInputFormatter(jsonOpts.Value, loggerFactory.CreateLogger<SystemTextJsonInputFormatter>()));
-                    config.InputFormatters.Add(new NewtonsoftJsonInputFormatter(
-                        loggerFactory.CreateLogger<NewtonsoftJsonInputFormatter>(), newtonJsonOpts.Value.SerializerSettings, charPool, objectPoolProvider, config, newtonJsonOpts.Value
-                    ));
                     config.InputFormatters.Add(new SpanJsonInputFormatter<SpanJsonDefaultResolver<byte>>());
 
                     config.OutputFormatters.Clear();
                     config.OutputFormatters.Add(new MySuperJsonOutputFormatter());
                     config.OutputFormatters.Add(new SystemTextJsonOutputFormatter(jsonOpts.Value.JsonSerializerOptions));
-                    config.OutputFormatters.Add(new NewtonsoftJsonOutputFormatter(newtonJsonOpts.Value.SerializerSettings, charPool, config, null));
                     config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
                 });
 
@@ -245,7 +241,6 @@ namespace Omnikeeper.Startup
                     return oid;
                 });
             });
-            services.AddSwaggerGenNewtonsoftSupport();
 
             // whether or not to show personally identifiable information in exceptions
             // see https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/wiki/PII

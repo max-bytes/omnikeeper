@@ -19,16 +19,6 @@ namespace Tests.Serialization
                     new CIAttributeValueConstraintTextLength(null, 2),
                 }));
 
-            var newtonSoftSerializer = new NewtonSoftJSONSerializer<TraitAttribute>(() =>
-            {
-                var s = new Newtonsoft.Json.JsonSerializerSettings()
-                {
-                    TypeNameHandling = Newtonsoft.Json.TypeNameHandling.Objects
-                };
-                s.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                return s;
-            });
-
             var systemTextJSONSerializer = new SystemTextJSONSerializer<TraitAttribute>(() =>
             {
                 return new System.Text.Json.JsonSerializerOptions()
@@ -41,26 +31,14 @@ namespace Tests.Serialization
             });
 
 
-            var expectedSerializedNewtonsoft = "{\"$type\":\"Omnikeeper.Base.Entity.TraitAttribute, Omnikeeper.Base\",\"AttributeTemplate\":{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeTemplate, Omnikeeper.Base\",\"Name\":\"attributeName\",\"Type\":\"MultilineText\",\"IsArray\":true,\"ValueConstraints\":[{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeValueConstraintTextRegex, Omnikeeper.Base\",\"RegexStr\":\"foo[12]\",\"RegexOptions\":\"IgnoreCase, ECMAScript\"},{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeValueConstraintTextLength, Omnikeeper.Base\",\"Minimum\":null,\"Maximum\":2}],\"IsID\":false},\"Identifier\":\"traitIdentifier\"}";
             var expectedSerializedSystemTextJson = "{\"AttributeTemplate\":{\"Name\":\"attributeName\",\"Type\":\"MultilineText\",\"IsArray\":true,\"ValueConstraints\":[{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeValueConstraintTextRegex, Omnikeeper.Base\",\"RegexStr\":\"foo[12]\",\"RegexOptions\":\"IgnoreCase, ECMAScript\"},{\"$type\":\"Omnikeeper.Base.Entity.CIAttributeValueConstraintTextLength, Omnikeeper.Base\",\"Minimum\":null,\"Maximum\":2}],\"IsID\":false},\"Identifier\":\"traitIdentifier\"}";
-
-            var sNewtonsoft = newtonSoftSerializer.SerializeToString(t);
-            // comparison taken from https://github.com/fluentassertions/fluentassertions/issues/1212
-            JsonDocument.Parse(sNewtonsoft).RootElement.Should().BeEquivalentTo(JsonDocument.Parse(expectedSerializedNewtonsoft).RootElement, opt => opt.ComparingByMembers<JsonElement>());
 
             var sSystemTextJson = systemTextJSONSerializer.SerializeToString(t);
             JsonDocument.Parse(expectedSerializedSystemTextJson).RootElement.Should().BeEquivalentTo(JsonDocument.Parse(sSystemTextJson).RootElement, opt => opt.ComparingByMembers<JsonElement>());
             //Assert.AreEqual(expectedSerializedSystemTextJson, sSystemTextJson);
 
-            var tNewtonsoft = newtonSoftSerializer.Deserialize(sNewtonsoft);
-            tNewtonsoft.Should().BeEquivalentTo(t);
-
             var tSystemTextJson = systemTextJSONSerializer.Deserialize(sSystemTextJson);
             tSystemTextJson.Should().BeEquivalentTo(t);
-
-            // test if systemTextJSON serializer can properly deserialize newtonsoft-serialized object
-            var tSystemTextJsonFromSNewtonsoft = systemTextJSONSerializer.Deserialize(sNewtonsoft);
-            tSystemTextJsonFromSNewtonsoft.Should().BeEquivalentTo(t);
         }
     }
 }

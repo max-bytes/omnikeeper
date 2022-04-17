@@ -1,6 +1,4 @@
 ﻿using FluentAssertions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
@@ -42,24 +40,8 @@ namespace Tests.Serialization
 
         private void TestSerialization(ICIAttributeValueConstraint t, string expectedSerialized)
         {
-            var newtonsoftSerializer = new NewtonSoftJSONSerializer<ICIAttributeValueConstraint>(() =>
-            {
-                var s = new JsonSerializerSettings()
-                {
-                    TypeNameHandling = TypeNameHandling.Objects
-                };
-                s.Converters.Add(new StringEnumConverter());
-                return s;
-            });
-
-            var sNewtonsoft = newtonsoftSerializer.SerializeToString(t);
-            Assert.AreEqual(expectedSerialized, sNewtonsoft);
-
             var sSystemTextJson = ICIAttributeValueConstraint.SystemTextJSONSerializer.SerializeToString(t);
             Assert.AreEqual(expectedSerialized, sSystemTextJson);
-
-            var tNewtonsoft = newtonsoftSerializer.Deserialize(sNewtonsoft);
-            tNewtonsoft.Should().BeEquivalentTo(t);
 
             var tSystemTextJson = ICIAttributeValueConstraint.SystemTextJSONSerializer.Deserialize(sSystemTextJson);
             tSystemTextJson.Should().BeEquivalentTo(t);

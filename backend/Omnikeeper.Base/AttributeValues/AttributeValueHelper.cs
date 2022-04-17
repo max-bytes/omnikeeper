@@ -21,55 +21,103 @@ namespace Omnikeeper.Base.AttributeValues
                         {
                             if (o == null)
                                 throw new Exception($"Expected object {o} to be string, found null");
-                            else if (o.GetType().IsArray) // TODO: stricter array null handling
-                                return AttributeArrayValueText.BuildFromString(((o as object[])!).OfType<string>().ToArray(), false);
-                            else
+                            else if (o is string str)
+                                return new AttributeScalarValueText(str, false);
+                            else if (o is JsonElement el)
                             {
-                                if (o is not string t)
-                                    throw new Exception($"Expected object {o} to be string, found {o.GetType().Name}");
-                                return new AttributeScalarValueText(t, false);
+                                switch (el.ValueKind)
+                                {
+                                    case JsonValueKind.Array: 
+                                        return AttributeArrayValueText.BuildFromString(el.EnumerateArray().Select(e => e.GetString()!));
+                                    case JsonValueKind.String:
+                                    case JsonValueKind.Number:
+                                    case JsonValueKind.True:
+                                    case JsonValueKind.False:
+                                        return new AttributeScalarValueText(el.GetString()!);
+                                    default:
+                                        throw new Exception($"Expected JsonElement {el} to be convertible to string, found {el.ValueKind}");
+                                }
                             }
+                            else if (o is string[] strArray)
+                            {
+                                return AttributeArrayValueText.BuildFromString(strArray, false);
+                            }
+                            else
+                                throw new Exception($"Expected object {o} to be string, found {o.GetType().Name}");
                         }
                     case AttributeValueType.MultilineText:
                         {
                             if (o == null)
                                 throw new Exception($"Expected object {o} to be string, found null");
-                            else if (o.GetType().IsArray) // TODO: stricter array null handling
-                                return AttributeArrayValueText.BuildFromString(((o as object[])!).OfType<string>().ToArray(), true);
-                            else
+                            else if (o is string str)
+                                return new AttributeScalarValueText(str, true);
+                            else if (o is JsonElement el)
                             {
-                                if (o is not string t)
-                                    throw new Exception($"Expected object {o} to be string, found {o.GetType().Name}");
-                                return new AttributeScalarValueText(t, true);
+                                switch (el.ValueKind)
+                                {
+                                    case JsonValueKind.Array:
+                                        return AttributeArrayValueText.BuildFromString(el.EnumerateArray().Select(e => e.GetString()!), true);
+                                    case JsonValueKind.String:
+                                    case JsonValueKind.Number:
+                                    case JsonValueKind.True:
+                                    case JsonValueKind.False:
+                                        return new AttributeScalarValueText(el.GetString()!, true);
+                                    default:
+                                        throw new Exception($"Expected JsonElement {el} to be convertible to string, found {el.ValueKind}");
+                                }
                             }
+                            else if (o is string[] strArray)
+                            {
+                                return AttributeArrayValueText.BuildFromString(strArray, true);
+                            }
+                            else
+                                throw new Exception($"Expected object {o} to be string, found {o.GetType().Name}");
                         }
                     case AttributeValueType.Integer:
                         {
                             if (o == null)
                                 throw new Exception($"Expected object {o} to be long, found null");
-                            else if (o.GetType().IsArray) // TODO: stricter array null handling
-                                return AttributeArrayValueInteger.Build(((o as object[])!).OfType<long>().ToArray());
-                            else
+                            else if (o is long lo)
+                                return new AttributeScalarValueInteger(lo);
+                            else if (o is JsonElement el)
                             {
-                                var t = o as long?;
-                                if (!t.HasValue)
-                                    throw new Exception($"Expected object {o} to be long, found {o.GetType().Name}");
-                                return new AttributeScalarValueInteger(t.Value);
+                                switch (el.ValueKind)
+                                {
+                                    case JsonValueKind.Array:
+                                        return AttributeArrayValueInteger.BuildFromString(el.EnumerateArray().Select(e => e.GetString()!).ToArray());
+                                    case JsonValueKind.Number:
+                                        return new AttributeScalarValueInteger(el.GetInt64());
+                                    default:
+                                        throw new Exception($"Expected JsonElement {el} to be convertible to long, found {el.ValueKind}");
+                                }
                             }
+                            else if (o is long[] loa)
+                                return AttributeArrayValueInteger.Build(loa);
+                            else
+                                throw new Exception($"Expected object {o} to be long, found {o.GetType().Name}");
                         }
                     case AttributeValueType.Double:
                         {
                             if (o == null)
                                 throw new Exception($"Expected object {o} to be double, found null");
-                            else if (o.GetType().IsArray) // TODO: stricter array null handling
-                                return AttributeArrayValueDouble.Build(((o as object[])!).OfType<double>().ToArray());
-                            else
+                            else if (o is double[] da)
+                                return AttributeArrayValueDouble.Build(da);
+                            else if (o is double d)
+                                return new AttributeScalarValueDouble(d);
+                            else if (o is JsonElement el)
                             {
-                                var t = o as double?;
-                                if (!t.HasValue)
-                                    throw new Exception($"Expected object {o} to be double, found {o.GetType().Name}");
-                                return new AttributeScalarValueDouble(t.Value);
+                                switch (el.ValueKind)
+                                {
+                                    case JsonValueKind.Array:
+                                        return AttributeArrayValueDouble.BuildFromString(el.EnumerateArray().Select(e => e.GetString()!).ToArray());
+                                    case JsonValueKind.Number:
+                                        return new AttributeScalarValueDouble(el.GetDouble());
+                                    default:
+                                        throw new Exception($"Expected JsonElement {el} to be convertible to double, found {el.ValueKind}");
+                                }
                             }
+                            else
+                                throw new Exception($"Expected object {o} to be double, found {o.GetType().Name}");
                         }
                     case AttributeValueType.JSON:
                         {
@@ -100,66 +148,26 @@ namespace Omnikeeper.Base.AttributeValues
                             {
                                 if (o is JsonDocument t)
                                     return AttributeScalarValueJSONNew.Build(t);
+                                else if (o is JsonElement je)
+                                    return AttributeScalarValueJSONNew.Build(JsonDocument.Parse(je.GetRawText())); // TODO: performance?
                                 else if (o is string so)
                                     return AttributeScalarValueJSONNew.BuildFromString(so);
                                 else
                                 {
-                                    // HACK, TODO: some parts of omnikeeper still produce Newtonsoft.Json objects, like the GenericJSONIngest
-                                    // so we support this for now, but try to remove ASAP
-                                    if (o is Newtonsoft.Json.Linq.JToken jo)
-                                    {
-                                        return AttributeScalarValueJSONNew.BuildFromString(jo.ToString());
-                                    }
                                     throw new Exception($"Expected object {o} to be JsonDocument or string, found {o.GetType().Name}");
                                 }
                             }
-                            //if (o == null)
-                            //    throw new Exception($"Expected object {o} to not be null, found null");
-                            //else if (o is JArray a) // TODO: stricter array null handling
-                            //    return AttributeArrayValueJSON.Build(a.Children().ToArray());
-                            //else if (o is object[] oa)
-                            //{
-                            //    if (oa.Length == 0) // if the length of the array is zero, we don't have good type information, so we treat this case separately
-                            //        return AttributeArrayValueJSON.Build(Enumerable.Empty<JToken>());
-                            //    if (o is string[] sa)
-                            //        return AttributeArrayValueJSON.BuildFromString(sa);
-                            //    else if (o is JToken[] ja)
-                            //        return AttributeArrayValueJSON.Build(ja);
-                            //    else
-                            //    {
-                            //        var stringArray = new string[oa.Length];
-                            //        for(var i = 0;i < oa.Length;i++)
-                            //        {
-                            //            var s = oa[i].ToString();
-                            //            if (s == null)
-                            //                throw new Exception($"Cannot deal with object {o}, that is an array, but neither string array nor JToken array");
-                            //            stringArray[i] = s;
-                            //        }
-                            //        return AttributeArrayValueJSON.BuildFromString(stringArray);
-                            //    }
-                            //}
-                            //else
-                            //{
-                            //    if (o is JToken t)
-                            //        return AttributeScalarValueJSON.Build(t);
-                            //    else if (o is string so)
-                            //        return AttributeScalarValueJSON.BuildFromString(so);
-                            //    else
-                            //        throw new Exception($"Expected object {o} to be JToken, found {o.GetType().Name}");
-                            //}
                         }
                     case AttributeValueType.YAML:
                         {
                             if (o == null)
                                 throw new Exception($"Expected object {o} to be string, found null");
-                            else if (o.GetType().IsArray) // TODO: stricter array null handling
-                                return AttributeArrayValueYAML.BuildFromString(((o as object[])!).OfType<string>().ToArray());
-                            else
-                            {
-                                if (o is not string t)
-                                    throw new Exception($"Expected object {o} to be string, found {o.GetType().Name}");
+                            else if (o is string[] oa)
+                                return AttributeArrayValueYAML.BuildFromString(oa);
+                            else if (o is string t)
                                 return AttributeScalarValueYAML.BuildFromString(t);
-                            }
+                            else
+                                throw new Exception($"Expected object {o} to be YAML, found {o.GetType().Name}");
                         }
                     case AttributeValueType.Mask:
                         return AttributeScalarValueMask.Instance;

@@ -18,10 +18,6 @@ namespace Omnikeeper.Utils
     {
         public Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next) => next();
     }
-    internal class UseNewtonsoftJsonAttribute : Attribute, IAsyncActionFilter
-    {
-        public Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next) => next();
-    }
 
     internal class MySuperJsonInputFormatter : TextInputFormatter
     {
@@ -36,18 +32,12 @@ namespace Omnikeeper.Utils
         {
             var mvcOpt = context.HttpContext.RequestServices.GetRequiredService<IOptions<MvcOptions>>().Value;
             var formatters = mvcOpt.InputFormatters;
-            TextInputFormatter? formatter = null;
+            TextInputFormatter? formatter;
 
             Endpoint? endpoint = context.HttpContext.GetEndpoint();
             if (endpoint?.Metadata.GetMetadata<UseSpanJsonAttribute>() != null)
             {
                 formatter = formatters.OfType<SpanJsonInputFormatter<SpanJsonDefaultResolver<byte>>>().FirstOrDefault();
-            }
-            else if (endpoint?.Metadata.GetMetadata<UseNewtonsoftJsonAttribute>() != null)
-            {
-                formatter = (NewtonsoftJsonInputFormatter?)(formatters
-                    .Where(f => typeof(NewtonsoftJsonInputFormatter) == f.GetType())
-                    .FirstOrDefault());
             }
             else
             {
@@ -72,19 +62,14 @@ namespace Omnikeeper.Utils
         {
             var mvcOpt = context.HttpContext.RequestServices.GetRequiredService<IOptions<MvcOptions>>().Value;
             var formatters = mvcOpt.OutputFormatters;
-            TextOutputFormatter? formatter = null;
+            TextOutputFormatter? formatter;
 
             Endpoint? endpoint = context.HttpContext.GetEndpoint();
             if (endpoint?.Metadata.GetMetadata<UseSpanJsonAttribute>() != null)
             {
                 formatter = formatters.OfType<SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>>().FirstOrDefault();
             }
-            else if (endpoint?.Metadata.GetMetadata<UseNewtonsoftJsonAttribute>() != null)
-            {
-                formatter = (NewtonsoftJsonOutputFormatter?)(formatters
-                    .Where(f => typeof(NewtonsoftJsonOutputFormatter) == f.GetType())
-                    .FirstOrDefault());
-            } else
+            else
             {
                 formatter = formatters.OfType<SystemTextJsonOutputFormatter>().FirstOrDefault();
             }

@@ -55,8 +55,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                             new GenericInboundAttribute
                             {
                                 name = "a",
-                                type = AttributeValueType.JSON,
-                                value = JsonDocument.Parse("[]")
+                                value = AttributeArrayValueJSONNew.BuildFromString(new string[0])
                             }
                         }
                     }

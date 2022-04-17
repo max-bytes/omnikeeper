@@ -44,7 +44,6 @@ namespace Omnikeeper.Base.Entity
         }
 
         [JsonPropertyName("$type")]
-        [Newtonsoft.Json.JsonIgnore]
         public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
         public static CIAttributeValueConstraintTextLength Build(int? min, int? max)
@@ -79,7 +78,6 @@ namespace Omnikeeper.Base.Entity
         }
 
         [JsonPropertyName("$type")]
-        [Newtonsoft.Json.JsonIgnore]
         public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
         public static CIAttributeValueConstraintArrayLength Build(int? min, int? max)
@@ -114,7 +112,6 @@ namespace Omnikeeper.Base.Entity
         public readonly RegexOptions RegexOptions;
 
         [JsonPropertyName("$type")]
-        [Newtonsoft.Json.JsonIgnore]
         public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
         [JsonIgnore]
@@ -129,7 +126,6 @@ namespace Omnikeeper.Base.Entity
         }
 
         [JsonConstructor]
-        [Newtonsoft.Json.JsonConstructor]
         public CIAttributeValueConstraintTextRegex(string regexStr, RegexOptions regexOptions)
         {
             RegexStr = regexStr;

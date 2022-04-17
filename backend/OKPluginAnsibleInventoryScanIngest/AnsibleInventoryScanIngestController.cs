@@ -68,7 +68,7 @@ namespace Omnikeeper.Controllers.Ingest
 
                 var transformer = TransformerJMESPath.Build(new TransformConfigJMESPath(AnsibleInventoryScanJMESPathExpression.Expression));
 
-                var documents = new Dictionary<string, JToken>();
+                var documents = new Dictionary<string, string>();
                 foreach(var kv in data.SetupFacts)
                     documents.Add("setup_facts_" + kv.Key, kv.Value);
                 foreach (var kv in data.YumInstalled)

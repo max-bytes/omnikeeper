@@ -2,8 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using OKPluginGenericJSONIngest;
 using OKPluginGenericJSONIngest.Extract;
 using OKPluginGenericJSONIngest.Load;
@@ -19,7 +17,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers.Ingest
@@ -254,28 +252,38 @@ namespace Omnikeeper.Controllers.Ingest
 
                         // NOTE: by just concating the strings together, not actually parsing the JSON at all (at this step)
                         // we safe some performance
-                        JToken genericInboundDataJson;
+                        string genericInboundDataJson;
                         try
                         {
                             var inputFilesSize = fileStreams.Sum(f => f.stream.Length);
                             using var ms = new MemoryStream((int)(inputFilesSize + fileStreams.Count() * 100 + 10));
-                            using var sw = new StreamWriter(ms);
-                            sw.Write("[");
+                            using var sw = new Utf8JsonWriter(ms);
+                            sw.WriteStartArray();
                             var numFileStreams = fileStreams.Count();
                             for (int i = 0; i < numFileStreams; i++)
                             {
                                 var item = fileStreams[i];
-                                var stream = item.stream;
-                                sw.Write($"{{\"document\":\"{item.filename}\",\"data\":");
-                                sw.Flush();
-                                stream.CopyTo(sw.BaseStream);
-                                sw.Write($"}}");
-                                if (i < numFileStreams - 1)
-                                    sw.Write(",");
+
+                                StreamReader tmpStreamReader = new StreamReader(item.stream);
+
+                                sw.WriteStartObject();
+                                //sw.WritePropertyName("document");
+                                sw.WriteString("document", item.filename);
+                                //ms.Write()
+                                //sw.Write($"{{\"document\":\"{item.filename}\",\"data\":");
+                                sw.WritePropertyName("data");
+                                sw.WriteRawValue(tmpStreamReader.ReadToEnd()); // TODO: can be optimized?
+                                //sw.Flush();
+                                //stream.CopyTo(ms);
+                                sw.WriteEndObject();
+                                //sw.Write($"}}");
+                                //if (i < numFileStreams - 1)
+                                //    sw.Write(",");
 
                                 item.stream.Dispose();
                             }
-                            sw.Write("]");
+                            sw.WriteEndArray();
+                            //sw.Write("]");
                             sw.Flush();
 
                             ms.Position = 0;
@@ -296,15 +304,16 @@ namespace Omnikeeper.Controllers.Ingest
                             //subStreams.Add(new StringStream("]"));
                             //using var multiStream = new MultiStream(subStreams);
 
-                            using var sr = new StreamReader(ms, Encoding.UTF8, true, 404800);
-                            using var jsonTextReader = new JsonTextReader(sr);
-
-                            var token = await JToken.ReadFromAsync(jsonTextReader);
+                            //using var sr = new StreamReader(ms, Encoding.UTF8, true, 404800);
+                            //using var jsonTextReader = new JsonTextReader(sr);
+                            //var token = await JToken.ReadFromAsync(jsonTextReader);
+                            StreamReader reader = new StreamReader(ms);
+                            string text = reader.ReadToEnd();
 
                             foreach (var stream in fileStreams)
                                 stream.stream.Dispose();
 
-                            genericInboundDataJson = transformer.TransformJSON(token);
+                            genericInboundDataJson = transformer.TransformJSON(text);
                         }
                         catch (Exception e)
                         {
