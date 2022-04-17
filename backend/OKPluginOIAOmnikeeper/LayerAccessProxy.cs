@@ -78,23 +78,25 @@ namespace OKPluginOIAOmnikeeper
         {
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
-            var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
+            throw new NotImplementedException(); // TODO
 
-            // we need to map the ciids to external ciids, even if they are the same, to ensure that only mapped cis are fetched
-            var IDPairs = mapper.GetIDPairs(ciids);
+            //var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
 
-            if (IDPairs.IsEmpty()) yield break; // no ci maps, bail early
+            //// we need to map the ciids to external ciids, even if they are the same, to ensure that only mapped cis are fetched
+            //var IDPairs = mapper.GetIDPairs(ciids);
 
-            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
+            //if (IDPairs.IsEmpty()) yield break; // no ci maps, bail early
 
-            var externalIDs = IDPairs.Select(p => p.externalID.ID);
-            var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
-            var attributesDTO = (attributeSelection is RegexAttributeSelection ras) ? // TODO: support other attribute selections
-                await client.FindMergedAttributesByNameAsync(ras.RegexStr, ciids, remoteLayerIDs, time, ClientVersion) : // TODO: does not exist anymore in later versions
-                await client.GetMergedAttributesAsync(externalIDs, remoteLayerIDs, time, ClientVersion);
-            foreach (var a in AttributeDTO2Regular(attributesDTO))
-                yield return a;
+            //var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
+            //var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
+
+            //var externalIDs = IDPairs.Select(p => p.externalID.ID);
+            //var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
+            //var attributesDTO = (attributeSelection is RegexAttributeSelection ras) ? // TODO: support other attribute selections
+            //    await client.FindMergedAttributesByNameAsync(ras.RegexStr, ciids, remoteLayerIDs, time, ClientVersion) : // TODO: does not exist anymore in later versions
+            //    await client.GetMergedAttributesAsync(externalIDs, remoteLayerIDs, time, ClientVersion);
+            //foreach (var a in AttributeDTO2Regular(attributesDTO))
+            //    yield return a;
         }
 
         public Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
@@ -130,14 +132,16 @@ namespace OKPluginOIAOmnikeeper
         {
             if (!atTime.IsLatest) return null; // TODO: implement historic information
 
-            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
-            var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
+            throw new NotImplementedException(); // TODO
 
-            var relationDTO = await client.GetMergedRelationAsync(fromCIID, toCIID, predicateID, remoteLayerIDs, time, ClientVersion);
-            if (relationDTO == null) return null;
+            //var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
+            //var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
+            //var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
 
-            return RelationDTO2Regular(relationDTO);
+            //var relationDTO = await client.GetMergedRelationAsync(fromCIID, toCIID, predicateID, remoteLayerIDs, time, ClientVersion);
+            //if (relationDTO == null) return null;
+
+            //return RelationDTO2Regular(relationDTO);
         }
     }
 }
