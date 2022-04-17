@@ -101,7 +101,7 @@ jobs:
         run: |
             cd frontend/$PLUGIN_FOLDER
             npm config set unsafe-perm true # needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
-            npm ci
+            npm ci  --legacy-peer-deps #  --legacy-peer-deps is necessary because npm 7 changed the way peer dependencies are handled
             cat <<'EOF' > .npmrc
             //${REPOURL}:_authToken=${ACCESS_TOKEN}
             @max-bytes:registry=https://npm.pkg.github.com
