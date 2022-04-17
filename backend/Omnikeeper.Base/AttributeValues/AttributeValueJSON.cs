@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -35,7 +33,7 @@ namespace Omnikeeper.Entity.AttributeValues
                     throw new Exception("Could not parse JsonDocument from string");
                 return Build(vv);
             }
-            catch (JsonReaderException e)
+            catch (Exception e)
             {
                 throw new Exception("Error building JSON attribute value from string", e);
             }
@@ -81,7 +79,7 @@ namespace Omnikeeper.Entity.AttributeValues
                 {
                     return JsonDocument.Parse(value);
                 }
-                catch (JsonReaderException e)
+                catch (Exception e)
                 {
                     throw new Exception("Error building JSON attribute value from string", e);
                 }

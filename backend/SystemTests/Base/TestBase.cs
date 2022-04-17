@@ -1,7 +1,7 @@
 ﻿using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
-using DotNet.Testcontainers.Network;
+using DotNet.Testcontainers.Networks;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;

@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotNet.Testcontainers" Version="1.6.0-beta.2130" />
+    <PackageReference Include="DotNet.Testcontainers" Version="1.6.0-beta.2185" />
     <PackageReference Include="FluentAssertions" Version="6.6.0" />
     <PackageReference Include="GraphQL.Client" Version="4.0.2" />
     <PackageReference Include="GraphQL.Client.Abstractions" Version="4.0.2" />
