@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -15,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Service
@@ -281,21 +281,20 @@ namespace Omnikeeper.Service
                 {
                     throw new Exception("Cannot parse roles in user token: key \"resource_access\" not found");
                 }
-                var resourceAccess = JObject.Parse(resourceAccessStr);
+                var resourceAccess = JsonDocument.Parse(resourceAccessStr);
                 if (resourceAccess == null)
                 {
                     throw new Exception("Cannot parse roles in user token: Cannot parse resource_access JSON value");
                 }
                 var resourceName = audience;
-                var claimRoles = resourceAccess[resourceName]?["roles"];
                 var clientRoles = new HashSet<string>();
-                if (claimRoles == null)
+                try
                 {
-                    logger.LogWarning($"Cannot parse roles in user token for user {username}: key-path \"resource_access\"->\"{resourceName}\"->\"roles\" not found; either no roles assigned or token structure invalid");
-                }
-                else
+                    var claimRoles = resourceAccess.RootElement.GetProperty(resourceName).GetProperty("roles").EnumerateArray();
+                    clientRoles = claimRoles.Select(tt => tt.GetString()!).ToHashSet();
+                } catch (Exception ex)
                 {
-                    clientRoles = claimRoles.Select(tt => tt.Value<string>()).ToHashSet();
+                    logger.LogWarning(ex, $"Cannot parse roles in user token for user {username}: key-path \"resource_access\"->\"{resourceName}\"->\"roles\" not found; either no roles assigned or token structure invalid");
                 }
 
                 var usertype = UserType.Unknown;
