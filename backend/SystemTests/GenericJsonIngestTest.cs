@@ -58,7 +58,7 @@ namespace SystemTests
             var httpClient = new HttpClient();
             var content = new StringContent(postDataIngestContext, Encoding.UTF8, "application/json");
             var responseCreateContext = await httpClient.PostAsync(insertUrl, content);
-            Assert.AreEqual(HttpStatusCode.OK, responseCreateContext.StatusCode);
+            Assert.AreEqual(HttpStatusCode.OK, responseCreateContext.StatusCode, responseCreateContext.Content.ReadAsStringAsync().GetAwaiter().GetResult());
 
             // prepare ingest data and perform ingest
             var ingestData = @"
