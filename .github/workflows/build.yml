@@ -129,10 +129,10 @@ jobs:
             dotnet nuget push "$1/bin/Release/$1.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
           }
           buildPublish OKPluginGenericJSONIngest
-          buildPublish OKPluginOIASharepoint
-          buildPublish OKPluginOIAOmnikeeper
-          buildPublish OKPluginOIAKeycloak
-          buildPublish OKPluginCLBMonitoring
+          #buildPublish OKPluginOIASharepoint
+          #buildPublish OKPluginOIAOmnikeeper
+          #buildPublish OKPluginOIAKeycloak
+          #buildPublish OKPluginCLBMonitoring
           buildPublish OKPluginAnsibleInventoryScanIngest
           buildPublish OKPluginActiveDirectoryXMLIngest
           buildPublish OKPluginVariableRendering
