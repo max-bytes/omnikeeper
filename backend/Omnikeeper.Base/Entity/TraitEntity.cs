@@ -48,16 +48,22 @@ namespace Omnikeeper.Base.Entity
             }
             else if (attribute is AttributeArrayValueJSON aa)
             {
-                var tokens = aa.Values.Select(v => v.Value).ToArray();
-                var deserialized = Array.CreateInstance(type, tokens.Length); // TODO: use proper generic types instead of Type
-                for (int i = 0; i < tokens.Length; i++)
+                //var tokens = aa.Values.Select(v => v.Value).ToArray();
+                //var deserialized = Array.CreateInstance(type, tokens.Length); // TODO: use proper generic types instead of Type
+                //for (int i = 0; i < tokens.Length; i++)
+                //{
+                //    var e = systemTextJsonSerializer.Deserialize(tokens[i], type);
+                //    if (e == null)
+                //        throw new Exception(); // TODO
+                //    deserialized.SetValue(e, i);
+                //}
+                //return deserialized;
+                var ret = new T[aa.Length];
+                for(int i = 0;i < aa.Values.Length;i++)
                 {
-                    var e = systemTextJsonSerializer.Deserialize(tokens[i], type);
-                    if (e == null)
-                        throw new Exception(); // TODO
-                    deserialized.SetValue(e, i);
+                    ret[i] = systemTextJsonSerializer.Deserialize(aa.Values[i].Value);
                 }
-                return deserialized;
+                return ret;
             }
             else
             {

@@ -409,8 +409,8 @@ namespace Omnikeeper.Base.AttributeValues
                 AttributeArrayValueInteger a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
                 AttributeScalarValueDouble a => MarshalSimpleBinaryV2(a.ToBytes()),
                 AttributeArrayValueDouble a => MarshalSimpleBinaryArrayV2(a.Values.Select(v => v.ToBytes())),
-                AttributeScalarValueJSON a => MarshalStringV2(a.Value.RootElement.GetRawText()), // TODO: better performance possible?
-                AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value.RootElement.GetRawText())), // TODO: better performance possible?
+                AttributeScalarValueJSON a => MarshalStringV2(a.Value2String()),
+                AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value2String())),
                 AttributeScalarValueYAML a => MarshalStringV2((a.Value.ToString())!),
                 AttributeArrayValueYAML a => MarshalStringArrayV2(a.Values.Select(v => (v.Value.ToString())!)),
                 AttributeScalarValueMask a => MarshalStringV2(""),
