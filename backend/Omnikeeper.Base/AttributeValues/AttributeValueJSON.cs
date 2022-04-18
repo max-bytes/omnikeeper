@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    public class AttributeScalarValueJSONNew : IAttributeScalarValue<JsonDocument>, IEquatable<AttributeScalarValueJSONNew>
+    public class AttributeScalarValueJSON : IAttributeScalarValue<JsonDocument>, IEquatable<AttributeScalarValueJSON>
     {
         private readonly JsonDocument value;
         private readonly string valueStr;
@@ -14,8 +14,8 @@ namespace Omnikeeper.Entity.AttributeValues
         public JsonDocument Value => value;
         public AttributeValueType Type => AttributeValueType.JSON;
         public bool IsArray => false;
-        public bool Equals([AllowNull] IAttributeValue? other) => Equals(other as AttributeScalarValueJSONNew);
-        public bool Equals([AllowNull] AttributeScalarValueJSONNew other)
+        public bool Equals([AllowNull] IAttributeValue? other) => Equals(other as AttributeScalarValueJSON);
+        public bool Equals([AllowNull] AttributeScalarValueJSON other)
         {
             return other != null && Value.RootElement.GetRawText() == other.Value.RootElement.GetRawText(); // TODO: implement proper deep equality
         }
@@ -44,34 +44,34 @@ namespace Omnikeeper.Entity.AttributeValues
             if (t.RootElement.ValueKind == JsonValueKind.Array)
             {
                 var documents = t.RootElement.EnumerateArray().Select(e => JsonDocument.Parse(e.GetRawText()));
-                return AttributeArrayValueJSONNew.Build(documents);
+                return AttributeArrayValueJSON.Build(documents);
             }
             else
             {
-                return new AttributeScalarValueJSONNew(t, t.RootElement.GetRawText());
+                return new AttributeScalarValueJSON(t, t.RootElement.GetRawText());
             }
         }
 
-        private AttributeScalarValueJSONNew(JsonDocument v, string valueStr)
+        private AttributeScalarValueJSON(JsonDocument v, string valueStr)
         {
             this.value = v;
             this.valueStr = valueStr;
         }
     }
 
-    public class AttributeArrayValueJSONNew : AttributeArrayValue<AttributeScalarValueJSONNew, JsonDocument>
+    public class AttributeArrayValueJSON : AttributeArrayValue<AttributeScalarValueJSON, JsonDocument>
     {
-        protected AttributeArrayValueJSONNew(AttributeScalarValueJSONNew[] values) : base(values)
+        protected AttributeArrayValueJSON(AttributeScalarValueJSON[] values) : base(values)
         {
         }
 
 #pragma warning disable CS8618
-        protected AttributeArrayValueJSONNew() { }
+        protected AttributeArrayValueJSON() { }
 #pragma warning restore CS8618
 
         public override AttributeValueType Type => AttributeValueType.JSON;
 
-        public static AttributeArrayValueJSONNew BuildFromString(string[] values)
+        public static AttributeArrayValueJSON BuildFromString(string[] values)
         {
             var jsonValues = values.Select(value =>
             {
@@ -87,12 +87,12 @@ namespace Omnikeeper.Entity.AttributeValues
             return Build(jsonValues);
         }
 
-        public static AttributeArrayValueJSONNew Build(IEnumerable<JsonDocument> values)
+        public static AttributeArrayValueJSON Build(IEnumerable<JsonDocument> values)
         {
-            var n = new AttributeArrayValueJSONNew(
+            var n = new AttributeArrayValueJSON(
                 values.Select(v => {
-                    var element = AttributeScalarValueJSONNew.Build(v);
-                    if (element is not AttributeScalarValueJSONNew jsonElement)
+                    var element = AttributeScalarValueJSON.Build(v);
+                    if (element is not AttributeScalarValueJSON jsonElement)
                         throw new Exception("Expected every element of AttributeArrayValueJSON to be object, not array");
                     return jsonElement;
                 }).ToArray()

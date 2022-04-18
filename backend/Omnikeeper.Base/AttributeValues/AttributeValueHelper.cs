@@ -126,11 +126,11 @@ namespace Omnikeeper.Base.AttributeValues
                             else if (o is object[] oa)
                             {
                                 if (oa.Length == 0) // if the length of the array is zero, we don't have good type information, so we treat this case separately
-                                    return AttributeArrayValueJSONNew.Build(Enumerable.Empty<JsonDocument>());
+                                    return AttributeArrayValueJSON.Build(Enumerable.Empty<JsonDocument>());
                                 if (o is string[] sa)
-                                    return AttributeArrayValueJSONNew.BuildFromString(sa);
+                                    return AttributeArrayValueJSON.BuildFromString(sa);
                                 else if (o is JsonDocument[] ja)
-                                    return AttributeArrayValueJSONNew.Build(ja);
+                                    return AttributeArrayValueJSON.Build(ja);
                                 else
                                 {
                                     var stringArray = new string[oa.Length];
@@ -141,17 +141,17 @@ namespace Omnikeeper.Base.AttributeValues
                                             throw new Exception($"Cannot deal with object {o}, that is an array, but neither string array nor JsonDocument array");
                                         stringArray[i] = s;
                                     }
-                                    return AttributeArrayValueJSONNew.BuildFromString(stringArray);
+                                    return AttributeArrayValueJSON.BuildFromString(stringArray);
                                 }
                             }
                             else
                             {
                                 if (o is JsonDocument t)
-                                    return AttributeScalarValueJSONNew.Build(t);
+                                    return AttributeScalarValueJSON.Build(t);
                                 else if (o is JsonElement je)
-                                    return AttributeScalarValueJSONNew.Build(JsonDocument.Parse(je.GetRawText())); // TODO: performance?
+                                    return AttributeScalarValueJSON.Build(JsonDocument.Parse(je.GetRawText())); // TODO: performance?
                                 else if (o is string so)
-                                    return AttributeScalarValueJSONNew.BuildFromString(so);
+                                    return AttributeScalarValueJSON.BuildFromString(so);
                                 else
                                 {
                                     throw new Exception($"Expected object {o} to be JsonDocument or string, found {o.GetType().Name}");
@@ -193,7 +193,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.MultilineText => AttributeArrayValueText.BuildFromString(generic.Values, true),
                     AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(generic.Values),
                     AttributeValueType.Double => AttributeArrayValueDouble.BuildFromString(generic.Values),
-                    AttributeValueType.JSON => AttributeArrayValueJSONNew.BuildFromString(generic.Values),
+                    AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(generic.Values),
                     AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(generic.Values),
                     AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                     AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
@@ -206,7 +206,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.MultilineText => new AttributeScalarValueText(generic.Values[0], true),
                     AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(generic.Values[0]),
                     AttributeValueType.Double => AttributeScalarValueDouble.BuildFromString(generic.Values[0]),
-                    AttributeValueType.JSON => AttributeScalarValueJSONNew.BuildFromString(generic.Values[0]),
+                    AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(generic.Values[0]),
                     AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(generic.Values[0]),
                     AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                     AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
@@ -250,7 +250,7 @@ namespace Omnikeeper.Base.AttributeValues
                         AttributeValueType.MultilineText => AttributeArrayValueText.BuildFromString(finalValues, true),
                         AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(finalValues),
                         AttributeValueType.Double => AttributeArrayValueDouble.BuildFromString(finalValues),
-                        AttributeValueType.JSON => AttributeArrayValueJSONNew.BuildFromString(finalValues),
+                        AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(finalValues),
                         AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(finalValues),
                         AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                         _ => throw new Exception($"Unknown type {type} encountered"),
@@ -264,7 +264,7 @@ namespace Omnikeeper.Base.AttributeValues
                         AttributeValueType.MultilineText => new AttributeScalarValueText(finalValue, true),
                         AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(finalValue),
                         AttributeValueType.Double => AttributeScalarValueDouble.BuildFromString(finalValue),
-                        AttributeValueType.JSON => AttributeScalarValueJSONNew.BuildFromString(finalValue),
+                        AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(finalValue),
                         AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(finalValue),
                         AttributeValueType.Mask => AttributeScalarValueMask.Instance,
                         _ => throw new Exception($"Unknown type {type} encountered"),
@@ -323,9 +323,9 @@ namespace Omnikeeper.Base.AttributeValues
                     case AttributeValueType.JSON:
                         {
                             if (isArray)
-                                return AttributeArrayValueJSONNew.BuildFromString(UnmarshalStringArrayV2(valueText, valueControl));
+                                return AttributeArrayValueJSON.BuildFromString(UnmarshalStringArrayV2(valueText, valueControl));
                             else
-                                return AttributeScalarValueJSONNew.BuildFromString(UnmarshalStringV2(valueText, valueControl));
+                                return AttributeScalarValueJSON.BuildFromString(UnmarshalStringV2(valueText, valueControl));
                         }
                     case AttributeValueType.YAML:
                         {
@@ -409,8 +409,8 @@ namespace Omnikeeper.Base.AttributeValues
                 AttributeArrayValueInteger a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
                 AttributeScalarValueDouble a => MarshalSimpleBinaryV2(a.ToBytes()),
                 AttributeArrayValueDouble a => MarshalSimpleBinaryArrayV2(a.Values.Select(v => v.ToBytes())),
-                AttributeScalarValueJSONNew a => MarshalStringV2(a.Value.RootElement.GetRawText()), // TODO: better performance possible?
-                AttributeArrayValueJSONNew a => MarshalStringArrayV2(a.Values.Select(v => v.Value.RootElement.GetRawText())), // TODO: better performance possible?
+                AttributeScalarValueJSON a => MarshalStringV2(a.Value.RootElement.GetRawText()), // TODO: better performance possible?
+                AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value.RootElement.GetRawText())), // TODO: better performance possible?
                 AttributeScalarValueYAML a => MarshalStringV2((a.Value.ToString())!),
                 AttributeArrayValueYAML a => MarshalStringArrayV2(a.Values.Select(v => (v.Value.ToString())!)),
                 AttributeScalarValueMask a => MarshalStringV2(""),

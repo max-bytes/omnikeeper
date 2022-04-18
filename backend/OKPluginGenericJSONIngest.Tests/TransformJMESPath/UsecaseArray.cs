@@ -36,7 +36,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         {
                             new GenericInboundAttribute { name = "textscalar", value = new AttributeScalarValueText("value 1") },
                             new GenericInboundAttribute { name = "textarray", value = AttributeArrayValueText.BuildFromString(new string[] {"value 1", "value 2" }) },
-                            new GenericInboundAttribute { name = "jsonarray", value = AttributeArrayValueJSONNew.BuildFromString(new string [] {
+                            new GenericInboundAttribute { name = "jsonarray", value = AttributeArrayValueJSON.BuildFromString(new string [] {
                                 @"{""foo"": ""bar"", ""blub"": ""bla""}",
                                 @"{ ""foo2"": ""bar2"", ""blub2"": ""bla2""}"
                             })},

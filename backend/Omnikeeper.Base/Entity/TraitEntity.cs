@@ -42,11 +42,11 @@ namespace Omnikeeper.Base.Entity
 
         public object Deserialize(IAttributeValue attribute, Type type)
         {
-            if (attribute is AttributeScalarValueJSONNew @as)
+            if (attribute is AttributeScalarValueJSON @as)
             {
                 return systemTextJsonSerializer.Deserialize(@as.Value, type);
             }
-            else if (attribute is AttributeArrayValueJSONNew aa)
+            else if (attribute is AttributeArrayValueJSON aa)
             {
                 var tokens = aa.Values.Select(v => v.Value).ToArray();
                 var deserialized = Array.CreateInstance(type, tokens.Length); // TODO: use proper generic types instead of Type
@@ -76,12 +76,12 @@ namespace Omnikeeper.Base.Entity
                     var e = systemTextJsonSerializer.SerializeToJsonDocument(a[i]);
                     serialized[i] = e;
                 }
-                return AttributeArrayValueJSONNew.Build(serialized);
+                return AttributeArrayValueJSON.Build(serialized);
             }
             else
             {
                 var jo = systemTextJsonSerializer.SerializeToJsonDocument(o);
-                return AttributeScalarValueJSONNew.Build(jo);
+                return AttributeScalarValueJSON.Build(jo);
             }
         }
     }

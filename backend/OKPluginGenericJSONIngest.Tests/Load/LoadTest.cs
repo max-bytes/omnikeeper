@@ -55,7 +55,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                             new GenericInboundAttribute
                             {
                                 name = "a",
-                                value = AttributeArrayValueJSONNew.BuildFromString(new string[0])
+                                value = AttributeArrayValueJSON.BuildFromString(new string[0])
                             }
                         }
                     }
@@ -66,7 +66,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
             var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), NullLogger.Instance);
 
             var jsonValue = ingestData.CICandidates.ToList().First().Attributes.Fragments.First().Value;
-            jsonValue.Should().BeEquivalentTo(AttributeArrayValueJSONNew.BuildFromString(new string[] { }), options => options.WithStrictOrdering().ComparingByMembers<JsonElement>());
+            jsonValue.Should().BeEquivalentTo(AttributeArrayValueJSON.BuildFromString(new string[] { }), options => options.WithStrictOrdering().ComparingByMembers<JsonElement>());
         }
 
 
