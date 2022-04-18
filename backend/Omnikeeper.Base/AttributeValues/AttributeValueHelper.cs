@@ -149,7 +149,7 @@ namespace Omnikeeper.Base.AttributeValues
                                 if (o is JsonDocument t)
                                     return AttributeScalarValueJSON.Build(t);
                                 else if (o is JsonElement je)
-                                    return AttributeScalarValueJSON.Build(JsonDocument.Parse(je.GetRawText())); // TODO: performance?
+                                    return AttributeScalarValueJSON.BuildFromString(je.GetRawText()); // TODO: performance?
                                 else if (o is string so)
                                     return AttributeScalarValueJSON.BuildFromString(so);
                                 else
