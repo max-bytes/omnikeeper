@@ -1,7 +1,6 @@
 ﻿using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Entity.AttributeValues;
 using System;
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -17,17 +16,18 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             }
 
             AttributeValueType? type = null;
-            object? valueObj = null;
+            JsonElement valueObj = default;
+            bool valueSet = false;
             while (reader.Read())
             {
                 if (reader.TokenType == JsonTokenType.EndObject)
                 {
-                    if (type.HasValue && valueObj != null)
+                    if (type.HasValue && valueSet)
                     {
-                        var value = AttributeValueHelper.BuildFromTypeAndObject(type.Value, valueObj);
+                        var value = AttributeValueHelper.BuildFromTypeAndJsonElement(type.Value, ref valueObj);
                         return value;
                     }
-                    else if (type.HasValue && valueObj == null)
+                    else if (type.HasValue && !valueSet)
                     {
                         return null;
                     } else
@@ -47,7 +47,8 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
                             type = JsonSerializer.Deserialize<AttributeValueType>(ref reader, options);
                             break;
                         case "value":
-                            valueObj = JsonSerializer.Deserialize<object>(ref reader, options);
+                            valueObj = JsonSerializer.Deserialize<JsonElement>(ref reader, options);
+                            valueSet = true;
                             break;
                     }
                 }

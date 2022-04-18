@@ -13,28 +13,28 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1jmplx01.mhx.at"
+            "value": "\u0022h1jmplx01.mhx.at\u0022"
           }
         },
         {
           "name": "fqdn",
           "value": {
             "type": "Text",
-            "value": "h1jmplx01.mhx.at"
+            "value": "\u0022h1jmplx01.mhx.at\u0022"
           }
         },
         {
           "name": "os_family",
           "value": {
             "type": "Text",
-            "value": "CentOS"
+            "value": "\u0022CentOS\u0022"
           }
         },
         {
           "name": "architecture",
           "value": {
             "type": "Text",
-            "value": "x86_64"
+            "value": "\u0022x86_64\u0022"
           }
         },
         {
@@ -56,7 +56,7 @@
           "name": "ansible.inventory.last_scan_time",
           "value": {
             "type": "Text",
-            "value": "2020-04-21T07:51:39Z"
+            "value": "\u00222020-04-21T07:51:39Z\u0022"
           }
         },
         {
@@ -81,42 +81,42 @@
           "name": "hostname",
           "value": {
             "type": "Text",
-            "value": "h1jmplx01"
+            "value": "\u0022h1jmplx01\u0022"
           }
         },
         {
           "name": "distribution",
           "value": {
             "type": "Text",
-            "value": "CentOS"
+            "value": "\u0022CentOS\u0022"
           }
         },
         {
           "name": "distribution_file_variety",
           "value": {
             "type": "Text",
-            "value": "RedHat"
+            "value": "\u0022RedHat\u0022"
           }
         },
         {
           "name": "distribution_major_version",
           "value": {
             "type": "Text",
-            "value": "7"
+            "value": "\u00227\u0022"
           }
         },
         {
           "name": "distribution_release",
           "value": {
             "type": "Text",
-            "value": "Core"
+            "value": "\u0022Core\u0022"
           }
         },
         {
           "name": "distribution_version",
           "value": {
             "type": "Text",
-            "value": "7.7"
+            "value": "\u00227.7\u0022"
           }
         },
         {
@@ -144,7 +144,7 @@
           "name": "kernel",
           "value": {
             "type": "Text",
-            "value": "3.10.0-1062.18.1.el7.x86_64"
+            "value": "\u00223.10.0-1062.18.1.el7.x86_64\u0022"
           }
         },
         {
@@ -159,8 +159,8 @@
           "value": {
             "type": "Text",
             "value": [
-              "lo",
-              "dmzpub0"
+              "\u0022lo\u0022",
+              "\u0022dmzpub0\u0022"
             ]
           }
         },
@@ -197,21 +197,21 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1jmplx01.mhx.at:/boot"
+            "value": "\u0022h1jmplx01.mhx.at:/boot\u0022"
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "/dev/sda1"
+            "value": "\u0022/dev/sda1\u0022"
           }
         },
         {
           "name": "mount",
           "value": {
             "type": "Text",
-            "value": "/boot"
+            "value": "\u0022/boot\u0022"
           }
         },
         {
@@ -246,7 +246,7 @@
           "name": "fstype",
           "value": {
             "type": "Text",
-            "value": "xfs"
+            "value": "\u0022xfs\u0022"
           }
         },
         {
@@ -274,7 +274,7 @@
           "name": "options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,attr2,inode64,noquota"
+            "value": "\u0022rw,relatime,attr2,inode64,noquota\u0022"
           }
         },
         {
@@ -295,7 +295,7 @@
           "name": "uuid",
           "value": {
             "type": "Text",
-            "value": "7af4db46-3482-43a4-8875-91df0661675e"
+            "value": "\u00227af4db46-3482-43a4-8875-91df0661675e\u0022"
           }
         }
       ]
@@ -315,21 +315,21 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1jmplx01.mhx.at:/data"
+            "value": "\u0022h1jmplx01.mhx.at:/data\u0022"
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "value": "\u0022/dev/mapper/vg_data-lv_data\u0022"
           }
         },
         {
           "name": "mount",
           "value": {
             "type": "Text",
-            "value": "/data"
+            "value": "\u0022/data\u0022"
           }
         },
         {
@@ -364,7 +364,7 @@
           "name": "fstype",
           "value": {
             "type": "Text",
-            "value": "xfs"
+            "value": "\u0022xfs\u0022"
           }
         },
         {
@@ -392,7 +392,7 @@
           "name": "options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,attr2,inode64,noquota"
+            "value": "\u0022rw,relatime,attr2,inode64,noquota\u0022"
           }
         },
         {
@@ -413,7 +413,7 @@
           "name": "uuid",
           "value": {
             "type": "Text",
-            "value": "ee632d3f-4de3-4181-963d-43be80ecca8f"
+            "value": "\u0022ee632d3f-4de3-4181-963d-43be80ecca8f\u0022"
           }
         }
       ]
@@ -431,35 +431,35 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Network Interface dmzpub0@h1jmplx01.mhx.at"
+            "value": "\u0022Network Interface dmzpub0@h1jmplx01.mhx.at\u0022"
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "dmzpub0"
+            "value": "\u0022dmzpub0\u0022"
           }
         },
         {
           "name": "active",
           "value": {
             "type": "Text",
-            "value": "true"
+            "value": "\u0022true\u0022"
           }
         },
         {
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "ether"
+            "value": "\u0022ether\u0022"
           }
         },
         {
           "name": "macaddress",
           "value": {
             "type": "Text",
-            "value": "7e:10:82:6d:db:6d"
+            "value": "\u00227e:10:82:6d:db:6d\u0022"
           }
         }
       ]
@@ -477,28 +477,28 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Network Interface lo@h1jmplx01.mhx.at"
+            "value": "\u0022Network Interface lo@h1jmplx01.mhx.at\u0022"
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "lo"
+            "value": "\u0022lo\u0022"
           }
         },
         {
           "name": "active",
           "value": {
             "type": "Text",
-            "value": "true"
+            "value": "\u0022true\u0022"
           }
         },
         {
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "loopback"
+            "value": "\u0022loopback\u0022"
           }
         },
         {
@@ -520,28 +520,28 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1lscapet01.mhx.local"
+            "value": "\u0022h1lscapet01.mhx.local\u0022"
           }
         },
         {
           "name": "fqdn",
           "value": {
             "type": "Text",
-            "value": "h1lscapet01.mhx.local"
+            "value": "\u0022h1lscapet01.mhx.local\u0022"
           }
         },
         {
           "name": "os_family",
           "value": {
             "type": "Text",
-            "value": "CentOS"
+            "value": "\u0022CentOS\u0022"
           }
         },
         {
           "name": "architecture",
           "value": {
             "type": "Text",
-            "value": "x86_64"
+            "value": "\u0022x86_64\u0022"
           }
         },
         {
@@ -563,7 +563,7 @@
           "name": "ansible.inventory.last_scan_time",
           "value": {
             "type": "Text",
-            "value": "2020-04-21T07:51:41Z"
+            "value": "\u00222020-04-21T07:51:41Z\u0022"
           }
         },
         {
@@ -588,42 +588,42 @@
           "name": "hostname",
           "value": {
             "type": "Text",
-            "value": "h1lscapet01"
+            "value": "\u0022h1lscapet01\u0022"
           }
         },
         {
           "name": "distribution",
           "value": {
             "type": "Text",
-            "value": "CentOS"
+            "value": "\u0022CentOS\u0022"
           }
         },
         {
           "name": "distribution_file_variety",
           "value": {
             "type": "Text",
-            "value": "RedHat"
+            "value": "\u0022RedHat\u0022"
           }
         },
         {
           "name": "distribution_major_version",
           "value": {
             "type": "Text",
-            "value": "7"
+            "value": "\u00227\u0022"
           }
         },
         {
           "name": "distribution_release",
           "value": {
             "type": "Text",
-            "value": "Core"
+            "value": "\u0022Core\u0022"
           }
         },
         {
           "name": "distribution_version",
           "value": {
             "type": "Text",
-            "value": "7.7"
+            "value": "\u00227.7\u0022"
           }
         },
         {
@@ -651,7 +651,7 @@
           "name": "kernel",
           "value": {
             "type": "Text",
-            "value": "3.10.0-1062.18.1.el7.x86_64"
+            "value": "\u00223.10.0-1062.18.1.el7.x86_64\u0022"
           }
         },
         {
@@ -666,7 +666,7 @@
           "value": {
             "type": "Text",
             "value": [
-              "br-93f487bc4aeb"
+              "\u0022br-93f487bc4aeb\u0022"
             ]
           }
         },
@@ -703,21 +703,21 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1lscapet01.mhx.local:/var/lib/docker"
+            "value": "\u0022h1lscapet01.mhx.local:/var/lib/docker\u0022"
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_docker"
+            "value": "\u0022/dev/mapper/vg_data-lv_docker\u0022"
           }
         },
         {
           "name": "mount",
           "value": {
             "type": "Text",
-            "value": "/var/lib/docker"
+            "value": "\u0022/var/lib/docker\u0022"
           }
         },
         {
@@ -752,7 +752,7 @@
           "name": "fstype",
           "value": {
             "type": "Text",
-            "value": "xfs"
+            "value": "\u0022xfs\u0022"
           }
         },
         {
@@ -780,7 +780,7 @@
           "name": "options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,attr2,inode64,noquota"
+            "value": "\u0022rw,relatime,attr2,inode64,noquota\u0022"
           }
         },
         {
@@ -801,7 +801,7 @@
           "name": "uuid",
           "value": {
             "type": "Text",
-            "value": "d221d65e-8ac7-4a6e-836f-4fac371e577c"
+            "value": "\u0022d221d65e-8ac7-4a6e-836f-4fac371e577c\u0022"
           }
         }
       ]
@@ -821,21 +821,21 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1lscapet01.mhx.local:/boot"
+            "value": "\u0022h1lscapet01.mhx.local:/boot\u0022"
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "/dev/sda1"
+            "value": "\u0022/dev/sda1\u0022"
           }
         },
         {
           "name": "mount",
           "value": {
             "type": "Text",
-            "value": "/boot"
+            "value": "\u0022/boot\u0022"
           }
         },
         {
@@ -870,7 +870,7 @@
           "name": "fstype",
           "value": {
             "type": "Text",
-            "value": "xfs"
+            "value": "\u0022xfs\u0022"
           }
         },
         {
@@ -898,7 +898,7 @@
           "name": "options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,attr2,inode64,noquota"
+            "value": "\u0022rw,relatime,attr2,inode64,noquota\u0022"
           }
         },
         {
@@ -919,7 +919,7 @@
           "name": "uuid",
           "value": {
             "type": "Text",
-            "value": "7af4db46-3482-43a4-8875-91df0661675e"
+            "value": "\u00227af4db46-3482-43a4-8875-91df0661675e\u0022"
           }
         }
       ]
@@ -937,35 +937,35 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Network Interface br-93f487bc4aeb@h1lscapet01.mhx.local"
+            "value": "\u0022Network Interface br-93f487bc4aeb@h1lscapet01.mhx.local\u0022"
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "br-93f487bc4aeb"
+            "value": "\u0022br-93f487bc4aeb\u0022"
           }
         },
         {
           "name": "active",
           "value": {
             "type": "Text",
-            "value": "true"
+            "value": "\u0022true\u0022"
           }
         },
         {
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "bridge"
+            "value": "\u0022bridge\u0022"
           }
         },
         {
           "name": "macaddress",
           "value": {
             "type": "Text",
-            "value": "02:42:b8:21:2d:22"
+            "value": "\u002202:42:b8:21:2d:22\u0022"
           }
         }
       ]

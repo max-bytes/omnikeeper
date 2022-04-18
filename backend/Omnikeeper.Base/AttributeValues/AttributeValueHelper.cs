@@ -23,21 +23,6 @@ namespace Omnikeeper.Base.AttributeValues
                                 throw new Exception($"Expected object {o} to be string, found null");
                             else if (o is string str)
                                 return new AttributeScalarValueText(str, false);
-                            else if (o is JsonElement el)
-                            {
-                                switch (el.ValueKind)
-                                {
-                                    case JsonValueKind.Array: 
-                                        return AttributeArrayValueText.BuildFromString(el.EnumerateArray().Select(e => e.GetString()!));
-                                    case JsonValueKind.String:
-                                    case JsonValueKind.Number:
-                                    case JsonValueKind.True:
-                                    case JsonValueKind.False:
-                                        return new AttributeScalarValueText(el.GetString()!);
-                                    default:
-                                        throw new Exception($"Expected JsonElement {el} to be convertible to string, found {el.ValueKind}");
-                                }
-                            }
                             else if (o is string[] strArray)
                             {
                                 return AttributeArrayValueText.BuildFromString(strArray, false);
@@ -51,21 +36,6 @@ namespace Omnikeeper.Base.AttributeValues
                                 throw new Exception($"Expected object {o} to be string, found null");
                             else if (o is string str)
                                 return new AttributeScalarValueText(str, true);
-                            else if (o is JsonElement el)
-                            {
-                                switch (el.ValueKind)
-                                {
-                                    case JsonValueKind.Array:
-                                        return AttributeArrayValueText.BuildFromString(el.EnumerateArray().Select(e => e.GetString()!), true);
-                                    case JsonValueKind.String:
-                                    case JsonValueKind.Number:
-                                    case JsonValueKind.True:
-                                    case JsonValueKind.False:
-                                        return new AttributeScalarValueText(el.GetString()!, true);
-                                    default:
-                                        throw new Exception($"Expected JsonElement {el} to be convertible to string, found {el.ValueKind}");
-                                }
-                            }
                             else if (o is string[] strArray)
                             {
                                 return AttributeArrayValueText.BuildFromString(strArray, true);
@@ -79,18 +49,6 @@ namespace Omnikeeper.Base.AttributeValues
                                 throw new Exception($"Expected object {o} to be long, found null");
                             else if (o is long lo)
                                 return new AttributeScalarValueInteger(lo);
-                            else if (o is JsonElement el)
-                            {
-                                switch (el.ValueKind)
-                                {
-                                    case JsonValueKind.Array:
-                                        return AttributeArrayValueInteger.BuildFromString(el.EnumerateArray().Select(e => e.GetString()!).ToArray());
-                                    case JsonValueKind.Number:
-                                        return new AttributeScalarValueInteger(el.GetInt64());
-                                    default:
-                                        throw new Exception($"Expected JsonElement {el} to be convertible to long, found {el.ValueKind}");
-                                }
-                            }
                             else if (o is long[] loa)
                                 return AttributeArrayValueInteger.Build(loa);
                             else
@@ -104,18 +62,6 @@ namespace Omnikeeper.Base.AttributeValues
                                 return AttributeArrayValueDouble.Build(da);
                             else if (o is double d)
                                 return new AttributeScalarValueDouble(d);
-                            else if (o is JsonElement el)
-                            {
-                                switch (el.ValueKind)
-                                {
-                                    case JsonValueKind.Array:
-                                        return AttributeArrayValueDouble.BuildFromString(el.EnumerateArray().Select(e => e.GetString()!).ToArray());
-                                    case JsonValueKind.Number:
-                                        return new AttributeScalarValueDouble(el.GetDouble());
-                                    default:
-                                        throw new Exception($"Expected JsonElement {el} to be convertible to double, found {el.ValueKind}");
-                                }
-                            }
                             else
                                 throw new Exception($"Expected object {o} to be double, found {o.GetType().Name}");
                         }
@@ -148,8 +94,6 @@ namespace Omnikeeper.Base.AttributeValues
                             {
                                 if (o is JsonDocument t)
                                     return AttributeScalarValueJSON.Build(t);
-                                else if (o is JsonElement je)
-                                    return AttributeScalarValueJSON.BuildFromString(je.GetRawText()); // TODO: performance?
                                 else if (o is string so)
                                     return AttributeScalarValueJSON.BuildFromString(so);
                                 else
@@ -184,6 +128,98 @@ namespace Omnikeeper.Base.AttributeValues
                 throw new Exception($"Could not build attribute value of type {type} from object {o}", e);
             }
         }
+
+        public static IAttributeValue? BuildFromTypeAndJsonElement(AttributeValueType type, ref JsonElement el)
+        {
+            if (el.ValueKind == JsonValueKind.Null || el.ValueKind == JsonValueKind.Undefined)
+                return null;
+
+            switch (type)
+            {
+                case AttributeValueType.Text:
+                    {
+                        switch (el.ValueKind)
+                        {
+                            case JsonValueKind.Array:
+                                return AttributeArrayValueText.BuildFromString(el.EnumerateArray().Select(e => e.GetRawText()!));
+                            case JsonValueKind.String:
+                            case JsonValueKind.Number:
+                            case JsonValueKind.True:
+                            case JsonValueKind.False:
+                                return new AttributeScalarValueText(el.GetRawText()!);
+                            default:
+                                throw new Exception($"Expected JsonElement {el} to be convertible to string, found {el.ValueKind}");
+                        }
+                    }
+                case AttributeValueType.MultilineText:
+                    {
+                        switch (el.ValueKind)
+                        {
+                            case JsonValueKind.Array:
+                                return AttributeArrayValueText.BuildFromString(el.EnumerateArray().Select(e => e.GetRawText()!), true);
+                            case JsonValueKind.String:
+                            case JsonValueKind.Number:
+                            case JsonValueKind.True:
+                            case JsonValueKind.False:
+                                return new AttributeScalarValueText(el.GetRawText()!, true);
+                            default:
+                                throw new Exception($"Expected JsonElement {el} to be convertible to string, found {el.ValueKind}");
+                        }
+                    }
+                case AttributeValueType.Integer:
+                    {
+                        switch (el.ValueKind)
+                        {
+                            case JsonValueKind.Array:
+                                return AttributeArrayValueInteger.Build(el.EnumerateArray().Select(e => e.GetInt64()!).ToArray());
+                            case JsonValueKind.Number:
+                                return new AttributeScalarValueInteger(el.GetInt64());
+                            default:
+                                throw new Exception($"Expected JsonElement {el} to be convertible to long, found {el.ValueKind}");
+                        }
+                    }
+                case AttributeValueType.Double:
+                    {
+                        switch (el.ValueKind)
+                        {
+                            case JsonValueKind.Array:
+                                return AttributeArrayValueDouble.Build(el.EnumerateArray().Select(e => e.GetDouble()!).ToArray());
+                            case JsonValueKind.Number:
+                                return new AttributeScalarValueDouble(el.GetDouble());
+                            default:
+                                throw new Exception($"Expected JsonElement {el} to be convertible to double, found {el.ValueKind}");
+                        }
+                    }
+                case AttributeValueType.JSON:
+                    {
+                        return AttributeScalarValueJSON.BuildFromString(el.GetRawText()!); // TODO: performance?
+                    }
+                case AttributeValueType.YAML:
+                    {
+                        switch (el.ValueKind)
+                        {
+                            case JsonValueKind.Array:
+                                return AttributeArrayValueYAML.BuildFromString(el.EnumerateArray().Select(e => e.GetRawText()!).ToArray());
+                            case JsonValueKind.String:
+                            case JsonValueKind.Number:
+                            case JsonValueKind.True:
+                            case JsonValueKind.False:
+                                return new AttributeScalarValueText(el.GetRawText()!);
+                            default:
+                                throw new Exception($"Expected JsonElement {el} to be convertible to YAML, found {el.ValueKind}");
+                        }
+                    }
+                case AttributeValueType.Mask:
+                    return AttributeScalarValueMask.Instance;
+                case AttributeValueType.Image:
+                    {
+                        throw new Exception("Building AttributeValueImage from type and JsonElement not allowed");
+                    }
+                default:
+                    throw new Exception($"Unknown type {type} encountered");
+            }
+        }
+
         public static IAttributeValue BuildFromDTO(AttributeValueDTO generic)
         {
             if (generic.IsArray)

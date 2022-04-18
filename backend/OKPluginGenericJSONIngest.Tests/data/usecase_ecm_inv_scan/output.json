@@ -13,91 +13,91 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "H13524429 - uansvclxnaemp01"
+            "value": "\u0022H13524429 - uansvclxnaemp01\u0022"
           }
         },
         {
           "name": "cmdb.host.id",
           "value": {
             "type": "Text",
-            "value": "H13524429"
+            "value": "\u0022H13524429\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.configuration_files.nrpe",
           "value": {
             "type": "MultilineText",
-            "value": "log_facility=daemon\npid_file=varrunnrpenrpe.pid\nserver_port=5666\nnrpe_user=nrpe\nnrpe_group=nrpe\nallowed_hosts=127.0.0.1,185.49.176.16028,185.49.176.19226,10.48.202.84,2001:9d0:2:10f::b931:b0c8\ndont_blame_nrpe=1\ndebug=0\ncommand_timeout=60\nconnection_timeout=300\n\nssl_client_certs=2\nssl_version=TLSv1\u002B\nssl_cipher_list=ALL:!aNULL:!eNULL:!SSLv2:!LOW:!EXP:!RC4:!MD5:@STRENGTH\nssl_cacert_file=etcnagiosnrpe.ssl.ca-crt\nssl_cert_file=etcnagiosnrpe.ssl.crt\nssl_privatekey_file=etcnagiosnrpe.ssl.key\n\ncommand[check_process]=usrlib64nagiospluginscheck_procs $ARG1$\ncommand[check_users]=usrlib64nagiospluginscheck_users $ARG1$\ncommand[check_load]=usrlib64nagiospluginscheck_load $ARG1$\ncommand[check_disk]=usrlib64nagiospluginscheck_disk $ARG1$\ncommand[check_mem]=usrlib64nagiospluginscheck_mem $ARG1$\ncommand[check_cpu]=usrlib64nagiospluginscheck_cpu $ARG1$\ncommand[check_mailq]=usrlib64nagiospluginscheck_mailq $ARG1$\ncommand[check_dmesg]=usrlib64nagiospluginscheck_dmesg.sh $ARG1$\n\ninclude_dir=etcnrpe.d"
+            "value": "\u0022log_facility=daemon\\npid_file=varrunnrpenrpe.pid\\nserver_port=5666\\nnrpe_user=nrpe\\nnrpe_group=nrpe\\nallowed_hosts=127.0.0.1,185.49.176.16028,185.49.176.19226,10.48.202.84,2001:9d0:2:10f::b931:b0c8\\ndont_blame_nrpe=1\\ndebug=0\\ncommand_timeout=60\\nconnection_timeout=300\\n\\nssl_client_certs=2\\nssl_version=TLSv1\u002B\\nssl_cipher_list=ALL:!aNULL:!eNULL:!SSLv2:!LOW:!EXP:!RC4:!MD5:@STRENGTH\\nssl_cacert_file=etcnagiosnrpe.ssl.ca-crt\\nssl_cert_file=etcnagiosnrpe.ssl.crt\\nssl_privatekey_file=etcnagiosnrpe.ssl.key\\n\\ncommand[check_process]=usrlib64nagiospluginscheck_procs $ARG1$\\ncommand[check_users]=usrlib64nagiospluginscheck_users $ARG1$\\ncommand[check_load]=usrlib64nagiospluginscheck_load $ARG1$\\ncommand[check_disk]=usrlib64nagiospluginscheck_disk $ARG1$\\ncommand[check_mem]=usrlib64nagiospluginscheck_mem $ARG1$\\ncommand[check_cpu]=usrlib64nagiospluginscheck_cpu $ARG1$\\ncommand[check_mailq]=usrlib64nagiospluginscheck_mailq $ARG1$\\ncommand[check_dmesg]=usrlib64nagiospluginscheck_dmesg.sh $ARG1$\\n\\ninclude_dir=etcnrpe.d\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.chassis",
           "value": {
             "type": "Text",
-            "value": ""
+            "value": "\u0022\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.identifying_number",
           "value": {
             "type": "Text",
-            "value": "VMware-42 1f 5f 84 99 ed b1 8a-07 ba dd 16 e6 77 87 51"
+            "value": "\u0022VMware-42 1f 5f 84 99 ed b1 8a-07 ba dd 16 e6 77 87 51\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.manufacturer",
           "value": {
             "type": "Text",
-            "value": "VMware, Inc."
+            "value": "\u0022VMware, Inc.\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.platform",
           "value": {
             "type": "Text",
-            "value": "x86_64"
+            "value": "\u0022x86_64\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.processor_type",
           "value": {
             "type": "Text",
-            "value": "x86_64"
+            "value": "\u0022x86_64\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.product_name",
           "value": {
             "type": "Text",
-            "value": "VMware Virtual Platform"
+            "value": "\u0022VMware Virtual Platform\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.serial_number",
           "value": {
             "type": "Text",
-            "value": ""
+            "value": "\u0022\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.uuid",
           "value": {
             "type": "Text",
-            "value": "421f5f84-99ed-b18a-07ba-dd16e6778751"
+            "value": "\u0022421f5f84-99ed-b18a-07ba-dd16e6778751\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.memory.available_mb",
           "value": {
             "type": "Text",
-            "value": "14248"
+            "value": "\u002214248\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.memory.total_size_mb",
           "value": {
             "type": "Text",
-            "value": "16257"
+            "value": "\u002216257\u0022"
           }
         },
         {
@@ -105,10 +105,10 @@
           "value": {
             "type": "Text",
             "value": [
-              "185.49.177.40",
-              "185.49.177.41",
-              "2001:9d0:2:113::b931:b128",
-              "2001:9d0:2:113::b931:b129"
+              "\u0022185.49.177.40\u0022",
+              "\u0022185.49.177.41\u0022",
+              "\u00222001:9d0:2:113::b931:b128\u0022",
+              "\u00222001:9d0:2:113::b931:b129\u0022"
             ]
           }
         },
@@ -136,42 +136,42 @@
           "name": "ecm_inv_scan.linux.operating_system.name",
           "value": {
             "type": "Text",
-            "value": "Red Hat Enterprise Linux Server 7.9"
+            "value": "\u0022Red Hat Enterprise Linux Server 7.9\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.operating_system.os_family",
           "value": {
             "type": "Text",
-            "value": "unix"
+            "value": "\u0022unix\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.operating_system.platform",
           "value": {
             "type": "Text",
-            "value": "linux"
+            "value": "\u0022linux\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.operating_system.release",
           "value": {
             "type": "Text",
-            "value": "redhat"
+            "value": "\u0022redhat\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.operating_system.release_name",
           "value": {
             "type": "Text",
-            "value": "Red Hat Enterprise Linux Server release 7.9 (Maipo)"
+            "value": "\u0022Red Hat Enterprise Linux Server release 7.9 (Maipo)\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.operating_system.version",
           "value": {
             "type": "Text",
-            "value": "7.9"
+            "value": "\u00227.9\u0022"
           }
         },
         {
@@ -213,77 +213,77 @@
           "name": "ecm_inv_scan.linux.scan_time",
           "value": {
             "type": "Text",
-            "value": "2021-11-01 22:12:14"
+            "value": "\u00222021-11-01 22:12:14\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.application_architecture",
           "value": {
             "type": "Text",
-            "value": "x86"
+            "value": "\u0022x86\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.hostname_domain",
           "value": {
             "type": "Text",
-            "value": "srv.dsh.at"
+            "value": "\u0022srv.dsh.at\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.hostname_fqdn",
           "value": {
             "type": "Text",
-            "value": "uansvclxnaemp01.srv.dsh.at"
+            "value": "\u0022uansvclxnaemp01.srv.dsh.at\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.install_date",
           "value": {
             "type": "Text",
-            "value": "2018-07-09 06:04:53"
+            "value": "\u00222018-07-09 06:04:53\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.kernel_architecture",
           "value": {
             "type": "Text",
-            "value": "x64"
+            "value": "\u0022x64\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.kernel_bit_size",
           "value": {
             "type": "Text",
-            "value": "64"
+            "value": "\u002264\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.kernel_name",
           "value": {
             "type": "Text",
-            "value": "Linux"
+            "value": "\u0022Linux\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.kernel_release",
           "value": {
             "type": "Text",
-            "value": "3.10.0-1160.45.1.el7.x86_64"
+            "value": "\u00223.10.0-1160.45.1.el7.x86_64\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.last_reboot_time",
           "value": {
             "type": "Text",
-            "value": "2021-10-19 09:17:33"
+            "value": "\u00222021-10-19 09:17:33\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.name",
           "value": {
             "type": "Text",
-            "value": "uansvclxnaemp01"
+            "value": "\u0022uansvclxnaemp01\u0022"
           }
         }
       ]
@@ -302,7 +302,7 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "00:50:56:9f:84:e9"
+                    "value": "\u002200:50:56:9f:84:e9\u0022"
                   }
                 },
                 "modifiers": {
@@ -315,7 +315,7 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "0050569f84e9"
+                    "value": "\u00220050569f84e9\u0022"
                   }
                 },
                 "modifiers": {
@@ -328,7 +328,7 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "185.49.176.204"
+                    "value": "\u0022185.49.176.204\u0022"
                   }
                 },
                 "modifiers": {
@@ -341,7 +341,7 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "fe80::250:56ff:fe9f:84e9"
+                    "value": "\u0022fe80::250:56ff:fe9f:84e9\u0022"
                   }
                 },
                 "modifiers": {
@@ -354,7 +354,7 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "2001:9d0:2:10f::b931:b0cc"
+                    "value": "\u00222001:9d0:2:10f::b931:b0cc\u0022"
                   }
                 },
                 "modifiers": {
@@ -367,7 +367,7 @@
                   "name": "cmdb.interface.name",
                   "value": {
                     "type": "Text",
-                    "value": "lan1103"
+                    "value": "\u0022lan1103\u0022"
                   }
                 },
                 "modifiers": {
@@ -396,21 +396,21 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Network Interface - lan1103"
+            "value": "\u0022Linux Network Interface - lan1103\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.network_interface.description",
           "value": {
             "type": "Text",
-            "value": "lan1103"
+            "value": "\u0022lan1103\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.network_interface.mac_address",
           "value": {
             "type": "Text",
-            "value": "00:50:56:9f:84:e9"
+            "value": "\u002200:50:56:9f:84:e9\u0022"
           }
         },
         {
@@ -471,56 +471,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - devtmpfs"
+            "value": "\u0022Linux Partition - devtmpfs\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "devtmpfs"
+            "value": "\u0022devtmpfs\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "devtmpfs"
+            "value": "\u0022devtmpfs\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,nosuid,size=8117080k,nr_inodes=2029270,mode=755"
+            "value": "\u0022rw,nosuid,size=8117080k,nr_inodes=2029270,mode=755\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/dev"
+            "value": "\u0022/dev\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "8117080"
+            "value": "\u00228117080\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "8117080"
+            "value": "\u00228117080\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "0"
+            "value": "\u00220\u0022"
           }
         }
       ]
@@ -555,56 +555,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_sys-lv_root"
+            "value": "\u0022Linux Partition - /dev/mapper/vg_sys-lv_root\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_sys-lv_root"
+            "value": "\u0022/dev/mapper/vg_sys-lv_root\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "value": "\u0022ext4\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "value": "\u0022rw,relatime,data=ordered\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/"
+            "value": "\u0022/\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "5029504"
+            "value": "\u00225029504\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "1734464"
+            "value": "\u00221734464\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "3016512"
+            "value": "\u00223016512\u0022"
           }
         }
       ]
@@ -639,56 +639,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/sda1"
+            "value": "\u0022Linux Partition - /dev/sda1\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/sda1"
+            "value": "\u0022/dev/sda1\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "value": "\u0022ext4\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "value": "\u0022rw,relatime,data=ordered\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/boot"
+            "value": "\u0022/boot\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "999320"
+            "value": "\u0022999320\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "744116"
+            "value": "\u0022744116\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "186392"
+            "value": "\u0022186392\u0022"
           }
         }
       ]
@@ -723,56 +723,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_sys-lv_var"
+            "value": "\u0022Linux Partition - /dev/mapper/vg_sys-lv_var\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_sys-lv_var"
+            "value": "\u0022/dev/mapper/vg_sys-lv_var\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "value": "\u0022ext4\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "value": "\u0022rw,relatime,data=ordered\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/var"
+            "value": "\u0022/var\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "3030800"
+            "value": "\u00223030800\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "2417320"
+            "value": "\u00222417320\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "439812"
+            "value": "\u0022439812\u0022"
           }
         }
       ]
@@ -807,56 +807,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_sys-lv_tmp"
+            "value": "\u0022Linux Partition - /dev/mapper/vg_sys-lv_tmp\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_sys-lv_tmp"
+            "value": "\u0022/dev/mapper/vg_sys-lv_tmp\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "value": "\u0022ext4\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "value": "\u0022rw,relatime,data=ordered\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/tmp"
+            "value": "\u0022/tmp\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "11320520"
+            "value": "\u002211320520\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "10824120"
+            "value": "\u002210824120\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "8172"
+            "value": "\u00228172\u0022"
           }
         }
       ]
@@ -891,56 +891,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_sys-lv_var_log"
+            "value": "\u0022Linux Partition - /dev/mapper/vg_sys-lv_var_log\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_sys-lv_var_log"
+            "value": "\u0022/dev/mapper/vg_sys-lv_var_log\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "value": "\u0022ext4\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "value": "\u0022rw,relatime,data=ordered\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/var/log"
+            "value": "\u0022/var/log\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "3063568"
+            "value": "\u00223063568\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "2388716"
+            "value": "\u00222388716\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "522160"
+            "value": "\u0022522160\u0022"
           }
         }
       ]
@@ -975,56 +975,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_sys-lv_opt"
+            "value": "\u0022Linux Partition - /dev/mapper/vg_sys-lv_opt\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_sys-lv_opt"
+            "value": "\u0022/dev/mapper/vg_sys-lv_opt\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "value": "\u0022ext4\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "value": "\u0022rw,relatime,data=ordered\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/opt"
+            "value": "\u0022/opt\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "1998672"
+            "value": "\u00221998672\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "1871276"
+            "value": "\u00221871276\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "6156"
+            "value": "\u00226156\u0022"
           }
         }
       ]
@@ -1059,56 +1059,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_data-lv_data"
+            "value": "\u0022Linux Partition - /dev/mapper/vg_data-lv_data\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "value": "\u0022/dev/mapper/vg_data-lv_data\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "value": "\u0022ext4\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "value": "\u0022rw,relatime,data=ordered\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/data"
+            "value": "\u0022/data\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "82434456"
+            "value": "\u002282434456\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "77318456"
+            "value": "\u002277318456\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "905520"
+            "value": "\u0022905520\u0022"
           }
         }
       ]
@@ -1143,56 +1143,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_data-lv_data"
+            "value": "\u0022Linux Partition - /dev/mapper/vg_data-lv_data\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "value": "\u0022/dev/mapper/vg_data-lv_data\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "value": "\u0022ext4\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "value": "\u0022rw,relatime,data=ordered\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/var/spool/perfdata"
+            "value": "\u0022/var/spool/perfdata\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         }
       ]
@@ -1227,56 +1227,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_data-lv_data"
+            "value": "\u0022Linux Partition - /dev/mapper/vg_data-lv_data\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "value": "\u0022/dev/mapper/vg_data-lv_data\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "value": "\u0022ext4\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "value": "\u0022rw,relatime,data=ordered\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/home"
+            "value": "\u0022/home\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         }
       ]
@@ -1311,56 +1311,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_data-lv_data"
+            "value": "\u0022Linux Partition - /dev/mapper/vg_data-lv_data\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "value": "\u0022/dev/mapper/vg_data-lv_data\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "value": "\u0022ext4\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "value": "\u0022rw,relatime,data=ordered\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/var/log/naemon"
+            "value": "\u0022/var/log/naemon\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         }
       ]
@@ -1395,56 +1395,56 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_data-lv_data"
+            "value": "\u0022Linux Partition - /dev/mapper/vg_data-lv_data\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "value": "\u0022/dev/mapper/vg_data-lv_data\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "value": "\u0022ext4\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "value": "\u0022rw,relatime,data=ordered\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/opt2"
+            "value": "\u0022/opt2\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "value": "\u0022null\u0022"
           }
         }
       ]
@@ -1462,231 +1462,231 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "H13524429 - saladvpsqlc1n2"
+            "value": "\u0022H13524429 - saladvpsqlc1n2\u0022"
           }
         },
         {
           "name": "cmdb.host.id",
           "value": {
             "type": "Text",
-            "value": "H13524429"
+            "value": "\u0022H13524429\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.scan_time",
           "value": {
             "type": "Text",
-            "value": "2021-11-01 23:41:18"
+            "value": "\u00222021-11-01 23:41:18\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.name",
           "value": {
             "type": "Text",
-            "value": "Microsoft Windows Server 2019 Standard"
+            "value": "\u0022Microsoft Windows Server 2019 Standard\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.servicepack",
           "value": {
             "type": "Text",
-            "value": ""
+            "value": "\u0022\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.last_bootup_time",
           "value": {
             "type": "Text",
-            "value": "2021-08-21 19:54:29"
+            "value": "\u00222021-08-21 19:54:29\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.install_date",
           "value": {
             "type": "Text",
-            "value": "2020-10-08 15:40:01"
+            "value": "\u00222020-10-08 15:40:01\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.architecture",
           "value": {
             "type": "Text",
-            "value": "64-bit"
+            "value": "\u002264-bit\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.language",
           "value": {
             "type": "Text",
-            "value": "English \uFFFD\uFFFD\uFFFD United States"
+            "value": "\u0022English \uFFFD\uFFFD\uFFFD United States\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.product_suite",
           "value": {
             "type": "Text",
-            "value": "Unknown (Undocumented)"
+            "value": "\u0022Unknown (Undocumented)\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.type",
           "value": {
             "type": "Text",
-            "value": "WINNT"
+            "value": "\u0022WINNT\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.version",
           "value": {
             "type": "Text",
-            "value": "10.0.17763"
+            "value": "\u002210.0.17763\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.build_number",
           "value": {
             "type": "Text",
-            "value": "17763"
+            "value": "\u002217763\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.codeset",
           "value": {
             "type": "Text",
-            "value": "1252"
+            "value": "\u00221252\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.country_code",
           "value": {
             "type": "Text",
-            "value": "43"
+            "value": "\u002243\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.timezone",
           "value": {
             "type": "Text",
-            "value": "GMT \u002B1"
+            "value": "\u0022GMT \u002B1\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.ntp_server",
           "value": {
             "type": "Text",
-            "value": "time.windows.com,0x8"
+            "value": "\u0022time.windows.com,0x8\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.ntp_server_synchronisation_type",
           "value": {
             "type": "Text",
-            "value": "NT5DS"
+            "value": "\u0022NT5DS\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.dep_32_bit_applications",
           "value": {
             "type": "Text",
-            "value": "true"
+            "value": "\u0022true\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.dep_available",
           "value": {
             "type": "Text",
-            "value": "true"
+            "value": "\u0022true\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.dep_drivers",
           "value": {
             "type": "Text",
-            "value": "true"
+            "value": "\u0022true\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.dep_support_policy",
           "value": {
             "type": "Text",
-            "value": "Opt Out"
+            "value": "\u0022Opt Out\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.sku",
           "value": {
             "type": "Text",
-            "value": "Windows Server Standard Edition (Desktop Experience installation)"
+            "value": "\u0022Windows Server Standard Edition (Desktop Experience installation)\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.installation_type",
           "value": {
             "type": "Text",
-            "value": "Server"
+            "value": "\u0022Server\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.ubr",
           "value": {
             "type": "Text",
-            "value": "2114"
+            "value": "\u00222114\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.edition_id",
           "value": {
             "type": "Text",
-            "value": "ServerStandard"
+            "value": "\u0022ServerStandard\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.registered_organization",
           "value": {
             "type": "Text",
-            "value": ""
+            "value": "\u0022\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.registered_owner",
           "value": {
             "type": "Text",
-            "value": "Windows User"
+            "value": "\u0022Windows User\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.fqdn",
           "value": {
             "type": "Text",
-            "value": "saladvpsqlc1n2.salres.com"
+            "value": "\u0022saladvpsqlc1n2.salres.com\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.machine_info.manufacturer",
           "value": {
             "type": "Text",
-            "value": "Dell Inc."
+            "value": "\u0022Dell Inc.\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.machine_info.product_name",
           "value": {
             "type": "Text",
-            "value": "PowerEdge R740"
+            "value": "\u0022PowerEdge R740\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.machine_info.identifying_number",
           "value": {
             "type": "Text",
-            "value": "7VN6K63"
+            "value": "\u00227VN6K63\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.machine_info.chassis",
           "value": {
             "type": "Text",
-            "value": "Rack Mount Chassis"
+            "value": "\u0022Rack Mount Chassis\u0022"
           }
         },
         {
@@ -1728,21 +1728,21 @@
           "name": "ecm_inv_scan.win.os_configuration.computer_role",
           "value": {
             "type": "Text",
-            "value": "Member Server"
+            "value": "\u0022Member Server\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.os_configuration.domain_name",
           "value": {
             "type": "Text",
-            "value": "salres.com"
+            "value": "\u0022salres.com\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.os_configuration.domain_type",
           "value": {
             "type": "Text",
-            "value": "domain"
+            "value": "\u0022domain\u0022"
           }
         },
         {
@@ -1902,42 +1902,42 @@
           "name": "ecm_inv_scan.win.system.name",
           "value": {
             "type": "Text",
-            "value": "SALADVPSQLC1N2"
+            "value": "\u0022SALADVPSQLC1N2\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.system.netbios_hostname",
           "value": {
             "type": "Text",
-            "value": "SALADVPSQLC1N2"
+            "value": "\u0022SALADVPSQLC1N2\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.system.dns_hostname",
           "value": {
             "type": "Text",
-            "value": "saladvpsqlc1n2"
+            "value": "\u0022saladvpsqlc1n2\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.system.distinguished_name",
           "value": {
             "type": "Text",
-            "value": "CN=SALADVPSQLC1N2,CN=Computers,DC=salres,DC=com"
+            "value": "\u0022CN=SALADVPSQLC1N2,CN=Computers,DC=salres,DC=com\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.cmdb_info.host_id",
           "value": {
             "type": "Text",
-            "value": "H13306165"
+            "value": "\u0022H13306165\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.cmdb_info.customer",
           "value": {
             "type": "Text",
-            "value": "SALESIANER"
+            "value": "\u0022SALESIANER\u0022"
           }
         }
       ]
@@ -1956,7 +1956,7 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "E4:43:4B:F4:2B:FA"
+                    "value": "\u0022E4:43:4B:F4:2B:FA\u0022"
                   }
                 },
                 "modifiers": {
@@ -1969,7 +1969,7 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "E4-43-4B-F4-2B-FA"
+                    "value": "\u0022E4-43-4B-F4-2B-FA\u0022"
                   }
                 },
                 "modifiers": {
@@ -1982,7 +1982,7 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "E4434BF42BFA"
+                    "value": "\u0022E4434BF42BFA\u0022"
                   }
                 },
                 "modifiers": {
@@ -1995,7 +1995,7 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "10.10.200.98"
+                    "value": "\u002210.10.200.98\u0022"
                   }
                 },
                 "modifiers": {
@@ -2008,7 +2008,7 @@
                   "name": "cmdb.interface.name",
                   "value": {
                     "type": "Text",
-                    "value": "HB"
+                    "value": "\u0022HB\u0022"
                   }
                 },
                 "modifiers": {
@@ -2037,35 +2037,35 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Network Adapter - HB"
+            "value": "\u0022Windows Network Adapter - HB\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.name",
           "value": {
             "type": "Text",
-            "value": "HB"
+            "value": "\u0022HB\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.description",
           "value": {
             "type": "Text",
-            "value": "Intel(R) Gigabit 4P X550/I350 rNDC"
+            "value": "\u0022Intel(R) Gigabit 4P X550/I350 rNDC\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.mac_address",
           "value": {
             "type": "Text",
-            "value": "E4:43:4B:F4:2B:FA"
+            "value": "\u0022E4:43:4B:F4:2B:FA\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.device_id",
           "value": {
             "type": "Text",
-            "value": "4"
+            "value": "\u00224\u0022"
           }
         },
         {
@@ -2103,7 +2103,7 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "B4:96:91:8F:A4:D2"
+                    "value": "\u0022B4:96:91:8F:A4:D2\u0022"
                   }
                 },
                 "modifiers": {
@@ -2116,7 +2116,7 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "B4-96-91-8F-A4-D2"
+                    "value": "\u0022B4-96-91-8F-A4-D2\u0022"
                   }
                 },
                 "modifiers": {
@@ -2129,7 +2129,7 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "B496918FA4D2"
+                    "value": "\u0022B496918FA4D2\u0022"
                   }
                 },
                 "modifiers": {
@@ -2142,7 +2142,7 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "10.10.203.12"
+                    "value": "\u002210.10.203.12\u0022"
                   }
                 },
                 "modifiers": {
@@ -2155,7 +2155,7 @@
                   "name": "cmdb.interface.name",
                   "value": {
                     "type": "Text",
-                    "value": "Prod-Team"
+                    "value": "\u0022Prod-Team\u0022"
                   }
                 },
                 "modifiers": {
@@ -2184,35 +2184,35 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Network Adapter - Prod-Team"
+            "value": "\u0022Windows Network Adapter - Prod-Team\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.name",
           "value": {
             "type": "Text",
-            "value": "Prod-Team"
+            "value": "\u0022Prod-Team\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.description",
           "value": {
             "type": "Text",
-            "value": "Microsoft Network Adapter Multiplexor Driver"
+            "value": "\u0022Microsoft Network Adapter Multiplexor Driver\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.mac_address",
           "value": {
             "type": "Text",
-            "value": "B4:96:91:8F:A4:D2"
+            "value": "\u0022B4:96:91:8F:A4:D2\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.device_id",
           "value": {
             "type": "Text",
-            "value": "16"
+            "value": "\u002216\u0022"
           }
         },
         {
@@ -2259,7 +2259,7 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "02:6F:D7:4F:BA:0F"
+                    "value": "\u002202:6F:D7:4F:BA:0F\u0022"
                   }
                 },
                 "modifiers": {
@@ -2272,7 +2272,7 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "02-6F-D7-4F-BA-0F"
+                    "value": "\u002202-6F-D7-4F-BA-0F\u0022"
                   }
                 },
                 "modifiers": {
@@ -2285,7 +2285,7 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "026FD74FBA0F"
+                    "value": "\u0022026FD74FBA0F\u0022"
                   }
                 },
                 "modifiers": {
@@ -2298,7 +2298,7 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "169.254.1.213"
+                    "value": "\u0022169.254.1.213\u0022"
                   }
                 },
                 "modifiers": {
@@ -2311,7 +2311,7 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "fe80::64ca:3a9d:1382:c837"
+                    "value": "\u0022fe80::64ca:3a9d:1382:c837\u0022"
                   }
                 },
                 "modifiers": {
@@ -2350,35 +2350,35 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Network Adapter - "
+            "value": "\u0022Windows Network Adapter - \u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.name",
           "value": {
             "type": "Text",
-            "value": ""
+            "value": "\u0022\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.description",
           "value": {
             "type": "Text",
-            "value": "Microsoft Failover Cluster Virtual Adapter"
+            "value": "\u0022Microsoft Failover Cluster Virtual Adapter\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.mac_address",
           "value": {
             "type": "Text",
-            "value": "02:6F:D7:4F:BA:0F"
+            "value": "\u002202:6F:D7:4F:BA:0F\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.device_id",
           "value": {
             "type": "Text",
-            "value": "17"
+            "value": "\u002217\u0022"
           }
         },
         {
@@ -2432,49 +2432,49 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device"
+            "value": "\u0022Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.name",
           "value": {
             "type": "Text",
-            "value": "HITACHI OPEN-V  Multi-Path Disk Device"
+            "value": "\u0022HITACHI OPEN-V  Multi-Path Disk Device\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.device_id",
           "value": {
             "type": "Text",
-            "value": "\\\\.\\PHYSICALDRIVE3"
+            "value": "\u0022\\\\\\\\.\\\\PHYSICALDRIVE3\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.interface",
           "value": {
             "type": "Text",
-            "value": "SCSI"
+            "value": "\u0022SCSI\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.serial_number",
           "value": {
             "type": "Text",
-            "value": "50453394"
+            "value": "\u002250453394\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
           "value": {
             "type": "Text",
-            "value": "1.0"
+            "value": "\u00221.0\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "value": "\u0022GB\u0022"
           }
         }
       ]
@@ -2505,49 +2505,49 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device"
+            "value": "\u0022Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.name",
           "value": {
             "type": "Text",
-            "value": "HITACHI OPEN-V  Multi-Path Disk Device"
+            "value": "\u0022HITACHI OPEN-V  Multi-Path Disk Device\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.device_id",
           "value": {
             "type": "Text",
-            "value": "\\\\.\\PHYSICALDRIVE1"
+            "value": "\u0022\\\\\\\\.\\\\PHYSICALDRIVE1\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.interface",
           "value": {
             "type": "Text",
-            "value": "SCSI"
+            "value": "\u0022SCSI\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.serial_number",
           "value": {
             "type": "Text",
-            "value": "307365"
+            "value": "\u0022307365\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
           "value": {
             "type": "Text",
-            "value": "2500.0"
+            "value": "\u00222500.0\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "value": "\u0022GB\u0022"
           }
         }
       ]
@@ -2578,49 +2578,49 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Storage Drive - H13524429 - DELL PERC H740P Mini SCSI Disk Device"
+            "value": "\u0022Windows Storage Drive - H13524429 - DELL PERC H740P Mini SCSI Disk Device\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.name",
           "value": {
             "type": "Text",
-            "value": "DELL PERC H740P Mini SCSI Disk Device"
+            "value": "\u0022DELL PERC H740P Mini SCSI Disk Device\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.device_id",
           "value": {
             "type": "Text",
-            "value": "\\\\.\\PHYSICALDRIVE0"
+            "value": "\u0022\\\\\\\\.\\\\PHYSICALDRIVE0\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.interface",
           "value": {
             "type": "Text",
-            "value": "SCSI"
+            "value": "\u0022SCSI\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.serial_number",
           "value": {
             "type": "Text",
-            "value": "00de454d4cd8da1127009afc52f0a7ce"
+            "value": "\u002200de454d4cd8da1127009afc52f0a7ce\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
           "value": {
             "type": "Text",
-            "value": "1489.87"
+            "value": "\u00221489.87\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "value": "\u0022GB\u0022"
           }
         }
       ]
@@ -2651,49 +2651,49 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device"
+            "value": "\u0022Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.name",
           "value": {
             "type": "Text",
-            "value": "HITACHI OPEN-V  Multi-Path Disk Device"
+            "value": "\u0022HITACHI OPEN-V  Multi-Path Disk Device\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.device_id",
           "value": {
             "type": "Text",
-            "value": "\\\\.\\PHYSICALDRIVE2"
+            "value": "\u0022\\\\\\\\.\\\\PHYSICALDRIVE2\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.interface",
           "value": {
             "type": "Text",
-            "value": "SCSI"
+            "value": "\u0022SCSI\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.serial_number",
           "value": {
             "type": "Text",
-            "value": "307365"
+            "value": "\u0022307365\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
           "value": {
             "type": "Text",
-            "value": "3999.99"
+            "value": "\u00223999.99\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "value": "\u0022GB\u0022"
           }
         }
       ]
@@ -2728,42 +2728,42 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Partition - H13524429 - E:"
+            "value": "\u0022Windows Partition - H13524429 - E:\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.name",
           "value": {
             "type": "Text",
-            "value": "E:"
+            "value": "\u0022E:\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.filesystem",
           "value": {
             "type": "Text",
-            "value": "NTFS"
+            "value": "\u0022NTFS\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size",
           "value": {
             "type": "Text",
-            "value": "2499.98"
+            "value": "\u00222499.98\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "value": "\u0022GB\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.freespace",
           "value": {
             "type": "Text",
-            "value": "1483.98"
+            "value": "\u00221483.98\u0022"
           }
         }
       ]
@@ -2798,42 +2798,42 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Partition - H13524429 - C:"
+            "value": "\u0022Windows Partition - H13524429 - C:\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.name",
           "value": {
             "type": "Text",
-            "value": "C:"
+            "value": "\u0022C:\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.filesystem",
           "value": {
             "type": "Text",
-            "value": "NTFS"
+            "value": "\u0022NTFS\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size",
           "value": {
             "type": "Text",
-            "value": "204.15"
+            "value": "\u0022204.15\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "value": "\u0022GB\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.freespace",
           "value": {
             "type": "Text",
-            "value": "146.35"
+            "value": "\u0022146.35\u0022"
           }
         }
       ]
@@ -2868,42 +2868,42 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Partition - H13524429 - S:"
+            "value": "\u0022Windows Partition - H13524429 - S:\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.name",
           "value": {
             "type": "Text",
-            "value": "S:"
+            "value": "\u0022S:\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.filesystem",
           "value": {
             "type": "Text",
-            "value": "NTFS"
+            "value": "\u0022NTFS\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size",
           "value": {
             "type": "Text",
-            "value": "400.0"
+            "value": "\u0022400.0\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "value": "\u0022GB\u0022"
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.freespace",
           "value": {
             "type": "Text",
-            "value": "358.81"
+            "value": "\u0022358.81\u0022"
           }
         }
       ]
