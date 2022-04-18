@@ -31,11 +31,7 @@ namespace SystemTests
 
             // create ingest context
             var insertUrl = $"{BaseUrl}/api/v1/ingest/genericJSON/manage/context";
-            var expression = @"[?document=='data.json'] | [].{cis: data.hosts[].[{tempID: ciid(hostname), idMethod: idMethodByData(['hostname']), attributes: [
-                    attribute('hostname', hostname),
-                    attribute('os', os),
-                    attribute('additionals', additionals, 'JSON')
-                ]}] | [], relations: `[]`} | [0]";
+            var expression = @"[?document=='data.json'] | [].{cis: data.hosts[].[{tempID: ciid(hostname), idMethod: idMethodByData(['hostname']), attributes: [attribute('hostname', hostname), attribute('os', os), attribute('additionals', additionals, 'JSON') ]}] | [], relations: `[]`} | [0]";
             var postDataIngestContext = $@"
 {{
    ""id"":""test_generic_json_ingest"",
@@ -57,6 +53,7 @@ namespace SystemTests
             ";
             var httpClient = new HttpClient();
             var content = new StringContent(postDataIngestContext, Encoding.UTF8, "application/json");
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json") { CharSet = Encoding.UTF8.WebName };
             var responseCreateContext = await httpClient.PostAsync(insertUrl, content);
             Assert.AreEqual(HttpStatusCode.OK, responseCreateContext.StatusCode, responseCreateContext.Content.ReadAsStringAsync().GetAwaiter().GetResult());
 
@@ -115,7 +112,7 @@ query {
                     new ResultCI() { MergedAttributes = new() {
                         new() { Attribute = new() { Name = "hostname", Value = new() { Values = new List<string>() { "host_b" } }  } },
                         new() { Attribute = new() { Name = "os", Value = new() { Values = new List<string>() { "linux" } }  } },
-                        new() { Attribute = new() { Name = "additionals", Value = new() { Values = new List<string>() { "{" + "\n" + "  \"foo\": \"bar\"" + "\n" + "}" } }  } }
+                        new() { Attribute = new() { Name = "additionals", Value = new() { Values = new List<string>() { "{\"foo\":\"bar\"}" } }  } }
 
                     } },
                     new ResultCI() { MergedAttributes = new() {
