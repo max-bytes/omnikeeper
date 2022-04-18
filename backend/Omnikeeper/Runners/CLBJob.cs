@@ -1,6 +1,5 @@
 ﻿using Autofac;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -74,10 +73,7 @@ namespace Omnikeeper.Runners
                                 if (clbLastRunCache.TryGetValue(lastRunKey, out var lr))
                                     lastRun = lr;
 
-                                // HACK, TODO: convert JsonDocument to JObject to keep up Plugin interface (for now), change ASAP
-                                var clBrainConfig = JObject.Parse(clConfig.CLBrainConfig.RootElement.GetRawText());
-
-                                if (await clb.CanSkipRun(lastRun, clBrainConfig, logger, modelContextBuilder))
+                                if (await clb.CanSkipRun(lastRun, clConfig.CLBrainConfig, logger, modelContextBuilder))
                                 {
                                     logger.LogDebug($"Skipping run of CLB {clb.Name} on layer {l.LayerID}");
                                 }
@@ -105,7 +101,7 @@ namespace Omnikeeper.Runners
                                             Stopwatch stopWatch = new Stopwatch();
                                             stopWatch.Start();
                                             var layer = Layer.Build(l.LayerID); // HACK, TODO: either pass layer-ID or layer-data, not Layer object
-                                            await clb.Run(layer, clBrainConfig, changesetProxy, modelContextBuilder, logger);
+                                            await clb.Run(layer, clConfig.CLBrainConfig, changesetProxy, modelContextBuilder, logger);
                                             stopWatch.Stop();
                                             TimeSpan ts = stopWatch.Elapsed;
                                             string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
@@ -9,6 +8,7 @@ using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace OKPluginVariableRendering
@@ -40,11 +40,11 @@ namespace OKPluginVariableRendering
         const int assignmentGroupDefaultPrio = 10000;
         const int baseCIPrio = 100000;
 
-        protected override ISet<string> GetDependentLayerIDs(JObject config, ILogger logger)
+        protected override ISet<string> GetDependentLayerIDs(JsonDocument config, ILogger logger)
         {
             try
             {
-                var cfg = config.ToObject<Configuration>();
+                var cfg = JsonSerializer.Deserialize<Configuration>(config);
                 return cfg.InputLayerSet.ToHashSet();
             }
             catch (Exception e)
@@ -54,7 +54,7 @@ namespace OKPluginVariableRendering
             }
         }
 
-        public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
+        public override async Task<bool> Run(Layer targetLayer, JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start VariableRendering");
 
@@ -62,7 +62,7 @@ namespace OKPluginVariableRendering
 
             try
             {
-                cfg = config.ToObject<Configuration>();
+                cfg = JsonSerializer.Deserialize<Configuration>(config);
                 logger.LogDebug("Parsed configuration for VariableRendering.");
             }
             catch (Exception ex)

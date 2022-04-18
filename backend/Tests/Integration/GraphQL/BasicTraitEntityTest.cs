@@ -709,19 +709,19 @@ mutation($name: String!, $id: String!) {
             ""entity"": {
               ""id"": ""entity_1"",
               ""name"": ""Entity 1""
-            },
+            }
           },
           {
             ""entity"": {
               ""id"": ""entity_2"",
               ""name"": ""Entity 2""
-            },
+            }
           },
           {
             ""entity"": {
               ""id"": ""entity_3"",
               ""name"": ""Entity 3""
-            },
+            }
           }
         ]
 	  }
@@ -754,13 +754,13 @@ mutation($name: String!, $id: String!) {
             ""entity"": {
               ""id"": ""entity_2"",
               ""name"": ""Entity 2""
-            },
+            }
           },
           {
             ""entity"": {
               ""id"": ""entity_3"",
               ""name"": ""Entity 3""
-            },
+            }
           }
         ]
 	  }
