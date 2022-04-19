@@ -184,7 +184,7 @@ namespace Omnikeeper.GridView.Commands
                                     writeLayer,
                                     changesetProxy,
                                     new DataOriginV1(DataOriginType.Manual),
-                                    trans, 
+                                    trans,
                                     OtherLayersValueHandlingForceWrite.Instance);
                             }
                             catch (Exception e)

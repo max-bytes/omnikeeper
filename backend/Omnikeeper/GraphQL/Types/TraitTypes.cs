@@ -128,7 +128,8 @@ namespace Omnikeeper.GraphQL.Types
 
     public class RelationTemplateType : ObjectGraphType<RelationTemplate>
     {
-        public RelationTemplateType() {
+        public RelationTemplateType()
+        {
             Field("predicateID", x => x.PredicateID);
             Field("directionForward", x => x.DirectionForward);
             Field("traitHints", x => x.TraitHints);

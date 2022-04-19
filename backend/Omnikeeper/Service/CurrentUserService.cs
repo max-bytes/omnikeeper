@@ -225,7 +225,7 @@ namespace Omnikeeper.Service
             return httpUser.ClientRoles.Contains("__ok_superuser");
         }
 
-        public static async Task<AuthenticatedUser> CreateAuthenticationUserFromHTTPUser(HttpUser httpUser, IUserInDatabaseModel userModel, ILayerModel LayerModel, 
+        public static async Task<AuthenticatedUser> CreateAuthenticationUserFromHTTPUser(HttpUser httpUser, IUserInDatabaseModel userModel, ILayerModel LayerModel,
             IMetaConfigurationModel MetaConfigurationModel, AuthRoleModel AuthRoleModel, IModelContext trans)
         {
             var userInDatabase = await userModel.UpsertUser(httpUser.Username, httpUser.DisplayName, httpUser.UserID, httpUser.UserType, trans);
@@ -292,7 +292,8 @@ namespace Omnikeeper.Service
                 {
                     var claimRoles = resourceAccess.RootElement.GetProperty(resourceName).GetProperty("roles").EnumerateArray();
                     clientRoles = claimRoles.Select(tt => tt.GetString()!).ToHashSet();
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     logger.LogWarning(ex, $"Cannot parse roles in user token for user {username}: key-path \"resource_access\"->\"{resourceName}\"->\"roles\" not found; either no roles assigned or token structure invalid");
                 }

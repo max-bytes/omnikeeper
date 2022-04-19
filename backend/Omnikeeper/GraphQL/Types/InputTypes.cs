@@ -4,7 +4,6 @@ using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using System;
-using System.Linq;
 
 namespace Omnikeeper.GraphQL.Types
 {

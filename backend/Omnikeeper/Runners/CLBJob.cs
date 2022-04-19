@@ -41,7 +41,8 @@ namespace Omnikeeper.Runners
 
         public async Task Execute(IJobExecutionContext context)
         {
-            try {
+            try
+            {
                 logger.LogTrace("Start");
 
                 var trans = modelContextBuilder.BuildImmediate();
@@ -121,7 +122,8 @@ namespace Omnikeeper.Runners
                 }
 
                 logger.LogTrace("Finished");
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 logger.LogError(e, "Error running clb job");
             }
