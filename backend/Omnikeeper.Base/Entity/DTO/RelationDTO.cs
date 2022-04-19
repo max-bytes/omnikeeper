@@ -1,6 +1,4 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace Omnikeeper.Base.Entity.DTO
 {
@@ -23,7 +21,8 @@ namespace Omnikeeper.Base.Entity.DTO
 
         public static RelationDTO BuildFromMergedRelation(MergedRelation r)
         {
-            return new RelationDTO() {
+            return new RelationDTO()
+            {
                 ID = r.Relation.ID,
                 FromCIID = r.Relation.FromCIID,
                 ToCIID = r.Relation.ToCIID,
@@ -34,7 +33,8 @@ namespace Omnikeeper.Base.Entity.DTO
 
         public static RelationDTO BuildFromRelation(Relation r)
         {
-            return new RelationDTO() {
+            return new RelationDTO()
+            {
                 ID = r.ID,
                 FromCIID = r.FromCIID,
                 ToCIID = r.ToCIID,

@@ -75,7 +75,7 @@ namespace Omnikeeper.Entity.AttributeValues
         {
             var num = bytes.Length / 8;
             var arr = new double[num];
-            for(var i = 0;i < num;i++)
+            for (var i = 0; i < num; i++)
             {
                 var v = BitConverter.ToDouble(bytes, i * 8);
                 arr[i] = v;
@@ -84,7 +84,8 @@ namespace Omnikeeper.Entity.AttributeValues
         }
         public static AttributeArrayValueDouble BuildFromString(string[] values)
         {
-            var doubleValues = values.Select(value => {
+            var doubleValues = values.Select(value =>
+            {
                 if (double.TryParse(value, AttributeScalarValueDouble.NumberStyle, CultureInfo.InvariantCulture, out var v))
                     return v;
                 else

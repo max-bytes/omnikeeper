@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Entity
 {
-    public class AttributeValueConstraintTypeDiscriminatorConverter : TypeDiscriminatorConverter<ICIAttributeValueConstraint> 
+    public class AttributeValueConstraintTypeDiscriminatorConverter : TypeDiscriminatorConverter<ICIAttributeValueConstraint>
     {
         public AttributeValueConstraintTypeDiscriminatorConverter() : base("$type")
         {

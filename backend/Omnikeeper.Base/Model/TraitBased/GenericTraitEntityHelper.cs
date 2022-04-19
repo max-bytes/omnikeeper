@@ -96,7 +96,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     {
                         // deserialize before setting field in entity
                         entityFieldValue = taFieldInfo.JsonSerializer.DeserializeFromAttributeValue(attribute.Attribute.Value);
-                    } 
+                    }
                     else
                     {
                         entityFieldValue = attribute.Attribute.Value.ToGenericObject();

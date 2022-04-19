@@ -48,7 +48,8 @@ namespace Omnikeeper.Entity.AttributeValues
                     if (vv == null)
                         throw new Exception("Could not parse JsonDocument from string");
                     return BuildFromJsonDocument(vv);
-                } else
+                }
+                else
                 {
                     return new AttributeScalarValueJSON(v);
                 }
@@ -77,11 +78,13 @@ namespace Omnikeeper.Entity.AttributeValues
         {
             if (el.ValueKind == JsonValueKind.Array)
             {
-                var elements = el.EnumerateArray().Select(e => {
+                var elements = el.EnumerateArray().Select(e =>
+                {
                     return e.ToString();
                 }); // TODO
                 return AttributeArrayValueJSON.BuildFromString(elements, false);
-            } else
+            }
+            else
             {
                 return new AttributeScalarValueJSON(el.ToString()); // TODO
             }
@@ -127,7 +130,8 @@ namespace Omnikeeper.Entity.AttributeValues
         public static AttributeArrayValueJSON BuildFromJsonDocuments(IEnumerable<JsonDocument> values)
         {
             var n = new AttributeArrayValueJSON(
-                values.Select(v => {
+                values.Select(v =>
+                {
                     var element = AttributeScalarValueJSON.BuildFromJsonDocument(v);
                     if (element is not AttributeScalarValueJSON jsonElement)
                         throw new Exception("Expected every element of AttributeArrayValueJSON to be object, not array");

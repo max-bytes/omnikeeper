@@ -15,11 +15,13 @@ namespace Omnikeeper.Base.Utils
         {
             var type = typeof(T);
             validTypeNames = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(s => {
+                .SelectMany(s =>
+                {
                     try
                     {
                         return s.GetTypes();
-                    } catch (Exception)
+                    }
+                    catch (Exception)
                     { // if the assembly cannot pe properly loaded, GetTypes() throws an error that we need to catch
                         return Array.Empty<Type>();
                     }

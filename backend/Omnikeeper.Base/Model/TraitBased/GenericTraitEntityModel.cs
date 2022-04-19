@@ -168,7 +168,8 @@ namespace Omnikeeper.Base.Model.TraitBased
             // for new entities that do not have a fully matching entity that already exists, we try to find a CI where the ID attributes match
             var newCIDictionary = new Dictionary<ID, Guid>();
             var idMatchedCIDictionary = await FindMatchingCIIDsFromIDs(idAttributeInfos.GetIDAttributeNames(), IDsOfNotFoundEntities, layerSet, trans, changesetProxy.TimeThreshold);
-            for (var i = 0;i < IDsOfNotFoundEntities.Length;i++) {
+            for (var i = 0; i < IDsOfNotFoundEntities.Length; i++)
+            {
                 var id = IDsOfNotFoundEntities[i];
                 if (!idMatchedCIDictionary.ContainsKey(id))
                 {

@@ -6,7 +6,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 {
     public class RecursiveTraitModel : GenericTraitEntityModel<RecursiveTrait, string>
     {
-        public RecursiveTraitModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) 
+        public RecursiveTraitModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
             : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
