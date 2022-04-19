@@ -52,12 +52,6 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
 
         public GenericInboundData DeserializeJson(string resultJson)
         {
-            //var settings = new JsonSerializerSettings
-            //{
-            //    DateParseHandling = DateParseHandling.None // TODO: move?
-            //};
-            ////var r = JsonSerializer.Create(settings);
-            //var r = JsonConvert.DeserializeObject<GenericInboundData>(resultJson, settings);// resultJson.ToObject<GenericInboundData>(serializer);
             var r = JsonSerializer.Deserialize<GenericInboundData>(resultJson, new JsonSerializerOptions()
             {
                 IncludeFields = true,
@@ -92,16 +86,6 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             }
             sb.Append("]");
             return sb.ToString();
-            //var input = new JArray();
-            //foreach (var kv in documents)
-            //{
-            //    input.Add(new JObject
-            //    {
-            //        ["document"] = kv.Key,
-            //        ["data"] = kv.Value
-            //    });
-            //}
-            //return input;
         }
 
         public string TransformJSON(string input)
