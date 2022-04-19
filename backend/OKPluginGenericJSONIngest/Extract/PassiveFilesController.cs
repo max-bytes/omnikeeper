@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -257,36 +258,32 @@ namespace Omnikeeper.Controllers.Ingest
                         {
                             var inputFilesSize = fileStreams.Sum(f => f.stream.Length);
                             using var ms = new MemoryStream((int)(inputFilesSize + fileStreams.Count() * 100 + 10));
-                            using var sw = new Utf8JsonWriter(ms);
-                            sw.WriteStartArray();
+                            //using var sw = new Utf8JsonWriter(ms);
+                            using var sw = new StreamWriter(ms);
+
+                            //sw.WriteStartArray();
+                            sw.Write("[");
                             var numFileStreams = fileStreams.Count();
                             for (int i = 0; i < numFileStreams; i++)
                             {
                                 var item = fileStreams[i];
 
-                                StreamReader tmpStreamReader = new StreamReader(item.stream);
+                                //sw.WriteStartObject();
+                                //sw.WriteString("document", item.filename);
+                                //sw.WritePropertyName("data");
+                                sw.Write($"{{\"document\": \"{item.filename}\", \"data\": ");
 
-                                sw.WriteStartObject();
-                                //sw.WritePropertyName("document");
-                                sw.WriteString("document", item.filename);
-                                //ms.Write()
-                                //sw.Write($"{{\"document\":\"{item.filename}\",\"data\":");
-                                sw.WritePropertyName("data");
-                                sw.WriteRawValue(tmpStreamReader.ReadToEnd()); // TODO: can be optimized?
-                                //sw.Flush();
-                                //stream.CopyTo(ms);
-                                sw.WriteEndObject();
-                                //sw.Write($"}}");
-                                //if (i < numFileStreams - 1)
-                                //    sw.Write(",");
+                                sw.Flush();
+                                await item.stream.CopyToAsync(sw.BaseStream);
 
-                                item.stream.Dispose();
+                                //sw.Write($"{{\"document\": {item.filename}, \"data\": ");
+
+                                sw.Write("}");
+                                //sw.WriteEndObject();
                             }
-                            sw.WriteEndArray();
-                            //sw.Write("]");
+                            sw.Write("]");
+                            //sw.WriteEndArray();
                             sw.Flush();
-
-                            ms.Position = 0;
 
                             // alternative implementation using a "MultiStream"
                             //var subStreams = new List<Stream>();
@@ -304,11 +301,9 @@ namespace Omnikeeper.Controllers.Ingest
                             //subStreams.Add(new StringStream("]"));
                             //using var multiStream = new MultiStream(subStreams);
 
-                            //using var sr = new StreamReader(ms, Encoding.UTF8, true, 404800);
-                            //using var jsonTextReader = new JsonTextReader(sr);
-                            //var token = await JToken.ReadFromAsync(jsonTextReader);
-                            StreamReader reader = new StreamReader(ms);
-                            string text = reader.ReadToEnd();
+                            ms.Position = 0;
+                            var reader = new StreamReader(ms);
+                            string text = await reader.ReadToEndAsync();
 
                             foreach (var stream in fileStreams)
                                 stream.stream.Dispose();
