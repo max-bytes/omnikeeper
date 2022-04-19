@@ -119,7 +119,7 @@ namespace OKPluginCLBMonitoring
             }
 
             var parseErrors = new List<(Guid ciid, string? template, string? error)>();
-            IEnumerable<(Guid ciid, AttributeArrayValueJSONNew attributeValue, IEnumerable<NaemonHostTemplate> hostTemplates, IEnumerable<NaemonServiceTemplate> serviceTemplates)>? renderedTemplatesPerCI = renderedTemplateSegments.GroupBy(t => t.ciid)
+            IEnumerable<(Guid ciid, AttributeArrayValueJSON attributeValue, IEnumerable<NaemonHostTemplate> hostTemplates, IEnumerable<NaemonServiceTemplate> serviceTemplates)>? renderedTemplatesPerCI = renderedTemplateSegments.GroupBy(t => t.ciid)
                 .Select(tt =>
                 {
                     var fragments = tt.SelectMany(ttt =>
@@ -140,7 +140,7 @@ namespace OKPluginCLBMonitoring
                     var values = tt.Select(ttt => ttt.templateSegment).ToArray();
                     try
                     {
-                        var attributeValue = AttributeArrayValueJSONNew.BuildFromString(values);
+                        var attributeValue = AttributeArrayValueJSON.BuildFromString(values, false);
                         return (ciid: tt.Key, attributeValue,
                             hostTemplates: fragments.Select(t => t as NaemonHostTemplate).WhereNotNull(),
                             serviceTemplates: fragments.Select(t => t as NaemonServiceTemplate).WhereNotNull());
@@ -220,8 +220,8 @@ namespace OKPluginCLBMonitoring
                         return naemonHost;
                     }).ToList();
 
-                monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeArrayValueJSONNew.BuildFromString(
-                    naemonHosts.Select(t => JsonConvert.SerializeObject(t, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() })).ToArray()), naemonInstance));
+                monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeArrayValueJSON.BuildFromString(
+                    naemonHosts.Select(t => JsonConvert.SerializeObject(t, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() })).ToArray(), false), naemonInstance));
 
                 //var finalConfigYamlNode = new YamlMappingNode(
                 //    templates.Select(t => (ciName: monitoredCIs[t.ciid].Name, t.yamlValue))
