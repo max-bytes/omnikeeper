@@ -46,7 +46,7 @@ namespace Omnikeeper.Base.Entity
             return other != null && ID == other.ID &&
                    CLBrainReference == other.CLBrainReference &&
                    Name == other.Name &&
-                   CLBrainConfig.RootElement.GetRawText() == other.CLBrainConfig.RootElement.GetRawText(); // TODO: implement proper deep equality
+                   CLBrainConfig.RootElement.ToString() == other.CLBrainConfig.RootElement.ToString(); // TODO: implement proper deep equality
         }
         public override int GetHashCode() => HashCode.Combine(ID, CLBrainReference, CLBrainConfig, Name);
     }

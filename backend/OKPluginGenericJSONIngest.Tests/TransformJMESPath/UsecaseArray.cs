@@ -39,7 +39,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                             new GenericInboundAttribute { name = "jsonarray", value = AttributeArrayValueJSON.BuildFromString(new string [] {
                                 @"{""foo"": ""bar"", ""blub"": ""bla""}",
                                 @"{ ""foo2"": ""bar2"", ""blub2"": ""bla2""}"
-                            })},
+                            }, false)},
                         }
                     },
                 },

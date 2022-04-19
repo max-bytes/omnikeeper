@@ -236,7 +236,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                         IAttributeValue value;
                         if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.JsonSerializer != null)
                         { // json with serializer
-                            value = taFieldInfo.JsonSerializer.Serialize(entityValue, taFieldInfo.IsArray);
+                            value = taFieldInfo.JsonSerializer.SerializeToAttributeValue(entityValue, taFieldInfo.IsArray);
                         }
                         else
                         { // general attribute

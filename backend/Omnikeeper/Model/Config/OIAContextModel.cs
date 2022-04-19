@@ -44,7 +44,7 @@ namespace Omnikeeper.Model.Config
                     {
                         logger.LogError(e, $"Could not deserialize OIA config \"{name}\"");
                         if (useFallbackConfig)
-                            config = new OIAFallbackConfig(configJO.RootElement.GetRawText());
+                            config = new OIAFallbackConfig(configJO.RootElement.ToString());
                     }
                     if (config != null)
                         ret.Add(OIAContext.Build(name, id, config));

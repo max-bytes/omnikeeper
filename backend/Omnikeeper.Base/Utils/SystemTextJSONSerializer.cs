@@ -22,17 +22,10 @@ namespace Omnikeeper.Base.Utils
                 throw new Exception("Could not deserialize string");
             return r;
         }
+
         public T Deserialize(JsonDocument jsonDocument)
         {
             var r = JsonSerializer.Deserialize<T>(jsonDocument, SerializerOptions);
-            if (r == null)
-                throw new Exception("Could not deserialize JsonDocument");
-            return r;
-        }
-
-        public object Deserialize(JsonDocument jsonDocument, Type type) // TODO: remove
-        {
-            var r = JsonSerializer.Deserialize(jsonDocument, type, SerializerOptions);
             if (r == null)
                 throw new Exception("Could not deserialize JsonDocument");
             return r;

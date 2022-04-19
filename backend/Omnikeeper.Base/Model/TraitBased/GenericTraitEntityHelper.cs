@@ -95,10 +95,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.JsonSerializer != null)
                     {
                         // deserialize before setting field in entity
-                        var fieldType = (taFieldInfo.IsArray) ? taFieldInfo.FieldInfo.FieldType.GetElementType() : taFieldInfo.FieldInfo.FieldType;
-                        if (fieldType == null)
-                            throw new Exception(); // TODO
-                        entityFieldValue = taFieldInfo.JsonSerializer.Deserialize(attribute.Attribute.Value, fieldType);
+                        entityFieldValue = taFieldInfo.JsonSerializer.DeserializeFromAttributeValue(attribute.Attribute.Value);
                     } 
                     else
                     {

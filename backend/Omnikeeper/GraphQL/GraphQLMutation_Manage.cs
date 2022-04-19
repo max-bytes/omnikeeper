@@ -504,7 +504,7 @@ namespace Omnikeeper.GraphQL
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
-                  var config = JsonDocument.Parse(clConfig.CLBrainConfig);
+                  using var config = JsonDocument.Parse(clConfig.CLBrainConfig);
 
                   var updated = new CLConfigV1(clConfig.ID, clConfig.CLBrainReference, config);
 

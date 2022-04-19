@@ -27,8 +27,8 @@ namespace Omnikeeper.Base.Entity
 
     public interface IAttributeJSONSerializer
     {
-        public object Deserialize(IAttributeValue attribute, Type type);
-        public IAttributeValue Serialize(object o, bool isArray);
+        public object DeserializeFromAttributeValue(IAttributeValue attribute);
+        public IAttributeValue SerializeToAttributeValue(object o, bool isArray);
     }
 
     public abstract class AttributeJSONSerializer<T> : IAttributeJSONSerializer where T : class
@@ -40,28 +40,18 @@ namespace Omnikeeper.Base.Entity
             systemTextJsonSerializer = new SystemTextJSONSerializer<T>(serializerOptions);
         }
 
-        public object Deserialize(IAttributeValue attribute, Type type)
+        public object DeserializeFromAttributeValue(IAttributeValue attribute)
         {
             if (attribute is AttributeScalarValueJSON @as)
             {
-                return systemTextJsonSerializer.Deserialize(@as.Value, type);
+                return systemTextJsonSerializer.Deserialize(@as.ValueStr);
             }
             else if (attribute is AttributeArrayValueJSON aa)
             {
-                //var tokens = aa.Values.Select(v => v.Value).ToArray();
-                //var deserialized = Array.CreateInstance(type, tokens.Length); // TODO: use proper generic types instead of Type
-                //for (int i = 0; i < tokens.Length; i++)
-                //{
-                //    var e = systemTextJsonSerializer.Deserialize(tokens[i], type);
-                //    if (e == null)
-                //        throw new Exception(); // TODO
-                //    deserialized.SetValue(e, i);
-                //}
-                //return deserialized;
                 var ret = new T[aa.Length];
                 for(int i = 0;i < aa.Values.Length;i++)
                 {
-                    ret[i] = systemTextJsonSerializer.Deserialize(aa.Values[i].Value);
+                    ret[i] = systemTextJsonSerializer.Deserialize(aa.Values[i].ValueStr);
                 }
                 return ret;
             }
@@ -71,23 +61,23 @@ namespace Omnikeeper.Base.Entity
             }
         }
 
-        public IAttributeValue Serialize(object o, bool isArray)
+        public IAttributeValue SerializeToAttributeValue(object o, bool isArray)
         {
             if (isArray)
             {
-                var a = (object[])o;
-                var serialized = new JsonDocument[a.Length];
+                var a = (T[])o;
+                var serialized = new string[a.Length];
                 for (int i = 0; i < a.Length; i++)
                 {
-                    var e = systemTextJsonSerializer.SerializeToJsonDocument(a[i]);
+                    var e = systemTextJsonSerializer.SerializeToString(a[i]);
                     serialized[i] = e;
                 }
-                return AttributeArrayValueJSON.Build(serialized);
+                return AttributeArrayValueJSON.BuildFromString(serialized, false);
             }
             else
             {
-                var jo = systemTextJsonSerializer.SerializeToJsonDocument(o);
-                return AttributeScalarValueJSON.Build(jo);
+                var jo = systemTextJsonSerializer.SerializeToString((T)o);
+                return AttributeScalarValueJSON.BuildFromString(jo, false);
             }
         }
     }

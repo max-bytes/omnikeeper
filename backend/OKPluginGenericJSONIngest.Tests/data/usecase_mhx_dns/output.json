@@ -20,7 +20,7 @@
           "name": "name",
           "value": {
             "type": "Text",
-            "value": "\u0022mhx-consulting.at\u0022"
+            "value": "mhx-consulting.at"
           }
         }
       ]
@@ -45,7 +45,7 @@
           "name": "name",
           "value": {
             "type": "Text",
-            "value": "\u0022mhx.at\u0022"
+            "value": "mhx.at"
           }
         }
       ]
@@ -70,7 +70,7 @@
           "name": "name",
           "value": {
             "type": "Text",
-            "value": "\u0022mhx-consulting.at\u0022"
+            "value": "mhx-consulting.at"
           }
         },
         {
@@ -84,14 +84,14 @@
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "\u0022NS\u0022"
+            "value": "NS"
           }
         },
         {
           "name": "value",
           "value": {
             "type": "Text",
-            "value": "\u0022ns1.he.net\u0022"
+            "value": "ns1.he.net"
           }
         }
       ]
@@ -116,7 +116,7 @@
           "name": "name",
           "value": {
             "type": "Text",
-            "value": "\u0022mhx-consulting.at\u0022"
+            "value": "mhx-consulting.at"
           }
         },
         {
@@ -130,14 +130,14 @@
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "\u0022NS\u0022"
+            "value": "NS"
           }
         },
         {
           "name": "value",
           "value": {
             "type": "Text",
-            "value": "\u0022ns2.he.net\u0022"
+            "value": "ns2.he.net"
           }
         }
       ]
@@ -162,7 +162,7 @@
           "name": "name",
           "value": {
             "type": "Text",
-            "value": "\u0022mhx.at\u0022"
+            "value": "mhx.at"
           }
         },
         {
@@ -176,14 +176,14 @@
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "\u0022NS\u0022"
+            "value": "NS"
           }
         },
         {
           "name": "value",
           "value": {
             "type": "Text",
-            "value": "\u0022ns-mhx1.he.net\u0022"
+            "value": "ns-mhx1.he.net"
           }
         }
       ]
