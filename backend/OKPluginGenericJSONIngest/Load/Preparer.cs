@@ -83,12 +83,12 @@ namespace OKPluginGenericJSONIngest.Load
         {
             ICIIdentificationMethod attributeF(InboundIDMethodByAttribute a)
             {
-                var fragment = new CICandidateAttributeData.Fragment(a.attribute.name, a.attribute.value);
-                if (fragment == null)
+                if (a.attribute.value == null)
                 {
                     logger.LogWarning($"Could not create fragment from generic attribute for idMethod CIIdentificationMethodByFragment using attribute name {a.attribute.name}");
                     return CIIdentificationMethodNoop.Build();
                 }
+                var fragment = new CICandidateAttributeData.Fragment(a.attribute.name, a.attribute.value);
                 return CIIdentificationMethodByFragment.Build(fragment, a.modifiers.caseInsensitive, searchLayers);
             }
 
