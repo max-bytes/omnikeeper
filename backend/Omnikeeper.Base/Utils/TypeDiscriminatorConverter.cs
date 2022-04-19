@@ -15,7 +15,15 @@ namespace Omnikeeper.Base.Utils
         {
             var type = typeof(T);
             validTypeNames = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(s => s.GetTypes())
+                .SelectMany(s => {
+                    try
+                    {
+                        return s.GetTypes();
+                    } catch (Exception)
+                    { // if the assembly cannot pe properly loaded, GetTypes() throws an error that we need to catch
+                        return Array.Empty<Type>();
+                    }
+                })
                 .Where(p => type.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract)
                 .ToDictionary(t => SystemTextJSONSerializerMigrationHelper.GetTypeString(t), t => t);
             this.jsonPropertyName = jsonPropertyName;
