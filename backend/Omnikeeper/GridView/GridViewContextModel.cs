@@ -1,26 +1,31 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
-using Omnikeeper.Base.Utils;
 using Omnikeeper.GridView.Entity;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.GridView
 {
     public class GridViewContextModel : GenericTraitEntityModel<GridViewContext, string>
     {
-        public GridViewContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, serializer)
+        public GridViewContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
 
-        private static readonly NewtonSoftJSONSerializer<object> serializer = new NewtonSoftJSONSerializer<object>(() =>
+        public class ConfigSerializer : AttributeJSONSerializer<GridViewConfiguration>
         {
-            var s = new JsonSerializerSettings()
+            public ConfigSerializer() : base(() =>
             {
-                TypeNameHandling = TypeNameHandling.Objects
-            };
-            s.Converters.Add(new StringEnumConverter());
-            return s;
-        });
+                return new System.Text.Json.JsonSerializerOptions()
+                {
+                    Converters = {
+                        new JsonStringEnumConverter()
+                    },
+                    IncludeFields = true
+                };
+            })
+            {
+            }
+        }
     }
 }

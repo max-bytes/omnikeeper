@@ -107,7 +107,8 @@ namespace Omnikeeper.Runners
                 TimeSpan ts = stopWatch.Elapsed;
                 string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
                 logger.LogInformation($"Finished in {elapsedTime}");
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 logger.LogError("Error running archive-old-data job", e);
             }

@@ -32,7 +32,8 @@ namespace Omnikeeper.Base.Model.TraitBased
                 if (relations.Count() != filter.ExactAmount)
                 {
                     return false;
-                } else
+                }
+                else
                 {
                     return true;
                 }

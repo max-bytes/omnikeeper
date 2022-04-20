@@ -53,5 +53,6 @@ namespace Omnikeeper.Base.Model
         Task<int> ArchiveUnusedChangesetsOlderThan(DateTimeOffset threshold, IModelContext trans);
         Task<int> DeleteEmptyChangesets(IModelContext trans);
         Task<long> GetNumberOfChangesets(IModelContext trans);
+        Task<long> GetNumberOfChangesets(string layerID, IModelContext trans);
     }
 }

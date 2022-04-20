@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
@@ -59,10 +58,10 @@ namespace Omnikeeper.Controllers
 
         public class ExportedLayerDataV1
         {
-            public readonly string LayerID;
+            public string LayerID { get; }
             //public readonly DateTimeOffset Timestamp; move to "meta" information
-            public readonly CIAttributeDTO[] Attributes;
-            public readonly RelationDTO[] Relations;
+            public CIAttributeDTO[] Attributes { get; }
+            public RelationDTO[] Relations { get; }
 
             public ExportedLayerDataV1(string layerID, CIAttributeDTO[] attributes, RelationDTO[] relations)
             {
@@ -71,9 +70,9 @@ namespace Omnikeeper.Controllers
                 Relations = relations;
             }
 
-            public static NewtonSoftJSONSerializer<ExportedLayerDataV1> Serializer = new NewtonSoftJSONSerializer<ExportedLayerDataV1>(new JsonSerializerSettings()
+            public static SystemTextJSONSerializer<ExportedLayerDataV1> Serializer = new SystemTextJSONSerializer<ExportedLayerDataV1>(() =>
             {
-                TypeNameHandling = TypeNameHandling.None
+                return new System.Text.Json.JsonSerializerOptions { };
             });
         }
 
@@ -116,9 +115,7 @@ namespace Omnikeeper.Controllers
             var data = new ExportedLayerDataV1(layerID, attributesDTO.ToArray(), relationsDTO.ToArray());
 
             using var fs = new MemoryStream();
-            using var textWriter = new StreamWriter(fs);
-            ExportedLayerDataV1.Serializer.SerializeToTextWriter(data, textWriter);
-            textWriter.Close(); // required for complete flushing
+            ExportedLayerDataV1.Serializer.SerializeToStream(data, fs);
             var byteData = fs.ToArray();
 
             var zipFile = GetZipArchive(new List<InMemoryFile>() {

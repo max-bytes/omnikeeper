@@ -1,171 +1,209 @@
 {
   "cis": [
     {
-      "tempID": "tempCIID>zone>mhx-consulting.at",
+      "tempID": "tempCIID\u003Ezone\u003Emhx-consulting.at",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "id"
-        ],
-        "type": "byData"
+        ]
       },
       "attributes": [
         {
           "name": "id",
-          "value": 718656,
-          "type": 2
+          "value": {
+            "type": "Integer",
+            "value": 718656
+          }
         },
         {
           "name": "name",
-          "value": "mhx-consulting.at",
-          "type": 0
+          "value": {
+            "type": "Text",
+            "value": "mhx-consulting.at"
+          }
         }
       ]
     },
     {
-      "tempID": "tempCIID>zone>mhx.at",
+      "tempID": "tempCIID\u003Ezone\u003Emhx.at",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "id"
-        ],
-        "type": "byData"
+        ]
       },
       "attributes": [
         {
           "name": "id",
-          "value": 742507,
-          "type": 2
+          "value": {
+            "type": "Integer",
+            "value": 742507
+          }
         },
         {
           "name": "name",
-          "value": "mhx.at",
-          "type": 0
+          "value": {
+            "type": "Text",
+            "value": "mhx.at"
+          }
         }
       ]
     },
     {
-      "tempID": "tempCIID>record>1569516122",
+      "tempID": "tempCIID\u003Erecord\u003E1569516122",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "id"
-        ],
-        "type": "byData"
+        ]
       },
       "attributes": [
         {
           "name": "id",
-          "value": 1569516122,
-          "type": 2
+          "value": {
+            "type": "Integer",
+            "value": 1569516122
+          }
         },
         {
           "name": "name",
-          "value": "mhx-consulting.at",
-          "type": 0
+          "value": {
+            "type": "Text",
+            "value": "mhx-consulting.at"
+          }
         },
         {
           "name": "ttl",
-          "value": 86400,
-          "type": 2
+          "value": {
+            "type": "Integer",
+            "value": 86400
+          }
         },
         {
           "name": "type",
-          "value": "NS",
-          "type": 0
+          "value": {
+            "type": "Text",
+            "value": "NS"
+          }
         },
         {
           "name": "value",
-          "value": "ns1.he.net",
-          "type": 0
+          "value": {
+            "type": "Text",
+            "value": "ns1.he.net"
+          }
         }
       ]
     },
     {
-      "tempID": "tempCIID>record>1569516123",
+      "tempID": "tempCIID\u003Erecord\u003E1569516123",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "id"
-        ],
-        "type": "byData"
+        ]
       },
       "attributes": [
         {
           "name": "id",
-          "value": 1569516123,
-          "type": 2
+          "value": {
+            "type": "Integer",
+            "value": 1569516123
+          }
         },
         {
           "name": "name",
-          "value": "mhx-consulting.at",
-          "type": 0
+          "value": {
+            "type": "Text",
+            "value": "mhx-consulting.at"
+          }
         },
         {
           "name": "ttl",
-          "value": 86400,
-          "type": 2
+          "value": {
+            "type": "Integer",
+            "value": 86400
+          }
         },
         {
           "name": "type",
-          "value": "NS",
-          "type": 0
+          "value": {
+            "type": "Text",
+            "value": "NS"
+          }
         },
         {
           "name": "value",
-          "value": "ns2.he.net",
-          "type": 0
+          "value": {
+            "type": "Text",
+            "value": "ns2.he.net"
+          }
         }
       ]
     },
     {
-      "tempID": "tempCIID>record>2569516148",
+      "tempID": "tempCIID\u003Erecord\u003E2569516148",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "id"
-        ],
-        "type": "byData"
+        ]
       },
       "attributes": [
         {
           "name": "id",
-          "value": 2569516148,
-          "type": 2
+          "value": {
+            "type": "Integer",
+            "value": 2569516148
+          }
         },
         {
           "name": "name",
-          "value": "mhx.at",
-          "type": 0
+          "value": {
+            "type": "Text",
+            "value": "mhx.at"
+          }
         },
         {
           "name": "ttl",
-          "value": 86400,
-          "type": 2
+          "value": {
+            "type": "Integer",
+            "value": 86400
+          }
         },
         {
           "name": "type",
-          "value": "NS",
-          "type": 0
+          "value": {
+            "type": "Text",
+            "value": "NS"
+          }
         },
         {
           "name": "value",
-          "value": "ns-mhx1.he.net",
-          "type": 0
+          "value": {
+            "type": "Text",
+            "value": "ns-mhx1.he.net"
+          }
         }
       ]
     }
   ],
   "relations": [
     {
-      "from": "tempCIID>record>1569516122",
+      "from": "tempCIID\u003Erecord\u003E1569516122",
       "predicate": "assigned_to",
-      "to": "tempCIID>zone>mhx-consulting.at"
+      "to": "tempCIID\u003Ezone\u003Emhx-consulting.at"
     },
     {
-      "from": "tempCIID>record>1569516123",
+      "from": "tempCIID\u003Erecord\u003E1569516123",
       "predicate": "assigned_to",
-      "to": "tempCIID>zone>mhx-consulting.at"
+      "to": "tempCIID\u003Ezone\u003Emhx-consulting.at"
     },
     {
-      "from": "tempCIID>record>2569516148",
+      "from": "tempCIID\u003Erecord\u003E2569516148",
       "predicate": "assigned_to",
-      "to": "tempCIID>zone>mhx.at"
+      "to": "tempCIID\u003Ezone\u003Emhx.at"
     }
   ]
 }

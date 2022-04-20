@@ -49,10 +49,10 @@ namespace Omnikeeper.Base.Entity
         public static ISet<string> ExtractAffectingLayerIDs(this EffectiveTrait effectiveTrait)
         {
             var ret = new HashSet<string>();
-            foreach(var ta in effectiveTrait.TraitAttributes)
+            foreach (var ta in effectiveTrait.TraitAttributes)
                 ret.Add(ta.Value.LayerStackIDs.First());
-            foreach(var tr in effectiveTrait.IncomingTraitRelations)
-                foreach(var r in tr.Value)
+            foreach (var tr in effectiveTrait.IncomingTraitRelations)
+                foreach (var r in tr.Value)
                     ret.Add(r.LayerStackIDs.First());
             foreach (var tr in effectiveTrait.OutgoingTraitRelations)
                 foreach (var r in tr.Value)

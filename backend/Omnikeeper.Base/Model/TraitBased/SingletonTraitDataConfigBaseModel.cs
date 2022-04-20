@@ -51,7 +51,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var foundCI = sortedCIs.FirstOrDefault();
             if (!foundCI.Equals(default(KeyValuePair<Guid, EffectiveTrait>)))
             {
-                var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(foundCI.Value, null!);
+                var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(foundCI.Value);
                 return (foundCI.Key, dc);
             }
             return default;

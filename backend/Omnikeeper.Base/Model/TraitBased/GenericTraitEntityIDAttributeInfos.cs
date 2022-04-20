@@ -85,7 +85,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         {
             int numTupleMembers = types.Length;
 
-            if (numTupleMembers <= 1 ||  numTupleMembers > 6)
+            if (numTupleMembers <= 1 || numTupleMembers > 6)
                 return null;
 
             var currentTupleType = tupleTypes[numTupleMembers - 2].MakeGenericType(types);

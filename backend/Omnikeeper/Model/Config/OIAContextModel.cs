@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
 using Omnikeeper.Base.Entity;
@@ -9,6 +7,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model.Config
@@ -35,7 +34,7 @@ namespace Omnikeeper.Model.Config
                 {
                     var id = s.GetInt64(0);
                     var name = s.GetString(1);
-                    var configJO = s.GetFieldValue<JObject>(2);
+                    var configJO = s.GetFieldValue<JsonDocument>(2);
                     IOnlineInboundAdapter.IConfig? config = null;
                     try
                     {
@@ -45,7 +44,7 @@ namespace Omnikeeper.Model.Config
                     {
                         logger.LogError(e, $"Could not deserialize OIA config \"{name}\"");
                         if (useFallbackConfig)
-                            config = new OIAFallbackConfig(configJO.ToString(Formatting.None));
+                            config = new OIAFallbackConfig(configJO.RootElement.ToString());
                     }
                     if (config != null)
                         ret.Add(OIAContext.Build(name, id, config));
@@ -65,7 +64,7 @@ namespace Omnikeeper.Model.Config
                 throw new Exception($"Could not find context with name {name}");
 
             var id = s.GetInt64(0);
-            var configJO = s.GetFieldValue<JObject>(1);
+            var configJO = s.GetFieldValue<JsonDocument>(1);
             try
             {
                 var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configJO);
@@ -80,7 +79,7 @@ namespace Omnikeeper.Model.Config
 
         public async Task<OIAContext> Create(string name, IOnlineInboundAdapter.IConfig config, IModelContext trans)
         {
-            var configJO = IOnlineInboundAdapter.IConfig.Serializer.SerializeToJObject(config);
+            var configJO = IOnlineInboundAdapter.IConfig.Serializer.SerializeToJsonDocument(config);
             using var command = new NpgsqlCommand(@"INSERT INTO config.onlineinboundadapter_context (name, config) VALUES (@name, @config) RETURNING id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("name", name);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
@@ -90,7 +89,7 @@ namespace Omnikeeper.Model.Config
 
         public async Task<OIAContext> Update(long id, string name, IOnlineInboundAdapter.IConfig config, IModelContext trans)
         {
-            var configJO = IOnlineInboundAdapter.IConfig.Serializer.SerializeToJObject(config);
+            var configJO = IOnlineInboundAdapter.IConfig.Serializer.SerializeToJsonDocument(config);
             using var command = new NpgsqlCommand(@"UPDATE config.onlineinboundadapter_context SET name = @name, config = @config WHERE id = @id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("name", name);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
@@ -107,7 +106,7 @@ namespace Omnikeeper.Model.Config
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var name = reader.GetString(0);
-            var configJO = reader.GetFieldValue<JObject>(1);
+            var configJO = reader.GetFieldValue<JsonDocument>(1);
             try
             {
                 var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configJO);

@@ -1,8 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -64,14 +65,14 @@ namespace Omnikeeper.Base.Entity
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Name;
 
-        [TraitAttribute("required_attributes", "trait.required_attributes", isJSONSerialized: true)]
+        [TraitAttribute("required_attributes", "trait.required_attributes", jsonSerializer: typeof(RecursiveTraitModel.TraitAttributeSerializer))]
         [TraitAttributeValueConstraintArrayLength(1, -1)]
         public readonly TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
 
-        [TraitAttribute("optional_attributes", "trait.optional_attributes", isJSONSerialized: true, optional: true)]
+        [TraitAttribute("optional_attributes", "trait.optional_attributes", jsonSerializer: typeof(RecursiveTraitModel.TraitAttributeSerializer), optional: true)]
         public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
 
-        [TraitAttribute("optional_relations", "trait.optional_relations", isJSONSerialized: true, optional: true)]
+        [TraitAttribute("optional_relations", "trait.optional_relations", jsonSerializer: typeof(RecursiveTraitModel.TraitRelationSerializer), optional: true)]
         public readonly TraitRelation[] OptionalRelations = Array.Empty<TraitRelation>();
 
         [TraitAttribute("required_traits", "trait.required_traits", optional: true)]

@@ -58,7 +58,8 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public static AttributeArrayValueInteger BuildFromString(string[] values)
         {
-            var longValues = values.Select(value => {
+            var longValues = values.Select(value =>
+            {
                 if (long.TryParse(value, out var v))
                     return v;
                 else

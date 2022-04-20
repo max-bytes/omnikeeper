@@ -24,6 +24,7 @@ namespace Omnikeeper.Model
             this.ciidModel = ciidModel;
         }
 
+        // TODO: integrate into _GetAttributes()
         private async Task<CIAttribute?> _GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary)
         {
             NpgsqlCommand command;
@@ -89,6 +90,60 @@ namespace Omnikeeper.Model
             };
         }
 
+        // NOTE: postgres-based implementation of filtering by attribute value
+        // must work equivalent to AttributeScalarTextFilter.Contains()
+        private string NamedAttributesWithValueFiltersSelection2WhereClause(NamedAttributesWithValueFiltersSelection s)
+        {
+            var attributeFilterClauses = new List<string>();
+            IList<NpgsqlParameter> filterParameters = new List<NpgsqlParameter>();
+            var index = 0;
+            foreach (var (attributeName, filter) in s.NamesAndFilters)
+            {
+                string valueClause;
+                if (filter.Exact != null)
+                {
+                    valueClause = $"value_text = @filterAttributeValue{index}";
+                    filterParameters.Add(new NpgsqlParameter($"filterAttributeValue{index}", filter.Exact));
+                }
+                else if (filter.Regex != null)
+                {
+                    // TODO: either support, or restrict other regex options
+                    var ignoreCase = (filter.Regex.Options & System.Text.RegularExpressions.RegexOptions.IgnoreCase) != 0;
+                    valueClause = $"value_text ~{(ignoreCase ? "*" : "")} @filterAttributeValue{index}";
+                    filterParameters.Add(new NpgsqlParameter($"filterAttributeValue{index}", filter.Regex.Pattern));
+                }
+                else
+                    throw new Exception("Invalid filter detected");
+                // TODO: support other attribute value types
+                var filterClause = $"((type = 'text' OR type = 'multiline_text') AND {AttributeValueHelper.BuildSQLIsScalarCheckClause()} AND name = @filterAttributeName{index} AND {valueClause})";
+
+                filterParameters.Add(new NpgsqlParameter($"filterAttributeName{index}", attributeName));
+                attributeFilterClauses.Add(filterClause);
+
+                index++;
+            }
+
+            var attributeFilterClause = string.Join(" AND ", attributeFilterClauses);
+            return $"({attributeFilterClause})";
+        }
+        private IEnumerable<NpgsqlParameter> NamedAttributesWithValueFiltersSelection2Parameters(NamedAttributesWithValueFiltersSelection selection)
+        {
+            var index = 0;
+            foreach (var (attributeName, filter) in selection.NamesAndFilters)
+            {
+                if (filter.Exact != null)
+                    yield return new NpgsqlParameter($"filterAttributeValue{index}", filter.Exact);
+                else if (filter.Regex != null)
+                    yield return new NpgsqlParameter($"filterAttributeValue{index}", filter.Regex.Pattern);
+                else
+                    throw new Exception("Invalid filter detected");
+
+                yield return new NpgsqlParameter($"filterAttributeName{index}", attributeName);
+
+                index++;
+            }
+        }
+
         private string AttributeSelection2WhereClause(IAttributeSelection selection)
         {
             return selection switch
@@ -97,10 +152,10 @@ namespace Omnikeeper.Model
                 NoAttributesSelection _ => "1=0",
                 RegexAttributeSelection _ => "name ~ @name_regex",
                 NamedAttributesSelection _ => "name = ANY(@names)",
+                NamedAttributesWithValueFiltersSelection f => NamedAttributesWithValueFiltersSelection2WhereClause(f),
                 _ => throw new NotImplementedException("")
             };
         }
-
         private IEnumerable<NpgsqlParameter> AttributeSelection2Parameters(IAttributeSelection selection)
         {
             switch (selection)
@@ -114,6 +169,11 @@ namespace Omnikeeper.Model
                     break;
                 case NamedAttributesSelection n:
                     yield return new NpgsqlParameter("@names", n.AttributeNames.ToArray());
+                    break;
+                case NamedAttributesWithValueFiltersSelection f:
+                    var t = NamedAttributesWithValueFiltersSelection2Parameters(f);
+                    foreach (var tt in t)
+                        yield return tt;
                     break;
                 default:
                     throw new NotImplementedException("");

@@ -31,7 +31,7 @@ namespace Omnikeeper.Model.Decorators
 
         public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
-            foreach(var layerID in layerIDs)
+            foreach (var layerID in layerIDs)
                 TrackLayerUsage(layerID);
             return await model.GetRelations(rl, layerIDs, trans, atTime, generatedDataHandling);
         }

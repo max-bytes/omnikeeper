@@ -5,7 +5,7 @@ namespace OKPluginValidation
 {
     public class ValidationModel : GenericTraitEntityModel<Validation, string>
     {
-        public ValidationModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, null)
+        public ValidationModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
     }

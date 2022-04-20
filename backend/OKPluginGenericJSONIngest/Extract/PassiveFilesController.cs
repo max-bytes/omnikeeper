@@ -2,8 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using OKPluginGenericJSONIngest;
 using OKPluginGenericJSONIngest.Extract;
 using OKPluginGenericJSONIngest.Load;
@@ -19,7 +17,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers.Ingest
@@ -194,6 +191,60 @@ namespace Omnikeeper.Controllers.Ingest
             this.authorizationService = authorizationService;
         }
 
+        private string BuildString(IEnumerable<IFormFile> files)
+        {
+            // TODO: think about maybe requiring specific file(name)s and making that configurable
+            var state = files.Select(f => {
+                var filename = Path.GetFileName(f.FileName); // stripping path for security reasons: https://docs.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-3.1#upload-small-files-with-buffered-model-binding-to-physical-storage-1
+                return (
+                    f,
+                    lengthInChars: (int)f.Length, // TODO: it seems like length-of-stream=num-of-characters-in-file... correct all the time?
+                    itemStart: $"{{\"document\": \"{filename}\", \"data\": ",
+                    itemEnd: $"}}"
+                );
+            }).ToArray();
+
+            var totalLengthInChars =
+                                2 + // array open+close
+                                state.Sum(s => s.lengthInChars + s.itemStart.Length + s.itemEnd.Length) + // item itself
+                                state.Length - 1; // item separators
+
+            var text = string.Create(totalLengthInChars, state, (charBuffer, fs) =>
+            {
+                var offset = 0;
+
+                "[".AsSpan().CopyTo(charBuffer.Slice(offset, 1));
+                offset += 1;
+
+                for (int i = 0; i < fs.Length; i++)
+                {
+                    var (formFile, lengthInChars, itemStart, itemEnd) = fs[i];
+
+                    itemStart.AsSpan().CopyTo(charBuffer.Slice(offset, itemStart.Length));
+                    offset += itemStart.Length;
+
+                    var subByteBuffer = charBuffer.Slice(offset, lengthInChars);
+                    using var reader = new StreamReader(formFile.OpenReadStream()); // StreamReader disposes the underlying stream as well
+                    offset += reader.Read(subByteBuffer);
+
+                    itemEnd.AsSpan().CopyTo(charBuffer.Slice(offset, itemEnd.Length));
+                    offset += itemEnd.Length;
+
+                    if (i < fs.Length - 1)
+                    {
+                        ",".AsSpan().CopyTo(charBuffer.Slice(offset, 1));
+                        offset += 1;
+                    }
+                }
+
+                "]".AsSpan().CopyTo(charBuffer.Slice(offset, 1));
+                offset += 1;
+            });
+
+            return text;
+
+        }
+
         [HttpPost("")]
         [DisableRequestSizeLimit]
         [RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
@@ -238,12 +289,6 @@ namespace Omnikeeper.Controllers.Ingest
                 // TODO: think about this!
 
 
-                // TODO: think about maybe requiring specific file(name)s and making that configurable
-                var fileStreams = files.Select<IFormFile, (Stream stream, string filename)>(f => (
-                   f.OpenReadStream(),
-                   Path.GetFileName(f.FileName) // stripping path for security reasons: https://docs.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-3.1#upload-small-files-with-buffered-model-binding-to-physical-storage-1
-               )).ToArray();
-
                 logger.LogInformation($"Transforming inbound data...");
 
                 GenericInboundData genericInboundData;
@@ -254,57 +299,11 @@ namespace Omnikeeper.Controllers.Ingest
 
                         // NOTE: by just concating the strings together, not actually parsing the JSON at all (at this step)
                         // we safe some performance
-                        JToken genericInboundDataJson;
+                        string genericInboundDataJson;
                         try
                         {
-                            var inputFilesSize = fileStreams.Sum(f => f.stream.Length);
-                            using var ms = new MemoryStream((int)(inputFilesSize + fileStreams.Count() * 100 + 10));
-                            using var sw = new StreamWriter(ms);
-                            sw.Write("[");
-                            var numFileStreams = fileStreams.Count();
-                            for (int i = 0; i < numFileStreams; i++)
-                            {
-                                var item = fileStreams[i];
-                                var stream = item.stream;
-                                sw.Write($"{{\"document\":\"{item.filename}\",\"data\":");
-                                sw.Flush();
-                                stream.CopyTo(sw.BaseStream);
-                                sw.Write($"}}");
-                                if (i < numFileStreams - 1)
-                                    sw.Write(",");
-
-                                item.stream.Dispose();
-                            }
-                            sw.Write("]");
-                            sw.Flush();
-
-                            ms.Position = 0;
-
-                            // alternative implementation using a "MultiStream"
-                            //var subStreams = new List<Stream>();
-                            //subStreams.Add(new StringStream("["));
-                            //var numFileStreams = fileStreams.Count();
-                            //for (int i = 0; i < numFileStreams; i++)
-                            //{
-                            //    var item = fileStreams[i];
-                            //    subStreams.Add(new StringStream($"{{\"document\":\"{item.filename}\",\"data\":"));
-                            //    subStreams.Add(item.stream);
-                            //    subStreams.Add(new StringStream($"}}"));
-                            //    if (i < numFileStreams - 1)
-                            //        subStreams.Add(new StringStream(","));
-                            //}
-                            //subStreams.Add(new StringStream("]"));
-                            //using var multiStream = new MultiStream(subStreams);
-
-                            using var sr = new StreamReader(ms, Encoding.UTF8, true, 404800);
-                            using var jsonTextReader = new JsonTextReader(sr);
-
-                            var token = await JToken.ReadFromAsync(jsonTextReader);
-
-                            foreach (var stream in fileStreams)
-                                stream.stream.Dispose();
-
-                            genericInboundDataJson = transformer.TransformJSON(token);
+                            var text = BuildString(files);
+                            genericInboundDataJson = transformer.TransformJSON(text);
                         }
                         catch (Exception e)
                         {

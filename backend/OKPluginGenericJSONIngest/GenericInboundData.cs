@@ -1,10 +1,11 @@
-﻿using JsonSubTypes;
-using Newtonsoft.Json;
+﻿
 using OKPluginGenericJSONIngest.Transform.JMESPath;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
-#pragma warning disable CS8618
+#pragma warning disable CS8618 // TODO
 namespace OKPluginGenericJSONIngest
 {
     public class GenericInboundData
@@ -21,13 +22,14 @@ namespace OKPluginGenericJSONIngest
     }
 
 
-    [JsonConverter(typeof(JsonSubtypes), "type")]
-    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByData), "byData")]
-    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByAttribute), "byAttribute")]
-    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByRelatedTempID), "byRelatedTempID")]
-    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByTemporaryCIID), "byTempID")]
-    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByByUnion), "byUnion")]
-    [JsonSubtypes.KnownSubType(typeof(InboundIDMethodByIntersect), "byIntersect")]
+    public class InboundIDMethodDiscriminatorConverter : TypeDiscriminatorConverter<IInboundIDMethod>
+    {
+        public InboundIDMethodDiscriminatorConverter() : base("type")
+        {
+        }
+    }
+
+    [JsonConverter(typeof(InboundIDMethodDiscriminatorConverter))]
     public interface IInboundIDMethod
     {
         string type { get; }
@@ -35,7 +37,8 @@ namespace OKPluginGenericJSONIngest
 
     public class InboundIDMethodByData : IInboundIDMethod
     {
-        public string type { get; } = "byData";
+        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+
         public readonly string[] attributes;
 
         public InboundIDMethodByData(string[] attributes)
@@ -56,7 +59,7 @@ namespace OKPluginGenericJSONIngest
 
     public class InboundIDMethodByAttribute : IInboundIDMethod
     {
-        public string type { get; } = "byAttribute";
+        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         public readonly GenericInboundAttribute attribute;
         public readonly InboundIDMethodByAttributeModifiers modifiers;
 
@@ -69,7 +72,7 @@ namespace OKPluginGenericJSONIngest
 
     public class InboundIDMethodByRelatedTempID : IInboundIDMethod
     {
-        public string type { get; } = "byRelatedTempID";
+        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         public readonly string tempID;
         public readonly bool outgoingRelation;
         public readonly string predicateID;
@@ -84,7 +87,7 @@ namespace OKPluginGenericJSONIngest
 
     public class InboundIDMethodByTemporaryCIID : IInboundIDMethod
     {
-        public string type { get; } = "byTempID";
+        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         public readonly string tempID;
 
         public InboundIDMethodByTemporaryCIID(string tempID)
@@ -95,7 +98,7 @@ namespace OKPluginGenericJSONIngest
 
     public class InboundIDMethodByByUnion : IInboundIDMethod
     {
-        public string type { get; } = "byUnion";
+        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         public readonly IInboundIDMethod[] inner;
 
         public InboundIDMethodByByUnion(IInboundIDMethod[] inner)
@@ -105,7 +108,7 @@ namespace OKPluginGenericJSONIngest
     }
     public class InboundIDMethodByIntersect : IInboundIDMethod
     {
-        public string type { get; } = "byIntersect";
+        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         public readonly IInboundIDMethod[] inner;
 
         public InboundIDMethodByIntersect(IInboundIDMethod[] inner)
@@ -117,9 +120,8 @@ namespace OKPluginGenericJSONIngest
     public class GenericInboundAttribute
     {
         public string name;
-        [JsonConverter(typeof(AttributeValueConverter<string>))]
-        public object? value;
-        public AttributeValueType type;
+        [JsonConverter(typeof(SystemTextJsonAttributeValueConverter))]
+        public IAttributeValue value;
     }
 
     public class GenericInboundRelation

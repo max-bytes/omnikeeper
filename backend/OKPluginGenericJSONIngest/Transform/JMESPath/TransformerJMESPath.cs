@@ -1,8 +1,9 @@
 ﻿using DevLab.JmesPath;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace OKPluginGenericJSONIngest.Transform.JMESPath
 {
@@ -42,46 +43,55 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             this.expression = expression;
         }
 
-        public GenericInboundData Transform(IDictionary<string, JToken> documents)
+        public GenericInboundData Transform(IDictionary<string, string> documents)
         {
             var input = Documents2JSON(documents);
             var resultJson = TransformJSON(input);
             return DeserializeJson(resultJson);
         }
 
-        public GenericInboundData DeserializeJson(JToken resultJson)
+        public GenericInboundData DeserializeJson(string resultJson)
         {
-            var settings = new JsonSerializerSettings
+            var r = JsonSerializer.Deserialize<GenericInboundData>(resultJson, new JsonSerializerOptions()
             {
-                DateParseHandling = DateParseHandling.None // TODO: move?
-            };
-            var serializer = JsonSerializer.Create(settings);
-            var r = resultJson.ToObject<GenericInboundData>(serializer);
+                IncludeFields = true,
+                Converters = {
+                    new JsonStringEnumConverter()
+                },
+            });
             if (r == null)
                 throw new Exception("Could not deserialize JSON into GenericInboundData");
+
             return r;
         }
 
-        public JArray Documents2JSON(IDictionary<string, JToken> documents)
+        public string Documents2JSON(IDictionary<string, string> documents)
         {
-            var input = new JArray();
+            var sb = new StringBuilder();
+            sb.Append("[");
+            var first = true;
             foreach (var kv in documents)
             {
-                input.Add(new JObject
+                if (first)
                 {
-                    ["document"] = kv.Key,
-                    ["data"] = kv.Value
-                });
+                    first = false;
+                } else
+                {
+                    sb.Append(",");
+                }
+                sb.Append("{");
+                sb.Append($"\"document\": \"{kv.Key}\",");
+                sb.Append($"\"data\": {kv.Value}");
+                sb.Append("}");
             }
-            return input;
+            sb.Append("]");
+            return sb.ToString();
         }
 
-        public JToken TransformJSON(JToken input)
+        public string TransformJSON(string input)
         {
-            // NOTE: jmes.Transform with a JToken as input is marked as obsolete, but works for our case and is much more performant
-            // see https://github.com/jdevillard/JmesPath.Net/blob/master/src/jmespath.net/JmesPath.cs#L33
             var resultJson = expression.Transform(input);
-            return resultJson.AsJToken();
+            return resultJson;
         }
     }
 }

@@ -1,61 +1,109 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.Json;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    public class AttributeScalarValueJSON : IAttributeScalarValue<JToken>, IEquatable<AttributeScalarValueJSON>
+    public class AttributeScalarValueJSON : IAttributeScalarValue<JsonDocument>, IEquatable<AttributeScalarValueJSON>
     {
-        public static JToken ErrorValue(string message) => JToken.Parse($"{{\"error\": \"{message}\" }}");
-
-        public override string ToString() => $"AV-JSON: {Value2String()}";
-
-        private readonly JToken value;
-        public JToken Value => value;
+        private JsonDocument? value;
         private readonly string valueStr;
+
+        // internal getter method, used to lazily initialize the JsonDocument
+        private JsonDocument GetValue()
+        {
+            if (value == null)
+            {
+                var v = JsonDocument.Parse(valueStr);
+                value = v;
+                return v;
+            }
+            else { return value; }
+        }
+
         public string ValueStr => valueStr;
-
-        public string Value2String() => valueStr;
-        public string[] ToRawDTOValues() => new string[] { valueStr };
-        public object ToGenericObject() => Value;
-        public bool IsArray => false;
-        public object ToGraphQLValue() => valueStr;
-
+        public override string ToString() => $"AV-JSON: {Value2String()}";
+        public JsonDocument Value => GetValue();
         public AttributeValueType Type => AttributeValueType.JSON;
-
-        public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeScalarValueJSON);
-        public bool Equals([AllowNull] AttributeScalarValueJSON other) => other != null && JToken.DeepEquals(Value, other.Value);
-        public override int GetHashCode() => Value.GetHashCode();
-
-        public static AttributeScalarValueJSON BuildFromString(string value)
+        public bool IsArray => false;
+        public bool Equals([AllowNull] IAttributeValue? other) => Equals(other as AttributeScalarValueJSON);
+        public bool Equals([AllowNull] AttributeScalarValueJSON other)
+        {
+            return other != null && valueStr == other.valueStr; // TODO: implement different equality comparator?
+        }
+        public override int GetHashCode() => valueStr.GetHashCode();
+        public object ToGenericObject() => GetValue();
+        public object ToGraphQLValue() => valueStr;
+        public string[] ToRawDTOValues() => new string[] { valueStr };
+        public string Value2String() => valueStr;
+        public static IAttributeValue BuildFromString(string v, bool parse)
         {
             try
             {
-                var v = JToken.Parse(value);
-                return new AttributeScalarValueJSON(v, v.ToString());
+                if (parse)
+                {
+                    var vv = JsonDocument.Parse(v);
+                    if (vv == null)
+                        throw new Exception("Could not parse JsonDocument from string");
+                    return BuildFromJsonDocument(vv);
+                }
+                else
+                {
+                    return new AttributeScalarValueJSON(v);
+                }
             }
-            catch (JsonReaderException e)
+            catch (Exception e)
             {
                 throw new Exception("Error building JSON attribute value from string", e);
             }
         }
 
-        public static AttributeScalarValueJSON Build(JToken value)
+        public static IAttributeValue BuildFromJsonDocument(JsonDocument t)
         {
-            return new AttributeScalarValueJSON(value, value.ToString());
+            if (t.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                var elements = t.RootElement.EnumerateArray().Select(e => e.ToString()); // TODO
+                return AttributeArrayValueJSON.BuildFromString(elements, false);
+            }
+            else
+            {
+                return new AttributeScalarValueJSON(t);
+            }
         }
 
-        private AttributeScalarValueJSON(JToken value, string valueStr)
+        // TODO: the whole method seems very hacky and slow
+        public static IAttributeValue BuildFromJsonElement(JsonElement el)
         {
-            this.value = value;
+            if (el.ValueKind == JsonValueKind.Array)
+            {
+                var elements = el.EnumerateArray().Select(e =>
+                {
+                    return e.ToString();
+                }); // TODO
+                return AttributeArrayValueJSON.BuildFromString(elements, false);
+            }
+            else
+            {
+                return new AttributeScalarValueJSON(el.ToString()); // TODO
+            }
+        }
+
+        private AttributeScalarValueJSON(string valueStr)
+        {
+            this.value = null;
             this.valueStr = valueStr;
+        }
+
+        private AttributeScalarValueJSON(JsonDocument v)
+        {
+            this.value = v;
+            this.valueStr = v.RootElement.ToString();
         }
     }
 
-    public class AttributeArrayValueJSON : AttributeArrayValue<AttributeScalarValueJSON, JToken>
+    public class AttributeArrayValueJSON : AttributeArrayValue<AttributeScalarValueJSON, JsonDocument>
     {
         protected AttributeArrayValueJSON(AttributeScalarValueJSON[] values) : base(values)
         {
@@ -67,26 +115,28 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public override AttributeValueType Type => AttributeValueType.JSON;
 
-        public static AttributeArrayValueJSON BuildFromString(string[] values)
+        public static AttributeArrayValueJSON BuildFromString(IEnumerable<string> values, bool parse)
         {
-            var jsonValues = values.Select(value =>
+            var elements = values.Select(value =>
             {
-                try
-                {
-                    return JToken.Parse(value);
-                }
-                catch (JsonReaderException e)
-                {
-                    throw new Exception("Error building JSON attribute value from string", e);
-                }
+                var element = AttributeScalarValueJSON.BuildFromString(value, parse);
+                if (element is not AttributeScalarValueJSON jsonElement)
+                    throw new Exception("Expected every element of AttributeArrayValueJSON to be object, not array");
+                return jsonElement;
             }).ToArray();
-            return Build(jsonValues);
+            return new AttributeArrayValueJSON(elements);
         }
 
-        public static AttributeArrayValueJSON Build(IEnumerable<JToken> values)
+        public static AttributeArrayValueJSON BuildFromJsonDocuments(IEnumerable<JsonDocument> values)
         {
             var n = new AttributeArrayValueJSON(
-                values.Select(v => AttributeScalarValueJSON.Build(v)).ToArray()
+                values.Select(v =>
+                {
+                    var element = AttributeScalarValueJSON.BuildFromJsonDocument(v);
+                    if (element is not AttributeScalarValueJSON jsonElement)
+                        throw new Exception("Expected every element of AttributeArrayValueJSON to be object, not array");
+                    return jsonElement;
+                }).ToArray()
             );
             return n;
         }

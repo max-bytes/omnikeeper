@@ -274,7 +274,6 @@ namespace Omnikeeper.Startup
         {
             builder.RegisterType<GraphQLSchemaHolder>().SingleInstance();
             builder.RegisterType<MyDocumentExecutor>().As<IDocumentExecuter>().SingleInstance(); // custom document executor that does serial queries, required by postgres
-            builder.RegisterType<SpanJSONDocumentWriter>().As<IDocumentWriter>().SingleInstance();
             builder.RegisterType<DataLoaderContextAccessor>().As<IDataLoaderContextAccessor>().SingleInstance();
             builder.RegisterType<DataLoaderDocumentListener>().SingleInstance();
             builder.RegisterType<DataLoaderService>().As<IDataLoaderService>().SingleInstance();

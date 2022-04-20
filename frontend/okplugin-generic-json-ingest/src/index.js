@@ -30,27 +30,27 @@ function ManageComponent(props) {
                 const selectedKey = locPathLast === "create-context" ? "create-context" : "explorer";
                 return  (
                     <Menu mode="horizontal" selectedKeys={selectedKey} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
-                        <Menu.Item key="explorer" ><Link to={`${url}/${pluginName}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
-                        <Menu.Item key="create-context" ><Link to={`${url}/${pluginName}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
+                        <Menu.Item key="explorer" ><Link to={`${url}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
+                        <Menu.Item key="create-context" ><Link to={`${url}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
                     </Menu>
                 )
             }}
         />
         <Switch>
             <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
-            <PrivateRoute path={`${path}/${pluginName}/edit-context/:contextID`}>
+            <PrivateRoute path={`${path}/edit-context/:contextID`}>
                 <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/${pluginName}/create-context`}>
+            <PrivateRoute path={`${path}/create-context`}>
                 <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/${pluginName}/explorer`}>
+            <PrivateRoute path={`${path}/explorer`}>
                 <Explorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
             </PrivateRoute>
 
             <PrivateRoute path={path}>
-            <Redirect to={`${path}/${pluginName}/explorer`} />
-        </PrivateRoute>
+                <Redirect to={`${path}/explorer`} />
+            </PrivateRoute>
         </Switch>
     </>
 }

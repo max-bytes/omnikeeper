@@ -26,7 +26,7 @@ namespace Omnikeeper.GridView.Entity
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Name;
 
-        [TraitAttribute("config", "gridview_context.config", isJSONSerialized: true)]
+        [TraitAttribute("config", "gridview_context.config", jsonSerializer: typeof(GridViewContextModel.ConfigSerializer))]
         public readonly GridViewConfiguration Configuration;
 
         public GridViewContext(string id, string speakingName, string description, GridViewConfiguration configuration)

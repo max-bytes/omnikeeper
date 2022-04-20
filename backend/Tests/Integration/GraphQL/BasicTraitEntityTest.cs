@@ -1,11 +1,11 @@
 ﻿using GraphQL;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Tests.Integration.GraphQL.Base;
 
@@ -154,7 +154,6 @@ mutation {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationInsert, expected3, user);
 
@@ -203,7 +202,6 @@ mutation {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationUpdateAttribute, expected5, user);
 
@@ -243,10 +241,9 @@ mutation {
     }
 ";
             var (_, jsonStr) = RunQuery(queryCIID, user);
-            var json = JToken.Parse(jsonStr);
+            var json = JsonDocument.Parse(jsonStr);
 
-            var ciidEntity1Str = json["data"]!["traitEntities"]!["test_trait_a"]!["byDataID"]!["ciid"]!.Value<string>();
-            var ciidEntity1 = Guid.Parse(ciidEntity1Str!);
+            var ciidEntity1 = json.RootElement.GetProperty("data").GetProperty("traitEntities").GetProperty("test_trait_a").GetProperty("byDataID").GetProperty("ciid").GetGuid();
 
             var mutationSetAssignments = @"
 mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
@@ -268,7 +265,6 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationSetAssignments, expected7, user,
                 new Inputs(new Dictionary<string, object?>()
@@ -312,7 +308,6 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationSetAssignments, expected9, user,
                 new Inputs(new Dictionary<string, object?>()
@@ -366,7 +361,6 @@ mutation($baseCIID: Guid!, $relatedCIIDsToAdd: [Guid]!) {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationAddAssignments, expected11, user,
                 new Inputs(new Dictionary<string, object?>()
@@ -422,7 +416,6 @@ mutation($baseCIID: Guid!, $relatedCIIDsToRemove: [Guid]!) {
       }
 	}
   }
-}
 ";
             AssertQuerySuccess(mutationRemoveAssignments, expected13, user,
                 new Inputs(new Dictionary<string, object?>()
@@ -716,19 +709,19 @@ mutation($name: String!, $id: String!) {
             ""entity"": {
               ""id"": ""entity_1"",
               ""name"": ""Entity 1""
-            },
+            }
           },
           {
             ""entity"": {
               ""id"": ""entity_2"",
               ""name"": ""Entity 2""
-            },
+            }
           },
           {
             ""entity"": {
               ""id"": ""entity_3"",
               ""name"": ""Entity 3""
-            },
+            }
           }
         ]
 	  }
@@ -761,13 +754,13 @@ mutation($name: String!, $id: String!) {
             ""entity"": {
               ""id"": ""entity_2"",
               ""name"": ""Entity 2""
-            },
+            }
           },
           {
             ""entity"": {
               ""id"": ""entity_3"",
               ""name"": ""Entity 3""
-            },
+            }
           }
         ]
 	  }

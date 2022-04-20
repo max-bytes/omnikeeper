@@ -8,6 +8,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -174,43 +175,28 @@ namespace Omnikeeper.Base.Model.TraitBased
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
-            var attributeNames = filters.Select(t => t.traitAttribute.AttributeTemplate.Name);
-            // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...
-            return dataLoaderService.SetupAndLoadMergedAttributes(ciSelection, NamedAttributesSelection.Build(attributeNames.ToHashSet()), attributeModel, layerSet, timeThreshold, trans)
-                .Then(cisWithAttributes =>
-                {
-                    ISet<Guid> ret = new HashSet<Guid>();
-                    foreach (var t in cisWithAttributes)
-                    {
-                        var ciid = t.Key;
-                        var attributes = t.Value;
 
-                        var meetsAllFilters = true;
-                        foreach (var (traitAttribute, filter) in filters)
-                        {
-                            var attributeName = traitAttribute.AttributeTemplate.Name;
-                            if (attributes.TryGetValue(attributeName, out var foundAttribute))
-                            {
-                                if (!AttributeFilterHelper.Matches(foundAttribute.Attribute.Value, filter))
-                                {
-                                    meetsAllFilters = false;
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                meetsAllFilters = false;
-                                break;
-                            }
-                        }
-                        if (meetsAllFilters)
-                        {
-                            ret.Add(ciid);
-                        }
-                    }
-                    return ret;
-                });
-            
+            return new SimpleDataLoader<ISet<Guid>>(async token =>
+            {
+                foreach (var (traitAttribute, filter) in filters)
+                {
+                    var attributeName = traitAttribute.AttributeTemplate.Name;
+                    var attributeSelection = NamedAttributesWithValueFiltersSelection.Build(new Dictionary<string, AttributeScalarTextFilter>() { { attributeName, filter } });
+
+                    // TODO: use dataloader
+                    var attributes = await attributeModel.GetMergedAttributes(ciSelection, attributeSelection, layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
+                    // NOTE: we reduce the ciSelection with each filter, and in the end, return the resulting ciSelection
+                    ciSelection = SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet());
+                }
+
+                return ciSelection switch
+                {
+                    SpecificCIIDsSelection s => s.CIIDs,
+                    NoCIIDsSelection _ => ImmutableHashSet<Guid>.Empty,
+                    _ => throw new Exception("Invalid ciSelection detected"),
+                };
+            });
+
         }
     }
 }

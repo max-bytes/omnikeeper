@@ -52,6 +52,6 @@ namespace Omnikeeper.Startup
                 return context.Response.WriteAsync(
                     Encoding.UTF8.GetString(memoryStream.ToArray()));
             }
-    };
+        };
     }
 }
