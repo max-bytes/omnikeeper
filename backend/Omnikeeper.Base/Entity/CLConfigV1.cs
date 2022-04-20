@@ -7,6 +7,7 @@ namespace Omnikeeper.Base.Entity
     [TraitEntity("__meta.config.cl_config", TraitOriginType.Core)]
     public class CLConfigV1 : TraitEntity, IEquatable<CLConfigV1>
     {
+        private static JsonElementComparer jsonElementComparer = new JsonElementComparer();
         public CLConfigV1(string id, string clBrainReference, JsonDocument clBrainConfig)
         {
             ID = id;
@@ -46,7 +47,7 @@ namespace Omnikeeper.Base.Entity
             return other != null && ID == other.ID &&
                    CLBrainReference == other.CLBrainReference &&
                    Name == other.Name &&
-                   CLBrainConfig.RootElement.ToString() == other.CLBrainConfig.RootElement.ToString(); // TODO: implement proper deep equality
+                   jsonElementComparer.Equals(CLBrainConfig.RootElement, other.CLBrainConfig.RootElement);
         }
         public override int GetHashCode() => HashCode.Combine(ID, CLBrainReference, CLBrainConfig, Name);
     }
