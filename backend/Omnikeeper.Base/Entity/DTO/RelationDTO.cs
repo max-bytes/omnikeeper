@@ -4,15 +4,6 @@ namespace Omnikeeper.Base.Entity.DTO
 {
     public class RelationDTO
     {
-        //private RelationDTO(Guid iD, Guid fromCIID, Guid toCIID, string predicateID, bool mask)
-        //{
-        //    ID = iD;
-        //    FromCIID = fromCIID;
-        //    ToCIID = toCIID;
-        //    PredicateID = predicateID;
-        //    Mask = mask;
-        //}
-
         public Guid ID { get; set; }
         public Guid FromCIID { get; set; }
         public Guid ToCIID { get; set; }
