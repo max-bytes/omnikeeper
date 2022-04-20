@@ -137,6 +137,7 @@ jobs:
           buildPublish OKPluginActiveDirectoryXMLIngest
           buildPublish OKPluginVariableRendering
           buildPublish OKPluginVisualization
+          buildPublish OKPluginNaemonConfig
 
   build-swagger-definition:
     runs-on: ubuntu-20.04
