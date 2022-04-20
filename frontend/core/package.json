@@ -33,7 +33,7 @@
     "prop-types": "^15.7.2",
     "query-string": "^6.13.6",
     "react": "^16.14.0",
-    "react-ace": "^8.1.0",
+    "react-ace": "^10.0.0",
     "react-color": "^2.19.3",
     "react-dom": "^16.14.0",
     "react-env": "0.0.0",
