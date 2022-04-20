@@ -182,6 +182,11 @@ namespace OKPluginNaemonConfig
                     interfaces.Add(obj);
                 }
 
+
+                int? port = null;
+                if (ciItem.Value.Port != "" && int.TryParse(ciItem.Value.Port, out var p))
+                    port = p;
+
                 ciData.Add(new ConfigurationItem
                 {
                     Type = "HOST",
@@ -189,7 +194,7 @@ namespace OKPluginNaemonConfig
                     Name = ciItem.Value.Name,
                     Status = ciItem.Value.Status,
                     Address = ciItem.Value.Address,
-                    Port = ciItem.Value.Port != "" ? int.Parse(ciItem.Value.Port) : null,
+                    Port = port,
                     Cust = ciItem.Value.Cust,
                     Criticality = ciItem.Value.Criticality,
                     SuppOS = "", // Add SuppOS for this ci,
@@ -248,6 +253,10 @@ namespace OKPluginNaemonConfig
                     interfaces.Add(obj);
                 }
 
+                int? port = null;
+                if (ciItem.Value.Port != "" && int.TryParse(ciItem.Value.Port, out var p))
+                    port = p;
+
                 ciData.Add(new ConfigurationItem
                 {
                     Type = "SERVICE",
@@ -256,7 +265,7 @@ namespace OKPluginNaemonConfig
                     Status = ciItem.Value.Status,
                     Environment = ciItem.Value.Environment,
                     Address = ciItem.Value.Address,
-                    Port = ciItem.Value.Port != "" ? int.Parse(ciItem.Value.Port) : null,
+                    Port = port,
                     Cust = ciItem.Value.Cust,
                     Criticality = ciItem.Value.Criticality,
                     SuppOS = "", // Add SuppOS for this ci,
