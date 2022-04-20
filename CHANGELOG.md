@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [15.0.0-rc*] - 2022-04-13
+## [16.0.0] - 2022-04-20
 
 ### Added
 - GraphQL API:
@@ -14,12 +14,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   - implemented trait-hints for trait relations to simplify typed access to related CIs with traits
   - added support for relation-based filters
   - added NonNullGraphType wrapper for certain trait entity attribute fields
+  - added GraphQL GET endpoint
 - technical frontend:
   - implementation of visualization frontend plugin
 - implementation of double attribute value type; closes #189
 - implemented basic application health check
 - implemented system-test infrastructure and initial test cases; added system-tests to ci/cd pipeline
 - implemented attribute selection for name+value filters
+- added ComputeLayer config to core traits
 
 ### Changes
 - GraphQL API:
@@ -30,11 +32,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   - removed trait select filters for empty and meta @ ci search
   - rework of frontend plugin management and infrastructure
 - updated to .Net 6.0
+- replacement of Newtonsoft.Json with System.Text.Json throughout the codebase
+- performance improvements to JSON attribute value handling
 - disabled OData support for now
 - switched to smaller alpine based docker image for backend container
 - updated SpanJSON to latest version
 - updated Graphql-Dotnet to 5.1.0
 - removed obsolete REST API endpoints
+- performance improvement and memory improvement to GenericJsonIngest ingest
 
 ### Fixes
 - lots of improvements to JSON handling in various levels
