@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using OKPluginNaemonConfig.Entity;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
@@ -13,6 +11,8 @@ using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -84,11 +84,11 @@ namespace OKPluginNaemonConfig
             this.interfaceModel = interfaceModel;
         }
 
-        protected override ISet<string> GetDependentLayerIDs(JObject config, ILogger logger)
+        protected override ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger)
         {
             try
             {
-                var parsedConfig = config.ToObject<Configuration>();
+                var parsedConfig = config.Deserialize<Configuration>();
                 return new string[2] { parsedConfig!.MonmanLayerId, parsedConfig!.CMDBLayerId }.ToHashSet();
             }
             catch (Exception e)
@@ -98,7 +98,7 @@ namespace OKPluginNaemonConfig
             }
         }
 
-        public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
+        public override async Task<bool> Run(Layer targetLayer, JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start naemonConfig");
 
@@ -108,7 +108,7 @@ namespace OKPluginNaemonConfig
 
             try
             {
-                cfg = config.ToObject<Configuration>();
+                cfg = config.Deserialize<Configuration>();
                 logger.LogDebug("Parsed successfully configuration for naemon config compute layer.");
             }
             catch (Exception ex)
@@ -119,7 +119,6 @@ namespace OKPluginNaemonConfig
 
             var layersetCMDB = await layerModel.BuildLayerSet(new[] { cfg!.CMDBLayerId }, trans);
             var layersetMonman = await layerModel.BuildLayerSet(new[] { cfg!.MonmanLayerId }, trans);
-            var layersetNaemonConfig = await layerModel.BuildLayerSet(new[] { cfg!.NaemonConfigLayerId }, trans);
 
             // load all naemons
             var naemonInstances = await naemonInstanceModel.GetAllByCIID(layersetMonman, trans, changesetProxy.TimeThreshold);
@@ -612,7 +611,7 @@ namespace OKPluginNaemonConfig
 
                 fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("final_config", new AttributeScalarValueText(finalCfg), item.Key));
 
-                fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("config", AttributeScalarValueJSON.Build(JArray.FromObject(naemonObjs.Concat(configObjs).ToList())), item.Key));
+                fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("config", AttributeScalarValueJSON.BuildFromJsonDocument(JsonSerializer.SerializeToDocument(naemonObjs.Concat(configObjs).ToList())), item.Key));
 
                 // NOTE: we also need to process deployed cis for this naemon, check applib-confgen-ci.php#74
 
@@ -633,10 +632,10 @@ namespace OKPluginNaemonConfig
 
         public class ConfigObj
         {
-            [JsonProperty("type")]
+            [JsonPropertyName("type")]
             public string Type { get; set; }
 
-            [JsonProperty("attributes")]
+            [JsonPropertyName("attributes")]
             public Dictionary<string, string> Attributes { get; set; }
 
             public ConfigObj()
@@ -756,29 +755,25 @@ namespace OKPluginNaemonConfig
 
         internal class Configuration
         {
-            [JsonProperty("monman_layer_id", Required = Required.Always)]
+            [JsonPropertyName("monman_layer_id")]
             public string MonmanLayerId { get; set; }
 
-            [JsonProperty("cmdb_layer_id", Required = Required.Always)]
+            [JsonPropertyName("cmdb_layer_id")]
             public string CMDBLayerId { get; set; }
 
-            [JsonProperty("naemon_config_layer_id", Required = Required.Always)]
-            public string NaemonConfigLayerId { get; set; }
-
-            [JsonProperty("load-cmdb-customer", Required = Required.Always)]
+            [JsonPropertyName("load-cmdb-customer")]
             public List<string> LoadCMDBCustomer { get; set; }
 
-            [JsonProperty("cmdb-monprofile-prefix", Required = Required.Always)]
+            [JsonPropertyName("cmdb-monprofile-prefix")]
             public List<string> CMDBMonprofilePrefix { get; set; }
 
-            [JsonProperty("naemons-config-generateprofiles", Required = Required.Always)]
+            [JsonPropertyName("naemons-config-generateprofiles")]
             public List<string> NaemonsConfigGenerateprofiles { get; set; }
 
             public Configuration()
             {
                 MonmanLayerId = "";
                 CMDBLayerId = "";
-                NaemonConfigLayerId = "";
                 LoadCMDBCustomer = new List<string>();
                 CMDBMonprofilePrefix = new List<string>();
                 NaemonsConfigGenerateprofiles = new List<string>();

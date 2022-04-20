@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
+using System.Text.Json;
 
 namespace OKPluginNaemonConfig.Entity
 {
@@ -15,7 +15,7 @@ namespace OKPluginNaemonConfig.Entity
         public readonly string Name;
 
         [TraitAttribute("config", "config", optional: true)]
-        public readonly JObject Config;
+        public readonly JsonDocument? Config;
 
         [TraitAttribute("finalConfig", "final_config", optional: true)]
         public readonly string FinalConfig;
@@ -24,7 +24,7 @@ namespace OKPluginNaemonConfig.Entity
             Id = "";
             Name = "";
             FinalConfig = "";
-            Config = new();
+            Config = null;
         }
 
     }
