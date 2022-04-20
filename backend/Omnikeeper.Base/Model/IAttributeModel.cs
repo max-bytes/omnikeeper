@@ -16,7 +16,7 @@ namespace Omnikeeper.Base.Model
 
         Task<MergedCIAttribute?> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layerset, IModelContext trans, TimeThreshold atTime);
 
-        Task<int> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, 
+        Task<int> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans,
             IMaskHandlingForRemoval maskHandling, IOtherLayersValueHandling otherLayersValueHandling);
     }
 
@@ -43,7 +43,7 @@ namespace Omnikeeper.Base.Model
             return a.ToDictionary(t => t.Key, t => t.Value[name]);
         }
 
-        public static async Task<bool> InsertAttribute(this IAttributeModel attributeModel, string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, 
+        public static async Task<bool> InsertAttribute(this IAttributeModel attributeModel, string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset,
             DataOriginV1 origin, IModelContext trans, IOtherLayersValueHandling otherLayersValueHandling)
         {
             var data = new BulkCIAttributeDataCIAndAttributeNameScope(layerID, new BulkCIAttributeDataCIAndAttributeNameScope.Fragment[]
@@ -64,7 +64,7 @@ namespace Omnikeeper.Base.Model
         }
 
 
-        public static async Task<bool> InsertCINameAttribute(this IAttributeModel attributeModel, string nameValue, Guid ciid, string layerID, IChangesetProxy changesetProxy, 
+        public static async Task<bool> InsertCINameAttribute(this IAttributeModel attributeModel, string nameValue, Guid ciid, string layerID, IChangesetProxy changesetProxy,
             DataOriginV1 origin, IModelContext trans, IOtherLayersValueHandling otherLayersValueHandling)
             => await attributeModel.InsertAttribute(ICIModel.NameAttribute, new AttributeScalarValueText(nameValue), ciid, layerID, changesetProxy, origin, trans, otherLayersValueHandling);
     }

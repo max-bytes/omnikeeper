@@ -2,8 +2,6 @@
 using Microsoft.DotNet.InternalAbstractions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -109,20 +107,14 @@ namespace Tests.Ingest
             var setupFacts = hosts.ToDictionary(fqdn => $"{fqdn}.json", fqdn =>
             {
                 var f = LoadFile($"{fqdn}\\setup_facts.json");
-
-                using var jsonReader = new JsonTextReader(new StringReader(f))
-                {
-                    DateParseHandling = DateParseHandling.None // TODO: ensure that we always set this!
-                };
-                var data = JToken.ReadFrom(jsonReader) as JObject;
-                return data!;
+                return f;
             });
 
             var response = await controller.IngestAnsibleInventoryScan(insertLayer.ID, searchLayerSet.LayerIDs, new AnsibleInventoryScanDTO(
                 setupFacts,
-                new Dictionary<string, JObject>() { },
-                new Dictionary<string, JObject>() { },
-                new Dictionary<string, JObject>() { }
+                new Dictionary<string, string>() { },
+                new Dictionary<string, string>() { },
+                new Dictionary<string, string>() { }
             ));
             return response;
         }

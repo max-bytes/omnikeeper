@@ -1,7 +1,4 @@
-﻿using JsonSubTypes;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Omnikeeper.Base.Utils;
+﻿using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -10,32 +7,18 @@ using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Entity
 {
-    public class AttributeValueConstraintTypeDiscriminatorConverter : TypeDiscriminatorConverter<ICIAttributeValueConstraint> 
+    public class AttributeValueConstraintTypeDiscriminatorConverter : TypeDiscriminatorConverter<ICIAttributeValueConstraint>
     {
-        public AttributeValueConstraintTypeDiscriminatorConverter() : base("type", "$type")
+        public AttributeValueConstraintTypeDiscriminatorConverter() : base("$type")
         {
         }
     }
 
-    [Newtonsoft.Json.JsonConverter(typeof(JsonSubtypes), "type")]
-    [JsonSubtypes.KnownSubType(typeof(CIAttributeValueConstraintTextRegex), "textRegex")]
-    [JsonSubtypes.KnownSubType(typeof(CIAttributeValueConstraintTextLength), "textLength")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(AttributeValueConstraintTypeDiscriminatorConverter))]
+    [JsonConverter(typeof(AttributeValueConstraintTypeDiscriminatorConverter))]
     public interface ICIAttributeValueConstraint
     {
         public string type { get; }
-        public string ttype { get; }
         bool HasErrors(IAttributeValue value);
-
-        public static readonly NewtonSoftJSONSerializer<ICIAttributeValueConstraint> NewtonsoftSerializer = new NewtonSoftJSONSerializer<ICIAttributeValueConstraint>(() =>
-        {
-            var s = new JsonSerializerSettings()
-            {
-                TypeNameHandling = TypeNameHandling.Objects
-            };
-            s.Converters.Add(new StringEnumConverter());
-            return s;
-        });
 
         public static readonly SystemTextJSONSerializer<ICIAttributeValueConstraint> SystemTextJSONSerializer = new SystemTextJSONSerializer<ICIAttributeValueConstraint>(() =>
         {
@@ -60,13 +43,8 @@ namespace Omnikeeper.Base.Entity
             Maximum = maximum;
         }
 
-        [Newtonsoft.Json.JsonIgnore]
-        [System.Text.Json.Serialization.JsonIgnore]
-        public string type => "textLength";
-
-        [Newtonsoft.Json.JsonIgnore]
         [JsonPropertyName("$type")]
-        public string ttype => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
         public static CIAttributeValueConstraintTextLength Build(int? min, int? max)
         {
@@ -99,13 +77,8 @@ namespace Omnikeeper.Base.Entity
             Maximum = maximum;
         }
 
-        [Newtonsoft.Json.JsonIgnore]
-        [System.Text.Json.Serialization.JsonIgnore]
-        public string type => "arrayLength";
-
-        [Newtonsoft.Json.JsonIgnore]
         [JsonPropertyName("$type")]
-        public string ttype => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
         public static CIAttributeValueConstraintArrayLength Build(int? min, int? max)
         {
@@ -138,16 +111,10 @@ namespace Omnikeeper.Base.Entity
         public readonly string RegexStr;
         public readonly RegexOptions RegexOptions;
 
-        [Newtonsoft.Json.JsonIgnore]
-        [System.Text.Json.Serialization.JsonIgnore]
-        public string type => "textRegex";
-
-        [Newtonsoft.Json.JsonIgnore]
         [JsonPropertyName("$type")]
-        public string ttype => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
-        [Newtonsoft.Json.JsonIgnore]
-        [System.Text.Json.Serialization.JsonIgnore]
+        [JsonIgnore]
         [NonSerialized]
         private Regex? regex;
 
@@ -158,8 +125,7 @@ namespace Omnikeeper.Base.Entity
             regex = r;
         }
 
-        [Newtonsoft.Json.JsonConstructor]
-        [System.Text.Json.Serialization.JsonConstructor]
+        [JsonConstructor]
         public CIAttributeValueConstraintTextRegex(string regexStr, RegexOptions regexOptions)
         {
             RegexStr = regexStr;

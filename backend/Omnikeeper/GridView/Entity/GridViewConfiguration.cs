@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Entity.AttributeValues;
+﻿using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 
 namespace Omnikeeper.GridView.Entity
@@ -24,11 +22,11 @@ namespace Omnikeeper.GridView.Entity
 
         private GridViewConfiguration() { }
 
-        public static NewtonSoftJSONSerializer<GridViewConfiguration> Serializer = new NewtonSoftJSONSerializer<GridViewConfiguration>(new JsonSerializerSettings()
-        {
-            TypeNameHandling = TypeNameHandling.Objects,
-            MissingMemberHandling = MissingMemberHandling.Error
-        });
+        //public static NewtonSoftJSONSerializer<GridViewConfiguration> Serializer = new NewtonSoftJSONSerializer<GridViewConfiguration>(new JsonSerializerSettings()
+        //{
+        //    TypeNameHandling = TypeNameHandling.Objects,
+        //    MissingMemberHandling = MissingMemberHandling.Error
+        //});
     }
 
     public class GridViewColumn

@@ -19,7 +19,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public TextFilterRegexInput(string pattern, RegexOptions[] options)
         {
             Pattern = pattern;
-            Options = options.Aggregate(RegexOptions.None, (a,num) => a | num);
+            Options = options.Aggregate(RegexOptions.None, (a, num) => a | num);
 
             compiledRegex = new Regex(Pattern, Options);
         }

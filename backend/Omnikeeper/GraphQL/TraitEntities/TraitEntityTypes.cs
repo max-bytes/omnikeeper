@@ -78,13 +78,16 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(SpecificCIIDsSelection.Build(matchingCIIDs), attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService))
                             .ResolveNestedResults(); // resolve one level to be correct type again
 
-                        } else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
+                        }
+                        else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
                         {
                             matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(new AllCIIDsSelection(), attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService);
-                        } else if (filter.AttributeFilters.IsEmpty() && !filter.RelationFilters.IsEmpty())
+                        }
+                        else if (filter.AttributeFilters.IsEmpty() && !filter.RelationFilters.IsEmpty())
                         {
                             matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService);
-                        } else
+                        }
+                        else
                         {
                             throw new Exception("At least one filter must be set");
                         }
@@ -150,7 +153,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
     {
         public readonly ITrait UnderlyingTrait;
 
-        public ElementWrapperType(ITrait underlyingTrait, ElementType elementGraphType, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, 
+        public ElementWrapperType(ITrait underlyingTrait, ElementType elementGraphType, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService,
             ICIModel ciModel, IChangesetModel changesetModel, IAttributeModel attributeModel)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityWrapperGraphTypeName(underlyingTrait);
@@ -175,7 +178,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, trans, timeThreshold);
 
                 var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(et.CIID), forwardAS, ciModel, attributeModel, layerset, timeThreshold, trans)
-                    .Then(cis => {
+                    .Then(cis =>
+                    {
                         // NOTE: we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
                         return cis.FirstOrDefault() ?? new MergedCI(et.CIID, null, layerset, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty);
                     });
@@ -213,7 +217,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class ElementType : ObjectGraphType<EffectiveTrait>
     {
-        public ElementType() {}
+        public ElementType() { }
 
         public delegate bool ElementWrapperTypeLookup(string key, [MaybeNullWhen(false)] out ElementWrapperType ew);
         public void Init(ITrait underlyingTrait, RelatedCIType relatedCIType, ElementWrapperTypeLookup elementWrapperTypeLookup, IDataLoaderService dataLoaderService,
@@ -262,7 +266,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 var directionForward = r.RelationTemplate.DirectionForward;
                 var traitHints = r.RelationTemplate.TraitHints;
 
-                foreach(var traitIDHint in traitHints)
+                foreach (var traitIDHint in traitHints)
                 {
                     if (elementWrapperTypeLookup(traitIDHint, out var elementWrapperType))
                     {
@@ -312,7 +316,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 else return ImmutableList<EffectiveTrait>.Empty;
                             })
                         });
-                    } else
+                    }
+                    else
                     {
                         logger.LogError($"Could not create trait relation fields for trait-hint: could not find trait with ID \"{traitIDHint}\"");
                     }
@@ -371,7 +376,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, trans, timeThreshold);
 
                 var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(otherCIID), forwardAS, ciModel, attributeModel, layerset, timeThreshold, trans)
-                    .Then(cis => {
+                    .Then(cis =>
+                    {
                         // NOTE: we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
                         return cis.FirstOrDefault() ?? new MergedCI(otherCIID, null, layerset, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty);
                     });

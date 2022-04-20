@@ -1,10 +1,11 @@
-﻿using static Omnikeeper.Base.Inbound.IOnlineInboundAdapter;
+﻿using System.Text.Json.Serialization;
+using static Omnikeeper.Base.Inbound.IOnlineInboundAdapter;
 
 namespace Omnikeeper.Base.Inbound
 {
     public struct OIAFallbackConfig : IConfig
     {
-        [Newtonsoft.Json.JsonIgnore]
+        [JsonIgnore]
         public string BuilderName => "No Builder For Fallback";
 
         public string MapperScope => "FallbackScope";

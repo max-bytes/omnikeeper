@@ -1,6 +1,5 @@
 ﻿using GraphQL;
 using GraphQL.Types;
-using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Generator;
@@ -11,6 +10,7 @@ using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Startup;
 using System;
 using System.Linq;
+using System.Text.Json;
 
 namespace Omnikeeper.GraphQL
 {
@@ -504,7 +504,7 @@ namespace Omnikeeper.GraphQL
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
-                  var config = JObject.Parse(clConfig.CLBrainConfig);
+                  using var config = JsonDocument.Parse(clConfig.CLBrainConfig);
 
                   var updated = new CLConfigV1(clConfig.ID, clConfig.CLBrainReference, config);
 

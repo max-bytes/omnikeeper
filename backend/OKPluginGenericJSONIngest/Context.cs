@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using OKPluginGenericJSONIngest.Extract;
+﻿using OKPluginGenericJSONIngest.Extract;
 using OKPluginGenericJSONIngest.Load;
 using OKPluginGenericJSONIngest.Transform;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Entity;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace OKPluginGenericJSONIngest
@@ -18,15 +18,12 @@ namespace OKPluginGenericJSONIngest
         public readonly string ID;
 
         [TraitAttribute("extract_config", "gji_context.extract_config", jsonSerializer: typeof(ContextModel.ExtractConfigSerializer))]
-        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly IExtractConfig ExtractConfig;
 
         [TraitAttribute("transform_config", "gji_context.transform_config", jsonSerializer: typeof(ContextModel.TransformConfigSerializer))]
-        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly ITransformConfig TransformConfig;
 
         [TraitAttribute("load_config", "gji_context.load_config", jsonSerializer: typeof(ContextModel.LoadConfigSerializer))]
-        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly ILoadConfig LoadConfig;
 
         [TraitAttribute("name", "__name", optional: true)]

@@ -11,7 +11,7 @@ using SystemTests.Base;
 
 namespace SystemTests
 {
-    public class Test01 : GraphQLTestBase
+    public class GraphQLAPITests : TestBase
     {
         [Test]
         public async Task TestBasics()

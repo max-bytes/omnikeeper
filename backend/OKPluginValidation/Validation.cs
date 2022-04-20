@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using System;
+using System.Text.Json;
 
 namespace OKPluginValidation
 {
@@ -17,7 +17,7 @@ namespace OKPluginValidation
         public readonly string RuleName;
 
         [TraitAttribute("rule_config", "validation.rule_config")]
-        public readonly JObject RuleConfig;
+        public readonly JsonDocument RuleConfig;
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
@@ -26,7 +26,7 @@ namespace OKPluginValidation
         [TraitRelation("detected_issues", "__meta.validation.belongs_to_validation", false)]
         public readonly Guid[] DetectedIssues;
 
-        public Validation(string id, string ruleName, JObject ruleConfig)
+        public Validation(string id, string ruleName, JsonDocument ruleConfig)
         {
             RuleName = ruleName;
             RuleConfig = ruleConfig;
@@ -38,7 +38,7 @@ namespace OKPluginValidation
         public Validation()
         {
             RuleName = "";
-            RuleConfig = new JObject();
+            RuleConfig = JsonDocument.Parse("{}");
             ID = "";
             Name = "";
             DetectedIssues = new Guid[0];

@@ -100,9 +100,9 @@ namespace Omnikeeper.GraphQL.Types
                 return null;
 
             if (value is ROM valueROM)
-                return ICIAttributeValueConstraint.NewtonsoftSerializer.Deserialize(valueROM.Span);
+                return ICIAttributeValueConstraint.SystemTextJSONSerializer.Deserialize(valueROM.Span);
             if (value is string valueStr)
-                return ICIAttributeValueConstraint.NewtonsoftSerializer.Deserialize(valueStr);
+                return ICIAttributeValueConstraint.SystemTextJSONSerializer.Deserialize(valueStr);
             return ThrowValueConversionError(value);
         }
 
@@ -112,7 +112,7 @@ namespace Omnikeeper.GraphQL.Types
                 return null;
 
             if (value is ICIAttributeValueConstraint vc)
-                return ICIAttributeValueConstraint.NewtonsoftSerializer.SerializeToString(vc);
+                return ICIAttributeValueConstraint.SystemTextJSONSerializer.SerializeToString(vc);
             return ThrowSerializationError(value);
         }
     }
@@ -128,7 +128,8 @@ namespace Omnikeeper.GraphQL.Types
 
     public class RelationTemplateType : ObjectGraphType<RelationTemplate>
     {
-        public RelationTemplateType() {
+        public RelationTemplateType()
+        {
             Field("predicateID", x => x.PredicateID);
             Field("directionForward", x => x.DirectionForward);
             Field("traitHints", x => x.TraitHints);

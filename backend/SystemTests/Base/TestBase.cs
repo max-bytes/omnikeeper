@@ -1,23 +1,26 @@
 ﻿using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
-using DotNet.Testcontainers.Network;
+using DotNet.Testcontainers.Networks;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
 using NUnit.Framework;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SystemTests.Base
 {
-    public abstract class GraphQLTestBase
+    public abstract class TestBase
     {
         private TestcontainersContainer postgresContainer;
         private TestcontainersContainer omnikeeperContainer;
         private IDockerNetwork network;
         private GraphQLHttpClient graphQLClient;
+
+        protected readonly string BaseUrl = "http://localhost:8080";
 
         protected async Task<GraphQLResponse<TResponse>> Query<TResponse>(string query, Func<TResponse> defineResponseType)
         {
@@ -80,7 +83,9 @@ namespace SystemTests.Base
                 .Build();
             await omnikeeperContainer.StartAsync();
 
-            graphQLClient = new GraphQLHttpClient("http://localhost:8080/graphql", new SystemTextJsonSerializer());
+            graphQLClient = new GraphQLHttpClient($"{BaseUrl}/graphql", new SystemTextJsonSerializer());
+
+            Thread.Sleep(2000); // wait a bit more to make sure omnikeeper is fully initialized (f.e. trait rebuilding)
         }
 
         [TearDown]

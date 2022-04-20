@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
 using Omnikeeper.Base.Entity;
@@ -7,6 +6,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model.Config
@@ -20,7 +20,7 @@ namespace Omnikeeper.Model.Config
             this.logger = logger;
         }
 
-        private ODataAPIContext? Deserialize(string id, JObject configJO)
+        private ODataAPIContext? Deserialize(string id, JsonDocument configJO)
         {
             try
             {
@@ -46,7 +46,7 @@ namespace Omnikeeper.Model.Config
                 while (await s.ReadAsync())
                 {
                     var id = s.GetString(0);
-                    var configJO = s.GetFieldValue<JObject>(1);
+                    var configJO = s.GetFieldValue<JsonDocument>(1);
                     var context = Deserialize(id, configJO);
                     if (context != null) // TODO: we actually need a fallback config to show, so users can at least attempt to fix any serialization issues
                         ret.Add(context);
@@ -65,7 +65,7 @@ namespace Omnikeeper.Model.Config
             if (!await s.ReadAsync())
                 throw new Exception($"Could not find context with ID {id}");
 
-            var configJO = s.GetFieldValue<JObject>(0);
+            var configJO = s.GetFieldValue<JsonDocument>(0);
             var d = Deserialize(id, configJO);
             if (d == null)
                 throw new Exception($"Could not deserialized context with ID {id}");
@@ -74,7 +74,7 @@ namespace Omnikeeper.Model.Config
 
         public async Task<ODataAPIContext> Upsert(string id, ODataAPIContext.IConfig config, IModelContext trans)
         {
-            var configJO = ODataAPIContext.ConfigSerializer.SerializeToJObject(config);
+            var configJO = ODataAPIContext.ConfigSerializer.SerializeToJsonDocument(config);
             using var command = new NpgsqlCommand(@"INSERT INTO config.odataapi_context (id, config) VALUES (@id, @config) ON CONFLICT (id) DO UPDATE SET config = EXCLUDED.config", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("id", id);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
@@ -92,7 +92,7 @@ namespace Omnikeeper.Model.Config
 
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
-            var config = reader.GetFieldValue<JObject>(0);
+            var config = reader.GetFieldValue<JsonDocument>(0);
 
             var d = Deserialize(id, config);
             if (d == null)

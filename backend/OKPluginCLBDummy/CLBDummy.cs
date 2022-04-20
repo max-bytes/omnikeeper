@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -8,6 +6,8 @@ using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace OKPluginCLBDummy
@@ -20,7 +20,7 @@ namespace OKPluginCLBDummy
 
         private class Config
         {
-            [JsonProperty("source_layerset")]
+            [JsonPropertyName("source_layerset")]
             public string[] SourceLayerset { get; set; }
         }
         /*
@@ -31,9 +31,9 @@ namespace OKPluginCLBDummy
         }
         */
 
-        private Config ParseConfig(JObject config) => config.ToObject<Config>();
+        private Config ParseConfig(JsonDocument config) => JsonSerializer.Deserialize<Config>(config);
 
-        protected override ISet<string> GetDependentLayerIDs(JObject config, ILogger logger)
+        protected override ISet<string> GetDependentLayerIDs(JsonDocument config, ILogger logger)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace OKPluginCLBDummy
             }
         }
 
-        public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
+        public override async Task<bool> Run(Layer targetLayer, JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start dummy CLB");
 

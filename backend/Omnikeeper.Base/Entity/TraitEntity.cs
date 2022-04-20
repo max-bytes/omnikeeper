@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
 using System;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Entity
@@ -24,8 +26,59 @@ namespace Omnikeeper.Base.Entity
 
     public interface IAttributeJSONSerializer
     {
-        public object Deserialize(JToken jo, Type type);
-        public JObject SerializeToJObject(object o);
+        public object DeserializeFromAttributeValue(IAttributeValue attribute);
+        public IAttributeValue SerializeToAttributeValue(object o, bool isArray);
+    }
+
+    public abstract class AttributeJSONSerializer<T> : IAttributeJSONSerializer where T : class
+    {
+        private readonly SystemTextJSONSerializer<T> systemTextJsonSerializer;
+
+        protected AttributeJSONSerializer(Func<JsonSerializerOptions> serializerOptions)
+        {
+            systemTextJsonSerializer = new SystemTextJSONSerializer<T>(serializerOptions);
+        }
+
+        public object DeserializeFromAttributeValue(IAttributeValue attribute)
+        {
+            if (attribute is AttributeScalarValueJSON @as)
+            {
+                return systemTextJsonSerializer.Deserialize(@as.ValueStr);
+            }
+            else if (attribute is AttributeArrayValueJSON aa)
+            {
+                var ret = new T[aa.Length];
+                for (int i = 0; i < aa.Values.Length; i++)
+                {
+                    ret[i] = systemTextJsonSerializer.Deserialize(aa.Values[i].ValueStr);
+                }
+                return ret;
+            }
+            else
+            {
+                throw new Exception("Unexpected attribute value type encountered; expected JSON attribute value");
+            }
+        }
+
+        public IAttributeValue SerializeToAttributeValue(object o, bool isArray)
+        {
+            if (isArray)
+            {
+                var a = (T[])o;
+                var serialized = new string[a.Length];
+                for (int i = 0; i < a.Length; i++)
+                {
+                    var e = systemTextJsonSerializer.SerializeToString(a[i]);
+                    serialized[i] = e;
+                }
+                return AttributeArrayValueJSON.BuildFromString(serialized, false);
+            }
+            else
+            {
+                var jo = systemTextJsonSerializer.SerializeToString((T)o);
+                return AttributeScalarValueJSON.BuildFromString(jo, false);
+            }
+        }
     }
 
     [AttributeUsage(AttributeTargets.Field)]

@@ -1,63 +1,45 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
-using Omnikeeper.Base.Utils;
-using System;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
     public class RecursiveTraitModel : GenericTraitEntityModel<RecursiveTrait, string>
     {
-        public RecursiveTraitModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) 
+        public RecursiveTraitModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
             : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
 
-        public class TraitAttributeSerializer : IAttributeJSONSerializer
+        public class TraitAttributeSerializer : AttributeJSONSerializer<TraitAttribute>
         {
-            private readonly NewtonSoftJSONSerializer<TraitAttribute> serializer = new NewtonSoftJSONSerializer<TraitAttribute>(() =>
+            public TraitAttributeSerializer() : base(() =>
             {
-                var s = new JsonSerializerSettings()
+                return new System.Text.Json.JsonSerializerOptions()
                 {
-                    TypeNameHandling = TypeNameHandling.Objects
+                    Converters = {
+                        new JsonStringEnumConverter()
+                    },
+                    IncludeFields = true
                 };
-                s.Converters.Add(new StringEnumConverter());
-                return s;
-            });
-
-            public object Deserialize(JToken jo, Type type)
+            })
             {
-                return serializer.Deserialize(jo, type);
-            }
-
-            public JObject SerializeToJObject(object o)
-            {
-                return serializer.SerializeToJObject(o);
             }
         }
 
-        public class TraitRelationSerializer : IAttributeJSONSerializer
+        public class TraitRelationSerializer : AttributeJSONSerializer<TraitRelation>
         {
-            private readonly NewtonSoftJSONSerializer<TraitRelation> serializer = new NewtonSoftJSONSerializer<TraitRelation>(() =>
+            public TraitRelationSerializer() : base(() =>
             {
-                var s = new JsonSerializerSettings()
+                return new System.Text.Json.JsonSerializerOptions()
                 {
-                    TypeNameHandling = TypeNameHandling.Objects
+                    Converters = {
+                        new JsonStringEnumConverter()
+                    },
+                    IncludeFields = true
                 };
-                s.Converters.Add(new StringEnumConverter());
-                return s;
-            });
-
-            public object Deserialize(JToken jo, Type type)
+            })
             {
-                return serializer.Deserialize(jo, type);
-            }
-
-            public JObject SerializeToJObject(object o)
-            {
-                return serializer.SerializeToJObject(o);
             }
         }
     }

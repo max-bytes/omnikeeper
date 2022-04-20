@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using Omnikeeper.Base.Model.TraitBased;
+﻿using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.Base.Entity
 {

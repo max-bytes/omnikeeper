@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.CLB
@@ -20,7 +20,7 @@ namespace Omnikeeper.Base.CLB
 
         public string Name => GetType().Name!;
 
-        public async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContextBuilder modelContextBuilder, ILogger logger)
+        public async Task<bool> Run(Layer targetLayer, JsonDocument config, IChangesetProxy changesetProxy, IModelContextBuilder modelContextBuilder, ILogger logger)
         {
             try
             {
@@ -42,11 +42,11 @@ namespace Omnikeeper.Base.CLB
             }
         }
 
-        public abstract Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger);
+        public abstract Task<bool> Run(Layer targetLayer, JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger);
 
-        protected virtual ISet<string>? GetDependentLayerIDs(JObject config, ILogger logger) => null;
+        protected virtual ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger) => null;
 
-        public async Task<bool> CanSkipRun(DateTimeOffset? lastRun, JObject config, ILogger logger, IModelContextBuilder modelContextBuilder)
+        public async Task<bool> CanSkipRun(DateTimeOffset? lastRun, JsonDocument config, ILogger logger, IModelContextBuilder modelContextBuilder)
         {
             if (lastRun == null)
             {
