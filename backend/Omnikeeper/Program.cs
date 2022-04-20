@@ -53,7 +53,8 @@ namespace Omnikeeper
 
                     var graphqlSchemaHolder = scope.ServiceProvider.GetRequiredService<GraphQLSchemaHolder>();
                     graphqlSchemaHolder.ReInitSchema(scope.ServiceProvider, activeTraits, logger);
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     logger.LogError(e, "Encountered error while trying to initialize GraphQL schema");
                 }

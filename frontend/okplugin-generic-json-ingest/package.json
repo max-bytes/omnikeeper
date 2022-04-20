@@ -4,7 +4,7 @@
   "version": "0.0.0-src",
   "description": "Omnikeeper Plugin for handling generic JSON inbound data",
   "main": "dist/index.js",
-  "module": "src/index.js",
+  "module": "dist/index.js",
   "scripts": {
     "build": "babel src --out-dir dist --copy-files",
     "copy": "ncp ./package.json ./dist/package.json",

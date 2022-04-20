@@ -1,14 +1,13 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.Controllers.Ingest
 {
     public class AnsibleInventoryScanDTO
     {
         [JsonConstructor]
-        public AnsibleInventoryScanDTO(IDictionary<string, JObject> setupFacts, IDictionary<string, JObject> yumInstalled, IDictionary<string, JObject> yumRepos, IDictionary<string, JObject> yumUpdates)
+        public AnsibleInventoryScanDTO(IDictionary<string, string> setupFacts, IDictionary<string, string> yumInstalled, IDictionary<string, string> yumRepos, IDictionary<string, string> yumUpdates)
         {
             SetupFacts = setupFacts;
             YumInstalled = yumInstalled;
@@ -17,15 +16,15 @@ namespace Omnikeeper.Controllers.Ingest
         }
 
         [Required]
-        public IDictionary<string, JObject> SetupFacts { get; private set; }
+        public IDictionary<string, string> SetupFacts { get; private set; }
 
         [Required]
-        public IDictionary<string, JObject> YumInstalled { get; private set; }
+        public IDictionary<string, string> YumInstalled { get; private set; }
 
         [Required]
-        public IDictionary<string, JObject> YumRepos { get; private set; }
+        public IDictionary<string, string> YumRepos { get; private set; }
 
         [Required]
-        public IDictionary<string, JObject> YumUpdates { get; private set; }
+        public IDictionary<string, string> YumUpdates { get; private set; }
     }
 }

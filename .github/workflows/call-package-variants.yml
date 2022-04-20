@@ -30,7 +30,7 @@ jobs:
       run: |
         echo "variantName=internal" >> $GITHUB_ENV
         echo "baseVersion=${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
-        echo "pluginsBackend=OKPluginGenericJSONIngest:${{ github.event.inputs.baseVersion }};OKPluginActiveDirectoryXMLIngest:${{ github.event.inputs.baseVersion }};OKPluginAnsibleInventoryScanIngest:${{ github.event.inputs.baseVersion }};OKPluginOIAKeycloak:${{ github.event.inputs.baseVersion }};OKPluginOIAOmnikeeper:${{ github.event.inputs.baseVersion }};OKPluginOIASharepoint:${{ github.event.inputs.baseVersion }};OKPluginVisualization:${{ github.event.inputs.baseVersion }};" >> $GITHUB_ENV
+        echo "pluginsBackend=OKPluginGenericJSONIngest:${{ github.event.inputs.baseVersion }};OKPluginActiveDirectoryXMLIngest:${{ github.event.inputs.baseVersion }};OKPluginAnsibleInventoryScanIngest:${{ github.event.inputs.baseVersion }};OKPluginVisualization:${{ github.event.inputs.baseVersion }};" >> $GITHUB_ENV
         echo "pluginsFrontend=@max-bytes/okplugin-generic-json-ingest@${{ github.event.inputs.baseVersion }} @max-bytes/okplugin-visualization@${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
     - name: "Invoke variant: internal"
       uses: benc-uk/workflow-dispatch@v1

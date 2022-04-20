@@ -1,12 +1,12 @@
 using FluentAssertions;
 using Microsoft.DotNet.InternalAbstractions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
 {
@@ -15,18 +15,18 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
         [Test]
         public void Test1()
         {
-            var documents = new Dictionary<string, JToken>()
+            var documents = new Dictionary<string, string>()
             {
                 {
-                    "listzones.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "listzones.json", (File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                         "data", "usecase_mhx_dns", "listzones.json")))
                 },
                 {
-                    "listrecords_mhx-consulting.at.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "listrecords_mhx-consulting.at.json", (File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                         "data", "usecase_mhx_dns", "listrecords_mhx-consulting.at.json")))
                 },
                 {
-                    "listrecords_mhx.at.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "listrecords_mhx.at.json", (File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                         "data", "usecase_mhx_dns", "listrecords_mhx.at.json")))
                 }
             };
@@ -47,8 +47,8 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         idMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "id", value = 718656, type = AttributeValueType.Integer },
-                            new GenericInboundAttribute { name = "name", value = "mhx-consulting.at", type = AttributeValueType.Text },
+                            new GenericInboundAttribute { name = "id", value = new AttributeScalarValueInteger(718656) },
+                            new GenericInboundAttribute { name = "name", value = new AttributeScalarValueText("mhx-consulting.at") },
                         }
                     },
                     new GenericInboundCI
@@ -57,8 +57,8 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         idMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "id", value = 742507, type = AttributeValueType.Integer },
-                            new GenericInboundAttribute { name = "name", value = "mhx.at", type = AttributeValueType.Text },
+                            new GenericInboundAttribute { name = "id", value = new AttributeScalarValueInteger(742507) },
+                            new GenericInboundAttribute { name = "name", value = new AttributeScalarValueText("mhx.at") },
                         }
                     },
 
@@ -68,11 +68,11 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         idMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "id", value = 1569516122, type = AttributeValueType.Integer },
-                            new GenericInboundAttribute { name = "name", value = "mhx-consulting.at", type = AttributeValueType.Text },
-                            new GenericInboundAttribute { name = "ttl", value = 86400, type = AttributeValueType.Integer },
-                            new GenericInboundAttribute { name = "type", value = "NS", type = AttributeValueType.Text },
-                            new GenericInboundAttribute { name = "value", value = "ns1.he.net", type = AttributeValueType.Text },
+                            new GenericInboundAttribute { name = "id", value = new AttributeScalarValueInteger(1569516122) },
+                            new GenericInboundAttribute { name = "name", value = new AttributeScalarValueText("mhx-consulting.at") },
+                            new GenericInboundAttribute { name = "ttl", value = new AttributeScalarValueInteger(86400) },
+                            new GenericInboundAttribute { name = "type", value = new AttributeScalarValueText("NS") },
+                            new GenericInboundAttribute { name = "value", value = new AttributeScalarValueText("ns1.he.net") },
                         }
                     },
                     new GenericInboundCI
@@ -81,11 +81,11 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         idMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "id", value = 1569516123, type = AttributeValueType.Integer },
-                            new GenericInboundAttribute { name = "name", value = "mhx-consulting.at", type = AttributeValueType.Text },
-                            new GenericInboundAttribute { name = "ttl", value = 86400, type = AttributeValueType.Integer },
-                            new GenericInboundAttribute { name = "type", value = "NS", type = AttributeValueType.Text },
-                            new GenericInboundAttribute { name = "value", value = "ns2.he.net", type = AttributeValueType.Text },
+                            new GenericInboundAttribute { name = "id", value = new AttributeScalarValueInteger(1569516123) },
+                            new GenericInboundAttribute { name = "name", value = new AttributeScalarValueText("mhx-consulting.at") },
+                            new GenericInboundAttribute { name = "ttl", value = new AttributeScalarValueInteger(86400) },
+                            new GenericInboundAttribute { name = "type", value = new AttributeScalarValueText("NS") },
+                            new GenericInboundAttribute { name = "value", value = new AttributeScalarValueText("ns2.he.net") },
                         }
                     },
                     new GenericInboundCI
@@ -94,11 +94,11 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         idMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "id", value = 2569516148, type = AttributeValueType.Integer },
-                            new GenericInboundAttribute { name = "name", value = "mhx.at", type = AttributeValueType.Text },
-                            new GenericInboundAttribute { name = "ttl", value = 86400, type = AttributeValueType.Integer },
-                            new GenericInboundAttribute { name = "type", value = "NS", type = AttributeValueType.Text },
-                            new GenericInboundAttribute { name = "value", value = "ns-mhx1.he.net", type = AttributeValueType.Text },
+                            new GenericInboundAttribute { name = "id", value = new AttributeScalarValueInteger(2569516148) },
+                            new GenericInboundAttribute { name = "name", value = new AttributeScalarValueText("mhx.at") },
+                            new GenericInboundAttribute { name = "ttl", value = new AttributeScalarValueInteger(86400) },
+                            new GenericInboundAttribute { name = "type", value = new AttributeScalarValueText("NS") },
+                            new GenericInboundAttribute { name = "value", value = new AttributeScalarValueText("ns-mhx1.he.net") },
                         }
                     },
                 },
@@ -126,7 +126,14 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
             };
             result.Should().BeEquivalentTo(expected, options => options.WithStrictOrdering());
 
-            string resultJson = JsonConvert.SerializeObject(result, Formatting.Indented);
+            string resultJson = JsonSerializer.Serialize(result, new JsonSerializerOptions()
+            {
+                IncludeFields = true,
+                Converters = {
+                    new JsonStringEnumConverter()
+                },
+                WriteIndented = true
+            });
             File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                 "data", "usecase_mhx_dns", "output.json"), resultJson);
         }

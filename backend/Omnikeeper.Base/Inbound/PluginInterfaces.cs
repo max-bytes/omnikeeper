@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
@@ -8,6 +7,8 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Inbound
@@ -126,15 +127,20 @@ namespace Omnikeeper.Base.Inbound
 
     public interface IOnlineInboundAdapter
     {
+        public class OnlineInboundAdapterTypeDiscriminatorConverter : TypeDiscriminatorConverter<IOnlineInboundAdapter>
+        {
+            public OnlineInboundAdapterTypeDiscriminatorConverter() : base("$type")
+            {
+            }
+        }
+
+        [JsonConverter(typeof(OnlineInboundAdapterTypeDiscriminatorConverter))]
         public interface IConfig
         {
             public string BuilderName { get; }
             public string MapperScope { get; }
 
-            public static NewtonSoftJSONSerializer<IConfig> Serializer = new NewtonSoftJSONSerializer<IConfig>(new JsonSerializerSettings()
-            {
-                TypeNameHandling = TypeNameHandling.Objects
-            });
+            public readonly static SystemTextJSONSerializer<IConfig> Serializer = new SystemTextJSONSerializer<IConfig>(new JsonSerializerOptions());
         }
 
         IExternalIDManager GetExternalIDManager();

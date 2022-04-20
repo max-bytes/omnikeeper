@@ -78,7 +78,7 @@ jobs:
         run: |
             cd frontend/$PLUGIN_FOLDER
             npm config set unsafe-perm true # needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
-            npm ci
+            npm ci  --legacy-peer-deps #  --legacy-peer-deps is necessary because npm 7 changed the way peer dependencies are handled
             cat <<'EOF' > .npmrc
             //${REPOURL}:_authToken=${ACCESS_TOKEN}
             @max-bytes:registry=https://npm.pkg.github.com
@@ -101,7 +101,7 @@ jobs:
         run: |
             cd frontend/$PLUGIN_FOLDER
             npm config set unsafe-perm true # needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
-            npm ci
+            npm ci  --legacy-peer-deps #  --legacy-peer-deps is necessary because npm 7 changed the way peer dependencies are handled
             cat <<'EOF' > .npmrc
             //${REPOURL}:_authToken=${ACCESS_TOKEN}
             @max-bytes:registry=https://npm.pkg.github.com
@@ -129,10 +129,10 @@ jobs:
             dotnet nuget push "$1/bin/Release/$1.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
           }
           buildPublish OKPluginGenericJSONIngest
-          buildPublish OKPluginOIASharepoint
-          buildPublish OKPluginOIAOmnikeeper
-          buildPublish OKPluginOIAKeycloak
-          buildPublish OKPluginCLBMonitoring
+          #buildPublish OKPluginOIASharepoint
+          #buildPublish OKPluginOIAOmnikeeper
+          #buildPublish OKPluginOIAKeycloak
+          #buildPublish OKPluginCLBMonitoring
           buildPublish OKPluginAnsibleInventoryScanIngest
           buildPublish OKPluginActiveDirectoryXMLIngest
           buildPublish OKPluginVariableRendering

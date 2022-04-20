@@ -150,7 +150,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 }
             }
 
-            foreach(var r in trait.OptionalRelations)
+            foreach (var r in trait.OptionalRelations)
             {
                 var relationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
                 AddField(new FieldType()

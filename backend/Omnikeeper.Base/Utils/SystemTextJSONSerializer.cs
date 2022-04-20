@@ -22,6 +22,15 @@ namespace Omnikeeper.Base.Utils
                 throw new Exception("Could not deserialize string");
             return r;
         }
+
+        public T Deserialize(JsonDocument jsonDocument)
+        {
+            var r = JsonSerializer.Deserialize<T>(jsonDocument, SerializerOptions);
+            if (r == null)
+                throw new Exception("Could not deserialize JsonDocument");
+            return r;
+        }
+
         public T Deserialize(ReadOnlySpan<char> span)
         {
             var r = JsonSerializer.Deserialize<T>(span, SerializerOptions);
@@ -37,9 +46,24 @@ namespace Omnikeeper.Base.Utils
             return t;
         }
 
+        public JsonDocument SerializeToJsonDocument(T config)
+        {
+            return JsonSerializer.SerializeToDocument<T>(config);
+        }
+
         public string SerializeToString(T t)
         {
             return JsonSerializer.Serialize(t, SerializerOptions);
+        }
+
+        internal JsonDocument SerializeToJsonDocument(object v)
+        {
+            return JsonSerializer.SerializeToDocument(v, SerializerOptions);
+        }
+
+        public void SerializeToStream(T t, Stream stream)
+        {
+            JsonSerializer.Serialize(stream, t, SerializerOptions);
         }
     }
 

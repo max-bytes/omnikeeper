@@ -241,7 +241,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 var et = await Update(currentCIID.Value, input.AttributeValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
                                 userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
                                 return et;
-                            } else
+                            }
+                            else
                             {
                                 var inputRelationValues = Array.Empty<(string predicateID, bool forward, Guid[] relatedCIIDs)>();
                                 var et = await InsertUsingNewCI(input.AttributeValues, inputRelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
@@ -296,7 +297,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 }
 
                 // relation mutations
-                foreach(var tr in elementTypeContainer.Trait.OptionalRelations)
+                foreach (var tr in elementTypeContainer.Trait.OptionalRelations)
                 {
                     // set complete relations set
                     tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateSetRelationsByCIIDMutationName(traitID, tr), elementTypeContainer.ElementWrapper,

@@ -134,7 +134,7 @@ namespace Omnikeeper.Model
             return (actualInserts, outdatedAttributes);
         }
 
-        public async Task<int> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans, 
+        public async Task<int> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans,
             IMaskHandlingForRemoval maskHandling, IOtherLayersValueHandling otherLayersValueHandling)
         {
             var readTS = changeset.TimeThreshold;
@@ -188,7 +188,7 @@ namespace Omnikeeper.Model
                 case OtherLayersValueHandlingTakeIntoAccount t:
                     // fetch attributes in layerset excluding write layer; if value is same as value that we want to write -> instead of write -> no-op or even delete
                     var existingAttributesInOtherLayers = await GetAttributesInScope(data, new LayerSet(t.ReadLayersWithoutWriteLayer), trans, readTS);
-                    for (var i = inserts.Count - 1;i >= 0;i--)
+                    for (var i = inserts.Count - 1; i >= 0; i--)
                     {
                         var insert = inserts[i];
                         if (existingAttributesInOtherLayers.TryGetValue(insert.ciid, out var a))

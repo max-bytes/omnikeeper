@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Load;
 using Omnikeeper.Base.Service;
@@ -8,6 +7,7 @@ using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace OKPluginGenericJSONIngest.Tests.Load
 {
@@ -55,8 +55,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                             new GenericInboundAttribute
                             {
                                 name = "a",
-                                type = AttributeValueType.JSON,
-                                value = JToken.Parse("[]")
+                                value = AttributeArrayValueJSON.BuildFromString(new string[0], false)
                             }
                         }
                     }
@@ -67,7 +66,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
             var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), NullLogger.Instance);
 
             var jsonValue = ingestData.CICandidates.ToList().First().Attributes.Fragments.First().Value;
-            jsonValue.Should().BeEquivalentTo(AttributeArrayValueJSON.BuildFromString(new string[] { }), options => options.WithStrictOrdering());
+            jsonValue.Should().BeEquivalentTo(AttributeArrayValueJSON.BuildFromString(new string[] { }, false), options => options.WithStrictOrdering().ComparingByMembers<JsonElement>());
         }
 
 

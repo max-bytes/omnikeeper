@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Entity.AttributeValues;
+﻿using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 
 namespace Omnikeeper.GridView.Entity

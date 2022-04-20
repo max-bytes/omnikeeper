@@ -1,11 +1,7 @@
-﻿using GraphQL;
-using Newtonsoft.Json.Linq;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
-using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tests.Integration.GraphQL.Base;
 

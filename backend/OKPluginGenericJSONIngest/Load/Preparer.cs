@@ -11,14 +11,6 @@ namespace OKPluginGenericJSONIngest.Load
 {
     public class Preparer
     {
-        private CICandidateAttributeData.Fragment? GenericAttribute2Fragment(GenericInboundAttribute a)
-        {
-            if (a.value == null)
-                return null;
-            var value = AttributeValueHelper.BuildFromTypeAndObject(a.type, a.value);
-            return new CICandidateAttributeData.Fragment(a.name, value);
-        }
-
         public IngestData GenericInboundData2IngestData(GenericInboundData data, LayerSet searchLayers, ILogger logger)
         {
             var tempCIIDMapping = new Dictionary<string, Guid>(); // maps tempIDs to temporary Guids
@@ -28,22 +20,16 @@ namespace OKPluginGenericJSONIngest.Load
             {
                 try
                 {
-                    var fragments = ci.attributes.Select(a =>
-                    {
-                        try
-                        {
-                            return GenericAttribute2Fragment(a);
-                        }
-                        catch (Exception e)
-                        {
-                            throw new Exception($"Could not build attribute {a.name} with value {a.value} and type {a.type} for ci {ci.tempID}", e);
-                        }
-                    });
-
+                    var a = ci.attributes;
                     // TODO: make configurable
                     var gracefullNullHandling = true;
                     if (gracefullNullHandling)
-                        fragments = fragments.WhereNotNull();
+                        a = a.Where(f => f.value != null);
+
+                    var fragments = a.Select(a =>
+                    {
+                        return new CICandidateAttributeData.Fragment(a.name, a.value);
+                    });
 
                     var attributes = new CICandidateAttributeData(fragments!);
 
@@ -97,12 +83,12 @@ namespace OKPluginGenericJSONIngest.Load
         {
             ICIIdentificationMethod attributeF(InboundIDMethodByAttribute a)
             {
-                var fragment = GenericAttribute2Fragment(a.attribute);
-                if (fragment == null)
+                if (a.attribute.value == null)
                 {
                     logger.LogWarning($"Could not create fragment from generic attribute for idMethod CIIdentificationMethodByFragment using attribute name {a.attribute.name}");
                     return CIIdentificationMethodNoop.Build();
                 }
+                var fragment = new CICandidateAttributeData.Fragment(a.attribute.name, a.attribute.value);
                 return CIIdentificationMethodByFragment.Build(fragment, a.modifiers.caseInsensitive, searchLayers);
             }
 

@@ -24,7 +24,7 @@ namespace Omnikeeper.Model
             IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes,
             string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            if (inserts.IsEmpty()  && removes.IsEmpty())
+            if (inserts.IsEmpty() && removes.IsEmpty())
                 return (false, default);
 
             Changeset changeset = await changesetProxy.GetChangeset(layerID, origin, trans);

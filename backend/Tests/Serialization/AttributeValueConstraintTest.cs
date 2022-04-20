@@ -40,14 +40,8 @@ namespace Tests.Serialization
 
         private void TestSerialization(ICIAttributeValueConstraint t, string expectedSerialized)
         {
-            var sNewtonsoft = ICIAttributeValueConstraint.NewtonsoftSerializer.SerializeToString(t);
-            Assert.AreEqual(expectedSerialized, sNewtonsoft);
-
             var sSystemTextJson = ICIAttributeValueConstraint.SystemTextJSONSerializer.SerializeToString(t);
             Assert.AreEqual(expectedSerialized, sSystemTextJson);
-
-            var tNewtonsoft = ICIAttributeValueConstraint.NewtonsoftSerializer.Deserialize(sNewtonsoft);
-            tNewtonsoft.Should().BeEquivalentTo(t);
 
             var tSystemTextJson = ICIAttributeValueConstraint.SystemTextJSONSerializer.Deserialize(sSystemTextJson);
             tSystemTextJson.Should().BeEquivalentTo(t);

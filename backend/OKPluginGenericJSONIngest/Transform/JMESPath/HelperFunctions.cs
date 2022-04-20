@@ -52,7 +52,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             //{
             //    return JObject.FromObject(new { name, value, type });
             //}
-            return JObject.FromObject(new { name, value, type });
+            return JObject.FromObject(new { name, value = new { value, type } });
         }
     }
     public class RelationFunc : JmesPathFunction
@@ -79,7 +79,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             if (!(args[0].Token is JArray ja))
                 throw new Exception("Invalid attributes when constructing idMethodByData");
             var attributes = ja;
-            var type = "byData";
+            var type = SystemTextJSONSerializerMigrationHelper.GetTypeString(typeof(InboundIDMethodByData));
             return JObject.FromObject(new { type, attributes });
         }
     }
@@ -103,7 +103,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             }
 
             var attribute = ja;
-            var type = "byAttribute";
+            var type = SystemTextJSONSerializerMigrationHelper.GetTypeString(typeof(InboundIDMethodByAttribute));
             return JObject.FromObject(new { type, attribute, modifiers });
         }
     }
@@ -124,7 +124,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             var outgoingRelationStr = ra[0].ToString();
             var outgoingRelation = outgoingRelationStr == ">";
             var predicateID = ra[1].ToString();
-            var type = "byRelatedTempID";
+            var type = SystemTextJSONSerializerMigrationHelper.GetTypeString(typeof(InboundIDMethodByRelatedTempID));
             return JObject.FromObject(new { type, tempID, outgoingRelation, predicateID });
         }
     }
@@ -138,7 +138,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             if (!(args[0].Token is JValue jv))
                 throw new Exception("Invalid attributes when constructing idMethodByTempID");
             var tempID = jv;
-            var type = "byTempID";
+            var type = SystemTextJSONSerializerMigrationHelper.GetTypeString(typeof(InboundIDMethodByTemporaryCIID));
             return JObject.FromObject(new { type, tempID });
         }
     }
@@ -152,7 +152,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             if (!(args[0].Token is JArray i))
                 throw new Exception("Invalid inner idMethods when constructing idMethodByUnion");
             var inner = i;
-            var type = "byUnion";
+            var type = SystemTextJSONSerializerMigrationHelper.GetTypeString(typeof(InboundIDMethodByByUnion));
             return JObject.FromObject(new { type, inner });
         }
     }
@@ -165,7 +165,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             if (!(args[0].Token is JArray i))
                 throw new Exception("Invalid inner idMethods when constructing idMethodByIntersect");
             var inner = i;
-            var type = "byIntersect";
+            var type = SystemTextJSONSerializerMigrationHelper.GetTypeString(typeof(InboundIDMethodByIntersect));
             return JObject.FromObject(new { type, inner });
         }
     }

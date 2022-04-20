@@ -79,7 +79,8 @@ namespace Omnikeeper.Base.Model
         }
 
         public bool ContainsAttributeName(string attributeName) => NamesAndFilters.ContainsKey(attributeName);
-        public bool ContainsAttribute(CIAttribute attribute) {
+        public bool ContainsAttribute(CIAttribute attribute)
+        {
             if (!NamesAndFilters.TryGetValue(attribute.Name, out var filter))
                 return false;
 

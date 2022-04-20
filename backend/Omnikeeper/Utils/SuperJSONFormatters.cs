@@ -32,7 +32,7 @@ namespace Omnikeeper.Utils
         {
             var mvcOpt = context.HttpContext.RequestServices.GetRequiredService<IOptions<MvcOptions>>().Value;
             var formatters = mvcOpt.InputFormatters;
-            TextInputFormatter? formatter = null;
+            TextInputFormatter? formatter;
 
             Endpoint? endpoint = context.HttpContext.GetEndpoint();
             if (endpoint?.Metadata.GetMetadata<UseSpanJsonAttribute>() != null)
@@ -41,13 +41,11 @@ namespace Omnikeeper.Utils
             }
             else
             {
-                formatter = (NewtonsoftJsonInputFormatter?)(formatters
-                    .Where(f => typeof(NewtonsoftJsonInputFormatter) == f.GetType())
-                    .FirstOrDefault());
+                formatter = formatters.OfType<SystemTextJsonInputFormatter>().FirstOrDefault();
             }
             if (formatter != null)
                 return await formatter.ReadRequestBodyAsync(context, encoding);
-            else throw new Exception("No suitable formatter found");
+            else throw new Exception("No suitable input formatter found");
         }
     }
 
@@ -64,7 +62,7 @@ namespace Omnikeeper.Utils
         {
             var mvcOpt = context.HttpContext.RequestServices.GetRequiredService<IOptions<MvcOptions>>().Value;
             var formatters = mvcOpt.OutputFormatters;
-            TextOutputFormatter? formatter = null;
+            TextOutputFormatter? formatter;
 
             Endpoint? endpoint = context.HttpContext.GetEndpoint();
             if (endpoint?.Metadata.GetMetadata<UseSpanJsonAttribute>() != null)
@@ -73,13 +71,11 @@ namespace Omnikeeper.Utils
             }
             else
             {
-                formatter = (NewtonsoftJsonOutputFormatter?)(formatters
-                    .Where(f => typeof(NewtonsoftJsonOutputFormatter) == f.GetType())
-                    .FirstOrDefault());
+                formatter = formatters.OfType<SystemTextJsonOutputFormatter>().FirstOrDefault();
             }
             if (formatter != null)
                 await formatter.WriteResponseBodyAsync(context, selectedEncoding);
-            else throw new Exception("No suitable formatter found");
+            else throw new Exception("No suitable output formatter found");
         }
     }
 }
