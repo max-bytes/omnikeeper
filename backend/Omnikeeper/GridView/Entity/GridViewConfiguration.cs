@@ -23,12 +23,6 @@ namespace Omnikeeper.GridView.Entity
         }
 
         private GridViewConfiguration() { }
-
-        public static NewtonSoftJSONSerializer<GridViewConfiguration> Serializer = new NewtonSoftJSONSerializer<GridViewConfiguration>(new JsonSerializerSettings()
-        {
-            TypeNameHandling = TypeNameHandling.Objects,
-            MissingMemberHandling = MissingMemberHandling.Error
-        });
     }
 
     public class GridViewColumn
