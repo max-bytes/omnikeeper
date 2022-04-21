@@ -11,13 +11,14 @@ using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
     public abstract class GenericTraitEntityModelTestBase<T, ID> : DIServicedTestBase where T : TraitEntity, new() where ID : notnull, IEquatable<ID>
     {
-        public GenericTraitEntityModelTestBase() : base(true)
+        public GenericTraitEntityModelTestBase() : base(true, false)
         {
         }
 
@@ -81,9 +82,9 @@ namespace Tests.Integration.Model
             var entity2 = await Insert(creator2());
 
             var byDataID1 = await model.GetSingleByDataID(id1, layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            byDataID1.entity.Should().BeEquivalentTo(entity1);
+            byDataID1.entity.Should().BeEquivalentTo(entity1, opt => opt.ComparingByMembers<JsonElement>());
             var byDataID2 = await model.GetSingleByDataID(id2, layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            byDataID2.entity.Should().BeEquivalentTo(entity2);
+            byDataID2.entity.Should().BeEquivalentTo(entity2, opt => opt.ComparingByMembers<JsonElement>());
             var byNonExistentID = await model.GetSingleByDataID(nonExistentID, layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.AreEqual(ValueTuple.Create<T?, Guid>(null, default), byNonExistentID);
 
@@ -92,7 +93,7 @@ namespace Tests.Integration.Model
             {
                 { id1, byDataID1.entity },
                 { id2, byDataID2.entity },
-            });
+            }, opt => opt.ComparingByMembers<JsonElement>());
         }
 
         protected async Task TestGenericModelOperations(Func<T> creator1, Func<T> creator2, ID entity1ID, ID entity2ID, ID nonExistantID)
@@ -122,18 +123,18 @@ namespace Tests.Integration.Model
             }
 
             var entity1 = await Insert(creator1(), changesetBuilder());
-            entity1.Should().BeEquivalentTo(creator1());
+            entity1.Should().BeEquivalentTo(creator1(), opt => opt.ComparingByMembers<JsonElement>());
 
             var rt2 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.AreEqual(1, rt2.Count());
-            rt2.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 } }, options => options.WithoutStrictOrdering());
+            rt2.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 } }, options => options.WithoutStrictOrdering().ComparingByMembers<JsonElement>());
 
             var entity2 = await Insert(creator2(), changesetBuilder());
-            entity2.Should().BeEquivalentTo(creator2());
+            entity2.Should().BeEquivalentTo(creator2(), opt => opt.ComparingByMembers<JsonElement>());
 
             var rt3 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.AreEqual(2, rt3.Count());
-            rt3.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, options => options.WithoutStrictOrdering());
+            rt3.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, options => options.WithoutStrictOrdering().ComparingByMembers<JsonElement>());
 
             // delete using non existant CIID
             using (var trans = ModelContextBuilder.BuildDeferred())
@@ -155,24 +156,24 @@ namespace Tests.Integration.Model
 
             var rt4 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.AreEqual(1, rt4.Count());
-            rt4.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity2ID, entity2 } }, options => options.WithoutStrictOrdering());
+            rt4.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity2ID, entity2 } }, options => options.WithoutStrictOrdering().ComparingByMembers<JsonElement>());
 
             // re-insert
             var entity1Re = await Insert(creator1(), changesetBuilder());
-            entity1Re.Should().BeEquivalentTo(creator1());
+            entity1Re.Should().BeEquivalentTo(creator1(), opt => opt.ComparingByMembers<JsonElement>());
 
             var rt5 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.AreEqual(2, rt5.Count());
-            rt5.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, options => options.WithoutStrictOrdering());
+            rt5.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, options => options.WithoutStrictOrdering().ComparingByMembers<JsonElement>());
 
 
             // try to insert same again
             var entity1Re2 = await Insert(creator1(), changesetBuilder(), false);
-            entity1Re2.Should().BeEquivalentTo(creator1());
+            entity1Re2.Should().BeEquivalentTo(creator1(), opt => opt.ComparingByMembers<JsonElement>());
 
             var rt6 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.AreEqual(2, rt6.Count());
-            rt6.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, options => options.WithoutStrictOrdering());
+            rt6.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, options => options.WithoutStrictOrdering().ComparingByMembers<JsonElement>());
 
         }
 

@@ -32,7 +32,7 @@ namespace Omnikeeper.Model.Decorators
             for (int i = 0; i < egis.Length; i++)
             {
                 foreach (var egi in egis[i])
-                    ret.UnionWith(egi.Template.UsedAttributeNames.Where(name => !baseAttributeSelection.Contains(name)));
+                    ret.UnionWith(egi.Template.UsedAttributeNames.Where(name => !baseAttributeSelection.ContainsAttributeName(name)));
             }
             return ret;
         }
@@ -63,13 +63,16 @@ namespace Omnikeeper.Model.Decorators
                     {
                         NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
                         RegexAttributeSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
+                        NamedAttributesWithValueFiltersSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
                         AllAttributeSelection _ => new HashSet<string>(), // we are fetching all attributes anyway, no need to add additional attributes
                         NoAttributesSelection _ => new HashSet<string>(), // no attributes necessary
                         _ => throw new Exception("Invalid attribute selection encountered"),
                     };
-                    var additionalAttributes = (additionalAttributeNames.Count > 0) ? await model.GetAttributes(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerIDs, trans, atTime, generatedDataHandling) : null;
+                    var additionalAttributes = (additionalAttributeNames.Count > 0) ?
+                        await model.GetAttributes(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerIDs, trans, atTime, generatedDataHandling) :
+                        Enumerable.Repeat(ImmutableDictionary<Guid, IDictionary<string, CIAttribute>>.Empty, layerIDs.Length).ToArray();
 
-                    @base = MergeInGeneratedAttributes(@base, additionalAttributes, egis, layerIDs);
+                    @base = MergeInGeneratedAttributes(@base, additionalAttributes, egis, layerIDs, attributeSelection);
 
                     // TODO: remove additional attributes again, to be consistent; caller did not ask for them
 
@@ -82,7 +85,7 @@ namespace Omnikeeper.Model.Decorators
         }
 
         private IDictionary<Guid, IDictionary<string, CIAttribute>>[] MergeInGeneratedAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] @base,
-            IDictionary<Guid, IDictionary<string, CIAttribute>>[]? additionalAttributes, IEnumerable<GeneratorV1>[] egis, string[] layerIDs)
+            IDictionary<Guid, IDictionary<string, CIAttribute>>[] additionalAttributes, IEnumerable<GeneratorV1>[] egis, string[] layerIDs, IAttributeSelection attributeSelection)
         {
             // TODO: maybe we can find an efficient way to not generate attributes that are guaranteed to be hidden by a higher layer anyway
             var resolver = new GeneratorAttributeResolver();
@@ -91,21 +94,30 @@ namespace Omnikeeper.Model.Decorators
                 var layerID = layerIDs[i];
                 foreach (var egi in egis[i])
                 {
-                    foreach (var (ciid, existingCIAttributes) in @base[i])
+                    var existingCIs = @base[i];
+                    var additionalCIs = additionalAttributes[i];
+                    foreach (var ciid in existingCIs.Keys.Union(additionalCIs.Keys))
                     {
-                        // TODO, HACK: this approach of adding additionalAttributes is not 100% clean
-                        // this only adds the additional attributes if the base CI contains any attributes... or not?
-                        // in any case, from this POV, it would make more sense to already pass in all attributes in a single structure instead of 
-                        // having to merged them here... but this would require changes to the fetch parameters, making it fetch the additional attributes in one fetch
-
                         // TODO: we shouldn't add the generated attributes right away... because that might give the impression that generated templates referencing
                         // other generated attributes is fully supported... which it isnt! Because the recursive dependent attributes are not properly added.
-                        var additionals = additionalAttributes?[i].GetOr(ciid, ImmutableDictionary<string, CIAttribute>.Empty);
-                        var generatedAttribute = resolver.Resolve(existingCIAttributes.Values, additionals?.Values, ciid, layerID, egi);
+                        var additionals = additionalCIs.GetOr(ciid, ImmutableDictionary<string, CIAttribute>.Empty);
+                        var existing = existingCIs.GetOrWithClass(ciid, null);
+                        var generatedAttribute = resolver.Resolve(existing != null ? existing.Values : ImmutableList<CIAttribute>.Empty, additionals.Values, ciid, layerID, egi);
                         if (generatedAttribute != null)
                         {
-                            // TODO: we are currently overwriting regular attributes with generated attributes... decide if that is the correct approach
-                            existingCIAttributes[egi.AttributeName] = generatedAttribute;
+                            if (attributeSelection.ContainsAttribute(generatedAttribute)) // apply attribute selection to generated attribute
+                            {
+                                if (existing != null)
+                                {
+                                    // TODO: we are currently overwriting regular attributes with generated attributes... decide if that is the correct approach
+                                    existing[egi.AttributeName] = generatedAttribute;
+                                }
+                                else
+                                {
+                                    // NOTE: CI is empty (=does not contain any attributes) in the base data, add it and add the generated attribute in there
+                                    existingCIs[ciid] = new Dictionary<string, CIAttribute>() { { egi.AttributeName, generatedAttribute } };
+                                }
+                            }
                         }
                     }
                 }

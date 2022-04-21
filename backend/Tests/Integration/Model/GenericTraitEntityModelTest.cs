@@ -609,4 +609,85 @@ namespace Tests.Integration.Model
             await TestGenericModelOtherLayersValueHandling(() => new TestEntityForPartialEntity("ID1", "foo"), "ID1");
         }
     }
+
+
+
+
+
+
+
+    [TraitEntity("test_entity1", TraitOriginType.Data)]
+    class TestEntityForDouble : TraitEntity
+    {
+        [TraitAttribute("id", "id")]
+        [TraitEntityID]
+        public readonly long ID;
+
+        [TraitAttribute("test_attribute_a", "test_attribute_a")]
+        public readonly double TestAttributeA;
+
+        public TestEntityForDouble()
+        {
+            ID = 0L;
+            TestAttributeA = 0.0;
+        }
+
+        public TestEntityForDouble(long id, double testAttributeA)
+        {
+            ID = id;
+            TestAttributeA = testAttributeA;
+        }
+    }
+
+    class GenericTraitEntityWithDoubleModelTest : GenericTraitEntityModelTestBase<TestEntityForDouble, long>
+    {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityForDouble, long>>().WithParameter("jsonSerializer", null!);
+        }
+
+        [Test]
+        public async Task TestGenericOperations()
+        {
+            await TestGenericModelOperations(
+                () => new TestEntityForDouble(1L, -1.2),
+                () => new TestEntityForDouble(2L, 3.1),
+                1L, 2L, 3L
+                );
+        }
+        [Test]
+        public async Task TestGetByDataID()
+        {
+            await TestGenericModelGetByDataID(
+                () => new TestEntityForDouble(1L, -1.2),
+                () => new TestEntityForDouble(2L, 3.1),
+                1L, 2L, 3L
+                );
+        }
+
+        [Test]
+        public async Task TestBulkReplace()
+        {
+            await TestGenericModelBulkReplace(
+                () => new TestEntityForDouble(1L, -1.2),
+                () => new TestEntityForDouble(2L, 3.1),
+                () => new TestEntityForDouble(2L, 0.0),
+                1L, 2L
+                );
+        }
+
+        [Test]
+        public async Task TestUpdateIncompleteTraitEntity()
+        {
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityForDouble(1L, -912.12), 1L, false, false);
+        }
+
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityForDouble(1L, 34.12), 1L);
+        }
+    }
 }

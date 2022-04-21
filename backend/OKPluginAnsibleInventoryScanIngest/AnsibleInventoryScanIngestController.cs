@@ -1,15 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using OKPluginGenericJSONIngest;
 using OKPluginGenericJSONIngest.Load;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
@@ -68,7 +65,7 @@ namespace Omnikeeper.Controllers.Ingest
 
                 var transformer = TransformerJMESPath.Build(new TransformConfigJMESPath(AnsibleInventoryScanJMESPathExpression.Expression));
 
-                var documents = new Dictionary<string, JToken>();
+                var documents = new Dictionary<string, string>();
                 foreach(var kv in data.SetupFacts)
                     documents.Add("setup_facts_" + kv.Key, kv.Value);
                 foreach (var kv in data.YumInstalled)

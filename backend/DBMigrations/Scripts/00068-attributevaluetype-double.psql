@@ -1,0 +1,1 @@
+﻿ALTER TYPE attributevaluetype ADD VALUE 'double' AFTER 'integer';

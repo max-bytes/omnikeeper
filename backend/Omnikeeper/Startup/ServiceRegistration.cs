@@ -59,14 +59,11 @@ namespace Omnikeeper.Startup
 
         public static IEnumerable<Assembly> RegisterOKPlugins(ContainerBuilder builder, string pluginFolder)
         {
-            //services.AddSingleton<OKPluginGenericJSONIngest.IContextModel, OKPluginGenericJSONIngest.ContextModel>();
-            //services.AddTransient<Controllers.Ingest.PassiveFilesController>();
-            //services.AddTransient<Controllers.Ingest.ManageContextController>();
-            //var pr = new OKPluginGenericJSONIngest.PluginRegistration();
-            //pr.RegisterServices(services);
-            //var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
-            //var result = plugin.DBMigration.Migrate(cs);
-
+            //var prNaemon = new OKPluginNaemonConfig.PluginRegistration();
+            //builder.Register<IPluginRegistration>(builder => prNaemon).SingleInstance();
+            //var tmpServiceCollection = new ServiceCollection();
+            //prNaemon.RegisterServices(tmpServiceCollection);
+            //builder.Populate(tmpServiceCollection);
 
             var dotNetFramework = Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
             var frameworkNameProvider = new FrameworkNameProvider(
@@ -266,7 +263,6 @@ namespace Omnikeeper.Startup
         {
             builder.RegisterType<GraphQLSchemaHolder>().SingleInstance();
             builder.RegisterType<MyDocumentExecutor>().As<IDocumentExecuter>().SingleInstance(); // custom document executor that does serial queries, required by postgres
-            builder.RegisterType<SpanJSONDocumentWriter>().As<IDocumentWriter>().SingleInstance();
             builder.RegisterType<DataLoaderContextAccessor>().As<IDataLoaderContextAccessor>().SingleInstance();
             builder.RegisterType<DataLoaderDocumentListener>().SingleInstance();
             builder.RegisterType<DataLoaderService>().As<IDataLoaderService>().SingleInstance();

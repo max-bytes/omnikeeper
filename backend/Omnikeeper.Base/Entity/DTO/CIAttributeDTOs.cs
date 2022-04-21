@@ -1,9 +1,5 @@
-﻿#nullable disable // TODO
-
-using Newtonsoft.Json;
-using Omnikeeper.Entity.AttributeValues;
+﻿using Omnikeeper.Entity.AttributeValues;
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -11,12 +7,10 @@ namespace Omnikeeper.Base.Entity.DTO
 {
     public class CIAttributeDTO
     {
-        [Required] public Guid ID { get; set; } = default;
-        [Required] public string Name { get; set; } = "";
-        [Required] public AttributeValueDTO Value { get; set; } = default;
-        [Required] public Guid CIID { get; set; } = default;
-
-        private CIAttributeDTO() { }
+        public Guid ID { get; set; } = default;
+        public string Name { get; set; } = "";
+        public AttributeValueDTO Value { get; set; } = default;
+        public Guid CIID { get; set; } = default;
 
         public static CIAttributeDTO Build(MergedCIAttribute attribute)
         {
@@ -45,25 +39,25 @@ namespace Omnikeeper.Base.Entity.DTO
     {
         public class FragmentDTO
         {
-            [Required] public string Name { get; set; } = "";
-            [Required] public AttributeValueDTO Value { get; set; } = null;
-            [Required] public Guid CIID { get; set; } = default;
+            public string Name { get; set; } = "";
+            public AttributeValueDTO Value { get; set; } = null;
+            public Guid CIID { get; set; } = default;
 
             private FragmentDTO() { }
         }
 
-        [Required] public string NamePrefix { get; set; } = "";
-        [Required] public string LayerID { get; set; } = default;
-        [Required] public FragmentDTO[] Fragments { get; set; } = default;
+        public string NamePrefix { get; set; } = "";
+        public string LayerID { get; set; } = default;
+        public FragmentDTO[] Fragments { get; set; } = default;
 
         private BulkCIAttributeLayerScopeDTO() { }
     }
 
     public class AttributeValueDTO : IEquatable<AttributeValueDTO>
     {
-        [Required] public AttributeValueType Type { get; set; } = default;
-        [Required] public bool IsArray { get; set; } = default;
-        [Required] public string[] Values { get; set; } = default;
+        public AttributeValueType Type { get; set; } = default;
+        public bool IsArray { get; set; } = default;
+        public string[] Values { get; set; } = default;
 
         public override bool Equals([AllowNull] object other) => Equals(other as AttributeValueDTO);
         public bool Equals([AllowNull] AttributeValueDTO other) => other != null && Values.SequenceEqual(other.Values);

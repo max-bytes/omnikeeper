@@ -354,6 +354,9 @@ namespace Omnikeeper.GraphQL
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
+
                     var id = context.GetArgument<Guid>("id");
 
                     // TODO: use dataloader
@@ -435,6 +438,9 @@ namespace Omnikeeper.GraphQL
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
+
                     ICIIDSelection ciidSelection = new AllCIIDsSelection();
                     if (ciids != null)
                     {
@@ -493,6 +499,9 @@ namespace Omnikeeper.GraphQL
                     .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                     .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                     .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
+                    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
 
                 return new TraitEntities.TraitEntities();
             });

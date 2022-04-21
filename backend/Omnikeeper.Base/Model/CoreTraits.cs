@@ -23,6 +23,7 @@ namespace Omnikeeper.Base.Model
             GenericTraitEntityHelper.Class2RecursiveTrait<Predicate>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<AuthRole>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<GeneratorV1>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<CLConfigV1>()
             //TraitBuilderFromClass.Class2RecursiveTrait<GridViewContext>(), // TODO: add?
         };
     }

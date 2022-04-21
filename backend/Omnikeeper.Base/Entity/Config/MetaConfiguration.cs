@@ -1,5 +1,6 @@
-﻿using Newtonsoft.Json;
-using Omnikeeper.Base.Utils;
+﻿using Omnikeeper.Base.Utils;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.Base.Entity.Config
 {
@@ -8,18 +9,14 @@ namespace Omnikeeper.Base.Entity.Config
         private readonly string[] configLayers;
         private readonly string configWriteLayer;
 
-        [JsonProperty(Required = Required.Always)]
         public string[] ConfigLayers => configLayers;
-        [JsonProperty(Required = Required.Always)]
         public string ConfigWriteLayer => configWriteLayer;
 
         [JsonIgnore]
         public LayerSet ConfigLayerset => new LayerSet(configLayers);
 
-        public static NewtonSoftJSONSerializer<MetaConfiguration> Serializer = new NewtonSoftJSONSerializer<MetaConfiguration>(new JsonSerializerSettings()
+        public static SystemTextJSONSerializer<MetaConfiguration> SystemTextJSONSerializer = new SystemTextJSONSerializer<MetaConfiguration>(new JsonSerializerOptions()
         {
-            TypeNameHandling = TypeNameHandling.None,
-            MissingMemberHandling = MissingMemberHandling.Error
         });
 
         public MetaConfiguration(string[] configLayers, string configWriteLayer)

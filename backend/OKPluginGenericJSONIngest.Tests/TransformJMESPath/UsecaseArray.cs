@@ -1,12 +1,11 @@
 using FluentAssertions;
 using Microsoft.DotNet.InternalAbstractions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 
 namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
 {
@@ -15,7 +14,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
         [Test]
         public void Test1()
         {
-            var documents = new Dictionary<string, JToken>() { }; // no input documents, expression generates output on its own
+            var documents = new Dictionary<string, string>() { }; // no input documents, expression generates output on its own
 
             string expression = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                 "data", "usecase_array", "expression.jmes"));
@@ -35,12 +34,12 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         idMethod = new InboundIDMethodByData(new string[]{ "foo" }),
                         attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "textscalar", value = "value 1", type = AttributeValueType.Text },
-                            new GenericInboundAttribute { name = "textarray", value = new string[] {"value 1", "value 2" }, type = AttributeValueType.Text },
-                            new GenericInboundAttribute { name = "jsonarray", value = new JToken[] {
-                                JToken.Parse(@"{foo: 'bar', blub: 'bla'}"),
-                                JToken.Parse(@"{ foo2: 'bar2', blub2: 'bla2'}"),
-                            }, type = AttributeValueType.JSON },
+                            new GenericInboundAttribute { name = "textscalar", value = new AttributeScalarValueText("value 1") },
+                            new GenericInboundAttribute { name = "textarray", value = AttributeArrayValueText.BuildFromString(new string[] {"value 1", "value 2" }) },
+                            new GenericInboundAttribute { name = "jsonarray", value = AttributeArrayValueJSON.BuildFromString(new string [] {
+                                @"{""foo"": ""bar"", ""blub"": ""bla""}",
+                                @"{ ""foo2"": ""bar2"", ""blub2"": ""bla2""}"
+                            }, false)},
                         }
                     },
                 },
@@ -48,7 +47,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
             };
             result.Should().BeEquivalentTo(expected, options => options.WithStrictOrdering());
 
-            string resultJson = JsonConvert.SerializeObject(result, Formatting.Indented);
+            string resultJson = JsonSerializer.Serialize(result, new JsonSerializerOptions() { WriteIndented = true });
             File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                 "data", "usecase_array", "output.json"), resultJson);
         }

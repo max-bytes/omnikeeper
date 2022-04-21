@@ -1,7 +1,5 @@
 ﻿using Keycloak.Net;
-using Newtonsoft.Json;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
@@ -10,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace OKPluginOIAKeycloak
@@ -34,15 +32,19 @@ namespace OKPluginOIAKeycloak
 
         private bool BuildAttribute(string name, Guid ciid, IAttributeValue value, Guid changesetID, IAttributeSelection attributeSelection, [MaybeNullWhen(false)] out CIAttribute ret)
         {
-            if (!attributeSelection.Contains(name))
+            // create a deterministic, dependent guid from the ciid + attribute name + value
+            var id = GuidUtility.Create(ciid, name + layer.ID.ToString() + value.Value2String()); // NOTE: id must change when the value changes
+            var r = new CIAttribute(id, name, ciid, value, changesetID);
+
+            if (!attributeSelection.ContainsAttribute(r))
             {
                 ret = null;
                 return false;
+            } else
+            {
+                ret = r;
+                return true;
             }
-            // create a deterministic, dependent guid from the ciid + attribute name + value
-            var id = GuidUtility.Create(ciid, name + layer.ID.ToString() + value.Value2String()); // NOTE: id must change when the value changes
-            ret = new CIAttribute(id, name, ciid, value, changesetID);
-            return true;
         }
 
         private IEnumerable<CIAttribute> BuildAttributesFromUser(Keycloak.Net.Models.Users.User user, Guid ciid, Keycloak.Net.Models.Common.Mapping? roleMappings, IAttributeSelection attributeSelection)
@@ -64,7 +66,7 @@ namespace OKPluginOIAKeycloak
             // roles
             if (roleMappings != null && roleMappings.ClientMappings != null)
             {
-                if (BuildAttribute("keycloak.client_mappings", ciid, AttributeScalarValueJSON.BuildFromString(JsonConvert.SerializeObject(roleMappings.ClientMappings)), changesetID, attributeSelection, out var a7)) yield return a7;
+                if (BuildAttribute("keycloak.client_mappings", ciid, AttributeScalarValueJSONNew.BuildFromString(JsonSerializer.Serialize(roleMappings.ClientMappings)), changesetID, attributeSelection, out var a7)) yield return a7;
             }
         }
 

@@ -1,9 +1,6 @@
-using Omnikeeper.Base.AttributeValues;
-using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -88,13 +85,6 @@ namespace Omnikeeper.Base.Entity
             NamePrefix = namePrefix;
             LayerID = layerID;
             Fragments = fragments;
-        }
-
-        public static BulkCIAttributeDataLayerScope BuildFromDTO(BulkCIAttributeLayerScopeDTO dto)
-        {
-            return new BulkCIAttributeDataLayerScope(
-                dto.NamePrefix, dto.LayerID,
-                dto.Fragments.Select(f => new Fragment(f.Name, AttributeValueHelper.BuildFromDTO(f.Value), f.CIID)));
         }
     }
 

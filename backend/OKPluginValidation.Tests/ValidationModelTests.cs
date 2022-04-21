@@ -2,13 +2,13 @@
 using Autofac.Extensions.DependencyInjection;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Tests.Integration.Model;
 
@@ -56,8 +56,8 @@ namespace OKPluginValidation.Tests
         public async Task TestGenericOperations()
         {
             await TestGenericModelOperations(
-                () => new Validation("validation1", "rule1", JObject.Parse(@"{""foo"": ""bar""}")),
-                () => new Validation("validation2", "rule2", JObject.Parse(@"{""blub"": true}")),
+                () => new Validation("validation1", "rule1", JsonDocument.Parse(@"{""foo"": ""bar""}")),
+                () => new Validation("validation2", "rule2", JsonDocument.Parse(@"{""blub"": true}")),
                 "validation1", "validation2", "non_existant_id"
                 );
         }
@@ -65,8 +65,8 @@ namespace OKPluginValidation.Tests
         public async Task TestGetByDataID()
         {
             await TestGenericModelGetByDataID(
-                () => new Validation("validation1", "rule1", JObject.Parse(@"{""foo"": ""bar""}")),
-                () => new Validation("validation2", "rule2", JObject.Parse(@"{""blub"": true}")),
+                () => new Validation("validation1", "rule1", JsonDocument.Parse(@"{""foo"": ""bar""}")),
+                () => new Validation("validation2", "rule2", JsonDocument.Parse(@"{""blub"": true}")),
                 "validation1", "validation2", "non_existant_id"
                 );
         }

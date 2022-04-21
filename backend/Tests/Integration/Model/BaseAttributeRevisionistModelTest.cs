@@ -67,5 +67,49 @@ namespace Tests.Integration.Model
             var d5 = await GetService<IBaseAttributeRevisionistModel>().DeleteOutdatedAttributesOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
             Assert.AreEqual(0, d5);
         }
+
+
+        [Test]
+        public async Task TestDeleteOutdatedAttributesOlderThanForRemovedAttributes()
+        {
+            Guid ciid1;
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                ciid1 = await GetService<ICIModel>().CreateCI(trans);
+                trans.Commit();
+            }
+
+            string layerID1;
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans);
+                layerID1 = layer1.ID;
+                trans.Commit();
+            }
+            var layerIDs = new string[] { layerID1 };
+
+            // insert attributes
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var changeset = await CreateChangesetProxy();
+                await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                trans.Commit();
+            }
+
+            // delete attributes again
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var changeset = await CreateChangesetProxy();
+                await GetService<IAttributeModel>().RemoveAttribute("a1", ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await GetService<IAttributeModel>().RemoveAttribute("a2", ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                trans.Commit();
+            }
+
+            // model should delete these removed attributes
+            var d1 = await GetService<IBaseAttributeRevisionistModel>().DeleteOutdatedAttributesOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
+            Assert.AreEqual(4, d1);
+
+        }
     }
 }

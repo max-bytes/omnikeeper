@@ -7,20 +7,8 @@ namespace Omnikeeper.Entity.AttributeValues
 {
     public enum AttributeValueType
     {
-        Text, MultilineText, Integer, JSON, YAML, Image, Mask
+        Text, MultilineText, Integer, JSON, YAML, Image, Mask, Double
     }
-    //[ProtoContract]
-    //[ProtoInclude(1, typeof(AttributeScalarValueImage))]
-    //[ProtoInclude(2, typeof(AttributeScalarValueInteger))]
-    //[ProtoInclude(3, typeof(AttributeScalarValueJSON))]
-    //[ProtoInclude(4, typeof(AttributeScalarValueText))]
-    //[ProtoInclude(5, typeof(AttributeScalarValueYAML))]
-    //[ProtoInclude(6, typeof(AttributeScalarValueMask))]
-    //[ProtoInclude(51, typeof(AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>))]
-    //[ProtoInclude(52, typeof(AttributeArrayValue<AttributeScalarValueInteger, long>))]
-    //[ProtoInclude(53, typeof(AttributeArrayValue<AttributeScalarValueJSON, JToken>))]
-    //[ProtoInclude(54, typeof(AttributeArrayValue<AttributeScalarValueText, string>))]
-    //[ProtoInclude(55, typeof(AttributeArrayValue<AttributeScalarValueYAML, YamlDocument>))]
     public interface IAttributeValue : IEquatable<IAttributeValue>
     {
         public string Value2String();

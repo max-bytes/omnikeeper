@@ -1,17 +1,24 @@
-﻿
-using Newtonsoft.Json;
-using Omnikeeper.Base.Utils;
+﻿using Omnikeeper.Base.Utils;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.Base.Entity
 {
-    //[ProtoContract(SkipConstructor = true)]
     public class ODataAPIContext
     {
-        //[ProtoContract]
-        //[ProtoInclude(1, typeof(ConfigV3))]
-        public interface IConfig { }
+        public class ConfigTypeDiscriminatorConverter : TypeDiscriminatorConverter<IConfig>
+        {
+            public ConfigTypeDiscriminatorConverter() : base("$type")
+            {
+            }
+        }
 
-        //[ProtoContract(SkipConstructor = true)]
+        [JsonConverter(typeof(ConfigTypeDiscriminatorConverter))]
+        public interface IConfig
+        {
+            public string type { get; }
+        }
+
         public class ConfigV3 : IConfig
         {
             public ConfigV3(string writeLayerID, string[] readLayerset)
@@ -20,21 +27,17 @@ namespace Omnikeeper.Base.Entity
                 ReadLayerset = readLayerset;
             }
 
-            //[ProtoMember(1)] 
+            [JsonPropertyName("$type")]
+            public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+
             public string WriteLayerID { get; set; }
-            //[ProtoMember(2)] 
             public string[] ReadLayerset { get; set; }
         }
 
-        //[ProtoMember(1)] 
         public string ID { get; set; }
-        //[ProtoMember(2)] 
         public IConfig CConfig { get; set; }
 
-        public static NewtonSoftJSONSerializer<IConfig> ConfigSerializer = new NewtonSoftJSONSerializer<IConfig>(new JsonSerializerSettings()
-        {
-            TypeNameHandling = TypeNameHandling.Objects
-        });
+        public static SystemTextJSONSerializer<IConfig> ConfigSerializer = new SystemTextJSONSerializer<IConfig>(new JsonSerializerOptions());
 
         public ODataAPIContext(string iD, IConfig cConfig)
         {

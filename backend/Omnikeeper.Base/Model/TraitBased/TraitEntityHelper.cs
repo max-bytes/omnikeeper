@@ -8,6 +8,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,13 +16,20 @@ namespace Omnikeeper.Base.Model.TraitBased
 {
     public static class TraitEntityHelper
     {
-        public static (string name, IAttributeValue value, bool isID)[] InputDictionary2AttributeTuples(IDictionary<string, object> inputDict, ITrait trait)
+        public static ((string name, IAttributeValue value, bool isID)[], (string predicateID, bool forward, Guid[] relatedCIIDs)[]) InputDictionary2AttributeAndRelationTuples(IDictionary<string, object?> inputDict, ITrait trait)
         {
             var attributeValues = new List<(string name, IAttributeValue value, bool isID)>();
+            var relationValues = new List<(string predicateID, bool forward, Guid[] relatedCIIDs)>();
 
             foreach (var kv in inputDict)
             {
                 var inputFieldName = kv.Key;
+
+                if (kv.Value == null)
+                {
+                    // input field is specified, but its value is null, so we treat it like it was not specified and skip it
+                    continue;
+                }
 
                 // lookup value type based on input attribute name
                 var attribute = trait.RequiredAttributes.Concat(trait.OptionalAttributes).FirstOrDefault(ra =>
@@ -32,7 +40,27 @@ namespace Omnikeeper.Base.Model.TraitBased
 
                 if (attribute == null)
                 {
-                    throw new Exception($"Invalid input field for trait {trait.ID}: {inputFieldName}");
+                    // lookup relation
+                    var relation = trait.OptionalRelations.FirstOrDefault(r =>
+                    {
+                        var convertedRelationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
+                        return convertedRelationFieldName == inputFieldName;
+                    });
+
+                    if (relation == null)
+                    {
+                        throw new Exception($"Invalid input field for trait {trait.ID}: {inputFieldName}");
+                    }
+                    else
+                    {
+                        var array = (object[])kv.Value;
+                        var relatedCIIDs = array.Select(a =>
+                        {
+                            var relatedCIID = (Guid)a;
+                            return relatedCIID;
+                        }).ToArray();
+                        relationValues.Add((relation.RelationTemplate.PredicateID, relation.RelationTemplate.DirectionForward, relatedCIIDs));
+                    }
                 }
                 else
                 {
@@ -42,14 +70,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 }
             }
 
-            return attributeValues.ToArray();
-        }
-
-        public static (string name, IAttributeValue value)[] InputDictionary2IDAttributes(IDictionary<string, object> inputDict, ITrait trait)
-        {
-            var attributeValues = InputDictionary2AttributeTuples(inputDict, trait);
-
-            return attributeValues.Where(t => t.isID).Select(t => (t.name, t.value)).ToArray();
+            return (attributeValues.ToArray(), relationValues.ToArray());
         }
 
 
@@ -154,43 +175,28 @@ namespace Omnikeeper.Base.Model.TraitBased
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
-            var attributeNames = filters.Select(t => t.traitAttribute.AttributeTemplate.Name);
-            // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...
-            return dataLoaderService.SetupAndLoadMergedAttributes(ciSelection, NamedAttributesSelection.Build(attributeNames.ToHashSet()), attributeModel, layerSet, timeThreshold, trans)
-                .Then(cisWithAttributes =>
-                {
-                    ISet<Guid> ret = new HashSet<Guid>();
-                    foreach (var t in cisWithAttributes)
-                    {
-                        var ciid = t.Key;
-                        var attributes = t.Value;
 
-                        var meetsAllFilters = true;
-                        foreach (var (traitAttribute, filter) in filters)
-                        {
-                            var attributeName = traitAttribute.AttributeTemplate.Name;
-                            if (attributes.TryGetValue(attributeName, out var foundAttribute))
-                            {
-                                if (!AttributeFilterHelper.Matches(foundAttribute.Attribute.Value, filter))
-                                {
-                                    meetsAllFilters = false;
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                meetsAllFilters = false;
-                                break;
-                            }
-                        }
-                        if (meetsAllFilters)
-                        {
-                            ret.Add(ciid);
-                        }
-                    }
-                    return ret;
-                });
-            
+            return new SimpleDataLoader<ISet<Guid>>(async token =>
+            {
+                foreach (var (traitAttribute, filter) in filters)
+                {
+                    var attributeName = traitAttribute.AttributeTemplate.Name;
+                    var attributeSelection = NamedAttributesWithValueFiltersSelection.Build(new Dictionary<string, AttributeScalarTextFilter>() { { attributeName, filter } });
+
+                    // TODO: use dataloader
+                    var attributes = await attributeModel.GetMergedAttributes(ciSelection, attributeSelection, layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
+                    // NOTE: we reduce the ciSelection with each filter, and in the end, return the resulting ciSelection
+                    ciSelection = SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet());
+                }
+
+                return ciSelection switch
+                {
+                    SpecificCIIDsSelection s => s.CIIDs,
+                    NoCIIDsSelection _ => ImmutableHashSet<Guid>.Empty,
+                    _ => throw new Exception("Invalid ciSelection detected"),
+                };
+            });
+
         }
     }
 }

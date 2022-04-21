@@ -19,7 +19,6 @@ namespace Omnikeeper.Base.Utils
             conn.Open();
             connectorIDs[conn.ProcessID] = 1;
             if (reloadTypes) conn.ReloadTypes(); // HACK, see https://github.com/npgsql/npgsql/issues/2366
-            conn.TypeMapper.UseJsonNet();
             MapEnums(conn);
             return conn;
         }
@@ -50,7 +49,6 @@ namespace Omnikeeper.Base.Utils
         //    conn.Open();
         //    connectorIDs.Add(conn.ProcessID);
         //    if (reloadTypes) conn.ReloadTypes(); // HACK, see https://github.com/npgsql/npgsql/issues/2366
-        //    conn.TypeMapper.UseJsonNet();
         //    MapEnums(conn);
         //    return conn;
         //}

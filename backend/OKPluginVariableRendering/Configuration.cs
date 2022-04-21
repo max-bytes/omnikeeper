@@ -1,16 +1,14 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace OKPluginVariableRendering
 {
     public class Configuration
     {
-        [JsonProperty("input_layerset", Required = Required.Always)]
+        [JsonPropertyName("input_layerset")]
         public List<string> InputLayerSet { get; set; }
 
-        [JsonProperty("base_ci", Required = Required.Always)]
+        [JsonPropertyName("base_ci")]
         public BaseCI BaseCI { get; set; }
         
         public Configuration()
@@ -22,19 +20,19 @@ namespace OKPluginVariableRendering
 
     public class BaseCI
     {
-        [JsonProperty("required_trait", Required = Required.Always)]
+        [JsonPropertyName("required_trait")]
         public string RequiredTrait { get; set; }
 
-        [JsonProperty("input_whitelist")]
+        [JsonPropertyName("input_whitelist")]
         public List<string> InputWhitelist { get; set; }
 
-        [JsonProperty("input_blacklist")]
+        [JsonPropertyName("input_blacklist")]
         public List<string> InputBlacklist { get; set; }
 
-        [JsonProperty("attribute_mapping", Required = Required.Always)]
+        [JsonPropertyName("attribute_mapping")]
         public List<AttributeMapping> AttributeMapping { get; set; }
 
-        [JsonProperty("follow_relations", Required = Required.Always)]
+        [JsonPropertyName("follow_relations")]
         public List<FollowRelation> FollowRelations { get; set; }
 
         public BaseCI()
@@ -49,7 +47,7 @@ namespace OKPluginVariableRendering
 
     public class FollowRelation
     {
-        [JsonProperty("follow")]
+        [JsonPropertyName("follow")]
         public List<Follow> Follow { get; set; }
 
         public FollowRelation()
@@ -60,19 +58,19 @@ namespace OKPluginVariableRendering
 
     public class Follow
     {
-        [JsonProperty("predicate")]
+        [JsonPropertyName("predicate")]
         public string Predicate { get; set; }
 
-        [JsonProperty("required_trait")]
+        [JsonPropertyName("required_trait")]
         public string RequiredTrait { get; set; }
 
-        [JsonProperty("input_blacklist")]
+        [JsonPropertyName("input_blacklist")]
         public List<string> InputBlacklist { get; set; }
 
-        [JsonProperty("input_whitelist")]
+        [JsonPropertyName("input_whitelist")]
         public List<string> InputWhitelist { get; set; }
 
-        [JsonProperty("attribute_mapping")]
+        [JsonPropertyName("attribute_mapping")]
         public List<AttributeMapping> AttributeMapping { get; set; }
 
         public Follow()
@@ -87,10 +85,10 @@ namespace OKPluginVariableRendering
 
     public class AttributeMapping
     {
-        [JsonProperty("source")]
+        [JsonPropertyName("source")]
         public string Source { get; set; }
 
-        [JsonProperty("target")]
+        [JsonPropertyName("target")]
         public string Target { get; set; }
 
         public AttributeMapping()

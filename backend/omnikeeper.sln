@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\.github\workflows\package-variants.yml = ..\.github\workflows\package-variants.yml
 		..\README.md = ..\README.md
 		..\.github\workflows\run-perf-tests.yml = ..\.github\workflows\run-perf-tests.yml
+		..\.github\workflows\run-system-tests.yml = ..\.github\workflows\run-system-tests.yml
 		..\.github\workflows\run-tests.yml = ..\.github\workflows\run-tests.yml
 		..\.github\workflows\update-wiki.yml = ..\.github\workflows\update-wiki.yml
 	EndProjectSection
@@ -68,6 +69,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginInsightDiscoveryScanIngest", "OKPluginInsightDiscoveryScanIngest\OKPluginInsightDiscoveryScanIngest.csproj", "{1CA8C461-914E-488E-8EE0-181A014A4902}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginInsightDiscoveryScanIngest.Tests", "OKPluginInsightDiscoveryScanIngest.Tests\OKPluginInsightDiscoveryScanIngest.Tests.csproj", "{20A5CD5E-BA57-4B7F-B4DE-D315510B52E7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginNaemonConfig", "OKPluginNaemonConfig\OKPluginNaemonConfig.csproj", "{002EF272-C890-4310-B830-35564D7A7E46}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -183,6 +186,14 @@ Global
 		{20A5CD5E-BA57-4B7F-B4DE-D315510B52E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{20A5CD5E-BA57-4B7F-B4DE-D315510B52E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{20A5CD5E-BA57-4B7F-B4DE-D315510B52E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19CD96DC-5E6B-4D70-8318-AB036190EC92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19CD96DC-5E6B-4D70-8318-AB036190EC92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19CD96DC-5E6B-4D70-8318-AB036190EC92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19CD96DC-5E6B-4D70-8318-AB036190EC92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{002EF272-C890-4310-B830-35564D7A7E46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{002EF272-C890-4310-B830-35564D7A7E46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{002EF272-C890-4310-B830-35564D7A7E46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{002EF272-C890-4310-B830-35564D7A7E46}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

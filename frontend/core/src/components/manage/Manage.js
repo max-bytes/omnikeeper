@@ -77,16 +77,18 @@ export default function Manage(props) {
                 // 'pluginLoading'-PrivateRoute:
                 // Shows "Loading..." until frontend-plugin was loaded (if frontend-plugin doesn't exist after loading -> Shows Manage-main-component)
                 // Without it, it would show the Manage-main-component until frontend-plugin was loaded - then it would render the frontend-plugin-component (looks linke jumping around, not wanted!)
-                frontendPlugins?.map(plugin => (
-                        plugin.components.manageComponent && // only create PrivateRoute for plugins containing component 'manageComponent'
-                            <PrivateRoute path={`${path}/${plugin.name}`} key={plugin.name}>
-                                <div style={{ padding: "10px" }}>
-                                    <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
-                                    <p>{plugin.description}</p>
-                                </div>
-                                {plugin.components.manageComponent()}
-                            </PrivateRoute>
-                    )
+                frontendPlugins?.map(plugin => {
+                    if (!plugin.components.manageComponent) // only create PrivateRoute for plugins containing component 'manageComponent'
+                        return null;
+                    const Component = plugin.components.manageComponent;
+                    return <PrivateRoute path={`${path}/${plugin.name}`} key={plugin.name}>
+                        <div style={{ padding: "10px" }}>
+                            <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
+                            <p>{plugin.description}</p>
+                        </div>
+                        <Component />
+                    </PrivateRoute>;
+                }
                 )
             }
 

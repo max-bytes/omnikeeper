@@ -4,7 +4,6 @@ using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using MediatR;
-using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -29,6 +28,7 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
+using Omnikeeper.GraphQL;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using SpanJson.AspNetCore.Formatter;
@@ -67,6 +67,9 @@ namespace Omnikeeper.Startup
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var csOmnikeeper = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
+            services.AddHealthChecks().AddNpgSql(csOmnikeeper);
+
             services.AddResponseCompression(options =>
             {
                 options.Providers.Add<BrotliCompressionProvider>();
@@ -92,33 +95,39 @@ namespace Omnikeeper.Startup
             services.AddSignalR();
 
             // HACK: member is set here and used later
-            mvcBuilder = services.AddControllers();
+            mvcBuilder = services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.IncludeFields = true;
+                options.JsonSerializerOptions.Converters.Add(new ExceptionConverter()); // System.Text.Json does not support serializing exceptions, so we add a custom converter
+            });
 
             // add input and output formatters
             services.AddOptions<MvcOptions>()
-                .PostConfigure<IOptions<JsonOptions>, IOptions<MvcNewtonsoftJsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, newtonJsonOpts, charPool, objectPoolProvider, loggerFactory) =>
+                .PostConfigure<IOptions<JsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, charPool, objectPoolProvider, loggerFactory) =>
                 {
 
                     config.InputFormatters.Clear();
                     config.InputFormatters.Add(new MySuperJsonInputFormatter());
-                    config.InputFormatters.Add(new NewtonsoftJsonInputFormatter(
-                        loggerFactory.CreateLogger<NewtonsoftJsonInputFormatter>(), newtonJsonOpts.Value.SerializerSettings, charPool, objectPoolProvider, config, newtonJsonOpts.Value
-                    ));
+                    config.InputFormatters.Add(new SystemTextJsonInputFormatter(jsonOpts.Value, loggerFactory.CreateLogger<SystemTextJsonInputFormatter>()));
                     config.InputFormatters.Add(new SpanJsonInputFormatter<SpanJsonDefaultResolver<byte>>());
 
                     config.OutputFormatters.Clear();
                     config.OutputFormatters.Add(new MySuperJsonOutputFormatter());
-                    config.OutputFormatters.Add(new NewtonsoftJsonOutputFormatter(newtonJsonOpts.Value.SerializerSettings, charPool, config, null));
+                    config.OutputFormatters.Add(new SystemTextJsonOutputFormatter(jsonOpts.Value.JsonSerializerOptions));
                     config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
                 });
 
 
-            global::GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(services)
-                .AddErrorInfoProvider(opt => {
+            global::GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(services, c =>
+            {
+                c.AddErrorInfoProvider(opt =>
+                {
                     opt.ExposeExceptionStackTrace = true;
                     opt.ExposeData = true;
                 })
-                .AddGraphTypes();
+                .AddGraphTypes()
+                .AddSerializer<SpanJSONGraphQLSerializer>();
+            });
 
             services.AddAuthentication(options =>
             {
@@ -233,7 +242,6 @@ namespace Omnikeeper.Startup
                     return oid;
                 });
             });
-            services.AddSwaggerGenNewtonsoftSupport();
 
             // whether or not to show personally identifiable information in exceptions
             // see https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/wiki/PII
@@ -313,11 +321,15 @@ namespace Omnikeeper.Startup
             var version = VersionService.GetVersion();
             logger.LogInformation($"Running version: {version}");
 
+            // must be really early, because it affects later parts
+            app.UsePathBase(Configuration.GetValue<string>("BaseURL"));
+
+            app.UseHealthChecks("/health", HealthCheckSettings.Options);
+
             app.UseResponseCompression(); // response compression
 
             app.UseCors("DefaultCORSPolicy");
 
-            app.UsePathBase(Configuration.GetValue<string>("BaseURL"));
 
             // make application properly consider headers (and populate httprequest object) when behind reverse proxy
             var forwardedHeaderOptions = new ForwardedHeadersOptions

@@ -1,5 +1,6 @@
-﻿using GraphQL.Language.AST;
-using GraphQL.Types;
+﻿using GraphQL.Types;
+using GraphQLParser;
+using GraphQLParser.AST;
 using Omnikeeper.Base.Entity;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,12 +83,12 @@ namespace Omnikeeper.GraphQL.Types
             Name = "AttributeValueConstraint";
         }
 
-        public override object? ParseLiteral(IValue value)
+        public override object? ParseLiteral(GraphQLValue value)
         {
-            if (value is NullValue)
+            if (value is GraphQLNullValue)
                 return null;
 
-            if (value is StringValue stringValue)
+            if (value is GraphQLStringValue stringValue)
                 return ParseValue(stringValue.Value);
 
             return ThrowLiteralConversionError(value);
@@ -98,8 +99,10 @@ namespace Omnikeeper.GraphQL.Types
             if (value == null)
                 return null;
 
+            if (value is ROM valueROM)
+                return ICIAttributeValueConstraint.SystemTextJSONSerializer.Deserialize(valueROM.Span);
             if (value is string valueStr)
-                return ICIAttributeValueConstraint.Serializer.Deserialize(valueStr);
+                return ICIAttributeValueConstraint.SystemTextJSONSerializer.Deserialize(valueStr);
             return ThrowValueConversionError(value);
         }
 
@@ -109,7 +112,7 @@ namespace Omnikeeper.GraphQL.Types
                 return null;
 
             if (value is ICIAttributeValueConstraint vc)
-                return ICIAttributeValueConstraint.Serializer.SerializeToString(vc);
+                return ICIAttributeValueConstraint.SystemTextJSONSerializer.SerializeToString(vc);
             return ThrowSerializationError(value);
         }
     }
@@ -125,7 +128,8 @@ namespace Omnikeeper.GraphQL.Types
 
     public class RelationTemplateType : ObjectGraphType<RelationTemplate>
     {
-        public RelationTemplateType() {
+        public RelationTemplateType()
+        {
             Field("predicateID", x => x.PredicateID);
             Field("directionForward", x => x.DirectionForward);
             Field("traitHints", x => x.TraitHints);

@@ -1,11 +1,11 @@
-﻿using Newtonsoft.Json;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace OKPluginValidation.Rules
@@ -29,14 +29,7 @@ namespace OKPluginValidation.Rules
                 Layerset = layerset;
             }
 
-            public static readonly NewtonSoftJSONSerializer<Config> Serializer = new NewtonSoftJSONSerializer<Config>(() =>
-            {
-                var s = new JsonSerializerSettings()
-                {
-                    TypeNameHandling = TypeNameHandling.None
-                };
-                return s;
-            });
+            public static readonly SystemTextJSONSerializer<Config> Serializer = new SystemTextJSONSerializer<Config>(new JsonSerializerOptions());
         }
 
         public ValidationRuleNamedCI(ITraitsProvider traitsProvider, IBaseAttributeModel baseAttributeModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel)

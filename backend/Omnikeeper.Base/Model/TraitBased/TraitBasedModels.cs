@@ -1,60 +1,80 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Generator;
-using Omnikeeper.Base.Utils;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
     public class RecursiveTraitModel : GenericTraitEntityModel<RecursiveTrait, string>
     {
-        public RecursiveTraitModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) 
-            : base(effectiveTraitModel, ciModel, attributeModel, relationModel, serializer)
+        public RecursiveTraitModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
+            : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
 
-        private static readonly NewtonSoftJSONSerializer<object> serializer = new NewtonSoftJSONSerializer<object>(() =>
+        public class TraitAttributeSerializer : AttributeJSONSerializer<TraitAttribute>
         {
-            var s = new JsonSerializerSettings()
+            public TraitAttributeSerializer() : base(() =>
             {
-                TypeNameHandling = TypeNameHandling.Objects
-            };
-            s.Converters.Add(new StringEnumConverter());
-            return s;
-        });
+                return new System.Text.Json.JsonSerializerOptions()
+                {
+                    Converters = {
+                        new JsonStringEnumConverter()
+                    },
+                    IncludeFields = true
+                };
+            })
+            {
+            }
+        }
+
+        public class TraitRelationSerializer : AttributeJSONSerializer<TraitRelation>
+        {
+            public TraitRelationSerializer() : base(() =>
+            {
+                return new System.Text.Json.JsonSerializerOptions()
+                {
+                    Converters = {
+                        new JsonStringEnumConverter()
+                    },
+                    IncludeFields = true
+                };
+            })
+            {
+            }
+        }
     }
 
     public class InnerLayerDataModel : GenericTraitEntityModel<LayerData, string>
     {
-        public InnerLayerDataModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, null)
+        public InnerLayerDataModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
     }
 
     public class PredicateModel : GenericTraitEntityModel<Predicate, string>
     {
-        public PredicateModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, null)
+        public PredicateModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
     }
 
     public class GeneratorV1Model : GenericTraitEntityModel<GeneratorV1, string>
     {
-        public GeneratorV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, null)
+        public GeneratorV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
     }
 
     public class CLConfigV1Model : GenericTraitEntityModel<CLConfigV1, string>
     {
-        public CLConfigV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, null)
+        public CLConfigV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
     }
 
     public class AuthRoleModel : GenericTraitEntityModel<AuthRole, string>
     {
-        public AuthRoleModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, null)
+        public AuthRoleModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
         }
     }

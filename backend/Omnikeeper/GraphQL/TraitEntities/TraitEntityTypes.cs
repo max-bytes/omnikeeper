@@ -16,7 +16,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Omnikeeper.GraphQL.TraitEntities
 {
@@ -38,7 +37,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
     {
         public TraitEntityRootType(ITrait at, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ICIIDModel ciidModel, IAttributeModel attributeModel, IRelationModel relationModel,
             IDataLoaderService dataLoaderService,
-            ElementWrapperType wrapperElementGraphType, FilterInputType? filterGraphType, InputObjectGraphType? idGraphType)
+            ElementWrapperType wrapperElementGraphType, FilterInputType? filterGraphType, IDInputType? idGraphType)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityRootGraphTypeName(at);
 
@@ -70,63 +69,25 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var trans = userContext.Transaction;
 
                         // use filter to reduce list of potential cis
-                        var filterCollection = context.GetArgument(typeof(object), "filter") as IDictionary<string, object>;
-                        if (filterCollection == null)
-                            throw new Exception("Unexpected filter detected");
-                        var attributeFilters = new List<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)>(); // TODO: support non-text filters
-                        var relationFilters = new List<(TraitRelation traitRelation, RelationFilter filter)>();
-                        foreach (var kv in filterCollection)
-                        {
-                            var inputFieldName = kv.Key;
-
-                            // lookup value type based on input attribute name
-                            var attribute = at.RequiredAttributes.Concat(at.OptionalAttributes).FirstOrDefault(ra =>
-                            {
-                                var convertedAttributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ra);
-                                return convertedAttributeFieldName == inputFieldName;
-                            });
-
-                            if (attribute != null)
-                            {
-                                if (kv.Value is not AttributeScalarTextFilter f)
-                                    throw new Exception($"Unknown attribute filter for attribute {inputFieldName} detected");
-                                attributeFilters.Add((attribute, f));
-                            } else
-                            {
-                                // filter field is not an attribute, try relations
-                                var relation = at.OptionalRelations.FirstOrDefault(r =>
-                                {
-                                    var convertedRelationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
-                                    return convertedRelationFieldName == inputFieldName;
-                                });
-
-                                if (relation != null)
-                                {
-                                    if (kv.Value is not RelationFilter f)
-                                        throw new Exception($"Unknown relation filter for relation {inputFieldName} detected");
-                                    relationFilters.Add((relation, f));
-                                } else
-                                {
-                                    throw new Exception($"Could not find input attribute- or relation-filter {inputFieldName} in trait entity {at.ID}");
-                                }
-
-                            }
-                        }
+                        var filter = context.GetArgument<FilterInput>("filter");
 
                         IDataLoaderResult<ISet<Guid>> matchingCIIDs;
-                        if (!relationFilters.IsEmpty() && !attributeFilters.IsEmpty())
+                        if (!filter.RelationFilters.IsEmpty() && !filter.AttributeFilters.IsEmpty())
                         {
-                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, relationFilters, layerset, trans, timeThreshold, dataLoaderService)
-                            .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(SpecificCIIDsSelection.Build(matchingCIIDs), attributeModel, attributeFilters, layerset, trans, timeThreshold, dataLoaderService))
+                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService)
+                            .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(SpecificCIIDsSelection.Build(matchingCIIDs), attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService))
                             .ResolveNestedResults(); // resolve one level to be correct type again
 
-                        } else if (!attributeFilters.IsEmpty() && relationFilters.IsEmpty())
+                        }
+                        else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
                         {
-                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(new AllCIIDsSelection(), attributeModel, attributeFilters, layerset, trans, timeThreshold, dataLoaderService);
-                        } else if (attributeFilters.IsEmpty() && !relationFilters.IsEmpty())
+                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(new AllCIIDsSelection(), attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService);
+                        }
+                        else if (filter.AttributeFilters.IsEmpty() && !filter.RelationFilters.IsEmpty())
                         {
-                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, relationFilters, layerset, trans, timeThreshold, dataLoaderService);
-                        } else
+                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService);
+                        }
+                        else
                         {
                             throw new Exception("At least one filter must be set");
                         }
@@ -170,15 +131,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var layerset = userContext.GetLayerSet(context.Path);
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
-                        var idCollection = context.GetArgument(typeof(object), "id") as IDictionary<string, object>;
 
-                        if (idCollection == null)
-                            throw new Exception("Invalid input object for trait entity ID detected");
-
-                        var idAttributeTuples = TraitEntityHelper.InputDictionary2IDAttributes(idCollection, at);
+                        var id = context.GetArgument<IDInput>("id");
 
                         // TODO: use data loader
-                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
+                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, id.AttributeValues, layerset, trans, timeThreshold);
 
                         if (!foundCIID.HasValue)
                         {
@@ -196,7 +153,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
     {
         public readonly ITrait UnderlyingTrait;
 
-        public ElementWrapperType(ITrait underlyingTrait, ElementType elementGraphType, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, 
+        public ElementWrapperType(ITrait underlyingTrait, ElementType elementGraphType, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService,
             ICIModel ciModel, IChangesetModel changesetModel, IAttributeModel attributeModel)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityWrapperGraphTypeName(underlyingTrait);
@@ -221,7 +178,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, trans, timeThreshold);
 
                 var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(et.CIID), forwardAS, ciModel, attributeModel, layerset, timeThreshold, trans)
-                    .Then(cis => {
+                    .Then(cis =>
+                    {
                         // NOTE: we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
                         return cis.FirstOrDefault() ?? new MergedCI(et.CIID, null, layerset, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty);
                     });
@@ -259,7 +217,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class ElementType : ObjectGraphType<EffectiveTrait>
     {
-        public ElementType() {}
+        public ElementType() { }
 
         public delegate bool ElementWrapperTypeLookup(string key, [MaybeNullWhen(false)] out ElementWrapperType ew);
         public void Init(ITrait underlyingTrait, RelatedCIType relatedCIType, ElementWrapperTypeLookup elementWrapperTypeLookup, IDataLoaderService dataLoaderService,
@@ -267,19 +225,19 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityGraphTypeName(underlyingTrait);
 
-            foreach (var ta in underlyingTrait.RequiredAttributes.Concat(underlyingTrait.OptionalAttributes))
+            void Add(TraitAttribute ta, bool isRequired)
             {
                 var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
 
                 var attributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta);
+                var resolvedType = (isRequired) ? new NonNullGraphType(graphType) : graphType;
                 AddField(new FieldType()
                 {
                     Name = attributeFieldName,
-                    ResolvedType = graphType, // TODO: add new NonNullGraphType() wrap for required attributes
+                    ResolvedType = resolvedType,
                     Resolver = new FuncFieldResolver<object>(ctx =>
                     {
-                        var o = ctx.Source as EffectiveTrait;
-                        if (o == null)
+                        if (ctx.Source is not EffectiveTrait o)
                         {
                             return null;
                         }
@@ -294,12 +252,21 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 });
             }
 
+            foreach (var ta in underlyingTrait.RequiredAttributes)
+            {
+                Add(ta, true);
+            }
+            foreach (var ta in underlyingTrait.OptionalAttributes)
+            {
+                Add(ta, false);
+            }
+
             foreach (var r in underlyingTrait.OptionalRelations)
             {
                 var directionForward = r.RelationTemplate.DirectionForward;
                 var traitHints = r.RelationTemplate.TraitHints;
 
-                foreach(var traitIDHint in traitHints)
+                foreach (var traitIDHint in traitHints)
                 {
                     if (elementWrapperTypeLookup(traitIDHint, out var elementWrapperType))
                     {
@@ -307,10 +274,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         {
                             Name = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldWithTraitHintName(r, traitIDHint),
                             ResolvedType = new ListGraphType(elementWrapperType),
-                            Resolver = new AsyncFieldResolver<object>(async context =>
+                            Resolver = new FuncFieldResolver<object>(async context =>
                             {
-                                var o = context.Source as EffectiveTrait;
-                                if (o == null)
+                                if (context.Source is not EffectiveTrait o)
                                 {
                                     return ImmutableList<EffectiveTrait>.Empty;
                                 }
@@ -350,7 +316,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 else return ImmutableList<EffectiveTrait>.Empty;
                             })
                         });
-                    } else
+                    }
+                    else
                     {
                         logger.LogError($"Could not create trait relation fields for trait-hint: could not find trait with ID \"{traitIDHint}\"");
                     }
@@ -363,8 +330,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     ResolvedType = new ListGraphType(relatedCIType),
                     Resolver = new FuncFieldResolver<object>(ctx =>
                     {
-                        var o = ctx.Source as EffectiveTrait;
-                        if (o == null)
+                        if (ctx.Source is not EffectiveTrait o)
                         {
                             return ImmutableList<(MergedRelation relation, bool outgoing)>.Empty;
                         }
@@ -376,157 +342,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         }
                         else return ImmutableList<(MergedRelation relation, bool outgoing)>.Empty;
                     })
-                });
-            }
-        }
-    }
-
-    public class IDInputType : InputObjectGraphType
-    {
-        public IDInputType() { }
-
-        private IDInputType(ITrait at)
-        {
-            Name = TraitEntityTypesNameGenerator.GenerateTraitEntityIDInputGraphTypeName(at);
-
-            foreach (var ta in at.RequiredAttributes)
-            {
-                var attributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta);
-
-                var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
-
-                if (ta.AttributeTemplate.IsID.GetValueOrDefault(false))
-                {
-                    this.AddField(new FieldType()
-                    {
-                        Name = attributeFieldName,
-                        ResolvedType = new NonNullGraphType(graphType)
-                    });
-                }
-            }
-        }
-
-        public static IDInputType? Build(ITrait at)
-        {
-            var hasIDFields = at.RequiredAttributes.Any(ra => ra.AttributeTemplate.IsID.GetValueOrDefault(false));
-            if (!hasIDFields)
-                return null;
-            return new IDInputType(at);
-        }
-    }
-
-    public class RegexOptionsType : EnumerationGraphType<RegexOptions> { }
-
-    public class TextFilterRegexInputType : InputObjectGraphType<TextFilterRegexInput>
-    {
-        public TextFilterRegexInputType()
-        {
-            Field("pattern", x => x.Pattern, nullable: false);
-            Field("options", x => x.Options, nullable: true, type: typeof(ListGraphType<RegexOptionsType>));
-        }
-    }
-
-    public class AttributeTextFilterInputType : InputObjectGraphType<AttributeScalarTextFilter>
-    {
-        public AttributeTextFilterInputType()
-        {
-            Field("regex", x => x.Regex, nullable: true, type: typeof(TextFilterRegexInputType));
-            Field("exact", x => x.Exact, nullable: true);
-        }
-
-        public override object ParseDictionary(IDictionary<string, object?> value)
-        {
-            var exact = value.TryGetValue("exact", out var e) ? (string?)e : null;
-            var regexObj = value.TryGetValue("regex", out var r) ? (TextFilterRegexInput?)r : null;
-
-            return AttributeScalarTextFilter.Build(regexObj, exact);
-        }
-    }
-
-    public class RelationFilterInputType : InputObjectGraphType<RelationFilter>
-    {
-        public RelationFilterInputType()
-        {
-            Field("exactAmount", x => x.ExactAmount, nullable: true);
-        }
-
-        public override object ParseDictionary(IDictionary<string, object?> value)
-        {
-            var exactAmount = value.TryGetValue("exactAmount", out var e) ? (uint?)e : null;
-
-            return RelationFilter.Build(exactAmount);
-        }
-    }
-
-    public class FilterInputType : InputObjectGraphType
-    {
-        public FilterInputType() { }
-
-        private FilterInputType(ITrait at)
-        {
-            Name = TraitEntityTypesNameGenerator.GenerateTraitEntityFilterInputGraphTypeName(at);
-
-            foreach (var ta in at.RequiredAttributes.Concat(at.OptionalAttributes))
-            {
-                var attributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta);
-
-                // TODO: support for non-text types
-                if (ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text) == AttributeValueType.Text)
-                {
-                    // TODO: support for array types
-                    if (!ta.AttributeTemplate.IsArray.GetValueOrDefault(false))
-                    {
-                        AddField(new FieldType()
-                        {
-                            Type = typeof(AttributeTextFilterInputType),
-                            Name = attributeFieldName,
-                        });
-                    }
-                }
-            }
-
-            foreach(var r in at.OptionalRelations)
-            {
-                var relationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
-                AddField(new FieldType()
-                {
-                    Type = typeof(RelationFilterInputType),
-                    Name = relationFieldName
-                });
-            }
-        }
-
-        public static FilterInputType? Build(ITrait at)
-        {
-            var t = new FilterInputType(at);
-            if (t.Fields.IsEmpty())
-                return null;
-            return t;
-        }
-    }
-
-    public class UpsertInputType : InputObjectGraphType
-    {
-        public UpsertInputType(ITrait at)
-        {
-            Name = TraitEntityTypesNameGenerator.GenerateUpsertTraitEntityInputGraphTypeName(at);
-
-            foreach (var ta in at.RequiredAttributes)
-            {
-                var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
-                AddField(new FieldType()
-                {
-                    Name = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta),
-                    ResolvedType = new NonNullGraphType(graphType)
-                });
-            }
-            foreach (var ta in at.OptionalAttributes)
-            {
-                var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
-                AddField(new FieldType()
-                {
-                    Name = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta),
-                    ResolvedType = graphType
                 });
             }
         }
@@ -561,7 +376,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, trans, timeThreshold);
 
                 var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(otherCIID), forwardAS, ciModel, attributeModel, layerset, timeThreshold, trans)
-                    .Then(cis => {
+                    .Then(cis =>
+                    {
                         // NOTE: we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
                         return cis.FirstOrDefault() ?? new MergedCI(otherCIID, null, layerset, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty);
                     });
@@ -594,9 +410,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 this.Field(fieldName, typeContainer.ElementWrapper, resolve: context =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    var ci = context.Parent?.Source as MergedCI;
 
-                    if (ci == null)
+                    if (context.Parent?.Source is not MergedCI ci)
                         throw new Exception("Could not get MergedCI from context... implementation bug?");
 
                     // NOTE: we assume here that the ci has all relevant attributes loaded for properly checking for effective trait/trait entity

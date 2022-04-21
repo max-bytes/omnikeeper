@@ -8,6 +8,7 @@
     * [application configuration](./configuration_application-configuration)
     * [configuration layers](./configuration_configuration-layers)
   * [datamodel](./datamodel)
+  * [eazy bi](./eazy-bi)
   * [generators](./generators)
   * [graphql api](./graphql-api)
   * [gridview](./gridview)
@@ -16,6 +17,7 @@
   * [layers](./layers)
   * meta
     * [code of conduct](./meta_code-of-conduct)
+  * [monitoring](./monitoring)
   * [plugins](./plugins)
   * [traits](./traits)
 

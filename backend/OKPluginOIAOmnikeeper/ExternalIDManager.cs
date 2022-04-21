@@ -31,12 +31,13 @@ namespace OKPluginOIAOmnikeeper
 
         protected override async Task<IEnumerable<(ExternalIDGuid externalID, ICIIdentificationMethod idMethod)>> GetExternalIDs()
         {
-            var layers = await client.GetLayersByNameAsync(config.remoteLayerNames, ClientVersion);
-            var layerIDs = layers.Select(l => l.ID);
-            var ciids = await client.GetAllCIIDsAsync(ClientVersion);
-            // TODO: in older version, we had a .GetCIIDsOfNonEmptyCIsAsync(layerIDs, null, ClientVersion)
-            // get all ciids from cis who have at least one attribute or relation in the specified layerset
-            return ciids.Select(id => (new ExternalIDGuid(id), (ICIIdentificationMethod)CIIdentificationMethodByCIID.Build(id)));
+            throw new NotImplementedException();
+            //var layers = await client.GetLayersByNameAsync(config.remoteLayerNames, ClientVersion);
+            //var layerIDs = layers.Select(l => l.ID);
+            //var ciids = await client.GetAllCIIDsAsync(ClientVersion);
+            //// TODO: in older version, we had a .GetCIIDsOfNonEmptyCIsAsync(layerIDs, null, ClientVersion)
+            //// get all ciids from cis who have at least one attribute or relation in the specified layerset
+            //return ciids.Select(id => (new ExternalIDGuid(id), (ICIIdentificationMethod)CIIdentificationMethodByCIID.Build(id)));
         }
     }
 }

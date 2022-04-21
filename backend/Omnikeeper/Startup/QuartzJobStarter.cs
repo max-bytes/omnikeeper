@@ -32,16 +32,16 @@ namespace Omnikeeper.Startup
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-                using var scope = _serviceScopeFactory.CreateScope();
-                var metaConfigurationModel = scope.ServiceProvider.GetRequiredService<IMetaConfigurationModel>();
-                var baseConfigurationModel = scope.ServiceProvider.GetRequiredService<IBaseConfigurationModel>();
-                var modelContextBuilder = scope.ServiceProvider.GetRequiredService<IModelContextBuilder>();
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<QuartzJobStarter>>();
-                var trans = modelContextBuilder.BuildImmediate();
-                var metaConfig = await metaConfigurationModel.GetConfigOrDefault(trans);
-                var config = await baseConfigurationModel.GetConfigOrDefault(new LayerSet(metaConfig.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+            using var scope = _serviceScopeFactory.CreateScope();
+            var metaConfigurationModel = scope.ServiceProvider.GetRequiredService<IMetaConfigurationModel>();
+            var baseConfigurationModel = scope.ServiceProvider.GetRequiredService<IBaseConfigurationModel>();
+            var modelContextBuilder = scope.ServiceProvider.GetRequiredService<IModelContextBuilder>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<QuartzJobStarter>>();
+            var trans = modelContextBuilder.BuildImmediate();
+            var metaConfig = await metaConfigurationModel.GetConfigOrDefault(trans);
+            var config = await baseConfigurationModel.GetConfigOrDefault(new LayerSet(metaConfig.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
 
-                var plugins = scope.ServiceProvider.GetServices<IPluginRegistration>();
+            var plugins = scope.ServiceProvider.GetServices<IPluginRegistration>();
 
             try
             {
@@ -66,7 +66,8 @@ namespace Omnikeeper.Startup
                 {
                     plugin.RegisterQuartzJobs();
                 }
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 logger.LogError(e, "Error setting up Quartz scheduler");
             }

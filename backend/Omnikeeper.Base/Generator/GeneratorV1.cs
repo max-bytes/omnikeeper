@@ -211,18 +211,18 @@ namespace Omnikeeper.Base.Generator
         private IEnumerable<GeneratorV1> FilterGeneratorsByAttributeSelection(IEnumerable<GeneratorV1> generators, IAttributeSelection attributeSelection)
         {
             foreach (var generator in generators)
-                if (attributeSelection.Contains(generator.AttributeName))
+                if (attributeSelection.ContainsAttributeName(generator.AttributeName))
                     yield return generator;
         }
     }
 
     public class GeneratorAttributeResolver
     {
-        public CIAttribute? Resolve(IEnumerable<CIAttribute> existingAttributes, IEnumerable<CIAttribute>? additionalAttributes, Guid ciid, string layerID, GeneratorV1 generator)
+        public CIAttribute? Resolve(IEnumerable<CIAttribute> existingAttributes, IEnumerable<CIAttribute> additionalAttributes, Guid ciid, string layerID, GeneratorV1 generator)
         {
             try
             {
-                var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? Array.Empty<CIAttribute>()).Where(a => generator.Template.UsedAttributeNames.Contains(a.Name)).ToList();
+                var relevantAttributes = existingAttributes.Concat(additionalAttributes).Where(a => generator.Template.UsedAttributeNames.Contains(a.Name)).ToList();
                 var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes);
 
                 object evaluated = generator.Template.Template.Evaluate(context);

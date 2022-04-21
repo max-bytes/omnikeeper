@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RepositoryUrl>https://github.com/max-bytes/omnikeeper</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj" />
+  </ItemGroup>
+	
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+	
+  <Target Name="CopyPackage" AfterTargets="Pack" Condition="'$(Configuration)' == 'Debug' ">
+    <Copy SourceFiles="$(OutputPath)\..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="$(OutputPath)\..\..\..\..\Omnikeeper\OKPlugins" />
+  </Target>
+
+</Project>

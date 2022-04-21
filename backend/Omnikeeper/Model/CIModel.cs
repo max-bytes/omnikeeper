@@ -25,7 +25,7 @@ namespace Omnikeeper.Model
         public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime)
         {
             var attributes = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), attributeSelection, layers, trans, atTime, GeneratedDataHandlingInclude.Instance);
-            var cis =  BuildMergedCIs(attributes, layers, atTime);
+            var cis = BuildMergedCIs(attributes, layers, atTime);
             return cis.First();
         }
 

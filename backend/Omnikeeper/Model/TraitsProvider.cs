@@ -23,7 +23,7 @@ namespace Omnikeeper.Model
         private readonly IEnumerable<IPluginRegistration> loadedPlugins;
         private readonly ILogger<TraitsProvider> logger;
 
-        public TraitsProvider(RecursiveTraitModel dataTraitModel, 
+        public TraitsProvider(RecursiveTraitModel dataTraitModel,
             IMetaConfigurationModel metaConfigurationModel, IChangesetModel changesetModel, IEnumerable<IPluginRegistration> loadedPlugins, ILogger<TraitsProvider> logger)
         {
             this.dataTraitModel = dataTraitModel;

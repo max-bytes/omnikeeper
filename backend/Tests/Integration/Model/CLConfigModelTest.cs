@@ -1,6 +1,5 @@
 ﻿using Autofac;
 using FluentAssertions;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -8,6 +7,7 @@ using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
@@ -45,8 +45,8 @@ namespace Tests.Integration.Model
         public async Task TestGenericOperations()
         {
             await TestGenericModelOperations(
-                () => new CLConfigV1("test_cl_config01", "clBrainRef1", JObject.Parse(@"{""foo"": ""bar""}")),
-                () => new CLConfigV1("test_cl_config02", "clBrainRef2", JObject.Parse(@"{""foo"": ""blub""}")),
+                () => new CLConfigV1("test_cl_config01", "clBrainRef1", JsonDocument.Parse(@"{""foo"": ""bar""}")),
+                () => new CLConfigV1("test_cl_config02", "clBrainRef2", JsonDocument.Parse(@"{""foo"": ""blub""}")),
                 "test_cl_config01", "test_cl_config02", "non_existant"
                 );
         }
@@ -54,8 +54,8 @@ namespace Tests.Integration.Model
         public async Task TestGetByDataID()
         {
             await TestGenericModelGetByDataID(
-                () => new CLConfigV1("test_cl_config01", "clBrainRef1", JObject.Parse(@"{""foo"": ""bar""}")),
-                () => new CLConfigV1("test_cl_config02", "clBrainRef2", JObject.Parse(@"{""foo"": ""blub""}")),
+                () => new CLConfigV1("test_cl_config01", "clBrainRef1", JsonDocument.Parse(@"{""foo"": ""bar""}")),
+                () => new CLConfigV1("test_cl_config02", "clBrainRef2", JsonDocument.Parse(@"{""foo"": ""blub""}")),
                 "test_cl_config01", "test_cl_config02", "non_existant_id"
                 );
         }

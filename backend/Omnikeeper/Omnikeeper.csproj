@@ -27,16 +27,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="5.0.2" />
     <PackageReference Include="Autofac.Extras.DynamicProxy" Version="6.0.0" />
     <PackageReference Include="Autofac.Extras.Quartz" Version="7.3.0" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="9.2.0" />
-    <PackageReference Include="GraphQL.Authorization" Version="4.0.0" />
-    <PackageReference Include="GraphQL.MicrosoftDI" Version="4.7.1" />
+    <PackageReference Include="GraphQL.MicrosoftDI" Version="5.1.0" />
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="5.2.0" />
-    <PackageReference Include="GraphQL.Server.Ui.Playground" Version="5.2.0" />
+    <PackageReference Include="GraphQL.Server.Ui.Playground" Version="5.2.1" />
     <PackageReference Include="MediatR" Version="8.1.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="8.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OData" Version="7.4.1" />
     <PackageReference Include="Microsoft.AspNetCore.OData.Versioning" Version="4.1.1" />
@@ -50,7 +49,6 @@
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
 	<PackageReference Include="SpanJson.AspNetCore.Formatter" Version="3.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.2" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.1.2" />
     <PackageReference Include="System.Linq" Version="4.3.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.18" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />

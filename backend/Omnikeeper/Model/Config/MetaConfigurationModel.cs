@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model
@@ -28,10 +28,10 @@ namespace Omnikeeper.Model
 
             if (await s.ReadAsync())
             {
-                var configJO = s.GetFieldValue<JObject>(0);
+                var config = s.GetFieldValue<JsonDocument>(0);
                 try
                 {
-                    return MetaConfiguration.Serializer.Deserialize(configJO);
+                    return MetaConfiguration.SystemTextJSONSerializer.Deserialize(config);
                 }
                 catch (Exception e)
                 {
@@ -47,11 +47,11 @@ namespace Omnikeeper.Model
 
         public async Task<MetaConfiguration> SetConfig(MetaConfiguration config, IModelContext trans)
         {
-            var configJO = MetaConfiguration.Serializer.SerializeToJObject(config);
+            var configJD = MetaConfiguration.SystemTextJSONSerializer.SerializeToJsonDocument(config);
             using var command = new NpgsqlCommand(@"
                 INSERT INTO config.general (key, config) VALUES ('meta', @config) ON CONFLICT (key) DO UPDATE SET config = EXCLUDED.config
             ", trans.DBConnection, trans.DBTransaction);
-            command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
+            command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJD });
             await command.ExecuteScalarAsync();
 
             return config;

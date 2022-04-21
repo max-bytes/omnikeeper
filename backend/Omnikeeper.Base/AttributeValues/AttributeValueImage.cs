@@ -1,16 +1,14 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
+using System.Text.Json;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    //[ProtoContract(SkipConstructor = true)]
     public class AttributeScalarValueImage : IAttributeScalarValue<BinaryScalarAttributeValueProxy>, IEquatable<AttributeScalarValueImage>
     {
-        //[ProtoMember(1)]
         private readonly BinaryScalarAttributeValueProxy value;
         public BinaryScalarAttributeValueProxy Value => value;
         public string Value2String() => Value.ToString();
@@ -19,7 +17,7 @@ namespace Omnikeeper.Entity.AttributeValues
             dynamic dynamicObject = new ExpandoObject();
             dynamicObject.hash = Value.Sha256Hash;
             dynamicObject.fullSize = Value.FullSize;
-            return new string[] { JsonConvert.SerializeObject(dynamicObject) };
+            return new string[] { JsonSerializer.Serialize(dynamicObject) };
         }
         public object ToGenericObject() => Value;
         public bool IsArray => false;

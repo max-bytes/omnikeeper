@@ -54,7 +54,7 @@ namespace OKPluginOIASharepoint
             var idPairs = mapper.GetIDPairs(ciids);
 
             await foreach (var a in GetAttributes(idPairs))
-                if (attributeSelection.Contains(a.Name))
+                if (attributeSelection.ContainsAttribute(a))
                     yield return a;
         }
         public async IAsyncEnumerable<CIAttribute> GetAttributes(IEnumerable<(Guid ciid, SharepointExternalListItemID externalID)> idPairs)

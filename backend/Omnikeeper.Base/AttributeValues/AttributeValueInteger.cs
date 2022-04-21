@@ -4,10 +4,8 @@ using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    //[ProtoContract(SkipConstructor = true)]
     public class AttributeScalarValueInteger : IAttributeScalarValue<long>, IEquatable<AttributeScalarValueInteger>
     {
-        //[ProtoMember(1)]
         private readonly long value;
         public long Value => value;
         public string Value2String() => Value.ToString();
@@ -31,13 +29,14 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public static AttributeScalarValueInteger BuildFromString(string value)
         {
-            long.TryParse(value, out var v);
-            return new AttributeScalarValueInteger(v);
+            if (long.TryParse(value, out var v))
+                return new AttributeScalarValueInteger(v);
+            else
+                throw new Exception("Could not parse integer for attribute value");
         }
 
     }
 
-    //[ProtoContract]
     public class AttributeArrayValueInteger : AttributeArrayValue<AttributeScalarValueInteger, long>
     {
         public AttributeArrayValueInteger(AttributeScalarValueInteger[] values) : base(values)
@@ -59,7 +58,13 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public static AttributeArrayValueInteger BuildFromString(string[] values)
         {
-            var longValues = values.Select(value => { long.TryParse(value, out var v); return v; }).ToArray();
+            var longValues = values.Select(value =>
+            {
+                if (long.TryParse(value, out var v))
+                    return v;
+                else
+                    throw new Exception("Could not parse integer for attribute value");
+            }).ToArray();
             return Build(longValues);
         }
     }

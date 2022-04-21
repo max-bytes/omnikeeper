@@ -71,7 +71,7 @@ namespace Omnikeeper.GraphQL
 
                     if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, readLayerIDs))
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', readLayerIDs)}");
 
                     var writeCIIDs = insertAttributes.Select(a => a.CI)

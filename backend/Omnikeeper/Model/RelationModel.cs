@@ -28,12 +28,13 @@ namespace Omnikeeper.Model
                 var layerID = layerIDs[i];
                 var rel = relations[i];
 
-                foreach(var r in rel)
+                foreach (var r in rel)
                 {
                     if (compound.TryGetValue(r.InformationHash, out var existingRelation))
                     {
                         existingRelation.LayerStackIDs.Add(layerID);
-                    } else
+                    }
+                    else
                     {
                         compound.Add(r.InformationHash, new MergedRelation(r, new List<string>() { layerID }));
                     }
@@ -79,7 +80,7 @@ namespace Omnikeeper.Model
 
         public async Task<bool> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            var scope = new BulkRelationDataSpecificScope(layerID, Array.Empty<BulkRelationDataSpecificScope.Fragment>(), 
+            var scope = new BulkRelationDataSpecificScope(layerID, Array.Empty<BulkRelationDataSpecificScope.Fragment>(),
                 new List<(Guid from, Guid to, string predicateID)> { (fromCIID, toCIID, predicateID) });
             var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance; // NOTE: we can keep this fixed here, because it does not affect removals
 
@@ -154,7 +155,7 @@ namespace Omnikeeper.Model
 
             async Task<IEnumerable<MergedRelation>> GetOutdatedRelationsFromSpecificScope(BulkRelationDataSpecificScope ss, LayerSet layerIDs, IModelContext trans, TimeThreshold timeThreshold, IMaskHandlingForRetrieval maskHandlingForRetrieval)
             {
-                var specificRelations = 
+                var specificRelations =
                     ss.Fragments.Select(f => (ss.GetFromCIID(f), ss.GetToCIID(f), ss.GetPredicateID(f)))
                     .Union(ss.Removals);
                 return await GetMergedRelations(RelationSelectionSpecific.Build(specificRelations), layerIDs, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance);
