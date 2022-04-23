@@ -20,7 +20,7 @@ namespace OKPluginNaemonConfig.Entity
         [TraitAttribute("environment", "cmdb.service.environment")]
         public readonly string Environment;
 
-        [TraitAttribute("address", "cmdb.service.mon_ip_address")]
+        [TraitAttribute("address", "cmdb.service.mon_ip_addres")]
         public readonly string Address;
 
         [TraitAttribute("port", "cmdb.service.mon_ip_port")]
@@ -45,6 +45,10 @@ namespace OKPluginNaemonConfig.Entity
 
         [TraitRelation("interface", "has_interface", true)]
         public readonly Guid[] InterfacesIds;
+
+        [TraitRelation("host", "runs_on", true)]
+        public readonly Guid[] Hosts;
+
         public Service()
         {
             Id = "";
@@ -57,6 +61,7 @@ namespace OKPluginNaemonConfig.Entity
             Criticality = "";
             CategoriesIds = Array.Empty<Guid>();
             InterfacesIds = Array.Empty<Guid>();
+            Hosts = Array.Empty<Guid>();
         }
     }
 }

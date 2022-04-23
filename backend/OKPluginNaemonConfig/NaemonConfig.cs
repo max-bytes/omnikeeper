@@ -211,6 +211,7 @@ namespace OKPluginNaemonConfig
 
             foreach (var ciItem in services)
             {
+
                 var ciCategories = allCategories.Where(c => ciItem.Value.CategoriesIds.ToList().Contains(c.Key)).ToList();
 
                 var cat = new Dictionary<string, List<Category>>();
@@ -257,6 +258,33 @@ namespace OKPluginNaemonConfig
                 if (ciItem.Value.Port != "" && int.TryParse(ciItem.Value.Port, out var p))
                     port = p;
 
+                // add relations
+
+                var relations = new Dictionary<string, Dictionary<string, List<string>>>();
+
+                foreach (var item in ciItem.Value.Hosts)
+                {
+                    if (!relations.ContainsKey("OUT"))
+                    {
+                        relations.Add("OUT", new Dictionary<string, List<string>>
+                        {
+                            { "runs_on", new List<string>{ item.ToString() } }
+                        });
+                    }
+
+                    if (!relations["OUT"].ContainsKey("runs_on"))
+                    {
+                        relations["OUT"].Add("runs_on", new List<string> { item.ToString() });
+                    }
+                    else
+                    {
+                        relations["OUT"]["runs_on"].Add(item.ToString());
+                    }
+
+                    // TODO write incoming relations if CI exists
+                    // check if we have incomin relations on our cmdb data
+                }
+
                 ciData.Add(new ConfigurationItem
                 {
                     Type = "SERVICE",
@@ -272,10 +300,10 @@ namespace OKPluginNaemonConfig
                     SuppApp = "", // Add SuppApp for this ci,
                     Categories = cat,
                     Interfaces = interfaces,
-
+                    Relations = relations,
                 });
             }
-
+            
             // add host actions to cidata
             var hostActions = await hostActionModel.GetAllByDataID(layersetCMDB, trans, changesetProxy.TimeThreshold);
             //NOTE mcsuk: the same as above for hosts + categories goes here
@@ -342,16 +370,18 @@ namespace OKPluginNaemonConfig
             logger.LogDebug("Finished adding cap tags => updateNormalizedCiData_addGenericCmdbCapTags.");
 
             // updateNormalizedCiData_addRelationData
-            var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runs_on"), layersetCMDB, trans, changesetProxy.TimeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
-            // NOTE In original implementation relations with predicate runsOn and canRunOn are selected.
+            //var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runs_on"), layersetCMDB, trans, changesetProxy.TimeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+            //// NOTE In original implementation relations with predicate runsOn and canRunOn are selected.
 
-            var fromCIIDs = allRunsOnRelations.Select(relation => relation.Relation.FromCIID).ToHashSet();
-            var fromCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(fromCIIDs), layersetCMDB!, false, NamedAttributesSelection.Build("cmdb.id"), trans, changesetProxy.TimeThreshold)).ToDictionary(ci => ci.ID);
+            //var fromCIIDs = allRunsOnRelations.Select(relation => relation.Relation.FromCIID).ToHashSet();
+            //var fromCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(fromCIIDs), layersetCMDB!, false, NamedAttributesSelection.Build("cmdb.id"), trans, changesetProxy.TimeThreshold)).ToDictionary(ci => ci.ID);
 
-            var toCIIds = allRunsOnRelations.Select(relation => relation.Relation.ToCIID).ToHashSet();
-            var toCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(toCIIds), layersetCMDB!, false, NamedAttributesSelection.Build("cmdb.id"), trans, changesetProxy.TimeThreshold)).ToDictionary(ci => ci.ID);
+            //var toCIIds = allRunsOnRelations.Select(relation => relation.Relation.ToCIID).ToHashSet();
+            //var toCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(toCIIds), layersetCMDB!, false, NamedAttributesSelection.Build("cmdb.id"), trans, changesetProxy.TimeThreshold)).ToDictionary(ci => ci.ID);
 
-            var cmdbRelationsBySrc = new Dictionary<string, (string, string)>();
+            //var cmdbRelationsBySrc = new Dictionary<string, (string, string)>();
+
+            /*
 
             foreach (var item in allRunsOnRelations)
             {
@@ -422,6 +452,8 @@ namespace OKPluginNaemonConfig
                 }
             }
 
+            */
+
             foreach (var ciItem in ciData)
             {
                 // add effective host for ci
@@ -436,10 +468,11 @@ namespace OKPluginNaemonConfig
                 }
                 else
                 {
-                    if (cmdbRelationsBySrc.ContainsKey(ciItem.Id))
-                    {
+                    // NOTE this is related to updateNormalizedCiData_addRelationData, why do we need this?
+                    //if (cmdbRelationsBySrc.ContainsKey(ciItem.Id))
+                    //{
 
-                    }
+                    //}
                 }
 
             }
