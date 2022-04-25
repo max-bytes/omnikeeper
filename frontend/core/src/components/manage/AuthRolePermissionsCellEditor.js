@@ -18,7 +18,7 @@ export default forwardRef((props, ref) => {
         };
     });
 
-    if (loading && !data) return "Loading...";
+    if (loading || !data) return "Loading...";
     
     var availablePermissions = data.manage_availablePermissions;
 

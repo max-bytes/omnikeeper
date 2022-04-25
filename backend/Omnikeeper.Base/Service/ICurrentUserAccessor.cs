@@ -10,6 +10,7 @@ namespace Omnikeeper.Base.Service
         string GetCurrentUsername();
     }
 
+    // NOTE: must NOT be passed as constructor parameter to singleton instances
     public interface ICurrentUserService
     {
         Task<AuthenticatedUser> GetCurrentUser(IModelContext trans);

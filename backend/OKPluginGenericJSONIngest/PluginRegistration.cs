@@ -14,6 +14,7 @@ namespace OKPluginGenericJSONIngest
         public override void RegisterServices(IServiceCollection sc)
         {
             sc.AddSingleton<ContextModel>();
+            sc.AddSingleton<GenericJsonIngestService>();
             sc.AddSingleton<PassiveFilesController>();
             sc.AddSingleton<ManageContextController>();
         }

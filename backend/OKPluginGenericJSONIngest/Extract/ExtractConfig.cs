@@ -5,7 +5,7 @@ namespace OKPluginGenericJSONIngest.Extract
 {
     public class ExtractConfigTypeDiscriminatorConverter : TypeDiscriminatorConverter<IExtractConfig>
     {
-        public ExtractConfigTypeDiscriminatorConverter() : base("$type")
+        public ExtractConfigTypeDiscriminatorConverter() : base("$type", typeof(ExtractConfigTypeDiscriminatorConverter))
         {
         }
     }

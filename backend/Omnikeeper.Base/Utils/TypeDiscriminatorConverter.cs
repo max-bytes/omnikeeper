@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,10 +12,25 @@ namespace Omnikeeper.Base.Utils
         private readonly IDictionary<string, Type> validTypeNames;
         private readonly string jsonPropertyName;
 
-        public TypeDiscriminatorConverter(string jsonPropertyName)
+        public TypeDiscriminatorConverter(string jsonPropertyName, Type typeOfSearchAssembly)
+            : this(jsonPropertyName, new Assembly[] { typeOfSearchAssembly.Assembly })
         {
-            var type = typeof(T);
-            validTypeNames = AppDomain.CurrentDomain.GetAssemblies()
+
+        }
+
+        public TypeDiscriminatorConverter(string jsonPropertyName, IEnumerable<Type> typesOfSearchAssemblies)
+            : this(jsonPropertyName, typesOfSearchAssemblies.Select(t => t.Assembly))
+        {
+
+        }
+
+        public TypeDiscriminatorConverter(string jsonPropertyName, IEnumerable<Assembly> searchAssemblies)
+        {
+            var baseType = typeof(T);
+
+            // TODO: proper assembly configuration, not go through ALL assemblies
+            //var types = AppDomain.CurrentDomain.GetAssemblies()
+            var types = searchAssemblies
                 .SelectMany(s =>
                 {
                     try
@@ -25,8 +41,12 @@ namespace Omnikeeper.Base.Utils
                     { // if the assembly cannot pe properly loaded, GetTypes() throws an error that we need to catch
                         return Array.Empty<Type>();
                     }
-                })
-                .Where(p => type.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract)
+                });
+
+            //var types = Assembly.GetExecutingAssembly().GetTypes();
+
+            validTypeNames = types
+                .Where(p => baseType.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract)
                 .ToDictionary(t => SystemTextJSONSerializerMigrationHelper.GetTypeString(t), t => t);
             this.jsonPropertyName = jsonPropertyName;
         }

@@ -8,6 +8,7 @@
           "cmdb.host.id"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -391,6 +392,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -466,6 +468,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -550,6 +553,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -634,6 +638,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -718,6 +723,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -802,6 +808,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -886,6 +893,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -970,6 +978,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -1054,6 +1063,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -1138,6 +1148,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -1222,6 +1233,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -1306,6 +1318,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -1390,6 +1403,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -1457,6 +1471,7 @@
           "cmdb.host.id"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -2032,6 +2047,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -2179,6 +2195,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -2345,6 +2362,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -2427,6 +2445,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -2500,6 +2519,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -2573,6 +2593,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -2646,6 +2667,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -2723,6 +2745,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -2793,6 +2816,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -2863,6 +2887,7 @@
           }
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",

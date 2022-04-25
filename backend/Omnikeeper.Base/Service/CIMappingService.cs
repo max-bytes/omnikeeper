@@ -237,6 +237,16 @@ namespace Omnikeeper.Base.Service
         {
             return new CICandidateAttributeData(Fragments.Concat(attributes.Fragments));
         }
+        public CICandidateAttributeData Merge(CICandidateAttributeData attributesToMerge)
+        {
+            var fragmentsToAdd = new List<Fragment>();
+            foreach(var fragmentToAdd in attributesToMerge.Fragments)
+            {
+                if (!Fragments.Any(f => f.Name == fragmentToAdd.Name))
+                    fragmentsToAdd.Add(fragmentToAdd);
+            }
+            return new CICandidateAttributeData(Fragments.Concat(fragmentsToAdd));
+        }
     }
 
     public interface ICIIdentificationMethod

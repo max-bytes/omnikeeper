@@ -38,7 +38,7 @@ namespace OKPluginGenericJSONIngest.Load
                     var tempGuid = Guid.NewGuid();
                     tempCIIDMapping.TryAdd(ci.tempID, tempGuid);
 
-                    ciCandidates.Add(new CICandidate(tempGuid, idMethod, attributes));
+                    ciCandidates.Add(new CICandidate(tempGuid, ci.tempID, idMethod, ci.sameTargetCIHandling, attributes));
                 }
                 catch (Exception e)
                 {
@@ -92,6 +92,7 @@ namespace OKPluginGenericJSONIngest.Load
                 return CIIdentificationMethodByFragment.Build(fragment, a.modifiers.caseInsensitive, searchLayers);
             }
 
+            // TODO: error handling is inconsistent: sometimes a warning is generated, sometimes an exception is thrown, consider reworking
             return idMethod switch
             {
                 InboundIDMethodByData d => CIIdentificationMethodByData.BuildFromAttributes(d.attributes, attributes, searchLayers),

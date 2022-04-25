@@ -21,146 +21,6 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers.Ingest
 {
-    //public class MultiStream : Stream
-    //{
-    //    private readonly Stream[] subStreams;
-    //    private long position;
-    //    private int currentStreamIndex;
-    //    private Stream currentStream;
-    //    private readonly int numSubStreams;
-
-    //    public MultiStream(IEnumerable<Stream> subStreams)
-    //    {
-    //        this.subStreams = subStreams.ToArray();
-    //        this.Length = subStreams.Sum(s => s.Length);
-    //        this.position = 0;
-    //        this.currentStreamIndex = 0;
-    //        this.currentStream = this.subStreams[0];
-    //        this.numSubStreams = subStreams.Count();
-    //    }
-
-    //    public override bool CanRead => true;
-
-    //    public override bool CanSeek => false;
-
-    //    public override bool CanWrite => false;
-
-    //    public override long Length { get; }
-
-    //    public override long Position
-    //    {
-    //        get { return position; }
-    //        set { throw new NotImplementedException(); }
-    //    }
-
-    //    public override void Flush()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public override int Read(byte[] buffer, int offset, int count)
-    //    {
-    //        int result = 0;
-    //        while (count > 0)
-    //        {
-    //            // Read what we can from the current stream
-    //            int numBytesRead = currentStream.Read(buffer, offset, count);
-    //            count -= numBytesRead;
-    //            offset += numBytesRead;
-    //            result += numBytesRead;
-    //            position += numBytesRead;
-
-    //            // If we haven't satisfied the read request, we have exhausted the child stream.
-    //            // Move on to the next stream and loop around to read more data.
-    //            if (count > 0)
-    //            {
-    //                // If we run out of child streams to read from, we're at the end of the HugeStream, and there is no more data to read
-    //                if (currentStreamIndex + 1 >= numSubStreams)
-    //                    break;
-
-    //                // Otherwise, go to the next substream
-    //                currentStream = subStreams[++currentStreamIndex];
-    //            }
-    //        }
-
-    //        return result;
-    //    }
-
-    //    public override long Seek(long offset, SeekOrigin origin)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public override void SetLength(long value)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public override void Write(byte[] buffer, int offset, int count)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
-
-    //public class StringStream : Stream
-    //{
-    //    private readonly MemoryStream _memory;
-    //    public StringStream(string text)
-    //    {
-    //        _memory = new MemoryStream(Encoding.UTF8.GetBytes(text));
-    //    }
-    //    public StringStream()
-    //    {
-    //        _memory = new MemoryStream();
-    //    }
-    //    public StringStream(int capacity)
-    //    {
-    //        _memory = new MemoryStream(capacity);
-    //    }
-    //    public override void Flush()
-    //    {
-    //        _memory.Flush();
-    //    }
-    //    public override int Read(byte[] buffer, int offset, int count)
-    //    {
-    //        return _memory.Read(buffer, offset, count);
-    //    }
-    //    public override long Seek(long offset, SeekOrigin origin)
-    //    {
-    //        return _memory.Seek(offset, origin);
-    //    }
-    //    public override void SetLength(long value)
-    //    {
-    //        _memory.SetLength(value);
-    //    }
-    //    public override void Write(byte[] buffer, int offset, int count)
-    //    {
-    //        _memory.Write(buffer, offset, count);
-    //    }
-    //    public override bool CanRead => _memory.CanRead;
-    //    public override bool CanSeek => _memory.CanSeek;
-    //    public override bool CanWrite => _memory.CanWrite;
-    //    public override long Length => _memory.Length;
-    //    public override long Position
-    //    {
-    //        get => _memory.Position;
-    //        set => _memory.Position = value;
-    //    }
-    //    public override string ToString()
-    //    {
-    //        return Encoding.UTF8.GetString(_memory.GetBuffer(), 0, (int)_memory.Length);
-    //    }
-    //    public override int ReadByte()
-    //    {
-    //        return _memory.ReadByte();
-    //    }
-    //    public override void WriteByte(byte value)
-    //    {
-    //        _memory.WriteByte(value);
-    //    }
-    //}
-
-
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/ingest/genericJSON/files")]
@@ -168,30 +28,16 @@ namespace Omnikeeper.Controllers.Ingest
     [ApiExplorerSettings(GroupName = "OKPluginGenericJSONIngest")]
     public class PassiveFilesController : ControllerBase
     {
-        private readonly IngestDataService ingestDataService;
-        private readonly ILayerModel layerModel;
         private readonly ILoggerFactory loggerFactory;
-        private readonly ICurrentUserAccessor currentUserService;
-        private readonly ContextModel contextModel;
-        private readonly IModelContextBuilder modelContextBuilder;
-        private readonly IMetaConfigurationModel metaConfigurationModel;
-        private readonly ILayerBasedAuthorizationService authorizationService;
+        private readonly GenericJsonIngestService ingestService;
 
-        public PassiveFilesController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserAccessor currentUserService,
-            ContextModel contextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
-            ILayerBasedAuthorizationService authorizationService, ILoggerFactory loggerFactory)
+        public PassiveFilesController(ILoggerFactory loggerFactory, GenericJsonIngestService ingestService)
         {
-            this.ingestDataService = ingestDataService;
-            this.layerModel = layerModel;
             this.loggerFactory = loggerFactory;
-            this.currentUserService = currentUserService;
-            this.contextModel = contextModel;
-            this.modelContextBuilder = modelContextBuilder;
-            this.metaConfigurationModel = metaConfigurationModel;
-            this.authorizationService = authorizationService;
+            this.ingestService = ingestService;
         }
 
-        private string BuildString(IEnumerable<IFormFile> files)
+        private string BuildJsonInput(IEnumerable<IFormFile> files)
         {
             // TODO: think about maybe requiring specific file(name)s and making that configurable
             var state = files.Select(f => {
@@ -242,7 +88,6 @@ namespace Omnikeeper.Controllers.Ingest
             });
 
             return text;
-
         }
 
         [HttpPost("")]
@@ -254,90 +99,19 @@ namespace Omnikeeper.Controllers.Ingest
             logger.LogInformation($"Starting ingest at context {context}");
             try
             {
-                using var mc = modelContextBuilder.BuildImmediate();
-
-                var timeThreshold = TimeThreshold.BuildLatest();
-
-                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
-                var (ctx, _) = await contextModel.GetSingleByDataID(context, metaConfiguration.ConfigLayerset, mc, timeThreshold);
-                if (ctx == null)
-                    return BadRequest($"Context with name \"{context}\" not found");
-                if (!(ctx.ExtractConfig is ExtractConfigPassiveRESTFiles f))
-                    return BadRequest($"Context with name \"{context}\" does not accept files via REST API");
                 if (files.IsEmpty())
                     return BadRequest($"No files specified");
 
-                var searchLayers = new LayerSet(ctx.LoadConfig.SearchLayerIDs);
-                var writeLayer = await layerModel.GetLayer(ctx.LoadConfig.WriteLayerID, mc);
-                if (writeLayer == null)
-                {
-                    return BadRequest($"Cannot write to layer with ID {ctx.LoadConfig.WriteLayerID}: layer does not exist");
-                }
+                var inputJson = BuildJsonInput(files);
 
-                var user = await currentUserService.GetCurrentUser(mc);
-
-                // authorization
-                if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
-                {
-                    return Forbid();
-                }
-                if (!authorizationService.CanUserReadFromAllLayers(user, searchLayers))
-                {
-                    return Forbid();
-                }
-                // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
-                // TODO: think about this!
-
-
-                logger.LogInformation($"Transforming inbound data...");
-
-                GenericInboundData genericInboundData;
-                switch (ctx.TransformConfig)
-                {
-                    case TransformConfigJMESPath jmesPathConfig:
-                        var transformer = TransformerJMESPath.Build(jmesPathConfig);
-
-                        // NOTE: by just concating the strings together, not actually parsing the JSON at all (at this step)
-                        // we safe some performance
-                        string genericInboundDataJson;
-                        try
-                        {
-                            var text = BuildString(files);
-                            genericInboundDataJson = transformer.TransformJSON(text);
-                        }
-                        catch (Exception e)
-                        {
-                            throw new Exception($"Error transforming JSON: {e.Message}", e);
-                        }
-
-                        try
-                        {
-                            genericInboundData = transformer.DeserializeJson(genericInboundDataJson);
-                        }
-                        catch (Exception e)
-                        {
-                            throw new Exception($"Error deserializing JSON to GenericInboundData: {e.Message}", e);
-                        }
-                        break;
-                    default:
-                        throw new Exception("Encountered unknown transform config");
-                }
-
-                logger.LogInformation($"Done transforming inbound data");
-
-                logger.LogInformation($"Converting to ingest data...");
-
-                var preparer = new Preparer();
-                var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, logger);
-
-                logger.LogInformation($"Done converting to ingest data");
-
-                logger.LogInformation($"Performing ingest...");
-
-                var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
-                logger.LogInformation($"Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");
+                await ingestService.Ingest(context, inputJson, logger);
 
                 return Ok();
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                logger.LogError(e, "Ingest failed");
+                return Forbid();
             }
             catch (Exception e)
             {

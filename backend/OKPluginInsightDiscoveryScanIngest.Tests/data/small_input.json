@@ -1,0 +1,187 @@
+﻿[
+  {
+    "UUID": null,
+    "Virtual": null,
+    "Hypervisor": null,
+    "LastUser": null,
+    "Timezone": "BST \\u002B0100\\n",
+    "CPUCount": 1,
+    "OS": {
+      "OSName": "GNU/Linux",
+      "Manufacturer": null,
+      "OSArchitecture": "x86_64",
+      "Version": null,
+      "BuildNumber": null,
+      "Kernel": "5.10.60.1-microsoft-standard-WSL2",
+      "ServicePackMajorVersion": null,
+      "ServicePackMinorVersion": null,
+      "Codename": null,
+      "License": null,
+      "Internal": null,
+      "ObjectHash": "2060285BFBCD137D4E70C1CA6ED7AB49",
+      "ExtendedInformations": [
+
+      ]
+    },
+    "CPUs": [
+      {
+        "DeviceID": "0",
+        "CPUType": "Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz",
+        "CoresPerProcessor": 6,
+        "MaxCPUSpeed": 2712,
+        "Internal": null,
+        "ObjectHash": "2060285BFBCD137D4E70C1CA6ED7AB49",
+        "ExtendedInformations": [
+
+        ]
+      }
+    ],
+    "Users": [
+
+    ],
+    "Groups": [
+
+    ],
+    "FileSystem": [
+      {
+        "Name": "/dev/sdd",
+        "Mount": "/etc/hosts",
+        "Size": 255731,
+        "Used": 47430,
+        "Free": 208301,
+        "PartitionInfo": null,
+        "VolumeSerialNumber": null,
+        "Internal": null,
+        "ObjectHash": "2060285BFBCD137D4E70C1CA6ED7AB49",
+        "ExtendedInformations": [
+
+        ]
+      }
+    ],
+    "StorageDevice": [
+
+    ],
+    "ApplicationServices": [
+
+    ],
+    "Patches": [
+
+    ],
+    "Applications": [
+
+    ],
+    "Processes": [
+
+    ],
+    "ConnectedDevices": [
+
+    ],
+    "Databases": [
+
+    ],
+    "VirtualGuests": [
+
+    ],
+    "Hostname": "openssh-server",
+    "FQDN": null,
+    "SystemUpTime": "2d 23h 38m",
+    "Model": null,
+    "Serialnumber": null,
+    "Vendor": "[?2004lcat: /sys/class/dmi/id/sys_vendor: No such file or directory\\n[?2004hopenssh-server:~$",
+    "SystemUpTimeMinutes": 4299,
+    "RAM": 16005,
+    "ScanInfo": {
+      "UsedCredentialID": "eb20fc29-8120-4f80-a361-8b962abf659a",
+      "NetworkInterfaceInfo": {
+        "DeviceID": "noID",
+        "Description": null,
+        "MACAddress": "00:15:5d:63:65:d1",
+        "IP4": "172.19.22.95",
+        "IP6": null,
+        "Subnet4": null,
+        "Subnet6": null,
+        "Gateway": null,
+        "DHCP": null,
+        "AddressSpace": "Private",
+        "Internal": null,
+        "ObjectHash": "2060285BFBCD137D4E70C1CA6ED7AB49",
+        "ExtendedInformations": [
+
+        ]
+      },
+      "DiscoveryID": "E11C7",
+      "ScanSettingID": "00001",
+      "DiscoveryVersion": "3.1.1.0",
+      "ScanTime": "2022-04-02_09:45",
+      "ScanningTimeElapsed": 91.9204881,
+      "ObjectID": "9e8a2383-84cf-4eff-8d7c-a871cf51d4e1",
+      "Internal": null,
+      "ObjectHash": "2060285BFBCD137D4E70C1CA6ED7AB49",
+      "ExtendedInformations": [
+
+      ]
+    },
+    "NetworkInterfaces": [
+      {
+        "DeviceID": "eth0",
+        "Description": null,
+        "MACAddress": "02:42:ac:11:00:03",
+        "IP4": "172.17.0.3",
+        "IP6": null,
+        "Subnet4": "255.255.0.0",
+        "Subnet6": null,
+        "Gateway": "172.17.0.1",
+        "DHCP": null,
+        "AddressSpace": "Private",
+        "Internal": null,
+        "ObjectHash": "2060285BFBCD137D4E70C1CA6ED7AB49",
+        "ExtendedInformations": [
+
+        ]
+      },
+      {
+        "DeviceID": "eth0@if210",
+        "Description": null,
+        "MACAddress": "02:42:ac:11:00:03",
+        "IP4": "172.17.0.3",
+        "IP6": null,
+        "Subnet4": null,
+        "Subnet6": null,
+        "Gateway": null,
+        "DHCP": null,
+        "AddressSpace": "Private",
+        "Internal": null,
+        "ObjectHash": "2060285BFBCD137D4E70C1CA6ED7AB49",
+        "ExtendedInformations": [
+
+        ]
+      },
+      {
+        "DeviceID": "noID",
+        "Description": null,
+        "MACAddress": "00:15:5d:63:65:d1",
+        "IP4": "172.19.22.95",
+        "IP6": null,
+        "Subnet4": null,
+        "Subnet6": null,
+        "Gateway": null,
+        "DHCP": null,
+        "AddressSpace": "Private",
+        "Internal": null,
+        "ObjectHash": "2060285BFBCD137D4E70C1CA6ED7AB49",
+        "ExtendedInformations": [
+
+        ]
+      }
+    ],
+    "ReferencedHosts": [
+
+    ],
+    "DeleteTag": false,
+    "Internal": null,
+    "ObjectHash": "2060285BFBCD137D4E70C1CA6ED7AB49",
+    "ExtendedInformations": [
+
+    ]
+  }
+]

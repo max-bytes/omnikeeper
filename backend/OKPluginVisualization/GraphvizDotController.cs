@@ -30,11 +30,11 @@ namespace OKPluginVisualization
         private readonly IRelationModel relationModel;
         private readonly IBaseRelationModel baseRelationModel;
         private readonly ILayerDataModel layerDataModel;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserAccessor;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public GraphvizDotController(IModelContextBuilder modelContextBuilder, ITraitsProvider traitsProvider, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, 
-            IAttributeModel attributeModel, IRelationModel relationModel, IBaseRelationModel baseRelationModel, ILayerDataModel layerDataModel, ICurrentUserService currentUserService,
+            IAttributeModel attributeModel, IRelationModel relationModel, IBaseRelationModel baseRelationModel, ILayerDataModel layerDataModel, ICurrentUserAccessor currentUserAccessor,
             ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.modelContextBuilder = modelContextBuilder;
@@ -45,7 +45,7 @@ namespace OKPluginVisualization
             this.relationModel = relationModel;
             this.baseRelationModel = baseRelationModel;
             this.layerDataModel = layerDataModel;
-            this.currentUserService = currentUserService;
+            this.currentUserAccessor = currentUserAccessor;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
         }
 
@@ -61,7 +61,7 @@ namespace OKPluginVisualization
                 return BadRequest("No layer IDs specified");
 
             using var trans = modelContextBuilder.BuildImmediate();
-            var user = await currentUserService.GetCurrentUser(trans);
+            var user = await currentUserAccessor.GetCurrentUser(trans);
             if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
                 return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
 
