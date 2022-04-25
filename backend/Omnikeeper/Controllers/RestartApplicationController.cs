@@ -15,14 +15,14 @@ namespace Omnikeeper.Controllers
     {
         private readonly IHostApplicationLifetime appLifetime;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserAccessor;
         private readonly IManagementAuthorizationService managementAuthorizationService;
 
-        public RestartApplicationController(IHostApplicationLifetime appLifetime, IModelContextBuilder modelContextBuilder, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService)
+        public RestartApplicationController(IHostApplicationLifetime appLifetime, IModelContextBuilder modelContextBuilder, ICurrentUserAccessor currentUserAccessor, IManagementAuthorizationService managementAuthorizationService)
         {
             this.appLifetime = appLifetime;
             this.modelContextBuilder = modelContextBuilder;
-            this.currentUserService = currentUserService;
+            this.currentUserAccessor = currentUserAccessor;
             this.managementAuthorizationService = managementAuthorizationService;
         }
 
@@ -30,7 +30,7 @@ namespace Omnikeeper.Controllers
         public async Task<IActionResult> Restart()
         {
             var trans = modelContextBuilder.BuildImmediate();
-            var user = await currentUserService.GetCurrentUser(trans);
+            var user = await currentUserAccessor.GetCurrentUser(trans);
             if (!managementAuthorizationService.HasManagementPermission(user))
                 return Forbid($"User \"{user.Username}\" does not have permission to restart");
 

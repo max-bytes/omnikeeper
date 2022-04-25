@@ -19,18 +19,18 @@ namespace OKPluginGenericJSONIngest
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ContextModel contextModel;
         private readonly ILayerModel layerModel;
-        private readonly ICurrentUserService currentUserService;
+        private readonly ICurrentUserAccessor currentUserAccessor;
         private readonly ILayerBasedAuthorizationService authorizationService;
         private readonly IngestDataService ingestDataService;
 
         public GenericJsonIngestService(IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel, ContextModel contextModel, 
-            ILayerModel layerModel, ICurrentUserService currentUserService, ILayerBasedAuthorizationService authorizationService, IngestDataService ingestDataService)
+            ILayerModel layerModel, ICurrentUserAccessor currentUserAccessor, ILayerBasedAuthorizationService authorizationService, IngestDataService ingestDataService)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.metaConfigurationModel = metaConfigurationModel;
             this.contextModel = contextModel;
             this.layerModel = layerModel;
-            this.currentUserService = currentUserService;
+            this.currentUserAccessor = currentUserAccessor;
             this.authorizationService = authorizationService;
             this.ingestDataService = ingestDataService;
         }
@@ -55,7 +55,7 @@ namespace OKPluginGenericJSONIngest
                 throw new Exception($"Cannot write to layer with ID {ctx.LoadConfig.WriteLayerID}: layer does not exist");
             }
 
-            var user = await currentUserService.GetCurrentUser(mc);
+            var user = await currentUserAccessor.GetCurrentUser(mc);
 
             // authorization
             if (!authorizationService.CanUserWriteToLayer(user, writeLayer))

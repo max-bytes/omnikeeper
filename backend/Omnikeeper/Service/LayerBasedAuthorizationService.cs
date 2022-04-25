@@ -50,7 +50,7 @@ namespace Omnikeeper.Service
         }
         private bool CanWriteToLayers(AuthRole[] authRoles, IEnumerable<string> layerIDs)
         {
-            var toCheckLayerIDs = new List<string>(layerIDs);
+                var toCheckLayerIDs = new List<string>(layerIDs);
             for (int i = toCheckLayerIDs.Count - 1; i >= 0; i--)
             {
                 var layerID = toCheckLayerIDs[i];
