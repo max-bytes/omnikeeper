@@ -60,7 +60,7 @@ namespace OKPluginGenericJSONIngest
             // authorization
             if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
             {
-                throw new UnauthorizedAccessException($"User {user.Username} cannot write to layer {writeLayer}");
+                throw new UnauthorizedAccessException($"User {user.Username} cannot write to layer {writeLayer.ID}");
             }
             if (!authorizationService.CanUserReadFromAllLayers(user, searchLayers))
             {

@@ -57,48 +57,45 @@ namespace Omnikeeper.Base.Service
 
                     var dropCandidateCI = false;
                     Guid? mergeIntoOtherTargetCIID = null;
-
-                    if (!foundCIIDs.IsEmpty())
+                    if (!foundCIIDs.IsEmpty() && ciCandidatesToInsert.ContainsKey(foundCIIDs[0]))
                     {
-                        // already affected/mapped target CIs must not be targeted again, so we must do something in that case
-                        // if we wouldn't do that, the mapping process could map multiple candidates to the same target CI, which would result in an ingest error
-                        if (ciCandidatesToInsert.ContainsKey(foundCIIDs[0]))
+                        // the mapping process cannot map multiple candidates to the same targetCI, it would result in an ingest error;
+                        // so we must do something... what we do is governed by SameTargetCIHandling
+                        switch (cic.SameTargetCIHandling)
                         {
-                            switch (cic.SameTargetCIHandling)
-                            {
-                                case SameTargetCIHandling.Error:
-                                    throw new Exception($"Candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
-                                case SameTargetCIHandling.Drop:
-                                    dropCandidateCI = true;
-                                    break;
-                                case SameTargetCIHandling.DropAndWarn:
-                                    dropCandidateCI = true;
-                                    logger.LogWarning($"Dropping candidate CI with temp-ID {cic.TempID}, as candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
-                                    break;
-                                case SameTargetCIHandling.Evade:
-                                case SameTargetCIHandling.EvadeAndWarn:
+                            case SameTargetCIHandling.Error:
+                                throw new Exception($"Candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
+                            case SameTargetCIHandling.Drop:
+                                dropCandidateCI = true;
+                                break;
+                            case SameTargetCIHandling.DropAndWarn:
+                                dropCandidateCI = true;
+                                logger.LogWarning($"Dropping candidate CI with temp-ID {cic.TempID}, as candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
+                                break;
+                            case SameTargetCIHandling.Evade:
+                            case SameTargetCIHandling.EvadeAndWarn:
+                                {
+                                    // remove all target CIIDs that are already targeted
+                                    for (int i = foundCIIDs.Count - 1; i >= 0; i--)
                                     {
-                                        // remove all target CIIDs that are already targeted
-                                        for (int i = foundCIIDs.Count - 1; i >= 0; i--)
+                                        if (ciCandidatesToInsert.ContainsKey(foundCIIDs[i]))
                                         {
-                                            if (ciCandidatesToInsert.ContainsKey(foundCIIDs[i]))
+                                            foundCIIDs.RemoveAt(i);
+                                            if (cic.SameTargetCIHandling == SameTargetCIHandling.EvadeAndWarn)
                                             {
-                                                foundCIIDs.RemoveAt(i);
-                                                if (cic.SameTargetCIHandling == SameTargetCIHandling.EvadeAndWarn)
-                                                {
-                                                    logger.LogWarning($"Candidate CI with temp-ID {cic.TempID}: evading to other CI, because candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[i]].tempID} already targets the CI with ID {foundCIIDs[i]}");
-                                                }
+                                                logger.LogWarning($"Candidate CI with temp-ID {cic.TempID}: evading to other CI, because candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[i]].tempID} already targets the CI with ID {foundCIIDs[i]}");
                                             }
                                         }
                                     }
-                                    break;
-                                case SameTargetCIHandling.Merge:
-                                    mergeIntoOtherTargetCIID = foundCIIDs[0];
-                                    break;
-                            }
+                                }
+                                break;
+                            case SameTargetCIHandling.Merge:
+                                mergeIntoOtherTargetCIID = foundCIIDs[0];
+                                break;
                         }
                     }
-                    else
+
+                    if (foundCIIDs.IsEmpty())
                     {
                         // CI is new, create a ciid for it (we'll later batch create all CIs)
                         var newCIID = CIModel.CreateCIID();
@@ -144,7 +141,7 @@ namespace Omnikeeper.Base.Service
                 }
                 catch (Exception e)
                 {
-                    throw new Exception($"Error mapping CI-candidate with temp-ID {cic.TempID}: {e.Message}");
+                    throw new Exception($"Error mapping CI-candidate with temp-ID {cic.TempID}: {e.Message}", e);
                 }
             }
 
