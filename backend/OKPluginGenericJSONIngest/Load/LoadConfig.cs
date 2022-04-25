@@ -6,7 +6,7 @@ namespace OKPluginGenericJSONIngest.Load
 {
     public class LoadConfigTypeDiscriminatorConverter : TypeDiscriminatorConverter<ILoadConfig>
     {
-        public LoadConfigTypeDiscriminatorConverter() : base("$type")
+        public LoadConfigTypeDiscriminatorConverter() : base("$type", typeof(LoadConfigTypeDiscriminatorConverter))
         {
         }
     }

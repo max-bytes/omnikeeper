@@ -115,6 +115,7 @@ namespace Omnikeeper.Startup
                         e.ExtractToFile(finalDLLFile, overwrite: true);
 
                         Assembly? assembly;
+                        bool isMainPluginAssembly = false;
                         try
                         {
                             loadContext.AddResolverFromPath(finalDLLFile);
@@ -134,6 +135,8 @@ namespace Omnikeeper.Startup
                                 builder.Populate(serviceCollection);
 
                                 Console.WriteLine($"Loaded OKPlugin {pr.Name}, Version {pr.Version}"); // TODO: better logging
+
+                                isMainPluginAssembly = true;
                             }
                             else
                             {
@@ -145,7 +148,9 @@ namespace Omnikeeper.Startup
                             Console.WriteLine($"Could not load assembly at location {finalDLLFile}: {ex.Message}"); // TODO: better error handling
                             continue;
                         }
-                        yield return assembly;
+
+                        if (isMainPluginAssembly)
+                            yield return assembly; // we only return those assemblies that contain an IPluginRegistration
                     }
                 }
             }

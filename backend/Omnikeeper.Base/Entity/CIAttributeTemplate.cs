@@ -9,7 +9,7 @@ namespace Omnikeeper.Base.Entity
 {
     public class AttributeValueConstraintTypeDiscriminatorConverter : TypeDiscriminatorConverter<ICIAttributeValueConstraint>
     {
-        public AttributeValueConstraintTypeDiscriminatorConverter() : base("$type")
+        public AttributeValueConstraintTypeDiscriminatorConverter() : base("$type", typeof(AttributeValueConstraintTypeDiscriminatorConverter))
         {
         }
     }

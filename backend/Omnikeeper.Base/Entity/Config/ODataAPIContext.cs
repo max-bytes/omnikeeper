@@ -8,7 +8,7 @@ namespace Omnikeeper.Base.Entity
     {
         public class ConfigTypeDiscriminatorConverter : TypeDiscriminatorConverter<IConfig>
         {
-            public ConfigTypeDiscriminatorConverter() : base("$type")
+            public ConfigTypeDiscriminatorConverter() : base("$type", typeof(ConfigTypeDiscriminatorConverter))
             {
             }
         }

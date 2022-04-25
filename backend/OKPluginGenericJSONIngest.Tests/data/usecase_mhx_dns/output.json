@@ -8,6 +8,7 @@
           "id"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "id",
@@ -33,6 +34,7 @@
           "id"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "id",
@@ -58,6 +60,7 @@
           "id"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "id",
@@ -104,6 +107,7 @@
           "id"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "id",
@@ -150,6 +154,7 @@
           "id"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "id",

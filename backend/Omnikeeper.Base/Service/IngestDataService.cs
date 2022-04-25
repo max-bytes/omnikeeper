@@ -42,8 +42,10 @@ namespace Omnikeeper.Base.Service
             var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, ChangesetModel);
 
             var ciMappingContext = new CIMappingService.CIMappingContext(AttributeModel, RelationModel, TimeThreshold.BuildLatest());
-            var affectedCIs = new HashSet<Guid>();
             var cisToCreate = new List<Guid>();
+            var ciCandidatesToInsert = new Dictionary<Guid, (CICandidateAttributeData attributes, Guid targetCIID, string tempID)>();
+            var droppedCandidateCIs = new HashSet<Guid>();
+
             foreach (var cic in data.CICandidates)
             {
                 var attributes = cic.Attributes;
@@ -53,20 +55,77 @@ namespace Omnikeeper.Base.Service
                     // find out if it's a new CI or an existing one
                     var foundCIIDs = await ciMappingService.TryToMatch(cic.IdentificationMethod, ciMappingContext, trans, logger);
 
-                    // already affected/mapped CIs must not be mapped again, so we remove them
-                    // if we wouldn't do that, the mapping process could map multiple candidates to the same target CI, which would result in an ingest error
-                    for (int i = foundCIIDs.Count - 1; i >= 0; i--)
-                    {
-                        if (affectedCIs.Contains(foundCIIDs[i]))
-                        {
-                            foundCIIDs.RemoveAt(i);
-                        }
-                    }
+                    var dropCandidateCI = false;
+                    Guid? mergeIntoOtherTargetCIID = null;
 
-
-                    Guid finalCIID;
                     if (!foundCIIDs.IsEmpty())
                     {
+                        // already affected/mapped target CIs must not be targeted again, so we must do something in that case
+                        // if we wouldn't do that, the mapping process could map multiple candidates to the same target CI, which would result in an ingest error
+                        if (ciCandidatesToInsert.ContainsKey(foundCIIDs[0]))
+                        {
+                            switch (cic.SameTargetCIHandling)
+                            {
+                                case SameTargetCIHandling.Error:
+                                    throw new Exception($"Candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
+                                case SameTargetCIHandling.Drop:
+                                    dropCandidateCI = true;
+                                    break;
+                                case SameTargetCIHandling.DropAndWarn:
+                                    dropCandidateCI = true;
+                                    logger.LogWarning($"Dropping candidate CI with temp-ID {cic.TempID}, as candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
+                                    break;
+                                case SameTargetCIHandling.Evade:
+                                case SameTargetCIHandling.EvadeAndWarn:
+                                    {
+                                        // remove all target CIIDs that are already targeted
+                                        for (int i = foundCIIDs.Count - 1; i >= 0; i--)
+                                        {
+                                            if (ciCandidatesToInsert.ContainsKey(foundCIIDs[i]))
+                                            {
+                                                foundCIIDs.RemoveAt(i);
+                                                if (cic.SameTargetCIHandling == SameTargetCIHandling.EvadeAndWarn)
+                                                {
+                                                    logger.LogWarning($"Candidate CI with temp-ID {cic.TempID}: evading to other CI, because candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[i]].tempID} already targets the CI with ID {foundCIIDs[i]}");
+                                                }
+                                            }
+                                        }
+                                    }
+                                    break;
+                                case SameTargetCIHandling.Merge:
+                                    mergeIntoOtherTargetCIID = foundCIIDs[0];
+                                    break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // CI is new, create a ciid for it (we'll later batch create all CIs)
+                        var newCIID = CIModel.CreateCIID();
+                        foundCIIDs = new Guid[] { newCIID }; // use a totally new CIID, do NOT use the temporary CIID of the ciCandidate
+                        cisToCreate.Add(newCIID);
+                    }
+
+                    if (dropCandidateCI)
+                    { // drop candidate completely
+                        droppedCandidateCIs.Add(ciCandidateCIID);
+                    } else if (mergeIntoOtherTargetCIID.HasValue)
+                    { // merged candidate into another, already existing candidate
+
+                        var otherTargetCIID = mergeIntoOtherTargetCIID.Value;
+
+                        // merge attributes and replace CI candidate to be inserted
+                        var otherCICandidate = ciCandidatesToInsert[otherTargetCIID];
+                        var mergedAttributes = otherCICandidate.attributes.Merge(cic.Attributes);
+                        ciCandidatesToInsert[otherCICandidate.targetCIID] = (mergedAttributes, otherCICandidate.targetCIID, otherCICandidate.tempID);
+
+                        // add a Temp2FinalCIID mapping that makes the merged candidate CI point to the base candidate CI's target CIID
+                        ciMappingContext.AddTemp2FinallCIIDMapping(ciCandidateCIID, otherTargetCIID);
+                    }
+                    else 
+                    { // regular candidate
+                        // determine final CIID from found candidate CIIDs
+                        Guid finalCIID;
                         if (foundCIIDs.Count() == 1)
                             finalCIID = foundCIIDs.First();
                         else
@@ -74,27 +133,18 @@ namespace Omnikeeper.Base.Service
                             // NOTE: how to deal with ambiguities? In other words: more than one CI fit, where to put the data?
                             // ciMappingService.TryToMatch() returns an already ordered list (by varying criteria, or - if nothing else - by CIID)
                             finalCIID = foundCIIDs.First();
-
-                            logger.LogWarning($"Multiple CIs match for candidate with temp-ID {ciCandidateCIID}: {string.Join(",", foundCIIDs)}, taking first one");
+                            logger.LogWarning($"Multiple CIs match for candidate with temp-ID {cic.TempID}: {string.Join(",", foundCIIDs)}, taking first one");
                         }
+
+                        // add to mapping context
+                        ciMappingContext.AddTemp2FinallCIIDMapping(ciCandidateCIID, finalCIID);
+
+                        ciCandidatesToInsert.Add(finalCIID, (cic.Attributes, finalCIID, cic.TempID));
                     }
-                    else
-                    {
-                        // CI is new, create a ciid for it (we'll later batch create all CIs)
-                        finalCIID = CIModel.CreateCIID(); // use a totally new CIID, do NOT use the temporary CIID of the ciCandidate
-                        cisToCreate.Add(finalCIID);
-                    }
-
-                    // add to mapping context
-                    ciMappingContext.AddTemp2FinallCIIDMapping(ciCandidateCIID, finalCIID);
-
-                    cic.TempCIID = finalCIID; // we update the TempCIID of the CI candidate with its final ID
-
-                    affectedCIs.Add(finalCIID);
                 }
                 catch (Exception e)
                 {
-                    throw new Exception($"Error mapping CI-candidate {ciCandidateCIID}", e);
+                    throw new Exception($"Error mapping CI-candidate with temp-ID {cic.TempID}: {e.Message}");
                 }
             }
 
@@ -107,8 +157,8 @@ namespace Omnikeeper.Base.Service
             if (!cisToCreate.IsEmpty())
                 await CIModel.BulkCreateCIs(cisToCreate, trans);
 
-            var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, data.CICandidates.SelectMany(cic =>
-                cic.Attributes.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, cic.TempCIID))
+            var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, ciCandidatesToInsert.Values.SelectMany(cic =>
+                cic.attributes.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, cic.targetCIID))
             ));
 
             var numAffectedAttributes = await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling, otherLayersValueHandling);
@@ -119,9 +169,14 @@ namespace Omnikeeper.Base.Service
                 // TODO: make it work with other usecases, such as where the final CIID is known and/or the relevant CIs are already present in omnikeeper
                 // find CIIDs
                 var tempFromCIID = cic.IdentificationMethodFromCI.CIID;
+                var tempToCIID = cic.IdentificationMethodToCI.CIID;
+                if (droppedCandidateCIs.Contains(tempFromCIID))
+                    continue; // candidate CI was dropped, drop relation too
+                if (droppedCandidateCIs.Contains(tempToCIID))
+                    continue; // candidate CI was dropped, drop relation too
+
                 if (!ciMappingContext.TryGetMappedTemp2FinalCIID(tempFromCIID, out Guid fromCIID))
                     throw new Exception($"Could not find temporary CIID {tempFromCIID}, tried using it as the \"from\" of a relation");
-                var tempToCIID = cic.IdentificationMethodToCI.CIID;
                 if (!ciMappingContext.TryGetMappedTemp2FinalCIID(tempToCIID, out Guid toCIID))
                     throw new Exception($"Could not find temporary CIID {tempToCIID}, tried using it as the \"to\" of a relation");
                 relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID, false));
@@ -135,22 +190,31 @@ namespace Omnikeeper.Base.Service
         }
     }
 
+    public enum SameTargetCIHandling
+    {
+        Error, // default
+        Drop,
+        DropAndWarn,
+        Evade,
+        EvadeAndWarn,
+        Merge
+    }
+
     public class CICandidate
     {
         public Guid TempCIID { get; set; }
+        public string TempID { get; set; }
         public ICIIdentificationMethod IdentificationMethod { get; private set; }
+        public SameTargetCIHandling SameTargetCIHandling { get; private set; }
         public CICandidateAttributeData Attributes { get; private set; }
 
-        public CICandidate(Guid tempCIID, ICIIdentificationMethod identificationMethod, CICandidateAttributeData attributes)
+        public CICandidate(Guid tempCIID, string tempID, ICIIdentificationMethod identificationMethod, SameTargetCIHandling sameTargetCIHandling, CICandidateAttributeData attributes)
         {
             TempCIID = tempCIID;
+            TempID = tempID;
             IdentificationMethod = identificationMethod;
+            SameTargetCIHandling = sameTargetCIHandling;
             Attributes = attributes;
-        }
-
-        public static CICandidate BuildWithAdditionalAttributes(CICandidate @base, CICandidateAttributeData additionalAttributes)
-        {
-            return new CICandidate(@base.TempCIID, @base.IdentificationMethod, @base.Attributes.Concat(additionalAttributes));
         }
     }
 

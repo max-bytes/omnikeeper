@@ -5,7 +5,7 @@ namespace OKPluginGenericJSONIngest.Transform
 {
     public class TransformConfigTypeDiscriminatorConverter : TypeDiscriminatorConverter<ITransformConfig>
     {
-        public TransformConfigTypeDiscriminatorConverter() : base("$type")
+        public TransformConfigTypeDiscriminatorConverter() : base("$type", typeof(TransformConfigTypeDiscriminatorConverter))
         {
         }
     }

@@ -8,6 +8,7 @@
           "fqdn"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -192,6 +193,7 @@
           "mount"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -310,6 +312,7 @@
           "mount"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -426,6 +429,7 @@
           "__name"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -472,6 +476,7 @@
           "__name"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -515,6 +520,7 @@
           "fqdn"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -698,6 +704,7 @@
           "mount"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -816,6 +823,7 @@
           "mount"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -932,6 +940,7 @@
           "__name"
         ]
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "__name",
@@ -976,6 +985,7 @@
         "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest",
         "tempID": "tempCIID\u003Eh1jmplx01.mhx.at"
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "yum.installed",
@@ -1003,6 +1013,7 @@
         "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest",
         "tempID": "tempCIID\u003Eh1jmplx01.mhx.at"
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "yum.repos",
@@ -1036,6 +1047,7 @@
         "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest",
         "tempID": "tempCIID\u003Eh1jmplx01.mhx.at"
       },
+      "sameTargetCIHandling": "Error",
       "attributes": [
         {
           "name": "yum.updates",

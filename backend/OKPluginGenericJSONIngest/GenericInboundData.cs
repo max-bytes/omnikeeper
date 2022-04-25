@@ -1,5 +1,6 @@
 ﻿
 using OKPluginGenericJSONIngest.Transform.JMESPath;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
@@ -18,13 +19,14 @@ namespace OKPluginGenericJSONIngest
     {
         public string tempID;
         public IInboundIDMethod idMethod;
+        public SameTargetCIHandling sameTargetCIHandling;
         public IEnumerable<GenericInboundAttribute> attributes;
     }
 
 
     public class InboundIDMethodDiscriminatorConverter : TypeDiscriminatorConverter<IInboundIDMethod>
     {
-        public InboundIDMethodDiscriminatorConverter() : base("type")
+        public InboundIDMethodDiscriminatorConverter() : base("type", typeof(InboundIDMethodDiscriminatorConverter))
         {
         }
     }

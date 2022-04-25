@@ -129,7 +129,7 @@ namespace Omnikeeper.Base.Inbound
     {
         public class OnlineInboundAdapterTypeDiscriminatorConverter : TypeDiscriminatorConverter<IOnlineInboundAdapter>
         {
-            public OnlineInboundAdapterTypeDiscriminatorConverter() : base("$type")
+            public OnlineInboundAdapterTypeDiscriminatorConverter() : base("$type", typeof(OnlineInboundAdapterTypeDiscriminatorConverter))
             {
             }
         }

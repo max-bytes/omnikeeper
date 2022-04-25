@@ -1,22 +1,49 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+	<RepositoryUrl>https://github.com/max-bytes/omnikeeper</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Description></Description>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\OKPluginGenericJSONIngest\OKPluginGenericJSONIngest.csproj" />
     <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="DiscoTools">
-      <HintPath>contrib\dlls\DiscoTools.dll</HintPath>
-    </Reference>
-    <Reference Include="InfoClasses">
-      <HintPath>contrib\dlls\InfoClasses.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="lib\DiscoTools.dll">
+			<Pack>true</Pack>
+			<PackagePath>lib\$(TargetFramework)</PackagePath>
+		</Content>
+		<Content Include="lib\InfoClasses.dll">
+			<Pack>true</Pack>
+			<PackagePath>lib\$(TargetFramework)</PackagePath>
+		</Content>
+		<Content Include="lib\BouncyCastle.Crypto.dll">
+			<Pack>true</Pack>
+			<PackagePath>lib\$(TargetFramework)</PackagePath>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="DiscoTools">
+	    <HintPath>lib\DiscoTools.dll</HintPath>
+	  </Reference>
+	  <Reference Include="InfoClasses">
+	    <HintPath>lib\InfoClasses.dll</HintPath>
+	  </Reference>
+		<Reference Include="BouncyCastle.Crypto">
+			<HintPath>lib\BouncyCastle.Crypto.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<Target Name="CopyPackage" AfterTargets="Pack" Condition="'$(Configuration)' == 'Debug' ">
+		<Copy SourceFiles="$(OutputPath)\..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="$(OutputPath)\..\..\..\..\Omnikeeper\OKPlugins" />
+	</Target>
 
 </Project>
