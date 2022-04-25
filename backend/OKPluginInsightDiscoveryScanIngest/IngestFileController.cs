@@ -71,31 +71,12 @@ namespace OKPluginInsightDiscoveryScanIngest
                 throw new Exception("Could not read input file");
 
             // deserialize XML, serialize to JSON
-            // TODO: get log service to not write anything
-            LogService.Instance.Initialize("/tmp", "tmp.log", Insight.Discovery.Tools.LogLevel.Error, Insight.Discovery.Tools.LogLevel.Error);
+            // TODO: get log service to not write anything, even on error
+            LogService.Instance.Initialize("/tmp", "tmp_insight.log", Insight.Discovery.Tools.LogLevel.Error, Insight.Discovery.Tools.LogLevel.Error);
             var hostList = ObjectSerializer.Instance.XMLDeserializeObject<List<HostInfo>>(xml);
             var inputJson = JsonSerializer.Serialize(hostList, new JsonSerializerOptions() { });
 
             await ingestService.Ingest(context.GenericJsonIngestContextID, inputJson, logger);
         }
-
-        //public class HostInfoConverter : JsonConverter<HostInfo>
-        //{
-        //    public override HostInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-
-        //    public override void Write(Utf8JsonWriter writer, HostInfo value, JsonSerializerOptions options)
-        //    {
-        //        writer.WriteStartObject();
-
-        //        writer.WriteString(nameof(FooBar.Bar), value.Bar);
-        //        // your condition
-        //        writer.WriteString(nameof(FooBar.Foo), value.Foo);
-
-        //        writer.WriteEndObject();
-        //    }
-        //}
     }
 }
