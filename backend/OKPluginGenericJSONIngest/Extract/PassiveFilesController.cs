@@ -108,6 +108,11 @@ namespace Omnikeeper.Controllers.Ingest
 
                 return Ok();
             }
+            catch (UnauthorizedAccessException e)
+            {
+                logger.LogError(e, "Ingest failed");
+                return Forbid();
+            }
             catch (Exception e)
             {
                 logger.LogError(e, "Ingest failed");
