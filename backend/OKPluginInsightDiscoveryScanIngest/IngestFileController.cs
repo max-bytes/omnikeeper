@@ -38,7 +38,7 @@ namespace OKPluginInsightDiscoveryScanIngest
         [RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
         public async Task<ActionResult> Ingest([FromQuery, Required] string context, [FromForm, Required] IFormFile file)
         {
-            var logger = loggerFactory.CreateLogger($"AnsibleIngest_{context}");
+            var logger = loggerFactory.CreateLogger($"InsightDiscoveryIngest_{context}");
             logger.LogInformation($"Starting ingest at context {context}");
             try
             {

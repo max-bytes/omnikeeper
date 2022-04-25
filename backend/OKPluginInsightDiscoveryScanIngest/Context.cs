@@ -4,10 +4,10 @@ using System.Text.RegularExpressions;
 
 namespace OKPluginInsightDiscoveryScanIngest
 {
-    [TraitEntity("__meta.config.ansible_ingest_context", TraitOriginType.Plugin)]
+    [TraitEntity("__meta.config.insight_discovers_ingest_context", TraitOriginType.Plugin)]
     public class Context : TraitEntity
     {
-        [TraitAttribute("id", "ansible_ingest_context.id")]
+        [TraitAttribute("id", "insight_discovers_ingest_context.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(ContextIDRegexString, ContextIDRegexOptions)]
         [TraitEntityID]
@@ -17,7 +17,7 @@ namespace OKPluginInsightDiscoveryScanIngest
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string Name;
 
-        [TraitAttribute("genericJsonIngestContextID", "ansible_ingest_context.generic_json_ingest_context_id")]
+        [TraitAttribute("genericJsonIngestContextID", "insight_discovers_ingest_context.generic_json_ingest_context_id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string GenericJsonIngestContextID;
 
@@ -32,7 +32,7 @@ namespace OKPluginInsightDiscoveryScanIngest
         public Context(string id, string genericJsonIngestContextID)
         {
             ID = id;
-            Name = $"Ansible-Ingest-Context {ID}";
+            Name = $"Insight-Discovery-Ingest-Context {ID}";
             GenericJsonIngestContextID = genericJsonIngestContextID;
         }
 
