@@ -60,11 +60,11 @@ namespace OKPluginGenericJSONIngest
             // authorization
             if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
             {
-                throw new UnauthorizedAccessException($"User cannot write to layer {writeLayer}");
+                throw new UnauthorizedAccessException($"User {user.Username} cannot write to layer {writeLayer}");
             }
             if (!authorizationService.CanUserReadFromAllLayers(user, searchLayers))
             {
-                throw new UnauthorizedAccessException($"User cannot read from at least one of the layers: {string.Join(",", searchLayers)}");
+                throw new UnauthorizedAccessException($"User {user.Username} cannot read from at least one of the layers: {string.Join(",", searchLayers.LayerIDs)}");
             }
             // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
             // TODO: think about this!
