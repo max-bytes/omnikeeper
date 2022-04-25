@@ -18,13 +18,4 @@
     <ProjectReference Include="..\OKPluginInsightDiscoveryScanIngest\OKPluginInsightDiscoveryScanIngest.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="DiscoTools">
-      <HintPath>..\OKPluginInsightDiscoveryScanIngest\contrib\dlls\DiscoTools.dll</HintPath>
-    </Reference>
-    <Reference Include="InfoClasses">
-      <HintPath>..\OKPluginInsightDiscoveryScanIngest\contrib\dlls\InfoClasses.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
