@@ -52,7 +52,7 @@ function AddNewContext(props) {
         <div style={{ display: 'flex', justifyContent: 'center', flexGrow: 1, margin: "10px"}}>
             { context ?
                 <Form 
-                    labelCol={{ span: "8" }}
+                    labelCol={{ span: "4" }}
                     style={{ display: 'flex', flexDirection: 'column', flexBasis: '1000px', margin:'10px 0px' }}
                     onFinish={async (e) => {
                         const newContext = context;
@@ -101,8 +101,9 @@ function AddNewContext(props) {
                     }
 
                     <Form.Item label="transformConfig" style={{ margin: 0, fontStyle: "italic" }}/>
-                    <Form.Item name="expression" label="expression" tooltip="JMESPath" style={{ margin: "0 0 50px 0"}}>
-                        <Input.TextArea />
+                    <Form.Item name="expression" label="expression" tooltip="JMESPath expression" style={{ margin: "0 0 50px 0"}}>
+                        <Input.TextArea rows={15} />
+
                     </Form.Item>
 
                     <Form.Item label="loadConfig" style={{ margin: 0, fontStyle: "italic" }}/>
