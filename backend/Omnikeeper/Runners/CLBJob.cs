@@ -25,7 +25,7 @@ namespace Omnikeeper.Runners
         public CLBJob(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, CLConfigV1Model clConfigModel,
             IMetaConfigurationModel metaConfigurationModel, ILifetimeScope parentLifetimeScope,
             IChangesetModel changesetModel, ScopedLifetimeAccessor scopedLifetimeAccessor, CLBLastRunCache clbLastRunCache,
-            ILayerDataModel layerDataModel, ILogger<CLBJob> logger, IModelContextBuilder modelContextBuilder)
+            ILayerDataModel layerDataModel, ILoggerFactory loggerFactory, IModelContextBuilder modelContextBuilder)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.clConfigModel = clConfigModel;
@@ -35,15 +35,17 @@ namespace Omnikeeper.Runners
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
             this.clbLastRunCache = clbLastRunCache; // TODO: check if that works in HA scenario
             this.layerDataModel = layerDataModel;
-            this.logger = logger;
+            this.loggerFactory = loggerFactory;
             this.modelContextBuilder = modelContextBuilder;
+            this.baseLogger = loggerFactory.CreateLogger<CLBJob>();
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
+
             try
             {
-                logger.LogTrace("Start");
+                baseLogger.LogTrace("Start");
 
                 var trans = modelContextBuilder.BuildImmediate();
                 var activeLayers = await layerDataModel.GetLayerData(AnchorStateFilter.ActiveAndDeprecated, trans, TimeThreshold.BuildLatest());
@@ -56,16 +58,18 @@ namespace Omnikeeper.Runners
 
                     foreach (var l in layersWithCLBs)
                     {
+                        var clLogger = loggerFactory.CreateLogger($"CLB_{l.CLConfigID}");
+
                         // find clConfig for layer
                         if (!clConfigs.TryGetValue(l.CLConfigID, out var clConfig))
                         {
-                            logger.LogError($"Could not find cl config with ID {l.CLConfigID}");
+                            clLogger.LogError($"Could not find cl config with ID {l.CLConfigID}");
                         }
                         else
                         {
                             if (!existingComputeLayerBrains.TryGetValue(clConfig.CLBrainReference, out var clb))
                             {
-                                logger.LogError($"Could not find compute layer brain with name {clConfig.CLBrainReference}");
+                                clLogger.LogError($"Could not find compute layer brain with name {clConfig.CLBrainReference}");
                             }
                             else
                             {
@@ -74,9 +78,9 @@ namespace Omnikeeper.Runners
                                 if (clbLastRunCache.TryGetValue(lastRunKey, out var lr))
                                     lastRun = lr;
 
-                                if (await clb.CanSkipRun(lastRun, clConfig.CLBrainConfig, logger, modelContextBuilder))
+                                if (await clb.CanSkipRun(lastRun, clConfig.CLBrainConfig, clLogger, modelContextBuilder))
                                 {
-                                    logger.LogDebug($"Skipping run of CLB {clb.Name} on layer {l.LayerID}");
+                                    clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {l.LayerID}");
                                 }
                                 else
                                 {
@@ -98,15 +102,15 @@ namespace Omnikeeper.Runners
 
                                             var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                                            logger.LogInformation($"Running CLB {clb.Name} on layer {l.LayerID}");
+                                            clLogger.LogInformation($"Running CLB {clb.Name} on layer {l.LayerID}");
                                             Stopwatch stopWatch = new Stopwatch();
                                             stopWatch.Start();
                                             var layer = Layer.Build(l.LayerID); // HACK, TODO: either pass layer-ID or layer-data, not Layer object
-                                            await clb.Run(layer, clConfig.CLBrainConfig, changesetProxy, modelContextBuilder, logger);
+                                            await clb.Run(layer, clConfig.CLBrainConfig, changesetProxy, modelContextBuilder, clLogger);
                                             stopWatch.Stop();
                                             TimeSpan ts = stopWatch.Elapsed;
                                             string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                                            logger.LogInformation($"Done in {elapsedTime}");
+                                            clLogger.LogInformation($"Done in {elapsedTime}");
 
                                             clbLastRunCache.UpdateCache(lastRunKey, changesetProxy.TimeThreshold.Time);
                                         }
@@ -121,11 +125,11 @@ namespace Omnikeeper.Runners
                     }
                 }
 
-                logger.LogTrace("Finished");
+                baseLogger.LogTrace("Finished");
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Error running clb job");
+                baseLogger.LogError(e, "Error running clb job");
             }
         }
 
@@ -137,8 +141,9 @@ namespace Omnikeeper.Runners
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
         private readonly CLBLastRunCache clbLastRunCache;
         private readonly ILayerDataModel layerDataModel;
-        private readonly ILogger<CLBJob> logger;
+        private readonly ILoggerFactory loggerFactory;
         private readonly IModelContextBuilder modelContextBuilder;
+        private readonly ILogger<CLBJob> baseLogger;
     }
 
     public class CLBLastRunCache
