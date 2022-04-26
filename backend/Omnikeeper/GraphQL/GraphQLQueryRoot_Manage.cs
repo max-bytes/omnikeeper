@@ -207,15 +207,6 @@ namespace Omnikeeper.GraphQL
                     return allPermissions;
                 });
 
-            Field<ListGraphType<StringGraphType>>("manage_cacheKeys",
-                resolve: context =>
-                {
-                    var memoryCacheModel = context.RequestServices!.GetRequiredService<ICacheModel>();
-
-                    var keys = memoryCacheModel.GetKeys();
-                    return keys;
-                });
-
             FieldAsync<ListGraphType<StringGraphType>>("manage_debugCurrentUser",
                 resolve: async context =>
                 {

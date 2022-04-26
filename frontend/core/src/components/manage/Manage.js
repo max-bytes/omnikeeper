@@ -8,7 +8,6 @@ import ManageOIAContexts from 'components/manage/ManageOIAContexts';
 import ManageODataAPIContexts from 'components/manage/ManageODataAPIContexts';
 import ManageTraits from 'components/manage/ManageTraits';
 import ManageAuthRoles from 'components/manage/ManageAuthRoles';
-import ManageCache from 'components/manage/ManageCache';
 import ManageCurrentUser from 'components/manage/ManageCurrentUser';
 import ShowLogs from 'components/manage/ShowLogs';
 import ShowVersion from 'components/manage/ShowVersion';
@@ -17,6 +16,7 @@ import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
 import ManageGenerators from './ManageGenerators';
 import ManageCLConfigs from './ManageCLConfigs';
 import ManageRestartApplication from './ManageRestartApplication';
+import UsageStats from './UsageStats';
 
 export default function Manage(props) {
     let { path, url } = useRouteMatch();
@@ -58,9 +58,6 @@ export default function Manage(props) {
             <PrivateRoute path={`${path}/cl-configs`}>
                 <ManageCLConfigs />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/cache`}>
-                <ManageCache />
-            </PrivateRoute>
             <PrivateRoute path={`${path}/current-user`}>
                 <ManageCurrentUser />
             </PrivateRoute>
@@ -69,6 +66,9 @@ export default function Manage(props) {
             </PrivateRoute>
             <PrivateRoute path={`${path}/logs`}>
                 <ShowLogs />
+            </PrivateRoute>
+            <PrivateRoute path={`${path}/usage-stats`}>
+                <UsageStats />
             </PrivateRoute>
             <PrivateRoute path={`${path}/restart-application`}>
                 <ManageRestartApplication />
@@ -114,10 +114,14 @@ export default function Manage(props) {
 
                     <h3>Debug</h3>
                     <ul>
-                        <li><Link to={`${url}/cache`}>Cache</Link></li>
                         <li><Link to={`${url}/version`}>Version</Link></li>
                         <li><Link to={`${url}/current-user`}>Current User Data</Link></li>
                         <li><Link to={`${url}/logs`}>Logs</Link></li>
+                    </ul>
+
+                    <h3>Stats</h3>
+                    <ul>
+                        <li><Link to={`${url}/usage-stats`}>Usage Stats</Link></li>
                     </ul>
 
                     <h3>Plugin Management</h3>
