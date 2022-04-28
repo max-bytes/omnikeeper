@@ -161,6 +161,7 @@ namespace Omnikeeper.Base.Service
             var numAffectedAttributes = await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling, otherLayersValueHandling);
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
+            var usedRelations = new HashSet<(Guid fromCIID, Guid toCIID, string predicateID)>();
             foreach (var cic in data.RelationCandidates)
             {
                 // TODO: make it work with other usecases, such as where the final CIID is known and/or the relevant CIs are already present in omnikeeper
@@ -176,7 +177,17 @@ namespace Omnikeeper.Base.Service
                     throw new Exception($"Could not find temporary CIID {tempFromCIID}, tried using it as the \"from\" of a relation");
                 if (!ciMappingContext.TryGetMappedTemp2FinalCIID(tempToCIID, out Guid toCIID))
                     throw new Exception($"Could not find temporary CIID {tempToCIID}, tried using it as the \"to\" of a relation");
+
+                // duplicate handling
+                if (usedRelations.Contains((fromCIID, toCIID, cic.PredicateID)))
+                {
+                    // TODO: different handling options
+                    logger.LogWarning($"Duplicate relation candidate detected: (fromCIID: {fromCIID}, toCIID: {toCIID}, predicateID: {cic.PredicateID}), dropping");
+                    continue;
+                }
+
                 relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID, false));
+                usedRelations.Add((fromCIID, toCIID, cic.PredicateID));
             }
             var bulkRelationData = new BulkRelationDataLayerScope(writeLayer.ID, relationFragments.ToArray());
             var numAffectedRelations = await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling, otherLayersValueHandling);
