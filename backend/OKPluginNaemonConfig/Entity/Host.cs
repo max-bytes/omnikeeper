@@ -11,14 +11,20 @@ namespace OKPluginNaemonConfig.Entity
         [TraitEntityID]
         public readonly string Id;
 
-        [TraitAttribute("name", "hostname")]
-        public readonly string Name;
+        [TraitAttribute("hostname", "hostname")]
+        public readonly string HostName;
 
         [TraitAttribute("environment", "cmdb.host.environment")]
         public readonly string Environment;
 
         [TraitAttribute("status", "cmdb.host.status")]
         public readonly string Status;
+
+        [TraitAttribute("fkey", "cmdb.host.fkey")]
+        public readonly string FKey;
+
+        [TraitAttribute("fsource", "cmdb.host.fsource")]
+        public readonly string FSource;
 
         [TraitAttribute("platform", "cmdb.host.platform")]
         public readonly string Platform;
@@ -35,8 +41,14 @@ namespace OKPluginNaemonConfig.Entity
         [TraitAttribute("criticality", "cmdb.host.criticality")]
         public readonly string Criticality;
 
+        [TraitAttribute("location", "cmdb.host.location")]
+        public readonly string Location;
 
-        // HSUP,HSUPAPP,HMONIPADDRESS,HMONIPPORT,HCRITICALITY,HCOMMENT,HINSTANCE,HCUST,HSERVICETIME,HOPERTIMEATTENDED,HOS,HLOCATION
+        [TraitAttribute("instance", "cmdb.host.instance")]
+        public readonly string Instance;
+
+        [TraitAttribute("os", "cmdb.host.os")]
+        public readonly string OS;
 
         //NOTE currently not imported
         //[TraitAttribute("suppOS", "")]
@@ -55,14 +67,19 @@ namespace OKPluginNaemonConfig.Entity
         public Host()
         {
             Id = "";
-            Name = "";
+            HostName = "";
             Environment = "";
             Status = "";
+            FKey = "";
+            FSource = "";
             Platform = "";
             Address = "";
             Port = "";
             Cust = "";
             Criticality = "";
+            Location = "";
+            Instance = "";
+            OS = "";
             CategoriesIds = Array.Empty<Guid>();
             InterfacesIds = Array.Empty<Guid>();
         }

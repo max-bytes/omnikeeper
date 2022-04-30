@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using static OKPluginNaemonConfig.NaemonConfig;
 
@@ -16,10 +17,20 @@ namespace OKPluginNaemonConfig.Helper
 
                 foreach (var a in obj.Attributes)
                 {
-                    result.AppendLine($"\t{a.Key.ToUpper()}\t{a.Value}");
+                    if (a.Key.Length <= 31)
+                    {
+                        //result.AppendLine($"\t{a.Key}{new string(' ', (31-a.Key.Length))}{a.Value}");
+
+                        result.AppendLine($"\t{a.Key.PadRight(30)} {a.Value}");
+                    } else
+                    {
+                        result.AppendLine($"\t{a.Key}\t{a.Value}");
+                    }
+                    
                 }
 
                 result.AppendLine("}");
+                result.AppendLine();
             }
 
             return result.ToString();

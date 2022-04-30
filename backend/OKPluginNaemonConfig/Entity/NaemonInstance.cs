@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace OKPluginNaemonConfig.Entity
 {
-    [TraitEntity("naemon_instance", TraitOriginType.Core)]
+    [TraitEntity("naemon_configuration_clb.naemon_instance", TraitOriginType.Core)]
     public class NaemonInstance : TraitEntity
     {
         [TraitAttribute("id", "naemon_instance.id")]

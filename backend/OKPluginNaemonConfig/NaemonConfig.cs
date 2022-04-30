@@ -88,7 +88,7 @@ namespace OKPluginNaemonConfig
         {
             try
             {
-                var parsedConfig = config.Deserialize<Configuration>();
+                var parsedConfig = config.Deserialize<NClbConfiguration>();
                 return new string[2] { parsedConfig!.MonmanLayerId, parsedConfig!.CMDBLayerId }.ToHashSet();
             }
             catch (Exception e)
@@ -104,11 +104,11 @@ namespace OKPluginNaemonConfig
 
             //return false;
 
-            Configuration cfg = new();
+            NClbConfiguration cfg = new();
 
             try
             {
-                cfg = config.Deserialize<Configuration>();
+                cfg = config.Deserialize<NClbConfiguration>();
                 logger.LogDebug("Parsed successfully configuration for naemon config compute layer.");
             }
             catch (Exception ex)
@@ -191,17 +191,23 @@ namespace OKPluginNaemonConfig
                 {
                     Type = "HOST",
                     Id = ciItem.Value.Id,
-                    Name = ciItem.Value.Name,
+                    Name = ciItem.Value.HostName,
+                    Environment = ciItem.Value.Environment,
                     Status = ciItem.Value.Status,
+                    FKey = ciItem.Value.FKey,
+                    FSource = ciItem.Value.FSource, 
+                    Platform = ciItem.Value.Platform,
                     Address = ciItem.Value.Address,
                     Port = port,
                     Cust = ciItem.Value.Cust,
                     Criticality = ciItem.Value.Criticality,
+                    Location = ciItem.Value.Location,
+                    Instance = ciItem.Value.Instance,
+                    OS = ciItem.Value.OS,
                     SuppOS = "", // Add SuppOS for this ci,
                     SuppApp = "", // Add SuppApp for this ci,W
                     Categories = cat,
                     Interfaces = interfaces,
-
                 });
             }
 
@@ -482,7 +488,7 @@ namespace OKPluginNaemonConfig
 
             /* update data, mainly vars stuff */
             // updateNormalizedCiData_preProcessVars
-
+            // TODO: very important to check when these variables should be set in order to honor the global variables
             foreach (var ciItem in ciData)
             {
                 // NOTE should we update resultRef[$id]['VARS']['ALERTS'] = 'OFF' ?
@@ -503,6 +509,10 @@ namespace OKPluginNaemonConfig
             }
 
             logger.LogDebug("Finished updating pre process vars => updateNormalizedCiData_preProcessVars.");
+
+            Helper.CIData.AddNaemonVars(ciData);
+
+            logger.LogDebug("Finished adding naemon vars.");
 
             // updateNormalizedCiData_varsFromDatabase
             // NOTE data that we need here is not present on cmdb layer
@@ -535,7 +545,7 @@ namespace OKPluginNaemonConfig
             ciData = ciData.Where(el => el.Status == "ACTIVE" || el.Status == "BASE_INSTALLED" || el.Status == "READY_FOR_SERVICE").ToList();
 
             // getNaemonConfigObjectsFromStaticTemplates - global-commands
-            Helper.ConfigObjects.GetFromStaticTemplates(configObjs);
+            Helper.ConfigObjects.GetFromStaticTemplates(configObjs, cfg.Command);
 
             // getNaemonConfigObjectsFromTimeperiods
             var timeperiods = await timePeriodModel.GetAllByDataID(layersetMonman, trans, changesetProxy.TimeThreshold);
@@ -617,7 +627,7 @@ namespace OKPluginNaemonConfig
                             Type = "host",
                             Attributes = new Dictionary<string, string>
                             {
-                                ["host_name"] = ciItem.Name,
+                                ["host_name"] = $"{ciItem.Name}_{ciItem.Id}", // this should be checked
                                 ["alias"] = ciItem.Id,
                                 ["address"] = ciItem.Address,
                             }
@@ -694,6 +704,9 @@ namespace OKPluginNaemonConfig
             public string Name { get; set; }
             public string Status { get; set; }
             public string Environment { get; set; }
+            public string FKey { get; set; }
+            public string FSource { get; set; }
+            public string Platform { get; set; }
             public string Profile { get; set; }
             public string Address { get; set; }
             public int? Port { get; set; }
@@ -701,6 +714,9 @@ namespace OKPluginNaemonConfig
             public string Criticality { get; set; }
             public string SuppApp { get; set; }
             public string SuppOS { get; set; }
+            public string Location { get; set; }
+            public string Instance { get; set; }
+            public string OS { get; set; }
             public List<string> ProfileOrg { get; set; }
             public List<string> NaemonsAvail { get; set; }
             public Dictionary<string, List<Category>> Categories { get; set; }
@@ -720,6 +736,9 @@ namespace OKPluginNaemonConfig
                 Name = "";
                 Status = "";
                 Environment = "";
+                FKey = "";
+                FSource = "";
+                Platform = "";
                 Profile = "";
                 Address = "";
                 EffectiveHostCI = "";
@@ -727,6 +746,9 @@ namespace OKPluginNaemonConfig
                 Criticality = "";
                 SuppApp = "";
                 SuppOS = "";
+                Location = "";
+                Instance = "";
+                OS = "";
                 Interfaces = new List<InterfaceObj>();
                 Relations = new Dictionary<string, Dictionary<string, List<string>>>();
                 Categories = new Dictionary<string, List<Category>>();
@@ -795,31 +817,31 @@ namespace OKPluginNaemonConfig
             }
         }
 
-        internal class Configuration
-        {
-            [JsonPropertyName("monman_layer_id")]
-            public string MonmanLayerId { get; set; }
+        //internal class Configuration
+        //{
+        //    [JsonPropertyName("monman_layer_id")]
+        //    public string MonmanLayerId { get; set; }
 
-            [JsonPropertyName("cmdb_layer_id")]
-            public string CMDBLayerId { get; set; }
+        //    [JsonPropertyName("cmdb_layer_id")]
+        //    public string CMDBLayerId { get; set; }
 
-            [JsonPropertyName("load-cmdb-customer")]
-            public List<string> LoadCMDBCustomer { get; set; }
+        //    [JsonPropertyName("load-cmdb-customer")]
+        //    public List<string> LoadCMDBCustomer { get; set; }
 
-            [JsonPropertyName("cmdb-monprofile-prefix")]
-            public List<string> CMDBMonprofilePrefix { get; set; }
+        //    [JsonPropertyName("cmdb-monprofile-prefix")]
+        //    public List<string> CMDBMonprofilePrefix { get; set; }
 
-            [JsonPropertyName("naemons-config-generateprofiles")]
-            public List<string> NaemonsConfigGenerateprofiles { get; set; }
+        //    [JsonPropertyName("naemons-config-generateprofiles")]
+        //    public List<string> NaemonsConfigGenerateprofiles { get; set; }
 
-            public Configuration()
-            {
-                MonmanLayerId = "";
-                CMDBLayerId = "";
-                LoadCMDBCustomer = new List<string>();
-                CMDBMonprofilePrefix = new List<string>();
-                NaemonsConfigGenerateprofiles = new List<string>();
-            }
-        }
+        //    public Configuration()
+        //    {
+        //        MonmanLayerId = "";
+        //        CMDBLayerId = "";
+        //        LoadCMDBCustomer = new List<string>();
+        //        CMDBMonprofilePrefix = new List<string>();
+        //        NaemonsConfigGenerateprofiles = new List<string>();
+        //    }
+        //}
     }
 }
