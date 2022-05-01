@@ -17,8 +17,8 @@ namespace OKPluginNaemonConfig.Helper
                     Type = "command",
                     Attributes = new Dictionary<string, string>
                     {
-                        ["command_name"] = command.Value.Name,
                         ["command_line"] = command.Value.Exec,
+                        ["command_name"] = command.Value.Name,
                     },
                 });
             }

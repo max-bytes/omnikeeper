@@ -25,7 +25,9 @@ namespace OKPluginNaemonConfig.Helper
                     }
                     else
                     {
-                        item.NaemonsAvail = new List<string>();
+                        // NOTE: this was taken from php implementation, but in my opinion is not correct to do this
+                        //       since the next requirement could fullfill the condition, lets comment this for now
+                        //item.NaemonsAvail = new List<string>();
                     }
                 }
             }

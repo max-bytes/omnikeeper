@@ -104,7 +104,7 @@ namespace OKPluginNaemonConfig
 
             //return false;
 
-            NClbConfiguration cfg = new();
+            NClbConfiguration? cfg = new();
 
             try
             {
@@ -126,7 +126,11 @@ namespace OKPluginNaemonConfig
 
 
             logger.LogDebug("Started creating configuration items.");
+
             // a list with all CI from database
+            // NOTE: in order to improve performance we need to make this List to a Dictionary so we dont need to iterate it 
+            // everytime and just select the key that we need to manipulate
+
             var ciData = new List<ConfigurationItem>();
 
             // load all categories
@@ -302,6 +306,9 @@ namespace OKPluginNaemonConfig
                     Port = port,
                     Cust = ciItem.Value.Cust,
                     Criticality = ciItem.Value.Criticality,
+                    FKey = ciItem.Value.FKey,
+                    FSource = ciItem.Value.FSource,
+                    Instance = ciItem.Value.Instance,
                     SuppOS = "", // Add SuppOS for this ci,
                     SuppApp = "", // Add SuppApp for this ci,
                     Categories = cat,

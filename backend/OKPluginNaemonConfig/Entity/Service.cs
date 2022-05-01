@@ -32,6 +32,15 @@ namespace OKPluginNaemonConfig.Entity
         [TraitAttribute("criticality", "cmdb.service.criticality")]
         public readonly string Criticality;
 
+        [TraitAttribute("fkey", "cmdb.service.fkey")]
+        public readonly string FKey;
+
+        [TraitAttribute("fsource", "cmdb.service.fsource")]
+        public readonly string FSource;
+
+        [TraitAttribute("instance", "cmdb.service.instance")]
+        public readonly string Instance;
+
         //NOTE currently not imported
         //[TraitAttribute("suppOS", "")]
         //public readonly string SuppOS;
@@ -59,6 +68,9 @@ namespace OKPluginNaemonConfig.Entity
             Port = "";
             Cust = "";
             Criticality = "";
+            FKey = "";
+            FSource = "";
+            Instance = "";
             CategoriesIds = Array.Empty<Guid>();
             InterfacesIds = Array.Empty<Guid>();
             Hosts = Array.Empty<Guid>();
