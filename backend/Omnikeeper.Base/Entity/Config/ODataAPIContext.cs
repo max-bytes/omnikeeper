@@ -4,7 +4,8 @@ using System.Text.Json.Serialization;
 
 namespace Omnikeeper.Base.Entity
 {
-    public class ODataAPIContext
+    [TraitEntity("__meta.config.odata_context", TraitOriginType.Core)]
+    public class ODataAPIContext : TraitEntity
     {
         public class ConfigTypeDiscriminatorConverter : TypeDiscriminatorConverter<IConfig>
         {
@@ -34,8 +35,17 @@ namespace Omnikeeper.Base.Entity
             public string[] ReadLayerset { get; set; }
         }
 
-        public string ID { get; set; }
-        public IConfig CConfig { get; set; }
+        [TraitAttribute("id", "odata_context.id")]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        [TraitEntityID]
+        public readonly string ID;
+
+        [TraitAttribute("config", "odata_context.config", jsonSerializer: typeof(ConfigSerializer))]
+        public readonly IConfig CConfig;
+
+        [TraitAttribute("name", "__name", optional: true)]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        public readonly string Name;
 
         public static SystemTextJSONSerializer<IConfig> ConfigSerializer = new SystemTextJSONSerializer<IConfig>(new JsonSerializerOptions());
 
@@ -43,6 +53,28 @@ namespace Omnikeeper.Base.Entity
         {
             ID = iD;
             CConfig = cConfig;
+            Name = $"OData-Context - {iD}";
+        }
+        public ODataAPIContext() { 
+            ID = ""; 
+            CConfig = new ConfigV3("", System.Array.Empty<string>());
+            Name = "";
+        }
+    }
+
+    public class ConfigSerializer : AttributeJSONSerializer<ODataAPIContext.ConfigV3>
+    {
+        public ConfigSerializer() : base(() =>
+        {
+            return new JsonSerializerOptions()
+            {
+                Converters = {
+                        new JsonStringEnumConverter()
+                    },
+                IncludeFields = true
+            };
+        })
+        {
         }
     }
 

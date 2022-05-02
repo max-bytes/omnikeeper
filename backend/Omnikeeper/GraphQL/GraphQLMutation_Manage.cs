@@ -180,8 +180,12 @@ namespace Omnikeeper.GraphQL
                     try
                     {
                         var config = ODataAPIContext.ConfigSerializer.Deserialize(contextInput.Config);
+                        var odataContext = new ODataAPIContext(contextInput.ID, config);
 
-                        var created = await odataAPIContextModel.Upsert(contextInput.ID, config, userContext.Transaction);
+                        var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                        var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                        var (created, _) = await odataAPIContextModel.InsertOrUpdate(odataContext, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
+                            new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                         userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                         return created;
@@ -206,9 +210,13 @@ namespace Omnikeeper.GraphQL
 
                   CheckManagementPermissionThrow(userContext, "delete ODataAPIContext");
 
-                  var deleted = await odataAPIContextModel.Delete(id, userContext.Transaction);
+                  var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+
+                  var deleted = await odataAPIContextModel.TryToDelete(id, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
+                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
-                  return deleted != null;
+                  return deleted;
               });
 
 

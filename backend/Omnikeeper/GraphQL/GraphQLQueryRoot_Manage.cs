@@ -97,13 +97,16 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
 
                     CheckManagementPermissionThrow(userContext);
 
-                    var configs = await odataAPIContextModel.GetContexts(userContext.Transaction);
+                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
 
-                    return configs;
+                    var configs = await odataAPIContextModel.GetAllByCIID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+
+                    return configs.Values;
                 });
 
             FieldAsync<StringGraphType>("manage_baseConfiguration",

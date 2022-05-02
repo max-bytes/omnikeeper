@@ -10,6 +10,7 @@ using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL.Types;
+using Omnikeeper.Model.Config;
 using Quartz;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace Omnikeeper.GraphQL
         private readonly IChangesetModel changesetModel;
         private readonly GeneratorV1Model generatorModel;
         private readonly IOIAContextModel oiaContextModel;
-        private readonly IODataAPIContextModel odataAPIContextModel;
+        private readonly ODataAPIContextModel odataAPIContextModel;
         private readonly AuthRoleModel authRoleModel;
         private readonly RecursiveTraitModel recursiveDataTraitModel;
         private readonly ILayerDataModel layerDataModel;
@@ -39,7 +40,7 @@ namespace Omnikeeper.GraphQL
 
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
             PredicateModel predicateModel, IChangesetModel changesetModel, GeneratorV1Model generatorModel,
-            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel,
+            IOIAContextModel oiaContextModel, ODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel,
             RecursiveTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
             IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,

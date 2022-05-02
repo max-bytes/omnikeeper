@@ -200,7 +200,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<RelationModel>().As<IRelationModel>().SingleInstance();
             builder.RegisterType<BaseRelationModel>().As<IBaseRelationModel>().SingleInstance();
             builder.RegisterType<ChangesetModel>().As<IChangesetModel>().SingleInstance();
-            builder.RegisterType<ODataAPIContextModel>().As<IODataAPIContextModel>().SingleInstance();
             builder.RegisterType<EffectiveTraitModel>().As<IEffectiveTraitModel>().SingleInstance();
             builder.RegisterType<BaseConfigurationModel>().As<IBaseConfigurationModel>().SingleInstance();
             builder.RegisterType<MetaConfigurationModel>().As<IMetaConfigurationModel>().SingleInstance();
@@ -213,6 +212,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<RecursiveTraitModel>().SingleInstance();
             builder.RegisterType<GridViewContextModel>().SingleInstance();
             builder.RegisterType<InnerLayerDataModel>().SingleInstance();
+            builder.RegisterType<ODataAPIContextModel>().SingleInstance();
             builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
             builder.RegisterType<UsageStatsModel>().As<IUsageStatsModel>().SingleInstance();
 

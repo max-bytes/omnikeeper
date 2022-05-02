@@ -8,14 +8,15 @@ using Microsoft.OData.Edm;
 using Microsoft.OData.UriParser;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Model.Config;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
@@ -26,19 +27,21 @@ namespace Omnikeeper.Controllers.OData
     {
         private readonly ITraitsProvider traitsProvider;
         private readonly IModelContextBuilder modelContextBuilder;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
         private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
-        private readonly IODataAPIContextModel oDataAPIContextModel;
+        private readonly ODataAPIContextModel oDataAPIContextModel;
         private readonly ILogger<TraitEntityController> logger;
 
-        public TraitEntityController(ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
+        public TraitEntityController(ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
             IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
-            IODataAPIContextModel oDataAPIContextModel, ILogger<TraitEntityController> logger)
+            ODataAPIContextModel oDataAPIContextModel, ILogger<TraitEntityController> logger)
         {
             this.traitsProvider = traitsProvider;
             this.modelContextBuilder = modelContextBuilder;
+            this.metaConfigurationModel = metaConfigurationModel;
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.attributeModel = attributeModel;
@@ -66,7 +69,7 @@ namespace Omnikeeper.Controllers.OData
             using var trans = modelContextBuilder.BuildImmediate();
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
+            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, metaConfigurationModel, context, trans, timeThreshold);
 
             var traitID = entityType.Name;
             var trait = await traitsProvider.GetActiveTrait(traitID, trans, timeThreshold);
@@ -123,7 +126,7 @@ namespace Omnikeeper.Controllers.OData
 
             var traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
 
-            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
+            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, metaConfigurationModel, context, trans, timeThreshold);
 
             // TODO: use dataloader
             var ets = await traitEntityModel.GetByCIID(SpecificCIIDsSelection.Build(key), layerset, trans, timeThreshold);
@@ -168,7 +171,7 @@ namespace Omnikeeper.Controllers.OData
             if (baseTrait == null)
                 return BadRequest();
 
-            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
+            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, metaConfigurationModel, context, trans, timeThreshold);
 
             // split navigation into trait relation and other trait ID 
             var tmp = navigation.Split("_as_");
@@ -186,7 +189,10 @@ namespace Omnikeeper.Controllers.OData
             // TODO: use dataloader and batching
             var baseTraitEntityModel = new TraitEntityModel(baseTrait, effectiveTraitModel, ciModel, attributeModel, relationModel);
             var ets = await baseTraitEntityModel.GetByCIID(SpecificCIIDsSelection.Build(key), layerset, trans, timeThreshold);
-            var et = ets.First().Value;
+            var et = ets.FirstOrDefault().Value;
+
+            if (et == null)
+                return BadRequest();
 
             var otherCIIDs = (traitRelation.RelationTemplate.DirectionForward) ? et.OutgoingTraitRelations[traitRelation.Identifier].Select(r => r.Relation.ToCIID) : et.IncomingTraitRelations[traitRelation.Identifier].Select(r => r.Relation.FromCIID);
 

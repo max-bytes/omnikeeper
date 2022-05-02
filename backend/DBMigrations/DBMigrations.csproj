@@ -77,6 +77,7 @@
     <None Remove="Scripts\00066-add-quartz-tables.psql" />
     <None Remove="Scripts\00067-drop-hangfire.psql" />
     <None Remove="Scripts\00068-attributevaluetype-double.psql" />
+    <None Remove="Scripts\00069-remove-odatacontext-table.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -87,6 +88,7 @@
     <EmbeddedResource Include="Scripts\00005-predicate-constraints.psql" />
     <EmbeddedResource Include="Scripts\00004-predicate-state-add-marked_for_deletion.psql" />
     <EmbeddedResource Include="Scripts\00003-predicate-state-add-deprecated.psql" />
+    <EmbeddedResource Include="Scripts\00069-remove-odatacontext-table.psql" />
     <EmbeddedResource Include="Scripts\00068-attributevaluetype-double.psql" />
     <EmbeddedResource Include="Scripts\00067-drop-hangfire.psql" />
     <EmbeddedResource Include="Scripts\00066-add-quartz-tables.psql" />
