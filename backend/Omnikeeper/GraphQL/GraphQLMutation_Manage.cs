@@ -352,6 +352,9 @@ namespace Omnikeeper.GraphQL
                   // trigger job to reload GraphQL schema
                   await scheduler.TriggerJob(QuartzJobStarter.JKGraphQLSchemaReloader);
 
+                  // trigger job to reload odata model
+                  await scheduler.TriggerJob(QuartzJobStarter.JKEdmModelReloader);
+
                   return newTrait.dc;
               });
 
@@ -378,6 +381,9 @@ namespace Omnikeeper.GraphQL
 
                   // trigger job to reload GraphQL schema
                   await scheduler.TriggerJob(QuartzJobStarter.JKGraphQLSchemaReloader);
+
+                  // trigger job to reload odata model
+                  await scheduler.TriggerJob(QuartzJobStarter.JKEdmModelReloader);
 
                   return deleted;
               });
