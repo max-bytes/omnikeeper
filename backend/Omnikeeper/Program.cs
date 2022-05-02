@@ -11,6 +11,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Controllers.OData;
 using Omnikeeper.GraphQL;
 using Omnikeeper.Service;
 using Omnikeeper.Startup;
@@ -57,6 +58,26 @@ namespace Omnikeeper
                 catch (Exception e)
                 {
                     logger.LogError(e, "Encountered error while trying to initialize GraphQL schema");
+                }
+            }
+
+            using (var scope = host.Services.CreateScope())
+            {
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                try
+                {
+                    var traitsProvider = scope.ServiceProvider.GetRequiredService<ITraitsProvider>();
+                    var modelContextBuilder = scope.ServiceProvider.GetRequiredService<IModelContextBuilder>();
+                    var timeThreshold = TimeThreshold.BuildLatest();
+                    var trans = modelContextBuilder.BuildImmediate();
+                    var activeTraits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
+
+                    var edmModelHolder = scope.ServiceProvider.GetRequiredService<EdmModelHolder>();
+                    edmModelHolder.ReInitModel(scope.ServiceProvider, activeTraits, logger);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Encountered error while trying to initialize Edm model");
                 }
             }
 
