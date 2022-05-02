@@ -59,7 +59,7 @@ namespace Omnikeeper.Startup
                 await ScheduleJob<ArchiveOldDataJob>(scheduler, JKArchiveOldData, config.ArchiveOldDataRunnerInterval, logger, deleteOnly);
                 await ScheduleJob<UsageDataWriterJob>(scheduler, JKUsageDataWriter, "0 * * * * ?", logger, deleteOnly);
                 await ScheduleJob<GraphQLSchemaReloaderJob>(scheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly);
-                await ScheduleJob<EdmModelReloaderJob>(scheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly);
+                await ScheduleJob<EdmModelReloaderJob>(scheduler, JKEdmModelReloader, "0 * * * * ?", logger, deleteOnly);
 
                 await scheduler.Start();
 
