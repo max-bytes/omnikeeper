@@ -30,7 +30,7 @@ import SubMenu from "antd/lib/menu/SubMenu";
 const { Header, Content } = Layout;
 
 const keycloak = new Keycloak({
-  "url": `${env("KEYCLOAK_URL")}/auth`,
+  "url": `${env("KEYCLOAK_URL")}`,
   "realm": env("KEYCLOAK_REALM"),
   "ssl-required": "none",
   "clientId": env("KEYCLOAK_CLIENT_ID"),
