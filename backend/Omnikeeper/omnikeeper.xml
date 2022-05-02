@@ -4,6 +4,40 @@
         <name>Omnikeeper</name>
     </assembly>
     <members>
+        <member name="P:Omnikeeper.Controllers.OData.MyODataRoutingApplicationModelProvider.Order">
+            <summary>
+            Gets the order value for determining the order of execution of providers.
+            </summary>
+        </member>
+        <member name="P:Omnikeeper.Controllers.OData.MyODataRoutingMatcherPolicy.Order">
+            <summary>
+            Gets a value that determines the order of this policy.
+            </summary>
+        </member>
+        <member name="M:Omnikeeper.Controllers.OData.MyODataRoutingMatcherPolicy.AppliesToEndpoints(System.Collections.Generic.IReadOnlyList{Microsoft.AspNetCore.Http.Endpoint})">
+            <summary>
+            Returns a value that indicates whether the matcher applies to any endpoint in endpoints.
+            </summary>
+            <param name="endpoints">The set of candidate values.</param>
+            <returns>true if the policy applies to any endpoint in endpoints, otherwise false.</returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.OData.MyODataRoutingMatcherPolicy.ApplyAsync(Microsoft.AspNetCore.Http.HttpContext,Microsoft.AspNetCore.Routing.Matching.CandidateSet)">
+            <summary>
+            Applies the policy to the CandidateSet.
+            </summary>
+            <param name="httpContext">The context associated with the current request.</param>
+            <param name="candidates">The CandidateSet.</param>
+            <returns>The task.</returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.OData.TraitEntityController.SetSelectExpandClauseOnODataFeature(Microsoft.OData.UriParser.ODataPath,Microsoft.OData.Edm.IEdmType)">
+            <summary>
+            Set the <see cref="T:Microsoft.OData.UriParser.SelectExpandClause"/> on ODataFeature.
+            Without this, the response does not contains navigation property included in $expand
+            </summary>
+            <param name="odataPath">OData Path from the Request</param>
+            <param name="edmEntityType">Entity type on which the query is being performed</param>
+            <returns></returns>
+        </member>
         <member name="M:Omnikeeper.Model.ChangesetModel.ArchiveUnusedChangesetsOlderThan(System.DateTimeOffset,Omnikeeper.Base.Utils.ModelContext.IModelContext)">
             <summary>
             approach: only archive a changeset when ALL of its changes can be archived... which means that ALL of its changes to attribute and relations can be archived

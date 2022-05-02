@@ -25,6 +25,7 @@ namespace Omnikeeper.Startup
         private static readonly JobKey JKArchiveOldData = new JobKey("ArchiveOldData", "omnikeeper");
         private static readonly JobKey JKUsageDataWriter = new JobKey("UsageDataWriter", "omnikeeper");
         public static readonly JobKey JKGraphQLSchemaReloader = new JobKey("GraphQLSchemaReloader", "omnikeeper");
+        public static readonly JobKey JKEdmModelReloader = new JobKey("EdmModelReloader", "omnikeeper");
 
         public QuartzJobStarter(IServiceScopeFactory serviceScopeFactory)
         {
@@ -58,6 +59,7 @@ namespace Omnikeeper.Startup
                 await ScheduleJob<ArchiveOldDataJob>(scheduler, JKArchiveOldData, config.ArchiveOldDataRunnerInterval, logger, deleteOnly);
                 await ScheduleJob<UsageDataWriterJob>(scheduler, JKUsageDataWriter, "0 * * * * ?", logger, deleteOnly);
                 await ScheduleJob<GraphQLSchemaReloaderJob>(scheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly);
+                await ScheduleJob<EdmModelReloaderJob>(scheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly);
 
                 await scheduler.Start();
 

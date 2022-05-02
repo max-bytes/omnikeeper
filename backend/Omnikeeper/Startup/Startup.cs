@@ -4,17 +4,14 @@ using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using MediatR;
-using Microsoft.AspNet.OData.Extensions;
-using Microsoft.AspNet.OData.Formatter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,9 +21,7 @@ using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
-using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.GraphQL;
 using Omnikeeper.Service;
@@ -39,6 +34,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Startup
@@ -88,32 +84,33 @@ namespace Omnikeeper.Startup
                 .WithExposedHeaders("Content-Disposition"))
             );
 
-            services.AddOData();//.EnableApiVersioning();
-
             services.AddHttpContextAccessor();
 
             services.AddSignalR();
 
             // HACK: member is set here and used later
-            mvcBuilder = services.AddControllers().AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.IncludeFields = true;
-                options.JsonSerializerOptions.Converters.Add(new ExceptionConverter()); // System.Text.Json does not support serializing exceptions, so we add a custom converter
-            });
+            mvcBuilder = services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.IncludeFields = true;
+                    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+                    options.JsonSerializerOptions.Converters.Add(new ExceptionConverter()); // System.Text.Json does not support serializing exceptions, so we add a custom converter
+                })
+                .AddOData((opt, sp) => { });
 
             // add input and output formatters
             services.AddOptions<MvcOptions>()
                 .PostConfigure<IOptions<JsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, charPool, objectPoolProvider, loggerFactory) =>
                 {
 
-                    config.InputFormatters.Clear();
-                    config.InputFormatters.Add(new MySuperJsonInputFormatter());
-                    config.InputFormatters.Add(new SystemTextJsonInputFormatter(jsonOpts.Value, loggerFactory.CreateLogger<SystemTextJsonInputFormatter>()));
+                    //config.InputFormatters.Clear();
+                    config.InputFormatters.Insert(0, new MySuperInputFormatter());
+                    //config.InputFormatters.Add(new SystemTextJsonInputFormatter(jsonOpts.Value, loggerFactory.CreateLogger<SystemTextJsonInputFormatter>()));
                     config.InputFormatters.Add(new SpanJsonInputFormatter<SpanJsonDefaultResolver<byte>>());
 
-                    config.OutputFormatters.Clear();
-                    config.OutputFormatters.Add(new MySuperJsonOutputFormatter());
-                    config.OutputFormatters.Add(new SystemTextJsonOutputFormatter(jsonOpts.Value.JsonSerializerOptions));
+                    //config.OutputFormatters.Clear();
+                    config.OutputFormatters.Insert(0, new MySuperOutputFormatter());
+                    //config.OutputFormatters.Add(new SystemTextJsonOutputFormatter(jsonOpts.Value.JsonSerializerOptions));
                     config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
                 });
 
@@ -250,42 +247,33 @@ namespace Omnikeeper.Startup
             // HACK: needed by odata, see: https://github.com/OData/WebApi/issues/2024
             services.AddMvcCore(options =>
             {
-                foreach (var outputFormatter in options.OutputFormatters.OfType<OutputFormatter>().Where(x => x.SupportedMediaTypes.Count == 0))
-                {
-                    outputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/odata"));
-                }
-
-                foreach (var inputFormatter in options.InputFormatters.OfType<InputFormatter>().Where(x => x.SupportedMediaTypes.Count == 0))
-                {
-                    inputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/odata"));
-                }
-
+                // TODO: still needed?
                 // NOTE: in order for the OData service to work behind a reverse proxy, we need to modify the base URL
                 // adding the BaseURL from the configuration and forcing https
-                Uri ModifyBaseAddress(HttpRequest m)
-                {
-                    var logger = m.HttpContext.RequestServices.GetRequiredService<ILogger<IODataAPIContextModel>>();
-                    var std = ODataInputFormatter.GetDefaultBaseAddress(m);
-                    string newBaseURLPrefix;
-                    string replaceStr;
-                    replaceStr = $"{m.Scheme}://{m.Host.Host}:{m.Host.Port}";
-                    newBaseURLPrefix = $"{m.Scheme}://{m.Host.Host}:{m.Host.Port}{Configuration["BaseURL"]}";
-                    var oldBaseURL = std.ToString();
-                    var newBaseURL = oldBaseURL.Replace(replaceStr, newBaseURLPrefix, StringComparison.InvariantCultureIgnoreCase);
+                //Uri ModifyBaseAddress(HttpRequest m)
+                //{
+                //    var logger = m.HttpContext.RequestServices.GetRequiredService<ILogger<IODataAPIContextModel>>();
+                //    var std = ODataInputFormatter.GetDefaultBaseAddress(m);
+                //    string newBaseURLPrefix;
+                //    string replaceStr;
+                //    replaceStr = $"{m.Scheme}://{m.Host.Host}:{m.Host.Port}";
+                //    newBaseURLPrefix = $"{m.Scheme}://{m.Host.Host}:{m.Host.Port}{Configuration["BaseURL"]}";
+                //    var oldBaseURL = std.ToString();
+                //    var newBaseURL = oldBaseURL.Replace(replaceStr, newBaseURLPrefix, StringComparison.InvariantCultureIgnoreCase);
 
-                    logger.LogDebug($"Built new base URL prefix: {newBaseURLPrefix}");
-                    logger.LogDebug($"Modifying base URL from {oldBaseURL} to {newBaseURL}");
-                    return new Uri(newBaseURL);
-                }
-                foreach (var outputFormatter in options.OutputFormatters.OfType<ODataOutputFormatter>())
-                {
-                    outputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
-                }
+                //    logger.LogDebug($"Built new base URL prefix: {newBaseURLPrefix}");
+                //    logger.LogDebug($"Modifying base URL from {oldBaseURL} to {newBaseURL}");
+                //    return new Uri(newBaseURL);
+                //}
+                //foreach (var outputFormatter in options.OutputFormatters.OfType<ODataOutputFormatter>())
+                //{
+                //    outputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
+                //}
 
-                foreach (var inputFormatter in options.InputFormatters.OfType<ODataInputFormatter>())
-                {
-                    inputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
-                }
+                //foreach (var inputFormatter in options.InputFormatters.OfType<ODataInputFormatter>())
+                //{
+                //    inputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
+                //}
             }).AddFluentValidation();
         }
 
@@ -303,6 +291,8 @@ namespace Omnikeeper.Startup
             ServiceRegistration.RegisterServices(builder);
             var csQuartz = Configuration.GetConnectionString("QuartzDatabaseConnection");
             ServiceRegistration.RegisterQuartz(builder, csQuartz);
+
+            ServiceRegistration.RegisterOData(builder);
 
             // plugins
             var pluginFolder = Path.Combine(Directory.GetCurrentDirectory(), "OKPlugins");
@@ -400,16 +390,6 @@ namespace Omnikeeper.Startup
                 // add AllowAnonymous Attribute when debugAllowAll is true
                 if (Configuration.GetSection("Authentication").GetValue("debugAllowAll", false))
                     cv.WithMetadata(new AllowAnonymousAttribute());
-
-                // odata
-                // DEFUNCT
-                //var builder = new ODataConventionModelBuilder(app.ApplicationServices);
-                //builder.EntitySet<Omnikeeper.Controllers.OData.AttributeDTO>("Attributes");
-                //builder.EntitySet<Omnikeeper.Controllers.OData.RelationDTO>("Relations");
-                //endpoints.EnableDependencyInjection();
-                //endpoints.Select().Expand().Filter().OrderBy().Count();
-                //var edmModel = builder.GetEdmModel();
-                //endpoints.MapODataRoute("odata", "api/odata/{context}", edmModel);
 
                 endpoints.MapHub<SignalRHubLogging>("/api/signalr/logging");
             });

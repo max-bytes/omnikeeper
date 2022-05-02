@@ -3,6 +3,8 @@ using Autofac.Extensions.DependencyInjection;
 using Autofac.Extras.Quartz;
 using GraphQL;
 using GraphQL.DataLoader;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
 using Omnikeeper.Base.Generator;
@@ -15,6 +17,7 @@ using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Controllers.OData;
 using Omnikeeper.GraphQL;
 using Omnikeeper.GraphQL.TraitEntities;
 using Omnikeeper.GridView;
@@ -264,6 +267,14 @@ namespace Omnikeeper.Startup
             }
         }
 
+        public static void RegisterOData(ContainerBuilder builder)
+        {
+            builder.RegisterType<EdmModelHolder>().SingleInstance();
+
+            builder.RegisterType<MyODataRoutingApplicationModelProvider>().As<IApplicationModelProvider>().InstancePerDependency();
+            builder.RegisterType<MyODataRoutingMatcherPolicy>().As<MatcherPolicy>().SingleInstance();
+        }
+
         public static void RegisterGraphQL(ContainerBuilder builder)
         {
             builder.RegisterType<GraphQLSchemaHolder>().SingleInstance();
@@ -310,6 +321,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<MarkedForDeletionJob>().InstancePerLifetimeScope();
             builder.RegisterType<UsageDataWriterJob>().InstancePerLifetimeScope();
             builder.RegisterType<GraphQLSchemaReloaderJob>().InstancePerLifetimeScope();
+            builder.RegisterType<EdmModelReloaderJob>().InstancePerLifetimeScope();
         }
     }
 }
