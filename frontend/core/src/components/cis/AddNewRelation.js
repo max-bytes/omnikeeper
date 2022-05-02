@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/client';
 import { mutations } from 'graphql/mutations'
-import { Form, Button, Card, Space, Select, Input } from "antd";
+import { Form, Button, Card, Space } from "antd";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import LayerDropdown from "components/LayerDropdown";
