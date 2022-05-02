@@ -102,15 +102,10 @@ namespace Omnikeeper.Startup
             services.AddOptions<MvcOptions>()
                 .PostConfigure<IOptions<JsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, charPool, objectPoolProvider, loggerFactory) =>
                 {
-
-                    //config.InputFormatters.Clear();
                     config.InputFormatters.Insert(0, new MySuperInputFormatter());
-                    //config.InputFormatters.Add(new SystemTextJsonInputFormatter(jsonOpts.Value, loggerFactory.CreateLogger<SystemTextJsonInputFormatter>()));
                     config.InputFormatters.Add(new SpanJsonInputFormatter<SpanJsonDefaultResolver<byte>>());
 
-                    //config.OutputFormatters.Clear();
                     config.OutputFormatters.Insert(0, new MySuperOutputFormatter());
-                    //config.OutputFormatters.Add(new SystemTextJsonOutputFormatter(jsonOpts.Value.JsonSerializerOptions));
                     config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
                 });
 
@@ -244,37 +239,7 @@ namespace Omnikeeper.Startup
             // see https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/wiki/PII
             IdentityModelEventSource.ShowPII = Configuration.GetValue<bool>("ShowPII");
 
-            // HACK: needed by odata, see: https://github.com/OData/WebApi/issues/2024
-            services.AddMvcCore(options =>
-            {
-                // TODO: still needed?
-                // NOTE: in order for the OData service to work behind a reverse proxy, we need to modify the base URL
-                // adding the BaseURL from the configuration and forcing https
-                //Uri ModifyBaseAddress(HttpRequest m)
-                //{
-                //    var logger = m.HttpContext.RequestServices.GetRequiredService<ILogger<IODataAPIContextModel>>();
-                //    var std = ODataInputFormatter.GetDefaultBaseAddress(m);
-                //    string newBaseURLPrefix;
-                //    string replaceStr;
-                //    replaceStr = $"{m.Scheme}://{m.Host.Host}:{m.Host.Port}";
-                //    newBaseURLPrefix = $"{m.Scheme}://{m.Host.Host}:{m.Host.Port}{Configuration["BaseURL"]}";
-                //    var oldBaseURL = std.ToString();
-                //    var newBaseURL = oldBaseURL.Replace(replaceStr, newBaseURLPrefix, StringComparison.InvariantCultureIgnoreCase);
-
-                //    logger.LogDebug($"Built new base URL prefix: {newBaseURLPrefix}");
-                //    logger.LogDebug($"Modifying base URL from {oldBaseURL} to {newBaseURL}");
-                //    return new Uri(newBaseURL);
-                //}
-                //foreach (var outputFormatter in options.OutputFormatters.OfType<ODataOutputFormatter>())
-                //{
-                //    outputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
-                //}
-
-                //foreach (var inputFormatter in options.InputFormatters.OfType<ODataInputFormatter>())
-                //{
-                //    inputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
-                //}
-            }).AddFluentValidation();
+            services.AddMvcCore(options => { }).AddFluentValidation();
         }
 
         public void ConfigureContainer(ContainerBuilder builder)

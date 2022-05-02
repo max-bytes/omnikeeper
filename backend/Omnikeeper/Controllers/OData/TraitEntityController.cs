@@ -234,6 +234,10 @@ namespace Omnikeeper.Controllers.OData
                         }
                     }
 
+                    // TODO:, when client wants expanded properties, add them through relations
+                    // example https://localhost:44378/api/odata/testcontext/insight_discovery.hosts?$expand=has_patch_installed_as_insight_discovery.patch
+                    // get queryOptions, look into Expand options and fetch correct related entities, add here
+
                     return entity as IEdmEntityObject;
                 }
                 catch (Exception e)
