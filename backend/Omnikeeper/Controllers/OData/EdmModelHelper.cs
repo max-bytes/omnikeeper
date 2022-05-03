@@ -7,11 +7,8 @@ namespace Omnikeeper.Controllers.OData
 {
     public class EdmModelHelper
     {
-        public static EdmPrimitiveTypeKind TraitAttribute2EdmPrimitiveType(TraitAttribute at)
+        public static EdmPrimitiveTypeKind AttributeValueType2EdmPrimitiveType(AttributeValueType type)
         {
-            if (at.AttributeTemplate.IsArray.GetValueOrDefault(false))
-                throw new Exception("Not supported (yet)");
-            var type = at.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
             return type switch
             {
                 AttributeValueType.Text => EdmPrimitiveTypeKind.String,

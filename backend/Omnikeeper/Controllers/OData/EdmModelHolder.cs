@@ -2,6 +2,7 @@
 using Microsoft.OData.Edm;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 
@@ -74,31 +75,47 @@ namespace Omnikeeper.Controllers.OData
 
                     foreach (var ta in at.Value.RequiredAttributes)
                     {
-                        if (!ta.AttributeTemplate.IsArray.GetValueOrDefault(false))
-                        { // TODO: add support for arrays
-                            try
+                        try
+                        {
+                            var type = ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
+                            var edmType = EdmModelHelper.AttributeValueType2EdmPrimitiveType(type); // TODO: catch exception
+
+                            if (!ta.AttributeTemplate.IsArray.GetValueOrDefault(false))
                             {
-                                eet.AddStructuralProperty(ta.Identifier, EdmModelHelper.TraitAttribute2EdmPrimitiveType(ta), false);
+                                eet.AddStructuralProperty(ta.Identifier, edmType, false);
                             }
-                            catch (Exception ex)
-                            {
-                                logger.LogWarning(ex, $"Could not add attribute {ta.Identifier} to edm entity with trait ID {at.Key}");
+                            else
+                            { // TODO: add support for arrays
+                                //eet.AddUnidirectionalNavigation()
+                                //var navProp = eet.AddUnidirectionalNavigation(new EdmNavigationPropertyInfo
+                                //{
+                                //    Name = ta.Identifier,
+                                //    TargetMultiplicity = EdmMultiplicity.Many,
+                                //    Target = edmType,
+                                //    ContainsTarget = true,
+                                //});
+                                //edmEntitySetMap[at.Key].AddNavigationTarget(navProp, edmEntitySetMap[targetTraitID]);
                             }
+                        } 
+                        catch (Exception)
+                        {
+                            logger.LogWarning($"Could not create property {ta.Identifier} for edm type {typeName}");
                         }
                     }
 
                     foreach (var ta in at.Value.OptionalAttributes)
                     {
-                        if (!ta.AttributeTemplate.IsArray.GetValueOrDefault(false))
-                        { // TODO: add support for arrays
-                            try
-                            {
-                                eet.AddStructuralProperty(ta.Identifier, EdmModelHelper.TraitAttribute2EdmPrimitiveType(ta), true);
+                        try
+                        {
+                            if (!ta.AttributeTemplate.IsArray.GetValueOrDefault(false))
+                            { // TODO: add support for arrays
+                                var type = ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
+                                eet.AddStructuralProperty(ta.Identifier, EdmModelHelper.AttributeValueType2EdmPrimitiveType(type), true); // TODO: catch exception
                             }
-                            catch (Exception ex)
-                            {
-                                logger.LogWarning(ex, $"Could not add attribute {ta.Identifier} to edm entity with trait ID {at.Key}");
-                            }
+                        }
+                        catch (Exception)
+                        {
+                            logger.LogWarning($"Could not create property {ta.Identifier} for edm type {typeName}");
                         }
                     }
 
