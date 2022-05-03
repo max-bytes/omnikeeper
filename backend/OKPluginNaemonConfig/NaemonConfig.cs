@@ -641,7 +641,7 @@ namespace OKPluginNaemonConfig
             // TODO: this should be configurable
             ciData = ciData.Where(el => el.Status == "ACTIVE" || el.Status == "BASE_INSTALLED" || el.Status == "READY_FOR_SERVICE").ToList();
 
-            newCIData = (Dictionary<string, ConfigurationItem>)newCIData.Where(el => el.Value.Status == "ACTIVE" || el.Value.Status == "BASE_INSTALLED" || el.Value.Status == "READY_FOR_SERVICE");
+            newCIData = newCIData.Where(el => el.Value.Status == "ACTIVE" || el.Value.Status == "BASE_INSTALLED" || el.Value.Status == "READY_FOR_SERVICE").ToDictionary(el => el.Key, el => el.Value);
 
             // getNaemonConfigObjectsFromStaticTemplates - global-commands
             Helper.ConfigObjects.GetFromStaticTemplates(configObjs, cfg.Command);
