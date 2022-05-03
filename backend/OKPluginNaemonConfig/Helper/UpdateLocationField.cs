@@ -37,5 +37,37 @@ namespace OKPluginNaemonConfig.Helper
                 }
             }
         }
+
+        public static void UpdateLocationField(Dictionary<string, ConfigurationItem> ciData)
+        {
+            foreach (var (_,ciItem) in ciData)
+            {
+                if (ciItem.Vars.ContainsKey("LOCATION"))
+                {
+                    if (ciItem.Vars["LOCATION"] == "")
+                    {
+                        if (ciItem.Relations.ContainsKey("OUT"))
+                        {
+                            if (ciItem.Relations["OUT"].ContainsKey("runs_on"))
+                            {
+                                if (ciItem.Relations["OUT"]["runs_on"].Count > 0)
+                                {
+                                    var targetCIID = ciItem.Relations["OUT"]["runs_on"][0];
+                                    //var targetCI = ciData.Where(c => c.Id == targetCIID).FirstOrDefault();
+
+                                    // NOTE we need to fix this case
+                                    //var targetCI = ciData[targetCIID];
+
+                                    //if (targetCI != null)
+                                    //{
+                                    //    ciItem.Vars["LOCATION"] = targetCI.Vars["LOCATION"];
+                                    //}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

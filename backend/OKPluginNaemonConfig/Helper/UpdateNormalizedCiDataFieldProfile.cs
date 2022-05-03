@@ -52,5 +52,7 @@ namespace OKPluginNaemonConfig.Helper
             }
 
         }
+    
+        public static void UpdateProfileField(Dictionary<string, ConfigurationItem> ciData, List<string> cmdbMonprofilePrefix) { }
     }
 }

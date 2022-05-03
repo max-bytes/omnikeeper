@@ -133,6 +133,9 @@ namespace OKPluginNaemonConfig
 
             var ciData = new List<ConfigurationItem>();
 
+            var newCIData = new Dictionary<string, ConfigurationItem>();
+
+
             // load all categories
             var allCategories = await categoryModel.GetAllByCIID(layersetCMDB, trans, changesetProxy.TimeThreshold);
 
@@ -144,54 +147,81 @@ namespace OKPluginNaemonConfig
 
             foreach (var ciItem in hosts)
             {
-                var ciCategories = allCategories.Where(c => ciItem.Value.CategoriesIds.ToList().Contains(c.Key)).ToList();
-
                 var cat = new Dictionary<string, List<Category>>();
-                foreach (var (_, ciCategory) in ciCategories)
-                {
-                    var obj = new Category
-                    {
-                        Id = ciCategory.Id,
-                        Tree = ciCategory.CatTree,
-                        Group = ciCategory.CatGroup,
-                        Name = ciCategory.Cat,
-                        Desc = ciCategory.CatDesc,
-                    };
 
-                    if (!cat.ContainsKey(obj.Group))
+                foreach (var item in ciItem.Value.CategoriesIds)
+                {
+                    if (allCategories.TryGetValue(item, out Entity.Category? ciCategory))
                     {
-                        cat.Add(obj.Group, new List<Category> { obj });
-                    }
-                    else
-                    {
-                        cat[obj.Group].Add(obj);
+                        var obj = new Category
+                        {
+                            Id = ciCategory.Id,
+                            Tree = ciCategory.CatTree,
+                            Group = ciCategory.CatGroup,
+                            Name = ciCategory.Cat,
+                            Desc = ciCategory.CatDesc,
+                        };
+
+                        if (!cat.ContainsKey(obj.Group))
+                        {
+                            cat.Add(obj.Group, new List<Category> { obj });
+                        }
+                        else
+                        {
+                            cat[obj.Group].Add(obj);
+                        }
                     }
                 }
-
-                var ciInterfaces = allInterfaces.Where(c => ciItem.Value.InterfacesIds.ToList().Contains(c.Key)).ToList();
+                
                 var interfaces = new List<InterfaceObj>();
 
-                foreach (var (_, item) in ciInterfaces)
+                foreach (var item in ciItem.Value.InterfacesIds)
                 {
-                    var obj = new InterfaceObj
+                    if (allInterfaces.TryGetValue(item, out Interface? ciInterface))
                     {
-                        DNSName = item.DNSName,
-                        Id = item.Id,
-                        IP = item.IP,
-                        LANType = item.LanType,
-                        Type = item.Type,
-                        Name = item.Name,
-                    };
+                        var obj = new InterfaceObj
+                        {
+                            DNSName = ciInterface.DNSName,
+                            Id = ciInterface.Id,
+                            IP = ciInterface.IP,
+                            LANType = ciInterface.LanType,
+                            Type = ciInterface.Type,
+                            Name = ciInterface.Name,
+                        };
 
-                    interfaces.Add(obj);
+                        interfaces.Add(obj);
+                    }
                 }
-
 
                 int? port = null;
                 if (ciItem.Value.Port != "" && int.TryParse(ciItem.Value.Port, out var p))
                     port = p;
 
-                ciData.Add(new ConfigurationItem
+                // TODO remove this when you remove ciData list
+                //ciData.Add(new ConfigurationItem
+                //{
+                //    Type = "HOST",
+                //    Id = ciItem.Value.Id,
+                //    Name = ciItem.Value.HostName,
+                //    Environment = ciItem.Value.Environment,
+                //    Status = ciItem.Value.Status,
+                //    FKey = ciItem.Value.FKey,
+                //    FSource = ciItem.Value.FSource, 
+                //    Platform = ciItem.Value.Platform,
+                //    Address = ciItem.Value.Address,
+                //    Port = port,
+                //    Cust = ciItem.Value.Cust,
+                //    Criticality = ciItem.Value.Criticality,
+                //    Location = ciItem.Value.Location,
+                //    Instance = ciItem.Value.Instance,
+                //    OS = ciItem.Value.OS,
+                //    SuppOS = "", // Add SuppOS for this ci,
+                //    SuppApp = "", // Add SuppApp for this ci,W
+                //    Categories = cat,
+                //    Interfaces = interfaces,
+                //});
+
+                var objToAdd = new ConfigurationItem
                 {
                     Type = "HOST",
                     Id = ciItem.Value.Id,
@@ -199,7 +229,7 @@ namespace OKPluginNaemonConfig
                     Environment = ciItem.Value.Environment,
                     Status = ciItem.Value.Status,
                     FKey = ciItem.Value.FKey,
-                    FSource = ciItem.Value.FSource, 
+                    FSource = ciItem.Value.FSource,
                     Platform = ciItem.Value.Platform,
                     Address = ciItem.Value.Address,
                     Port = port,
@@ -212,7 +242,63 @@ namespace OKPluginNaemonConfig
                     SuppApp = "", // Add SuppApp for this ci,W
                     Categories = cat,
                     Interfaces = interfaces,
-                });
+                };
+
+                var profileCount = 0;
+                objToAdd.Profile = "NONE";
+                objToAdd.ProfileOrg = new List<string>();
+
+                if (objToAdd.Categories.TryGetValue("MONITORING", out List<Category>? value))
+                {
+                    foreach (var category in value)
+                    {
+                        // check profile against configured scoping pattern
+                        var isMyProfileScope = false;
+                        foreach (var pattern in cfg!.CMDBMonprofilePrefix)
+                        {
+                            if (Regex.IsMatch(category.Name, $"^{pattern}", RegexOptions.IgnoreCase))
+                            {
+                                isMyProfileScope = true;
+                                break;
+                            }
+                        }
+
+                        if (isMyProfileScope)
+                        {
+                            profileCount += 1;
+                            objToAdd.Profile = category.Name.ToLower();
+                            objToAdd.ProfileOrg.Add(category.Name.ToLower());
+                        }
+                    }
+                }
+
+                if (profileCount > 1)
+                {
+                    objToAdd.Profile = "MULTIPLE";
+                }
+
+                if (profileCount == 1 && Regex.IsMatch(objToAdd.Profile, "^profile", RegexOptions.IgnoreCase))
+                {
+                    // add legacy profile capability
+                    objToAdd.Tags.Add("cap_lp_" + objToAdd.Profile);
+                }
+
+                if (!objToAdd.Vars.ContainsKey("HASNRPE"))
+                {
+                    objToAdd.Vars.Add("HASNRPE", "YES");
+                }
+
+                if (!objToAdd.Vars.ContainsKey("DYNAMICADD"))
+                {
+                    objToAdd.Vars.Add("DYNAMICADD", "NO");
+                }
+
+                if (!objToAdd.Vars.ContainsKey("DYNAMICMODULES"))
+                {
+                    objToAdd.Vars.Add("DYNAMICMODULES", "YES");
+                }
+
+                newCIData.Add(ciItem.Value.Id, objToAdd);
             }
 
             // get services
@@ -221,47 +307,50 @@ namespace OKPluginNaemonConfig
 
             foreach (var ciItem in services)
             {
-
-                var ciCategories = allCategories.Where(c => ciItem.Value.CategoriesIds.ToList().Contains(c.Key)).ToList();
-
                 var cat = new Dictionary<string, List<Category>>();
-                foreach (var (_, ciCategory) in ciCategories)
-                {
-                    var obj = new Category
-                    {
-                        Id = ciCategory.Id,
-                        Tree = ciCategory.CatTree,
-                        Group = ciCategory.CatGroup,
-                        Name = ciCategory.Cat,
-                        Desc = ciCategory.CatDesc,
-                    };
 
-                    if (!cat.ContainsKey(obj.Group))
+                foreach (var item in ciItem.Value.CategoriesIds)
+                {
+                    if (allCategories.TryGetValue(item, out Entity.Category? ciCategory))
                     {
-                        cat.Add(obj.Group, new List<Category> { obj });
-                    }
-                    else
-                    {
-                        cat[obj.Group].Add(obj);
+                        var obj = new Category
+                        {
+                            Id = ciCategory.Id,
+                            Tree = ciCategory.CatTree,
+                            Group = ciCategory.CatGroup,
+                            Name = ciCategory.Cat,
+                            Desc = ciCategory.CatDesc,
+                        };
+
+                        if (!cat.ContainsKey(obj.Group))
+                        {
+                            cat.Add(obj.Group, new List<Category> { obj });
+                        }
+                        else
+                        {
+                            cat[obj.Group].Add(obj);
+                        }
                     }
                 }
 
-                var ciInterfaces = allInterfaces.Where(c => ciItem.Value.InterfacesIds.ToList().Contains(c.Key)).ToList();
                 var interfaces = new List<InterfaceObj>();
 
-                foreach (var (_, item) in ciInterfaces)
+                foreach (var item in ciItem.Value.InterfacesIds)
                 {
-                    var obj = new InterfaceObj
+                    if (allInterfaces.TryGetValue(item, out Interface? ciInterface))
                     {
-                        DNSName = item.DNSName,
-                        Id = item.Id,
-                        IP = item.IP,
-                        LANType = item.LanType,
-                        Type = item.Type,
-                        Name = item.Name,
-                    };
+                        var obj = new InterfaceObj
+                        {
+                            DNSName = ciInterface.DNSName,
+                            Id = ciInterface.Id,
+                            IP = ciInterface.IP,
+                            LANType = ciInterface.LanType,
+                            Type = ciInterface.Type,
+                            Name = ciInterface.Name,
+                        };
 
-                    interfaces.Add(obj);
+                        interfaces.Add(obj);
+                    }
                 }
 
                 int? port = null;
@@ -295,7 +384,29 @@ namespace OKPluginNaemonConfig
                     // check if we have incomin relations on our cmdb data
                 }
 
-                ciData.Add(new ConfigurationItem
+                // TODO remove this when we remove the ciData list
+                //ciData.Add(new ConfigurationItem
+                //{
+                //    Type = "SERVICE",
+                //    Id = ciItem.Value.Id,
+                //    Name = ciItem.Value.Name,
+                //    Status = ciItem.Value.Status,
+                //    Environment = ciItem.Value.Environment,
+                //    Address = ciItem.Value.Address,
+                //    Port = port,
+                //    Cust = ciItem.Value.Cust,
+                //    Criticality = ciItem.Value.Criticality,
+                //    FKey = ciItem.Value.FKey,
+                //    FSource = ciItem.Value.FSource,
+                //    Instance = ciItem.Value.Instance,
+                //    SuppOS = "", // Add SuppOS for this ci,
+                //    SuppApp = "", // Add SuppApp for this ci,
+                //    Categories = cat,
+                //    Interfaces = interfaces,
+                //    Relations = relations,
+                //});
+
+                var objToAdd = new ConfigurationItem
                 {
                     Type = "SERVICE",
                     Id = ciItem.Value.Id,
@@ -314,7 +425,63 @@ namespace OKPluginNaemonConfig
                     Categories = cat,
                     Interfaces = interfaces,
                     Relations = relations,
-                });
+                };
+
+                var profileCount = 0;
+                objToAdd.Profile = "NONE";
+                objToAdd.ProfileOrg = new List<string>();
+
+                if (objToAdd.Categories.TryGetValue("MONITORING", out List<Category>? value))
+                {
+                    foreach (var category in value)
+                    {
+                        // check profile against configured scoping pattern
+                        var isMyProfileScope = false;
+                        foreach (var pattern in cfg!.CMDBMonprofilePrefix)
+                        {
+                            if (Regex.IsMatch(category.Name, $"^{pattern}", RegexOptions.IgnoreCase))
+                            {
+                                isMyProfileScope = true;
+                                break;
+                            }
+                        }
+
+                        if (isMyProfileScope)
+                        {
+                            profileCount += 1;
+                            objToAdd.Profile = category.Name.ToLower();
+                            objToAdd.ProfileOrg.Add(category.Name.ToLower());
+                        }
+                    }
+                }
+
+                if (profileCount > 1)
+                {
+                    objToAdd.Profile = "MULTIPLE";
+                }
+
+                if (profileCount == 1 && Regex.IsMatch(objToAdd.Profile, "^profile", RegexOptions.IgnoreCase))
+                {
+                    // add legacy profile capability
+                    objToAdd.Tags.Add("cap_lp_" + objToAdd.Profile);
+                }
+
+                if (!objToAdd.Vars.ContainsKey("HASNRPE"))
+                {
+                    objToAdd.Vars.Add("HASNRPE", "YES");
+                }
+
+                if (!objToAdd.Vars.ContainsKey("DYNAMICADD"))
+                {
+                    objToAdd.Vars.Add("DYNAMICADD", "NO");
+                }
+
+                if (!objToAdd.Vars.ContainsKey("DYNAMICMODULES"))
+                {
+                    objToAdd.Vars.Add("DYNAMICMODULES", "YES");
+                }
+
+                newCIData.Add(ciItem.Value.Id, objToAdd);
             }
             
             // add host actions to cidata
@@ -324,25 +491,23 @@ namespace OKPluginNaemonConfig
 
             foreach (var ciItem in hostActions)
             {
-                ciData.ForEach(el =>
+                // find if key exists in main dictionary
+                if (newCIData.ContainsKey(ciItem.Value.HostId))
                 {
-                    if (el.Id == ciItem.Value.HostId)
+                    newCIData[ciItem.Value.HostId].Actions = new Actions
                     {
-                        el.Actions = new Actions
-                        {
-                            Id = ciItem.Value.Id,
-                            Type = ciItem.Value.Type,
-                            Cmd = ciItem.Value.Cmd,
-                            CmdUser = ciItem.Value.CmdUser,
-                        };
+                        Id = ciItem.Value.Id,
+                        Type = ciItem.Value.Type,
+                        Cmd = ciItem.Value.Cmd,
+                        CmdUser = ciItem.Value.CmdUser,
+                    };
 
-                        /* override address from hostactions */
-                        if (ciItem.Value.Type.ToUpper() == "MONITORING")
-                        {
-                            el.Address = ciItem.Value.Cmd;
-                        }
+                    /* override address from hostactions */
+                    if (ciItem.Value.Type.ToUpper() == "MONITORING")
+                    {
+                        newCIData[ciItem.Value.HostId].Address = ciItem.Value.Cmd;
                     }
-                });
+                }
             }
 
             // add service actions to ci data 
@@ -351,19 +516,17 @@ namespace OKPluginNaemonConfig
             //NOTE mk: in the cmdb import of the data there is no relation between actions and services
             foreach (var ciItem in serviceActions)
             {
-                ciData.ForEach(el =>
+                if (newCIData.ContainsKey(ciItem.Value.ServiceId))
                 {
-                    if (el.Id == ciItem.Value.ServiceId)
+                    newCIData[ciItem.Value.ServiceId].Actions = new Actions
                     {
-                        el.Actions = new Actions
-                        {
-                            Id = ciItem.Value.Id,
-                            Type = ciItem.Value.Type,
-                            Cmd = ciItem.Value.Cmd,
-                            CmdUser = ciItem.Value.CmdUser,
-                        };
-                    }
-                });
+                        Id = ciItem.Value.Id,
+                        Type = ciItem.Value.Type,
+                        Cmd = ciItem.Value.Cmd,
+                        CmdUser = ciItem.Value.CmdUser,
+                    };
+
+                }
             }
 
 
@@ -372,101 +535,23 @@ namespace OKPluginNaemonConfig
             logger.LogDebug("Started processing core data.");
 
             // Update normalized CiData field Profile
-            Helper.CIData.UpdateProfileField(ciData, cfg!.CMDBMonprofilePrefix);
-            logger.LogDebug("Finished updating profile field => UpdateNormalizedCiDataFieldProfile.");
+
+            // ============== Helper.CIData.UpdateProfileField || UpdateNormalizedCiDataFieldProfile ============
+
+            // NOTE: in order to improve performance these actions are done when creating hosts and services
+            //Helper.CIData.UpdateProfileField(ciData, cfg!.CMDBMonprofilePrefix);
+            //logger.LogDebug("Finished updating profile field => UpdateNormalizedCiDataFieldProfile.");
 
             // updateNormalizedCiDataFieldAddress
             // NOTE: this part is done directly when selecting hosts and serices
 
             // updateNormalizedCiData_addGenericCmdbCapTags
-            Helper.CIData.AddGenericCmdbCapTags(ciData);
+            // NOTE remove the first line
+            //Helper.CIData.AddGenericCmdbCapTags(ciData);
+            Helper.CIData.AddGenericCmdbCapTags(newCIData);
             logger.LogDebug("Finished adding cap tags => updateNormalizedCiData_addGenericCmdbCapTags.");
 
-            // updateNormalizedCiData_addRelationData
-            //var allRunsOnRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build("runs_on"), layersetCMDB, trans, changesetProxy.TimeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
-            //// NOTE In original implementation relations with predicate runsOn and canRunOn are selected.
-
-            //var fromCIIDs = allRunsOnRelations.Select(relation => relation.Relation.FromCIID).ToHashSet();
-            //var fromCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(fromCIIDs), layersetCMDB!, false, NamedAttributesSelection.Build("cmdb.id"), trans, changesetProxy.TimeThreshold)).ToDictionary(ci => ci.ID);
-
-            //var toCIIds = allRunsOnRelations.Select(relation => relation.Relation.ToCIID).ToHashSet();
-            //var toCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(toCIIds), layersetCMDB!, false, NamedAttributesSelection.Build("cmdb.id"), trans, changesetProxy.TimeThreshold)).ToDictionary(ci => ci.ID);
-
-            //var cmdbRelationsBySrc = new Dictionary<string, (string, string)>();
-
-            /*
-
-            foreach (var item in allRunsOnRelations)
-            {
-                MergedCI fromCI;
-                if (!fromCIs.ContainsKey(item!.Relation.FromCIID))
-                {
-                    continue;
-                }
-                fromCI = fromCIs[item!.Relation.FromCIID];
-
-                var fromCIID = (fromCI.MergedAttributes["cmdb.service.id"].Attribute.Value as AttributeScalarValueText)?.Value;
-
-                var cfgObj = ciData.Where(el => el.Type == "SERVICE" && el.Id == fromCIID).FirstOrDefault();
-
-                if (cfgObj != null)
-                {
-                    var targetCI = toCIs[item!.Relation.FromCIID];
-                    var targetCIID = (fromCI.MergedAttributes["cmdb.id"].Attribute.Value as AttributeScalarValueText)?.Value;
-
-                    if (!cfgObj.Relations.ContainsKey("OUT"))
-                    {
-                        cfgObj.Relations.Add("OUT", new Dictionary<string, List<string>>
-                        {
-                            { item.Relation.PredicateID, new List<string>{targetCIID! } }
-                        });
-                    }
-
-                    if (!cfgObj.Relations["OUT"].ContainsKey(item.Relation.PredicateID))
-                    {
-                        cfgObj.Relations["OUT"].Add(item.Relation.PredicateID, new List<string> { targetCIID! });
-                    }
-                    else
-                    {
-                        cfgObj.Relations["OUT"][item.Relation.PredicateID].Add(targetCIID!);
-                    }
-
-                    if (!cmdbRelationsBySrc.ContainsKey(fromCIID!))
-                    {
-                        cmdbRelationsBySrc.Add(fromCIID!, (item.Relation.PredicateID, targetCIID!));
-                    }
-                    else
-                    {
-                        cmdbRelationsBySrc[fromCIID!] = (item.Relation.PredicateID, targetCIID!);
-                    }
-
-                    // write incoming relations if CI exists
-                    var targetCfgObj = ciData.Where(el => el.Id == targetCIID).FirstOrDefault();
-
-                    if (targetCfgObj != null)
-                    {
-
-                        if (!targetCfgObj.Relations.ContainsKey("IN"))
-                        {
-                            targetCfgObj.Relations.Add("IN", new Dictionary<string, List<string>> {
-                                { item.Relation.PredicateID, new List<string>{fromCIID! } }
-                            });
-                        }
-
-                        if (!cfgObj.Relations["IN"].ContainsKey(item.Relation.PredicateID))
-                        {
-                            cfgObj.Relations["IN"].Add(item.Relation.PredicateID, new List<string> { targetCIID! });
-                        }
-                        else
-                        {
-                            cfgObj.Relations["IN"][item.Relation.PredicateID].Add(targetCIID!);
-                        }
-                    }
-                }
-            }
-
-            */
-
+            
             foreach (var ciItem in ciData)
             {
                 // add effective host for ci
@@ -496,28 +581,30 @@ namespace OKPluginNaemonConfig
             /* update data, mainly vars stuff */
             // updateNormalizedCiData_preProcessVars
             // TODO: very important to check when these variables should be set in order to honor the global variables
-            foreach (var ciItem in ciData)
-            {
-                // NOTE should we update resultRef[$id]['VARS']['ALERTS'] = 'OFF' ?
-                if (!ciItem.Vars.ContainsKey("HASNRPE"))
-                {
-                    ciItem.Vars.Add("HASNRPE", "YES");
-                }
+            // NOTE now this is done directly when creating host and service configuration objects
+            //foreach (var ciItem in ciData)
+            //{
+            //    // NOTE should we update resultRef[$id]['VARS']['ALERTS'] = 'OFF' ?
+            //    if (!ciItem.Vars.ContainsKey("HASNRPE"))
+            //    {
+            //        ciItem.Vars.Add("HASNRPE", "YES");
+            //    }
 
-                if (!ciItem.Vars.ContainsKey("DYNAMICADD"))
-                {
-                    ciItem.Vars.Add("DYNAMICADD", "NO");
-                }
+            //    if (!ciItem.Vars.ContainsKey("DYNAMICADD"))
+            //    {
+            //        ciItem.Vars.Add("DYNAMICADD", "NO");
+            //    }
 
-                if (!ciItem.Vars.ContainsKey("DYNAMICMODULES"))
-                {
-                    ciItem.Vars.Add("DYNAMICMODULES", "YES");
-                }
-            }
+            //    if (!ciItem.Vars.ContainsKey("DYNAMICMODULES"))
+            //    {
+            //        ciItem.Vars.Add("DYNAMICMODULES", "YES");
+            //    }
+            //}
 
             logger.LogDebug("Finished updating pre process vars => updateNormalizedCiData_preProcessVars.");
 
-            Helper.CIData.AddNaemonVars(ciData);
+            //Helper.CIData.AddNaemonVars(ciData);
+            Helper.CIData.AddNaemonVars(newCIData);
 
             logger.LogDebug("Finished adding naemon vars.");
 
@@ -528,11 +615,13 @@ namespace OKPluginNaemonConfig
 
             // updateNormalizedCiData_postProcessVars
 
-            Helper.CIData.UpdateNormalizedCiDataPostProcessVars(ciData);
+            //Helper.CIData.UpdateNormalizedCiDataPostProcessVars(ciData);
+            Helper.CIData.UpdateNormalizedCiDataPostProcessVars(newCIData);
             logger.LogDebug("Finished updating post process cars => updateNormalizedCiData_postProcessVars.");
 
             // updateNormalizedCiData_updateLocationField
-            Helper.CIData.UpdateLocationField(ciData);
+            //Helper.CIData.UpdateLocationField(ciData);
+            Helper.CIData.UpdateLocationField(newCIData);
             logger.LogDebug("Finished updating post process cars => updateNormalizedCiData_updateLocationField.");
 
             // build CapabilityMap
@@ -542,7 +631,8 @@ namespace OKPluginNaemonConfig
 
             /* test compatibility of naemons and add NAEMONSAVAIL */
             var naemonIds = naemonInstances.Select(el => el.Value.Id).ToList();
-            Helper.CIData.AddNaemonsAvailField(ciData, naemonIds, capMap);
+            //Helper.CIData.AddNaemonsAvailField(ciData, naemonIds, capMap);
+            Helper.CIData.AddNaemonsAvailField(newCIData, naemonIds, capMap);
 
             var configObjs = new List<ConfigObj>();
 
@@ -550,6 +640,8 @@ namespace OKPluginNaemonConfig
             // include only cis that have STATUS = to "ACTIVE" || "BASE_INSTALLED" || "READY_FOR_SERVICE"
             // TODO: this should be configurable
             ciData = ciData.Where(el => el.Status == "ACTIVE" || el.Status == "BASE_INSTALLED" || el.Status == "READY_FOR_SERVICE").ToList();
+
+            newCIData = (Dictionary<string, ConfigurationItem>)newCIData.Where(el => el.Value.Status == "ACTIVE" || el.Value.Status == "BASE_INSTALLED" || el.Value.Status == "READY_FOR_SERVICE");
 
             // getNaemonConfigObjectsFromStaticTemplates - global-commands
             Helper.ConfigObjects.GetFromStaticTemplates(configObjs, cfg.Command);
@@ -597,7 +689,15 @@ namespace OKPluginNaemonConfig
             foreach (var item in naemonInstances)
             {
                 naemonsCis.Add(item.Key, new List<ConfigurationItem>());
-                foreach (var ciItem in ciData)
+                //foreach (var ciItem in ciData)
+                //{
+                //    if (ciItem.NaemonsAvail.Contains(item.Value.Id))
+                //    {
+                //        naemonsCis[item.Key].Add(ciItem);
+                //    }
+                //}
+
+                foreach (var (_,ciItem) in newCIData)
                 {
                     if (ciItem.NaemonsAvail.Contains(item.Value.Id))
                     {
@@ -605,6 +705,8 @@ namespace OKPluginNaemonConfig
                     }
                 }
             }
+
+
             #endregion
 
             #region generate configs foreach naemon instance
@@ -664,6 +766,10 @@ namespace OKPluginNaemonConfig
                     }
                 }
 
+                if (item.Key == Guid.Parse("9bee109c-d40e-428f-99e5-e6a6b2eef7cc"))
+                {
+                    var a = 127;
+                }
                 // proces JSON to flat file here
                 // NOTE: check the concat once again ??
                 var finalCfg = Helper.FinalConfiguration.Create(naemonObjs.Concat(configObjs).ToList());

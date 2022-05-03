@@ -24,5 +24,23 @@ namespace OKPluginNaemonConfig.Helper
                 }
             }
         }
+
+        public static void AddGenericCmdbCapTags(Dictionary<string, ConfigurationItem> ciData)
+        {
+            foreach (var (key, ciItem) in ciData)
+            {
+                if (ciItem.Categories.ContainsKey("MONITORING_CAP"))
+                {
+                    foreach (var category in ciItem.Categories["MONITORING_CAP"])
+                    {
+                        ciItem.Tags.Add($"cap_{category.Tree}_{category.Name}".ToLower());
+                    }
+                }
+                else
+                {
+                    ciItem.Tags.Add("cap_default");
+                }
+            }
+        }
     }
 }
