@@ -1,10 +1,24 @@
-﻿using Omnikeeper.Entity.AttributeValues;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
+    public class TraitAttributeFilter
+    {
+        public readonly TraitAttribute traitAttribute;
+        // TODO: support non-text filters
+        public readonly AttributeScalarTextFilter filter;
+
+        public TraitAttributeFilter(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)
+        {
+            this.traitAttribute = traitAttribute;
+            this.filter = filter;
+        }
+    }
+
     public class TextFilterRegexInput
     {
         public readonly string Pattern;

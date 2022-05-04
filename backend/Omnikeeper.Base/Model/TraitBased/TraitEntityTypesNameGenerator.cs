@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Model.TraitBased
@@ -59,6 +60,8 @@ namespace Omnikeeper.Base.Model.TraitBased
         }
         public static string GenerateTraitRelationFieldWithTraitHintName(TraitRelation tr, string traitIDHint)
         {
+            if (!tr.RelationTemplate.TraitHints.Contains(traitIDHint))
+                throw new System.Exception("trait hint must be part of trait relation when generating name");
             // TODO: what if two unsanitized field names map to the same sanitized field name? TODO: detect this and provide a work-around
             return SanitizeFieldName($"{tr.Identifier}_as_{traitIDHint}");
         }

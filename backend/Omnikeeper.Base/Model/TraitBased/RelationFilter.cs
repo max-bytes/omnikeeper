@@ -1,10 +1,24 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using GraphQL.DataLoader;
+using Omnikeeper.Base.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
+    public class TraitRelationFilter
+    {
+        public readonly TraitRelation traitRelation;
+        public readonly RelationFilter filter;
+
+        public TraitRelationFilter(TraitRelation traitRelation, RelationFilter filter)
+        {
+            this.traitRelation = traitRelation;
+            this.filter = filter;
+        }
+    }
+
     public class RelationFilter
     {
         public uint? ExactAmount;
@@ -25,18 +39,24 @@ namespace Omnikeeper.Base.Model.TraitBased
     public static class RelationFilterHelper
     {
         // NOTE: expects that the passed relations are exactly the correct relations applicable for this filter: correct predicateID, direction, CI, ...
-        public static bool Matches(this RelationFilter filter, IEnumerable<MergedRelation> relations)
+        public static IDataLoaderResult<IEnumerable<Guid>> MatchAgainstNonEmpty(this RelationFilter filter, IEnumerable<IGrouping<Guid, MergedRelation>> relations)
         {
             if (filter.ExactAmount != null)
             {
-                if (relations.Count() != filter.ExactAmount)
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
+                if (filter.ExactAmount == 0)
+                    throw new Exception("Must not be");
+                return new SimpleDataLoader<IEnumerable<Guid>>(c => Task.FromResult(relations.Where(r => r.Count() == filter.ExactAmount).Select(r => r.Key)));
+            }
+            throw new Exception("Encountered relation filter in unknown state");
+        }
+
+        public static IDataLoaderResult<IEnumerable<Guid>> MatchAgainstEmpty(this RelationFilter filter, IEnumerable<Guid> relations)
+        {
+            if (filter.ExactAmount != null)
+            {
+                if (filter.ExactAmount != 0)
+                    throw new Exception("Must not be");
+                return new SimpleDataLoader<IEnumerable<Guid>>(c => Task.FromResult(relations));
             }
             throw new Exception("Encountered relation filter in unknown state");
         }

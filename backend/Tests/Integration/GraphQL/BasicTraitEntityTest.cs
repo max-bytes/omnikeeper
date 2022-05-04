@@ -768,6 +768,39 @@ mutation($name: String!, $id: String!) {
 }
 ";
             AssertQuerySuccess(queryFiltered, expected5, user);
+
+
+            var queryFiltered2 = @"
+{
+  traitEntities(layers: [""layer_1""]) {
+    test_trait_a {
+                filtered(filter: {id: {exact: ""entity_2""}, name: {regex:{pattern: ""Entity [23]""}}}) {
+                    entity {
+                        id
+                        name
+                    }
+                }
+            }
+        }
+    }
+";
+            var expected6 = @"
+{
+  ""traitEntities"": {
+	  ""test_trait_a"": {
+	    ""filtered"": [
+          {
+            ""entity"": {
+              ""id"": ""entity_2"",
+              ""name"": ""Entity 2""
+            }
+          }
+        ]
+	  }
+  }
+}
+";
+            AssertQuerySuccess(queryFiltered2, expected6, user);
         }
     }
 }

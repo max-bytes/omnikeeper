@@ -112,11 +112,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class FilterInput
     {
-        // TODO: support non-text filters
-        public readonly (TraitAttribute traitAttribute, AttributeScalarTextFilter filter)[] AttributeFilters;
-        public readonly (TraitRelation traitRelation, RelationFilter filter)[] RelationFilters;
+        public readonly TraitAttributeFilter[] AttributeFilters;
+        public readonly TraitRelationFilter[] RelationFilters;
 
-        public FilterInput((TraitAttribute traitAttribute, AttributeScalarTextFilter filter)[] attributeFilters, (TraitRelation traitRelation, RelationFilter filter)[] relationFilters)
+        public FilterInput(TraitAttributeFilter[] attributeFilters, TraitRelationFilter[] relationFilters)
         {
             AttributeFilters = attributeFilters;
             RelationFilters = relationFilters;
@@ -126,6 +125,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
     public class FilterInputType : InputObjectGraphType<FilterInput>
     {
         private readonly ITrait trait;
+        private readonly IDictionary<string, TraitAttribute> FieldName2TraitAttributeMap = new Dictionary<string, TraitAttribute>();
+        private readonly IDictionary<string, TraitRelation> FieldName2TraitRelationMap = new Dictionary<string, TraitRelation>();
 
         public FilterInputType(ITrait trait)
         {
@@ -146,18 +147,21 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             Type = typeof(AttributeTextFilterInputType),
                             Name = attributeFieldName,
                         });
+                        FieldName2TraitAttributeMap.Add(attributeFieldName, ta);
                     }
                 }
             }
 
             foreach (var r in trait.OptionalRelations)
             {
+                // TODO: support for trait hints
                 var relationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
                 AddField(new FieldType()
                 {
                     Type = typeof(RelationFilterInputType),
                     Name = relationFieldName
                 });
+                FieldName2TraitRelationMap.Add(relationFieldName, r);
             }
 
             this.trait = trait;
@@ -165,44 +169,27 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
-            var attributeFilters = new List<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)>(); // TODO: support non-text filters
-            var relationFilters = new List<(TraitRelation traitRelation, RelationFilter filter)>();
+            var attributeFilters = new List<TraitAttributeFilter>();
+            var relationFilters = new List<TraitRelationFilter>();
             foreach (var kv in value)
             {
                 var inputFieldName = kv.Key;
 
-                // lookup value type based on input attribute name
-                var attribute = trait.RequiredAttributes.Concat(trait.OptionalAttributes).FirstOrDefault(ra =>
-                {
-                    var convertedAttributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ra);
-                    return convertedAttributeFieldName == inputFieldName;
-                });
-
-                if (attribute != null)
+                if (FieldName2TraitAttributeMap.TryGetValue(inputFieldName, out var attribute))
                 {
                     if (kv.Value is not AttributeScalarTextFilter f)
                         throw new Exception($"Unknown attribute filter for attribute {inputFieldName} detected");
-                    attributeFilters.Add((attribute, f));
+                    attributeFilters.Add(new TraitAttributeFilter(attribute, f));
+                }
+                else if (FieldName2TraitRelationMap.TryGetValue(inputFieldName, out var relation))
+                {
+                    if (kv.Value is not RelationFilter f)
+                        throw new Exception($"Unknown relation filter for relation {inputFieldName} detected");
+                    relationFilters.Add(new TraitRelationFilter(relation, f));
                 }
                 else
                 {
-                    // filter field is not an attribute, try relations
-                    var relation = trait.OptionalRelations.FirstOrDefault(r =>
-                    {
-                        var convertedRelationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
-                        return convertedRelationFieldName == inputFieldName;
-                    });
-
-                    if (relation != null)
-                    {
-                        if (kv.Value is not RelationFilter f)
-                            throw new Exception($"Unknown relation filter for relation {inputFieldName} detected");
-                        relationFilters.Add((relation, f));
-                    }
-                    else
-                    {
-                        throw new Exception($"Could not find input attribute- or relation-filter {inputFieldName} in trait entity {trait.ID}");
-                    }
+                    throw new Exception($"Could not find input attribute- or relation-filter {inputFieldName} in trait entity {trait.ID}");
                 }
             }
 

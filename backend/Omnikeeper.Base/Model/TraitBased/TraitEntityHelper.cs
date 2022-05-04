@@ -106,7 +106,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (foundCIID == default) ? null : foundCIID;
         }
 
-        public static IDataLoaderResult<ISet<Guid>> GetMatchingCIIDsByRelationFilters(IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<(TraitRelation traitRelation, RelationFilter filter)> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
+        public static IDataLoaderResult<ISet<Guid>> GetMatchingCIIDsByRelationFilters(IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<TraitRelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
@@ -117,71 +117,58 @@ namespace Omnikeeper.Base.Model.TraitBased
             {
                 var relationsLookup = relations.ToLookup(r => r.Relation.PredicateID);
 
-                var isFirstFilter = true;
-                ISet<Guid> ret = new HashSet<Guid>();
+                IList<IDataLoaderResult<IEnumerable<Guid>>> dls = new List<IDataLoaderResult<IEnumerable<Guid>>>();
                 foreach (var filter in filters)
                 {
                     var template = filter.traitRelation.RelationTemplate;
                     var candidateRelations = relationsLookup[template.PredicateID];
                     var ciidGroupedRelations = (template.DirectionForward) ? candidateRelations.GroupBy(r => r.Relation.FromCIID) : candidateRelations.GroupBy(r => r.Relation.ToCIID);
 
-                    // NOTE: because the set of cis WITH and cis WITHOUT relations are a partition (i.e. have no overlap), we can do these two loops consecutively, yet isFirstFilter is still correct
+                    // TODO: performance improvement: after the first filter, we should reduce the input list
+
+                    // NOTE: because the set of cis WITH and cis WITHOUT relations are a partition (i.e. have no overlap), we can do these two loops consecutively
                     if (filter.filter.RequiresCheckOfCIsWithNonEmptyRelations())
                     {
-                        foreach (var t in ciidGroupedRelations)
-                        {
-                            if (filter.filter.Matches(t))
-                            {
-                                if (isFirstFilter)
-                                    ret.Add(t.Key);
-                            }
-                            else
-                            {
-                                if (!isFirstFilter)
-                                    ret.Remove(t.Key);
-                            }
-                        }
+                        dls.Add(filter.filter.MatchAgainstNonEmpty(ciidGroupedRelations));
                     }
                     if (filter.filter.RequiresCheckOfCIsWithEmptyRelations())
                     {
-                        var allCIIDs = await ciidModel.GetCIIDs(trans);
+                        var allCIIDs = await ciidModel.GetCIIDs(trans); // TODO: use dataloader?
                         var ciidsWithoutRelations = allCIIDs.Except(ciidGroupedRelations.Select(g => g.Key));
-                        foreach (var ciidWithoutRelations in ciidsWithoutRelations)
-                        {
-                            if (filter.filter.Matches(Enumerable.Empty<MergedRelation>()))
-                            {
-                                if (isFirstFilter)
-                                    ret.Add(ciidWithoutRelations);
-                            }
-                            else
-                            {
-                                if (!isFirstFilter)
-                                    ret.Remove(ciidWithoutRelations);
-                            }
-                        }
-                    }
 
-                    isFirstFilter = false;
+                        dls.Add(filter.filter.MatchAgainstEmpty(ciidsWithoutRelations));
+                    }
                 }
 
-                return ret;
-            });
+                var r = dls.ToResultOfListNonNull();
+                return r.Then(re =>
+                {
+                    // taken from https://stackoverflow.com/a/1676684
+                    var intersection = re
+                        .Skip(1)
+                        .Aggregate(
+                            (ISet<Guid>)new HashSet<Guid>(re.First()),
+                            (h, e) => { h.IntersectWith(e); return h; }
+                        );
+                    return intersection;
+                });
+            }).ResolveNestedResults();
         }
 
         /*
         * NOTE: this does not care whether or not the CIs are actually a trait entities or not
         */
-        public static IDataLoaderResult<ISet<Guid>> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IEnumerable<(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
+        public static IDataLoaderResult<ISet<Guid>> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IEnumerable<TraitAttributeFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
 
             return new SimpleDataLoader<ISet<Guid>>(async token =>
             {
-                foreach (var (traitAttribute, filter) in filters)
+                foreach (var taFilter in filters)
                 {
-                    var attributeName = traitAttribute.AttributeTemplate.Name;
-                    var attributeSelection = NamedAttributesWithValueFiltersSelection.Build(new Dictionary<string, AttributeScalarTextFilter>() { { attributeName, filter } });
+                    var attributeName = taFilter.traitAttribute.AttributeTemplate.Name;
+                    var attributeSelection = NamedAttributesWithValueFiltersSelection.Build(new Dictionary<string, AttributeScalarTextFilter>() { { attributeName, taFilter.filter } });
 
                     // TODO: use dataloader
                     var attributes = await attributeModel.GetMergedAttributes(ciSelection, attributeSelection, layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);

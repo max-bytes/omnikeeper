@@ -77,7 +77,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService)
                             .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(SpecificCIIDsSelection.Build(matchingCIIDs), attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService))
                             .ResolveNestedResults(); // resolve one level to be correct type again
-
                         }
                         else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
                         {
