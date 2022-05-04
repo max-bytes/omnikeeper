@@ -1,0 +1,2 @@
+﻿ALTER TABLE public.usage_stats
+  ADD COLUMN layer_id text NOT NULL DEFAULT '';

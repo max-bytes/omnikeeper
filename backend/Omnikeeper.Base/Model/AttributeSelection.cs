@@ -4,7 +4,6 @@ using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Model
 {
@@ -12,24 +11,6 @@ namespace Omnikeeper.Base.Model
     {
         bool ContainsAttributeName(string attributeName);
         bool ContainsAttribute(CIAttribute attribute);
-    }
-
-    public class RegexAttributeSelection : IAttributeSelection, IEquatable<RegexAttributeSelection>
-    {
-        public readonly string RegexStr;
-        public readonly Regex RegexCompiled;
-
-        public RegexAttributeSelection(string regex)
-        {
-            RegexCompiled = new Regex(regex);
-            RegexStr = regex;
-        }
-
-        public bool ContainsAttributeName(string attributeName) => RegexCompiled.IsMatch(attributeName);
-        public bool ContainsAttribute(CIAttribute attribute) => RegexCompiled.IsMatch(attribute.Name);
-        public override int GetHashCode() => RegexStr.GetHashCode();
-        public override bool Equals(object? obj) => Equals(obj as RegexAttributeSelection);
-        public bool Equals(RegexAttributeSelection? other) => other != null && RegexStr == other.RegexStr;
     }
 
     public class NamedAttributesSelection : IAttributeSelection, IEquatable<NamedAttributesSelection>
@@ -129,7 +110,6 @@ namespace Omnikeeper.Base.Model
                 NoAttributesSelection _ => other,
                 NamedAttributesSelection n => n.Union(other),
                 NamedAttributesWithValueFiltersSelection _ => throw new NotImplementedException(),
-                RegexAttributeSelection r => r.Union(other),
                 _ => throw new NotImplementedException(),
             };
         }
@@ -142,20 +122,6 @@ namespace Omnikeeper.Base.Model
                 NoAttributesSelection _ => a,
                 NamedAttributesSelection n => NamedAttributesSelection.Build(a.AttributeNames.Union(n.AttributeNames).ToHashSet()), // union
                 NamedAttributesWithValueFiltersSelection _ => throw new NotImplementedException(),
-                RegexAttributeSelection _ => throw new NotImplementedException(),
-                _ => throw new NotImplementedException(),
-            };
-        }
-
-        public static IAttributeSelection Union(this RegexAttributeSelection a, IAttributeSelection other)
-        {
-            return other switch
-            {
-                AllAttributeSelection _ => other,
-                NoAttributesSelection _ => a,
-                NamedAttributesSelection _ => throw new NotImplementedException(),
-                NamedAttributesWithValueFiltersSelection _ => throw new NotImplementedException(),
-                RegexAttributeSelection _ => throw new NotImplementedException(),
                 _ => throw new NotImplementedException(),
             };
         }
@@ -176,8 +142,6 @@ namespace Omnikeeper.Base.Model
                         throw new NotImplementedException();
                     case NoAttributesSelection _:
                         break;
-                    case RegexAttributeSelection _:
-                        throw new NotImplementedException();
                 }
             }
             return NamedAttributesSelection.Build(specific);

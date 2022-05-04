@@ -226,9 +226,8 @@ namespace Omnikeeper.Model
         {
             return data switch
             {
-                BulkCIAttributeDataLayerScope d => (d.NamePrefix.IsEmpty()) ?
-                        (await GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, layerset, trans, timeThreshold, GeneratedDataHandlingExclude.Instance)) :
-                        (await GetMergedAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{d.NamePrefix}"), layerset, trans, timeThreshold, GeneratedDataHandlingExclude.Instance)),
+                BulkCIAttributeDataLayerScope _ => 
+                    await GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, layerset, trans, timeThreshold, GeneratedDataHandlingExclude.Instance),
                 BulkCIAttributeDataCIScope d =>
                     await GetMergedAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, layerset, trans: trans, atTime: timeThreshold, GeneratedDataHandlingExclude.Instance),
                 BulkCIAttributeDataCIAndAttributeNameScope a =>

@@ -62,7 +62,6 @@ namespace Omnikeeper.Model.Decorators
                     var additionalAttributeNames = attributeSelection switch
                     {
                         NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
-                        RegexAttributeSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
                         NamedAttributesWithValueFiltersSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
                         AllAttributeSelection _ => new HashSet<string>(), // we are fetching all attributes anyway, no need to add additional attributes
                         NoAttributesSelection _ => new HashSet<string>(), // no attributes necessary

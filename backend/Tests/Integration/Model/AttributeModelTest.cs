@@ -276,21 +276,6 @@ namespace Tests.Integration.Model
             var changeset3 = await CreateChangesetProxy();
             await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
             await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-
-            var a1 = (await GetService<IBaseAttributeModel>().GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^a"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
-            Assert.AreEqual(2, a1.Count());
-
-            var a2 = (await GetService<IBaseAttributeModel>().GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^a2$"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
-            Assert.AreEqual(1, a2.Count());
-
-            var a3 = (await GetService<IBaseAttributeModel>().GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("3$"), new string[] { layer2.ID }, trans: trans, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
-            Assert.AreEqual(1, a3.Count());
-
-            var a4 = (await GetService<IBaseAttributeModel>().GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^3"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
-            Assert.AreEqual(0, a4.Count());
-
-            var a5 = (await GetService<IBaseAttributeModel>().GetAttributes(SpecificCIIDsSelection.Build(ciid2), new RegexAttributeSelection("^a1$"), new string[] { layer2.ID }, trans: trans, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
-            Assert.AreEqual(1, a5.Count());
         }
 
         [Test]
@@ -317,7 +302,7 @@ namespace Tests.Integration.Model
 
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var changeset3 = await CreateChangesetProxy();
-            await GetService<IAttributeModel>().BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("prefix1.", layer1.ID, new BulkCIAttributeDataLayerScope.Fragment[] {
+            await GetService<IAttributeModel>().BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(layer1.ID, new BulkCIAttributeDataLayerScope.Fragment[] {
                 new BulkCIAttributeDataLayerScope.Fragment("a1", new AttributeScalarValueText("textNew"), ciid1),
                 new BulkCIAttributeDataLayerScope.Fragment("a4", new AttributeScalarValueText("textNew"), ciid2),
                 new BulkCIAttributeDataLayerScope.Fragment("a2", new AttributeScalarValueText("textNew"), ciid2),
@@ -325,11 +310,9 @@ namespace Tests.Integration.Model
             trans2.Commit();
 
             using var trans3 = ModelContextBuilder.BuildImmediate();
-            var a1 = (await GetService<IBaseAttributeModel>().GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^prefix1"), new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
-            Assert.AreEqual(3, a1.Count());
+            var a1 = (await GetService<IBaseAttributeModel>().GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            Assert.AreEqual(4, a1.Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
-            var a2 = (await GetService<IBaseAttributeModel>().GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^prefix2"), new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
-            Assert.AreEqual(1, a2.Count());
         }
 
 

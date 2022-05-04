@@ -7,7 +7,7 @@ namespace Omnikeeper.Base.Model
 {
     public interface IUsageDataAccumulator
     {
-        void Add(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName)> elements);
+        void Add(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName, string layerID)> elements);
         void Flush(IModelContext trans);
         Task<int> DeleteOlderThan(DateTimeOffset deleteThreshold, IModelContext trans);
     }

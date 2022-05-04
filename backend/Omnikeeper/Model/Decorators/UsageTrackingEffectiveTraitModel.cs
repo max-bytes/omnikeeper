@@ -23,14 +23,14 @@ namespace Omnikeeper.Model.Decorators
 
         public IEnumerable<MergedCI> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
-            TrackTraitUsage(trait);
+            TrackTraitUsage(trait, layers.LayerIDs);
 
             return baseModel.FilterCIsWithoutTrait(cis, trait, layers, trans, atTime);
         }
 
         public IEnumerable<MergedCI> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
-            TrackTraitUsage(trait);
+            TrackTraitUsage(trait, layers.LayerIDs);
 
             return baseModel.FilterCIsWithTrait(cis, trait, layers, trans, atTime);
         }
@@ -39,19 +39,19 @@ namespace Omnikeeper.Model.Decorators
         {
             foreach (var traitP in traitSOP)
                 foreach (var (trait, _) in traitP)
-                    TrackTraitUsage(trait);
+                    TrackTraitUsage(trait, layers.LayerIDs);
 
             return baseModel.FilterCIsWithTraitSOP(cis, traitSOP, layers, trans, atTime);
         }
 
         public async Task<IDictionary<Guid, EffectiveTrait>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
-            TrackTraitUsage(trait);
+            TrackTraitUsage(trait, layerSet.LayerIDs);
 
             return await baseModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, atTime);
         }
 
-        private void TrackTraitUsage(ITrait trait)
+        private void TrackTraitUsage(ITrait trait, IEnumerable<string> layerIDs)
         {
             if (trait.ID.StartsWith("__meta"))
             { // not interested in recording usage of meta traits
@@ -60,7 +60,8 @@ namespace Omnikeeper.Model.Decorators
 
             var usageTracker = scopedLifetimeAccessor.GetLifetimeScope()?.Resolve<IScopedUsageTracker>();
             if (usageTracker != null)
-                usageTracker.TrackUseTrait(trait.ID);
+                foreach(var layerID in layerIDs)
+                    usageTracker.TrackUseTrait(trait.ID, layerID);
         }
     }
 }

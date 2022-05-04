@@ -71,18 +71,15 @@ namespace Omnikeeper.Base.Entity
                 CIID = ciid;
             }
         }
-
-        public string NamePrefix { get; private set; }
         public string LayerID { get; private set; }
         public IEnumerable<Fragment> Fragments { get; private set; }
 
         public Guid GetCIID(Fragment f) => f.CIID;
-        public string GetFullName(Fragment fragment) => $"{NamePrefix}{fragment.Name}";
+        public string GetFullName(Fragment fragment) => fragment.Name;
         public IAttributeValue GetValue(Fragment f) => f.Value;
 
-        public BulkCIAttributeDataLayerScope(string namePrefix, string layerID, IEnumerable<Fragment> fragments)
+        public BulkCIAttributeDataLayerScope(string layerID, IEnumerable<Fragment> fragments)
         {
-            NamePrefix = namePrefix;
             LayerID = layerID;
             Fragments = fragments;
         }

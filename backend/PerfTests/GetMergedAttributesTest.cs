@@ -170,7 +170,7 @@ namespace PerfTests
                     return new BulkCIAttributeDataLayerScope.Fragment(name, value, ciid);
                 });
 
-                var data = new BulkCIAttributeDataLayerScope("", layer!.ID, fragments);
+                var data = new BulkCIAttributeDataLayerScope(layer!.ID, fragments);
 
                 await attributeModel.BulkReplaceAttributes(data, changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
             }

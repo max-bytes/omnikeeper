@@ -204,7 +204,7 @@ namespace Tasks.DBInit
                     index++;
                 }
 
-                await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", cmdbLayerID, fragments), changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(cmdbLayerID, fragments), changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
 
                 trans.Commit();
             }

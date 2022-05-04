@@ -336,7 +336,7 @@ namespace OKPluginVariableRendering
             }
 
             await attributeModel.BulkReplaceAttributes(
-                new BulkCIAttributeDataLayerScope("", targetLayer.ID, fragments),
+                new BulkCIAttributeDataLayerScope(targetLayer.ID, fragments),
                 changesetProxy, 
                 new DataOriginV1(DataOriginType.ComputeLayer), 
                 trans,

@@ -10,29 +10,30 @@ namespace Omnikeeper.Model
 {
     public class UsageDataAccumulator : IUsageDataAccumulator
     {
-        private readonly ConcurrentQueue<(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName)> elements)> accumulator;
+        private readonly ConcurrentQueue<(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName, string layerID)> elements)> accumulator;
 
         public UsageDataAccumulator()
         {
-            accumulator = new ConcurrentQueue<(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName)> elements)>();
+            accumulator = new ConcurrentQueue<(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName, string layerID)> elements)>();
         }
 
-        public void Add(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName)> elements)
+        public void Add(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName, string layerID)> elements)
         {
             accumulator.Enqueue((username, timestamp, elements));
         }
 
         public void Flush(IModelContext trans)
         {
-            using var writer = trans.DBConnection.BeginBinaryImport(@"COPY usage_stats (element_type, element_name, username, timestamp) FROM STDIN (FORMAT BINARY)");
+            using var writer = trans.DBConnection.BeginBinaryImport(@"COPY usage_stats (element_type, element_name, username, layer_id, timestamp) FROM STDIN (FORMAT BINARY)");
             while (accumulator.TryDequeue(out var ds))
             {
-                foreach (var (elementType, elementName) in ds.elements)
+                foreach (var (elementType, elementName, layerID) in ds.elements)
                 {
                     writer.StartRow();
                     writer.Write(elementType);
                     writer.Write(elementName);
                     writer.Write(ds.username);
+                    writer.Write(layerID);
                     writer.Write(ds.timestamp);
                 }
             }

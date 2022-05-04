@@ -20,20 +20,20 @@ namespace Omnikeeper.Model.Decorators
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
         }
 
-        private void TrackEffectiveGeneratorUsage(string generatorID)
+        private void TrackEffectiveGeneratorUsage(string generatorID, string layerID)
         {
             var usageTracker = scopedLifetimeAccessor.GetLifetimeScope()?.Resolve<IScopedUsageTracker>();
             if (usageTracker != null)
-                usageTracker.TrackUseGenerator(generatorID);
+                usageTracker.TrackUseGenerator(generatorID, layerID);
         }
 
         public async Task<IEnumerable<GeneratorV1>[]> GetEffectiveGenerators(string[] layerIDs, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold timeThreshold)
         {
             var r = await @base.GetEffectiveGenerators(layerIDs, generatorSelection, attributeSelection, trans, timeThreshold);
 
-            foreach (var generators in r)
-                foreach (var generator in generators)
-                    TrackEffectiveGeneratorUsage(generator.ID);
+            for(var i = 0;i < layerIDs.Length;i++)
+                foreach (var generator in r[i])
+                    TrackEffectiveGeneratorUsage(generator.ID, layerIDs[i]);
 
             return r;
         }

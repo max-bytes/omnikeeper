@@ -7,12 +7,13 @@ namespace Omnikeeper.Base.Service
 {
     public interface IScopedUsageTracker
     {
-        void TrackUseLayer(string layerID);
-        void TrackUseTrait(string traitID);
+        void TrackUseTrait(string traitID, string layerID);
         void TrackUseAuthRole(string authRoleID);
-        void TrackUseGenerator(string generatorID);
+        void TrackUseGenerator(string generatorID, string layerID);
+        void TrackUseAttribute(string attributeName, string layerID);
+        void TrackUseRelationPredicate(string predicateID, string layerID);
 
-        void TrackUse(string elementType, string elementName);
+        void TrackUse(string elementType, string elementName, string layerID);
     }
 
     public class ScopedUsageTracker : IScopedUsageTracker, IDisposable
@@ -20,7 +21,7 @@ namespace Omnikeeper.Base.Service
         private readonly ILogger<ScopedUsageTracker> logger;
         private readonly ICurrentUserService currentUserService;
         private readonly IUsageDataAccumulator usageDataAccumulator;
-        private readonly ISet<(string elementType, string elementName)> usages = new HashSet<(string elementType, string elementName)>();
+        private readonly ISet<(string elementType, string elementName, string layerID)> usages = new HashSet<(string elementType, string elementName, string layerID)>();
 
         public ScopedUsageTracker(ILogger<ScopedUsageTracker> logger, ICurrentUserService currentUserService, IUsageDataAccumulator usageDataAccumulator)
         {
@@ -31,32 +32,37 @@ namespace Omnikeeper.Base.Service
 
         public const string ElementTypeTrait = "trait";
         public const string ElementTypeAuthRole = "auth-role";
-        public const string ElementTypeLayer = "layer";
         public const string ElementTypeGenerator = "generator";
+        public const string ElementTypeAttributeName = "attribute";
+        public const string ElementTypeRelationPredicateID = "relation-predicate";
 
-        public void TrackUseLayer(string layerID)
+        public void TrackUseTrait(string traitID, string layerID)
         {
-            TrackUse(ElementTypeLayer, layerID);
-        }
-
-        public void TrackUseTrait(string traitID)
-        {
-            TrackUse(ElementTypeTrait, traitID);
+            TrackUse(ElementTypeTrait, traitID, layerID);
         }
 
         public void TrackUseAuthRole(string authRoleID)
         {
-            TrackUse(ElementTypeAuthRole, authRoleID);
+            TrackUse(ElementTypeAuthRole, authRoleID, "");
         }
 
-        public void TrackUseGenerator(string generatorID)
+        public void TrackUseGenerator(string generatorID, string layerID)
         {
-            TrackUse(ElementTypeGenerator, generatorID);
+            TrackUse(ElementTypeGenerator, generatorID, layerID);
+        }
+        public void TrackUseAttribute(string attributeName, string layerID)
+        {
+            TrackUse(ElementTypeAttributeName, attributeName, layerID);
         }
 
-        public void TrackUse(string elementType, string elementName)
+        public void TrackUseRelationPredicate(string predicateID, string layerID)
         {
-            usages.Add((elementType, elementName));
+            TrackUse(ElementTypeRelationPredicateID, predicateID, layerID);
+        }
+
+        public void TrackUse(string elementType, string elementName, string layerID)
+        {
+            usages.Add((elementType, elementName, layerID));
         }
 
         public void Dispose()
@@ -65,9 +71,9 @@ namespace Omnikeeper.Base.Service
             {
                 var username = currentUserService.GetCurrentUsername();
 
-                foreach (var (elementType, elementName) in usages)
+                foreach (var (elementType, elementName, layerID) in usages)
                 {
-                    logger.LogTrace($"Usage tracked: type: {elementType}, name: {elementName}, user: {username}");
+                    logger.LogTrace($"Usage tracked: type: {elementType}, name: {elementName}, user: {username}, layerID: {layerID}");
                 }
 
                 var timestamp = DateTimeOffset.Now;
