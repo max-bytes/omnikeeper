@@ -497,8 +497,8 @@ namespace Omnikeeper.Service
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                Func<ISet<Guid>, IRelationSelection> srb = (ciids) => RelationSelectionFrom.Build(ciids);
-                if (!outgoing) srb = (ciids) => RelationSelectionTo.Build(ciids);
+                Func<ISet<Guid>, IRelationSelection> srb = (ciids) => RelationSelectionFrom.BuildWithAllPredicateIDs(ciids);
+                if (!outgoing) srb = (ciids) => RelationSelectionTo.BuildWithAllPredicateIDs(ciids);
                 IRelationSelection leftRelationSelection = (d.leftCIIDSelection is SpecificCIIDsSelection leftSS) ? srb(leftSS.CIIDs) : RelationSelectionAll.Instance;
                 IRelationSelection rightRelationSelection = (d.rightCIIDSelection is SpecificCIIDsSelection rightSS) ? srb(rightSS.CIIDs) : RelationSelectionAll.Instance;
 

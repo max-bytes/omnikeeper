@@ -146,9 +146,13 @@ namespace Omnikeeper.Model
 
             async Task<IEnumerable<MergedRelation>> GetOutdatedRelationsFromCIAndPredicateScope(BulkRelationDataCIAndPredicateScope cp, LayerSet layerIDs, IModelContext trans, TimeThreshold timeThreshold, IMaskHandlingForRetrieval maskHandlingForRetrieval)
             {
+                if (cp.Relevant.Count == 0)
+                    return Array.Empty<MergedRelation>();
                 var dLookup = cp.Relevant.ToLookup(dd => dd.thisCIID, dd => dd.predicateID);
-                var relationSelection = (cp.Outgoing) ? RelationSelectionFrom.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet()) : RelationSelectionTo.Build(cp.Relevant.Select(dd => dd.thisCIID).ToHashSet());
-                var allRelations = await GetMergedRelations(relationSelection, layerIDs, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance); // TODO: restrict to relevant predicateIDs at fetch point
+                var relationSelection = (cp.Outgoing) ? 
+                    RelationSelectionFrom.Build(cp.Relevant.Select(dd => dd.predicateID).ToHashSet(), cp.Relevant.Select(dd => dd.thisCIID).ToHashSet()) : 
+                    RelationSelectionTo.Build(cp.Relevant.Select(dd => dd.predicateID).ToHashSet(), cp.Relevant.Select(dd => dd.thisCIID).ToHashSet());
+                var allRelations = await GetMergedRelations(relationSelection, layerIDs, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance);
                 var outdatedRelations = allRelations.Where(r => dLookup[(cp.Outgoing) ? r.Relation.FromCIID : r.Relation.ToCIID].Contains(r.Relation.PredicateID));
                 return outdatedRelations;
             }

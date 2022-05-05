@@ -6,6 +6,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -28,6 +29,7 @@ namespace Tests.Integration.Model
                 var ciid2 = await GetService<ICIModel>().CreateCI(trans);
                 ciid3 = await GetService<ICIModel>().CreateCI(trans);
                 var predicateID1 = "predicate1";
+                var predicateID2 = "predicate2";
 
                 var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans);
                 layerID1 = layer1.ID;
@@ -36,7 +38,7 @@ namespace Tests.Integration.Model
                 // test single relation
                 var c1 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 Assert.IsTrue(c1);
-                var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+                var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.BuildWithAllPredicateIDs(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                 Assert.AreEqual(1, r1.Count());
                 var rr1 = r1.First();
                 Assert.AreEqual(ciid1, rr1.Relation.FromCIID);
@@ -47,19 +49,24 @@ namespace Tests.Integration.Model
                 // test repeated insertion
                 var c2 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 Assert.IsFalse(c2);
-                r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+                r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.BuildWithAllPredicateIDs(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                 Assert.AreEqual(1, r1.Count());
 
 
                 // test second relation
-                var c3 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID1, false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                var r2 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+                var c3 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID2, false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                var r2 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.BuildWithAllPredicateIDs(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                 Assert.AreEqual(2, r2.Count());
                 var rr2 = r2.FirstOrDefault(r => r.Relation.ToCIID == ciid3);
                 Assert.AreEqual(ciid1, rr2.Relation.FromCIID);
                 Assert.IsNotNull(rr2);
                 Assert.AreEqual(layerID1, rr2.LayerStackIDs[0]);
                 Assert.AreEqual((await changeset.GetChangeset(layerID1, new DataOriginV1(DataOriginType.Manual), trans)).ID, rr2.Relation.ChangesetID);
+
+                // select via from + predicateID
+                var r3 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(new HashSet<string>() { predicateID2 }, ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+                Assert.AreEqual(1, r3.Count());
+                var rr3 = r3.FirstOrDefault(r => r.Relation.ToCIID == ciid3);
 
                 trans.Commit();
             }
@@ -84,7 +91,7 @@ namespace Tests.Integration.Model
             var c2 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
             Assert.IsTrue(c1);
             Assert.IsTrue(c2);
-            var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+            var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.BuildWithAllPredicateIDs(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
             Assert.AreEqual(1, r1.Count());
             var rr1 = r1.First();
             Assert.AreEqual(layer2.ID, rr1.LayerStackIDs[0]);
@@ -147,7 +154,7 @@ namespace Tests.Integration.Model
                 var changeset = await CreateChangesetProxy();
                 var removedRelation = await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 Assert.IsNotNull(removedRelation);
-                var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+                var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.BuildWithAllPredicateIDs(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                 Assert.AreEqual(1, r1.Count());
                 var rr1 = r1.First();
                 Assert.AreEqual(layer1.ID, rr1.LayerStackIDs[0]);
@@ -159,7 +166,7 @@ namespace Tests.Integration.Model
             {
                 var changeset = await CreateChangesetProxy();
                 await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                var r2 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+                var r2 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.BuildWithAllPredicateIDs(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                 Assert.AreEqual(1, r2.Count());
                 var rr2 = r2.First();
                 Assert.AreEqual(layer2.ID, rr2.LayerStackIDs[0]);

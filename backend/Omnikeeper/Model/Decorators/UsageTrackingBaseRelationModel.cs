@@ -33,8 +33,8 @@ namespace Omnikeeper.Model.Decorators
                 RelationSelectionAll _ => new string[] { "*" },
                 RelationSelectionNone _ => Array.Empty<string>(),
                 RelationSelectionWithPredicate p => p.PredicateIDs,
-                RelationSelectionFrom _ => new string[] { "*" },
-                RelationSelectionTo _ => new string[] { "*" },
+                RelationSelectionFrom f => (f.PredicateIDs == null) ? new string[] { "*" } : f.PredicateIDs,
+                RelationSelectionTo t => (t.PredicateIDs == null) ? new string[] { "*" } : t.PredicateIDs,
                 RelationSelectionSpecific s => s.Specifics.Select(t => t.predicateID).Distinct(),
                 _ => throw new NotImplementedException("")
             };

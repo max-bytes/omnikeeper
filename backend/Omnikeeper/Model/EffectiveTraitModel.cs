@@ -127,15 +127,23 @@ namespace Omnikeeper.Model
             switch (trait)
             {
                 case GenericTrait tt:
-                    ILookup<Guid, MergedRelation> fromRelations = Enumerable.Empty<MergedRelation>().ToLookup(x => default(Guid));
-                    ILookup<Guid, MergedRelation> toRelations = Enumerable.Empty<MergedRelation>().ToLookup(x => default(Guid));
+                    ILookup<(Guid ciid, string predicateID), MergedRelation> fromRelations = Enumerable.Empty<MergedRelation>().ToLookup(x => default((Guid ciid, string predicateID)));
+                    ILookup<(Guid ciid, string predicateID), MergedRelation> toRelations = Enumerable.Empty<MergedRelation>().ToLookup(x => default((Guid ciid, string predicateID)));
                     if (tt.OptionalRelations.Count > 0)
                     {
                         var ciids = cis.Select(ci => ci.ID).ToHashSet();
                         if (tt.OptionalRelations.Any(r => r.RelationTemplate.DirectionForward))
-                            fromRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(ciids), layers, trans, atTime, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance)).ToLookup(r => r.Relation.FromCIID);
+                        {
+                            var relevantPredicates = tt.OptionalRelations.Where(r => r.RelationTemplate.DirectionForward).Select(r => r.RelationTemplate.PredicateID).ToHashSet();
+                            fromRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(relevantPredicates, ciids), layers, trans, atTime, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance))
+                                .ToLookup(r => (r.Relation.FromCIID, r.Relation.PredicateID));
+                        }
                         if (tt.OptionalRelations.Any(r => !r.RelationTemplate.DirectionForward))
-                            toRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(ciids), layers, trans, atTime, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance)).ToLookup(r => r.Relation.ToCIID);
+                        {
+                            var relevantPredicates = tt.OptionalRelations.Where(r => !r.RelationTemplate.DirectionForward).Select(r => r.RelationTemplate.PredicateID).ToHashSet();
+                            toRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(relevantPredicates, ciids), layers, trans, atTime, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance))
+                                .ToLookup(r => (r.Relation.ToCIID, r.Relation.PredicateID));
+                        }
                     }
 
                     foreach (var ci in cis)
@@ -167,14 +175,11 @@ namespace Omnikeeper.Model
                         foreach (var tr in tt.OptionalRelations)
                         {
                             var traitRelationIdentifier = tr.Identifier;
-                            var (foundRelations, errors) = TemplateCheckService.CalculateTemplateErrorsRelationSimple(fromRelations[ci.ID], toRelations[ci.ID], tr.RelationTemplate);
-                            if (!errors)
-                            {
-                                if (tr.RelationTemplate.DirectionForward)
-                                    effectiveOutgoingTraitRelations.Add(traitRelationIdentifier, foundRelations!);
-                                else
-                                    effectiveIncomingTraitRelations.Add(traitRelationIdentifier, foundRelations!);
-                            }
+
+                            if (tr.RelationTemplate.DirectionForward)
+                                effectiveOutgoingTraitRelations.Add(traitRelationIdentifier, fromRelations[(ci.ID, tr.RelationTemplate.PredicateID)]);
+                            else
+                                effectiveIncomingTraitRelations.Add(traitRelationIdentifier, toRelations[(ci.ID, tr.RelationTemplate.PredicateID)]);
                         }
 
                         var resolvedET = new EffectiveTrait(ci.ID, tt, effectiveTraitAttributes, effectiveOutgoingTraitRelations, effectiveIncomingTraitRelations);

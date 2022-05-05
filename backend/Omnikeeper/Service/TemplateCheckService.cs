@@ -18,12 +18,6 @@ namespace Omnikeeper.Service
                 return (null, true);
             }
         }
-        public static (IEnumerable<MergedRelation>? relevantRelations, bool hasErrors) CalculateTemplateErrorsRelationSimple(IEnumerable<MergedRelation> fromRelations, IEnumerable<MergedRelation> toRelations, RelationTemplate rt)
-        {
-            var relevantRelations = (rt.DirectionForward) ? fromRelations : toRelations;
-            relevantRelations = relevantRelations.Where(r => r.Relation.PredicateID == rt.PredicateID);
-            return (relevantRelations, false);
-        }
 
         private static bool PerAttributeTemplateChecksSimple(MergedCIAttribute foundAttribute, CIAttributeTemplate at)
         {

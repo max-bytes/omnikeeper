@@ -28,9 +28,17 @@ namespace Omnikeeper.Model
             switch (rl)
             {
                 case RelationSelectionFrom rsft:
-                    return ("(from_ci_id = ANY(@from_ci_ids))", new[] { new NpgsqlParameter("from_ci_ids", rsft.FromCIIDs.ToArray()) });
+                    if (rsft.PredicateIDs != null)
+                        return ("(from_ci_id = ANY(@from_ci_ids) AND predicate_id = ANY(@predicate_ids))", 
+                            new[] { new NpgsqlParameter("from_ci_ids", rsft.FromCIIDs.ToArray()), new NpgsqlParameter("predicate_ids", rsft.PredicateIDs.ToArray()) });
+                    else
+                        return ("(from_ci_id = ANY(@from_ci_ids))", new[] { new NpgsqlParameter("from_ci_ids", rsft.FromCIIDs.ToArray()) });
                 case RelationSelectionTo rst:
-                    return ("(to_ci_id = ANY(@to_ci_ids))", new[] { new NpgsqlParameter("to_ci_ids", rst.ToCIIDs.ToArray()) });
+                    if (rst.PredicateIDs != null)
+                        return ("(to_ci_id = ANY(@to_ci_ids) AND predicate_id = ANY(@predicate_ids))",
+                            new[] { new NpgsqlParameter("to_ci_ids", rst.ToCIIDs.ToArray()), new NpgsqlParameter("predicate_ids", rst.PredicateIDs.ToArray()) });
+                    else
+                        return ("(to_ci_id = ANY(@to_ci_ids))", new[] { new NpgsqlParameter("to_ci_ids", rst.ToCIIDs.ToArray()) });
                 case RelationSelectionWithPredicate rsp:
                     return ("(predicate_id = ANY(@predicate_ids))", new[] { new NpgsqlParameter("predicate_ids", rsp.PredicateIDs.ToArray()) });
                 case RelationSelectionSpecific rss:

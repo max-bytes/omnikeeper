@@ -13,6 +13,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GraphQL.TraitEntities;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -51,14 +52,12 @@ namespace Omnikeeper.GraphQL.Types
                 var CIIdentity = context.Source!.ID;
                 var requiredPredicateID = context.GetArgument<string?>("requiredPredicateID", null);
 
-                var loaded = dataLoaderService.SetupAndLoadRelation(RelationSelectionFrom.Build(CIIdentity), relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
-                return loaded.Then(ret =>
-                { // TODO: move predicateID filtering into fetch and RelationSelection
-                    if (requiredPredicateID != null)
-                        return ret.Where(r => r.Relation.PredicateID == requiredPredicateID);
-                    else
-                        return ret;
-                });
+                var relationSelection = (requiredPredicateID != null) ?
+                    RelationSelectionFrom.Build(new HashSet<string>() { requiredPredicateID }, CIIdentity) :
+                    RelationSelectionFrom.BuildWithAllPredicateIDs(CIIdentity);
+
+                var loaded = dataLoaderService.SetupAndLoadRelation(relationSelection, relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                return loaded;
             });
             Field<ListGraphType<MergedRelationType>>("incomingMergedRelations",
             arguments: new QueryArguments(new QueryArgument<StringGraphType> { Name = "requiredPredicateID" }),
@@ -68,14 +67,12 @@ namespace Omnikeeper.GraphQL.Types
                 var CIIdentity = context.Source!.ID;
                 var requiredPredicateID = context.GetArgument<string?>("requiredPredicateID", null);
 
-                var loaded = dataLoaderService.SetupAndLoadRelation(RelationSelectionTo.Build(CIIdentity), relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
-                return loaded.Then(ret =>
-                { // TODO: move predicateID filtering into fetch and RelationSelection
-                    if (requiredPredicateID != null)
-                        return ret.Where(r => r.Relation.PredicateID == requiredPredicateID);
-                    else
-                        return ret;
-                });
+                var relationSelection = (requiredPredicateID != null) ?
+                    RelationSelectionTo.Build(new HashSet<string>() { requiredPredicateID }, CIIdentity) :
+                    RelationSelectionTo.BuildWithAllPredicateIDs(CIIdentity);
+
+                var loaded = dataLoaderService.SetupAndLoadRelation(relationSelection, relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                return loaded;
             });
 
             Field<ListGraphType<EffectiveTraitType>>("effectiveTraits",

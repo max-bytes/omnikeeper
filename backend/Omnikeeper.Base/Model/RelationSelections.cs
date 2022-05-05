@@ -11,21 +11,38 @@ namespace Omnikeeper.Base.Model
     public class RelationSelectionFrom : IRelationSelection, IEquatable<RelationSelectionFrom>
     {
         public ISet<Guid> FromCIIDs { get; }
-        private RelationSelectionFrom(ISet<Guid> fromCIIDs)
+        public ISet<string>? PredicateIDs { get; } // NOTE: null means all
+
+        private RelationSelectionFrom(ISet<Guid> fromCIIDs, ISet<string>? predicateIDs)
         {
             FromCIIDs = fromCIIDs;
+            PredicateIDs = predicateIDs;
         }
 
-        public static IRelationSelection Build(ISet<Guid> fromCIIDs)
+        public static IRelationSelection BuildWithAllPredicateIDs(ISet<Guid> fromCIIDs)
         {
             if (fromCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
-            return new RelationSelectionFrom(fromCIIDs);
+            return new RelationSelectionFrom(fromCIIDs, null);
         }
-        public static IRelationSelection Build(params Guid[] fromCIIDs)
+        public static IRelationSelection BuildWithAllPredicateIDs(params Guid[] fromCIIDs)
         {
             if (fromCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
-            return new RelationSelectionFrom(fromCIIDs.ToHashSet());
+            return new RelationSelectionFrom(fromCIIDs.ToHashSet(), null);
         }
+
+        public static IRelationSelection Build(ISet<string> predicateIDs, ISet<Guid> fromCIIDs)
+        {
+            if (predicateIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            if (fromCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            return new RelationSelectionFrom(fromCIIDs, predicateIDs);
+        }
+        public static IRelationSelection Build(ISet<string> predicateIDs, params Guid[] fromCIIDs)
+        {
+            if (predicateIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            if (fromCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            return new RelationSelectionFrom(fromCIIDs.ToHashSet(), predicateIDs);
+        }
+
         public override int GetHashCode()
         {
             unchecked // Overflow is fine, just wrap
@@ -42,20 +59,34 @@ namespace Omnikeeper.Base.Model
     public class RelationSelectionTo : IRelationSelection, IEquatable<RelationSelectionTo>
     {
         public ISet<Guid> ToCIIDs { get; }
-        private RelationSelectionTo(ISet<Guid> toCIIDs)
+        public ISet<string>? PredicateIDs { get; } // NOTE: null means all
+        private RelationSelectionTo(ISet<Guid> toCIIDs, ISet<string>? predicateIDs)
         {
             ToCIIDs = toCIIDs;
+            PredicateIDs = predicateIDs;
         }
 
-        public static IRelationSelection Build(ISet<Guid> toCIIDs)
+        public static IRelationSelection BuildWithAllPredicateIDs(ISet<Guid> toCIIDs)
         {
             if (toCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
-            return new RelationSelectionTo(toCIIDs);
+            return new RelationSelectionTo(toCIIDs, null);
         }
-        public static IRelationSelection Build(params Guid[] toCIIDs)
+        public static IRelationSelection BuildWithAllPredicateIDs(params Guid[] toCIIDs)
         {
             if (toCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
-            return new RelationSelectionTo(toCIIDs.ToHashSet());
+            return new RelationSelectionTo(toCIIDs.ToHashSet(), null);
+        }
+        public static IRelationSelection Build(ISet<string> predicateIDs, ISet<Guid> toCIIDs)
+        {
+            if (predicateIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            if (toCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            return new RelationSelectionTo(toCIIDs, predicateIDs);
+        }
+        public static IRelationSelection Build(ISet<string> predicateIDs, params Guid[] toCIIDs)
+        {
+            if (predicateIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            if (toCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            return new RelationSelectionTo(toCIIDs.ToHashSet(), predicateIDs);
         }
 
         public override int GetHashCode()

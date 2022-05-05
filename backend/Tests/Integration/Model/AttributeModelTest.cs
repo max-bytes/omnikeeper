@@ -303,16 +303,18 @@ namespace Tests.Integration.Model
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var changeset3 = await CreateChangesetProxy();
             await GetService<IAttributeModel>().BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(layer1.ID, new BulkCIAttributeDataLayerScope.Fragment[] {
-                new BulkCIAttributeDataLayerScope.Fragment("a1", new AttributeScalarValueText("textNew"), ciid1),
-                new BulkCIAttributeDataLayerScope.Fragment("a4", new AttributeScalarValueText("textNew"), ciid2),
-                new BulkCIAttributeDataLayerScope.Fragment("a2", new AttributeScalarValueText("textNew"), ciid2),
+                new BulkCIAttributeDataLayerScope.Fragment("prefix1.a1", new AttributeScalarValueText("textNew"), ciid1),
+                new BulkCIAttributeDataLayerScope.Fragment("prefix1.a4", new AttributeScalarValueText("textNew"), ciid2),
+                new BulkCIAttributeDataLayerScope.Fragment("prefix1.a2", new AttributeScalarValueText("textNew"), ciid2),
             }), changeset3, new DataOriginV1(DataOriginType.Manual), trans2, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
             trans2.Commit();
 
             using var trans3 = ModelContextBuilder.BuildImmediate();
             var a1 = (await GetService<IBaseAttributeModel>().GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
-            Assert.AreEqual(4, a1.Count());
+            Assert.AreEqual(3, a1.Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
+            Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a1").Count());
+            Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a4").Count());
         }
 
 

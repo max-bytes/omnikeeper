@@ -154,17 +154,18 @@ namespace Omnikeeper.GraphQL
         {
             return rs switch
             {
-                RelationSelectionFrom f => SetupRelationFetchingFrom(relationModel, layerSet, timeThreshold, trans).LoadAsync(f),
-                RelationSelectionTo t => SetupRelationFetchingTo(relationModel, layerSet, timeThreshold, trans).LoadAsync(t),
+                RelationSelectionFrom f => SetupRelationFetchingFrom(f, relationModel, layerSet, timeThreshold, trans).LoadAsync(f),
+                RelationSelectionTo t => SetupRelationFetchingTo(t, relationModel, layerSet, timeThreshold, trans).LoadAsync(t),
                 RelationSelectionAll a => SetupRelationFetchingAll(relationModel, layerSet, timeThreshold, trans).LoadAsync(a),
                 RelationSelectionWithPredicate p => SetupRelationFetchingWithPredicate(relationModel, layerSet, timeThreshold, trans).LoadAsync(p),
                 _ => throw new Exception("Not support yet")
             };
         }
 
-        private IDataLoader<RelationSelectionFrom, IEnumerable<MergedRelation>> SetupRelationFetchingFrom(IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        private IDataLoader<RelationSelectionFrom, IEnumerable<MergedRelation>> SetupRelationFetchingFrom(RelationSelectionFrom f, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsFrom_{layerSet}_{timeThreshold}",
+            // NOTE: we dont combine relationSelections with differing PredicateIDs
+            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsFrom_{layerSet}_{timeThreshold}{((f.PredicateIDs != null) ? "_" + string.Join(",", f.PredicateIDs) : "")}",
                 async (IEnumerable<RelationSelectionFrom> relationSelections) =>
                 {
                     var combinedRelationsFrom = new HashSet<Guid>();
@@ -172,7 +173,8 @@ namespace Omnikeeper.GraphQL
                         combinedRelationsFrom.UnionWith(rs.FromCIIDs);
 
                     // TODO: masking
-                    var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(combinedRelationsFrom), layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+                    var combinedSelection = (f.PredicateIDs == null) ? RelationSelectionFrom.BuildWithAllPredicateIDs(combinedRelationsFrom) : RelationSelectionFrom.Build(f.PredicateIDs, combinedRelationsFrom);
+            var relationsFrom = await relationModel.GetMergedRelations(combinedSelection, layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                     var relationsFromMap = relationsFrom.ToLookup(t => t.Relation.FromCIID);
 
                     var ret = new List<(RelationSelectionFrom, MergedRelation)>();
@@ -183,9 +185,9 @@ namespace Omnikeeper.GraphQL
             return loader;
         }
 
-        private IDataLoader<RelationSelectionTo, IEnumerable<MergedRelation>> SetupRelationFetchingTo(IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        private IDataLoader<RelationSelectionTo, IEnumerable<MergedRelation>> SetupRelationFetchingTo(RelationSelectionTo t, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsTo_{layerSet}_{timeThreshold}",
+            var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader($"GetMergedRelationsTo_{layerSet}_{timeThreshold}{((t.PredicateIDs != null) ? "_" + string.Join(",", t.PredicateIDs) : "")}",
                 async (IEnumerable<RelationSelectionTo> relationSelections) =>
                 {
                     var combinedRelationsTo = new HashSet<Guid>();
@@ -193,7 +195,8 @@ namespace Omnikeeper.GraphQL
                         combinedRelationsTo.UnionWith(rs.ToCIIDs);
 
                     // TODO: masking
-                    var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(combinedRelationsTo), layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+                    var combinedSelection = (t.PredicateIDs == null) ? RelationSelectionTo.BuildWithAllPredicateIDs(combinedRelationsTo) : RelationSelectionTo.Build(t.PredicateIDs, combinedRelationsTo);
+                    var relationsTo = await relationModel.GetMergedRelations(combinedSelection, layerSet, trans, timeThreshold, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                     var relationsToMap = relationsTo.ToLookup(t => t.Relation.ToCIID);
 
                     var ret = new List<(RelationSelectionTo, MergedRelation)>();
