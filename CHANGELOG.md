@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [17.0.0] - 2022-05-06
+### Added
+- (breaking) reworked odata support based on trait entities
+- initial version of insight-discovery-ingest plugin
+- generic-json-ingest: implemented SameTargetCIHandling feature
+- technical frontend: 
+  - added usage stats interface
+- added usage stats tracking for attribute-names and relation-predicates
+### Changed
+- (breaking) reworked usage-stats to include layer-ID per element and removed layer stats type
+- improved error handling of generic-json-ingest 
+- improved CLB logging
+- technical frontend:
+  - (breaking) migrated /auth prefix of keycloak URL from hard coded value into env variable
+  - update keycloak-js to 18.0.0
+- migrated configuration for odata contexts into new data-based form
+- performance improvements: added relation selection based on from/to + relationIDs and use throughout codebase 
+### Fixed
+
 ## [16.0.0] - 2022-04-20
 
 ### Added
@@ -23,7 +42,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - implemented attribute selection for name+value filters
 - added ComputeLayer config to core traits
 
-### Changes
+### Changed
 - GraphQL API:
   - dataloader-related performance improvements and restructurings
   - (breaking) removed min- and max-cardinality from trait relations
@@ -41,7 +60,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - removed obsolete REST API endpoints
 - performance improvement and memory improvement to GenericJsonIngest ingest
 
-### Fixes
+### Fixed
 - lots of improvements to JSON handling in various levels
 - fixed memory leak related to ModelContexts and using them in GraphQL resolvers
 - fixed bug in trait entity GraphQL mutations where errors would still commit the data to the database
@@ -168,7 +187,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   - improved features on how to do ID matching: union/intersect nested matching, more matching options
   - improved performance, logging and error handling
 
-### Fixes
+### Fixed
 - GraphQL query for effective traits: did not return optional trait attributes properly
 
 ## [10.0.0] - 2021-12-17
@@ -184,7 +203,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - improved hangfire concurrent job handling
 - performance improvement: per-request caching of traits
 
-### Fixes
+### Fixed
 - technical frontend: layer drawer line break bug
 
 ## [9.0.0] - 2021-12-09
@@ -204,7 +223,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - give hangfire jobs IDs so that the are properly stoppable; remove existing hangfire jobs on startup
 - internal changes and work to support attribute masks
 
-### Fixes
+### Fixed
 - technical frontend: nginx bugfix for URLs containing a period
 - GraphQL server: when not selecting mergedAttributes, querying effectiveTraits only ever returned the __named effectiveTrait
 
@@ -237,7 +256,7 @@ Internal release
 
 ## [4.0.1] - 2021-11-24
 
-### Fixes
+### Fixed
 - build process for backend
 
 ## [4.0.0] - 2021-11-24
@@ -250,7 +269,7 @@ Internal release
 ### Changed
 - performance improvement to maintenance task of archiving unused attributes/relations
 
-### Fixes
+### Fixed
 - technical frontend: fixed wrong badge counts for added and removed attributes in changeset view
 - fixed CI diffing GraphQL resolve error
 
@@ -259,7 +278,7 @@ Internal release
 ### Added
 - generic JSON Ingest: graceful error handling for missing relation ends
 
-### Fixes
+### Fixed
 - better handling of x-forwarded-proto in certain environments (nginx SSL frontloading+docker)
 
 ## [3.0.0] - 2021-11-18
@@ -268,7 +287,7 @@ Internal release
 - implemented bulk replace for trait entities
 - added support for historical querying of layers
 
-### Fixes
+### Fixed
 - technical frontend: bugfix for error when editing generators in layer management
 - bugfix for swagger API generation error related to AuthRedirectController
 
