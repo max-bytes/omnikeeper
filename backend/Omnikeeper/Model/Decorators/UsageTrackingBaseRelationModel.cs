@@ -48,7 +48,7 @@ namespace Omnikeeper.Model.Decorators
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
         }
 
-        public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        public async Task<IReadOnlyList<Relation>[]> GetRelations(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
             
             TrackRelationPredicateUsage(RelationSelection2PredicateIDs(rl), layerIDs);
@@ -61,12 +61,12 @@ namespace Omnikeeper.Model.Decorators
             return await model.BulkUpdate(inserts, removes, layerID, dataOrigin, changesetProxy, trans);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
+        public async Task<IReadOnlyList<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
             return await model.GetRelationsOfChangeset(changesetID, getRemoved, trans);
         }
 
-        public async Task<ISet<string>> GetPredicateIDs(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        public async Task<IReadOnlySet<string>> GetPredicateIDs(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
             TrackRelationPredicateUsage(RelationSelection2PredicateIDs(rs), layerIDs);
             return await model.GetPredicateIDs(rs, layerIDs, trans, atTime, generatedDataHandling);

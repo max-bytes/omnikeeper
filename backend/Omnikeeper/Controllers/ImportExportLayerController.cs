@@ -101,7 +101,7 @@ namespace Omnikeeper.Controllers
                 .Where(a => a.ChangesetID != GeneratorV1.StaticChangesetID) // HACK: skip generated attributes
                 .Select(a => CIAttributeDTO.Build(a));
 
-            var relations = (await baseRelationModel.GetRelations(RelationSelectionAll.Instance, new string[] { layerID }, trans, timeThreshold, GeneratedDataHandlingExclude.Instance))[0];
+            IEnumerable<Relation> relations = (await baseRelationModel.GetRelations(RelationSelectionAll.Instance, new string[] { layerID }, trans, timeThreshold, GeneratedDataHandlingExclude.Instance))[0];
 
             // TODO: because there is no proper "RelationSelectionFromAndToInList", we fetch all and select manually afterwards
             if (ciidSelection is SpecificCIIDsSelection specificCIIDsSelection)

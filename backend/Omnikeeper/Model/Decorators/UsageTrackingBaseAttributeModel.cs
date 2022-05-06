@@ -55,7 +55,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime, generatedDataHandling);
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
+        public async Task<IReadOnlyList<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
             //TrackAttributeUsage("*"); // TODO: we should fetch the layer of this changeset here
             return await model.GetAttributesOfChangeset(changesetID, getRemoved, trans);
@@ -67,7 +67,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        public async Task<IReadOnlySet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
             TrackAttributeUsage("*", layerIDs);
             return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);

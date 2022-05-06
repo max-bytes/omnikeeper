@@ -30,7 +30,7 @@ namespace Omnikeeper.Model
         }
 
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime)
+        public async Task<IReadOnlyList<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime)
         {
             var attributes = await attributeModel.GetMergedAttributes(selection, attributeSelection, layers, trans, atTime, GeneratedDataHandlingInclude.Instance);
 
@@ -48,9 +48,9 @@ namespace Omnikeeper.Model
             return null; // TODO: we assume we can convert the name to a string, is this correct?
         }
 
-        public IList<MergedCI> BuildMergedCIs(IDictionary<Guid, IDictionary<string, MergedCIAttribute>> attributes, LayerSet layers, TimeThreshold atTime)
+        public IReadOnlyList<MergedCI> BuildMergedCIs(IDictionary<Guid, IDictionary<string, MergedCIAttribute>> attributes, LayerSet layers, TimeThreshold atTime)
         {
-            var ret = new List<MergedCI>();
+            var ret = new List<MergedCI>(attributes.Count);
             foreach (var ga in attributes)
             {
                 var att = ga.Value;
@@ -61,13 +61,20 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IEnumerable<MergedCI>> BuildMergedCIsIncludingEmptyCIs(IDictionary<Guid, IDictionary<string, MergedCIAttribute>> attributes, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public async Task<IReadOnlyList<MergedCI>> BuildMergedCIsIncludingEmptyCIs(IDictionary<Guid, IDictionary<string, MergedCIAttribute>> attributes, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
-            var ret = BuildMergedCIs(attributes, layers, atTime);
-
             // check which ci we already got and which are empty, add the empty ones
             var allSelectedCIIDs = await selection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
-            var emptyCIIDs = allSelectedCIIDs.Except(attributes.Keys);
+            var emptyCIIDs = allSelectedCIIDs.Except(attributes.Keys).ToHashSet();
+
+            var ret = new List<MergedCI>(attributes.Count + emptyCIIDs.Count);
+            foreach (var ga in attributes)
+            {
+                var att = ga.Value;
+                var name = GetNameFromAttributes(att);
+                ret.Add(new MergedCI(ga.Key, name, layers, atTime, att));
+            }
+
             foreach (var emptyCIID in emptyCIIDs)
             {
                 ret.Add(new MergedCI(emptyCIID, null, layers, atTime, ImmutableDictionary<string, MergedCIAttribute>.Empty));
@@ -98,7 +105,7 @@ namespace Omnikeeper.Model
             await writer.CompleteAsync();
         }
 
-        public async Task<IEnumerable<Guid>> GetCIIDs(IModelContext trans)
+        public async Task<IReadOnlySet<Guid>> GetCIIDs(IModelContext trans)
         {
             return await ciidModel.GetCIIDs(trans);
         }

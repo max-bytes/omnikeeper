@@ -71,7 +71,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         // use filter to reduce list of potential cis
                         var filter = context.GetArgument<FilterInput>("filter");
 
-                        IDataLoaderResult<ISet<Guid>> matchingCIIDs;
+                        IDataLoaderResult<IReadOnlySet<Guid>> matchingCIIDs;
                         if (!filter.RelationFilters.IsEmpty() && !filter.AttributeFilters.IsEmpty())
                         {
                             matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService)

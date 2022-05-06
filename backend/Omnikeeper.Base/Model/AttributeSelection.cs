@@ -3,6 +3,7 @@ using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Omnikeeper.Base.Model
@@ -15,9 +16,9 @@ namespace Omnikeeper.Base.Model
 
     public class NamedAttributesSelection : IAttributeSelection, IEquatable<NamedAttributesSelection>
     {
-        public readonly ISet<string> AttributeNames;
+        public readonly IReadOnlySet<string> AttributeNames;
 
-        private NamedAttributesSelection(ISet<string> attributeNames)
+        private NamedAttributesSelection(IReadOnlySet<string> attributeNames)
         {
             AttributeNames = attributeNames;
         }
@@ -26,9 +27,9 @@ namespace Omnikeeper.Base.Model
         {
             if (attributeNames.IsEmpty())
                 return NoAttributesSelection.Instance;
-            return new NamedAttributesSelection(attributeNames.ToHashSet());
+            return new NamedAttributesSelection(attributeNames.ToImmutableHashSet());
         }
-        public static IAttributeSelection Build(ISet<string> attributeNames)
+        public static IAttributeSelection Build(IReadOnlySet<string> attributeNames)
         {
             if (attributeNames.IsEmpty())
                 return NoAttributesSelection.Instance;

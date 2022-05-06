@@ -55,7 +55,7 @@ namespace Omnikeeper.Model
             }
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans)
+        public async Task<IReadOnlyList<Layer>> GetLayers(IModelContext trans)
         {
             var layers = new List<Layer>();
             using (var command = new NpgsqlCommand($@"SELECT l.id FROM layer l", trans.DBConnection, trans.DBTransaction))

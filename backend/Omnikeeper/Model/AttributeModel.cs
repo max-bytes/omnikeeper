@@ -25,6 +25,7 @@ namespace Omnikeeper.Model
         private IDictionary<Guid, IDictionary<string, MergedCIAttribute>> MergeAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] layeredAttributes, string[] layerIDs)
         {
             // TODO: implement faster in case of single layer
+            // TODO: think about implementing it faster by using a sparse attribute array instead of a dictionary
 
             var compound = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
             for (var i = 0; i < layerIDs.Length; i++)

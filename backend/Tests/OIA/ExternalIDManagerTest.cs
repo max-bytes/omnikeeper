@@ -9,6 +9,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -77,7 +78,7 @@ namespace Tests.OIA
                 .ReturnsAsync((Guid ciid, IModelContext trans) => ciid);
             ciModelMock.Setup(x => x.CreateCI(It.IsAny<IModelContext>()))
                 .ReturnsAsync((IModelContext trans) => { var n = newCIIDs.Dequeue(); existingCIs.Add(n); return n; });
-            ciModelMock.Setup(x => x.GetCIIDs(It.IsAny<IModelContext>())).ReturnsAsync(() => existingCIs);
+            ciModelMock.Setup(x => x.GetCIIDs(It.IsAny<IModelContext>())).ReturnsAsync(() => existingCIs.ToImmutableHashSet());
 
             await scopedExternalIDMapper.Setup(trans);
 
@@ -193,7 +194,7 @@ namespace Tests.OIA
             ciModelMock.Setup(x => x.CreateCI(It.IsAny<Guid>(), It.IsAny<IModelContext>()))
                 .Callback((Guid ciid, IModelContext trans) => existingCIs.Add(ciid))
                 .ReturnsAsync((Guid ciid, IModelContext trans) => ciid);
-            ciModelMock.Setup(x => x.GetCIIDs(It.IsAny<IModelContext>())).ReturnsAsync(() => existingCIs);
+            ciModelMock.Setup(x => x.GetCIIDs(It.IsAny<IModelContext>())).ReturnsAsync(() => existingCIs.ToImmutableHashSet());
 
             await scopedExternalIDMapper.Setup(trans);
 

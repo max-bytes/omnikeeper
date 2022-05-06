@@ -62,7 +62,7 @@ namespace Omnikeeper.Model
             return MergeRelations(lr, layerset.LayerIDs, maskHandling);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
+        public async Task<IReadOnlyList<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
             return await baseModel.GetRelationsOfChangeset(changesetID, getRemoved, trans);
         }

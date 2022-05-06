@@ -15,7 +15,7 @@ namespace Omnikeeper.Base.Model
         Task<(Layer layer, bool created)> CreateLayerIfNotExists(string id, IModelContext trans);
         Task<bool> TryToDelete(string id, IModelContext trans);
 
-        Task<IEnumerable<Layer>> GetLayers(IModelContext trans);
+        Task<IReadOnlyList<Layer>> GetLayers(IModelContext trans);
     }
 
     public interface ILayerDataModel

@@ -7,6 +7,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -194,7 +195,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 return (kv.Value, ciid);
             });
 
-            var relevantCIIDs = newCIDictionary.Values.Union(idMatchedCIDictionary.Values).Union(outdated.Keys).ToHashSet();
+            var relevantCIIDs = newCIDictionary.Values.Union(idMatchedCIDictionary.Values).Union(outdated.Keys).ToImmutableHashSet();
             var attributeFragments = Entities2Fragments(entities);
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(entities);
             var changed = await traitEntityModel.BulkReplace(relevantCIIDs, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);

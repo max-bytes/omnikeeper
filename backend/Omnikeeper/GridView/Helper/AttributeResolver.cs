@@ -17,7 +17,7 @@ namespace Omnikeeper.GridView.Helper
         private ILookup<(string PredicateID, Guid ToCIID), Guid> incomingRelationsLookup = null!;
         private IDictionary<Guid, MergedCI> relatedMergedCIsLookup = new Dictionary<Guid, MergedCI>();
 
-        public async Task PrefetchRelatedCIsAndLookups(GridViewConfiguration config, ISet<Guid> baseCIIDs, IRelationModel relationModel, ICIModel ciModel, IModelContext trans, TimeThreshold atTime)
+        public async Task PrefetchRelatedCIsAndLookups(GridViewConfiguration config, IReadOnlySet<Guid> baseCIIDs, IRelationModel relationModel, ICIModel ciModel, IModelContext trans, TimeThreshold atTime)
         {
             // collected necessary outgoing and incoming relations via the specified predicates in the SourceAttributePaths
             // TODO: validate sourceAttributePaths:

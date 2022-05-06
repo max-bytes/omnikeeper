@@ -15,8 +15,8 @@ namespace Omnikeeper.Base.Model
 
     public class SpecificCIIDsSelection : ICIIDSelection, IEquatable<SpecificCIIDsSelection>
     {
-        public ISet<Guid> CIIDs { get; }
-        private SpecificCIIDsSelection(ISet<Guid> ciids)
+        public IReadOnlySet<Guid> CIIDs { get; }
+        private SpecificCIIDsSelection(IReadOnlySet<Guid> ciids)
         {
             CIIDs = ciids;
         }
@@ -28,7 +28,7 @@ namespace Omnikeeper.Base.Model
             return CIIDs.Where(items.ContainsKey).ToDictionary(ciid => ciid, ciid => items[ciid]);
         }
 
-        public static ICIIDSelection Build(ISet<Guid> ciids)
+        public static ICIIDSelection Build(IReadOnlySet<Guid> ciids)
         {
             if (ciids.IsEmpty()) return new NoCIIDsSelection();
             return new SpecificCIIDsSelection(ciids);
@@ -36,7 +36,7 @@ namespace Omnikeeper.Base.Model
         public static ICIIDSelection Build(params Guid[] ciids)
         {
             if (ciids.IsEmpty()) return new NoCIIDsSelection();
-            return new SpecificCIIDsSelection(ciids.ToHashSet());
+            return new SpecificCIIDsSelection(ciids.ToImmutableHashSet());
         }
         public override int GetHashCode()
         {
@@ -54,8 +54,8 @@ namespace Omnikeeper.Base.Model
 
     public class AllCIIDsExceptSelection : ICIIDSelection, IEquatable<AllCIIDsExceptSelection>
     {
-        public ISet<Guid> ExceptCIIDs { get; }
-        private AllCIIDsExceptSelection(ISet<Guid> ciids)
+        public IReadOnlySet<Guid> ExceptCIIDs { get; }
+        private AllCIIDsExceptSelection(IReadOnlySet<Guid> ciids)
         {
             ExceptCIIDs = ciids;
         }
@@ -66,7 +66,7 @@ namespace Omnikeeper.Base.Model
             return items.Where(kv => !ExceptCIIDs.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public static ICIIDSelection Build(ISet<Guid> ciids)
+        public static ICIIDSelection Build(IReadOnlySet<Guid> ciids)
         {
             if (ciids.IsEmpty()) return new AllCIIDsSelection();
             return new AllCIIDsExceptSelection(ciids);
@@ -74,7 +74,7 @@ namespace Omnikeeper.Base.Model
         public static ICIIDSelection Build(params Guid[] ciids)
         {
             if (ciids.IsEmpty()) return new AllCIIDsSelection();
-            return new AllCIIDsExceptSelection(ciids.ToHashSet());
+            return new AllCIIDsExceptSelection(ciids.ToImmutableHashSet());
         }
         public override int GetHashCode()
         {
@@ -123,7 +123,7 @@ namespace Omnikeeper.Base.Model
                 _ => throw new NotImplementedException()
             };
         }
-        public static async Task<IEnumerable<Guid>> GetCIIDsAsync(this ICIIDSelection selection, Func<Task<IEnumerable<Guid>>> getAllCIIDs)
+        public static async Task<IEnumerable<Guid>> GetCIIDsAsync(this ICIIDSelection selection, Func<Task<IReadOnlySet<Guid>>> getAllCIIDs)
         {
             return selection switch
             {

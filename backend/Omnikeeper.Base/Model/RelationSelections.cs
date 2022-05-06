@@ -1,6 +1,7 @@
 ﻿using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Omnikeeper.Base.Model
@@ -10,16 +11,16 @@ namespace Omnikeeper.Base.Model
     }
     public class RelationSelectionFrom : IRelationSelection, IEquatable<RelationSelectionFrom>
     {
-        public ISet<Guid> FromCIIDs { get; }
-        public ISet<string>? PredicateIDs { get; } // NOTE: null means all
+        public IReadOnlySet<Guid> FromCIIDs { get; }
+        public IReadOnlySet<string>? PredicateIDs { get; } // NOTE: null means all
 
-        private RelationSelectionFrom(ISet<Guid> fromCIIDs, ISet<string>? predicateIDs)
+        private RelationSelectionFrom(IReadOnlySet<Guid> fromCIIDs, IReadOnlySet<string>? predicateIDs)
         {
             FromCIIDs = fromCIIDs;
             PredicateIDs = predicateIDs;
         }
 
-        public static IRelationSelection BuildWithAllPredicateIDs(ISet<Guid> fromCIIDs)
+        public static IRelationSelection BuildWithAllPredicateIDs(IReadOnlySet<Guid> fromCIIDs)
         {
             if (fromCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
             return new RelationSelectionFrom(fromCIIDs, null);
@@ -27,20 +28,20 @@ namespace Omnikeeper.Base.Model
         public static IRelationSelection BuildWithAllPredicateIDs(params Guid[] fromCIIDs)
         {
             if (fromCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
-            return new RelationSelectionFrom(fromCIIDs.ToHashSet(), null);
+            return new RelationSelectionFrom(fromCIIDs.ToImmutableHashSet(), null);
         }
 
-        public static IRelationSelection Build(ISet<string> predicateIDs, ISet<Guid> fromCIIDs)
+        public static IRelationSelection Build(IReadOnlySet<string> predicateIDs, IReadOnlySet<Guid> fromCIIDs)
         {
             if (predicateIDs.IsEmpty()) return RelationSelectionNone.Instance;
             if (fromCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
             return new RelationSelectionFrom(fromCIIDs, predicateIDs);
         }
-        public static IRelationSelection Build(ISet<string> predicateIDs, params Guid[] fromCIIDs)
+        public static IRelationSelection Build(IReadOnlySet<string> predicateIDs, params Guid[] fromCIIDs)
         {
             if (predicateIDs.IsEmpty()) return RelationSelectionNone.Instance;
             if (fromCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
-            return new RelationSelectionFrom(fromCIIDs.ToHashSet(), predicateIDs);
+            return new RelationSelectionFrom(fromCIIDs.ToImmutableHashSet(), predicateIDs);
         }
 
         public override int GetHashCode()
@@ -58,15 +59,15 @@ namespace Omnikeeper.Base.Model
     }
     public class RelationSelectionTo : IRelationSelection, IEquatable<RelationSelectionTo>
     {
-        public ISet<Guid> ToCIIDs { get; }
-        public ISet<string>? PredicateIDs { get; } // NOTE: null means all
-        private RelationSelectionTo(ISet<Guid> toCIIDs, ISet<string>? predicateIDs)
+        public IReadOnlySet<Guid> ToCIIDs { get; }
+        public IReadOnlySet<string>? PredicateIDs { get; } // NOTE: null means all
+        private RelationSelectionTo(IReadOnlySet<Guid> toCIIDs, IReadOnlySet<string>? predicateIDs)
         {
             ToCIIDs = toCIIDs;
             PredicateIDs = predicateIDs;
         }
 
-        public static IRelationSelection BuildWithAllPredicateIDs(ISet<Guid> toCIIDs)
+        public static IRelationSelection BuildWithAllPredicateIDs(IReadOnlySet<Guid> toCIIDs)
         {
             if (toCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
             return new RelationSelectionTo(toCIIDs, null);
@@ -76,13 +77,13 @@ namespace Omnikeeper.Base.Model
             if (toCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
             return new RelationSelectionTo(toCIIDs.ToHashSet(), null);
         }
-        public static IRelationSelection Build(ISet<string> predicateIDs, ISet<Guid> toCIIDs)
+        public static IRelationSelection Build(IReadOnlySet<string> predicateIDs, IReadOnlySet<Guid> toCIIDs)
         {
             if (predicateIDs.IsEmpty()) return RelationSelectionNone.Instance;
             if (toCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
             return new RelationSelectionTo(toCIIDs, predicateIDs);
         }
-        public static IRelationSelection Build(ISet<string> predicateIDs, params Guid[] toCIIDs)
+        public static IRelationSelection Build(IReadOnlySet<string> predicateIDs, params Guid[] toCIIDs)
         {
             if (predicateIDs.IsEmpty()) return RelationSelectionNone.Instance;
             if (toCIIDs.IsEmpty()) return RelationSelectionNone.Instance;

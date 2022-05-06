@@ -21,7 +21,7 @@ namespace Omnikeeper.Model.Decorators
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        public async Task<IReadOnlyList<Relation>[]> GetRelations(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
             switch (generatedDataHandling)
             {
@@ -40,13 +40,13 @@ namespace Omnikeeper.Model.Decorators
             }
         }
 
-        public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
+        public async Task<IReadOnlyList<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
             // NOTE: OIAs do not support changesets, so an OIA can never return any
             return await model.GetRelationsOfChangeset(changesetID, getRemoved, trans);
         }
 
-        public async Task<ISet<string>> GetPredicateIDs(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        public async Task<IReadOnlySet<string>> GetPredicateIDs(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
             return await model.GetPredicateIDs(rs, layerIDs, trans, atTime, generatedDataHandling);
         }

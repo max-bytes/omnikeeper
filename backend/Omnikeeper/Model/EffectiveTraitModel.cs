@@ -35,12 +35,12 @@ namespace Omnikeeper.Model
             {
                 var traitP = traitSOP[i];
 
-                IEnumerable<MergedCI>? productResult = null;
+                IReadOnlyList<MergedCI>? productResult = null;
 
                 for (var j = 0; j < traitP.Length; j++)
                 {
                     var (trait, negated) = traitP[j];
-                    var (has, hasNot) = CanResolve(trait, productResult ?? cis, layers, trans, atTime);
+                    var (has, hasNot) = CanResolve(trait, productResult ?? cis);
                     if (negated)
                         productResult = hasNot;
                     else
@@ -56,18 +56,18 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public IEnumerable<MergedCI> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public IReadOnlyList<MergedCI> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             if (layers.IsEmpty && !(trait is TraitEmpty))
                 return ImmutableList<MergedCI>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
 
-            var (has, _) = CanResolve(trait, cis, layers, trans, atTime);
+            var (has, _) = CanResolve(trait, cis);
             return has;
         }
 
-        public IEnumerable<MergedCI> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public IReadOnlyList<MergedCI> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
-            var (_, hasNot) = CanResolve(trait, cis, layers, trans, atTime);
+            var (_, hasNot) = CanResolve(trait, cis);
             return hasNot;
         }
 
@@ -80,7 +80,7 @@ namespace Omnikeeper.Model
             return ets;
         }
 
-        private (IEnumerable<MergedCI> has, IEnumerable<MergedCI> hasNot) CanResolve(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        private (IReadOnlyList<MergedCI> has, IReadOnlyList<MergedCI> hasNot) CanResolve(ITrait trait, IEnumerable<MergedCI> cis)
         {
             // TODO: sanity check: make sure that MergedCIs contain the necessary attributes (in principle), otherwise resolving cannot work properly
 

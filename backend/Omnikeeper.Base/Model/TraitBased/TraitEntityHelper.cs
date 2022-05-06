@@ -106,7 +106,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (foundCIID == default) ? null : foundCIID;
         }
 
-        public static IDataLoaderResult<ISet<Guid>> GetMatchingCIIDsByRelationFilters(IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<TraitRelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
+        public static IDataLoaderResult<IReadOnlySet<Guid>> GetMatchingCIIDsByRelationFilters(IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<TraitRelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
@@ -150,7 +150,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                             (ISet<Guid>)new HashSet<Guid>(re.First()),
                             (h, e) => { h.IntersectWith(e); return h; }
                         );
-                    return intersection;
+                    return (IReadOnlySet<Guid>)intersection.ToImmutableHashSet();
                 });
             }).ResolveNestedResults();
         }
@@ -158,12 +158,12 @@ namespace Omnikeeper.Base.Model.TraitBased
         /*
         * NOTE: this does not care whether or not the CIs are actually a trait entities or not
         */
-        public static IDataLoaderResult<ISet<Guid>> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IEnumerable<TraitAttributeFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
+        public static IDataLoaderResult<IReadOnlySet<Guid>> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IEnumerable<TraitAttributeFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
 
-            return new SimpleDataLoader<ISet<Guid>>(async token =>
+            return new SimpleDataLoader<IReadOnlySet<Guid>>(async token =>
             {
                 foreach (var taFilter in filters)
                 {

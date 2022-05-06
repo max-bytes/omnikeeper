@@ -10,11 +10,11 @@ namespace Omnikeeper.Model
     public class CIIDModel : ICIIDModel
     {
         // TODO: caching
-        public async Task<IEnumerable<Guid>> GetCIIDs(IModelContext trans)
+        public async Task<IReadOnlySet<Guid>> GetCIIDs(IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"select id from ci", trans.DBConnection, trans.DBTransaction);
             command.Prepare();
-            var tmp = new List<Guid>();
+            var tmp = new HashSet<Guid>();
             using var s = await command.ExecuteReaderAsync();
             while (await s.ReadAsync())
                 tmp.Add(s.GetGuid(0));

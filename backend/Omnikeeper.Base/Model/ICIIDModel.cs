@@ -7,8 +7,7 @@ namespace Omnikeeper.Base.Model
 {
     public interface ICIIDModel
     {
-        // TODO: should return an ISet instead
-        Task<IEnumerable<Guid>> GetCIIDs(IModelContext trans);
+        Task<IReadOnlySet<Guid>> GetCIIDs(IModelContext trans);
         Task<bool> CIIDExists(Guid id, IModelContext trans);
     }
 }

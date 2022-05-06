@@ -9,7 +9,7 @@ namespace Omnikeeper.Base.Service
         bool CanWriteToCI(Guid cIID);
         bool CanReadAllCIs(IEnumerable<Guid> ciids, out Guid? notAllowedCI);
         bool CanWriteToAllCIs(IEnumerable<Guid> enumerable, out Guid? notAllowedCI);
-        IEnumerable<Guid> FilterReadableCIs(IEnumerable<Guid> ciids);
+        IReadOnlySet<Guid> FilterReadableCIs(IReadOnlySet<Guid> ciids);
         IEnumerable<T> FilterReadableCIs<T>(IEnumerable<T> t, Func<T, Guid> f);
     }
 }

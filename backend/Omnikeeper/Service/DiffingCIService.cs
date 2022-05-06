@@ -480,8 +480,8 @@ namespace Omnikeeper.Service
                     var d = context.Source!;
 
                     // TODO: use dataloader?
-                    var leftCIs = await ciModel.GetMergedCIs(d.leftCIIDSelection, d.leftLayers, false, d.leftAttributes, userContext.Transaction, d.leftTimeThreshold);
-                    var rightCIs = await ciModel.GetMergedCIs(d.rightCIIDSelection, d.rightLayers, false, d.rightAttributes, userContext.Transaction, d.rightTimeThreshold);
+                    IEnumerable<MergedCI> leftCIs = await ciModel.GetMergedCIs(d.leftCIIDSelection, d.leftLayers, false, d.leftAttributes, userContext.Transaction, d.leftTimeThreshold);
+                    IEnumerable<MergedCI> rightCIs = await ciModel.GetMergedCIs(d.rightCIIDSelection, d.rightLayers, false, d.rightAttributes, userContext.Transaction, d.rightTimeThreshold);
 
                     // ci-based authz
                     leftCIs = ciBasedAuthorizationService.FilterReadableCIs(leftCIs, (ci) => ci.ID);
@@ -497,7 +497,7 @@ namespace Omnikeeper.Service
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                Func<ISet<Guid>, IRelationSelection> srb = (ciids) => RelationSelectionFrom.BuildWithAllPredicateIDs(ciids);
+                Func<IReadOnlySet<Guid>, IRelationSelection> srb = (ciids) => RelationSelectionFrom.BuildWithAllPredicateIDs(ciids);
                 if (!outgoing) srb = (ciids) => RelationSelectionTo.BuildWithAllPredicateIDs(ciids);
                 IRelationSelection leftRelationSelection = (d.leftCIIDSelection is SpecificCIIDsSelection leftSS) ? srb(leftSS.CIIDs) : RelationSelectionAll.Instance;
                 IRelationSelection rightRelationSelection = (d.rightCIIDSelection is SpecificCIIDsSelection rightSS) ? srb(rightSS.CIIDs) : RelationSelectionAll.Instance;
@@ -539,8 +539,8 @@ namespace Omnikeeper.Service
                     var d = context.Source!;
 
                     // TODO: use dataloader?
-                    var leftCIs = await ciModel.GetMergedCIs(d.leftCIIDSelection, d.leftLayers, false, d.leftAttributes, userContext.Transaction, d.leftTimeThreshold);
-                    var rightCIs = await ciModel.GetMergedCIs(d.rightCIIDSelection, d.rightLayers, false, d.rightAttributes, userContext.Transaction, d.rightTimeThreshold);
+                    IEnumerable<MergedCI> leftCIs = await ciModel.GetMergedCIs(d.leftCIIDSelection, d.leftLayers, false, d.leftAttributes, userContext.Transaction, d.leftTimeThreshold);
+                    IEnumerable<MergedCI> rightCIs = await ciModel.GetMergedCIs(d.rightCIIDSelection, d.rightLayers, false, d.rightAttributes, userContext.Transaction, d.rightTimeThreshold);
 
                     // ci-based authz
                     leftCIs = ciBasedAuthorizationService.FilterReadableCIs(leftCIs, (ci) => ci.ID);

@@ -118,7 +118,7 @@ namespace Omnikeeper.Base.Entity
 
     public class BulkCIAttributeDataCIAndAttributeNameScope : IBulkCIAttributeData<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>
     {
-        public ISet<Guid> RelevantCIs;
+        public IReadOnlySet<Guid> RelevantCIs;
 
         public class Fragment
         {
@@ -136,13 +136,13 @@ namespace Omnikeeper.Base.Entity
 
         public string LayerID { get; private set; }
         public IEnumerable<Fragment> Fragments { get; private set; }
-        public ISet<string> RelevantAttributes { get; }
+        public IReadOnlySet<string> RelevantAttributes { get; }
 
         public Guid GetCIID(Fragment f) => f.CIID;
         public string GetFullName(Fragment f) => f.Name;
         public IAttributeValue GetValue(Fragment f) => f.Value;
 
-        public BulkCIAttributeDataCIAndAttributeNameScope(string layerID, IEnumerable<Fragment> fragments, ISet<Guid> relevantCIs, ISet<string> relevantAttributes)
+        public BulkCIAttributeDataCIAndAttributeNameScope(string layerID, IEnumerable<Fragment> fragments, IReadOnlySet<Guid> relevantCIs, IReadOnlySet<string> relevantAttributes)
         {
             LayerID = layerID;
             Fragments = fragments;

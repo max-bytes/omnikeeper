@@ -101,7 +101,7 @@ namespace Omnikeeper.Model.Decorators
             }
         }
 
-        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        public async Task<IReadOnlySet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: implement
             return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
@@ -114,7 +114,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.BulkUpdate(inserts, removes, layerID, origin, changesetProxy, trans);
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
+        public async Task<IReadOnlyList<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
             // NOTE: OIAs do not support changesets, so an OIA can never return any
             return await model.GetAttributesOfChangeset(changesetID, getRemoved, trans);

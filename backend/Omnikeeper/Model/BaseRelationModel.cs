@@ -115,7 +115,7 @@ namespace Omnikeeper.Model
             return command;
         }
 
-        public async Task<IEnumerable<Relation>[]> GetRelations(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        public async Task<IReadOnlyList<Relation>[]> GetRelations(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
             var tmp = new Dictionary<string, List<Relation>>();
             using (var command = await CreateRelationCommand(rs, layerIDs, trans, atTime))
@@ -153,7 +153,7 @@ namespace Omnikeeper.Model
             return relations;
         }
 
-        public async Task<ISet<string>> GetPredicateIDs(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        public async Task<IReadOnlySet<string>> GetPredicateIDs(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
             async Task<NpgsqlCommand> CreateCommand()
             {
@@ -205,7 +205,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
+        public async Task<IReadOnlyList<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
             var ret = new List<Relation>();
             using var command = new NpgsqlCommand($@"

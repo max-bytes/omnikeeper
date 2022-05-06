@@ -336,7 +336,7 @@ namespace Omnikeeper.Model
         }
 
         // TODO: test
-        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        public async Task<IReadOnlySet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
@@ -383,7 +383,7 @@ namespace Omnikeeper.Model
         }
 
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
+        public async Task<IReadOnlyList<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
             var ret = new List<CIAttribute>();
             using var command = new NpgsqlCommand($@"

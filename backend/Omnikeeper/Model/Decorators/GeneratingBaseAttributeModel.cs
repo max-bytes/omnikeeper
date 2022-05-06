@@ -61,10 +61,10 @@ namespace Omnikeeper.Model.Decorators
                     // and also (for the return structure) ignore any additionally fetched attributes that were only fetched to calculate the generated attributes
                     var additionalAttributeNames = attributeSelection switch
                     {
-                        NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
-                        NamedAttributesWithValueFiltersSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
-                        AllAttributeSelection _ => new HashSet<string>(), // we are fetching all attributes anyway, no need to add additional attributes
-                        NoAttributesSelection _ => new HashSet<string>(), // no attributes necessary
+                        NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection).ToImmutableHashSet(),
+                        NamedAttributesWithValueFiltersSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection).ToImmutableHashSet(),
+                        AllAttributeSelection _ => ImmutableHashSet<string>.Empty, // we are fetching all attributes anyway, no need to add additional attributes
+                        NoAttributesSelection _ => ImmutableHashSet<string>.Empty, // no attributes necessary
                         _ => throw new Exception("Invalid attribute selection encountered"),
                     };
                     var additionalAttributes = (additionalAttributeNames.Count > 0) ?
@@ -126,7 +126,7 @@ namespace Omnikeeper.Model.Decorators
         }
 
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
+        public async Task<IReadOnlyList<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
             // NOTE: changesets never contain any generated attributes
             return await model.GetAttributesOfChangeset(changesetID, getRemoved, trans);
@@ -138,7 +138,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        public async Task<IReadOnlySet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
             // NOTE: because generators can only produce attributes on CIs that already have any, we can assume that the results of the base call is valid here too
             return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);

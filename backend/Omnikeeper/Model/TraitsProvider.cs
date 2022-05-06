@@ -88,7 +88,9 @@ namespace Omnikeeper.Model
             if (relevantChangesetIDs.IsEmpty())
                 return null;
             var relevantChangesets = await changesetModel.GetChangesets(relevantChangesetIDs, trans);
-            return relevantChangesets.Select(c => c.Timestamp).OrderByDescending(c => c).FirstOrDefault(); // TODO: replace with MaxBy()
+            if (relevantChangesets.IsEmpty())
+                return null;
+            return relevantChangesets.Select(c => c.Timestamp).Max();
         }
 
         public async Task<ITrait?> GetActiveTrait(string traitID, IModelContext trans, TimeThreshold timeThreshold)

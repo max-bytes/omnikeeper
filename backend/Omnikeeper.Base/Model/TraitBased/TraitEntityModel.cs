@@ -56,7 +56,7 @@ namespace Omnikeeper.Base.Model.TraitBased
          * and will be considered as this trait's entities going forward
          */
         // NOTE: the cis MUST exist already
-        public async Task<bool> BulkReplace(ISet<Guid> relevantCIIDs, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
+        public async Task<bool> BulkReplace(IReadOnlySet<Guid> relevantCIIDs, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
             LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
@@ -135,7 +135,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         }
 
         private async Task<bool> WriteAttributes(IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> fragments,
-            ISet<Guid> relevantCIs, ISet<string> relevantAttributes, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans,
+            IReadOnlySet<Guid> relevantCIs, IReadOnlySet<string> relevantAttributes, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans,
             IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             var otherLayersValueHandling = GetOtherLayersValueHandling(layerSet, writeLayer);

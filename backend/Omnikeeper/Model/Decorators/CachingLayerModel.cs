@@ -28,13 +28,13 @@ namespace Omnikeeper.Model.Decorators
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(IModelContext trans)
+        public async Task<IReadOnlyList<Layer>> GetLayers(IModelContext trans)
         {
             var allLayers = await _GetFromCache(trans);
             if (allLayers == null)
                 return await Model.GetLayers(trans);
 
-            return allLayers.Values;
+            return allLayers.Values.ToList();
         }
 
         public async Task<bool> TryToDelete(string id, IModelContext trans)

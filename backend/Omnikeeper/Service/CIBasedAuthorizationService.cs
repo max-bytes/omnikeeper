@@ -21,7 +21,7 @@ namespace Omnikeeper.Service
             }
         }
 
-        public IEnumerable<Guid> FilterReadableCIs(IEnumerable<Guid> ciids)
+        public IReadOnlySet<Guid> FilterReadableCIs(IReadOnlySet<Guid> ciids)
         {
             return ciids; // TODO: implement
         }

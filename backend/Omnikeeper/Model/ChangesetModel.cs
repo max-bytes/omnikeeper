@@ -67,7 +67,7 @@ namespace Omnikeeper.Model
             return new Changeset(id, user, layerID, origin, timestamp);
         }
 
-        public async Task<IEnumerable<Changeset>> GetChangesets(ISet<Guid> ids, IModelContext trans)
+        public async Task<IReadOnlyList<Changeset>> GetChangesets(ISet<Guid> ids, IModelContext trans)
         {
             using var command = new NpgsqlCommand($@"SELECT c.id, c.timestamp, c.user_id, c.layer_id, c.origin_type, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c
                 LEFT JOIN ""user"" u ON c.user_id = u.id
@@ -101,7 +101,7 @@ namespace Omnikeeper.Model
 
         // returns all changesets in the time range
         // sorted by timestamp
-        public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null)
+        public async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null)
         {
             return cs switch
             {
@@ -114,7 +114,7 @@ namespace Omnikeeper.Model
 
         // returns all changesets affecting these CI, both via attributes OR relations
         // sorted by timestamp
-        private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, Guid[] ciids, IModelContext trans, int? limit = null)
+        private async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, Guid[] ciids, IModelContext trans, int? limit = null)
         {
             var queryAttributes = @"SELECT distinct c.id, c.user_id, c.layer_id, c.origin_type, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN attribute a ON a.changeset_id = c.id 
@@ -167,7 +167,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IModelContext trans, int? limit = null)
+        private async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IModelContext trans, int? limit = null)
         {
             var query = @"SELECT distinct c.id, c.user_id, c.layer_id, c.origin_type, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 LEFT JOIN ""user"" u ON c.user_id = u.id

@@ -63,7 +63,7 @@ namespace PerfTests
             layerset = layerModel!.BuildLayerSet(layers.Select(l => l.ID).ToArray(), mc).GetAwaiter().GetResult();
 
             var ciidModel = ServiceProvider.GetRequiredService<ICIIDModel>();
-            var ciids = (await ciidModel.GetCIIDs(mc)).ToList();
+            var ciids = await ciidModel.GetCIIDs(mc);
             specificCIIDs = SpecificCIIDsSelection.Build(ciids.Take(ciids.Count / 3).ToHashSet());
             allExceptCIIDs = AllCIIDsExceptSelection.Build(ciids.Take(ciids.Count / 3).ToHashSet());
         }

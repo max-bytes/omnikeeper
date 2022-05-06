@@ -28,7 +28,7 @@ namespace Tests.Integration.Controller
             cbas.Setup(x => x.CanReadCI(It.IsAny<Guid>())).Returns(true);
             Guid? tmp;
             cbas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
-            cbas.Setup(x => x.FilterReadableCIs(It.IsAny<IEnumerable<Guid>>())).Returns<IEnumerable<Guid>>((i) => i);
+            cbas.Setup(x => x.FilterReadableCIs(It.IsAny<IReadOnlySet<Guid>>())).Returns<IReadOnlySet<Guid>>((i) => i);
             cbas.Setup(x => x.FilterReadableCIs(It.IsAny<IEnumerable<MergedCI>>(), It.IsAny<Func<MergedCI, Guid>>())).Returns<IEnumerable<MergedCI>, Func<MergedCI, Guid>>((i, j) =>
             {
                 return i;
