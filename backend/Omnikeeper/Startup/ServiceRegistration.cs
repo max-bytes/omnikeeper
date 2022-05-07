@@ -315,6 +315,7 @@ namespace Omnikeeper.Startup
 
             // jobs
             builder.RegisterType<CLBJob>().InstancePerLifetimeScope();
+            builder.RegisterType<CLBSingleJob>().InstancePerLifetimeScope();
             builder.RegisterType<CLBLastRunCache>().SingleInstance();
             builder.RegisterType<ArchiveOldDataJob>().InstancePerLifetimeScope();
             builder.RegisterType<ExternalIDManagerJob>().InstancePerLifetimeScope();
