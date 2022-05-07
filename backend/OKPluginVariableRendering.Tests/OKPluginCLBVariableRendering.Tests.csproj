@@ -13,7 +13,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\OKPluginVariableRendering\OKPluginVariableRendering.csproj" />
+		<ProjectReference Include="..\OKPluginVariableRendering\OKPluginCLBVariableRendering.csproj" />
 		<ProjectReference Include="..\Tests\Tests.csproj" />
 	</ItemGroup>
 </Project>
