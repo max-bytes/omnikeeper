@@ -2,11 +2,11 @@
 {
     public class CLBContext
     {
-        public readonly IComputeLayerBrain Brain;
+        public string Username;
 
-        public CLBContext(IComputeLayerBrain brain)
+        public CLBContext(string username)
         {
-            this.Brain = brain;
+            this.Username = username;
         }
     }
 }

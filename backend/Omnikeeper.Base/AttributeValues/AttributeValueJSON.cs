@@ -31,7 +31,10 @@ namespace Omnikeeper.Entity.AttributeValues
         public bool Equals([AllowNull] IAttributeValue? other) => Equals(other as AttributeScalarValueJSON);
         public bool Equals([AllowNull] AttributeScalarValueJSON other)
         {
-            return other != null && valueStr == other.valueStr; // TODO: implement different equality comparator?
+            // NOTE: we do basic string equality comparison, because other methods would be much more expensive and ideal either
+            // this means that tiny changes to the JSON, like reordering of member order or whitespace means the attribute value has changed
+            // make sure to consider that and take care that the produced JSONs are as stable as possible
+            return other != null && valueStr == other.valueStr;
         }
         public override int GetHashCode() => valueStr.GetHashCode();
         public object ToGenericObject() => GetValue();

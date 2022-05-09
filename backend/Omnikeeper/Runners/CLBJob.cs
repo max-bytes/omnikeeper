@@ -168,7 +168,7 @@ namespace Omnikeeper.Runners
                 return;
             }
 
-            var lastRunKey = $"{clb.Name}{layerID}";
+            var lastRunKey = $"{clConfig_ID}{layerID}";
             DateTimeOffset? lastRun = null;
             if (clbLastRunCache.TryGetValue(lastRunKey, out var lr))
                 lastRun = lr;
@@ -180,9 +180,10 @@ namespace Omnikeeper.Runners
             }
 
             // create a lifetime scope per clb invocation (similar to a HTTP request lifetime)
+            var username = $"__cl.{clConfig_ID}@{layerID}"; // construct username
             await using (var scope = lifetimeScope.BeginLifetimeScope(Autofac.Core.Lifetime.MatchingScopeLifetimeTags.RequestLifetimeScopeTag, builder =>
             {
-                builder.Register(builder => new CLBContext(clb)).InstancePerLifetimeScope();
+                builder.Register(builder => new CLBContext(username)).InstancePerLifetimeScope();
                 builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
             }))
             {

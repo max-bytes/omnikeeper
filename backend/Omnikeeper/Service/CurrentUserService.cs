@@ -129,12 +129,13 @@ namespace Omnikeeper.Service
 
         public string GetCurrentUsername()
         {
-            return $"__cl.{clbContext.Brain.Name}"; // make username the same as CLB name
+            return clbContext.Username;
         }
 
         private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)
         {
             // CLBs implicitly have all permissions
+            // TODO: become more restricive, just allow writing to target layer and reading from all
             var suar = await PermissionUtils.GetSuperUserAuthRole(layerModel, trans);
 
             // upsert user
@@ -142,7 +143,7 @@ namespace Omnikeeper.Service
             var displayName = username;
             // generate a unique but deterministic GUID from the clb Name
             var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
-            var guid = GuidUtility.Create(clbUserGuidNamespace, clbContext.Brain.Name);
+            var guid = GuidUtility.Create(clbUserGuidNamespace, username);
             var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, trans);
 
             return new AuthenticatedUser(user, new AuthRole[] { suar });
