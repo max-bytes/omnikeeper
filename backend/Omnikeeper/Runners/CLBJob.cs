@@ -80,15 +80,19 @@ namespace Omnikeeper.Runners
 
         private async Task TriggerCLB(CLConfigV1 clConfig, LayerData layerData)
         {
-            IJobDetail job = JobBuilder.Create<CLBSingleJob>().WithIdentity($"{clConfig.ID}@{layerData.LayerID}").Build();
+            var jobKey = new JobKey($"{clConfig.ID}@{layerData.LayerID}");
 
-            job.JobDataMap.Add("clConfig_ID", clConfig.ID);
-            job.JobDataMap.Add("clConfig_CLBrainConfig", clConfig.CLBrainConfig.RootElement.GetRawText()); // HACK: we pass the config by string, because Quartz likes those more than objects
-            job.JobDataMap.Add("clConfig_CLBrainReference", clConfig.CLBrainReference);
-            job.JobDataMap.Add("layerID", layerData.LayerID);
+            if (!await scheduler.CheckExists(jobKey))
+            { // only trigger if we are not already running a job with that ID (which would mean that the previous run is still running)
+                IJobDetail job = JobBuilder.Create<CLBSingleJob>().WithIdentity(jobKey).Build();
+                job.JobDataMap.Add("clConfig_ID", clConfig.ID);
+                job.JobDataMap.Add("clConfig_CLBrainConfig", clConfig.CLBrainConfig.RootElement.GetRawText()); // HACK: we pass the config by string, because Quartz likes those more than objects
+                job.JobDataMap.Add("clConfig_CLBrainReference", clConfig.CLBrainReference);
+                job.JobDataMap.Add("layerID", layerData.LayerID);
 
-            ITrigger trigger = TriggerBuilder.Create().StartNow().Build();
-            await scheduler.ScheduleJob(job, trigger);
+                ITrigger trigger = TriggerBuilder.Create().StartNow().Build();
+                await scheduler.ScheduleJob(job, trigger);
+            }
         }
 
         private readonly CLConfigV1Model clConfigModel;
