@@ -90,7 +90,7 @@ export function InputControl(props) {
         var value = props.value;
         if (props.type === 'JSON') {
             var o = JSON.parse(value);
-            value = JSON.stringify(o, null, 4);
+            value = JSON.stringify(o, null, 2);
         }
         return <AceEditor
             value={value}
