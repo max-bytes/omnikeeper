@@ -87,8 +87,13 @@ export function InputControl(props) {
     } else if (props.type === 'JSON' || props.type === 'YAML') {
         // return <ReactJson name={false} src={JSON.parse(props.value)} enableClipboard={false} 
         //     style={{flexGrow: 1, border: "1px solid #ced4da", borderRadius: ".25rem"}}/>; // TODO
+        var value = props.value;
+        if (props.type === 'JSON') {
+            var o = JSON.parse(value);
+            value = JSON.stringify(o, null, 4);
+        }
         return <AceEditor
-            value={props.value}
+            value={value}
             editorProps={{autoScrollEditorIntoView: true}}
             onValidate={a => {
                 const e = a.filter(a => a.type === 'error').length > 0;
