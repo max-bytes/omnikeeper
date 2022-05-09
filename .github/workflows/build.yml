@@ -134,11 +134,12 @@ jobs:
           #buildPublish OKPluginOIAOmnikeeper
           #buildPublish OKPluginOIAKeycloak
           #buildPublish OKPluginCLBMonitoring
+          buildPublish OKPluginCLBNaemonVariableResolution
+          buildPublish OKPluginCLBVariableRendering
+          buildPublish OKPluginCLBNaemonConfig
           buildPublish OKPluginAnsibleInventoryScanIngest
           buildPublish OKPluginActiveDirectoryXMLIngest
-          buildPublish OKPluginVariableRendering
           buildPublish OKPluginVisualization
-          buildPublish OKPluginNaemonConfig
 
   build-swagger-definition:
     runs-on: ubuntu-20.04
