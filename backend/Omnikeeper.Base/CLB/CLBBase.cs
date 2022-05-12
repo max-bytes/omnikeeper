@@ -54,6 +54,8 @@ namespace Omnikeeper.Base.CLB
             }
             else
             {
+                // TODO: check if config has changed; if yes -> cannot skip run
+
                 var dependentLayerIDs = GetDependentLayerIDs(config, logger);
                 if (dependentLayerIDs == null)
                 {

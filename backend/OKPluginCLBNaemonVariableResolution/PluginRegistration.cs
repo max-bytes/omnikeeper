@@ -20,6 +20,9 @@ namespace OKPluginCLBNaemonVariableResolution
             GenericTraitEntityHelper.Class2RecursiveTrait<Profile>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<Category>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<Customer>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<Interface>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<ServiceAction>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<Group>(),
         };
     }
 }
