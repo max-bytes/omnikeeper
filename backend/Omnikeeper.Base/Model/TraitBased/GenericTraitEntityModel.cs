@@ -276,16 +276,22 @@ namespace Omnikeeper.Base.Model.TraitBased
 
                         if (entityValue != null)
                         {
-                            var otherCIIDs = entityValue as Guid[];
-                            if (otherCIIDs == null)
-                                throw new Exception(); // invalid type
                             var predicateID = trFieldInfo.TraitRelationAttribute.predicateID;
-
                             var outgoing = trFieldInfo.TraitRelationAttribute.directionForward;
-                            if (outgoing)
-                                outgoingRelations.Add((ciid, predicateID, otherCIIDs));
-                            else
-                                incomingRelations.Add((ciid, predicateID, otherCIIDs));
+
+                            if (entityValue is Guid[] otherCIIDs)
+                            {
+                                if (outgoing)
+                                    outgoingRelations.Add((ciid, predicateID, otherCIIDs));
+                                else
+                                    incomingRelations.Add((ciid, predicateID, otherCIIDs));
+                            } else if (entityValue is Guid otherCIID)
+                            {
+                                if (outgoing)
+                                    outgoingRelations.Add((ciid, predicateID, new Guid[] { otherCIID }));
+                                else
+                                    incomingRelations.Add((ciid, predicateID, new Guid[] { otherCIID }));
+                            } else throw new Exception(); // invalid type
                         }
                         else
                         {

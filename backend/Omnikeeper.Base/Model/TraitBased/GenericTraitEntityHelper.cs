@@ -127,7 +127,10 @@ namespace Omnikeeper.Base.Model.TraitBased
                 {
                     var otherCIIDs = ((isForward) ? relations.Select(r => r.Relation.ToCIID) : relations.Select(r => r.Relation.FromCIID)).ToArray();
 
-                    trFieldInfo.FieldInfo.SetValue(ret, otherCIIDs);
+                    if (trFieldInfo.FieldInfo.FieldType.IsArray)
+                        trFieldInfo.FieldInfo.SetValue(ret, otherCIIDs);
+                    else
+                        trFieldInfo.FieldInfo.SetValue(ret, otherCIIDs.FirstOrDefault());
                 }
                 else
                 {
