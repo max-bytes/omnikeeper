@@ -137,7 +137,7 @@ namespace Omnikeeper.GraphQL
 
                     var predicates = await predicateModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
 
-                    return predicates;
+                    return predicates.Values;
                 });
 
             FieldAsync<ListGraphType<RecursiveTraitType>>("manage_recursiveTraits",
