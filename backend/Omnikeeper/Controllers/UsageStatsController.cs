@@ -5,6 +5,8 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers
@@ -41,7 +43,13 @@ namespace Omnikeeper.Controllers
 
             var elements = await usageStatsModel.GetElements(from, to, trans);
 
-            return Ok(elements);
+            var options = new JsonSerializerOptions
+            {
+                Converters = { new JsonStringEnumConverter() },
+                IncludeFields = true,
+            };
+
+            return Json(elements, options);
         }
     }
 }

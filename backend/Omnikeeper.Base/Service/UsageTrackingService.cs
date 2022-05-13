@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using System;
 using System.Collections.Generic;
@@ -10,10 +11,8 @@ namespace Omnikeeper.Base.Service
         void TrackUseTrait(string traitID, string layerID);
         void TrackUseAuthRole(string authRoleID);
         void TrackUseGenerator(string generatorID, string layerID);
-        void TrackUseAttribute(string attributeName, string layerID);
-        void TrackUseRelationPredicate(string predicateID, string layerID);
-
-        void TrackUse(string elementType, string elementName, string layerID);
+        void TrackUseAttribute(string attributeName, string layerID, UsageStatsOperation operation);
+        void TrackUseRelationPredicate(string predicateID, string layerID, UsageStatsOperation operation);
     }
 
     public class ScopedUsageTracker : IScopedUsageTracker, IDisposable
@@ -21,7 +20,7 @@ namespace Omnikeeper.Base.Service
         private readonly ILogger<ScopedUsageTracker> logger;
         private readonly ICurrentUserService currentUserService;
         private readonly IUsageDataAccumulator usageDataAccumulator;
-        private readonly ISet<(string elementType, string elementName, string layerID)> usages = new HashSet<(string elementType, string elementName, string layerID)>();
+        private readonly ISet<(string elementType, string elementName, string layerID, UsageStatsOperation operation)> usages = new HashSet<(string elementType, string elementName, string layerID, UsageStatsOperation operation)>();
 
         public ScopedUsageTracker(ILogger<ScopedUsageTracker> logger, ICurrentUserService currentUserService, IUsageDataAccumulator usageDataAccumulator)
         {
@@ -38,31 +37,35 @@ namespace Omnikeeper.Base.Service
 
         public void TrackUseTrait(string traitID, string layerID)
         {
-            TrackUse(ElementTypeTrait, traitID, layerID);
+            TrackUse(ElementTypeTrait, traitID, layerID, UsageStatsOperation.Use);
         }
 
         public void TrackUseAuthRole(string authRoleID)
         {
-            TrackUse(ElementTypeAuthRole, authRoleID, "");
+            TrackUse(ElementTypeAuthRole, authRoleID, "", UsageStatsOperation.Use);
         }
 
         public void TrackUseGenerator(string generatorID, string layerID)
         {
-            TrackUse(ElementTypeGenerator, generatorID, layerID);
+            TrackUse(ElementTypeGenerator, generatorID, layerID, UsageStatsOperation.Use);
         }
-        public void TrackUseAttribute(string attributeName, string layerID)
+        public void TrackUseAttribute(string attributeName, string layerID, UsageStatsOperation operation)
         {
-            TrackUse(ElementTypeAttributeName, attributeName, layerID);
-        }
-
-        public void TrackUseRelationPredicate(string predicateID, string layerID)
-        {
-            TrackUse(ElementTypeRelationPredicateID, predicateID, layerID);
+            if (operation != UsageStatsOperation.Write && operation != UsageStatsOperation.Read)
+                throw new Exception("Invalid operation for attribute use");
+            TrackUse(ElementTypeAttributeName, attributeName, layerID, operation);
         }
 
-        public void TrackUse(string elementType, string elementName, string layerID)
+        public void TrackUseRelationPredicate(string predicateID, string layerID, UsageStatsOperation operation)
         {
-            usages.Add((elementType, elementName, layerID));
+            if (operation != UsageStatsOperation.Write && operation != UsageStatsOperation.Read)
+                throw new Exception("Invalid operation for relation-predicate use");
+            TrackUse(ElementTypeRelationPredicateID, predicateID, layerID, operation);
+        }
+
+        private void TrackUse(string elementType, string elementName, string layerID, UsageStatsOperation operation)
+        {
+            usages.Add((elementType, elementName, layerID, operation));
         }
 
         public void Dispose()
@@ -71,9 +74,9 @@ namespace Omnikeeper.Base.Service
             {
                 var username = currentUserService.GetCurrentUsername();
 
-                foreach (var (elementType, elementName, layerID) in usages)
+                foreach (var (elementType, elementName, layerID, operation) in usages)
                 {
-                    logger.LogTrace($"Usage tracked: type: {elementType}, name: {elementName}, user: {username}, layerID: {layerID}");
+                    logger.LogTrace($"Usage tracked: type: {elementType}, name: {elementName}, user: {username}, layerID: {layerID}, operation: {operation}");
                 }
 
                 var timestamp = DateTimeOffset.Now;

@@ -1,4 +1,5 @@
 ﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -10,30 +11,31 @@ namespace Omnikeeper.Model
 {
     public class UsageDataAccumulator : IUsageDataAccumulator
     {
-        private readonly ConcurrentQueue<(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName, string layerID)> elements)> accumulator;
+        private readonly ConcurrentQueue<(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName, string layerID, UsageStatsOperation operation)> elements)> accumulator;
 
         public UsageDataAccumulator()
         {
-            accumulator = new ConcurrentQueue<(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName, string layerID)> elements)>();
+            accumulator = new ConcurrentQueue<(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName, string layerID, UsageStatsOperation operation)> elements)>();
         }
 
-        public void Add(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName, string layerID)> elements)
+        public void Add(string username, DateTimeOffset timestamp, IEnumerable<(string elementType, string elementName, string layerID, UsageStatsOperation operation)> elements)
         {
             accumulator.Enqueue((username, timestamp, elements));
         }
 
         public void Flush(IModelContext trans)
         {
-            using var writer = trans.DBConnection.BeginBinaryImport(@"COPY usage_stats (element_type, element_name, username, layer_id, timestamp) FROM STDIN (FORMAT BINARY)");
+            using var writer = trans.DBConnection.BeginBinaryImport(@"COPY usage_stats (element_type, element_name, username, layer_id, operation, timestamp) FROM STDIN (FORMAT BINARY)");
             while (accumulator.TryDequeue(out var ds))
             {
-                foreach (var (elementType, elementName, layerID) in ds.elements)
+                foreach (var (elementType, elementName, layerID, operation) in ds.elements)
                 {
                     writer.StartRow();
                     writer.Write(elementType);
                     writer.Write(elementName);
                     writer.Write(ds.username);
                     writer.Write(layerID);
+                    writer.Write(operation);
                     writer.Write(ds.timestamp);
                 }
             }

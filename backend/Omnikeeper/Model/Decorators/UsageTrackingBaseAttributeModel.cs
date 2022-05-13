@@ -24,20 +24,20 @@ namespace Omnikeeper.Model.Decorators
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
         }
 
-        private void TrackAttributeUsage(string attributeName, IEnumerable<string> layerIDs)
+        private void TrackAttributeUsage(string attributeName, IEnumerable<string> layerIDs, UsageStatsOperation operation)
         {
             var usageTracker = scopedLifetimeAccessor.GetLifetimeScope()?.Resolve<IScopedUsageTracker>();
             if (usageTracker != null)
                 foreach (var layerID in layerIDs)
-                    usageTracker.TrackUseAttribute(attributeName, layerID);
+                    usageTracker.TrackUseAttribute(attributeName, layerID, operation);
         }
-        private void TrackAttributeUsages(IEnumerable<string> attributeNames, IEnumerable<string> layerIDs)
+        private void TrackAttributeUsages(IEnumerable<string> attributeNames, IEnumerable<string> layerIDs, UsageStatsOperation operation)
         {
             var usageTracker = scopedLifetimeAccessor.GetLifetimeScope()?.Resolve<IScopedUsageTracker>();
             if (usageTracker != null)
                 foreach (var name in attributeNames)
                     foreach(var layerID in layerIDs)
-                        usageTracker.TrackUseAttribute(name, layerID);
+                        usageTracker.TrackUseAttribute(name, layerID, operation);
         }
 
         public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
@@ -50,7 +50,7 @@ namespace Omnikeeper.Model.Decorators
                 NamedAttributesWithValueFiltersSelection f => f.NamesAndFilters.Select(t => t.Key),
                 _ => throw new NotImplementedException("")
             };
-            TrackAttributeUsages(usedAttributes, layerIDs);
+            TrackAttributeUsages(usedAttributes, layerIDs, UsageStatsOperation.Read);
 
             return await model.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime, generatedDataHandling);
         }
@@ -63,19 +63,19 @@ namespace Omnikeeper.Model.Decorators
 
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
-            TrackAttributeUsage(name, new string[] { layerID });
+            TrackAttributeUsage(name, new string[] { layerID }, UsageStatsOperation.Read);
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
         public async Task<IReadOnlySet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
-            TrackAttributeUsage("*", layerIDs);
+            TrackAttributeUsage("*", layerIDs, UsageStatsOperation.Read);
             return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
         }
 
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes, string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            // NOTE: we do not need to track attribute usage here, because BulkUpdate generally comes after a call to GetAttributes() anyway
+            TrackAttributeUsages(inserts.Select(i => i.fullName).Concat(removes.Select(i => i.name)).Distinct(), new string[] { layerID }, UsageStatsOperation.Write);
             return await model.BulkUpdate(inserts, removes, layerID, origin, changesetProxy, trans);
         }
     }

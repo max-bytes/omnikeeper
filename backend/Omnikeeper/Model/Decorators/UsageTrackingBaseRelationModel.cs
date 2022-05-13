@@ -17,13 +17,13 @@ namespace Omnikeeper.Model.Decorators
         private readonly IBaseRelationModel model;
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
 
-        private void TrackRelationPredicateUsage(IEnumerable<string> predicateIDs, IEnumerable<string> layerIDs)
+        private void TrackRelationPredicateUsage(IEnumerable<string> predicateIDs, IEnumerable<string> layerIDs, UsageStatsOperation operation)
         {
             var usageTracker = scopedLifetimeAccessor.GetLifetimeScope()?.Resolve<IScopedUsageTracker>();
             if (usageTracker != null)
                 foreach (var layerID in layerIDs)
                     foreach(var predicateID in predicateIDs)
-                        usageTracker.TrackUseRelationPredicate(predicateID, layerID);
+                        usageTracker.TrackUseRelationPredicate(predicateID, layerID, operation);
         }
 
         private IEnumerable<string> RelationSelection2PredicateIDs(IRelationSelection rl)
@@ -50,14 +50,13 @@ namespace Omnikeeper.Model.Decorators
 
         public async Task<IReadOnlyList<Relation>[]> GetRelations(IRelationSelection rl, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
-            
-            TrackRelationPredicateUsage(RelationSelection2PredicateIDs(rl), layerIDs);
+            TrackRelationPredicateUsage(RelationSelection2PredicateIDs(rl), layerIDs, UsageStatsOperation.Read);
             return await model.GetRelations(rl, layerIDs, trans, atTime, generatedDataHandling);
         }
 
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts, IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid existingRelationID, Guid newRelationID, bool mask)> removes, string layerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            TrackRelationPredicateUsage(inserts.Select(i => i.predicateID).Concat(removes.Select(r => r.predicateID)).Distinct(), new string[] { layerID });
+            TrackRelationPredicateUsage(inserts.Select(i => i.predicateID).Concat(removes.Select(r => r.predicateID)).Distinct(), new string[] { layerID }, UsageStatsOperation.Write);
             return await model.BulkUpdate(inserts, removes, layerID, dataOrigin, changesetProxy, trans);
         }
 
@@ -68,7 +67,7 @@ namespace Omnikeeper.Model.Decorators
 
         public async Task<IReadOnlySet<string>> GetPredicateIDs(IRelationSelection rs, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
-            TrackRelationPredicateUsage(RelationSelection2PredicateIDs(rs), layerIDs);
+            TrackRelationPredicateUsage(RelationSelection2PredicateIDs(rs), layerIDs, UsageStatsOperation.Read);
             return await model.GetPredicateIDs(rs, layerIDs, trans, atTime, generatedDataHandling);
         }
     }

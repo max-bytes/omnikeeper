@@ -1,0 +1,9 @@
+﻿CREATE TYPE usagestatsoperation AS ENUM (
+    'use',
+    'read',
+    'write'
+);
+ALTER TYPE usagestatsoperation OWNER TO postgres;
+
+ALTER TABLE public.usage_stats
+  ADD COLUMN operation usagestatsoperation NOT NULL DEFAULT 'use';
