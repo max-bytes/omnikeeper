@@ -206,7 +206,7 @@ namespace Omnikeeper.Runners
                     stopWatch.Stop();
                     TimeSpan ts = stopWatch.Elapsed;
                     string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                    clLogger.LogInformation($"Done in {elapsedTime}; result: {successful ? 'success' : 'failure'}");
+                    clLogger.LogInformation($"Done in {elapsedTime}; result: {(successful ? "success" : "failure")}");
 
                     if (successful)
                         clbLastRunCache.UpdateCache(lastRunKey, changesetProxy.TimeThreshold.Time);
