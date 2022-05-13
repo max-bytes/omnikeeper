@@ -311,7 +311,7 @@ namespace OKPluginCLBNaemonVariableResolution
     [TraitEntity("monman_v2.varres.group", TraitOriginType.Plugin)]
     public class Group : TraitEntity
     {
-        [TraitAttribute("name", "cmdb.group.id")]
+        [TraitAttribute("id", "cmdb.group.id")]
         [TraitEntityID]
         public string ID;
 

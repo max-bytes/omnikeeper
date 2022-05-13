@@ -397,14 +397,12 @@ namespace OKPluginCLBNaemonVariableResolution
                     new ResolvedVariable("FKEY", "FORCED", service.ForeignKey ?? ""),
 
                     new ResolvedVariable("SUPP_OS", "FORCED", supportGroupName),
-                    //new ResolvedVariable("SUPP_APP", "FORCED", appSupportGroupName),
 
                     new ResolvedVariable("MONITORINGPROFILE", "FORCED", profile.Name),
                 });
 
                 // TODO
                 //$resultRef[$id]['VARS']['MONITORINGPROFILE_ORIG'] = join(',', $resultRef[$id]['PROFILE_ORIG']);
-
                 //$resultRef[$id]['VARS']['SUPP_APP'] = $resultRef[$id]['SUPP_APP'];
 
                 // extract oracle db connection string
@@ -427,9 +425,6 @@ namespace OKPluginCLBNaemonVariableResolution
                 // SD-WAN
                 if ((service.Class == "APP_ROUTING" || service.Class == "SVC_ROUTING") && Regex.IsMatch(service.Type ?? "", "^SD-WAN.*"))
                 {
-                    // TODO: add tag
-                    //    uniqueListAddElement($resultRef[$id]['TAGS'], 'cap_sdwan');
-
                     var foundServiceAction = serviceActionServiceIDLookup[service.ID].FirstOrDefault();
                     if (foundServiceAction != null)
                     {
@@ -457,6 +452,8 @@ namespace OKPluginCLBNaemonVariableResolution
                 }
             }
 
+            var debugOutput = false; // TODO: remove or make configurable
+
             // write output
             var variableComparer = new ResolvedVariableComparer();
             var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
@@ -466,6 +463,7 @@ namespace OKPluginCLBNaemonVariableResolution
                 var groupedByName = v.Value.GroupBy(v => v.Name)
                     .OrderBy(g => g.Key); // order by key (=variable Name) to produce stable output, otherwise JSON changes all the time, leading to "fake" changes
 
+                var debugStr = "";
                 var d = new JsonObject();
                 foreach (var variablesOfCI in groupedByName)
                 {
@@ -475,6 +473,9 @@ namespace OKPluginCLBNaemonVariableResolution
                     var first = ordered.First();
                     inner["value"] = first.Value;
                     inner["refType"] = first.OutputRefType;
+
+                    if (debugOutput)
+                        debugStr += $"{variablesOfCI.Key}           {first.Value}\n";
 
                     var chain = new JsonArray();
                     foreach (var vv in ordered.Skip(1))
@@ -489,6 +490,11 @@ namespace OKPluginCLBNaemonVariableResolution
                 }
                 var value = AttributeScalarValueJSON.BuildFromString(d.ToJsonString(), false);
                 fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables", value, v.Key));
+                if (debugOutput)
+                {
+                    var valueDebug = new AttributeScalarValueText(debugStr, true);
+                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables_debug", valueDebug, v.Key));
+                }
             }
 
             await attributeModel.BulkReplaceAttributes(
