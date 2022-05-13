@@ -202,13 +202,14 @@ namespace Omnikeeper.Runners
                     var stopWatch = new Stopwatch();
                     stopWatch.Start();
                     var layer = Layer.Build(layerID); // HACK, TODO: either pass layer-ID or layer-data, not Layer object
-                    await clb.Run(layer, clBrainConfig, changesetProxy, modelContextBuilder, clLogger);
+                    var successful = await clb.Run(layer, clBrainConfig, changesetProxy, modelContextBuilder, clLogger);
                     stopWatch.Stop();
                     TimeSpan ts = stopWatch.Elapsed;
                     string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                    clLogger.LogInformation($"Done in {elapsedTime}");
+                    clLogger.LogInformation($"Done in {elapsedTime}; result: {successful ? 'success' : 'failure'}");
 
-                    clbLastRunCache.UpdateCache(lastRunKey, changesetProxy.TimeThreshold.Time);
+                    if (successful)
+                        clbLastRunCache.UpdateCache(lastRunKey, changesetProxy.TimeThreshold.Time);
                 }
                 finally
                 {
