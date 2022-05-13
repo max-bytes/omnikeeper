@@ -341,3 +341,6 @@ healthchecksdb
 
 omnikeeper.xml
 backend/Omnikeeper/OKPlugins/extracted
+
+# local files
+/.local/
