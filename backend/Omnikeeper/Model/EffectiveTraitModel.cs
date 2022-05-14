@@ -56,24 +56,9 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public IReadOnlyList<MergedCI> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            if (layers.IsEmpty && !(trait is TraitEmpty))
-                return ImmutableList<MergedCI>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
-
-            var (has, _) = CanResolve(trait, cis);
-            return has;
-        }
-
-        public IReadOnlyList<MergedCI> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            var (_, hasNot) = CanResolve(trait, cis);
-            return hasNot;
-        }
-
         public async Task<IDictionary<Guid, EffectiveTrait>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
-            if (layerSet.IsEmpty && !(trait is TraitEmpty))
+            if (layerSet.IsEmpty && trait is not TraitEmpty)
                 return ImmutableDictionary<Guid, EffectiveTrait>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
 
             var ets = await Resolve(trait, cis, layerSet, trans, atTime);

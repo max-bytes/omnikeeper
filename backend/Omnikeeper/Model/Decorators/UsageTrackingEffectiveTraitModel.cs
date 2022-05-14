@@ -21,20 +21,6 @@ namespace Omnikeeper.Model.Decorators
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
         }
 
-        public IReadOnlyList<MergedCI> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            TrackTraitUsage(trait, layers.LayerIDs);
-
-            return baseModel.FilterCIsWithoutTrait(cis, trait, layers, trans, atTime);
-        }
-
-        public IReadOnlyList<MergedCI> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            TrackTraitUsage(trait, layers.LayerIDs);
-
-            return baseModel.FilterCIsWithTrait(cis, trait, layers, trans, atTime);
-        }
-
         public IEnumerable<MergedCI> FilterCIsWithTraitSOP(IEnumerable<MergedCI> cis, (ITrait trait, bool negated)[][] traitSOP, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             foreach (var traitP in traitSOP)

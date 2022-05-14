@@ -3,6 +3,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,9 +11,6 @@ namespace Omnikeeper.Base.Model
 {
     public interface IEffectiveTraitModel
     {
-        IReadOnlyList<MergedCI> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime);
-        IReadOnlyList<MergedCI> FilterCIsWithoutTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime);
-
         IEnumerable<MergedCI> FilterCIsWithTraitSOP(IEnumerable<MergedCI> cis, (ITrait trait, bool negated)[][] traitSOP, LayerSet layers, IModelContext trans, TimeThreshold atTime);
 
         Task<IDictionary<Guid, EffectiveTrait>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime);
@@ -28,7 +26,6 @@ namespace Omnikeeper.Base.Model
             return null;
         }
 
-
         public static IEnumerable<MergedCI> FilterMergedCIsByTraits(this IEffectiveTraitModel model, IEnumerable<MergedCI> cis, IEnumerable<ITrait> withEffectiveTraits, IEnumerable<ITrait> withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             if (withEffectiveTraits.IsEmpty() && withoutEffectiveTraits.IsEmpty())
@@ -40,6 +37,14 @@ namespace Omnikeeper.Base.Model
             return model.FilterCIsWithTraitSOP(cis, traitSOP, layerSet, trans, atTime);
         }
 
+        public static IEnumerable<MergedCI> FilterCIsWithTrait(this IEffectiveTraitModel model, IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        {
+            if (layers.IsEmpty && trait is not TraitEmpty)
+                return ImmutableList<MergedCI>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
+
+            var traitSOP = new (ITrait trait, bool negated)[][] { new (ITrait trait, bool negated)[] {(trait, false)} };
+            return model.FilterCIsWithTraitSOP(cis, traitSOP, layers, trans, atTime);
+        }
 
         public static bool ReduceTraitRequirements(this IEffectiveTraitModel model, ref IEnumerable<ITrait> requiredTraits, ref IEnumerable<ITrait> requiredNonTraits, out bool emptyTraitIsRequired, out bool emptyTraitIsNonRequired)
         {
