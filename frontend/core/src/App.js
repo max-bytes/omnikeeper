@@ -96,7 +96,7 @@ function App() {
                           if (plugin.components.menuComponents)
                           {
                             const items = plugin.components.menuComponents.map(mc =>
-                              <Menu.Item key={mc.url} style={{ marginRight: "60px" }}><Link to={`${mc.url}`}><FontAwesomeIcon icon={mc.icon} style={{ marginRight: "0.5rem" }}/> {mc.title}</Link></Menu.Item>
+                              <Menu.Item key={mc.url}><Link to={`${mc.url}`}><FontAwesomeIcon icon={mc.icon} style={{ marginRight: "0.5rem" }}/> {mc.title}</Link></Menu.Item>
                             ); 
                             return items;
                           }

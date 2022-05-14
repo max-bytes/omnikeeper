@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useState } from "react";
 import env from "@beam-australia/react-env";
 import { useExplorerLayers } from "utils/layers";
 import { Button, Spin, Row, Col } from 'antd';
-import { graphviz } from "d3-graphviz";
 import { SyncOutlined } from '@ant-design/icons';
 import Paragraph from "antd/lib/typography/Paragraph";
 import { useQuery } from "@apollo/client";
@@ -10,52 +9,9 @@ import { queries } from "graphql/queries";
 import TraitList from "./TraitList.js";
 import Text from "antd/lib/typography/Text";
 import _ from 'lodash';
+import Graph from "./Graph.js";
 
-function Graph(props) {
-    const {graphDefinition} = props;
-    
-    useEffect(() => {
-        // produces <script src="wasm/@hpcc-js/index.min.js" type="javascript/worker"></script>
-        // TODO: prevent multiple appends
-        const script = document.createElement("script");
-        script.type = "javascript/worker";
-        script.src = process.env.PUBLIC_URL + "/wasm/@hpcc-js/index.min.js";
-        document.head.appendChild(script);
-    }, []);
-
-    const ref = useRef(null);
-
-    // HACK: constantly update size of graph div to be able to resize graph itself
-    const [size, setSize] = useState([0,0]);
-    const updateSize = useCallback(() => {
-        setSize(currentSize => {
-            if (ref.current) {
-                if (currentSize[0] != ref.current.clientWidth || currentSize[1] != ref.current.clientHeight)
-                    return [ref.current.clientWidth, ref.current.clientHeight];
-                else
-                    return currentSize;
-            }
-        });
-    }, [ref, setSize]);
-    useEffect(() => {
-        updateSize();
-        window.addEventListener('resize', updateSize);
-        return () => {
-            window.removeEventListener('resize', updateSize);
-        }
-    }, [updateSize]);
-
-    useEffect(()=>{
-        graphviz(`#graph-body`)
-            .width(Math.max(0, size[0] - 10))
-            .height(Math.max(0, size[1] - 10))
-            .renderDot(graphDefinition);
-    }, [graphDefinition, size]);
-
-    return <div id="graph-body" style={{height: '100%'}} ref={ref}></div>;
-}
-
-export default function GraphRendering(props) {
+export default function TraitCentricGraphRendering(props) {
     
     const [graphDefinition, setGraphDefinition] = useState(null);
     const [graphDefinitionLoading, setGraphDefinitionLoading] = useState(null);
@@ -68,7 +24,7 @@ export default function GraphRendering(props) {
     
     return <div style={styles.container}>
         <div style={styles.filterColumn}>
-            <h2>Graph Rendering</h2>
+            <h2>Trait-Centric Graph Rendering</h2>
             <div style={styles.filterColumnEntry}>
                 <Paragraph>
                     Note: only data from visible layers will be shown. Make sure to mark the desired layers as visible in the layer side-bar.
@@ -89,7 +45,7 @@ export default function GraphRendering(props) {
 
                             const traitParams = selectedValidTraitIDs.map(traitID => `traitIDs=${encodeURIComponent(traitID)}`).join('&');
                             const params = [layerIDParams, traitParams].join('&');
-                            const backendURL = `${env('BACKEND_URL')}/api/v1/GraphvizDot/generate?${params}`;
+                            const backendURL = `${env('BACKEND_URL')}/api/v1/GraphvizDot/traitCentric?${params}`;
                             const token = localStorage.getItem('token');
                             setGraphDefinitionLoading(true);
                             fetch(backendURL, {

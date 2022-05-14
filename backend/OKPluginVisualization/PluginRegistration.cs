@@ -8,6 +8,8 @@ namespace OKPluginVisualization
         public override void RegisterServices(IServiceCollection sc)
         {
             sc.AddSingleton<GraphvizDotController>();
+            sc.AddSingleton<TraitCentricDataGenerator>();
+            sc.AddSingleton<LayerCentricUsageGenerator>();
         }
     }
 }
