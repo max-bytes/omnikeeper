@@ -26,6 +26,10 @@ export default function LayerCentricUsageGraphRendering(props) {
             <h2>Layer-Centric Usage Graph Rendering</h2>
             <div style={styles.filterColumnEntry}>
                 <Paragraph>
+                    Visualizes access patterns of users and CLBs regarding read and write operations on attributes and relations in the specified timespan.
+                    Attributes and relations are grouped by layer, providing an overview over which user/CLB accessed which layer(s).
+                </Paragraph>
+                <Paragraph>
                     Note: only data from visible layers will be shown. Make sure to mark the desired layers as visible in the layer side-bar.
                 </Paragraph>
             </div>

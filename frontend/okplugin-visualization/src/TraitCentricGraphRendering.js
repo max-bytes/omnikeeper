@@ -27,6 +27,11 @@ export default function TraitCentricGraphRendering(props) {
             <h2>Trait-Centric Graph Rendering</h2>
             <div style={styles.filterColumnEntry}>
                 <Paragraph>
+                    Visualizes CIs that fulfill the selected traits as nodes in a graph, and relations with predicates as edges between them. 
+                    The numbers in brackets indicate the amount of CIs and the amount of relations.
+                    Nodes and edges are colorized according to the layer they belong to.
+                </Paragraph>
+                <Paragraph>
                     Note: only data from visible layers will be shown. Make sure to mark the desired layers as visible in the layer side-bar.
                 </Paragraph>
             </div>

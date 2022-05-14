@@ -1,10 +1,8 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -128,7 +126,6 @@ namespace OKPluginVisualization
             var relationPerLayer = relationAccesses.GroupBy(e => e.LayerID, e => e.Name).ToDictionary(e => e.Key, e => e.Distinct().ToList());
             foreach (var layerID in layerSet)
             {
-
                 sb.AppendLine($"subgraph cluster_layer_{layerID} {{");
                 sb.AppendLine($"label = \"Layer {layerID}\"");
                 if (layerData.TryGetValue(layerID, out var ld))
@@ -138,34 +135,34 @@ namespace OKPluginVisualization
                 sb.AppendLine($"penwidth = 5");
 
                 // attributes
-                sb.AppendLine($"subgraph cluster_layer_attributes_{layerID} {{");
-                sb.AppendLine($"label = \"Attributes\"");
-                sb.AppendLine($"penwidth = 0");
-                sb.AppendLine($"{buildInnerAttributeTableNodeName(layerID)}[shape = none, label =<");
-                sb.AppendLine("<table border = \"0\" cellborder = \"1\" cellspacing = \"0\">");
                 if (attributesPerLayer.TryGetValue(layerID, out var attributesOfLayer))
                 {
+                    sb.AppendLine($"subgraph cluster_layer_attributes_{layerID} {{");
+                    sb.AppendLine($"label = \"Attributes\"");
+                    sb.AppendLine($"penwidth = 0");
+                    sb.AppendLine($"{buildInnerAttributeTableNodeName(layerID)}[shape = none, label =<");
+                    sb.AppendLine("<table border = \"0\" cellborder = \"1\" cellspacing = \"0\">");
                     foreach (var attribute in attributesOfLayer)
                         sb.AppendLine($"<tr><td port=\"{buildAttributeNodeName(attribute, layerID)}\" align=\"LEFT\" balign=\"LEFT\" >{attribute}<br align=\"left\"/></td></tr>");
+                    sb.AppendLine("</table>");
+                    sb.AppendLine(">]");
+                    sb.AppendLine("}");
                 }
-                sb.AppendLine("</table>");
-                sb.AppendLine(">]");
-                sb.AppendLine("}");
 
                 // relations
-                sb.AppendLine($"subgraph cluster_layer_relations_{layerID} {{");
-                sb.AppendLine($"label = \"Relations\"");
-                sb.AppendLine($"penwidth = 0");
-                sb.AppendLine($"{buildInnerRelationTableNodeName(layerID)}[shape = none, label =<");
-                sb.AppendLine("<table border = \"0\" cellborder = \"1\" cellspacing = \"0\">");
                 if (relationPerLayer.TryGetValue(layerID, out var relationsOfLayer))
                 {
+                    sb.AppendLine($"subgraph cluster_layer_relations_{layerID} {{");
+                    sb.AppendLine($"label = \"Relations\"");
+                    sb.AppendLine($"penwidth = 0");
+                    sb.AppendLine($"{buildInnerRelationTableNodeName(layerID)}[shape = none, label =<");
+                    sb.AppendLine("<table border = \"0\" cellborder = \"1\" cellspacing = \"0\">");
                     foreach (var relation in relationsOfLayer)
                         sb.AppendLine($"<tr><td port=\"{buildRelationNodeName(relation, layerID)}\" align=\"LEFT\" balign=\"LEFT\" >{relation}<br align=\"left\"/></td></tr>");
+                    sb.AppendLine("</table>");
+                    sb.AppendLine(">]");
+                    sb.AppendLine("}");
                 }
-                sb.AppendLine("</table>");
-                sb.AppendLine(">]");
-                sb.AppendLine("}");
 
                 sb.AppendLine("}");
             }
