@@ -18,5 +18,5 @@ jobs:
       - name: Run tests
         run: |
           cd backend
-          dotnet nuget update source "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+          # dotnet nuget update source "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
           dotnet test SystemTests

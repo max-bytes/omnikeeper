@@ -24,7 +24,7 @@ jobs:
       - name: Build and publish
         run: |
           cd backend
-          # dotnet nuget add source https://nuget.pkg.github.com/max-bytes/index.json --name "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+          dotnet nuget add source https://nuget.pkg.github.com/max-bytes/index.json --name "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
           dotnet pack Omnikeeper.Base/Omnikeeper.Base.csproj /p:Version=${{ env.VERSION }} -c Release
           dotnet nuget push "Omnikeeper.Base/bin/Release/Omnikeeper.Base.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
 
@@ -123,7 +123,7 @@ jobs:
       - name: Build and publish
         run: |
           cd backend
-          # dotnet nuget add source https://nuget.pkg.github.com/max-bytes/index.json --name "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+          dotnet nuget add source https://nuget.pkg.github.com/max-bytes/index.json --name "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
           function buildPublish () {
             dotnet pack $1/$1.csproj /p:Version=${{ env.VERSION }} -c Release
             dotnet nuget push "$1/bin/Release/$1.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
