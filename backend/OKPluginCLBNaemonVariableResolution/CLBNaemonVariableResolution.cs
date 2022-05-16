@@ -71,25 +71,25 @@ namespace OKPluginCLBNaemonVariableResolution
             var monmanV1InputLayerset = await layerModel.BuildLayerSet(cfg.MonmanV1InputLayerSet.ToArray(), trans);
             var selfserviceVariablesInputLayerset = await layerModel.BuildLayerSet(cfg.SelfserviceVariablesInputLayerSet.ToArray(), trans);
 
-            var hostTraitModel = new GenericTraitEntityModel<TargetHost, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var serviceTraitModel = new GenericTraitEntityModel<TargetService, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var targetHostModel = new GenericTraitEntityModel<TargetHost, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var targetServiceModel = new GenericTraitEntityModel<TargetService, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var naemonV1VariableModel = new GenericTraitEntityModel<NaemonV1Variable, long>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var selfServiceVariableModel = new GenericTraitEntityModel<SelfServiceVariable, (string refType, string refID, string name)>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var customerTraitModel = new GenericTraitEntityModel<Customer, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var profileTraitModel = new GenericTraitEntityModel<Profile, long>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var categoryTraitModel = new GenericTraitEntityModel<Category, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var serviceActionTraitModel = new GenericTraitEntityModel<ServiceAction, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var interfaceTraitModel = new GenericTraitEntityModel<Interface, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var groupTraitModel = new GenericTraitEntityModel<Group, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var customerModel = new GenericTraitEntityModel<Customer, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var profileModel = new GenericTraitEntityModel<Profile, long>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var categoryModel = new GenericTraitEntityModel<Category, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var serviceActionModel = new GenericTraitEntityModel<ServiceAction, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var interfaceModel = new GenericTraitEntityModel<Interface, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var groupModel = new GenericTraitEntityModel<Group, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
 
-            var categories = await categoryTraitModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+            var categories = await categoryModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
 
             var cmdbProfiles = categories
                 .Where(kv => kv.Value.Group == "MONITORING")
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // extract cmdb hosts, but limit to those that have a monitoring profile (=related to a proper cmdb category)
-            var hosts = await hostTraitModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+            var hosts = await targetHostModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var hostsWithCategoryProfiles = hosts
                 .Select(host =>
                 {
@@ -111,7 +111,7 @@ namespace OKPluginCLBNaemonVariableResolution
             var hostsWithCategoryProfiles2CIIDLookup = hostsWithCategoryProfiles.ToDictionary(h => h.host.ID, h => h.ciid);
 
             // extract cmdb services, but limit to those that have a monitoring profile (=related to a proper cmdb category)
-            var services = await serviceTraitModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+            var services = await targetServiceModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var servicesWithCategoryProfiles = services
                 .Select(service =>
                 {
@@ -136,15 +136,15 @@ namespace OKPluginCLBNaemonVariableResolution
 
             var selfServiceVariables = await selfServiceVariableModel.GetAllByCIID(selfserviceVariablesInputLayerset, trans, timeThreshold);
 
-            var customers = await customerTraitModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+            var customers = await customerModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var customerNicknameLookup = customers.ToDictionary(c => c.Value.Nickname, c => c.Value);
 
-            var profiles = await profileTraitModel.GetAllByDataID(monmanV1InputLayerset, trans, timeThreshold);
+            var profiles = await profileModel.GetAllByDataID(monmanV1InputLayerset, trans, timeThreshold);
 
-            var serviceActions = await serviceActionTraitModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+            var serviceActions = await serviceActionModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var serviceActionServiceIDLookup = serviceActions.Values.ToLookup(s => s.ServiceID);
 
-            var interfaces = await interfaceTraitModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+            var interfaces = await interfaceModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
 
             // TODO: this is not properly defined, because there can be multiple categories with the same name in different trees 
             // TODO: lookup how monman_v1 implements this and how it looks up the proper category from the profile
@@ -153,7 +153,7 @@ namespace OKPluginCLBNaemonVariableResolution
             var categoryNameLookup = categories.GroupBy(c => c.Value.Name).ToDictionary(t => t.Key.ToUpperInvariant(), t => t.First().Value);
 
             // get groups
-            var groups = await groupTraitModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+            var groups = await groupModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var argusGroupCIID = groups.FirstOrDefault(kv => kv.Value.Name == "GDE.PEA.AT.ALL.ARGUS").Key;
 
             // collect variables...
