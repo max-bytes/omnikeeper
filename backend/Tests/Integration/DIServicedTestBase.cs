@@ -130,9 +130,11 @@ namespace Tests.Integration
             cibas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
             builder.Register((sp) => cibas.Object).SingleInstance();
 
-            // override quartz scheduler
-            var scheduler = new Mock<Quartz.IScheduler>();
-            builder.Register<Quartz.IScheduler>(sp => scheduler.Object).SingleInstance();
+            // override quartz schedulers
+            var localScheduler = new Mock<Quartz.IScheduler>();
+            builder.Register<Quartz.IScheduler>(sp => localScheduler.Object).Keyed<Quartz.IScheduler>("localScheduler").SingleInstance();
+            var distributedScheduler = new Mock<Quartz.IScheduler>();
+            builder.Register<Quartz.IScheduler>(sp => distributedScheduler.Object).Keyed<Quartz.IScheduler>("distributedScheduler").SingleInstance();
         }
     }
 }
