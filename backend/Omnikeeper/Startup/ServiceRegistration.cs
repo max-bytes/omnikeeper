@@ -28,6 +28,8 @@ using Omnikeeper.Runners;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using Omnikeeper.Utils.Decorators;
+using Quartz;
+using Quartz.Spi;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -290,7 +292,14 @@ namespace Omnikeeper.Startup
 
         public static void RegisterQuartz(ContainerBuilder builder, string connectionString)
         {
-            var schedulerConfig = new NameValueCollection {
+            var localSchedulerConfig = new NameValueCollection {
+                {"quartz.threadPool.threadCount", "3" },
+                {"quartz.scheduler.threadName", "Scheduler" },
+                {"quartz.jobStore.type","Quartz.Simpl.RAMJobStore, Quartz" },
+                {"quartz.scheduler.instanceName", "local" }
+            };
+
+            var distributedSchedulerConfig = new NameValueCollection {
                 {"quartz.threadPool.threadCount", "3" },
                 {"quartz.scheduler.threadName", "Scheduler" },
 
@@ -306,12 +315,49 @@ namespace Omnikeeper.Startup
 
                 {"quartz.jobStore.clustered", "true" },
                 {"quartz.scheduler.instanceId", "instance-A" }, // TODO: make configurable for clustering
+                {"quartz.scheduler.instanceName", "distributed" }
             };
 
-            builder.RegisterModule(new QuartzAutofacFactoryModule
+            builder.Register(c => new AutofacJobFactory(c.Resolve<ILifetimeScope>(), "quartz.job", null))
+                .AsSelf()
+                .As<IJobFactory>()
+                .SingleInstance();
+
+            builder.Register<ISchedulerFactory>(c =>
             {
-                ConfigurationProvider = _ => schedulerConfig
-            });
+                var autofacSchedulerFactory = new AutofacSchedulerFactory(localSchedulerConfig, c.Resolve<AutofacJobFactory>());
+                return autofacSchedulerFactory;
+            })
+                .Named<ISchedulerFactory>("local")
+                .SingleInstance();
+            builder.Register<IScheduler>(c =>
+            {
+                var factory = c.ResolveNamed<ISchedulerFactory>("local");
+                var s = factory.GetScheduler().ConfigureAwait(false).GetAwaiter().GetResult();
+                return s;
+            })
+                .Keyed<IScheduler>("localScheduler")
+                .SingleInstance();
+
+
+            builder.Register<ISchedulerFactory>(c =>
+            {
+                var autofacSchedulerFactory = new AutofacSchedulerFactory(distributedSchedulerConfig, c.Resolve<AutofacJobFactory>());
+                return autofacSchedulerFactory;
+            })
+                .Named<ISchedulerFactory>("distributed")
+                .SingleInstance();
+            builder.Register<IScheduler>(c =>
+            {
+                var factory = c.ResolveNamed<ISchedulerFactory>("distributed");
+                var s = factory.GetScheduler().ConfigureAwait(false).GetAwaiter().GetResult();
+                return s;
+            })
+                .Keyed<IScheduler>("distributedScheduler")
+                .SingleInstance();
+
+            // jobs registration
+            builder.RegisterModule(new QuartzAutofacJobsModule(Assembly.GetExecutingAssembly()) { });
 
             // jobs
             builder.RegisterType<CLBJob>().InstancePerLifetimeScope();

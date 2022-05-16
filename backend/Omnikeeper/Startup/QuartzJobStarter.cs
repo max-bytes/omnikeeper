@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Autofac;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
@@ -34,6 +35,7 @@ namespace Omnikeeper.Startup
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             using var scope = _serviceScopeFactory.CreateScope();
+            var lifetimeScope = scope.ServiceProvider.GetRequiredService<ILifetimeScope>();
             var metaConfigurationModel = scope.ServiceProvider.GetRequiredService<IMetaConfigurationModel>();
             var baseConfigurationModel = scope.ServiceProvider.GetRequiredService<IBaseConfigurationModel>();
             var modelContextBuilder = scope.ServiceProvider.GetRequiredService<IModelContextBuilder>();
@@ -48,20 +50,23 @@ namespace Omnikeeper.Startup
             {
                 var lf = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
                 LogProvider.SetCurrentLogProvider(new QuartzLogProvider(lf));
-                var scheduler = scope.ServiceProvider.GetRequiredService<IScheduler>();
+                var localScheduler = lifetimeScope.ResolveKeyed<IScheduler>("localScheduler");
+                var distributedScheduler = lifetimeScope.ResolveKeyed<IScheduler>("distributedScheduler");
 
                 bool deleteOnly = false; // TODO: only set to true for debugging purposes
 
                 // schedule internal recurring jobs
-                await ScheduleJob<CLBJob>(scheduler, JKCLB, config.CLBRunnerInterval, logger, deleteOnly);
-                await ScheduleJob<MarkedForDeletionJob>(scheduler, JKMarkedForDeletion, config.MarkedForDeletionRunnerInterval, logger, deleteOnly);
-                await ScheduleJob<ExternalIDManagerJob>(scheduler, JKExternalIDManager, config.ExternalIDManagerRunnerInterval, logger, deleteOnly);
-                await ScheduleJob<ArchiveOldDataJob>(scheduler, JKArchiveOldData, config.ArchiveOldDataRunnerInterval, logger, deleteOnly);
-                await ScheduleJob<UsageDataWriterJob>(scheduler, JKUsageDataWriter, "0 * * * * ?", logger, deleteOnly);
-                await ScheduleJob<GraphQLSchemaReloaderJob>(scheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly);
-                await ScheduleJob<EdmModelReloaderJob>(scheduler, JKEdmModelReloader, "0 * * * * ?", logger, deleteOnly);
+                await ScheduleJob<CLBJob>(distributedScheduler, JKCLB, config.CLBRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<MarkedForDeletionJob>(distributedScheduler, JKMarkedForDeletion, config.MarkedForDeletionRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<ExternalIDManagerJob>(distributedScheduler, JKExternalIDManager, config.ExternalIDManagerRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<ArchiveOldDataJob>(distributedScheduler, JKArchiveOldData, config.ArchiveOldDataRunnerInterval, logger, deleteOnly);
+                
+                await ScheduleJob<UsageDataWriterJob>(localScheduler, JKUsageDataWriter, "0 * * * * ?", logger, deleteOnly);
+                await ScheduleJob<GraphQLSchemaReloaderJob>(localScheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly);
+                await ScheduleJob<EdmModelReloaderJob>(localScheduler, JKEdmModelReloader, "0 * * * * ?", logger, deleteOnly);
 
-                await scheduler.Start();
+                await distributedScheduler.Start();
+                await localScheduler.Start();
 
                 // plugin jobs
                 foreach (var plugin in plugins)

@@ -358,10 +358,10 @@ namespace Omnikeeper.GraphQL
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                   // trigger job to reload GraphQL schema
-                  await scheduler.TriggerJob(QuartzJobStarter.JKGraphQLSchemaReloader);
+                  await localScheduler.TriggerJob(QuartzJobStarter.JKGraphQLSchemaReloader);
 
                   // trigger job to reload odata model
-                  await scheduler.TriggerJob(QuartzJobStarter.JKEdmModelReloader);
+                  await localScheduler.TriggerJob(QuartzJobStarter.JKEdmModelReloader);
 
                   return newTrait.dc;
               });
@@ -388,10 +388,10 @@ namespace Omnikeeper.GraphQL
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                   // trigger job to reload GraphQL schema
-                  await scheduler.TriggerJob(QuartzJobStarter.JKGraphQLSchemaReloader);
+                  await localScheduler.TriggerJob(QuartzJobStarter.JKGraphQLSchemaReloader);
 
                   // trigger job to reload odata model
-                  await scheduler.TriggerJob(QuartzJobStarter.JKEdmModelReloader);
+                  await localScheduler.TriggerJob(QuartzJobStarter.JKEdmModelReloader);
 
                   return deleted;
               });

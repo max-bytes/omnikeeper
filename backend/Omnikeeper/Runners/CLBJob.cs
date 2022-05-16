@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Autofac.Features.Indexed;
 using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
@@ -23,12 +24,12 @@ namespace Omnikeeper.Runners
     [DisallowConcurrentExecution]
     public class CLBJob : IJob
     {
-        public CLBJob(CLConfigV1Model clConfigModel, ILogger<CLBJob> baseLogger, IMetaConfigurationModel metaConfigurationModel, IScheduler scheduler,
+        public CLBJob(CLConfigV1Model clConfigModel, ILogger<CLBJob> baseLogger, IMetaConfigurationModel metaConfigurationModel, IIndex<string, IScheduler> schedulers,
             ILayerDataModel layerDataModel, IModelContextBuilder modelContextBuilder)
         {
             this.clConfigModel = clConfigModel;
             this.metaConfigurationModel = metaConfigurationModel;
-            this.scheduler = scheduler;
+            this.scheduler = schedulers["distributedScheduler"];
             this.layerDataModel = layerDataModel;
             this.modelContextBuilder = modelContextBuilder;
             this.baseLogger = baseLogger;
