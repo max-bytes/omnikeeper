@@ -83,6 +83,11 @@ namespace Omnikeeper.Base.Model.TraitBased
         {
             var (_, attributeFieldInfos, relationFieldInfos) = ExtractFieldInfos<C>();
 
+            return EffectiveTrait2Object<C>(et, attributeFieldInfos, relationFieldInfos);
+        }
+
+        public static C EffectiveTrait2Object<C>(EffectiveTrait et, IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos, IEnumerable<TraitRelationFieldInfo> relationFieldInfos) where C : TraitEntity, new()
+        {
             var ret = new C();
 
             foreach (var taFieldInfo in attributeFieldInfos)
@@ -119,7 +124,6 @@ namespace Omnikeeper.Base.Model.TraitBased
             foreach (var trFieldInfo in relationFieldInfos)
             {
                 var isForward = trFieldInfo.TraitRelationAttribute.directionForward;
-                var predicateID = trFieldInfo.TraitRelationAttribute.predicateID;
                 var trName = trFieldInfo.TraitRelationAttribute.trName;
                 var relationList = (isForward) ? et.OutgoingTraitRelations : et.IncomingTraitRelations;
                 // get value from effective trait
