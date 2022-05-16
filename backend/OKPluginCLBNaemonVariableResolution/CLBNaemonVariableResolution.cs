@@ -35,7 +35,10 @@ namespace OKPluginCLBNaemonVariableResolution
             try
             {
                 var cfg = JsonSerializer.Deserialize<Configuration>(config);
-                return cfg?.CMDBInputLayerSet.Union(cfg?.MonmanV1InputLayerSet ?? new List<string>()).ToHashSet();
+                return cfg?.CMDBInputLayerSet
+                    .Union(cfg?.MonmanV1InputLayerSet ?? new List<string>())
+                    .Union(cfg?.SelfserviceVariablesInputLayerSet ?? new List<string>())
+                    .ToHashSet();
             }
             catch (Exception e)
             {
@@ -66,10 +69,12 @@ namespace OKPluginCLBNaemonVariableResolution
 
             var cmdbInputLayerset = await layerModel.BuildLayerSet(cfg.CMDBInputLayerSet.ToArray(), trans);
             var monmanV1InputLayerset = await layerModel.BuildLayerSet(cfg.MonmanV1InputLayerSet.ToArray(), trans);
+            var selfserviceVariablesInputLayerset = await layerModel.BuildLayerSet(cfg.SelfserviceVariablesInputLayerSet.ToArray(), trans);
 
             var hostTraitModel = new GenericTraitEntityModel<TargetHost, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var serviceTraitModel = new GenericTraitEntityModel<TargetService, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var naemonV1VariableModel = new GenericTraitEntityModel<NaemonV1Variable, long>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var selfServiceVariableModel = new GenericTraitEntityModel<SelfServiceVariable, (string refType, string refID, string name)>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var customerTraitModel = new GenericTraitEntityModel<Customer, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var profileTraitModel = new GenericTraitEntityModel<Profile, long>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var categoryTraitModel = new GenericTraitEntityModel<Category, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
@@ -80,7 +85,7 @@ namespace OKPluginCLBNaemonVariableResolution
             var categories = await categoryTraitModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
 
             var cmdbProfiles = categories
-                .Where(kv => kv.Value.Tree == "ARGUS-MONITORING" && kv.Value.Group == "MONITORING")
+                .Where(kv => kv.Value.Group == "MONITORING")
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // extract cmdb hosts, but limit to those that have a monitoring profile (=related to a proper cmdb category)
@@ -128,6 +133,8 @@ namespace OKPluginCLBNaemonVariableResolution
             var servicesWithCategoryProfiles2CIIDLookup = servicesWithCategoryProfiles.ToDictionary(h => h.service.ID, h => h.ciid);
 
             var naemonV1Variables = await naemonV1VariableModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
+
+            var selfServiceVariables = await selfServiceVariableModel.GetAllByCIID(selfserviceVariablesInputLayerset, trans, timeThreshold);
 
             var customers = await customerTraitModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var customerNicknameLookup = customers.ToDictionary(c => c.Value.Nickname, c => c.Value);
@@ -243,7 +250,35 @@ namespace OKPluginCLBNaemonVariableResolution
                         }
                         break;
                     default:
-                        logger.LogWarning($"Could not process variable \"{v.Value.ID}\": invalid refType \"{v.Value.refType}\"");
+                        logger.LogWarning($"Could not process monman variable \"{v.Value.ID}\": invalid refType \"{v.Value.refType}\"");
+                        break;
+                }
+            }
+
+            // ...from variables in self service
+            foreach (var v in selfServiceVariables)
+            {
+                var refID = v.Value.refID;
+                switch (v.Value.refType)
+                {
+                    case "CI":
+                        {
+                            if (hostsWithCategoryProfiles2CIIDLookup.TryGetValue(refID, out var refHostCIID))
+                            {
+                                resolvedVariables[refHostCIID].Add(v.Value.ToResolvedVariable());
+                            }
+                            else if (servicesWithCategoryProfiles2CIIDLookup.TryGetValue(refID, out var refServiceCIID))
+                            {
+                                resolvedVariables[refServiceCIID].Add(v.Value.ToResolvedVariable());
+                            }
+                            else
+                            {
+                                logger.LogWarning($"Could not find referenced CI with refID \"{refID}\" for variable with ciid \"{v.Key}\", skipping variable");
+                            }
+                        }
+                        break;
+                    default:
+                        logger.LogWarning($"Could not process selfservice variable with ciid \"{v.Key}\": invalid refType \"{v.Value.refType}\"");
                         break;
                 }
             }
@@ -588,6 +623,15 @@ namespace OKPluginCLBNaemonVariableResolution
         public static ResolvedVariable ToResolvedVariable(this NaemonV1Variable input)
         {
             return new ResolvedVariable(input.name.ToUpperInvariant(), input.refType, input.value, input.precedence, input.ID);
+        }
+    }
+
+    static class SelfServiceVariableExtensions
+    {
+        public static ResolvedVariable ToResolvedVariable(this SelfServiceVariable input)
+        {
+            // NOTE: high precedence to make it override other variables by default
+            return new ResolvedVariable(input.name.ToUpperInvariant(), input.refType, input.value, precedence: 200, externalID: 0L);
         }
     }
 }

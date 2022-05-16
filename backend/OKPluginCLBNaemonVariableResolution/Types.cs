@@ -41,6 +41,33 @@ namespace OKPluginCLBNaemonVariableResolution
         }
     }
 
+    [TraitEntity("monman_v2.varres.selfservice_variable", TraitOriginType.Plugin)]
+    public class SelfServiceVariable : TraitEntity
+    {
+        [TraitAttribute("refType", "naemon_variable.reftype")]
+        [TraitEntityID]
+        public string refType;
+
+        [TraitAttribute("refID", "naemon_variable.refid")]
+        [TraitEntityID]
+        public string refID;
+
+        [TraitAttribute("name", "naemon_variable.name")]
+        [TraitEntityID]
+        public string name;
+
+        [TraitAttribute("value", "naemon_variable.value")]
+        public string value;
+
+        public SelfServiceVariable()
+        {
+            refType = "";
+            refID = "";
+            name = "";
+            value = "";
+        }
+    }
+
     [TraitEntity("monman_v2.varres.target_host", TraitOriginType.Plugin)]
     public class TargetHost : TraitEntity
     {

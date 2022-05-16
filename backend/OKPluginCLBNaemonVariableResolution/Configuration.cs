@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace OKPluginCLBNaemonVariableResolution
 {
@@ -11,10 +10,14 @@ namespace OKPluginCLBNaemonVariableResolution
         [JsonPropertyName("monman_v1_input_layerset")]
         public List<string> MonmanV1InputLayerSet { get; set; }
 
+        [JsonPropertyName("selfservice_variables_input_layerset")]
+        public List<string> SelfserviceVariablesInputLayerSet { get; set; }
+
         public Configuration()
         {
             CMDBInputLayerSet = new List<string>();
             MonmanV1InputLayerSet = new List<string>();
+            SelfserviceVariablesInputLayerSet = new List<string>();
         }
     }
 }
