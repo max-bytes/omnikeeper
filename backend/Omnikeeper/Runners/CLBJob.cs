@@ -197,6 +197,11 @@ namespace Omnikeeper.Runners
                     var user = await currentUserService.GetCurrentUser(transUpsertUser);
                     transUpsertUser.Commit();
 
+                    // TODO: do we not introduce a race-condition here? We use the changeset's proxies time to set our lastRunCache entry
+                    // is there a way for a dependent layer to get updated with a timestamp that's BEFORE the timestamp set by lastRunCache?
+                    // in that case, the CLB would miss the updated data and not run again
+                    // TODO: possible solution: get timestamp of latest change in any of the dependent layers before running clb (=at the moment of decision whether to run CLB)
+                    // store in cache under the name "consideredLayerDataUpUntil", use this for comparison (in addition or instead?)
                     var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
                     clLogger.LogInformation($"Running CLB {clb.Name} on layer {layerID}");

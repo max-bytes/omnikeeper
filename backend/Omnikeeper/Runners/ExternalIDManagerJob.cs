@@ -28,6 +28,7 @@ namespace Omnikeeper.Runners
         private readonly IModelContextBuilder modelContextBuilder;
 
         // HACK: making this static sucks, find better way, but runner is instantiated anew on each run
+        // TODO: not supported in HA/cluster scenario
         private static readonly IDictionary<string, DateTimeOffset> lastRuns = new ConcurrentDictionary<string, DateTimeOffset>();
 
         public ExternalIDManagerJob(IInboundAdapterManager pluginManager, IExternalIDMapPersister externalIDMapPersister, ICIModel ciModel, CIMappingService ciMappingService,
