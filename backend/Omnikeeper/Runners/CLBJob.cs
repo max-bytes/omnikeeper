@@ -1,6 +1,8 @@
 ﻿using Autofac;
 using Autofac.Features.Indexed;
 using Microsoft.Extensions.Logging;
+using Npgsql;
+using NpgsqlTypes;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -14,7 +16,6 @@ using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -112,7 +113,7 @@ namespace Omnikeeper.Runners
         private readonly ILogger<CLBSingleJob> genericLogger;
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly CLBLastRunCache clbLastRunCache; // TODO: check if that works in HA scenario
+        private readonly CLBLastRunCache clbLastRunCache;
         private readonly ILoggerFactory loggerFactory;
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
 
@@ -170,9 +171,9 @@ namespace Omnikeeper.Runners
             }
 
             var lastRunKey = $"{clConfig_ID}{layerID}";
-            DateTimeOffset? lastRun = null;
-            if (clbLastRunCache.TryGetValue(lastRunKey, out var lr))
-                lastRun = lr;
+            var transI = modelContextBuilder.BuildImmediate();
+            DateTimeOffset? lastRun = await clbLastRunCache.TryGetValue(lastRunKey, transI);
+            transI.Dispose();
 
             if (await clb.CanSkipRun(lastRun, clBrainConfig, clLogger, modelContextBuilder))
             {
@@ -215,7 +216,10 @@ namespace Omnikeeper.Runners
                     clLogger.LogInformation($"Done in {elapsedTime}; result: {(successful ? "success" : "failure")}");
 
                     if (successful)
-                        clbLastRunCache.UpdateCache(lastRunKey, changesetProxy.TimeThreshold.Time);
+                    {
+                        using var transI2 = modelContextBuilder.BuildImmediate();
+                        await clbLastRunCache.UpdateCache(lastRunKey, changesetProxy.TimeThreshold.Time, transI2);
+                    }
                 }
                 finally
                 {
@@ -227,21 +231,47 @@ namespace Omnikeeper.Runners
 
     public class CLBLastRunCache
     {
-        private readonly IDictionary<string, DateTimeOffset> cache = new Dictionary<string, DateTimeOffset>();
-
-        public void UpdateCache(string key, DateTimeOffset latestChange)
+        private class CLBLastRunEntry
         {
-            cache[key] = latestChange;
+            public DateTimeOffset LastRun { get; set; }
         }
 
-        public void RemoveFromCache(string key)
+        public async Task UpdateCache(string key, DateTimeOffset latestChange, IModelContext trans)
         {
-            cache.Remove(key);
+            var prefixedKey = $"CLBLastRun_{key}";
+            using var command = new NpgsqlCommand(@"
+                INSERT INTO config.general (key, config) VALUES (@key, @config) ON CONFLICT (key) DO UPDATE SET config = EXCLUDED.config
+            ", trans.DBConnection, trans.DBTransaction);
+            command.Parameters.AddWithValue("key", prefixedKey);
+            var d = new CLBLastRunEntry() { LastRun = latestChange };
+            var json = JsonSerializer.SerializeToDocument(d);
+            command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = json });
+            await command.ExecuteScalarAsync();
         }
 
-        public bool TryGetValue(string key, [MaybeNullWhen(false)] out DateTimeOffset v)
+        public async Task<DateTimeOffset?> TryGetValue(string key, IModelContext trans)
         {
-            return cache.TryGetValue(key, out v);
+            var prefixedKey = $"CLBLastRun_{key}";
+            using var command = new NpgsqlCommand("SELECT config FROM config.general WHERE key = @key LIMIT 1", trans.DBConnection, trans.DBTransaction);
+            command.Parameters.AddWithValue("key", prefixedKey);
+            using var s = await command.ExecuteReaderAsync();
+
+            if (await s.ReadAsync())
+            {
+                try
+                {
+                    var json = s.GetFieldValue<JsonDocument>(0);
+                    var d = json.Deserialize<CLBLastRunEntry>();
+                    return d?.LastRun;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            } else
+            {
+                return null;
+            }
         }
     }
 }
