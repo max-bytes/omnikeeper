@@ -193,6 +193,8 @@ export default function AgGridCrud(props) {
         defaultColDef={defaultColDef}
         rowData={rowData}
         immutableData
+        enableCellTextSelection={true}
+        ensureDomOrder={true}
         getRowNodeId={data => {
             if (isFrontendRowNodeOnly(data)) return data.frontend_id; else return getRowNodeId(data);
         }} />
