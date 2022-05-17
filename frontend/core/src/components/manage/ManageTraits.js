@@ -50,6 +50,10 @@ export default function ManageTraits() {
     <h2>Traits</h2>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
+      onGridReady={(params) => {
+        var defaultSortModel = [ {colId: "id", sort: "asc"} ];
+        params.api.setSortModel(defaultSortModel);
+      }}
       saveRow={async row => {
         const trait = {
           id: row.id, 

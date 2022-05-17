@@ -36,7 +36,7 @@ export default function ManageLayers(props) {
           return a.filter(e => e);
         },
     },
-    { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {
+    { headerName: "State", field: "state", width: 80, cellEditor: 'agSelectCellEditor', cellEditorParams: {
         values: ['ACTIVE', 'DEPRECATED', 'INACTIVE', 'MARKED_FOR_DELETION'],
       },
     },
@@ -52,6 +52,10 @@ export default function ManageLayers(props) {
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} 
       columnDefs={columnDefs} onRefresh={refetch} disableAddRow={true}
+      onGridReady={(params) => {
+          var defaultSortModel = [ {colId: "id", sort: "asc"} ];
+          params.api.setSortModel(defaultSortModel);
+      }}
       saveRow={async row => {
           return upsertLayer({variables: { layer: { id: row.id, description: row.description, state: row.state, clConfigID: row.clConfigID, onlineInboundAdapterName: row.onlineInboundAdapterName, color: row.color, generators: row.generators ?? [] }}})
             .then(r => { apolloClient.resetStore(); return r; })

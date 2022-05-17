@@ -14,7 +14,7 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
 export default function AgGridCrud(props) {
 
-  const {rowData, setRowData, deleteRow, saveRow, disableAddRow, setupNewRowData, onRefresh, columnDefs, idIsUserCreated, deletableRows, loading} = props;
+  const {rowData, setRowData, deleteRow, saveRow, disableAddRow, setupNewRowData, onRefresh, columnDefs, idIsUserCreated, deletableRows, loading, onGridReady} = props;
 
   var [isSaving, setIsSaving] = useState(false);
 
@@ -197,7 +197,8 @@ export default function AgGridCrud(props) {
         ensureDomOrder={true}
         getRowNodeId={data => {
             if (isFrontendRowNodeOnly(data)) return data.frontend_id; else return getRowNodeId(data);
-        }} />
+        }} 
+        onGridReady={onGridReady} />
     </div>
     </>;
 }

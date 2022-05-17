@@ -37,6 +37,10 @@ export default function ManageCLConfigs(props) {
     <h2>Compute Layer Configurations</h2>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
+      onGridReady={(params) => {
+        var defaultSortModel = [ {colId: "id", sort: "asc"} ];
+        params.api.setSortModel(defaultSortModel);
+      }}
       saveRow={async row => {
         const config = {
           id: row.id, 

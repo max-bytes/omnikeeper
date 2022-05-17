@@ -37,6 +37,10 @@ export default function ManageAuthRoles(props) {
     <h2>Auth Roles</h2>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
+      onGridReady={(params) => {
+        var defaultSortModel = [ {colId: "id", sort: "asc"} ];
+        params.api.setSortModel(defaultSortModel);
+      }}
       saveRow={async row => {
         const authRole = {
           id: row.id, 
