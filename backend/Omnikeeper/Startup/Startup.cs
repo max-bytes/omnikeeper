@@ -255,7 +255,7 @@ namespace Omnikeeper.Startup
             ServiceRegistration.RegisterOIABase(builder);
             ServiceRegistration.RegisterServices(builder);
             var csQuartz = Configuration.GetConnectionString("QuartzDatabaseConnection");
-            ServiceRegistration.RegisterQuartz(builder, csQuartz);
+            ServiceRegistration.RegisterQuartz(builder, csQuartz, Configuration.GetValue<string>("DistributedQuartzInstanceID"));
 
             ServiceRegistration.RegisterOData(builder);
 

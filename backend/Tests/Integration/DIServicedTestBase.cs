@@ -87,7 +87,7 @@ namespace Tests.Integration
             ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching, false, enableGenerators, false);
             ServiceRegistration.RegisterServices(builder);
             ServiceRegistration.RegisterGraphQL(builder);
-            ServiceRegistration.RegisterQuartz(builder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly));
+            ServiceRegistration.RegisterQuartz(builder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), "instance-A");
 
             builder.Register<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance).SingleInstance();
             builder.Register<ILogger<MetaConfigurationModel>>((sp) => NullLogger<MetaConfigurationModel>.Instance).SingleInstance();

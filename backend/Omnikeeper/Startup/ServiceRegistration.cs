@@ -290,7 +290,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<TypeContainerCreator>().SingleInstance();
         }
 
-        public static void RegisterQuartz(ContainerBuilder builder, string connectionString)
+        public static void RegisterQuartz(ContainerBuilder builder, string connectionString, string distributedQuartzInstanceID)
         {
             var localSchedulerConfig = new NameValueCollection {
                 {"quartz.threadPool.threadCount", "3" },
@@ -314,7 +314,7 @@ namespace Omnikeeper.Startup
                 {"quartz.serializer.type","json" },
 
                 {"quartz.jobStore.clustered", "true" },
-                {"quartz.scheduler.instanceId", "instance-A" }, // TODO: make configurable for clustering
+                {"quartz.scheduler.instanceId", distributedQuartzInstanceID },
                 {"quartz.scheduler.instanceName", "distributed" }
             };
 
