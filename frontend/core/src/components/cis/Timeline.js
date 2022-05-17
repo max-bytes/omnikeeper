@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client';
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types'
 import { queries } from 'graphql/queries'
 import LoadingOverlay from 'react-loading-overlay' // TODO: switch to antd spin
@@ -11,13 +11,12 @@ import { useMutation } from '@apollo/client';
 import UserTypeIcon from 'components/UserTypeIcon';
 import { formatTimestamp } from 'utils/datetime.js';
 import { ErrorView } from 'components/ErrorView';
-import { useExplorerLayers } from 'utils/layers';
+import { useExplorerLayers, LayerSettingsContext } from 'utils/layers';
 import { useSelectedTime } from 'utils/useSelectedTime';
 import { Link } from 'react-router-dom';
 import { buildDiffingURLQueryBetweenChangesets } from 'components/diffing/Diffing'
 import _ from "lodash"
 import moment from 'moment';
-import { useLocalStorage } from 'utils/useLocalStorage';
 
 function Timeline(props) {
   const { data: layers } = useExplorerLayers(true);
@@ -59,7 +58,7 @@ function LoadingTimeline(props) {
 
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
   
-  const [layerSettings, ] = useLocalStorage('layerSettings', null);
+  const { layerSettings, } = useContext(LayerSettingsContext);
 
   if (error) return <ErrorView error={error}/>;
 

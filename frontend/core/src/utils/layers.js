@@ -1,12 +1,13 @@
 import { useQuery } from '@apollo/client';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext, createContext } from "react";
 import { queries } from 'graphql/queries';
 import _ from 'lodash';
-import { useLocalStorage } from './useLocalStorage';
+
+export const LayerSettingsContext = createContext({});
 
 export function useExplorerLayers(skipInvisible = false, skipReadonly = false) {
     const { error, data, loading } = useQuery(queries.Layers);
-    const [layerSettings,] = useLocalStorage('layerSettings', null);
+    const { layerSettings, } = useContext(LayerSettingsContext);
 
     const [explorerLayers, setExplorerLayers] = useState({error: undefined, data: [], loading: undefined});
 

@@ -1,14 +1,9 @@
-import React from 'react';
+import React, { useContext } from "react";
 import Layers from './Layers';
-import { useLocalStorage } from 'utils/useLocalStorage';
+import { LayerSettingsContext } from "utils/layers";
 
-function ExplorerLayers() {
-  const [layerSettings, setLayerSettings] = useLocalStorage('layerSettings', null);
+export function ExplorerLayers() {
+  const { layerSettings, setLayerSettings} = useContext(LayerSettingsContext);
 
-  return <Layers layerSettings={layerSettings} 
-    setLayerSettings={ newLS => {
-      setLayerSettings(newLS);
-    }} />
+  return <Layers layerSettings={layerSettings} setLayerSettings={ newLS => setLayerSettings(newLS) } />
 }
-
-export default ExplorerLayers;

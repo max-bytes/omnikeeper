@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import './App.css';
 import Explorer from './components/cis/Explorer';
 import Diffing from './components/diffing/Diffing';
@@ -20,13 +20,15 @@ import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
 import { ReactKeycloakProvider } from '@react-keycloak/web'
 import { Menu, Layout, Button, Drawer } from 'antd';
-import ExplorerLayers from "components/ExplorerLayers";
+import { ExplorerLayers } from "components/ExplorerLayers";
+import { LayerSettingsContext } from "utils/layers";
 import Trait from "components/traits/Trait";
 import Breadcrumbs from "utils/Breadcrumbs";
 import GraphQLPlayground from "components/GraphQLPlayground";
 import Dashboard from "components/dashboard/Dashboard";
 import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
 import SubMenu from "antd/lib/menu/SubMenu";
+import { useLocalStorage } from 'utils/useLocalStorage';
 const { Header, Content } = Layout;
 
 const keycloak = new Keycloak({
@@ -50,6 +52,18 @@ const keycloakProviderInitOptions = {
   // promiseType: 'native'
 }
 
+function LayerSettingsContextProvider(props) {
+  // get layerSettings from storage, initialize state with it
+  const [layerSettingsInStorage, setLayerSettingsInStorage] = useLocalStorage('layerSettings', null);
+  const [layerSettings, setLayerSettings] = useState(layerSettingsInStorage);
+  const memoizedLayerSettings = useMemo(
+    () => ({ layerSettings, setLayerSettings }), 
+    [layerSettings]
+  );
+  useEffect(() => setLayerSettingsInStorage(layerSettings), [setLayerSettingsInStorage, layerSettings]);
+  return <LayerSettingsContext.Provider value={memoizedLayerSettings}>{props.children}</LayerSettingsContext.Provider>;
+}
+
 function App() {
 
   const BR = () => {
@@ -57,139 +71,141 @@ function App() {
 
     const frontendPluginsManager = useFrontendPluginsManager();
     const frontendPlugins = frontendPluginsManager.allFrontendPlugins;
-  
+    
     return <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
-      <Layout style={{height: '100vh', backgroundColor: 'unset'}}>
-          <Header style={{ position: 'fixed', zIndex: 10, width: '100%', top: '0px', 
-            borderBottom: "solid 1px #e8e8e8", boxShadow: "0 0 30px #f3f1f1", backgroundColor: 'white' }}>
-            <div style={{float: 'left', width: '200px'}}>
-                <Link to="/">
-                    <img
-                        src={process.env.PUBLIC_URL + '/omnikeeper_logo_v1.0.png'}
-                        alt="omnikeeper logo" 
-                        className="logo"
-                        style={{ height: "38px", margin: "4px 8px" }}
-                    />
-                </Link>
-            </div>
-            <div style={{float: 'left', paddingLeft: '20px'}}>
-              <Button onClick={e => setLayerDrawerVisible(true)} 
-                icon={<FontAwesomeIcon icon={faLayerGroup} style={{ marginRight: "0.5rem" }} />}
-                size="large">Layers</Button>
-            </div>
-            <div style={{float: 'right'}}>
-              <UserBar />
-            </div>
-            <Route
-              render={({ location }) =>  (
-                <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{justifyContent: 'flex-end'}}>
-                  <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Explore CIs</Link></Menu.Item>
-                  <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faCog} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
-                  <Menu.Item key="changesets"><Link to="/changesets"><FontAwesomeIcon icon={faList} style={{ marginRight: "0.5rem" }}/> Changesets</Link></Menu.Item>
-                  <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
-                  <SubMenu key="tools" title={<span><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/>Tools</span>}>
-                    <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
-                    <Menu.Item key="grid-view"><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
-                    <Menu.Item key="graphql-playground"><Link to="/graphql-playground"><FontAwesomeIcon icon={faPlayCircle} style={{ marginRight: "0.5rem" }}/> GraphQL Playground</Link></Menu.Item>
-                    {
-                      frontendPlugins.flatMap(plugin => {
-                          if (plugin.components.menuComponents)
-                          {
-                            const items = plugin.components.menuComponents.map(mc =>
-                              <Menu.Item key={mc.url}><Link to={`${mc.url}`}><FontAwesomeIcon icon={mc.icon} style={{ marginRight: "0.5rem" }}/> {mc.title}</Link></Menu.Item>
-                            ); 
-                            return items;
+      <LayerSettingsContextProvider>
+        <Layout style={{height: '100vh', backgroundColor: 'unset'}}>
+            <Header style={{ position: 'fixed', zIndex: 10, width: '100%', top: '0px', 
+              borderBottom: "solid 1px #e8e8e8", boxShadow: "0 0 30px #f3f1f1", backgroundColor: 'white' }}>
+              <div style={{float: 'left', width: '200px'}}>
+                  <Link to="/">
+                      <img
+                          src={process.env.PUBLIC_URL + '/omnikeeper_logo_v1.0.png'}
+                          alt="omnikeeper logo" 
+                          className="logo"
+                          style={{ height: "38px", margin: "4px 8px" }}
+                      />
+                  </Link>
+              </div>
+              <div style={{float: 'left', paddingLeft: '20px'}}>
+                <Button onClick={e => setLayerDrawerVisible(true)} 
+                  icon={<FontAwesomeIcon icon={faLayerGroup} style={{ marginRight: "0.5rem" }} />}
+                  size="large">Layers</Button>
+              </div>
+              <div style={{float: 'right'}}>
+                <UserBar />
+              </div>
+              <Route
+                render={({ location }) =>  (
+                  <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{justifyContent: 'flex-end'}}>
+                    <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Explore CIs</Link></Menu.Item>
+                    <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faCog} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
+                    <Menu.Item key="changesets"><Link to="/changesets"><FontAwesomeIcon icon={faList} style={{ marginRight: "0.5rem" }}/> Changesets</Link></Menu.Item>
+                    <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
+                    <SubMenu key="tools" title={<span><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/>Tools</span>}>
+                      <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
+                      <Menu.Item key="grid-view"><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
+                      <Menu.Item key="graphql-playground"><Link to="/graphql-playground"><FontAwesomeIcon icon={faPlayCircle} style={{ marginRight: "0.5rem" }}/> GraphQL Playground</Link></Menu.Item>
+                      {
+                        frontendPlugins.flatMap(plugin => {
+                            if (plugin.components.menuComponents)
+                            {
+                              const items = plugin.components.menuComponents.map(mc =>
+                                <Menu.Item key={mc.url}><Link to={`${mc.url}`}><FontAwesomeIcon icon={mc.icon} style={{ marginRight: "0.5rem" }}/> {mc.title}</Link></Menu.Item>
+                              ); 
+                              return items;
+                            }
+                            else
+                                return [];
+                        })
+                      }
+                    </SubMenu>
+                    
+                  </Menu>
+                )}
+              />
+            </Header>
+              
+            <Content className="site-layout" style={{ padding: '0 50px', marginTop: 64 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Breadcrumbs style={{marginTop: '10px', marginBottom: '10px'}} />
+                <Switch>
+                  <Route path="/login">
+                    <LoginPage />
+                  </Route>
+                  <PrivateRoute path="/graphql-playground">
+                    <GraphQLPlayground />
+                  </PrivateRoute>
+                  <PrivateRoute path="/diffing">
+                    <Diffing />
+                  </PrivateRoute>
+                  <PrivateRoute path="/createCI">
+                    <AddNewCI />
+                  </PrivateRoute>
+                  <PrivateRoute path="/explorer/:ciid">
+                    <Explorer />
+                  </PrivateRoute>
+                  <PrivateRoute path="/explorer">
+                    <SearchCIAdvanced />
+                  </PrivateRoute>
+                  <PrivateRoute path="/changesets/:changesetID">
+                    <Changeset />
+                  </PrivateRoute>
+                  <PrivateRoute path="/changesets">
+                    <ChangesetList />
+                  </PrivateRoute>
+                  <PrivateRoute path="/grid-view">
+                    <GridView/>
+                  </PrivateRoute>
+                  <PrivateRoute path="/manage">
+                    <Manage/>
+                  </PrivateRoute>
+                  <PrivateRoute path="/traits/:traitID">
+                    <Trait />
+                  </PrivateRoute>
+
+                  {
+                    frontendPlugins.flatMap(plugin => {
+                      if (plugin.components.menuComponents)
+                      {
+                        const items = plugin.components.menuComponents.map(mc => {
+                            const Component = mc.component;
+                            return <PrivateRoute key={mc.url} path={mc.url}>
+                              <Component />
+                            </PrivateRoute>
                           }
-                          else
-                              return [];
-                      })
-                    }
-                  </SubMenu>
-                  
-                </Menu>
-              )}
-            />
-          </Header>
-            
-          <Content className="site-layout" style={{ padding: '0 50px', marginTop: 64 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <Breadcrumbs style={{marginTop: '10px', marginBottom: '10px'}} />
-              <Switch>
-                <Route path="/login">
-                  <LoginPage />
-                </Route>
-                <PrivateRoute path="/graphql-playground">
-                  <GraphQLPlayground />
-                </PrivateRoute>
-                <PrivateRoute path="/diffing">
-                  <Diffing />
-                </PrivateRoute>
-                <PrivateRoute path="/createCI">
-                  <AddNewCI />
-                </PrivateRoute>
-                <PrivateRoute path="/explorer/:ciid">
-                  <Explorer />
-                </PrivateRoute>
-                <PrivateRoute path="/explorer">
-                  <SearchCIAdvanced />
-                </PrivateRoute>
-                <PrivateRoute path="/changesets/:changesetID">
-                  <Changeset />
-                </PrivateRoute>
-                <PrivateRoute path="/changesets">
-                  <ChangesetList />
-                </PrivateRoute>
-                <PrivateRoute path="/grid-view">
-                  <GridView/>
-                </PrivateRoute>
-                <PrivateRoute path="/manage">
-                  <Manage/>
-                </PrivateRoute>
-                <PrivateRoute path="/traits/:traitID">
-                  <Trait />
-                </PrivateRoute>
+                        ); 
+                        return items;
+                      }
+                      else
+                        return [];
+                    })
+                  }
 
-                {
-                  frontendPlugins.flatMap(plugin => {
-                    if (plugin.components.menuComponents)
-                    {
-                      const items = plugin.components.menuComponents.map(mc => {
-                          const Component = mc.component;
-                          return <PrivateRoute key={mc.url} path={mc.url}>
-                            <Component />
-                          </PrivateRoute>
-                        }
-                      ); 
-                      return items;
-                    }
-                    else
-                      return [];
-                  })
-                }
+                  <PrivateRoute path="/">
+                    <Dashboard />
+                  </PrivateRoute>
 
-                <PrivateRoute path="/">
-                  <Dashboard />
-                </PrivateRoute>
+                  <Route path="*">
+                    <Redirect to="/" />
+                  </Route>
+                </Switch>
+              </div>
 
-                <Route path="*">
-                  <Redirect to="/" />
-                </Route>
-              </Switch>
-            </div>
-
-            <Drawer 
-              width={500}
-              title="Layers"
-              placement={"left"}
-              closable={true}
-              onClose={() => setLayerDrawerVisible(false)}
-              visible={layerDrawerVisible}
-              key="explorerLayerDrawer"
-            >
-              <ExplorerLayers />
-            </Drawer>
-          </Content>
-        </Layout>
+              <Drawer 
+                width={500}
+                title="Layers"
+                placement={"left"}
+                closable={true}
+                onClose={() => setLayerDrawerVisible(false)}
+                visible={layerDrawerVisible}
+                key="explorerLayerDrawer"
+              >
+                <ExplorerLayers />
+              </Drawer>
+            </Content>
+          </Layout>
+        </LayerSettingsContextProvider>
       </BrowserRouter>
   }
   
