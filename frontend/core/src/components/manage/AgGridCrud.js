@@ -6,7 +6,7 @@ import { RowStateCellRenderer } from '../RowStateCellRenderer';
 import { LayerColorCellRenderer } from '../LayerColorCellRenderer';
 import LinkCellRenderer from '../LinkCellRenderer';
 import AuthRolePermissionsCellEditor from './AuthRolePermissionsCellEditor';
-
+import JSONCellEditor from './JSONCellEditor';
 import DeleteRowCellRenderer from '../DeleteRowCellRenderer';
 import ARGBColorCellEditor from './ARGBColorCellEditor';
 import 'ag-grid-community/dist/styles/ag-grid.css';
@@ -51,7 +51,7 @@ export default function AgGridCrud(props) {
       }];
 
   const finalColumnDefs = [
-    { headerName: "", sortable: false, resizable: false, filter: false, width: 30, colId: 'state', editable: false, valueGetter: 'data', 
+    { headerName: "", sortable: false, resizable: false, filter: false, width: 40, colId: 'state', editable: false, valueGetter: 'data', 
       cellRenderer: 'rowStateCellRenderer'
     },
     { headerName: "", field: "error", sortable: false, resizable: false, filter: false, width: 30, editable: false, 
@@ -188,7 +188,7 @@ export default function AgGridCrud(props) {
           layerColorCellRenderer: LayerColorCellRenderer, deleteRowCellRenderer: DeleteRowCellRenderer,
           linkCellRenderer: LinkCellRenderer,
           authRolePermissionsCellEditor: AuthRolePermissionsCellEditor,
-          ARGBColorCellEditor: ARGBColorCellEditor }}
+          ARGBColorCellEditor: ARGBColorCellEditor, JSONCellEditor: JSONCellEditor }}
         columnDefs={finalColumnDefs}
         defaultColDef={defaultColDef}
         rowData={rowData}
