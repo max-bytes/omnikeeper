@@ -1,6 +1,5 @@
 import React, {useState, forwardRef, useImperativeHandle} from "react";
 import { Form } from "antd"
-import _ from 'lodash';
 import 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import AceEditor from "react-ace";
