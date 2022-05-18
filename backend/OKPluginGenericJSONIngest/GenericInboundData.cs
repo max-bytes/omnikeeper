@@ -9,6 +9,12 @@ using System.Text.Json.Serialization;
 #pragma warning disable CS8618 // TODO
 namespace OKPluginGenericJSONIngest
 {
+    [JsonSourceGenerationOptions(IncludeFields = true)]
+    [JsonSerializable(typeof(GenericInboundData))]
+    internal partial class GenericInboundDataJsonContext : JsonSerializerContext
+    {
+    }
+
     public class GenericInboundData
     {
         public IEnumerable<GenericInboundCI> cis;
@@ -19,6 +25,7 @@ namespace OKPluginGenericJSONIngest
     {
         public string tempID;
         public IInboundIDMethod idMethod;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public SameTargetCIHandling sameTargetCIHandling;
         public IEnumerable<GenericInboundAttribute> attributes;
     }

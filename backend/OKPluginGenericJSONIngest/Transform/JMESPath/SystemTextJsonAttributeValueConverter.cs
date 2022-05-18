@@ -6,6 +6,12 @@ using System.Text.Json.Serialization;
 
 namespace OKPluginGenericJSONIngest.Transform.JMESPath
 {
+    [JsonSourceGenerationOptions(IncludeFields = true)]
+    [JsonSerializable(typeof(JsonElement))]
+    internal partial class JsonElementJsonContext : JsonSerializerContext
+    {
+    }
+
     class SystemTextJsonAttributeValueConverter : JsonConverter<IAttributeValue>
     {
         public override IAttributeValue? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -44,10 +50,10 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
                     switch (propertyName)
                     {
                         case "type":
-                            type = JsonSerializer.Deserialize<AttributeValueType>(ref reader, options);
+                            type = Enum.Parse<AttributeValueType>(reader.GetString()!);
                             break;
                         case "value":
-                            valueObj = JsonSerializer.Deserialize<JsonElement>(ref reader, options);
+                            valueObj = JsonSerializer.Deserialize<JsonElement>(ref reader, JsonElementJsonContext.Default.JsonElement);
                             valueSet = true;
                             break;
                     }
