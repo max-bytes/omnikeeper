@@ -528,6 +528,9 @@ namespace Omnikeeper.GraphQL
                       changesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
+                  // delete last run cache entries that affect this clConfig
+                  await clbLastRunCache.DeleteFromCache(clConfig.ID, userContext.Transaction);
+
                   return newCLConfig.dc;
               });
 
@@ -552,6 +555,9 @@ namespace Omnikeeper.GraphQL
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+
+                  // delete last run cache entries that affect this clConfig
+                  await clbLastRunCache.DeleteFromCache(id, userContext.Transaction);
 
                   return deleted;
               });

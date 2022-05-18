@@ -170,9 +170,8 @@ namespace Omnikeeper.Runners
                 return;
             }
 
-            var lastRunKey = $"{clConfig_ID}{layerID}";
             var transI = modelContextBuilder.BuildImmediate();
-            DateTimeOffset? lastRun = await clbLastRunCache.TryGetValue(lastRunKey, transI);
+            DateTimeOffset? lastRun = await clbLastRunCache.TryGetValue(clConfig_ID, layerID, transI);
             transI.Dispose();
 
             if (await clb.CanSkipRun(lastRun, clBrainConfig, clLogger, modelContextBuilder))
@@ -218,7 +217,7 @@ namespace Omnikeeper.Runners
                     if (successful)
                     {
                         using var transI2 = modelContextBuilder.BuildImmediate();
-                        await clbLastRunCache.UpdateCache(lastRunKey, changesetProxy.TimeThreshold.Time, transI2);
+                        await clbLastRunCache.UpdateCache(clConfig_ID, layerID, changesetProxy.TimeThreshold.Time, transI2);
                     }
                 }
                 finally
@@ -236,9 +235,9 @@ namespace Omnikeeper.Runners
             public DateTimeOffset LastRun { get; set; }
         }
 
-        public async Task UpdateCache(string key, DateTimeOffset latestChange, IModelContext trans)
+        public async Task UpdateCache(string clConfigID, string layerID, DateTimeOffset latestChange, IModelContext trans)
         {
-            var prefixedKey = $"CLBLastRun_{key}";
+            var prefixedKey = $"CLBLastRun_{clConfigID}{layerID}";
             using var command = new NpgsqlCommand(@"
                 INSERT INTO config.general (key, config) VALUES (@key, @config) ON CONFLICT (key) DO UPDATE SET config = EXCLUDED.config
             ", trans.DBConnection, trans.DBTransaction);
@@ -249,9 +248,17 @@ namespace Omnikeeper.Runners
             await command.ExecuteScalarAsync();
         }
 
-        public async Task<DateTimeOffset?> TryGetValue(string key, IModelContext trans)
+        public async Task DeleteFromCache(string clConfigID, IModelContext trans)
         {
-            var prefixedKey = $"CLBLastRun_{key}";
+            using var command = new NpgsqlCommand(@"DELETE FROM config.general WHERE key ~ @keyRegex", trans.DBConnection, trans.DBTransaction);
+            var keyRegex = $"^CLBLastRun_{clConfigID}.*";
+            command.Parameters.AddWithValue("keyRegex", keyRegex);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task<DateTimeOffset?> TryGetValue(string clConfigID, string layerID, IModelContext trans)
+        {
+            var prefixedKey = $"CLBLastRun_{clConfigID}{layerID}";
             using var command = new NpgsqlCommand("SELECT config FROM config.general WHERE key = @key LIMIT 1", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("key", prefixedKey);
             using var s = await command.ExecuteReaderAsync();

@@ -12,6 +12,7 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Model.Config;
+using Omnikeeper.Runners;
 using Quartz;
 using System;
 using System.Collections.Generic;
@@ -36,6 +37,7 @@ namespace Omnikeeper.GraphQL
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
+        private readonly CLBLastRunCache clbLastRunCache;
         private readonly IScheduler localScheduler;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
@@ -45,7 +47,7 @@ namespace Omnikeeper.GraphQL
             RecursiveTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
             IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
-            IEnumerable<IPluginRegistration> plugins, IIndex<string, IScheduler> schedulers,
+            IEnumerable<IPluginRegistration> plugins, IIndex<string, IScheduler> schedulers, CLBLastRunCache clbLastRunCache,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, ILayerDataModel layerDataModel)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
@@ -204,6 +206,7 @@ namespace Omnikeeper.GraphQL
             this.metaConfigurationModel = metaConfigurationModel;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
+            this.clbLastRunCache = clbLastRunCache;
             this.localScheduler = schedulers["localScheduler"];
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.layerDataModel = layerDataModel;
