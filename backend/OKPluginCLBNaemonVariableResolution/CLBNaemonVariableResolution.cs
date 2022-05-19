@@ -312,35 +312,35 @@ namespace OKPluginCLBNaemonVariableResolution
 
                 rv.AddRange(new List<ResolvedVariable>()
                 {
-                    new ResolvedVariable("HASNRPE", "FORCED", "YES"),
-                    new ResolvedVariable("DYNAMICADD", "FORCED", "NO"),
-                    new ResolvedVariable("DYNAMICMODULES", "FORCED", "YES"),
+                    new ResolvedVariable("HASNRPE", "FIXED", "YES"),
+                    new ResolvedVariable("DYNAMICADD", "FIXED", "NO"),
+                    new ResolvedVariable("DYNAMICMODULES", "FIXED", "YES"),
 
-                    new ResolvedVariable("ENVIRONMENT", "FORCED", host.Environment ?? ""),
-                    new ResolvedVariable("STATUS", "FORCED", host.Status ?? ""),
-                    new ResolvedVariable("CRITICALITY", "FORCED", host.Criticality ?? ""),
+                    new ResolvedVariable("ENVIRONMENT", "FIXED", host.Environment ?? ""),
+                    new ResolvedVariable("STATUS", "FIXED", host.Status ?? ""),
+                    new ResolvedVariable("CRITICALITY", "FIXED", host.Criticality ?? ""),
 
-                    new ResolvedVariable("LOCATION", "FORCED", Regex.Replace(host.Location ?? "", @"\p{C}+", string.Empty)),
-                    new ResolvedVariable("OS", "FORCED", host.OS ?? ""),
-                    new ResolvedVariable("PLATFORM", "FORCED", host.Platform ?? ""),
-                    new ResolvedVariable("ADDRESS", "FORCED", host.MonIPAddress ?? ""),
-                    new ResolvedVariable("PORT", "FORCED", host.MonIPPort ?? ""),
+                    new ResolvedVariable("LOCATION", "FIXED", Regex.Replace(host.Location ?? "", @"\p{C}+", string.Empty)),
+                    new ResolvedVariable("OS", "FIXED", host.OS ?? ""),
+                    new ResolvedVariable("PLATFORM", "FIXED", host.Platform ?? ""),
+                    new ResolvedVariable("ADDRESS", "FIXED", host.MonIPAddress ?? ""),
+                    new ResolvedVariable("PORT", "FIXED", host.MonIPPort ?? ""),
 
-                    new ResolvedVariable("CIID", "FORCED", host.ID),
-                    new ResolvedVariable("CINAME", "FORCED", host.Hostname ?? ""),
-                    new ResolvedVariable("CONFIGSOURCE", "FORCED", "monmanagement"),
+                    new ResolvedVariable("CIID", "FIXED", host.ID),
+                    new ResolvedVariable("CINAME", "FIXED", host.Hostname ?? ""),
+                    new ResolvedVariable("CONFIGSOURCE", "FIXED", "monmanagement"),
 
-                    new ResolvedVariable("CUST", "FORCED", customerNickname),
-                    new ResolvedVariable("CUST_ESCAPED", "FORCED", escapeCustomerNickname(customerNickname)),
+                    new ResolvedVariable("CUST", "FIXED", customerNickname),
+                    new ResolvedVariable("CUST_ESCAPED", "FIXED", escapeCustomerNickname(customerNickname)),
 
-                    new ResolvedVariable("INSTANCE", "FORCED", host.Instance ?? ""),
-                    new ResolvedVariable("FSOURCE", "FORCED", host.ForeignSource ?? ""),
-                    new ResolvedVariable("FKEY", "FORCED", host.ForeignKey ?? ""),
+                    new ResolvedVariable("INSTANCE", "FIXED", host.Instance ?? ""),
+                    new ResolvedVariable("FSOURCE", "FIXED", host.ForeignSource ?? ""),
+                    new ResolvedVariable("FKEY", "FIXED", host.ForeignKey ?? ""),
 
-                    new ResolvedVariable("SUPP_OS", "FORCED", osSupportGroupName),
-                    new ResolvedVariable("SUPP_APP", "FORCED", appSupportGroupName),
+                    new ResolvedVariable("SUPP_OS", "FIXED", osSupportGroupName),
+                    new ResolvedVariable("SUPP_APP", "FIXED", appSupportGroupName),
 
-                    new ResolvedVariable("MONITORINGPROFILE", "FORCED", profile.Name),
+                    new ResolvedVariable("MONITORINGPROFILE", "FIXED", profile.Name),
                 });
 
                 // TODO
@@ -362,9 +362,9 @@ namespace OKPluginCLBNaemonVariableResolution
                             {
                                 rv.AddRange(new List<ResolvedVariable>()
                                 {
-                                    new ResolvedVariable("LOMADDRESS", "FORCED", @interface.IP ?? ""),
-                                    new ResolvedVariable("LOMTYPE", "FORCED", @interface.Name?.ToUpperInvariant() ?? ""),
-                                    new ResolvedVariable("LOMNAME", "FORCED", @interface.DnsName ?? ""),
+                                    new ResolvedVariable("LOMADDRESS", "FIXED", @interface.IP ?? ""),
+                                    new ResolvedVariable("LOMTYPE", "FIXED", @interface.Name?.ToUpperInvariant() ?? ""),
+                                    new ResolvedVariable("LOMNAME", "FIXED", @interface.DnsName ?? ""),
                                 });
                                 break;
                             }
@@ -375,25 +375,25 @@ namespace OKPluginCLBNaemonVariableResolution
                 // set alerting ID to foreign key for special instances
                 if (host.Instance == "SERVER-CH")
                 {
-                    rv.Add(new ResolvedVariable("ALERTCIID", "FORCED", host.ForeignKey ?? ""));
+                    rv.Add(new ResolvedVariable("ALERTCIID", "FIXED", host.ForeignKey ?? ""));
                 }
                 else
                 {
-                    rv.Add(new ResolvedVariable("ALERTCIID", "FORCED", host.ID));
+                    rv.Add(new ResolvedVariable("ALERTCIID", "FIXED", host.ID));
                 }
 
                 // alerts
                 if (host.Status != "ACTIVE" && host.Status != "INFOALERTING")
                 { // disable ALERTS for non-active and non-infoalerting
-                    rv.Add(new ResolvedVariable("ALERTS", "FORCED", "OFF"));
+                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "OFF"));
                 }
                 else if ((host.Environment == "DEV" || host.Environment == "QM") && (host.AppSupportGroup == argusGroupCIID || host.OSSupportGroup == argusGroupCIID))
                 { // disable ALERTS for DEV/QM ARGUS systems
-                    rv.Add(new ResolvedVariable("ALERTS", "FORCED", "OFF"));
+                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "OFF"));
                 }
                 else
                 {
-                    rv.Add(new ResolvedVariable("ALERTS", "FORCED", "ON"));
+                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "ON"));
                 }
             }
 
@@ -412,28 +412,28 @@ namespace OKPluginCLBNaemonVariableResolution
                     supportGroupName = supportGroup.Name;
                 rv.AddRange(new List<ResolvedVariable>()
                 {
-                    new ResolvedVariable("HASNRPE", "FORCED", "YES"),
-                    new ResolvedVariable("DYNAMICADD", "FORCED", "NO"),
-                    new ResolvedVariable("DYNAMICMODULES", "FORCED", "YES"),
+                    new ResolvedVariable("HASNRPE", "FIXED", "YES"),
+                    new ResolvedVariable("DYNAMICADD", "FIXED", "NO"),
+                    new ResolvedVariable("DYNAMICMODULES", "FIXED", "YES"),
 
-                    new ResolvedVariable("ENVIRONMENT", "FORCED", service.Environment ?? ""),
-                    new ResolvedVariable("STATUS", "FORCED", service.Status ?? ""),
-                    new ResolvedVariable("CRITICALITY", "FORCED", service.Criticality ?? ""),
+                    new ResolvedVariable("ENVIRONMENT", "FIXED", service.Environment ?? ""),
+                    new ResolvedVariable("STATUS", "FIXED", service.Status ?? ""),
+                    new ResolvedVariable("CRITICALITY", "FIXED", service.Criticality ?? ""),
 
-                    new ResolvedVariable("CIID", "FORCED", service.ID),
-                    new ResolvedVariable("CINAME", "FORCED", service.Name ?? ""),
-                    new ResolvedVariable("CONFIGSOURCE", "FORCED", "monmanagement"),
+                    new ResolvedVariable("CIID", "FIXED", service.ID),
+                    new ResolvedVariable("CINAME", "FIXED", service.Name ?? ""),
+                    new ResolvedVariable("CONFIGSOURCE", "FIXED", "monmanagement"),
 
-                    new ResolvedVariable("CUST", "FORCED", customerNickname),
-                    new ResolvedVariable("CUST_ESCAPED", "FORCED", escapeCustomerNickname(customerNickname)),
+                    new ResolvedVariable("CUST", "FIXED", customerNickname),
+                    new ResolvedVariable("CUST_ESCAPED", "FIXED", escapeCustomerNickname(customerNickname)),
 
-                    new ResolvedVariable("INSTANCE", "FORCED", service.Instance ?? ""),
-                    new ResolvedVariable("FSOURCE", "FORCED", service.ForeignSource ?? ""),
-                    new ResolvedVariable("FKEY", "FORCED", service.ForeignKey ?? ""),
+                    new ResolvedVariable("INSTANCE", "FIXED", service.Instance ?? ""),
+                    new ResolvedVariable("FSOURCE", "FIXED", service.ForeignSource ?? ""),
+                    new ResolvedVariable("FKEY", "FIXED", service.ForeignKey ?? ""),
 
-                    new ResolvedVariable("SUPP_OS", "FORCED", supportGroupName),
+                    new ResolvedVariable("SUPP_OS", "FIXED", supportGroupName),
 
-                    new ResolvedVariable("MONITORINGPROFILE", "FORCED", profile.Name),
+                    new ResolvedVariable("MONITORINGPROFILE", "FIXED", profile.Name),
                 });
 
                 // TODO
@@ -450,8 +450,8 @@ namespace OKPluginCLBNaemonVariableResolution
                         {
                             rv.AddRange(new List<ResolvedVariable>()
                             {
-                                new ResolvedVariable("ORACLECONNECT", "FORCED", (foundServiceAction.Command ?? "").Replace(" ", "")),
-                                new ResolvedVariable("ORACLEUSER", "FORCED", foundServiceAction.CommandUser ?? ""),
+                                new ResolvedVariable("ORACLECONNECT", "FIXED", (foundServiceAction.Command ?? "").Replace(" ", "")),
+                                new ResolvedVariable("ORACLEUSER", "FIXED", foundServiceAction.CommandUser ?? ""),
                             });
                         }
                     }
@@ -467,23 +467,23 @@ namespace OKPluginCLBNaemonVariableResolution
                         {
                             rv.AddRange(new List<ResolvedVariable>()
                             {
-                                new ResolvedVariable("SDWANCHECKCONFIG", "FORCED", foundServiceAction.Command ?? ""),
-                                new ResolvedVariable("SDWANORG", "FORCED", foundServiceAction.CommandUser ?? ""),
+                                new ResolvedVariable("SDWANCHECKCONFIG", "FIXED", foundServiceAction.Command ?? ""),
+                                new ResolvedVariable("SDWANORG", "FIXED", foundServiceAction.CommandUser ?? ""),
                             });
                         }
                     }
                 }
 
-                rv.Add(new ResolvedVariable("ALERTCIID", "FORCED", service.ID));
+                rv.Add(new ResolvedVariable("ALERTCIID", "FIXED", service.ID));
 
                 if (service.Status != "ACTIVE" && service.Status != "INFOALERTING")
                 {
                     // disable ALERTS for non-active and non-infoalerting
-                    rv.Add(new ResolvedVariable("ALERTS", "FORCED", "OFF"));
+                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "OFF"));
                 }
                 else
                 {
-                    rv.Add(new ResolvedVariable("ALERTS", "FORCED", "ON"));
+                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "ON"));
                 }
             }
 
@@ -507,7 +507,7 @@ namespace OKPluginCLBNaemonVariableResolution
                     var inner = new JsonObject();
                     var first = ordered.First();
                     inner["value"] = first.Value;
-                    inner["refType"] = first.OutputRefType;
+                    inner["refType"] = first.RefType;
 
                     if (debugOutput)
                         debugStr += $"{variablesOfCI.Key}           {first.Value}\n";
@@ -517,7 +517,7 @@ namespace OKPluginCLBNaemonVariableResolution
                         chain.Add(new JsonObject()
                         {
                             ["value"] = vv.Value,
-                            ["refType"] = vv.OutputRefType
+                            ["refType"] = vv.RefType
                         });
                     inner["chain"] = chain;
 
@@ -581,7 +581,7 @@ namespace OKPluginCLBNaemonVariableResolution
             {
                 return refType switch
                 {
-                    "FORCED" => -1,
+                    "FIXED" => -1,
                     "CI" => 0,
                     "PROFILE" => 1,
                     "CUST" => 2,
@@ -608,14 +608,14 @@ namespace OKPluginCLBNaemonVariableResolution
             ExternalID = externalID;
         }
 
-        // internally, we use the "FORCED" refType, but for outputting, we replace it with "CI"
-        public string OutputRefType {
-            get {
-                if (RefType == "FORCED")
-                    return "CI";
-                return RefType;
-            }
-        }
+        // internally, we use the "FIXED" refType, but for outputting, we replace it with "CI"
+        //public string OutputRefType {
+        //    get {
+        //        if (RefType == "FIXED")
+        //            return "CI";
+        //        return RefType;
+        //    }
+        //}
     }
 
     static class NaemonV1VariableExtensions
