@@ -88,9 +88,19 @@ namespace OKPluginCLBNaemonVariableResolution
                 .Where(kv => kv.Value.Group == "MONITORING")
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
-            // extract cmdb hosts, but limit to those that have a monitoring profile (=related to a proper cmdb category)
+            // extract cmdb hosts, filter them
             var hosts = await targetHostModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-            var hostsWithCategoryProfiles = hosts
+            var relevantStatuus = new HashSet<string>()
+            {
+                "ACTIVE",
+                "INFOALERTING",
+                "BASE_INSTALLED",
+                "READY_FOR_SERVICE",
+                "EXPERIMENTAL",
+                "HOSTING",
+            };
+            var filteredHosts = hosts
+                .Where(host => relevantStatuus.Contains(host.Value.Status ?? ""))
                 .Select(host =>
                 {
                     var profileCIID = host.Value.MemberOfCategories.FirstOrDefault(categoryCIID => cmdbProfiles.ContainsKey(categoryCIID));
@@ -105,14 +115,13 @@ namespace OKPluginCLBNaemonVariableResolution
                         return (ciid: host.Key, host: host.Value, profile: (Category?)profile);
                     }
                 })
-                .Where(t => t.profile != null)
-                .Select(t => (t.ciid, t.host, t.profile!))
                 .ToList();
-            var hostsWithCategoryProfiles2CIIDLookup = hostsWithCategoryProfiles.ToDictionary(h => h.host.ID, h => h.ciid);
+            var hostsWithCategoryProfiles2CIIDLookup = filteredHosts.ToDictionary(h => h.host.ID, h => h.ciid);
 
-            // extract cmdb services, but limit to those that have a monitoring profile (=related to a proper cmdb category)
+            // extract cmdb services, filter them
             var services = await targetServiceModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-            var servicesWithCategoryProfiles = services
+            var filteredServices = services
+                .Where(service => relevantStatuus.Contains(service.Value.Status ?? ""))
                 .Select(service =>
                 {
                     var profileCIID = service.Value.MemberOfCategories.FirstOrDefault(categoryCIID => cmdbProfiles.ContainsKey(categoryCIID));
@@ -127,10 +136,8 @@ namespace OKPluginCLBNaemonVariableResolution
                         return (ciid: service.Key, service: service.Value, profile: (Category?)profile);
                     }
                 })
-                .Where(t => t.profile != null)
-                .Select(t => (t.ciid, t.service, t.profile!))
                 .ToList();
-            var servicesWithCategoryProfiles2CIIDLookup = servicesWithCategoryProfiles.ToDictionary(h => h.service.ID, h => h.ciid);
+            var servicesWithCategoryProfiles2CIIDLookup = filteredServices.ToDictionary(h => h.service.ID, h => h.ciid);
 
             var naemonV1Variables = await naemonV1VariableModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
 
@@ -157,10 +164,10 @@ namespace OKPluginCLBNaemonVariableResolution
             var argusGroupCIID = groups.FirstOrDefault(kv => kv.Value.Name == "GDE.PEA.AT.ALL.ARGUS").Key;
 
             // collect variables...
-            var resolvedVariables = new Dictionary<Guid, List<ResolvedVariable>>(hostsWithCategoryProfiles.Count + servicesWithCategoryProfiles.Count);
-            foreach (var kv in hostsWithCategoryProfiles)
+            var resolvedVariables = new Dictionary<Guid, List<ResolvedVariable>>(filteredHosts.Count + filteredServices.Count);
+            foreach (var kv in filteredHosts)
                 resolvedVariables.TryAdd(kv.ciid, new List<ResolvedVariable>());
-            foreach (var kv in servicesWithCategoryProfiles)
+            foreach (var kv in filteredServices)
                 resolvedVariables.TryAdd(kv.ciid, new List<ResolvedVariable>());
 
             // ...from variables in monman
@@ -294,7 +301,7 @@ namespace OKPluginCLBNaemonVariableResolution
             }
 
             // ...from cmdb hosts
-            foreach (var (ciid, host, profile) in hostsWithCategoryProfiles)
+            foreach (var (ciid, host, profile) in filteredHosts)
             {
                 var rv = resolvedVariables[ciid];
 
@@ -340,7 +347,7 @@ namespace OKPluginCLBNaemonVariableResolution
                     new ResolvedVariable("SUPP_OS", "FIXED", osSupportGroupName),
                     new ResolvedVariable("SUPP_APP", "FIXED", appSupportGroupName),
 
-                    new ResolvedVariable("MONITORINGPROFILE", "FIXED", profile.Name),
+                    new ResolvedVariable("MONITORINGPROFILE", "FIXED", profile?.Name ?? "NONE"),
                 });
 
                 // TODO
@@ -398,7 +405,7 @@ namespace OKPluginCLBNaemonVariableResolution
             }
 
             // ...from cmdb services
-            foreach (var (ciid, service, profile) in servicesWithCategoryProfiles)
+            foreach (var (ciid, service, profile) in filteredServices)
             {
                 var rv = resolvedVariables[ciid];
 
@@ -433,7 +440,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
                     new ResolvedVariable("SUPP_OS", "FIXED", supportGroupName),
 
-                    new ResolvedVariable("MONITORINGPROFILE", "FIXED", profile.Name),
+                    new ResolvedVariable("MONITORINGPROFILE", "FIXED", profile?.Name ?? "NONE"),
                 });
 
                 // TODO
