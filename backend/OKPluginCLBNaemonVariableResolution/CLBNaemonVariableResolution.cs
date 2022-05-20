@@ -30,6 +30,11 @@ namespace OKPluginCLBNaemonVariableResolution
             this.attributeModel = attributeModel;
         }
 
+        public enum Stage
+        {
+            DEV, PROD
+        }
+
         protected override ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger)
         {
             try
@@ -65,6 +70,8 @@ namespace OKPluginCLBNaemonVariableResolution
                 return false;
             }
 
+            var stage = Stage.DEV; // TODO: make configurable
+
             var timeThreshold = TimeThreshold.BuildLatest();
 
             var cmdbInputLayerset = await layerModel.BuildLayerSet(cfg.CMDBInputLayerSet.ToArray(), trans);
@@ -86,10 +93,21 @@ namespace OKPluginCLBNaemonVariableResolution
 
             var cmdbProfiles = categories
                 .Where(kv => kv.Value.Group == "MONITORING")
+                .Where(kv =>
+                {
+                    var name = kv.Value.Name;
+                    return stage switch
+                    {
+                        Stage.DEV => Regex.IsMatch(name, "profile-.*", RegexOptions.IgnoreCase) || Regex.IsMatch(name, "profiletsc-.*", RegexOptions.IgnoreCase) || Regex.IsMatch(name, "profiledev-.*", RegexOptions.IgnoreCase),
+                        Stage.PROD => Regex.IsMatch(name, "profile-.*", RegexOptions.IgnoreCase) || Regex.IsMatch(name, "profiletsc-.*", RegexOptions.IgnoreCase),
+                        _ => false,
+                    };
+                })
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
-            // extract cmdb hosts, filter them
             var hosts = await targetHostModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+            var services = await targetServiceModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+
             var relevantStatuus = new HashSet<string>()
             {
                 "ACTIVE",
@@ -99,45 +117,28 @@ namespace OKPluginCLBNaemonVariableResolution
                 "EXPERIMENTAL",
                 "HOSTING",
             };
-            var filteredHosts = hosts
-                .Where(host => relevantStatuus.Contains(host.Value.Status ?? ""))
-                .Select(host =>
-                {
-                    var profileCIID = host.Value.MemberOfCategories.FirstOrDefault(categoryCIID => cmdbProfiles.ContainsKey(categoryCIID));
 
-                    if (profileCIID == default)
-                    {
-                        return (host.Key, host.Value, null);
-                    }
-                    else
-                    {
-                        var profile = cmdbProfiles[profileCIID];
-                        return (ciid: host.Key, host: host.Value, profile: (Category?)profile);
-                    }
+            // construct an intermediate data structure holding hosts and services together
+            var hos = new Dictionary<Guid, HostOrService>(hosts.Count + services.Count);
+            foreach (var kv in hosts)
+                hos.Add(kv.Key, new HostOrService(kv.Value, null));
+            foreach (var kv in services)
+                hos.Add(kv.Key, new HostOrService(null, kv.Value));
+
+            // filter hosts and service
+            var filteredHOS = hos
+                .Where(hs => relevantStatuus.Contains(hs.Value.Status ?? ""))
+                .Select(hs =>
+                {
+                    var profiles = hs.Value.MemberOfCategories
+                        .Where(categoryCIID => cmdbProfiles.ContainsKey(categoryCIID))
+                        .Select(p => cmdbProfiles[p].Name)
+                        .ToList();
+
+                    return (ciid: hs.Key, hs: hs.Value, profiles);
                 })
                 .ToList();
-            var hostsWithCategoryProfiles2CIIDLookup = filteredHosts.ToDictionary(h => h.host.ID, h => h.ciid);
-
-            // extract cmdb services, filter them
-            var services = await targetServiceModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-            var filteredServices = services
-                .Where(service => relevantStatuus.Contains(service.Value.Status ?? ""))
-                .Select(service =>
-                {
-                    var profileCIID = service.Value.MemberOfCategories.FirstOrDefault(categoryCIID => cmdbProfiles.ContainsKey(categoryCIID));
-
-                    if (profileCIID == default)
-                    {
-                        return (service.Key, service.Value, null);
-                    }
-                    else
-                    {
-                        var profile = cmdbProfiles[profileCIID];
-                        return (ciid: service.Key, service: service.Value, profile: (Category?)profile);
-                    }
-                })
-                .ToList();
-            var servicesWithCategoryProfiles2CIIDLookup = filteredServices.ToDictionary(h => h.service.ID, h => h.ciid);
+            var hosWithCategoryProfiles2CIIDLookup = filteredHOS.ToDictionary(h => h.hs.ID, h => h.ciid);
 
             var naemonV1Variables = await naemonV1VariableModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
 
@@ -164,13 +165,24 @@ namespace OKPluginCLBNaemonVariableResolution
             var argusGroupCIID = groups.FirstOrDefault(kv => kv.Value.Name == "GDE.PEA.AT.ALL.ARGUS").Key;
 
             // collect variables...
-            var resolvedVariables = new Dictionary<Guid, List<ResolvedVariable>>(filteredHosts.Count + filteredServices.Count);
-            foreach (var kv in filteredHosts)
-                resolvedVariables.TryAdd(kv.ciid, new List<ResolvedVariable>());
-            foreach (var kv in filteredServices)
-                resolvedVariables.TryAdd(kv.ciid, new List<ResolvedVariable>());
+            var resolvedVariables = new Dictionary<Guid, List<ResolvedVariable>>(hos.Count);
+
+            // ...init
+            // reference: updateNormalizedCiData_preProcessVars()
+            foreach (var (ciid, hs, profile) in filteredHOS)
+            {
+                resolvedVariables.Add(ciid, new List<ResolvedVariable>()
+                {
+                    new ResolvedVariable("ALERTS", "FIXED", "OFF", -100),
+                    new ResolvedVariable("ALERTCIID", "FIXED", hs.ID, -100),
+                    new ResolvedVariable("HASNRPE", "FIXED", "YES", -100),
+                    new ResolvedVariable("DYNAMICADD", "FIXED", "NO", -100),
+                    new ResolvedVariable("DYNAMICMODULES", "FIXED", "YES", -100),
+                });
+            }
 
             // ...from variables in monman
+            // reference: roughly updateNormalizedCiData_varsFromDatabase()
             foreach (var v in naemonV1Variables)
             {
                 // replace secret values with fetch command
@@ -184,13 +196,9 @@ namespace OKPluginCLBNaemonVariableResolution
                 {
                     case "CI":
                         {
-                            if (hostsWithCategoryProfiles2CIIDLookup.TryGetValue(refID, out var refHostCIID))
+                            if (hosWithCategoryProfiles2CIIDLookup.TryGetValue(refID, out var refHOSCIID))
                             {
-                                resolvedVariables[refHostCIID].Add(v.Value.ToResolvedVariable());
-                            }
-                            else if (servicesWithCategoryProfiles2CIIDLookup.TryGetValue(refID, out var refServiceCIID))
-                            {
-                                resolvedVariables[refServiceCIID].Add(v.Value.ToResolvedVariable());
+                                resolvedVariables[refHOSCIID].Add(v.Value.ToResolvedVariable());
                             }
                             else
                             {
@@ -270,13 +278,9 @@ namespace OKPluginCLBNaemonVariableResolution
                 {
                     case "CI":
                         {
-                            if (hostsWithCategoryProfiles2CIIDLookup.TryGetValue(refID, out var refHostCIID))
+                            if (hosWithCategoryProfiles2CIIDLookup.TryGetValue(refID, out var refHOSCIID))
                             {
-                                resolvedVariables[refHostCIID].Add(v.Value.ToResolvedVariable());
-                            }
-                            else if (servicesWithCategoryProfiles2CIIDLookup.TryGetValue(refID, out var refServiceCIID))
-                            {
-                                resolvedVariables[refServiceCIID].Add(v.Value.ToResolvedVariable());
+                                resolvedVariables[refHOSCIID].Add(v.Value.ToResolvedVariable());
                             }
                             else
                             {
@@ -300,209 +304,236 @@ namespace OKPluginCLBNaemonVariableResolution
                     .Replace(']', '-');
             }
 
-            // ...from cmdb hosts
-            foreach (var (ciid, host, profile) in filteredHosts)
+            // ...from cmdb hosts and services
+            // reference: roughly updateNormalizedCiData_varsByExpression(), naemon-vars-ci.php
+            foreach (var (ciid, hs, _) in filteredHOS)
             {
                 var rv = resolvedVariables[ciid];
 
-                // base 
-                var customerNickname = "UNKNOWN";
-                if (host.Customer.HasValue && customers.TryGetValue(host.Customer.Value, out var customer))
-                    customerNickname = customer.Nickname;
-
-                var osSupportGroupName = "UNKNOWN";
-                if (host.OSSupportGroup.HasValue && groups.TryGetValue(host.OSSupportGroup.Value, out var osSupportGroup))
-                    osSupportGroupName = osSupportGroup.Name;
-                var appSupportGroupName = "UNKNOWN";
-                if (host.AppSupportGroup.HasValue && groups.TryGetValue(host.AppSupportGroup.Value, out var appSupportGroup))
-                    appSupportGroupName = appSupportGroup.Name;
-
                 rv.AddRange(new List<ResolvedVariable>()
                 {
-                    new ResolvedVariable("HASNRPE", "FIXED", "YES"),
-                    new ResolvedVariable("DYNAMICADD", "FIXED", "NO"),
-                    new ResolvedVariable("DYNAMICMODULES", "FIXED", "YES"),
-
-                    new ResolvedVariable("ENVIRONMENT", "FIXED", host.Environment ?? ""),
-                    new ResolvedVariable("STATUS", "FIXED", host.Status ?? ""),
-                    new ResolvedVariable("CRITICALITY", "FIXED", host.Criticality ?? ""),
-
-                    new ResolvedVariable("LOCATION", "FIXED", Regex.Replace(host.Location ?? "", @"\p{C}+", string.Empty)),
-                    new ResolvedVariable("OS", "FIXED", host.OS ?? ""),
-                    new ResolvedVariable("PLATFORM", "FIXED", host.Platform ?? ""),
-                    new ResolvedVariable("ADDRESS", "FIXED", host.MonIPAddress ?? ""),
-                    new ResolvedVariable("PORT", "FIXED", host.MonIPPort ?? ""),
-
-                    new ResolvedVariable("CIID", "FIXED", host.ID),
-                    new ResolvedVariable("CINAME", "FIXED", host.Hostname ?? ""),
-                    new ResolvedVariable("CONFIGSOURCE", "FIXED", "monmanagement"),
-
-                    new ResolvedVariable("CUST", "FIXED", customerNickname),
-                    new ResolvedVariable("CUST_ESCAPED", "FIXED", escapeCustomerNickname(customerNickname)),
-
-                    new ResolvedVariable("INSTANCE", "FIXED", host.Instance ?? ""),
-                    new ResolvedVariable("FSOURCE", "FIXED", host.ForeignSource ?? ""),
-                    new ResolvedVariable("FKEY", "FIXED", host.ForeignKey ?? ""),
-
-                    new ResolvedVariable("SUPP_OS", "FIXED", osSupportGroupName),
-                    new ResolvedVariable("SUPP_APP", "FIXED", appSupportGroupName),
-
-                    new ResolvedVariable("MONITORINGPROFILE", "FIXED", profile?.Name ?? "NONE"),
+                    new ResolvedVariable("LOCATION", "FIXED", Regex.Replace(hs.Location ?? "", @"\p{C}+", string.Empty)),
+                    new ResolvedVariable("OS", "FIXED", hs.OS ?? ""),
+                    new ResolvedVariable("PLATFORM", "FIXED", hs.Platform ?? ""),
+                    new ResolvedVariable("ADDRESS", "FIXED", hs.MonIPAddress ?? ""),
+                    new ResolvedVariable("PORT", "FIXED", hs.MonIPPort ?? ""),
                 });
 
-                // TODO
-                //$resultRef[$id]['VARS']['MONITORINGPROFILE_ORIG'] = join(',', $resultRef[$id]['PROFILE_ORIG']);
-
-                // hardware monitoring
-                foreach (var interfaceCIID in host.Interfaces)
+                // set alerting ID to foreign key for special instances
+                if (hs.Instance == "SERVER-CH")
                 {
-                    if (interfaces.TryGetValue(interfaceCIID, out var @interface))
+                    rv.Add(new ResolvedVariable("ALERTCIID", "FIXED", hs.ForeignKey ?? ""));
+                }
+
+                // alerts
+                if (hs.Status != "ACTIVE" && hs.Status != "INFOALERTING")
+                { // disable ALERTS for non-active and non-infoalerting
+                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "OFF"));
+                }
+                else if ((hs.Environment == "DEV" || hs.Environment == "QM") && (hs.AppSupportGroup == argusGroupCIID || hs.OSSupportGroup == argusGroupCIID))
+                { // disable ALERTS for DEV/QM ARGUS systems
+                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "OFF"));
+                }
+
+                // host-specific stuff
+                if (hs.Host != null)
+                {
+                    // hardware monitoring
+                    foreach (var interfaceCIID in hs.Host.Interfaces)
                     {
-                        if (@interface.LanType?.Equals("MANAGEMENT", StringComparison.InvariantCultureIgnoreCase) == true)
+                        if (interfaces.TryGetValue(interfaceCIID, out var @interface))
                         {
-                            var interfaceName = @interface.Name;
-                            if (interfaceName != null && (
-                                Regex.IsMatch(interfaceName, "ILO", RegexOptions.IgnoreCase) ||
-                                Regex.IsMatch(interfaceName, "XSCF", RegexOptions.IgnoreCase) ||
-                                Regex.IsMatch(interfaceName, "IDRAC", RegexOptions.IgnoreCase)
-                            ))
+                            if (@interface.LanType?.Equals("MANAGEMENT", StringComparison.InvariantCultureIgnoreCase) == true)
                             {
-                                rv.AddRange(new List<ResolvedVariable>()
+                                var interfaceName = @interface.Name;
+                                if (interfaceName != null && (
+                                    Regex.IsMatch(interfaceName, "ILO", RegexOptions.IgnoreCase) ||
+                                    Regex.IsMatch(interfaceName, "XSCF", RegexOptions.IgnoreCase) ||
+                                    Regex.IsMatch(interfaceName, "IDRAC", RegexOptions.IgnoreCase)
+                                ))
                                 {
-                                    new ResolvedVariable("LOMADDRESS", "FIXED", @interface.IP ?? ""),
-                                    new ResolvedVariable("LOMTYPE", "FIXED", @interface.Name?.ToUpperInvariant() ?? ""),
-                                    new ResolvedVariable("LOMNAME", "FIXED", @interface.DnsName ?? ""),
-                                });
-                                break;
+                                    rv.AddRange(new List<ResolvedVariable>()
+                                    {
+                                        new ResolvedVariable("LOMADDRESS", "FIXED", @interface.IP ?? ""),
+                                        new ResolvedVariable("LOMTYPE", "FIXED", @interface.Name?.ToUpperInvariant() ?? ""),
+                                        new ResolvedVariable("LOMNAME", "FIXED", @interface.DnsName ?? ""),
+                                    });
+                                    break;
+                                }
                             }
                         }
                     }
                 }
 
-                // set alerting ID to foreign key for special instances
-                if (host.Instance == "SERVER-CH")
+                // service-specific stuff
+                if (hs.Service != null)
                 {
-                    rv.Add(new ResolvedVariable("ALERTCIID", "FIXED", host.ForeignKey ?? ""));
-                }
-                else
-                {
-                    rv.Add(new ResolvedVariable("ALERTCIID", "FIXED", host.ID));
-                }
-
-                // alerts
-                if (host.Status != "ACTIVE" && host.Status != "INFOALERTING")
-                { // disable ALERTS for non-active and non-infoalerting
-                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "OFF"));
-                }
-                else if ((host.Environment == "DEV" || host.Environment == "QM") && (host.AppSupportGroup == argusGroupCIID || host.OSSupportGroup == argusGroupCIID))
-                { // disable ALERTS for DEV/QM ARGUS systems
-                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "OFF"));
-                }
-                else
-                {
-                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "ON"));
-                }
-            }
-
-            // ...from cmdb services
-            foreach (var (ciid, service, profile) in filteredServices)
-            {
-                var rv = resolvedVariables[ciid];
-
-                // base
-                var customerNickname = "UNKNOWN";
-                if (service.Customer.HasValue && customers.TryGetValue(service.Customer.Value, out var customer))
-                    customerNickname = customer.Nickname;
-
-                var supportGroupName = "UNKNOWN";
-                if (service.SupportGroup.HasValue && groups.TryGetValue(service.SupportGroup.Value, out var supportGroup))
-                    supportGroupName = supportGroup.Name;
-                rv.AddRange(new List<ResolvedVariable>()
-                {
-                    new ResolvedVariable("HASNRPE", "FIXED", "YES"),
-                    new ResolvedVariable("DYNAMICADD", "FIXED", "NO"),
-                    new ResolvedVariable("DYNAMICMODULES", "FIXED", "YES"),
-
-                    new ResolvedVariable("ENVIRONMENT", "FIXED", service.Environment ?? ""),
-                    new ResolvedVariable("STATUS", "FIXED", service.Status ?? ""),
-                    new ResolvedVariable("CRITICALITY", "FIXED", service.Criticality ?? ""),
-
-                    new ResolvedVariable("CIID", "FIXED", service.ID),
-                    new ResolvedVariable("CINAME", "FIXED", service.Name ?? ""),
-                    new ResolvedVariable("CONFIGSOURCE", "FIXED", "monmanagement"),
-
-                    new ResolvedVariable("CUST", "FIXED", customerNickname),
-                    new ResolvedVariable("CUST_ESCAPED", "FIXED", escapeCustomerNickname(customerNickname)),
-
-                    new ResolvedVariable("INSTANCE", "FIXED", service.Instance ?? ""),
-                    new ResolvedVariable("FSOURCE", "FIXED", service.ForeignSource ?? ""),
-                    new ResolvedVariable("FKEY", "FIXED", service.ForeignKey ?? ""),
-
-                    new ResolvedVariable("SUPP_OS", "FIXED", supportGroupName),
-
-                    new ResolvedVariable("MONITORINGPROFILE", "FIXED", profile?.Name ?? "NONE"),
-                });
-
-                // TODO
-                //$resultRef[$id]['VARS']['MONITORINGPROFILE_ORIG'] = join(',', $resultRef[$id]['PROFILE_ORIG']);
-                //$resultRef[$id]['VARS']['SUPP_APP'] = $resultRef[$id]['SUPP_APP'];
-
-                // extract oracle db connection string
-                if (Regex.IsMatch(service.Class ?? "", "DB") && Regex.IsMatch(service.Type ?? "", "ORACLE"))
-                {
-                    var foundServiceAction = serviceActionServiceIDLookup[service.ID].FirstOrDefault();
-                    if (foundServiceAction != null)
+                    // extract oracle db connection string
+                    if (Regex.IsMatch(hs.Service.Class ?? "", "DB") && Regex.IsMatch(hs.Service.Type ?? "", "ORACLE"))
                     {
-                        if (foundServiceAction.Type.Equals("MONITORING", StringComparison.InvariantCultureIgnoreCase))
+                        var foundServiceAction = serviceActionServiceIDLookup[hs.Service.ID].FirstOrDefault();
+                        if (foundServiceAction != null)
                         {
-                            rv.AddRange(new List<ResolvedVariable>()
+                            if (foundServiceAction.Type.Equals("MONITORING", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                rv.AddRange(new List<ResolvedVariable>()
                             {
                                 new ResolvedVariable("ORACLECONNECT", "FIXED", (foundServiceAction.Command ?? "").Replace(" ", "")),
                                 new ResolvedVariable("ORACLEUSER", "FIXED", foundServiceAction.CommandUser ?? ""),
                             });
+                            }
                         }
                     }
-                }
 
-                // SD-WAN
-                if ((service.Class == "APP_ROUTING" || service.Class == "SVC_ROUTING") && Regex.IsMatch(service.Type ?? "", "^SD-WAN.*"))
-                {
-                    var foundServiceAction = serviceActionServiceIDLookup[service.ID].FirstOrDefault();
-                    if (foundServiceAction != null)
+                    // SD-WAN
+                    if ((hs.Service.Class == "APP_ROUTING" || hs.Service.Class == "SVC_ROUTING") && Regex.IsMatch(hs.Service.Type ?? "", "^SD-WAN.*"))
                     {
-                        if (foundServiceAction.Type.Equals("MONITORING", StringComparison.InvariantCultureIgnoreCase))
+                        var foundServiceAction = serviceActionServiceIDLookup[hs.Service.ID].FirstOrDefault();
+                        if (foundServiceAction != null)
                         {
-                            rv.AddRange(new List<ResolvedVariable>()
+                            if (foundServiceAction.Type.Equals("MONITORING", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                rv.AddRange(new List<ResolvedVariable>()
                             {
                                 new ResolvedVariable("SDWANCHECKCONFIG", "FIXED", foundServiceAction.Command ?? ""),
                                 new ResolvedVariable("SDWANORG", "FIXED", foundServiceAction.CommandUser ?? ""),
                             });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // reference: updateNormalizedCiData_postProcessVars()
+            foreach (var (ciid, hs, profileNames) in filteredHOS)
+            {
+                var rv = resolvedVariables[ciid];
+
+                // dynamically set profile under certain circumstances
+                // TODO: test
+                if (profileNames.Count != 1 && hs.Host != null)
+                {
+                    var os = hs.Host.OS;
+                    var osMatches = os != null && (
+                        Regex.IsMatch(os, "^WIN") ||
+                        Regex.IsMatch(os, "^LINUX") ||
+                        Regex.IsMatch(os, "^XEN") ||
+                        Regex.IsMatch(os, "^SUNOS")
+                        );
+
+                    var platformMatches = hs.Host.Platform != null && Regex.IsMatch(hs.Host.Platform, "^SRV_");
+
+                    var status = hs.Host.Status;
+                    var statusMatches = status != null && (
+                        Regex.IsMatch(status, "ACTIVE") ||
+                        Regex.IsMatch(status, "INFOALERTING") ||
+                        Regex.IsMatch(status, "BASE_INSTALLED") ||
+                        Regex.IsMatch(status, "READY_FOR_SERVICE")
+                        );
+
+                    if (osMatches && platformMatches && statusMatches)
+                    {
+                        // TODO: this is not fully correct; we should instead check if the RESOLVED variable has DYNAMICADD=YES, not if there is ANY variable
+                        if (rv.Any(v => v.Name == "DYNAMICADD" && v.Value == "YES"))
+                        {
+                            profileNames.Clear();
+                            profileNames.Add("dynamic-nrpe");
                         }
                     }
                 }
 
-                rv.Add(new ResolvedVariable("ALERTCIID", "FIXED", service.ID));
+            //    if (
+            //    (
+            //        $resultRef[$id]['PROFILE'] == 'NONE' ||
+            //        $resultRef[$id]['PROFILE'] == 'MULTIPLE'
+            //    ) && (
+            //        $resultRef[$id]['TYPE'] == 'HOST'
+            //    ) && (
+            //        preg_match('/^WIN/', $ci['CMDBDATA']['HOS']) ||
+            //        preg_match('/^LINUX/', $ci['CMDBDATA']['HOS']) ||
+            //        preg_match('/^XEN/', $ci['CMDBDATA']['HOS']) ||
+            //        preg_match('/^SUNOS/', $ci['CMDBDATA']['HOS'])
+            //    ) && (
+            //        preg_match('/^SRV_/', $ci['CMDBDATA']['HPLATFORM'])
+            //    ) && (
+            //        preg_match('/ACTIVE/', $ci['CMDBDATA']['HSTATUS']) ||
+            //        preg_match('/INFOALERTING/', $ci['CMDBDATA']['HSTATUS']) ||
+            //        preg_match('/BASE_INSTALLED/', $ci['CMDBDATA']['HSTATUS']) ||
+            //        preg_match('/READY_FOR_SERVICE/', $ci['CMDBDATA']['HSTATUS'])
+            //    ) && (
+            //        $resultRef[$id]['VARS']['DYNAMICADD'] == 'YES'
+            //    )
+            //) {
+            //    $resultRef[$id]['PROFILE'] = 'dynamic-nrpe';
+            //        }
 
-                if (service.Status != "ACTIVE" && service.Status != "INFOALERTING")
-                {
-                    // disable ALERTS for non-active and non-infoalerting
-                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "OFF"));
-                }
+
+
+                var customerNickname = "UNKNOWN";
+                if (hs.Customer.HasValue && customers.TryGetValue(hs.Customer.Value, out var customer))
+                    customerNickname = customer.Nickname;
+
+                var osSupportGroupName = "UNKNOWN";
+                if (hs.OSSupportGroup.HasValue && groups.TryGetValue(hs.OSSupportGroup.Value, out var osSupportGroup))
+                    osSupportGroupName = osSupportGroup.Name;
+                var appSupportGroupName = "UNKNOWN";
+                if (hs.AppSupportGroup.HasValue && groups.TryGetValue(hs.AppSupportGroup.Value, out var appSupportGroup))
+                    appSupportGroupName = appSupportGroup.Name;
+
+                string monitoringProfile;
+                if (profileNames.Count == 1)
+                    monitoringProfile = profileNames[0];
+                else if (profileNames.Count > 1)
+                    monitoringProfile = "MULTIPLE";
                 else
+                    monitoringProfile = "NONE";
+                string monitoringProfileOrig;
+                if (profileNames.Count == 1)
+                    monitoringProfileOrig = profileNames[0];
+                else if (profileNames.Count > 1)
+                    monitoringProfileOrig = string.Join(',', profileNames);
+                else
+                    monitoringProfileOrig = "NONE";
+
+                rv.AddRange(new List<ResolvedVariable>()
                 {
-                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "ON"));
-                }
+                    new ResolvedVariable("CIID", "FIXED", hs.ID),
+                    new ResolvedVariable("CINAME", "FIXED", hs.Name ?? ""),
+                    new ResolvedVariable("CONFIGSOURCE", "FIXED", "monmanagement"),
+
+                    new ResolvedVariable("MONITORINGPROFILE", "FIXED", monitoringProfile),
+                    new ResolvedVariable("MONITORINGPROFILE_ORIG", "FIXED", monitoringProfileOrig),
+
+                    new ResolvedVariable("CUST", "FIXED", customerNickname),
+                    new ResolvedVariable("CUST_ESCAPED", "FIXED", escapeCustomerNickname(customerNickname)),
+
+                    new ResolvedVariable("ENVIRONMENT", "FIXED", hs.Environment ?? ""),
+                    new ResolvedVariable("STATUS", "FIXED", hs.Status ?? ""),
+                    new ResolvedVariable("CRITICALITY", "FIXED", hs.Criticality ?? ""),
+
+                    new ResolvedVariable("SUPP_OS", "FIXED", osSupportGroupName),
+                    new ResolvedVariable("SUPP_APP", "FIXED", appSupportGroupName),
+
+                    new ResolvedVariable("INSTANCE", "FIXED", hs.Instance ?? ""),
+                    new ResolvedVariable("FSOURCE", "FIXED", hs.ForeignSource ?? ""),
+                    new ResolvedVariable("FKEY", "FIXED", hs.ForeignKey ?? ""),
+            });
             }
 
             var debugOutput = false; // TODO: remove or make configurable
 
+            // filter out hosts and services that contain an empty monitoring profile, because there is no use in creating resolved variables for them
+            var filteredResolvedVariables = resolvedVariables
+                .Where(kv => kv.Value.Any(v => v.Name == "MONITORINGPROFILE" && v.Value != "NONE"))
+                .ToList();
+
             // write output
             var variableComparer = new ResolvedVariableComparer();
             var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
-            foreach (var v in resolvedVariables)
+            foreach (var kv in filteredResolvedVariables)
             {
                 // merge process for variables
-                var groupedByName = v.Value.GroupBy(v => v.Name)
+                var groupedByName = kv.Value.GroupBy(v => v.Name)
                     .OrderBy(g => g.Key); // order by key (=variable Name) to produce stable output, otherwise JSON changes all the time, leading to "fake" changes
 
                 var debugStr = "";
@@ -531,11 +562,11 @@ namespace OKPluginCLBNaemonVariableResolution
                     d.Add(variablesOfCI.Key, inner);
                 }
                 var value = AttributeScalarValueJSON.BuildFromString(d.ToJsonString(), false);
-                fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables", value, v.Key));
+                fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables", value, kv.Key));
                 if (debugOutput)
                 {
                     var valueDebug = new AttributeScalarValueText(debugStr, true);
-                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables_debug", valueDebug, v.Key));
+                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables_debug", valueDebug, kv.Key));
                 }
             }
 
