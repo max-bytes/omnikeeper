@@ -186,87 +186,6 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (dc, changed);
         }
 
-        private IList<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> Entities2Fragments(IEnumerable<(T t, Guid ciid)> entities)
-        {
-            var fragments = new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>();
-            foreach (var taFieldInfo in attributeFieldInfos)
-            {
-                foreach (var (t, ciid) in entities)
-                {
-                    var entityValue = taFieldInfo.FieldInfo.GetValue(t);
-                    var attributeName = taFieldInfo.TraitAttributeAttribute.aName;
-
-                    if (entityValue != null)
-                    {
-                        IAttributeValue value;
-                        if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.JsonSerializer != null)
-                        { // json with serializer
-                            value = taFieldInfo.JsonSerializer.SerializeToAttributeValue(entityValue, taFieldInfo.IsArray);
-                        }
-                        else
-                        { // general attribute
-                            value = AttributeValueHelper.BuildFromTypeAndObject(taFieldInfo.AttributeValueType, entityValue);
-                        }
-                        fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, attributeName, value));
-                    }
-                    else
-                    {
-                        if (!taFieldInfo.TraitAttributeAttribute.optional)
-                        {
-                            throw new Exception(); // TODO
-                        }
-                        else
-                        {
-                            // this is an optional attribute, and it is not set, so we'll try to remove the attribute, which happens implicitly through the bulk operation
-                        }
-                    }
-                }
-            }
-            return fragments;
-        }
-
-        private (IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations) Entities2RelationTuples(IEnumerable<(T t, Guid ciid)> entities)
-        {
-            var outgoingRelations = new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>();
-            var incomingRelations = new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>();
-            if (!relationFieldInfos.IsEmpty())
-            {
-                foreach (var (t, ciid) in entities)
-                {
-                    foreach (var trFieldInfo in relationFieldInfos)
-                    {
-                        var entityValue = trFieldInfo.FieldInfo.GetValue(t);
-
-                        if (entityValue != null)
-                        {
-                            var predicateID = trFieldInfo.TraitRelationAttribute.predicateID;
-                            var outgoing = trFieldInfo.TraitRelationAttribute.directionForward;
-
-                            if (entityValue is Guid[] otherCIIDs)
-                            {
-                                if (outgoing)
-                                    outgoingRelations.Add((ciid, predicateID, otherCIIDs));
-                                else
-                                    incomingRelations.Add((ciid, predicateID, otherCIIDs));
-                            } else if (entityValue is Guid otherCIID)
-                            {
-                                if (outgoing)
-                                    outgoingRelations.Add((ciid, predicateID, new Guid[] { otherCIID }));
-                                else
-                                    incomingRelations.Add((ciid, predicateID, new Guid[] { otherCIID }));
-                            } else throw new Exception(); // invalid type
-                        }
-                        else
-                        {
-                            // relations are optional by design, continue if not found
-                        }
-                    }
-                }
-            }
-
-            return (outgoingRelations, incomingRelations);
-        }
-
         public async Task<bool> TryToDelete(ID id, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             // TODO: we should actually not fetch a single, but instead ALL that match that ID and delete them
@@ -323,6 +242,89 @@ namespace Omnikeeper.Base.Model.TraitBased
             var changesetIDs = ets.SelectMany(et => et.Value.GetRelevantChangesetIDs()).ToHashSet();
             return changesetIDs;
         }
+
+        protected IList<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> Entities2Fragments(IEnumerable<(T t, Guid ciid)> entities)
+        {
+            var fragments = new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>();
+            foreach (var taFieldInfo in attributeFieldInfos)
+            {
+                foreach (var (t, ciid) in entities)
+                {
+                    var entityValue = taFieldInfo.FieldInfo.GetValue(t);
+                    var attributeName = taFieldInfo.TraitAttributeAttribute.aName;
+
+                    if (entityValue != null)
+                    {
+                        IAttributeValue value;
+                        if (taFieldInfo.AttributeValueType == AttributeValueType.JSON && taFieldInfo.JsonSerializer != null)
+                        { // json with serializer
+                            value = taFieldInfo.JsonSerializer.SerializeToAttributeValue(entityValue, taFieldInfo.IsArray);
+                        }
+                        else
+                        { // general attribute
+                            value = AttributeValueHelper.BuildFromTypeAndObject(taFieldInfo.AttributeValueType, entityValue);
+                        }
+                        fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, attributeName, value));
+                    }
+                    else
+                    {
+                        if (!taFieldInfo.TraitAttributeAttribute.optional)
+                        {
+                            throw new Exception(); // TODO
+                        }
+                        else
+                        {
+                            // this is an optional attribute, and it is not set, so we'll try to remove the attribute, which happens implicitly through the bulk operation
+                        }
+                    }
+                }
+            }
+            return fragments;
+        }
+        protected (IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations) Entities2RelationTuples(IEnumerable<(T t, Guid ciid)> entities)
+        {
+            var outgoingRelations = new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>();
+            var incomingRelations = new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>();
+            if (!relationFieldInfos.IsEmpty())
+            {
+                foreach (var (t, ciid) in entities)
+                {
+                    foreach (var trFieldInfo in relationFieldInfos)
+                    {
+                        var entityValue = trFieldInfo.FieldInfo.GetValue(t);
+
+                        if (entityValue != null)
+                        {
+                            var predicateID = trFieldInfo.TraitRelationAttribute.predicateID;
+                            var outgoing = trFieldInfo.TraitRelationAttribute.directionForward;
+
+                            if (entityValue is Guid[] otherCIIDs)
+                            {
+                                if (outgoing)
+                                    outgoingRelations.Add((ciid, predicateID, otherCIIDs));
+                                else
+                                    incomingRelations.Add((ciid, predicateID, otherCIIDs));
+                            }
+                            else if (entityValue is Guid otherCIID)
+                            {
+                                if (outgoing)
+                                    outgoingRelations.Add((ciid, predicateID, new Guid[] { otherCIID }));
+                                else
+                                    incomingRelations.Add((ciid, predicateID, new Guid[] { otherCIID }));
+                            }
+                            else throw new Exception(); // invalid type
+                        }
+                        else
+                        {
+                            // relations are optional by design, continue if not found
+                        }
+                    }
+                }
+            }
+
+            return (outgoingRelations, incomingRelations);
+        }
+
     }
 
 

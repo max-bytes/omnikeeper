@@ -30,10 +30,6 @@ namespace Omnikeeper.Base.Entity.Config
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public readonly string archiveOldDataRunnerInterval;
 
-        [TraitAttribute("name", "__name", optional: true)]
-        [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
-
         public TimeSpan ArchiveDataThreshold => TimeSpan.FromTicks(archiveDataThresholdTicks);
         public string CLBRunnerInterval => clbRunnerInterval;
         public string MarkedForDeletionRunnerInterval => markedForDeletionRunnerInterval;
@@ -49,7 +45,6 @@ namespace Omnikeeper.Base.Entity.Config
             this.markedForDeletionRunnerInterval = "";
             this.externalIDManagerRunnerInterval = "";
             this.archiveOldDataRunnerInterval = "";
-            this.Name = "";
         }
 
         [JsonConstructor]
@@ -60,7 +55,6 @@ namespace Omnikeeper.Base.Entity.Config
             this.markedForDeletionRunnerInterval = markedForDeletionRunnerInterval;
             this.externalIDManagerRunnerInterval = externalIDManagerRunnerInterval;
             this.archiveOldDataRunnerInterval = archiveOldDataRunnerInterval;
-            this.Name = "Base-Configuration";
         }
     }
 }
