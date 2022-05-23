@@ -56,57 +56,11 @@ namespace Omnikeeper.Model
             return ret;
         }
 
+        // NOTE: this does not do any sanity check: make sure that the passed in CIs contain the necessary attributes (in principle), otherwise resolving cannot work properly
         public async Task<IDictionary<Guid, EffectiveTrait>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             if (layerSet.IsEmpty && trait is not TraitEmpty)
                 return ImmutableDictionary<Guid, EffectiveTrait>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
-
-            var ets = await Resolve(trait, cis, layerSet, trans, atTime);
-            return ets;
-        }
-
-        private (IReadOnlyList<MergedCI> has, IReadOnlyList<MergedCI> hasNot) CanResolve(ITrait trait, IEnumerable<MergedCI> cis)
-        {
-            // TODO: sanity check: make sure that MergedCIs contain the necessary attributes (in principle), otherwise resolving cannot work properly
-
-            var has = new List<MergedCI>(cis.Count());
-            var hasNot = new List<MergedCI>(cis.Count());
-            switch (trait)
-            {
-                case GenericTrait tt:
-                    foreach (var ci in cis)
-                    {
-                        foreach (var ta in tt.RequiredAttributes)
-                        {
-                            var (_, errors) = TemplateCheckService.CalculateTemplateErrorsAttributeSimple(ci, ta.AttributeTemplate);
-                            if (errors)
-                            {
-                                hasNot.Add(ci);
-                                goto ENDOFCILOOP;
-                            }
-                        };
-
-                        has.Add(ci);
-
-                    ENDOFCILOOP:
-                        ;
-                    }
-                    return (has, hasNot);
-                case TraitEmpty _:
-                    foreach (var ci in cis)
-                        if (ci.MergedAttributes.IsEmpty()) // NOTE: we do not check for relations
-                            has.Add(ci);
-                        else
-                            hasNot.Add(ci);
-                    return (has, hasNot);
-                default:
-                    throw new Exception("Unknown trait encountered");
-            }
-        }
-
-        private async Task<IDictionary<Guid, EffectiveTrait>> Resolve(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            // TODO: sanity check: make sure that MergedCIs contain the necessary attributes (in principle), otherwise resolving cannot work properly
 
             var ret = new Dictionary<Guid, EffectiveTrait>(cis.Count());
             switch (trait)
@@ -120,13 +74,13 @@ namespace Omnikeeper.Model
                         if (tt.OptionalRelations.Any(r => r.RelationTemplate.DirectionForward))
                         {
                             var relevantPredicates = tt.OptionalRelations.Where(r => r.RelationTemplate.DirectionForward).Select(r => r.RelationTemplate.PredicateID).ToHashSet();
-                            fromRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(relevantPredicates, ciids), layers, trans, atTime, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance))
+                            fromRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(relevantPredicates, ciids), layerSet, trans, atTime, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance))
                                 .ToLookup(r => (r.Relation.FromCIID, r.Relation.PredicateID));
                         }
                         if (tt.OptionalRelations.Any(r => !r.RelationTemplate.DirectionForward))
                         {
                             var relevantPredicates = tt.OptionalRelations.Where(r => !r.RelationTemplate.DirectionForward).Select(r => r.RelationTemplate.PredicateID).ToHashSet();
-                            toRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(relevantPredicates, ciids), layers, trans, atTime, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance))
+                            toRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(relevantPredicates, ciids), layerSet, trans, atTime, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance))
                                 .ToLookup(r => (r.Relation.ToCIID, r.Relation.PredicateID));
                         }
                     }
@@ -181,6 +135,45 @@ namespace Omnikeeper.Model
                         if (ci.MergedAttributes.IsEmpty()) // NOTE: we do not check for relations
                             ret.Add(ci.ID, new EffectiveTrait(ci.ID, te, new Dictionary<string, MergedCIAttribute>(), new Dictionary<string, IEnumerable<MergedRelation>>(), new Dictionary<string, IEnumerable<MergedRelation>>()));
                     return ret;
+                default:
+                    throw new Exception("Unknown trait encountered");
+            }
+        }
+
+        private (IReadOnlyList<MergedCI> has, IReadOnlyList<MergedCI> hasNot) CanResolve(ITrait trait, IEnumerable<MergedCI> cis)
+        {
+            // TODO: sanity check: make sure that MergedCIs contain the necessary attributes (in principle), otherwise resolving cannot work properly
+
+            var has = new List<MergedCI>(cis.Count());
+            var hasNot = new List<MergedCI>(cis.Count());
+            switch (trait)
+            {
+                case GenericTrait tt:
+                    foreach (var ci in cis)
+                    {
+                        foreach (var ta in tt.RequiredAttributes)
+                        {
+                            var (_, errors) = TemplateCheckService.CalculateTemplateErrorsAttributeSimple(ci, ta.AttributeTemplate);
+                            if (errors)
+                            {
+                                hasNot.Add(ci);
+                                goto ENDOFCILOOP;
+                            }
+                        };
+
+                        has.Add(ci);
+
+                    ENDOFCILOOP:
+                        ;
+                    }
+                    return (has, hasNot);
+                case TraitEmpty _:
+                    foreach (var ci in cis)
+                        if (ci.MergedAttributes.IsEmpty()) // NOTE: we do not check for relations
+                            has.Add(ci);
+                        else
+                            hasNot.Add(ci);
+                    return (has, hasNot);
                 default:
                     throw new Exception("Unknown trait encountered");
             }
