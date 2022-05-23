@@ -115,10 +115,11 @@ namespace Omnikeeper.Runners
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly CLBLastRunCache clbLastRunCache;
         private readonly ILoggerFactory loggerFactory;
+        private readonly ILatestLayerChangeModel latestLayerChangeModel;
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
 
         public CLBSingleJob(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, ILifetimeScope lifetimeScope, IChangesetModel changesetModel, ILogger<CLBSingleJob> genericLogger,
-            ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, CLBLastRunCache clbLastRunCache, ILoggerFactory loggerFactory)
+            ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, CLBLastRunCache clbLastRunCache, ILoggerFactory loggerFactory, ILatestLayerChangeModel latestLayerChangeModel)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.lifetimeScope = lifetimeScope;
@@ -128,6 +129,7 @@ namespace Omnikeeper.Runners
             this.modelContextBuilder = modelContextBuilder;
             this.clbLastRunCache = clbLastRunCache;
             this.loggerFactory = loggerFactory;
+            this.latestLayerChangeModel = latestLayerChangeModel;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -174,10 +176,33 @@ namespace Omnikeeper.Runners
             DateTimeOffset? lastRun = await clbLastRunCache.TryGetValue(clConfig_ID, layerID, transI);
             transI.Dispose();
 
-            if (await clb.CanSkipRun(lastRun, clBrainConfig, clLogger, modelContextBuilder))
+            if (lastRun != null)
             {
-                clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID}");
-                return;
+                var dependentLayerIDs = clb.GetDependentLayerIDs(clBrainConfig, clLogger);
+                if (dependentLayerIDs != null)
+                {
+                    using var trans = modelContextBuilder.BuildImmediate();
+                    var allUnchanged = true;
+                    foreach (var dependentLayerID in dependentLayerIDs)
+                    {
+                        var latestChangeInLayer = await latestLayerChangeModel.GetLatestChangeInLayer(dependentLayerID, trans);
+                        if (latestChangeInLayer == null)
+                        {
+                            allUnchanged = false;
+                            break;
+                        }
+                        if (latestChangeInLayer > lastRun)
+                        {
+                            allUnchanged = false;
+                            break;
+                        }
+                    }
+                    if (allUnchanged)
+                    {
+                        clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID}");
+                        return; // <- all dependent layer have not changed since last run, we can skip
+                    }
+                }
             }
 
             // create a lifetime scope per clb invocation (similar to a HTTP request lifetime)
@@ -224,60 +249,6 @@ namespace Omnikeeper.Runners
                 {
                     scopedLifetimeAccessor.ResetLifetimeScope();
                 }
-            }
-        }
-    }
-
-    public class CLBLastRunCache
-    {
-        private class CLBLastRunEntry
-        {
-            public DateTimeOffset LastRun { get; set; }
-        }
-
-        public async Task UpdateCache(string clConfigID, string layerID, DateTimeOffset latestChange, IModelContext trans)
-        {
-            var prefixedKey = $"CLBLastRun_{clConfigID}{layerID}";
-            using var command = new NpgsqlCommand(@"
-                INSERT INTO config.general (key, config) VALUES (@key, @config) ON CONFLICT (key) DO UPDATE SET config = EXCLUDED.config
-            ", trans.DBConnection, trans.DBTransaction);
-            command.Parameters.AddWithValue("key", prefixedKey);
-            var d = new CLBLastRunEntry() { LastRun = latestChange };
-            var json = JsonSerializer.SerializeToDocument(d);
-            command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = json });
-            await command.ExecuteScalarAsync();
-        }
-
-        public async Task DeleteFromCache(string clConfigID, IModelContext trans)
-        {
-            using var command = new NpgsqlCommand(@"DELETE FROM config.general WHERE key ~ @keyRegex", trans.DBConnection, trans.DBTransaction);
-            var keyRegex = $"^CLBLastRun_{clConfigID}.*";
-            command.Parameters.AddWithValue("keyRegex", keyRegex);
-            await command.ExecuteNonQueryAsync();
-        }
-
-        public async Task<DateTimeOffset?> TryGetValue(string clConfigID, string layerID, IModelContext trans)
-        {
-            var prefixedKey = $"CLBLastRun_{clConfigID}{layerID}";
-            using var command = new NpgsqlCommand("SELECT config FROM config.general WHERE key = @key LIMIT 1", trans.DBConnection, trans.DBTransaction);
-            command.Parameters.AddWithValue("key", prefixedKey);
-            using var s = await command.ExecuteReaderAsync();
-
-            if (await s.ReadAsync())
-            {
-                try
-                {
-                    var json = s.GetFieldValue<JsonDocument>(0);
-                    var d = json.Deserialize<CLBLastRunEntry>();
-                    return d?.LastRun;
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
-            } else
-            {
-                return null;
             }
         }
     }

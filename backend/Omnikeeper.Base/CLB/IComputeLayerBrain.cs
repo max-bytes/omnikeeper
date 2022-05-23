@@ -2,7 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
-using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -14,6 +14,6 @@ namespace Omnikeeper.Base.CLB
 
         Task<bool> Run(Layer targetLayer, JsonDocument config, IChangesetProxy changesetProxy, IModelContextBuilder modelContextBuilder, ILogger logger);
 
-        Task<bool> CanSkipRun(DateTimeOffset? lastRun, JsonDocument config, ILogger logger, IModelContextBuilder modelContextBuilder);
+        ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger);
     }
 }

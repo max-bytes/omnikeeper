@@ -2,6 +2,7 @@
 using GraphQL;
 using GraphQL.Types;
 using Omnikeeper.Base.AttributeValues;
+using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;

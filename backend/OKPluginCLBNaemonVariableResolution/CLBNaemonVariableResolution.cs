@@ -21,7 +21,7 @@ namespace OKPluginCLBNaemonVariableResolution
         private readonly ILayerModel layerModel;
         private readonly IAttributeModel attributeModel;
         public CLBNaemonVariableResolution(ICIModel ciModel, ILayerModel layerModel, IEffectiveTraitModel effectiveTraitModel,
-            IRelationModel relationModel, IAttributeModel attributeModel, ILatestLayerChangeModel latestLayerChangeModel) : base(latestLayerChangeModel)
+            IRelationModel relationModel, IAttributeModel attributeModel)
         {
             this.relationModel = relationModel;
             this.ciModel = ciModel;
@@ -35,7 +35,7 @@ namespace OKPluginCLBNaemonVariableResolution
             DEV, PROD
         }
 
-        protected override ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger)
+        public override ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger)
         {
             try
             {

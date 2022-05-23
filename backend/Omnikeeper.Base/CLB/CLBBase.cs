@@ -11,14 +11,9 @@ namespace Omnikeeper.Base.CLB
 {
     public abstract class CLBBase : IComputeLayerBrain
     {
-        private readonly ILatestLayerChangeModel latestLayerChangeModel;
-
-        protected CLBBase(ILatestLayerChangeModel latestLayerChangeModel)
-        {
-            this.latestLayerChangeModel = latestLayerChangeModel;
-        }
-
         public string Name => GetType().Name!;
+
+        public virtual ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger) => null;
 
         public async Task<bool> Run(Layer targetLayer, JsonDocument config, IChangesetProxy changesetProxy, IModelContextBuilder modelContextBuilder, ILogger logger)
         {
@@ -44,37 +39,5 @@ namespace Omnikeeper.Base.CLB
 
         public abstract Task<bool> Run(Layer targetLayer, JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger);
 
-        protected virtual ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger) => null;
-
-        public async Task<bool> CanSkipRun(DateTimeOffset? lastRun, JsonDocument config, ILogger logger, IModelContextBuilder modelContextBuilder)
-        {
-            if (lastRun == null)
-            {
-                return false;
-            }
-            else
-            {
-                // TODO: check if config has changed; if yes -> cannot skip run
-
-                var dependentLayerIDs = GetDependentLayerIDs(config, logger);
-                if (dependentLayerIDs == null)
-                {
-                    return false;
-                }
-                else
-                {
-                    using var trans = modelContextBuilder.BuildImmediate();
-                    foreach (var dependentLayerID in dependentLayerIDs)
-                    {
-                        var latestChangeInLayer = await latestLayerChangeModel.GetLatestChangeInLayer(dependentLayerID, trans);
-                        if (latestChangeInLayer == null)
-                            return false;
-                        if (latestChangeInLayer > lastRun)
-                            return false;
-                    }
-                    return true; // <- all dependent layer have not changed since last run, we can skip
-                }
-            }
-        }
     }
 }

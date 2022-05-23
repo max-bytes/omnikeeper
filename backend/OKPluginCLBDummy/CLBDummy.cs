@@ -14,10 +14,6 @@ namespace OKPluginCLBDummy
 {
     public class CLBDummy : CLBBase
     {
-        public CLBDummy(ILatestLayerChangeModel latestLayerChangeModel) : base(latestLayerChangeModel)
-        {
-        }
-
         private class Config
         {
             [JsonPropertyName("source_layerset")]
@@ -33,7 +29,7 @@ namespace OKPluginCLBDummy
 
         private Config ParseConfig(JsonDocument config) => JsonSerializer.Deserialize<Config>(config);
 
-        protected override ISet<string> GetDependentLayerIDs(JsonDocument config, ILogger logger)
+        public override ISet<string> GetDependentLayerIDs(JsonDocument config, ILogger logger)
         {
             try
             {
