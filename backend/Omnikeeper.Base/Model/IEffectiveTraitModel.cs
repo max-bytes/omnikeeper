@@ -18,14 +18,6 @@ namespace Omnikeeper.Base.Model
 
     public static class EffectiveTraitModelExtensions
     {
-        public static async Task<EffectiveTrait?> GetEffectiveTraitForCI(this IEffectiveTraitModel model, MergedCI ci, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            var r = await model.GetEffectiveTraitsForTrait(trait, new MergedCI[] { ci }, layers, trans, atTime);
-            if (r.TryGetValue(ci.ID, out var outValue))
-                return outValue;
-            return null;
-        }
-
         public static IEnumerable<MergedCI> FilterMergedCIsByTraits(this IEffectiveTraitModel model, IEnumerable<MergedCI> cis, IEnumerable<ITrait> withEffectiveTraits, IEnumerable<ITrait> withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             if (withEffectiveTraits.IsEmpty() && withoutEffectiveTraits.IsEmpty())

@@ -39,9 +39,11 @@ namespace Omnikeeper.Base.Model.TraitBased
         public async Task<EffectiveTrait?> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var ci = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(ciid), layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold)).FirstOrDefault();
-            if (ci == null) return default;
-            var ciWithTrait = await effectiveTraitModel.GetEffectiveTraitForCI(ci, trait, layerSet, trans, timeThreshold);
-            return ciWithTrait;
+            if (ci == null) return null;
+            var r = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, new MergedCI[] { ci }, layerSet, trans, timeThreshold);
+            if (r.TryGetValue(ci.ID, out var outValue))
+                return outValue;
+            return null;
         }
 
         public async Task<IDictionary<Guid, EffectiveTrait>> GetByCIID(ICIIDSelection ciidSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
