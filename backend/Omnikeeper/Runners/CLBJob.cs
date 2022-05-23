@@ -1,8 +1,6 @@
 ﻿using Autofac;
 using Autofac.Features.Indexed;
 using Microsoft.Extensions.Logging;
-using Npgsql;
-using NpgsqlTypes;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -173,10 +171,10 @@ namespace Omnikeeper.Runners
             // NOTE: to avoid race conditions, we use a single timeThreshold and base everything off of this
             var timeThreshold = TimeThreshold.BuildLatest();
 
+            // calculate unprocessed changesets
             var transI = modelContextBuilder.BuildImmediate();
             var processedChangesets = await clbProcessedChangesetsCache.TryGetValue(clConfig_ID, layerID, transI);
             transI.Dispose();
-
             var unprocessedChangesets = new Dictionary<string, IReadOnlyList<Changeset>?>(); // null value means all changesets
             var latestSeenChangesets = new Dictionary<string, Guid>();
             if (processedChangesets != null)
