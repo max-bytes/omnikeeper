@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
+using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Inbound;
@@ -363,6 +364,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<CLBJob>().InstancePerLifetimeScope();
             builder.RegisterType<CLBSingleJob>().InstancePerLifetimeScope();
             builder.RegisterType<CLBLastRunCache>().SingleInstance();
+            builder.RegisterType<CLBProcessedChangesetsCache>().SingleInstance();
             builder.RegisterType<ArchiveOldDataJob>().InstancePerLifetimeScope();
             builder.RegisterType<ExternalIDManagerJob>().InstancePerLifetimeScope();
             builder.RegisterType<MarkedForDeletionJob>().InstancePerLifetimeScope();

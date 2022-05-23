@@ -340,5 +340,39 @@ namespace Omnikeeper.Model
             var ret = (long?)await command.ExecuteScalarAsync();
             return ret!.Value;
         }
+        public async Task<IReadOnlyList<Changeset>> GetChangesetsAfter(Guid afterChangesetID, string[] layerIDs, IModelContext trans)
+        {
+            var query = @"SELECT distinct c.id, c.user_id, c.layer_id, c.origin_type, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
+                LEFT JOIN ""user"" u ON c.user_id = u.id
+                WHERE c.timestamp > (SELECT i.timestamp FROM changeset i WHERE i.id = @changeset_id LIMIT 1)
+                AND c.layer_id = ANY(@layer_ids)
+                ORDER BY c.timestamp DESC NULLS LAST";
+            using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
+            command.Parameters.AddWithValue("changeset_id", afterChangesetID);
+            command.Parameters.AddWithValue("layer_ids", layerIDs);
+            command.Prepare();
+            using var dr = await command.ExecuteReaderAsync();
+
+            var ret = new List<Changeset>();
+            while (await dr.ReadAsync())
+            {
+                var id = dr.GetGuid(0);
+                var userID = dr.GetInt64(1);
+                var layerID = dr.GetString(2);
+                var dataOriginType = dr.GetFieldValue<DataOriginType>(3);
+                var origin = new DataOriginV1(dataOriginType);
+                var timestamp = dr.GetTimeStamp(4).ToDateTime();
+                var username = dr.GetString(5);
+                var displayName = dr.GetString(6);
+                var userUUID = dr.GetGuid(7);
+                var userType = dr.GetFieldValue<UserType>(8);
+                var userTimestamp = dr.GetTimeStamp(9).ToDateTime();
+
+                var user = new UserInDatabase(userID, userUUID, username, displayName, userType, userTimestamp);
+                var c = new Changeset(id, user, layerID, origin, timestamp);
+                ret.Add(c);
+            }
+            return ret;
+        }
     }
 }

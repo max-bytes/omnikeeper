@@ -113,13 +113,12 @@ namespace Omnikeeper.Runners
         private readonly ILogger<CLBSingleJob> genericLogger;
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly CLBLastRunCache clbLastRunCache;
+        private readonly CLBProcessedChangesetsCache clbProcessedChangesetsCache;
         private readonly ILoggerFactory loggerFactory;
-        private readonly ILatestLayerChangeModel latestLayerChangeModel;
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
 
         public CLBSingleJob(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, ILifetimeScope lifetimeScope, IChangesetModel changesetModel, ILogger<CLBSingleJob> genericLogger,
-            ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, CLBLastRunCache clbLastRunCache, ILoggerFactory loggerFactory, ILatestLayerChangeModel latestLayerChangeModel)
+            ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, ILoggerFactory loggerFactory, CLBProcessedChangesetsCache clbProcessedChangesetsCache)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.lifetimeScope = lifetimeScope;
@@ -127,9 +126,8 @@ namespace Omnikeeper.Runners
             this.genericLogger = genericLogger;
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
             this.modelContextBuilder = modelContextBuilder;
-            this.clbLastRunCache = clbLastRunCache;
             this.loggerFactory = loggerFactory;
-            this.latestLayerChangeModel = latestLayerChangeModel;
+            this.clbProcessedChangesetsCache = clbProcessedChangesetsCache;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -173,35 +171,41 @@ namespace Omnikeeper.Runners
             }
 
             var transI = modelContextBuilder.BuildImmediate();
-            DateTimeOffset? lastRun = await clbLastRunCache.TryGetValue(clConfig_ID, layerID, transI);
+            var processedChangesets = await clbProcessedChangesetsCache.TryGetValue(clConfig_ID, layerID, transI);
             transI.Dispose();
 
-            if (lastRun != null)
+            var unprocessedChangesets = new Dictionary<string, IReadOnlyList<Changeset>?>(); // null value means all changesets
+            var latestSeenChangesets = new Dictionary<string, Guid>();
+            if (processedChangesets != null)
             {
                 var dependentLayerIDs = clb.GetDependentLayerIDs(clBrainConfig, clLogger);
                 if (dependentLayerIDs != null)
                 {
                     using var trans = modelContextBuilder.BuildImmediate();
-                    var allUnchanged = true;
                     foreach (var dependentLayerID in dependentLayerIDs)
                     {
-                        var latestChangeInLayer = await latestLayerChangeModel.GetLatestChangeInLayer(dependentLayerID, trans);
-                        if (latestChangeInLayer == null)
+                        if (processedChangesets.TryGetValue(dependentLayerID, out var lastProcessedChangesetID))
                         {
-                            allUnchanged = false;
-                            break;
-                        }
-                        if (latestChangeInLayer > lastRun)
+                            var up = await changesetModel.GetChangesetsAfter(lastProcessedChangesetID, new string[] { dependentLayerID }, trans);
+                            var latestID = up.FirstOrDefault()?.ID ?? lastProcessedChangesetID;
+                            unprocessedChangesets.Add(dependentLayerID, up);
+                            latestSeenChangesets.Add(dependentLayerID, latestID);
+                        } else
                         {
-                            allUnchanged = false;
-                            break;
+                            unprocessedChangesets.Add(dependentLayerID, null);
+                            var latest = await changesetModel.GetLatestChangesetForLayer(dependentLayerID, trans); // TODO: fetch with time threshold to not introduce race condition
+                            if (latest != null)
+                                latestSeenChangesets.Add(dependentLayerID, latest.ID);
                         }
                     }
-                    if (allUnchanged)
-                    {
-                        clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID}");
-                        return; // <- all dependent layer have not changed since last run, we can skip
-                    }
+                }
+            }
+            if (!unprocessedChangesets.IsEmpty())
+            {
+                if (unprocessedChangesets.All(kv => kv.Value != null && kv.Value.IsEmpty()))
+                {
+                    clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID}");
+                    return; // <- all dependent layer have not changed since last run, we can skip
                 }
             }
 
@@ -232,8 +236,7 @@ namespace Omnikeeper.Runners
                     clLogger.LogInformation($"Running CLB {clb.Name} on layer {layerID}");
                     var stopWatch = new Stopwatch();
                     stopWatch.Start();
-                    var layer = Layer.Build(layerID); // HACK, TODO: either pass layer-ID or layer-data, not Layer object
-                    var successful = await clb.Run(layer, clBrainConfig, changesetProxy, modelContextBuilder, clLogger);
+                    var successful = await clb.Run(layerID, unprocessedChangesets, clBrainConfig, changesetProxy, modelContextBuilder, clLogger);
                     stopWatch.Stop();
                     TimeSpan ts = stopWatch.Elapsed;
                     string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
@@ -242,7 +245,7 @@ namespace Omnikeeper.Runners
                     if (successful)
                     {
                         using var transI2 = modelContextBuilder.BuildImmediate();
-                        await clbLastRunCache.UpdateCache(clConfig_ID, layerID, changesetProxy.TimeThreshold.Time, transI2);
+                        await clbProcessedChangesetsCache.UpdateCache(clConfig_ID, layerID, latestSeenChangesets, transI2);
                     }
                 }
                 finally

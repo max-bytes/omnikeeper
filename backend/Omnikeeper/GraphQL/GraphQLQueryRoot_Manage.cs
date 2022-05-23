@@ -77,7 +77,7 @@ namespace Omnikeeper.GraphQL
                         numActiveRelations,
                         numRelationChangesHistory,
                         numLayerChangesetsHistory,
-                        latestChange);
+                        latestChange?.Timestamp);
                 });
 
             FieldAsync<ListGraphType<OIAContextType>>("manage_oiacontexts",

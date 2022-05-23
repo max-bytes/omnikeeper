@@ -55,5 +55,6 @@ namespace Omnikeeper.Base.Model
         Task<int> DeleteEmptyChangesets(IModelContext trans);
         Task<long> GetNumberOfChangesets(IModelContext trans);
         Task<long> GetNumberOfChangesets(string layerID, IModelContext trans);
+        Task<IReadOnlyList<Changeset>> GetChangesetsAfter(Guid afterChangesetID, string[] layerIDs, IModelContext trans);
     }
 }

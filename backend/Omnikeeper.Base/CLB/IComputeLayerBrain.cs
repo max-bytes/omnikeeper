@@ -12,7 +12,7 @@ namespace Omnikeeper.Base.CLB
     {
         string Name { get; }
 
-        Task<bool> Run(Layer targetLayer, JsonDocument config, IChangesetProxy changesetProxy, IModelContextBuilder modelContextBuilder, ILogger logger);
+        Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, JsonDocument config, IChangesetProxy changesetProxy, IModelContextBuilder modelContextBuilder, ILogger logger);
 
         ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger);
     }

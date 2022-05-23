@@ -1,7 +1,7 @@
-﻿using Omnikeeper.Base.Inbound;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
-using System;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model
@@ -17,7 +17,7 @@ namespace Omnikeeper.Model
             this.changesetModel = changesetModel;
         }
 
-        public async Task<DateTimeOffset?> GetLatestChangeInLayer(string layerID, IModelContext trans)
+        public async Task<Changeset?> GetLatestChangeInLayer(string layerID, IModelContext trans)
         {
             // check if this layer is an OIA layer, then we can't know the latest change
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
@@ -29,7 +29,7 @@ namespace Omnikeeper.Model
                 var latestChangeset = await changesetModel.GetLatestChangesetForLayer(layerID, trans);
                 if (latestChangeset == null)
                     return null;
-                return latestChangeset.Timestamp;
+                return latestChangeset;
             }
         }
     }
