@@ -27,10 +27,7 @@ namespace Tests.Integration.Model
                         new TraitAttribute("external_id_manager_runner_interval", CIAttributeTemplate.BuildFromParams("base_config.external_id_manager_runner_interval", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                         new TraitAttribute("archive_old_data_runner_interval", CIAttributeTemplate.BuildFromParams("base_config.archive_old_data_runner_interval", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                     },
-                    new List<TraitAttribute>()
-                    {
-                        new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-                    }
+                    new List<TraitAttribute>() {}
                 )
             );
         }
