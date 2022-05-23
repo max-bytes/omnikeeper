@@ -61,6 +61,8 @@ namespace Omnikeeper.Model
         {
             if (layerSet.IsEmpty && trait is not TraitEmpty)
                 return ImmutableDictionary<Guid, EffectiveTrait>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
+            if (cis.IsEmpty())
+                return ImmutableDictionary<Guid, EffectiveTrait>.Empty;
 
             var ret = new Dictionary<Guid, EffectiveTrait>(cis.Count());
             switch (trait)
