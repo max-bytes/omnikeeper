@@ -46,6 +46,7 @@ namespace Omnikeeper.Base.Model
         Task<Changeset> CreateChangeset(long userID, string layerID, DataOriginV1 dataOrigin, IModelContext trans, DateTimeOffset? timestamp = null);
         Task<Changeset?> GetChangeset(Guid id, IModelContext trans);
         Task<IReadOnlyList<Changeset>> GetChangesets(ISet<Guid> ids, IModelContext trans);
+        Task<IReadOnlySet<Guid>> GetCIIDsAffectedByChangeset(Guid changesetID, IModelContext trans);
         Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null);
         Task<Changeset?> GetLatestChangesetForLayer(string layerID, IModelContext trans);
 

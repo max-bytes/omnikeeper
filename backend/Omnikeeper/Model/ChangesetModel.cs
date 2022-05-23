@@ -99,6 +99,28 @@ namespace Omnikeeper.Model
             return ret;
         }
 
+        public async Task<IReadOnlySet<Guid>> GetCIIDsAffectedByChangeset(Guid changesetID, IModelContext trans)
+        {
+            var query = @"SELECT DISTINCT inn.ci_id FROM (
+                SELECT a.ci_id as ci_id FROM attribute a WHERE a.changeset_id = @changeset_id
+                UNION
+                SELECT r.from_ci_id as ci_id FROM relation r WHERE r.changeset_id = @changeset_id
+                UNION
+                SELECT r.to_ci_id as ci_id FROM relation r WHERE r.changeset_id = @changeset_id
+            ) inn";
+            using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
+            command.Parameters.AddWithValue("changeset_id", changesetID);
+            command.Prepare();
+            using var dr = await command.ExecuteReaderAsync();
+
+            var ret = new HashSet<Guid>();
+            while (await dr.ReadAsync())
+            {
+                ret.Add(dr.GetGuid(0));
+            }
+            return ret;
+        }
+
         // returns all changesets in the time range
         // sorted by timestamp
         public async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null)
