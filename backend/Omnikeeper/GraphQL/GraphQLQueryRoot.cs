@@ -43,7 +43,6 @@ namespace Omnikeeper.GraphQL
         private readonly CLConfigV1Model clConfigModel;
         private readonly RecursiveTraitModel recursiveDataTraitModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
-        private readonly ILatestLayerChangeModel latestLayerChangeModel;
         private readonly IBaseAttributeModel baseAttributeModel;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
@@ -54,7 +53,7 @@ namespace Omnikeeper.GraphQL
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GeneratorV1Model generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, ODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel, CLConfigV1Model clConfigModel,
             RecursiveTraitModel recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
-            IEnumerable<IPluginRegistration> plugins, ILatestLayerChangeModel latestLayerChangeModel, IBaseAttributeModel baseAttributeModel,
+            IEnumerable<IPluginRegistration> plugins, IBaseAttributeModel baseAttributeModel,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, IDataLoaderService dataLoaderService)
         {
             this.ciidModel = ciidModel;
@@ -76,7 +75,6 @@ namespace Omnikeeper.GraphQL
             this.clConfigModel = clConfigModel;
             this.recursiveDataTraitModel = recursiveDataTraitModel;
             this.managementAuthorizationService = managementAuthorizationService;
-            this.latestLayerChangeModel = latestLayerChangeModel;
             this.baseAttributeModel = baseAttributeModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;

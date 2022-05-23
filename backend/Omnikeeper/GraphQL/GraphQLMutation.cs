@@ -38,7 +38,7 @@ namespace Omnikeeper.GraphQL
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
-        private readonly CLBLastRunCache clbLastRunCache;
+        private readonly CLBProcessedChangesetsCache clbProcessedChangesetsCache;
         private readonly IScheduler localScheduler;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
@@ -48,7 +48,7 @@ namespace Omnikeeper.GraphQL
             RecursiveTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
             IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
-            IEnumerable<IPluginRegistration> plugins, IIndex<string, IScheduler> schedulers, CLBLastRunCache clbLastRunCache,
+            IEnumerable<IPluginRegistration> plugins, IIndex<string, IScheduler> schedulers, CLBProcessedChangesetsCache clbProcessedChangesetsCache,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, ILayerDataModel layerDataModel)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
@@ -207,7 +207,7 @@ namespace Omnikeeper.GraphQL
             this.metaConfigurationModel = metaConfigurationModel;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
-            this.clbLastRunCache = clbLastRunCache;
+            this.clbProcessedChangesetsCache = clbProcessedChangesetsCache;
             this.localScheduler = schedulers["localScheduler"];
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.layerDataModel = layerDataModel;

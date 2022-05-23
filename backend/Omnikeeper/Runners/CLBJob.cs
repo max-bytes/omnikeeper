@@ -170,6 +170,9 @@ namespace Omnikeeper.Runners
                 return;
             }
 
+            // NOTE: to avoid race conditions, we use a single timeThreshold and base everything off of this
+            var timeThreshold = TimeThreshold.BuildLatest();
+
             var transI = modelContextBuilder.BuildImmediate();
             var processedChangesets = await clbProcessedChangesetsCache.TryGetValue(clConfig_ID, layerID, transI);
             transI.Dispose();
@@ -186,14 +189,14 @@ namespace Omnikeeper.Runners
                     {
                         if (processedChangesets.TryGetValue(dependentLayerID, out var lastProcessedChangesetID))
                         {
-                            var up = await changesetModel.GetChangesetsAfter(lastProcessedChangesetID, new string[] { dependentLayerID }, trans);
+                            var up = await changesetModel.GetChangesetsAfter(lastProcessedChangesetID, new string[] { dependentLayerID }, trans, timeThreshold);
                             var latestID = up.FirstOrDefault()?.ID ?? lastProcessedChangesetID;
                             unprocessedChangesets.Add(dependentLayerID, up);
                             latestSeenChangesets.Add(dependentLayerID, latestID);
                         } else
                         {
                             unprocessedChangesets.Add(dependentLayerID, null);
-                            var latest = await changesetModel.GetLatestChangesetForLayer(dependentLayerID, trans); // TODO: fetch with time threshold to not introduce race condition
+                            var latest = await changesetModel.GetLatestChangesetForLayer(dependentLayerID, trans, timeThreshold);
                             if (latest != null)
                                 latestSeenChangesets.Add(dependentLayerID, latest.ID);
                         }
@@ -226,12 +229,7 @@ namespace Omnikeeper.Runners
                     var user = await currentUserService.GetCurrentUser(transUpsertUser);
                     transUpsertUser.Commit();
 
-                    // TODO: do we not introduce a race-condition here? We use the changeset's proxies time to set our lastRunCache entry
-                    // is there a way for a dependent layer to get updated with a timestamp that's BEFORE the timestamp set by lastRunCache?
-                    // in that case, the CLB would miss the updated data and not run again
-                    // TODO: possible solution: get timestamp of latest change in any of the dependent layers before running clb (=at the moment of decision whether to run CLB)
-                    // store in cache under the name "consideredLayerDataUpUntil", use this for comparison (in addition or instead?)
-                    var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+                    var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
                     clLogger.LogInformation($"Running CLB {clb.Name} on layer {layerID}");
                     var stopWatch = new Stopwatch();

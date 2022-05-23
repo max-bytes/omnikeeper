@@ -230,15 +230,16 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<Changeset?> GetLatestChangesetForLayer(string layerID, IModelContext trans)
+        public async Task<Changeset?> GetLatestChangesetForLayer(string layerID, IModelContext trans, TimeThreshold timeThreshold)
         {
             using var command = new NpgsqlCommand(@"SELECT c.id, c.timestamp, c.user_id, c.origin_type, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c
                 LEFT JOIN ""user"" u ON c.user_id = u.id
-                WHERE c.layer_id = @layer_id
+                WHERE c.layer_id = @layer_id AND c.timestamp <= @threshold
                 ORDER BY c.timestamp DESC
                 LIMIT 1", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("layer_id", layerID);
+            command.Parameters.AddWithValue("threshold", timeThreshold.Time);
             command.Prepare();
             using var dr = await command.ExecuteReaderAsync();
 
@@ -340,16 +341,17 @@ namespace Omnikeeper.Model
             var ret = (long?)await command.ExecuteScalarAsync();
             return ret!.Value;
         }
-        public async Task<IReadOnlyList<Changeset>> GetChangesetsAfter(Guid afterChangesetID, string[] layerIDs, IModelContext trans)
+        public async Task<IReadOnlyList<Changeset>> GetChangesetsAfter(Guid afterChangesetID, string[] layerIDs, IModelContext trans, TimeThreshold timeThreshold)
         {
             var query = @"SELECT distinct c.id, c.user_id, c.layer_id, c.origin_type, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 LEFT JOIN ""user"" u ON c.user_id = u.id
-                WHERE c.timestamp > (SELECT i.timestamp FROM changeset i WHERE i.id = @changeset_id LIMIT 1)
+                WHERE c.timestamp > (SELECT i.timestamp FROM changeset i WHERE i.id = @changeset_id LIMIT 1) AND c.timestamp <= @threshold
                 AND c.layer_id = ANY(@layer_ids)
                 ORDER BY c.timestamp DESC NULLS LAST";
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("changeset_id", afterChangesetID);
             command.Parameters.AddWithValue("layer_ids", layerIDs);
+            command.Parameters.AddWithValue("threshold", timeThreshold.Time);
             command.Prepare();
             using var dr = await command.ExecuteReaderAsync();
 

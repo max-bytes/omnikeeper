@@ -216,7 +216,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<GridViewContextModel>().SingleInstance();
             builder.RegisterType<InnerLayerDataModel>().SingleInstance();
             builder.RegisterType<ODataAPIContextModel>().SingleInstance();
-            builder.RegisterType<LatestLayerChangeModel>().As<ILatestLayerChangeModel>().SingleInstance();
             builder.RegisterType<UsageStatsModel>().As<IUsageStatsModel>().SingleInstance();
 
             // these aren't real models, but we keep them here because they are closely related to models
@@ -363,7 +362,6 @@ namespace Omnikeeper.Startup
             // jobs
             builder.RegisterType<CLBJob>().InstancePerLifetimeScope();
             builder.RegisterType<CLBSingleJob>().InstancePerLifetimeScope();
-            builder.RegisterType<CLBLastRunCache>().SingleInstance();
             builder.RegisterType<CLBProcessedChangesetsCache>().SingleInstance();
             builder.RegisterType<ArchiveOldDataJob>().InstancePerLifetimeScope();
             builder.RegisterType<ExternalIDManagerJob>().InstancePerLifetimeScope();

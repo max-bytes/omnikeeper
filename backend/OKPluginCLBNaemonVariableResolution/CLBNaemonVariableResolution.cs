@@ -72,7 +72,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
             var stage = Stage.DEV; // TODO: make configurable
 
-            var timeThreshold = TimeThreshold.BuildLatest();
+            var timeThreshold = changesetProxy.TimeThreshold;
 
             var cmdbInputLayerset = await layerModel.BuildLayerSet(cfg.CMDBInputLayerSet.ToArray(), trans);
             var monmanV1InputLayerset = await layerModel.BuildLayerSet(cfg.MonmanV1InputLayerSet.ToArray(), trans);
