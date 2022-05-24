@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -19,7 +20,7 @@ namespace Omnikeeper.Startup
     public class QuartzJobStarter : BackgroundService, IHostedService
     {
         public IServiceScopeFactory _serviceScopeFactory;
-
+        private readonly IConfiguration configuration;
         private static readonly JobKey JKCLB = new JobKey("CLB", "omnikeeper");
         private static readonly JobKey JKMarkedForDeletion = new JobKey("MarkedForDeletion", "omnikeeper");
         private static readonly JobKey JKExternalIDManager = new JobKey("ExternalIDManager", "omnikeeper");
@@ -28,9 +29,10 @@ namespace Omnikeeper.Startup
         public static readonly JobKey JKGraphQLSchemaReloader = new JobKey("GraphQLSchemaReloader", "omnikeeper");
         public static readonly JobKey JKEdmModelReloader = new JobKey("EdmModelReloader", "omnikeeper");
 
-        public QuartzJobStarter(IServiceScopeFactory serviceScopeFactory)
+        public QuartzJobStarter(IServiceScopeFactory serviceScopeFactory, IConfiguration configuration)
         {
             _serviceScopeFactory = serviceScopeFactory;
+            this.configuration = configuration;
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -56,11 +58,12 @@ namespace Omnikeeper.Startup
                 bool deleteOnly = false; // TODO: only set to true for debugging purposes
 
                 // schedule internal recurring jobs
-                await ScheduleJob<CLBJob>(distributedScheduler, JKCLB, config.CLBRunnerInterval, logger, deleteOnly);
                 await ScheduleJob<MarkedForDeletionJob>(distributedScheduler, JKMarkedForDeletion, config.MarkedForDeletionRunnerInterval, logger, deleteOnly);
                 await ScheduleJob<ExternalIDManagerJob>(distributedScheduler, JKExternalIDManager, config.ExternalIDManagerRunnerInterval, logger, deleteOnly);
                 await ScheduleJob<ArchiveOldDataJob>(distributedScheduler, JKArchiveOldData, config.ArchiveOldDataRunnerInterval, logger, deleteOnly);
-                
+
+                if (configuration.GetValue("RunComputeLayers", false))
+                    await ScheduleJob<CLBJob>(localScheduler, JKCLB, config.CLBRunnerInterval, logger, deleteOnly);
                 await ScheduleJob<UsageDataWriterJob>(localScheduler, JKUsageDataWriter, "0 * * * * ?", logger, deleteOnly);
                 await ScheduleJob<GraphQLSchemaReloaderJob>(localScheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly);
                 await ScheduleJob<EdmModelReloaderJob>(localScheduler, JKEdmModelReloader, "0 * * * * ?", logger, deleteOnly);
