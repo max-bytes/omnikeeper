@@ -369,6 +369,9 @@ namespace Omnikeeper.Startup
             builder.RegisterType<UsageDataWriterJob>().InstancePerLifetimeScope();
             builder.RegisterType<GraphQLSchemaReloaderJob>().InstancePerLifetimeScope();
             builder.RegisterType<EdmModelReloaderJob>().InstancePerLifetimeScope();
+
+            // TODO: remove
+            builder.RegisterType<ReactiveTestCLB>().As<IComputeLayerBrain>().SingleInstance();
         }
     }
 }
