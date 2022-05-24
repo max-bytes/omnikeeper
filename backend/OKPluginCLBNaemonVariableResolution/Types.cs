@@ -3,8 +3,8 @@
 namespace OKPluginCLBNaemonVariableResolution
 {
 
-    [TraitEntity("monman_v2.varres.naemon_v1_variable", TraitOriginType.Plugin)]
-    public class NaemonV1Variable : TraitEntity
+    [TraitEntity("monman_v2.varres.naemon_variable_v1", TraitOriginType.Plugin)]
+    public class NaemonVariableV1 : TraitEntity
     {
         [TraitAttribute("id", "naemon_variable.id")]
         [TraitEntityID]
@@ -29,7 +29,7 @@ namespace OKPluginCLBNaemonVariableResolution
         public long isSecretLong;
         public bool isSecret => isSecretLong != 0L;
 
-        public NaemonV1Variable()
+        public NaemonVariableV1()
         {
             ID = 0L;
             refType = "";
@@ -65,6 +65,39 @@ namespace OKPluginCLBNaemonVariableResolution
             refID = "";
             name = "";
             value = "";
+        }
+    }
+
+    [TraitEntity("monman_v2.varres.naemon_instance_v1", TraitOriginType.Plugin)]
+    public class NaemonInstanceV1 : TraitEntity
+    {
+        [TraitAttribute("id", "naemon_instance.id")]
+        [TraitEntityID]
+        public string ID;
+
+        [TraitAttribute("name", "naemon_instance.name")]
+        public string Name;
+
+        [TraitRelation("tags", "has_tag", true)]
+        public Guid[] Tags;
+
+        public NaemonInstanceV1()
+        {
+            ID = "";
+            Name = "";
+            Tags = Array.Empty<Guid>();
+        }
+    }
+
+    [TraitEntity("monman_v2.varres.tag_v1", TraitOriginType.Plugin)]
+    public class TagV1 : TraitEntity
+    {
+        [TraitAttribute("name", "naemon_instance_tag.tag")]
+        public string Name;
+
+        public TagV1()
+        {
+            Name = "";
         }
     }
 

@@ -11,10 +11,12 @@ namespace OKPluginCLBNaemonVariableResolution
         private readonly TargetHost? host;
         private readonly TargetService? service;
 
-        public HostOrService(TargetHost? host, TargetService? service)
+        public HostOrService(TargetHost? host, TargetService? service, List<string> profiles, Customer customer)
         {
             this.host = host;
             this.service = service;
+            Customer = customer;
+            Profiles = profiles;
         }
 
         private R Get<R>(Func<TargetHost, R> hostF, Func<TargetService, R> serviceF)
@@ -27,7 +29,7 @@ namespace OKPluginCLBNaemonVariableResolution
         public Guid[] MemberOfCategories => Get(h => h.MemberOfCategories, s => s.MemberOfCategories);
         public string ID => Get(h => h.ID, s => s.ID);
         public string? Name => Get(h => h.Hostname, s => s.Name);
-        public Guid? Customer => Get(h => h.Customer, s => s.Customer);
+        public Guid? CustomerCIID => Get(h => h.Customer, s => s.Customer);
         public Guid? OSSupportGroup => Get(h => h.OSSupportGroup, s => s.SupportGroup); // TODO: is this correct for services?
         public Guid? AppSupportGroup => Get(h => h.AppSupportGroup, s => null); // TODO: is this correct for services?
         public string? Environment => Get(h => h.Environment, s => s.Environment);
@@ -43,5 +45,9 @@ namespace OKPluginCLBNaemonVariableResolution
 
         public TargetHost? Host => host;
         public TargetService? Service => service;
+
+        // additional data
+        public List<string> Profiles { get; set; }
+        public Customer Customer { get; }
     }
 }

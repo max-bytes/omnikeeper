@@ -14,7 +14,9 @@ namespace OKPluginCLBNaemonVariableResolution
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => new List<RecursiveTrait>() {
-            GenericTraitEntityHelper.Class2RecursiveTrait<NaemonV1Variable>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<NaemonVariableV1>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<NaemonInstanceV1>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<TagV1>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<TargetHost>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<TargetService>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<Profile>(),

@@ -35,19 +35,27 @@ namespace OKPluginCLBNaemonVariableResolution
             DEV, PROD
         }
 
+        private Configuration ParseConfig(JsonDocument configJson)
+        {
+            var tmpCfg = JsonSerializer.Deserialize<Configuration>(configJson);
+            if (tmpCfg == null)
+                throw new Exception("Could not parse configuration");
+            return tmpCfg;
+        }
+
         public override ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger)
         {
             try
             {
-                var cfg = JsonSerializer.Deserialize<Configuration>(config);
-                return cfg?.CMDBInputLayerSet
-                    .Union(cfg?.MonmanV1InputLayerSet ?? new List<string>())
-                    .Union(cfg?.SelfserviceVariablesInputLayerSet ?? new List<string>())
+                var cfg = ParseConfig(config);
+                return cfg.CMDBInputLayerSet
+                    .Union(cfg.MonmanV1InputLayerSet)
+                    .Union(cfg.SelfserviceVariablesInputLayerSet)
                     .ToHashSet();
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Cannot parse CLB config");
+                logger.LogError(e, "Cannot get dependent layers");
                 return null;
             }
         }
@@ -58,10 +66,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
             try
             {
-                var tmpCfg = JsonSerializer.Deserialize<Configuration>(config);
-                if (tmpCfg == null)
-                    throw new Exception("Could not parse configuration");
-                cfg = tmpCfg;
+                cfg = ParseConfig(config);
                 logger.LogDebug("Parsed configuration for VariableRendering.");
             }
             catch (Exception ex)
@@ -80,7 +85,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
             var targetHostModel = new GenericTraitEntityModel<TargetHost, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var targetServiceModel = new GenericTraitEntityModel<TargetService, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var naemonV1VariableModel = new GenericTraitEntityModel<NaemonV1Variable, long>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var naemonV1VariableModel = new GenericTraitEntityModel<NaemonVariableV1, long>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var selfServiceVariableModel = new GenericTraitEntityModel<SelfServiceVariable, (string refType, string refID, string name)>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var customerModel = new GenericTraitEntityModel<Customer, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var profileModel = new GenericTraitEntityModel<Profile, long>(effectiveTraitModel, ciModel, attributeModel, relationModel);
@@ -88,6 +93,8 @@ namespace OKPluginCLBNaemonVariableResolution
             var serviceActionModel = new GenericTraitEntityModel<ServiceAction, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var interfaceModel = new GenericTraitEntityModel<Interface, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var groupModel = new GenericTraitEntityModel<Group, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var naemonInstanceModel = new GenericTraitEntityModel<NaemonInstanceV1, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var tagModel = new GenericTraitEntityModel<TagV1>(effectiveTraitModel, ciModel, attributeModel, relationModel);
 
             var categories = await categoryModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
 
@@ -108,6 +115,9 @@ namespace OKPluginCLBNaemonVariableResolution
             var hosts = await targetHostModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var services = await targetServiceModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
 
+            var customers = await customerModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+            var customerNicknameLookup = customers.ToDictionary(c => c.Value.Nickname, c => c.Value);
+
             var relevantStatuus = new HashSet<string>()
             {
                 "ACTIVE",
@@ -119,33 +129,50 @@ namespace OKPluginCLBNaemonVariableResolution
             };
 
             // construct an intermediate data structure holding hosts and services together
+            List<string> CalculateCIProfiles(Guid[] memberOfCategories) => memberOfCategories
+                .Where(categoryCIID => cmdbProfiles.ContainsKey(categoryCIID))
+                .Select(p => cmdbProfiles[p].Name)
+                .ToList();
+            Customer? CalculateCustomer(Guid? customerCIID)
+            {
+                if (customerCIID.HasValue && customers.TryGetValue(customerCIID.Value, out var customer))
+                    return customer;
+                return null;
+            }
             var hos = new Dictionary<Guid, HostOrService>(hosts.Count + services.Count);
             foreach (var kv in hosts)
-                hos.Add(kv.Key, new HostOrService(kv.Value, null));
+            {
+                var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
+                var customer = CalculateCustomer(kv.Value.Customer);
+                if (customer == null)
+                {
+                    logger.LogWarning($"Could not lookup customer of host with CI-ID \"{kv.Key}\"... skipping");
+                    continue;
+                }
+                hos.Add(kv.Key, new HostOrService(kv.Value, null, profilesOfCI, customer));
+            }
             foreach (var kv in services)
-                hos.Add(kv.Key, new HostOrService(null, kv.Value));
+            {
+                var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
+                var customer = CalculateCustomer(kv.Value.Customer);
+                if (customer == null)
+                {
+                    logger.LogWarning($"Could not lookup customer of service with CI-ID \"{kv.Key}\"... skipping");
+                    continue;
+                }
+                hos.Add(kv.Key, new HostOrService(null, kv.Value, profilesOfCI, customer));
+            }
 
             // filter hosts and service
             var filteredHOS = hos
-                .Where(hs => relevantStatuus.Contains(hs.Value.Status ?? ""))
-                .Select(hs =>
-                {
-                    var profiles = hs.Value.MemberOfCategories
-                        .Where(categoryCIID => cmdbProfiles.ContainsKey(categoryCIID))
-                        .Select(p => cmdbProfiles[p].Name)
-                        .ToList();
-
-                    return (ciid: hs.Key, hs: hs.Value, profiles);
-                })
+                .Where(kv => relevantStatuus.Contains(kv.Value.Status ?? ""))
+                .Select(kv => (ciid: kv.Key, hs: kv.Value))
                 .ToList();
             var hosWithCategoryProfiles2CIIDLookup = filteredHOS.ToDictionary(h => h.hs.ID, h => h.ciid);
 
             var naemonV1Variables = await naemonV1VariableModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
 
             var selfServiceVariables = await selfServiceVariableModel.GetAllByCIID(selfserviceVariablesInputLayerset, trans, timeThreshold);
-
-            var customers = await customerModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-            var customerNicknameLookup = customers.ToDictionary(c => c.Value.Nickname, c => c.Value);
 
             var profiles = await profileModel.GetAllByDataID(monmanV1InputLayerset, trans, timeThreshold);
 
@@ -164,12 +191,126 @@ namespace OKPluginCLBNaemonVariableResolution
             var groups = await groupModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var argusGroupCIID = groups.FirstOrDefault(kv => kv.Value.Name == "GDE.PEA.AT.ALL.ARGUS").Key;
 
+            // naemon instances + their tags
+            var naemonInstances = await naemonInstanceModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
+            var tags = await tagModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
+
+            // build capability map 
+            // reference: getCapabilityMap()
+            var capMap = new Dictionary<string, ISet<Guid>>(); // key: capability name, value: list of CIIDs of naemon instances
+            foreach(var kv in naemonInstances)
+            {
+                var naemonCIID = kv.Key;
+                var naemon = kv.Value;
+                foreach(var tagCIID in naemon.Tags)
+                {
+                    if (tags.TryGetValue(tagCIID, out var tag))
+                    {
+                        if (Regex.IsMatch(tag.Name, "^cap_"))
+                        {
+                            capMap.AddNaemon(tag.Name, naemonCIID);
+                        }
+                    }
+                    else
+                    {
+                        logger.LogWarning($"Could not find tag with CI-ID {tagCIID}");
+                    }
+                }
+            }
+
+            // extend capability map
+            // reference: enrichNormalizedCiData()
+            foreach(var profile in profiles.Values)
+            {
+                var cap = $"cap_lp_{profile.Name.ToLowerInvariant()}";
+
+                // TODO: restrict naemons to those in list(s), see "naemons-config-generateprofiles" in yml config files (per environment)
+                capMap.AddNaemons(cap, naemonInstances.Keys);
+            }
+
+            // calculate target host/service requirements/tags
+            // reference: naemon-vars-ci.php in various folders
+            var hsTags = new Dictionary<Guid, ISet<string>>(); // key: ciid of host/service, value: set of tags of this host/service
+            foreach(var (ciid, hs) in filteredHOS)
+            {
+                var capCust = $"cap_cust_{hs.Customer.Nickname.ToLowerInvariant()}";
+                hsTags.AddTag(ciid, capCust);
+
+                if (hs.Profiles.Contains("profiledev-default-app-naemon-eventgenerator"))
+                {
+                    hsTags.AddTag(ciid, "cap_eventgenerator");
+                }
+
+                // reference: updateNormalizedCiDataFieldProfile()
+                if (hs.Profiles.Count == 1 && Regex.IsMatch(hs.Profiles.First(), "^profile", RegexOptions.IgnoreCase))
+                {
+                    // add legacy profile capability
+                    hsTags.AddTag(ciid, $"cap_lp_{hs.Profiles.First().ToLowerInvariant()}");
+                }
+
+                // reference: updateNormalizedCiData_addGenericCmdbCapTags()
+
+                //if (array_key_exists('MONITORING_CAP', $ci['CATEGORIES']))
+                //{
+                //    foreach (sequentialOrAssocToSequential($ci['CATEGORIES']['MONITORING_CAP']) as $category) {
+                //        array_push($ciDataRef[$id]['TAGS'], strtolower('cap_'. $category['TREE']. '_'. $category['NAME']));
+                //    }
+                //}
+                //else
+                //{
+                //    array_push($ciDataRef[$id]['TAGS'], 'cap_default');
+                //}
+
+
+                // dynamic capability
+                if (stage == Stage.PROD)
+                {
+                    if (hs.Profiles.Any(p => Regex.IsMatch(p, "^profiletsc-.*")))
+                    {
+                        hsTags.AddTag(ciid, "cap_scope_tsc_yes");
+                    }
+                    else
+                    {
+                        hsTags.AddTag(ciid, "cap_scope_tsc_no");
+                    }
+                }
+
+
+                // TODO: environment-specific capabilities
+            }
+
+            // check requirements vs capabilities
+            // calculate which naemons monitor which hosts/services
+            // reference: enrichNormalizedCiData()
+            var allNaemonCIIDs = naemonInstances.Select(i => i.Key).ToHashSet();
+            var naemons2hos = new List<(Guid naemonCIID, Guid hosCIID)>();
+            foreach (var (ciid, hs) in filteredHOS)
+            {
+                var naemonsAvail = new HashSet<Guid>(allNaemonCIIDs);
+                foreach(var requirement in hsTags[ciid])
+                {
+                    if (Regex.IsMatch(requirement, "^cap_"))
+                    {
+                        if (capMap.TryGetValue(requirement, out var naemonsFulfillingRequirement))
+                        {
+                            naemonsAvail.IntersectWith(naemonsFulfillingRequirement);
+                        } else
+                        {
+                            naemonsAvail.Clear();
+                            break;
+                        }
+                    }
+                }
+                foreach (var naemonAvail in naemonsAvail)
+                    naemons2hos.Add((naemonAvail, ciid));
+            }
+
             // collect variables...
-            var resolvedVariables = new Dictionary<Guid, List<ResolvedVariable>>(hos.Count);
+            var resolvedVariables = new Dictionary<Guid, List<ResolvedVariable>>(filteredHOS.Count);
 
             // ...init
             // reference: updateNormalizedCiData_preProcessVars()
-            foreach (var (ciid, hs, profile) in filteredHOS)
+            foreach (var (ciid, hs) in filteredHOS)
             {
                 resolvedVariables.Add(ciid, new List<ResolvedVariable>()
                 {
@@ -306,7 +447,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
             // ...from cmdb hosts and services
             // reference: roughly updateNormalizedCiData_varsByExpression(), naemon-vars-ci.php
-            foreach (var (ciid, hs, _) in filteredHOS)
+            foreach (var (ciid, hs) in filteredHOS)
             {
                 var rv = resolvedVariables[ciid];
 
@@ -318,6 +459,14 @@ namespace OKPluginCLBNaemonVariableResolution
                     new ResolvedVariable("ADDRESS", "FIXED", hs.MonIPAddress ?? ""),
                     new ResolvedVariable("PORT", "FIXED", hs.MonIPPort ?? ""),
                 });
+
+                if (stage == Stage.PROD)
+                {
+                    if (hs.Profiles.Any(p => Regex.IsMatch(p, "^profiletsc-.*")))
+                    {
+                        resolvedVariables.Add(ciid, new List<ResolvedVariable>() { new ResolvedVariable("HASNRPE", "FIXED", "NO", 0) });
+                    }
+                }
 
                 // set alerting ID to foreign key for special instances
                 if (hs.Instance == "SERVER-CH")
@@ -377,10 +526,10 @@ namespace OKPluginCLBNaemonVariableResolution
                             if (foundServiceAction.Type.Equals("MONITORING", StringComparison.InvariantCultureIgnoreCase))
                             {
                                 rv.AddRange(new List<ResolvedVariable>()
-                            {
-                                new ResolvedVariable("ORACLECONNECT", "FIXED", (foundServiceAction.Command ?? "").Replace(" ", "")),
-                                new ResolvedVariable("ORACLEUSER", "FIXED", foundServiceAction.CommandUser ?? ""),
-                            });
+                                {
+                                    new ResolvedVariable("ORACLECONNECT", "FIXED", (foundServiceAction.Command ?? "").Replace(" ", "")),
+                                    new ResolvedVariable("ORACLEUSER", "FIXED", foundServiceAction.CommandUser ?? ""),
+                                });
                             }
                         }
                     }
@@ -394,10 +543,10 @@ namespace OKPluginCLBNaemonVariableResolution
                             if (foundServiceAction.Type.Equals("MONITORING", StringComparison.InvariantCultureIgnoreCase))
                             {
                                 rv.AddRange(new List<ResolvedVariable>()
-                            {
-                                new ResolvedVariable("SDWANCHECKCONFIG", "FIXED", foundServiceAction.Command ?? ""),
-                                new ResolvedVariable("SDWANORG", "FIXED", foundServiceAction.CommandUser ?? ""),
-                            });
+                                {
+                                    new ResolvedVariable("SDWANCHECKCONFIG", "FIXED", foundServiceAction.Command ?? ""),
+                                    new ResolvedVariable("SDWANORG", "FIXED", foundServiceAction.CommandUser ?? ""),
+                                });
                             }
                         }
                     }
@@ -405,13 +554,12 @@ namespace OKPluginCLBNaemonVariableResolution
             }
 
             // reference: updateNormalizedCiData_postProcessVars()
-            foreach (var (ciid, hs, profileNames) in filteredHOS)
+            foreach (var (ciid, hs) in filteredHOS)
             {
                 var rv = resolvedVariables[ciid];
 
                 // dynamically set profile under certain circumstances
-                // TODO: test
-                if (profileNames.Count != 1 && hs.Host != null)
+                if (hs.Profiles.Count != 1 && hs.Host != null)
                 {
                     var os = hs.Host.OS;
                     var osMatches = os != null && (
@@ -436,42 +584,12 @@ namespace OKPluginCLBNaemonVariableResolution
                         // TODO: this is not fully correct; we should instead check if the RESOLVED variable has DYNAMICADD=YES, not if there is ANY variable
                         if (rv.Any(v => v.Name == "DYNAMICADD" && v.Value == "YES"))
                         {
-                            profileNames.Clear();
-                            profileNames.Add("dynamic-nrpe");
+                            hs.Profiles = new List<string>() { "dynamic-nrpe" };
                         }
                     }
                 }
 
-            //    if (
-            //    (
-            //        $resultRef[$id]['PROFILE'] == 'NONE' ||
-            //        $resultRef[$id]['PROFILE'] == 'MULTIPLE'
-            //    ) && (
-            //        $resultRef[$id]['TYPE'] == 'HOST'
-            //    ) && (
-            //        preg_match('/^WIN/', $ci['CMDBDATA']['HOS']) ||
-            //        preg_match('/^LINUX/', $ci['CMDBDATA']['HOS']) ||
-            //        preg_match('/^XEN/', $ci['CMDBDATA']['HOS']) ||
-            //        preg_match('/^SUNOS/', $ci['CMDBDATA']['HOS'])
-            //    ) && (
-            //        preg_match('/^SRV_/', $ci['CMDBDATA']['HPLATFORM'])
-            //    ) && (
-            //        preg_match('/ACTIVE/', $ci['CMDBDATA']['HSTATUS']) ||
-            //        preg_match('/INFOALERTING/', $ci['CMDBDATA']['HSTATUS']) ||
-            //        preg_match('/BASE_INSTALLED/', $ci['CMDBDATA']['HSTATUS']) ||
-            //        preg_match('/READY_FOR_SERVICE/', $ci['CMDBDATA']['HSTATUS'])
-            //    ) && (
-            //        $resultRef[$id]['VARS']['DYNAMICADD'] == 'YES'
-            //    )
-            //) {
-            //    $resultRef[$id]['PROFILE'] = 'dynamic-nrpe';
-            //        }
-
-
-
-                var customerNickname = "UNKNOWN";
-                if (hs.Customer.HasValue && customers.TryGetValue(hs.Customer.Value, out var customer))
-                    customerNickname = customer.Nickname;
+                var customerNickname = hs.Customer.Nickname;
 
                 var osSupportGroupName = "UNKNOWN";
                 if (hs.OSSupportGroup.HasValue && groups.TryGetValue(hs.OSSupportGroup.Value, out var osSupportGroup))
@@ -481,17 +599,17 @@ namespace OKPluginCLBNaemonVariableResolution
                     appSupportGroupName = appSupportGroup.Name;
 
                 string monitoringProfile;
-                if (profileNames.Count == 1)
-                    monitoringProfile = profileNames[0];
-                else if (profileNames.Count > 1)
+                if (hs.Profiles.Count == 1)
+                    monitoringProfile = hs.Profiles[0];
+                else if (hs.Profiles.Count > 1)
                     monitoringProfile = "MULTIPLE";
                 else
                     monitoringProfile = "NONE";
                 string monitoringProfileOrig;
-                if (profileNames.Count == 1)
-                    monitoringProfileOrig = profileNames[0];
-                else if (profileNames.Count > 1)
-                    monitoringProfileOrig = string.Join(',', profileNames);
+                if (hs.Profiles.Count == 1)
+                    monitoringProfileOrig = hs.Profiles[0];
+                else if (hs.Profiles.Count > 1)
+                    monitoringProfileOrig = string.Join(',', hs.Profiles);
                 else
                     monitoringProfileOrig = "NONE";
 
@@ -529,7 +647,9 @@ namespace OKPluginCLBNaemonVariableResolution
 
             // write output
             var variableComparer = new ResolvedVariableComparer();
-            var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
+            var attributeFragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
+            var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
+            // variables
             foreach (var kv in filteredResolvedVariables)
             {
                 // merge process for variables
@@ -562,16 +682,35 @@ namespace OKPluginCLBNaemonVariableResolution
                     d.Add(variablesOfCI.Key, inner);
                 }
                 var value = AttributeScalarValueJSON.BuildFromString(d.ToJsonString(), false);
-                fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables", value, kv.Key));
+                attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables", value, kv.Key));
                 if (debugOutput)
                 {
                     var valueDebug = new AttributeScalarValueText(debugStr, true);
-                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables_debug", valueDebug, kv.Key));
+                    attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables_debug", valueDebug, kv.Key));
                 }
+            }
+            // naemons -> hosts/services
+            foreach(var (naemonCIID, hosCIID) in naemons2hos)
+            {
+                relationFragments.Add(new BulkRelationDataLayerScope.Fragment(naemonCIID, hosCIID, "monitors", false));
+            }
+            // host/service tags, for debugging purposes
+            foreach(var kv in hsTags)
+            {
+                var ciid = kv.Key;
+                var v = AttributeArrayValueText.BuildFromString(kv.Value);
+                attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_tags", v, ciid));
             }
 
             await attributeModel.BulkReplaceAttributes(
-                new BulkCIAttributeDataLayerScope(targetLayerID, fragments),
+                new BulkCIAttributeDataLayerScope(targetLayerID, attributeFragments),
+                changesetProxy,
+                new DataOriginV1(DataOriginType.ComputeLayer),
+                trans,
+                MaskHandlingForRemovalApplyNoMask.Instance,
+                OtherLayersValueHandlingForceWrite.Instance);
+            await relationModel.BulkReplaceRelations(
+                new BulkRelationDataLayerScope(targetLayerID, relationFragments),
                 changesetProxy,
                 new DataOriginV1(DataOriginType.ComputeLayer),
                 trans,
@@ -645,20 +784,11 @@ namespace OKPluginCLBNaemonVariableResolution
             Precedence = precedence;
             ExternalID = externalID;
         }
-
-        // internally, we use the "FIXED" refType, but for outputting, we replace it with "CI"
-        //public string OutputRefType {
-        //    get {
-        //        if (RefType == "FIXED")
-        //            return "CI";
-        //        return RefType;
-        //    }
-        //}
     }
 
     static class NaemonV1VariableExtensions
     {
-        public static ResolvedVariable ToResolvedVariable(this NaemonV1Variable input)
+        public static ResolvedVariable ToResolvedVariable(this NaemonVariableV1 input)
         {
             return new ResolvedVariable(input.name.ToUpperInvariant(), input.refType, input.value, input.precedence, input.ID);
         }
@@ -670,6 +800,31 @@ namespace OKPluginCLBNaemonVariableResolution
         {
             // NOTE: high precedence to make it override other variables by default
             return new ResolvedVariable(input.name.ToUpperInvariant(), input.refType, input.value, precedence: 200, externalID: 0L);
+        }
+    }
+
+    static class HSTagsExtensions
+    {
+        public static void AddTag(this Dictionary<Guid, ISet<string>> hsTags, Guid ciid, string tag)
+        {
+            hsTags.AddOrUpdate(ciid,
+                () => new HashSet<string>() { tag },
+                (cur) => { cur.Add(tag); return cur; });
+        }
+    }
+    static class CapMapExtensions
+    {
+        public static void AddNaemon(this Dictionary<string, ISet<Guid>> capMap, string cap, Guid naemonCIID)
+        {
+            capMap.AddOrUpdate(cap,
+                () => new HashSet<Guid>() { naemonCIID },
+                (cur) => { cur.Add(naemonCIID); return cur; });
+        }
+        public static void AddNaemons(this Dictionary<string, ISet<Guid>> capMap, string cap, IEnumerable<Guid> naemonCIIDs)
+        {
+            capMap.AddOrUpdate(cap,
+                () => new HashSet<Guid>(naemonCIIDs),
+                (cur) => { cur.UnionWith(naemonCIIDs); return cur; });
         }
     }
 }
