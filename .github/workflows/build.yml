@@ -123,10 +123,9 @@ jobs:
       - name: Build and publish
         run: |
           cd backend
-          # pushing seems to not work sometimes, see https://github.com/NuGet/Home/issues/8580#issuecomment-714501802
-          #dotnet nuget add source https://nuget.pkg.github.com/max-bytes/index.json --name "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
           function buildPublish () {
             dotnet pack $1/$1.csproj /p:Version=${{ env.VERSION }} -c Release
+            # pushing seems to not work sometimes, see https://github.com/NuGet/Home/issues/8580#issuecomment-714501802
             dotnet nuget push "$1/bin/Release/$1.${{ env.VERSION }}.nupkg" --source "https://nuget.pkg.github.com/max-bytes/index.json" -k "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
           }
           buildPublish OKPluginGenericJSONIngest
