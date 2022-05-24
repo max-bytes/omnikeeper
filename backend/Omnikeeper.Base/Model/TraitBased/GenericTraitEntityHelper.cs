@@ -134,7 +134,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     if (trFieldInfo.FieldInfo.FieldType.IsArray)
                         trFieldInfo.FieldInfo.SetValue(ret, otherCIIDs);
                     else
-                        trFieldInfo.FieldInfo.SetValue(ret, otherCIIDs.FirstOrDefault());
+                        trFieldInfo.FieldInfo.SetValue(ret, (otherCIIDs.Length == 0) ? null : otherCIIDs.First());
                 }
                 else
                 {

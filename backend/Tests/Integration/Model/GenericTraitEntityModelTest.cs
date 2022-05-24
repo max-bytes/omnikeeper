@@ -690,4 +690,55 @@ namespace Tests.Integration.Model
             await TestGenericModelOtherLayersValueHandling(() => new TestEntityForDouble(1L, 34.12), 1L);
         }
     }
+
+
+
+
+
+    [TraitEntity("test_entity7", TraitOriginType.Data)]
+    class TestEntityWithSingularTraitRelation : TraitEntity
+    {
+        [TraitAttribute("id", "id")]
+        [TraitEntityID]
+        public readonly string ID;
+
+        [TraitRelation("tr", "predicate_id", false)]
+        public readonly Guid? TestRelation;
+
+        public TestEntityWithSingularTraitRelation()
+        {
+            ID = "";
+            TestRelation = null;
+        }
+
+        public TestEntityWithSingularTraitRelation(string id, Guid? testRelation)
+        {
+            ID = id;
+            TestRelation = testRelation;
+        }
+    }
+
+    class GenericTraitEntityWithSingularTraitRelationTest : GenericTraitEntityModelTestBase<TestEntityWithSingularTraitRelation, string>
+    {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityWithSingularTraitRelation, string>>().WithParameter("jsonSerializer", null!);
+        }
+
+        [Test]
+        public async Task TestGenericOperations()
+        {
+            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
+            var otherCIID1 = await ciModel.CreateCI(modelContextBuilder.BuildImmediate());
+
+            await TestGenericModelOperations(
+                () => new TestEntityWithSingularTraitRelation("id1", otherCIID1),
+                () => new TestEntityWithSingularTraitRelation("id2", null),
+                "id1", "id2", "non_existant"
+                );
+        }
+    }
 }
