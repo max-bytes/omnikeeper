@@ -35,8 +35,8 @@ namespace Omnikeeper.Base.Utils
             var lifetimeScope = scopedLifetimeAccessor.GetLifetimeScope();
             if (lifetimeScope == null)
             {
-                logger.LogError("Cannot use per request cache because we are not in a scoped lifetime context");
-                throw new Exception("Cannot use per request cache because we are not in a scoped lifetime context");
+                logger.LogDebug("Cannot use per request cache because we are not in a scoped lifetime context");
+                return await factory();
             }
 
             if (lifetimeScope.TryResolve<ConcreteScopedCache>(out var cache))
