@@ -31,9 +31,6 @@ namespace Omnikeeper.Model.Decorators
         public async Task<IReadOnlyList<Layer>> GetLayers(IModelContext trans)
         {
             var allLayers = await _GetFromCache(trans);
-            if (allLayers == null)
-                return await Model.GetLayers(trans);
-
             return allLayers.Values.ToList();
         }
 
@@ -52,7 +49,7 @@ namespace Omnikeeper.Model.Decorators
             return t;
         }
 
-        private async Task<IDictionary<string, Layer>?> _GetFromCache(IModelContext trans)
+        private async Task<IDictionary<string, Layer>> _GetFromCache(IModelContext trans)
         {
             return await PerRequestLayerCache.GetFromScopedCache<PerRequestLayerCache>(scopedLifetimeAccessor, logger, async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
         }

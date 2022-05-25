@@ -30,13 +30,13 @@ namespace Omnikeeper.Base.Utils
             cached = null;
         }
 
-        public static async Task<T?> GetFromScopedCache<ConcreteScopedCache>(ScopedLifetimeAccessor scopedLifetimeAccessor, ILogger logger, Func<Task<T>> factory) where ConcreteScopedCache : ScopedCache<T>
+        public static async Task<T> GetFromScopedCache<ConcreteScopedCache>(ScopedLifetimeAccessor scopedLifetimeAccessor, ILogger logger, Func<Task<T>> factory) where ConcreteScopedCache : ScopedCache<T>
         {
             var lifetimeScope = scopedLifetimeAccessor.GetLifetimeScope();
             if (lifetimeScope == null)
             {
-                logger.LogDebug("Cannot use per request cache because we are not in a scoped lifetime context");
-                return null;
+                logger.LogError("Cannot use per request cache because we are not in a scoped lifetime context");
+                throw new Exception("Cannot use per request cache because we are not in a scoped lifetime context");
             }
 
             if (lifetimeScope.TryResolve<ConcreteScopedCache>(out var cache))

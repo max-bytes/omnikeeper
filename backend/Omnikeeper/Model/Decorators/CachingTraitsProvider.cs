@@ -32,25 +32,19 @@ namespace Omnikeeper.Model.Decorators
 
         public async Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold)
         {
-            var all = await _GetFromCache(trans);
-            if (all == null)
-                return await Provider.GetActiveTraits(trans, timeThreshold);
+            var all = await _GetFromCache(trans, timeThreshold);
             return all;
         }
 
         public async Task<ITrait?> GetActiveTrait(string traitID, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var all = await _GetFromCache(trans);
-            if (all == null)
-                return await Provider.GetActiveTrait(traitID, trans, timeThreshold);
+            var all = await _GetFromCache(trans, timeThreshold);
             return all.GetOrWithClass(traitID, null);
         }
 
         public async Task<IDictionary<string, ITrait>> GetActiveTraitsByIDs(IEnumerable<string> IDs, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var all = await _GetFromCache(trans);
-            if (all == null)
-                return await Provider.GetActiveTraitsByIDs(IDs, trans, timeThreshold);
+            var all = await _GetFromCache(trans, timeThreshold);
             return all.Where(kv => IDs.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
@@ -60,15 +54,9 @@ namespace Omnikeeper.Model.Decorators
             return await Provider.GetLatestChangeToActiveDataTraits(trans, timeThreshold);
         }
 
-        private async Task<IDictionary<string, ITrait>?> _GetFromCache(IModelContext trans)
+        private async Task<IDictionary<string, ITrait>> _GetFromCache(IModelContext trans, TimeThreshold timeThreshold)
         {
-            // TODO: we should not create a timethreshold instance in the factory
-            return await PerRequestTraitsProviderCache.GetFromScopedCache<PerRequestTraitsProviderCache>(scopedLifetimeAccessor, logger, async () => await Provider.GetActiveTraits(trans, TimeThreshold.BuildLatest()));
-        }
-
-        private void _ClearCache()
-        {
-            PerRequestTraitsProviderCache.ClearScopedCache<PerRequestTraitsProviderCache>(scopedLifetimeAccessor, logger);
+            return await PerRequestTraitsProviderCache.GetFromScopedCache<PerRequestTraitsProviderCache>(scopedLifetimeAccessor, logger, async () => await Provider.GetActiveTraits(trans, timeThreshold));
         }
     }
 }

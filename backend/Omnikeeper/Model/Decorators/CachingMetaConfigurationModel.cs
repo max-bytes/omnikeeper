@@ -27,8 +27,6 @@ namespace Omnikeeper.Model.Decorators
         public async Task<MetaConfiguration> GetConfigOrDefault(IModelContext trans)
         {
             var item = await _GetFromCache(trans);
-            if (item == null)
-                return await Model.GetConfigOrDefault(trans);
             return item;
         }
 
@@ -38,7 +36,7 @@ namespace Omnikeeper.Model.Decorators
             return await Model.SetConfig(config, trans);
         }
 
-        private async Task<MetaConfiguration?> _GetFromCache(IModelContext trans)
+        private async Task<MetaConfiguration> _GetFromCache(IModelContext trans)
         {
             return await PerRequestMetaConfigurationCache.GetFromScopedCache<PerRequestMetaConfigurationCache>(scopedLifetimeAccessor, logger, async () => await Model.GetConfigOrDefault(trans));
         }
