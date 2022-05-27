@@ -57,18 +57,20 @@ namespace OKPluginCLBNaemonVariableResolution
 
         public HashSet<string> Tags {get;}
 
-        private static VariableComparer variableComparer = new VariableComparer();
+        private static VariableComparer VariableComparer = new VariableComparer();
         public void AddVariable(Variable v)
         {
-            Variables.AddOrUpdate(v.Name, 
-                () => new List<Variable>() { v },
-                cur => {
-                    int x = cur.BinarySearch(v, variableComparer);
-                    cur.Insert((x >= 0) ? x : ~x, v); // taken from https://stackoverflow.com/a/46294791
-                    return cur;
-                });
+            if (Variables.TryGetValue(v.Name, out var l))
+            {
+                int x = l.BinarySearch(v, VariableComparer);
+                l.Insert((x >= 0) ? x : ~x, v); // taken from https://stackoverflow.com/a/46294791
+            }
+            else
+            {
+                Variables.Add(v.Name, new List<Variable>() { v });
+            }
         }
-        public void AddVariables(IEnumerable<Variable> variables)
+        public void AddVariables(params Variable[] variables)
         {
             foreach (var vv in variables)
                 AddVariable(vv);
