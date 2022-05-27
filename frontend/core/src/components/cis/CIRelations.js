@@ -38,6 +38,9 @@ function CIRelations(props) {
     const predicateCompare = a.relation.predicateID?.localeCompare(b.relation.predicateID) ?? 0;
     if (predicateCompare !== 0)
       return predicateCompare;
+    const fromCINameCompare = a.relation.fromCIName.localeCompare(b.relation.fromCIName);
+    if (fromCINameCompare !== 0)
+      return fromCINameCompare;
     const fromCIIDCompare = a.relation.fromCIID.localeCompare(b.relation.fromCIID);
     if (fromCIIDCompare !== 0)
       return fromCIIDCompare;
