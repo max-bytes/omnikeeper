@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OKPluginCLBNaemonVariableResolution
@@ -78,6 +79,10 @@ namespace OKPluginCLBNaemonVariableResolution
                 return list.FirstOrDefault()?.Value;
             return null;
         }
+
+        public bool HasProfile(string profile) => Profiles.Contains(profile);
+        public bool HasProfileMatchingRegex(string pattern, RegexOptions regexOptions = RegexOptions.None) => Profiles.Any(p => Regex.IsMatch(p, pattern, regexOptions));
+        public bool HasAnyProfileOf(params string[] profiles) => Profiles.Any(p => profiles.Contains(p));
     }
 
 

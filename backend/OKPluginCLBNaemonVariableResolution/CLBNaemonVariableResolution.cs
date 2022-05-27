@@ -64,7 +64,7 @@ namespace OKPluginCLBNaemonVariableResolution
         {
             Configuration cfg = ParseConfig(config);
 
-            var stage = Stage.DEV; // TODO: make configurable
+            var stage = Stage.PROD; // TODO: make configurable
 
             var timeThreshold = changesetProxy.TimeThreshold;
 
@@ -85,21 +85,14 @@ namespace OKPluginCLBNaemonVariableResolution
             var naemonInstanceModel = new GenericTraitEntityModel<NaemonInstanceV1, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var tagModel = new GenericTraitEntityModel<TagV1>(effectiveTraitModel, ciModel, attributeModel, relationModel);
 
-            var categories = await categoryModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+            var instanceRules = stage switch
+            {
+                Stage.DEV => (IInstanceRules)new InstanceRulesDev(),
+                Stage.PROD => new InstanceRulesProd(),
+                _ => throw new NotImplementedException(),
+            };
 
-            var cmdbProfiles = categories
-                .Where(kv => kv.Value.Group == "MONITORING")
-                .Where(kv =>
-                {
-                    var name = kv.Value.Name;
-                    return stage switch
-                    {
-                        Stage.DEV => Regex.IsMatch(name, "profile-.*", RegexOptions.IgnoreCase) || Regex.IsMatch(name, "profiletsc-.*", RegexOptions.IgnoreCase) || Regex.IsMatch(name, "profiledev-.*", RegexOptions.IgnoreCase),
-                        Stage.PROD => Regex.IsMatch(name, "profile-.*", RegexOptions.IgnoreCase) || Regex.IsMatch(name, "profiletsc-.*", RegexOptions.IgnoreCase),
-                        _ => false,
-                    };
-                })
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
+            var categories = await categoryModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
 
             var hosts = await targetHostModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var services = await targetServiceModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
@@ -113,6 +106,12 @@ namespace OKPluginCLBNaemonVariableResolution
             var naemonInstances = await naemonInstanceModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
             var tags = await tagModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
 
+            // filter customers
+            var filteredCustomers = customers.Where(c => instanceRules.FilterCustomer(c.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+            // filter cmdb profiles
+            var cmdbProfiles = categories.Where(kv => instanceRules.FilterCmdbProfile(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
+
             // construct an intermediate data structure holding hosts and services together
             List<string> CalculateCIProfiles(Guid[] memberOfCategories) => 
                 memberOfCategories
@@ -120,7 +119,7 @@ namespace OKPluginCLBNaemonVariableResolution
                 .Select(p => cmdbProfiles[p].Name)
                 .ToList();
             Customer? CalculateCustomer(Guid? customerCIID) => 
-                (customerCIID.HasValue && customers.TryGetValue(customerCIID.Value, out var customer)) ? customer : null;
+                (customerCIID.HasValue && filteredCustomers.TryGetValue(customerCIID.Value, out var customer)) ? customer : null;
 
             var hos = new Dictionary<Guid, HostOrService>(hosts.Count + services.Count);
             foreach (var kv in hosts)
@@ -129,7 +128,7 @@ namespace OKPluginCLBNaemonVariableResolution
                 var customer = CalculateCustomer(kv.Value.Customer);
                 if (customer == null)
                 {
-                    logger.LogWarning($"Could not lookup customer of host with CI-ID \"{kv.Key}\"... skipping");
+                    //logger.LogWarning($"Could not lookup customer of host with CI-ID \"{kv.Key}\"... skipping");
                     continue;
                 }
                 hos.Add(kv.Key, new HostOrService(kv.Value, null, profilesOfCI, customer));
@@ -140,26 +139,15 @@ namespace OKPluginCLBNaemonVariableResolution
                 var customer = CalculateCustomer(kv.Value.Customer);
                 if (customer == null)
                 {
-                    logger.LogWarning($"Could not lookup customer of service with CI-ID \"{kv.Key}\"... skipping");
+                    //logger.LogWarning($"Could not lookup customer of service with CI-ID \"{kv.Key}\"... skipping");
                     continue;
                 }
                 hos.Add(kv.Key, new HostOrService(null, kv.Value, profilesOfCI, customer));
             }
 
             // filter hosts and services
-            var relevantStatuus = new HashSet<string>()
-            {
-                "ACTIVE",
-                "INFOALERTING",
-                "BASE_INSTALLED",
-                "READY_FOR_SERVICE",
-                "EXPERIMENTAL",
-                "HOSTING",
-            };
             var filteredHOS = hos
-                .Where(kv => relevantStatuus.Contains(kv.Value.Status ?? ""))
-                //.Select(kv => (ciid: kv.Key, hs: kv.Value))
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
+                .Where(kv => instanceRules.FilterTarget(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // collect variables...
 
@@ -180,7 +168,7 @@ namespace OKPluginCLBNaemonVariableResolution
             // ...from variables in monman
             // reference: roughly updateNormalizedCiData_varsFromDatabase()
             var hosByNameLookup = filteredHOS.ToDictionary(h => h.Value.ID, h => h.Value);
-            var customerNicknameLookup = customers.ToDictionary(c => c.Value.Nickname, c => c.Value);
+            var customerNicknameLookup = filteredCustomers.ToDictionary(c => c.Value.Nickname, c => c.Value);
             // TODO: this is not properly defined, because there can be multiple categories with the same name in different trees 
             // TODO: lookup how monman_v1 implements this and how it looks up the proper category from the profile
             // for now, we just pick the first that fits at random
@@ -286,9 +274,8 @@ namespace OKPluginCLBNaemonVariableResolution
             }
 
             // ...from cmdb hosts and services
-            // reference: roughly updateNormalizedCiData_varsByExpression(), naemon-vars-ci.php
+            // reference: roughly updateNormalizedCiData_varsByExpression()
             var serviceActionServiceIDLookup = serviceActions.Values.ToLookup(s => s.ServiceID);
-            var argusGroupCIID = groups.FirstOrDefault(kv => kv.Value.Name == "GDE.PEA.AT.ALL.ARGUS").Key;
             foreach (var (ciid, hs) in filteredHOS)
             {
                 hs.AddVariables(new List<Variable>()
@@ -300,21 +287,12 @@ namespace OKPluginCLBNaemonVariableResolution
                     new Variable("PORT", "FIXED", hs.MonIPPort ?? ""),
                 });
 
-                if (stage == Stage.PROD)
-                {
-                    if (hs.Profiles.Any(p => Regex.IsMatch(p, "^profiletsc-.*")))
-                        hs.AddVariable(new Variable("HASNRPE", "FIXED", "NO", 0));
-                }
+                // instance rules
+                instanceRules.ApplyInstanceRules(hs, groups);
 
                 // set alerting ID to foreign key for special instances
                 if (hs.Instance == "SERVER-CH")
                     hs.AddVariable(new Variable("ALERTCIID", "FIXED", hs.ForeignKey ?? ""));
-
-                // alerts
-                if (hs.Status != "ACTIVE" && hs.Status != "INFOALERTING")
-                    hs.AddVariable(new Variable("ALERTS", "FIXED", "OFF")); // disable ALERTS for non-active and non-infoalerting
-                else if ((hs.Environment == "DEV" || hs.Environment == "QM") && (hs.AppSupportGroup == argusGroupCIID || hs.OSSupportGroup == argusGroupCIID))
-                    hs.AddVariable(new Variable("ALERTS", "FIXED", "OFF")); // disable ALERTS for DEV/QM ARGUS systems
 
                 // host-specific stuff
                 if (hs.Host != null)
@@ -508,24 +486,17 @@ namespace OKPluginCLBNaemonVariableResolution
             }
 
             // calculate target host/service requirements/tags
-            // reference: naemon-vars-ci.php in various folders
             foreach (var (ciid, hs) in evenMoreFilteredHOS)
             {
-                var capCust = $"cap_cust_{hs.Customer.Nickname.ToLowerInvariant()}";
-                hs.Tags.Add(capCust);
-
-                if (hs.Profiles.Contains("profiledev-default-app-naemon-eventgenerator"))
-                    hs.Tags.Add("cap_eventgenerator");
-
                 // reference: updateNormalizedCiDataFieldProfile()
-                if (hs.Profiles.Count == 1 && Regex.IsMatch(hs.Profiles.First(), "^profile", RegexOptions.IgnoreCase))
+                if (hs.Profiles.Count == 1 && hs.HasProfileMatchingRegex("^profile", RegexOptions.IgnoreCase))
                 {
                     // add legacy profile capability
                     hs.Tags.Add($"cap_lp_{hs.Profiles.First().ToLowerInvariant()}");
                 }
 
                 // reference: updateNormalizedCiData_addGenericCmdbCapTags()
-
+                // TODO
                 //if (array_key_exists('MONITORING_CAP', $ci['CATEGORIES']))
                 //{
                 //    foreach (sequentialOrAssocToSequential($ci['CATEGORIES']['MONITORING_CAP']) as $category) {
@@ -536,18 +507,6 @@ namespace OKPluginCLBNaemonVariableResolution
                 //{
                 //    array_push($ciDataRef[$id]['TAGS'], 'cap_default');
                 //}
-
-
-                // dynamic capability
-                if (stage == Stage.PROD)
-                {
-                    if (hs.Profiles.Any(p => Regex.IsMatch(p, "^profiletsc-.*")))
-                        hs.Tags.Add("cap_scope_tsc_yes");
-                    else
-                        hs.Tags.Add("cap_scope_tsc_no");
-                }
-
-                // TODO: environment-specific capabilities
             }
 
             // check requirements vs capabilities
