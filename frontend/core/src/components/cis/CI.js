@@ -39,7 +39,7 @@ function CI(props) {
       <CIRelations mergedRelations={props.ci.incomingMergedRelations} isEditable={props.isEditable} areOutgoingRelations={false} ciIdentity={props.ci.id} />
     </TabPane>
     <TabPane tab={<CountBadge count={props.ci.effectiveTraits.length}>Effective Traits</CountBadge>} key="effectiveTraits">
-      <EffectiveTraits timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.id} />
+      <EffectiveTraits traits={props.ci.effectiveTraits} />
     </TabPane>
   </>)
 

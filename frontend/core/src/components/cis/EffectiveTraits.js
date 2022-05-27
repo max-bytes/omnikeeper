@@ -53,10 +53,14 @@ function TraitRelations(props) {
 
 function EffectiveTraits(props) {
 
+  const {traits} = props;
+
+  const sortedTraits = traits.sort((a,b) => a.underlyingTrait.id.localeCompare(b.underlyingTrait.id));
+
   const { data: dataPredicates } = useQuery(queries.PredicateList, { variables: {} });
 
   return <Collapse defaultActiveKey={[]} ghost>
-      {props.traits.map((t, index) => {
+      {sortedTraits.map((t, index) => {
         return <Panel header={t.underlyingTrait.id} key={index}>
           <h4 style={{margin: '0px', paddingLeft: '15px'}}>Underlying Trait:</h4>
             <div style={{paddingLeft: '30px'}}>
