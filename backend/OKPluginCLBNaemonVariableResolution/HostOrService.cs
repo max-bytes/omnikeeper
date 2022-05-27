@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Omnikeeper.Base.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,8 @@ namespace OKPluginCLBNaemonVariableResolution
             this.service = service;
             Customer = customer;
             Profiles = profiles;
+            Variables = new SortedDictionary<string, List<Variable>>();
+            Tags = new HashSet<string>();
         }
 
         private R Get<R>(Func<TargetHost, R> hostF, Func<TargetService, R> serviceF)
@@ -49,5 +52,97 @@ namespace OKPluginCLBNaemonVariableResolution
         // additional data
         public List<string> Profiles { get; set; }
         public Customer Customer { get; }
+        public SortedDictionary<string, List<Variable>> Variables { get; }
+
+        public HashSet<string> Tags {get;}
+
+        private static VariableComparer variableComparer = new VariableComparer();
+        public void AddVariable(Variable v)
+        {
+            Variables.AddOrUpdate(v.Name, 
+                () => new List<Variable>() { v },
+                cur => {
+                    int x = cur.BinarySearch(v, variableComparer);
+                    cur.Insert((x >= 0) ? x : ~x, v); // taken from https://stackoverflow.com/a/46294791
+                    return cur;
+                });
+        }
+        public void AddVariables(IEnumerable<Variable> variables)
+        {
+            foreach (var vv in variables)
+                AddVariable(vv);
+        }
+        public string? GetVariableValue(string name)
+        {
+            if (Variables.TryGetValue(name, out var list))
+                return list.FirstOrDefault()?.Value;
+            return null;
+        }
+    }
+
+
+    class VariableComparer : IComparer<Variable>
+    {
+        public int Compare(Variable? v1, Variable? v2)
+        {
+            if (v1 == null && v2 == null) return 0;
+            if (v1 == null) return -1;
+            if (v2 == null) return 1;
+            if (v1.RefType == v2.RefType)
+            {
+                if (v1.Precedence > v2.Precedence)
+                    return -1;
+                else if (v1.Precedence < v2.Precedence)
+                    return 1;
+                else
+                {
+                    // we cannot sort "naturally", use the id as the final decider
+                    if (v1.ExternalID < v2.ExternalID)
+                        return -1;
+                    else
+                        return 1;
+                }
+            }
+            else
+            {
+                var refType1 = RefType2Int(v1.RefType);
+                var refType2 = RefType2Int(v2.RefType);
+                if (refType1 < refType2)
+                    return -1;
+                else
+                    return 1;
+            }
+        }
+        private static int RefType2Int(string refType)
+        {
+            return refType switch
+            {
+                "FIXED" => -1,
+                "CI" => 0,
+                "PROFILE" => 1,
+                "CUST" => 2,
+                "GLOBAL" => 3,
+                "INIT" => 4,
+                _ => 5, // must not happen, other refTypes should have been filtered out by now
+            };
+        }
+    }
+
+    public class Variable
+    {
+        public readonly string Name;
+        public readonly string Value;
+        public readonly string RefType;
+        public readonly long Precedence;
+        public readonly long ExternalID;
+
+        public Variable(string name, string refType, string value, long precedence = 0, long externalID = 0L)
+        {
+            Name = name;
+            Value = value;
+            RefType = refType;
+            Precedence = precedence;
+            ExternalID = externalID;
+        }
     }
 }

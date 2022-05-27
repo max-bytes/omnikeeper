@@ -158,132 +158,28 @@ namespace OKPluginCLBNaemonVariableResolution
             };
             var filteredHOS = hos
                 .Where(kv => relevantStatuus.Contains(kv.Value.Status ?? ""))
-                .Select(kv => (ciid: kv.Key, hs: kv.Value))
-                .ToList();
-
-            // build capability map 
-            // reference: getCapabilityMap()
-            var capMap = new Dictionary<string, ISet<Guid>>(); // key: capability name, value: list of CIIDs of naemon instances
-            foreach(var kv in naemonInstances)
-            {
-                var naemonCIID = kv.Key;
-                var naemon = kv.Value;
-                foreach(var tagCIID in naemon.Tags)
-                {
-                    if (tags.TryGetValue(tagCIID, out var tag))
-                    {
-                        if (Regex.IsMatch(tag.Name, "^cap_"))
-                            capMap.AddNaemon(tag.Name, naemonCIID);
-                    }
-                    else
-                    {
-                        logger.LogWarning($"Could not find tag with CI-ID {tagCIID}");
-                    }
-                }
-            }
-
-            // extend capability map
-            // reference: enrichNormalizedCiData()
-            foreach(var profile in profiles.Values)
-            {
-                var cap = $"cap_lp_{profile.Name.ToLowerInvariant()}";
-
-                // TODO: restrict naemons to those in list(s), see "naemons-config-generateprofiles" in yml config files (per environment)
-                capMap.AddNaemons(cap, naemonInstances.Keys);
-            }
-
-            // calculate target host/service requirements/tags
-            // reference: naemon-vars-ci.php in various folders
-            var hsTags = new Dictionary<Guid, ISet<string>>(); // key: ciid of host/service, value: set of tags of this host/service
-            foreach(var (ciid, hs) in filteredHOS)
-            {
-                var capCust = $"cap_cust_{hs.Customer.Nickname.ToLowerInvariant()}";
-                hsTags.AddTag(ciid, capCust);
-
-                if (hs.Profiles.Contains("profiledev-default-app-naemon-eventgenerator"))
-                    hsTags.AddTag(ciid, "cap_eventgenerator");
-
-                // reference: updateNormalizedCiDataFieldProfile()
-                if (hs.Profiles.Count == 1 && Regex.IsMatch(hs.Profiles.First(), "^profile", RegexOptions.IgnoreCase))
-                {
-                    // add legacy profile capability
-                    hsTags.AddTag(ciid, $"cap_lp_{hs.Profiles.First().ToLowerInvariant()}");
-                }
-
-                // reference: updateNormalizedCiData_addGenericCmdbCapTags()
-
-                //if (array_key_exists('MONITORING_CAP', $ci['CATEGORIES']))
-                //{
-                //    foreach (sequentialOrAssocToSequential($ci['CATEGORIES']['MONITORING_CAP']) as $category) {
-                //        array_push($ciDataRef[$id]['TAGS'], strtolower('cap_'. $category['TREE']. '_'. $category['NAME']));
-                //    }
-                //}
-                //else
-                //{
-                //    array_push($ciDataRef[$id]['TAGS'], 'cap_default');
-                //}
-
-
-                // dynamic capability
-                if (stage == Stage.PROD)
-                {
-                    if (hs.Profiles.Any(p => Regex.IsMatch(p, "^profiletsc-.*")))
-                        hsTags.AddTag(ciid, "cap_scope_tsc_yes");
-                    else
-                        hsTags.AddTag(ciid, "cap_scope_tsc_no");
-                }
-
-
-                // TODO: environment-specific capabilities
-            }
-
-            // check requirements vs capabilities
-            // calculate which naemons monitor which hosts/services
-            // reference: enrichNormalizedCiData()
-            var allNaemonCIIDs = naemonInstances.Select(i => i.Key).ToHashSet();
-            var naemons2hos = new List<(Guid naemonCIID, Guid hosCIID)>();
-            foreach (var (ciid, hs) in filteredHOS)
-            {
-                var naemonsAvail = new HashSet<Guid>(allNaemonCIIDs);
-                foreach(var requirement in hsTags[ciid])
-                {
-                    if (Regex.IsMatch(requirement, "^cap_"))
-                    {
-                        if (capMap.TryGetValue(requirement, out var naemonsFulfillingRequirement))
-                        {
-                            naemonsAvail.IntersectWith(naemonsFulfillingRequirement);
-                        } 
-                        else
-                        {
-                            naemonsAvail.Clear();
-                            break;
-                        }
-                    }
-                }
-                foreach (var naemonAvail in naemonsAvail)
-                    naemons2hos.Add((naemonAvail, ciid));
-            }
+                //.Select(kv => (ciid: kv.Key, hs: kv.Value))
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // collect variables...
-            var resolvedVariables = new Dictionary<Guid, List<ResolvedVariable>>(filteredHOS.Count);
 
             // ...init
             // reference: updateNormalizedCiData_preProcessVars()
             foreach (var (ciid, hs) in filteredHOS)
             {
-                resolvedVariables.Add(ciid, new List<ResolvedVariable>()
+                hs.AddVariables(new List<Variable>()
                 {
-                    new ResolvedVariable("ALERTS", "INIT", "OFF", -100),
-                    new ResolvedVariable("ALERTCIID", "INIT", hs.ID, -100),
-                    new ResolvedVariable("HASNRPE", "INIT", "YES", -100),
-                    new ResolvedVariable("DYNAMICADD", "INIT", "NO", -100),
-                    new ResolvedVariable("DYNAMICMODULES", "INIT", "YES", -100),
+                    new Variable("ALERTS", "INIT", "OFF", -100),
+                    new Variable("ALERTCIID", "INIT", hs.ID, -100),
+                    new Variable("HASNRPE", "INIT", "YES", -100),
+                    new Variable("DYNAMICADD", "INIT", "NO", -100),
+                    new Variable("DYNAMICMODULES", "INIT", "YES", -100),
                 });
             }
 
             // ...from variables in monman
             // reference: roughly updateNormalizedCiData_varsFromDatabase()
-            var hos2CIIDLookup = filteredHOS.ToDictionary(h => h.hs.ID, h => h.ciid);
+            var hosByNameLookup = filteredHOS.ToDictionary(h => h.Value.ID, h => h.Value);
             var customerNicknameLookup = customers.ToDictionary(c => c.Value.Nickname, c => c.Value);
             // TODO: this is not properly defined, because there can be multiple categories with the same name in different trees 
             // TODO: lookup how monman_v1 implements this and how it looks up the proper category from the profile
@@ -302,20 +198,14 @@ namespace OKPluginCLBNaemonVariableResolution
                 switch (v.Value.refType)
                 {
                     case "CI":
-                        {
-                            if (hos2CIIDLookup.TryGetValue(refID, out var refHOSCIID))
-                            {
-                                resolvedVariables[refHOSCIID].Add(v.Value.ToResolvedVariable());
-                            }
-                            else
-                            {
-                                logger.LogWarning($"Could not find referenced CI with refID \"{refID}\" for variable \"{v.Value.ID}\", skipping variable");
-                            }
-                        }
+                        if (hosByNameLookup.TryGetValue(refID, out var foundHS))
+                            foundHS.AddVariable(v.Value.ToResolvedVariable());
+                        else
+                            logger.LogWarning($"Could not find referenced CI with refID \"{refID}\" for variable \"{v.Value.ID}\", skipping variable");
                         break;
                     case "GLOBAL":
-                        foreach (var rv in resolvedVariables)
-                            rv.Value.Add(v.Value.ToResolvedVariable());
+                        foreach (var rv in filteredHOS.Values)
+                            rv.AddVariable(v.Value.ToResolvedVariable());
                         break;
                     case "PROFILE":
                         // approach: get the profile, look up its name, then fetch the corresponding CMDB category, then its member CIs
@@ -331,8 +221,8 @@ namespace OKPluginCLBNaemonVariableResolution
                             {
                                 foreach (var targetCIID in category.Members)
                                 {
-                                    if (resolvedVariables.TryGetValue(targetCIID, out var targetList))
-                                        targetList.Add(v.Value.ToResolvedVariable());
+                                    if (filteredHOS.TryGetValue(targetCIID, out var hs))
+                                        hs.AddVariable(v.Value.ToResolvedVariable());
                                     else { } // member CI of category is neither host nor service, ignore
                                 }
                             }
@@ -351,8 +241,8 @@ namespace OKPluginCLBNaemonVariableResolution
                         {
                             foreach (var targetCIID in foundCustomer.AssociatedCIs)
                             {
-                                if (resolvedVariables.TryGetValue(targetCIID, out var targetList))
-                                    targetList.Add(v.Value.ToResolvedVariable());
+                                if (filteredHOS.TryGetValue(targetCIID, out var hs))
+                                    hs.AddVariable(v.Value.ToResolvedVariable());
                                 else { } // associated CI of customer is neither host nor service, ignore
                             }
                         }
@@ -374,8 +264,8 @@ namespace OKPluginCLBNaemonVariableResolution
                 switch (v.Value.refType)
                 {
                     case "CI":
-                        if (hos2CIIDLookup.TryGetValue(refID, out var refHOSCIID))
-                            resolvedVariables[refHOSCIID].Add(v.Value.ToResolvedVariable());
+                        if (hosByNameLookup.TryGetValue(refID, out var hs))
+                            hs.AddVariable(v.Value.ToResolvedVariable());
                         else
                             logger.LogWarning($"Could not find referenced CI with refID \"{refID}\" for variable with ciid \"{v.Key}\", skipping variable");
                         break;
@@ -401,32 +291,30 @@ namespace OKPluginCLBNaemonVariableResolution
             var argusGroupCIID = groups.FirstOrDefault(kv => kv.Value.Name == "GDE.PEA.AT.ALL.ARGUS").Key;
             foreach (var (ciid, hs) in filteredHOS)
             {
-                var rv = resolvedVariables[ciid];
-
-                rv.AddRange(new List<ResolvedVariable>()
+                hs.AddVariables(new List<Variable>()
                 {
-                    new ResolvedVariable("LOCATION", "FIXED", Regex.Replace(hs.Location ?? "", @"\p{C}+", string.Empty)),
-                    new ResolvedVariable("OS", "FIXED", hs.OS ?? ""),
-                    new ResolvedVariable("PLATFORM", "FIXED", hs.Platform ?? ""),
-                    new ResolvedVariable("ADDRESS", "FIXED", hs.MonIPAddress ?? ""),
-                    new ResolvedVariable("PORT", "FIXED", hs.MonIPPort ?? ""),
+                    new Variable("LOCATION", "FIXED", Regex.Replace(hs.Location ?? "", @"\p{C}+", string.Empty)),
+                    new Variable("OS", "FIXED", hs.OS ?? ""),
+                    new Variable("PLATFORM", "FIXED", hs.Platform ?? ""),
+                    new Variable("ADDRESS", "FIXED", hs.MonIPAddress ?? ""),
+                    new Variable("PORT", "FIXED", hs.MonIPPort ?? ""),
                 });
 
                 if (stage == Stage.PROD)
                 {
                     if (hs.Profiles.Any(p => Regex.IsMatch(p, "^profiletsc-.*")))
-                        resolvedVariables.Add(ciid, new List<ResolvedVariable>() { new ResolvedVariable("HASNRPE", "FIXED", "NO", 0) });
+                        hs.AddVariable(new Variable("HASNRPE", "FIXED", "NO", 0));
                 }
 
                 // set alerting ID to foreign key for special instances
                 if (hs.Instance == "SERVER-CH")
-                    rv.Add(new ResolvedVariable("ALERTCIID", "FIXED", hs.ForeignKey ?? ""));
+                    hs.AddVariable(new Variable("ALERTCIID", "FIXED", hs.ForeignKey ?? ""));
 
                 // alerts
                 if (hs.Status != "ACTIVE" && hs.Status != "INFOALERTING")
-                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "OFF")); // disable ALERTS for non-active and non-infoalerting
+                    hs.AddVariable(new Variable("ALERTS", "FIXED", "OFF")); // disable ALERTS for non-active and non-infoalerting
                 else if ((hs.Environment == "DEV" || hs.Environment == "QM") && (hs.AppSupportGroup == argusGroupCIID || hs.OSSupportGroup == argusGroupCIID))
-                    rv.Add(new ResolvedVariable("ALERTS", "FIXED", "OFF")); // disable ALERTS for DEV/QM ARGUS systems
+                    hs.AddVariable(new Variable("ALERTS", "FIXED", "OFF")); // disable ALERTS for DEV/QM ARGUS systems
 
                 // host-specific stuff
                 if (hs.Host != null)
@@ -445,11 +333,11 @@ namespace OKPluginCLBNaemonVariableResolution
                                     Regex.IsMatch(interfaceName, "IDRAC", RegexOptions.IgnoreCase)
                                 ))
                                 {
-                                    rv.AddRange(new List<ResolvedVariable>()
+                                    hs.AddVariables(new List<Variable>()
                                     {
-                                        new ResolvedVariable("LOMADDRESS", "FIXED", @interface.IP ?? ""),
-                                        new ResolvedVariable("LOMTYPE", "FIXED", @interface.Name?.ToUpperInvariant() ?? ""),
-                                        new ResolvedVariable("LOMNAME", "FIXED", @interface.DnsName ?? ""),
+                                        new Variable("LOMADDRESS", "FIXED", @interface.IP ?? ""),
+                                        new Variable("LOMTYPE", "FIXED", @interface.Name?.ToUpperInvariant() ?? ""),
+                                        new Variable("LOMNAME", "FIXED", @interface.DnsName ?? ""),
                                     });
                                     break;
                                 }
@@ -468,10 +356,10 @@ namespace OKPluginCLBNaemonVariableResolution
                         if (foundServiceAction != null)
                         {
                             if (foundServiceAction.Type.Equals("MONITORING", StringComparison.InvariantCultureIgnoreCase))
-                                rv.AddRange(new List<ResolvedVariable>()
+                                hs.AddVariables(new List<Variable>()
                                 {
-                                    new ResolvedVariable("ORACLECONNECT", "FIXED", (foundServiceAction.Command ?? "").Replace(" ", "")),
-                                    new ResolvedVariable("ORACLEUSER", "FIXED", foundServiceAction.CommandUser ?? ""),
+                                    new Variable("ORACLECONNECT", "FIXED", (foundServiceAction.Command ?? "").Replace(" ", "")),
+                                    new Variable("ORACLEUSER", "FIXED", foundServiceAction.CommandUser ?? ""),
                                 });
                         }
                     }
@@ -483,10 +371,10 @@ namespace OKPluginCLBNaemonVariableResolution
                         if (foundServiceAction != null)
                         {
                             if (foundServiceAction.Type.Equals("MONITORING", StringComparison.InvariantCultureIgnoreCase))
-                                rv.AddRange(new List<ResolvedVariable>()
+                                hs.AddVariables(new List<Variable>()
                                 {
-                                    new ResolvedVariable("SDWANCHECKCONFIG", "FIXED", foundServiceAction.Command ?? ""),
-                                    new ResolvedVariable("SDWANORG", "FIXED", foundServiceAction.CommandUser ?? ""),
+                                    new Variable("SDWANCHECKCONFIG", "FIXED", foundServiceAction.Command ?? ""),
+                                    new Variable("SDWANORG", "FIXED", foundServiceAction.CommandUser ?? ""),
                                 });
                         }
                     }
@@ -496,8 +384,6 @@ namespace OKPluginCLBNaemonVariableResolution
             // reference: updateNormalizedCiData_postProcessVars()
             foreach (var (ciid, hs) in filteredHOS)
             {
-                var rv = resolvedVariables[ciid];
-
                 // dynamically set profile under certain circumstances
                 if (hs.Profiles.Count != 1 && hs.Host != null)
                 {
@@ -521,8 +407,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
                     if (osMatches && platformMatches && statusMatches)
                     {
-                        // TODO: this is not fully correct; we should instead check if the RESOLVED variable has DYNAMICADD=YES, not if there is ANY variable
-                        if (rv.Any(v => v.Name == "DYNAMICADD" && v.Value == "YES"))
+                        if (hs.GetVariableValue("DYNAMICADD") == "YES")
                             hs.Profiles = new List<string>() { "dynamic-nrpe" };
                     }
                 }
@@ -551,54 +436,153 @@ namespace OKPluginCLBNaemonVariableResolution
                 else
                     monitoringProfileOrig = "NONE";
 
-                rv.AddRange(new List<ResolvedVariable>()
+                hs.AddVariables(new List<Variable>()
                 {
-                    new ResolvedVariable("CIID", "FIXED", hs.ID),
-                    new ResolvedVariable("CINAME", "FIXED", hs.Name ?? ""),
-                    new ResolvedVariable("CONFIGSOURCE", "FIXED", "monmanagement"),
+                    new Variable("CIID", "FIXED", hs.ID),
+                    new Variable("CINAME", "FIXED", hs.Name ?? ""),
+                    new Variable("CONFIGSOURCE", "FIXED", "monmanagement"),
 
-                    new ResolvedVariable("MONITORINGPROFILE", "FIXED", monitoringProfile),
-                    new ResolvedVariable("MONITORINGPROFILE_ORIG", "FIXED", monitoringProfileOrig),
+                    new Variable("MONITORINGPROFILE", "FIXED", monitoringProfile),
+                    new Variable("MONITORINGPROFILE_ORIG", "FIXED", monitoringProfileOrig),
 
-                    new ResolvedVariable("CUST", "FIXED", customerNickname),
-                    new ResolvedVariable("CUST_ESCAPED", "FIXED", escapeCustomerNickname(customerNickname)),
+                    new Variable("CUST", "FIXED", customerNickname),
+                    new Variable("CUST_ESCAPED", "FIXED", escapeCustomerNickname(customerNickname)),
 
-                    new ResolvedVariable("ENVIRONMENT", "FIXED", hs.Environment ?? ""),
-                    new ResolvedVariable("STATUS", "FIXED", hs.Status ?? ""),
-                    new ResolvedVariable("CRITICALITY", "FIXED", hs.Criticality ?? ""),
+                    new Variable("ENVIRONMENT", "FIXED", hs.Environment ?? ""),
+                    new Variable("STATUS", "FIXED", hs.Status ?? ""),
+                    new Variable("CRITICALITY", "FIXED", hs.Criticality ?? ""),
 
-                    new ResolvedVariable("SUPP_OS", "FIXED", osSupportGroupName),
-                    new ResolvedVariable("SUPP_APP", "FIXED", appSupportGroupName),
+                    new Variable("SUPP_OS", "FIXED", osSupportGroupName),
+                    new Variable("SUPP_APP", "FIXED", appSupportGroupName),
 
-                    new ResolvedVariable("INSTANCE", "FIXED", hs.Instance ?? ""),
-                    new ResolvedVariable("FSOURCE", "FIXED", hs.ForeignSource ?? ""),
-                    new ResolvedVariable("FKEY", "FIXED", hs.ForeignKey ?? ""),
-            });
+                    new Variable("INSTANCE", "FIXED", hs.Instance ?? ""),
+                    new Variable("FSOURCE", "FIXED", hs.ForeignSource ?? ""),
+                    new Variable("FKEY", "FIXED", hs.ForeignKey ?? ""),
+                });
             }
 
             var debugOutput = false; // TODO: remove or make configurable
 
-            // filter out hosts and services that contain an empty monitoring profile, because there is no use in creating resolved variables for them
-            var filteredResolvedVariables = resolvedVariables
-                .Where(kv => kv.Value.Any(v => v.Name == "MONITORINGPROFILE" && v.Value != "NONE"))
-                .ToList();
+            // filter out hosts and services that contain no monitoring profile, because there is no use in creating resolved variables for them
+            var evenMoreFilteredHOS = filteredHOS
+                //.Where(kv => kv.Value.Variables.Any(v => v.Name == "MONITORINGPROFILE" && v.Value != "NONE"))
+                .Where(kv => kv.Value.Profiles.Count != 0)
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+
+            // build capability map 
+            // reference: getCapabilityMap()
+            var capMap = new Dictionary<string, ISet<Guid>>(); // key: capability name, value: list of CIIDs of naemon instances
+            foreach (var kv in naemonInstances)
+            {
+                var naemonCIID = kv.Key;
+                var naemon = kv.Value;
+                foreach (var tagCIID in naemon.Tags)
+                {
+                    if (tags.TryGetValue(tagCIID, out var tag))
+                    {
+                        if (Regex.IsMatch(tag.Name, "^cap_"))
+                            capMap.AddNaemon(tag.Name, naemonCIID);
+                    }
+                    else
+                    {
+                        logger.LogWarning($"Could not find tag with CI-ID {tagCIID}");
+                    }
+                }
+            }
+
+            // extend capability map
+            // reference: enrichNormalizedCiData()
+            foreach (var profile in profiles.Values)
+            {
+                var cap = $"cap_lp_{profile.Name.ToLowerInvariant()}";
+
+                // TODO: restrict naemons to those in list(s), see "naemons-config-generateprofiles" in yml config files (per environment)
+                capMap.AddNaemons(cap, naemonInstances.Keys);
+            }
+
+            // calculate target host/service requirements/tags
+            // reference: naemon-vars-ci.php in various folders
+            foreach (var (ciid, hs) in evenMoreFilteredHOS)
+            {
+                var capCust = $"cap_cust_{hs.Customer.Nickname.ToLowerInvariant()}";
+                hs.Tags.Add(capCust);
+
+                if (hs.Profiles.Contains("profiledev-default-app-naemon-eventgenerator"))
+                    hs.Tags.Add("cap_eventgenerator");
+
+                // reference: updateNormalizedCiDataFieldProfile()
+                if (hs.Profiles.Count == 1 && Regex.IsMatch(hs.Profiles.First(), "^profile", RegexOptions.IgnoreCase))
+                {
+                    // add legacy profile capability
+                    hs.Tags.Add($"cap_lp_{hs.Profiles.First().ToLowerInvariant()}");
+                }
+
+                // reference: updateNormalizedCiData_addGenericCmdbCapTags()
+
+                //if (array_key_exists('MONITORING_CAP', $ci['CATEGORIES']))
+                //{
+                //    foreach (sequentialOrAssocToSequential($ci['CATEGORIES']['MONITORING_CAP']) as $category) {
+                //        array_push($ciDataRef[$id]['TAGS'], strtolower('cap_'. $category['TREE']. '_'. $category['NAME']));
+                //    }
+                //}
+                //else
+                //{
+                //    array_push($ciDataRef[$id]['TAGS'], 'cap_default');
+                //}
+
+
+                // dynamic capability
+                if (stage == Stage.PROD)
+                {
+                    if (hs.Profiles.Any(p => Regex.IsMatch(p, "^profiletsc-.*")))
+                        hs.Tags.Add("cap_scope_tsc_yes");
+                    else
+                        hs.Tags.Add("cap_scope_tsc_no");
+                }
+
+                // TODO: environment-specific capabilities
+            }
+
+            // check requirements vs capabilities
+            // calculate which naemons monitor which hosts/services
+            // reference: enrichNormalizedCiData()
+            var allNaemonCIIDs = naemonInstances.Select(i => i.Key).ToHashSet();
+            var naemons2hos = new List<(Guid naemonCIID, Guid hosCIID)>();
+            foreach (var (ciid, hs) in evenMoreFilteredHOS)
+            {
+                var naemonsAvail = new HashSet<Guid>(allNaemonCIIDs);
+                foreach (var requirement in hs.Tags)
+                {
+                    if (Regex.IsMatch(requirement, "^cap_"))
+                    {
+                        if (capMap.TryGetValue(requirement, out var naemonsFulfillingRequirement))
+                        {
+                            naemonsAvail.IntersectWith(naemonsFulfillingRequirement);
+                        }
+                        else
+                        {
+                            naemonsAvail.Clear();
+                            break;
+                        }
+                    }
+                }
+                foreach (var naemonAvail in naemonsAvail)
+                    naemons2hos.Add((naemonAvail, ciid));
+            }
+
 
             // write output
-            var variableComparer = new ResolvedVariableComparer();
             var attributeFragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
             // variables
-            foreach (var kv in filteredResolvedVariables)
+            foreach (var kv in evenMoreFilteredHOS)
             {
-                // merge process for variables
-                var groupedByName = kv.Value.GroupBy(v => v.Name)
-                    .OrderBy(g => g.Key); // order by key (=variable Name) to produce stable output, otherwise JSON changes all the time, leading to "fake" changes
-
                 var debugStr = "";
                 var d = new JsonObject();
-                foreach (var variablesOfCI in groupedByName)
+                foreach (var variableGroup in kv.Value.Variables)
                 {
-                    var ordered = variablesOfCI.OrderBy(v => v, variableComparer);
+                    var ordered = variableGroup.Value;
 
                     var inner = new JsonObject();
                     var first = ordered.First();
@@ -606,7 +590,7 @@ namespace OKPluginCLBNaemonVariableResolution
                     inner["refType"] = first.RefType;
 
                     if (debugOutput)
-                        debugStr += $"{variablesOfCI.Key}           {first.Value}\n";
+                        debugStr += $"{variableGroup.Key}           {first.Value}\n";
 
                     var chain = new JsonArray();
                     foreach (var vv in ordered.Skip(1))
@@ -617,7 +601,7 @@ namespace OKPluginCLBNaemonVariableResolution
                         });
                     inner["chain"] = chain;
 
-                    d.Add(variablesOfCI.Key, inner);
+                    d.Add(variableGroup.Key, inner);
                 }
                 var value = AttributeScalarValueJSON.BuildFromString(d.ToJsonString(), false);
                 attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables", value, kv.Key));
@@ -633,10 +617,10 @@ namespace OKPluginCLBNaemonVariableResolution
                 relationFragments.Add(new BulkRelationDataLayerScope.Fragment(naemonCIID, hosCIID, "monitors", false));
             }
             // host/service tags, for debugging purposes
-            foreach(var kv in hsTags)
+            foreach (var kv in evenMoreFilteredHOS)
             {
                 var ciid = kv.Key;
-                var v = AttributeArrayValueText.BuildFromString(kv.Value);
+                var v = AttributeArrayValueText.BuildFromString(kv.Value.Tags);
                 attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_tags", v, ciid));
             }
 
@@ -657,98 +641,25 @@ namespace OKPluginCLBNaemonVariableResolution
 
             return true;
         }
-
-        class ResolvedVariableComparer : IComparer<ResolvedVariable>
-        {
-            public int Compare(ResolvedVariable? v1, ResolvedVariable? v2)
-            {
-                if (v1 == null && v2 == null) return 0;
-                if (v1 == null) return -1;
-                if (v2 == null) return 1;
-                if (v1.RefType == v2.RefType)
-                {
-                    if (v1.Precedence > v2.Precedence)
-                        return -1;
-                    else if (v1.Precedence < v2.Precedence)
-                        return 1;
-                    else
-                    {
-                        // we cannot sort "naturally", use the id as the final decider
-                        if (v1.ExternalID < v2.ExternalID)
-                            return -1;
-                        else
-                            return 1;
-                    }
-                }
-                else
-                {
-                    var refType1 = RefType2Int(v1.RefType);
-                    var refType2 = RefType2Int(v2.RefType);
-                    if (refType1 < refType2)
-                        return -1;
-                    else
-                        return 1;
-                }
-            }
-            private static int RefType2Int(string refType)
-            {
-                return refType switch
-                {
-                    "FIXED" => -1,
-                    "CI" => 0,
-                    "PROFILE" => 1,
-                    "CUST" => 2,
-                    "GLOBAL" => 3,
-                    "INIT" => 4,
-                    _ => 5, // must not happen, other refTypes should have been filtered out by now
-                };
-            }
-        }
-    }
-    class ResolvedVariable
-    {
-        public readonly string Name;
-        public readonly string Value;
-        public readonly string RefType;
-        public readonly long Precedence;
-        public readonly long ExternalID;
-
-        public ResolvedVariable(string name, string refType, string value, long precedence = 0, long externalID = 0L)
-        {
-            Name = name;
-            Value = value;
-            RefType = refType;
-            Precedence = precedence;
-            ExternalID = externalID;
-        }
     }
 
     static class NaemonV1VariableExtensions
     {
-        public static ResolvedVariable ToResolvedVariable(this NaemonVariableV1 input)
+        public static Variable ToResolvedVariable(this NaemonVariableV1 input)
         {
-            return new ResolvedVariable(input.name.ToUpperInvariant(), input.refType, input.value, input.precedence, input.ID);
+            return new Variable(input.name.ToUpperInvariant(), input.refType, input.value, input.precedence, input.ID);
         }
     }
 
     static class SelfServiceVariableExtensions
     {
-        public static ResolvedVariable ToResolvedVariable(this SelfServiceVariable input)
+        public static Variable ToResolvedVariable(this SelfServiceVariable input)
         {
             // NOTE: high precedence to make it override other variables by default
-            return new ResolvedVariable(input.name.ToUpperInvariant(), input.refType, input.value, precedence: 200, externalID: 0L);
+            return new Variable(input.name.ToUpperInvariant(), input.refType, input.value, precedence: 200, externalID: 0L);
         }
     }
 
-    static class HSTagsExtensions
-    {
-        public static void AddTag(this Dictionary<Guid, ISet<string>> hsTags, Guid ciid, string tag)
-        {
-            hsTags.AddOrUpdate(ciid,
-                () => new HashSet<string>() { tag },
-                (cur) => { cur.Add(tag); return cur; });
-        }
-    }
     static class CapMapExtensions
     {
         public static void AddNaemon(this Dictionary<string, ISet<Guid>> capMap, string cap, Guid naemonCIID)
