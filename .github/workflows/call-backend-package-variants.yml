@@ -19,7 +19,7 @@ jobs:
     - name: "Invoke backend variant: TSA"
       uses: benc-uk/workflow-dispatch@v1
       with:
-        workflow: package-backend-variants
+        workflow: package-backend-variant
         token: ${{ secrets.PAT }}
         inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "runSystemTests": "false" }'
   call-package-variant-internal:
@@ -33,6 +33,6 @@ jobs:
     - name: "Invoke backend variant: internal"
       uses: benc-uk/workflow-dispatch@v1
       with:
-        workflow: package-backend-variants
+        workflow: package-backend-variant
         token: ${{ secrets.PAT }}
         inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "runSystemTests": "true" }'
