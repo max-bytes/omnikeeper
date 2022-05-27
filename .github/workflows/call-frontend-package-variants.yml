@@ -19,7 +19,7 @@ jobs:
     - name: "Invoke frontend variant: TSA"
       uses: benc-uk/workflow-dispatch@v1
       with:
-        workflow: package-variants
+        workflow: package-frontend-variants
         token: ${{ secrets.PAT }}
         inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsFrontend": "${{ env.pluginsFrontend }}" }'
   call-frontend-package-variant-internal:
@@ -33,6 +33,6 @@ jobs:
     - name: "Invoke frontend variant: internal"
       uses: benc-uk/workflow-dispatch@v1
       with:
-        workflow: package-variants
+        workflow: package-frontend-variants
         token: ${{ secrets.PAT }}
         inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsFrontend": "${{ env.pluginsFrontend }}" }'
