@@ -473,6 +473,7 @@ namespace OKPluginCLBNaemonVariableResolution
             // build capability map 
             // reference: getCapabilityMap()
             var capMap = new Dictionary<string, ISet<Guid>>(); // key: capability name, value: list of CIIDs of naemon instances
+            var invertedCapMap = new Dictionary<Guid, ISet<string>>(); // key: naemon ciid, value: list of capabilities
             foreach (var kv in naemonInstances)
             {
                 var naemonCIID = kv.Key;
@@ -482,7 +483,10 @@ namespace OKPluginCLBNaemonVariableResolution
                     if (tags.TryGetValue(tagCIID, out var tag))
                     {
                         if (Regex.IsMatch(tag.Name, "^cap_"))
+                        {
                             capMap.AddNaemon(tag.Name, naemonCIID);
+                            invertedCapMap.AddCapability(naemonCIID, tag.Name);
+                        }
                     }
                     else
                     {
@@ -499,6 +503,8 @@ namespace OKPluginCLBNaemonVariableResolution
 
                 // TODO: restrict naemons to those in list(s), see "naemons-config-generateprofiles" in yml config files (per environment)
                 capMap.AddNaemons(cap, naemonInstances.Keys);
+                foreach (var naemonInstanceCII in naemonInstances.Keys)
+                    invertedCapMap.AddCapability(naemonInstanceCII, cap);
             }
 
             // calculate target host/service requirements/tags
@@ -623,6 +629,13 @@ namespace OKPluginCLBNaemonVariableResolution
                 var v = AttributeArrayValueText.BuildFromString(kv.Value.Tags);
                 attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_tags", v, ciid));
             }
+            // naemon capabilities, for debugging purposes
+            foreach(var kv in invertedCapMap)
+            {
+                var ciid = kv.Key;
+                var v = AttributeArrayValueText.BuildFromString(kv.Value);
+                attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.capabilities", v, ciid));
+            }
 
             await attributeModel.BulkReplaceAttributes(
                 new BulkCIAttributeDataLayerScope(targetLayerID, attributeFragments),
@@ -673,6 +686,16 @@ namespace OKPluginCLBNaemonVariableResolution
             capMap.AddOrUpdate(cap,
                 () => new HashSet<Guid>(naemonCIIDs),
                 (cur) => { cur.UnionWith(naemonCIIDs); return cur; });
+        }
+    }
+
+    static class InvertedCapMapExtensions
+    {
+        public static void AddCapability(this Dictionary<Guid, ISet<string>> invertedCapMap, Guid naemonCIID, string cap)
+        {
+            invertedCapMap.AddOrUpdate(naemonCIID,
+                () => new HashSet<string>() { cap },
+                (cur) => { cur.Add(cap); return cur; });
         }
     }
 }
