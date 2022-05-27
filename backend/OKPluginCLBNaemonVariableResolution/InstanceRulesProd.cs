@@ -402,10 +402,14 @@ namespace OKPluginCLBNaemonVariableResolution
             return ValidCustomers.Contains(customer.Nickname);
         }
 
-        public bool FilterCmdbProfile(Category category)
+        public bool FilterProfileFromCmdbCategory(Category category)
         {
             return category.Group == "MONITORING" &&
                 (Regex.IsMatch(category.Name, "profile-.*", RegexOptions.IgnoreCase) || Regex.IsMatch(category.Name, "profiletsc-.*", RegexOptions.IgnoreCase));
+        }
+        public bool FilterNaemonInstance(NaemonInstanceV1 naemonInstance)
+        {
+            return true;
         }
 
         private static string[] ValidCustomers = new string[]

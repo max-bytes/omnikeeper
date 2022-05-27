@@ -110,7 +110,10 @@ namespace OKPluginCLBNaemonVariableResolution
             var filteredCustomers = customers.Where(c => instanceRules.FilterCustomer(c.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // filter cmdb profiles
-            var cmdbProfiles = categories.Where(kv => instanceRules.FilterCmdbProfile(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
+            var cmdbProfiles = categories.Where(kv => instanceRules.FilterProfileFromCmdbCategory(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+            // filter naemon instances
+            var filteredNaemonInstances = naemonInstances.Where(kv => instanceRules.FilterNaemonInstance(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // construct an intermediate data structure holding hosts and services together
             List<string> CalculateCIProfiles(Guid[] memberOfCategories) => 
@@ -124,30 +127,25 @@ namespace OKPluginCLBNaemonVariableResolution
             var hos = new Dictionary<Guid, HostOrService>(hosts.Count + services.Count);
             foreach (var kv in hosts)
             {
-                var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
                 var customer = CalculateCustomer(kv.Value.Customer);
-                if (customer == null)
+                if (customer != null)
                 {
-                    //logger.LogWarning($"Could not lookup customer of host with CI-ID \"{kv.Key}\"... skipping");
-                    continue;
+                    var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
+                    hos.Add(kv.Key, new HostOrService(kv.Value, null, profilesOfCI, customer));
                 }
-                hos.Add(kv.Key, new HostOrService(kv.Value, null, profilesOfCI, customer));
             }
             foreach (var kv in services)
             {
-                var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
                 var customer = CalculateCustomer(kv.Value.Customer);
-                if (customer == null)
+                if (customer != null)
                 {
-                    //logger.LogWarning($"Could not lookup customer of service with CI-ID \"{kv.Key}\"... skipping");
-                    continue;
+                    var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
+                    hos.Add(kv.Key, new HostOrService(null, kv.Value, profilesOfCI, customer));
                 }
-                hos.Add(kv.Key, new HostOrService(null, kv.Value, profilesOfCI, customer));
             }
 
             // filter hosts and services
-            var filteredHOS = hos
-                .Where(kv => instanceRules.FilterTarget(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
+            var filteredHOS = hos.Where(kv => instanceRules.FilterTarget(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // collect variables...
 
@@ -155,14 +153,13 @@ namespace OKPluginCLBNaemonVariableResolution
             // reference: updateNormalizedCiData_preProcessVars()
             foreach (var (ciid, hs) in filteredHOS)
             {
-                hs.AddVariables(new List<Variable>()
-                {
+                hs.AddVariables(
                     new Variable("ALERTS", "INIT", "OFF", -100),
                     new Variable("ALERTCIID", "INIT", hs.ID, -100),
                     new Variable("HASNRPE", "INIT", "YES", -100),
                     new Variable("DYNAMICADD", "INIT", "NO", -100),
-                    new Variable("DYNAMICMODULES", "INIT", "YES", -100),
-                });
+                    new Variable("DYNAMICMODULES", "INIT", "YES", -100)
+                );
             }
 
             // ...from variables in monman
@@ -192,8 +189,8 @@ namespace OKPluginCLBNaemonVariableResolution
                             logger.LogWarning($"Could not find referenced CI with refID \"{refID}\" for variable \"{v.Value.ID}\", skipping variable");
                         break;
                     case "GLOBAL":
-                        foreach (var rv in filteredHOS.Values)
-                            rv.AddVariable(v.Value.ToResolvedVariable());
+                        foreach (var rv in filteredHOS)
+                            rv.Value.AddVariable(v.Value.ToResolvedVariable());
                         break;
                     case "PROFILE":
                         // approach: get the profile, look up its name, then fetch the corresponding CMDB category, then its member CIs
@@ -263,29 +260,18 @@ namespace OKPluginCLBNaemonVariableResolution
                 }
             }
 
-            string escapeCustomerNickname(string customerNickname)
-            {
-                return customerNickname
-                    .Replace(' ', '-')
-                    .Replace('(', '-')
-                    .Replace(')', '-')
-                    .Replace('[', '-')
-                    .Replace(']', '-');
-            }
-
             // ...from cmdb hosts and services
             // reference: roughly updateNormalizedCiData_varsByExpression()
             var serviceActionServiceIDLookup = serviceActions.Values.ToLookup(s => s.ServiceID);
             foreach (var (ciid, hs) in filteredHOS)
             {
-                hs.AddVariables(new List<Variable>()
-                {
+                hs.AddVariables(
                     new Variable("LOCATION", "FIXED", Regex.Replace(hs.Location ?? "", @"\p{C}+", string.Empty)),
                     new Variable("OS", "FIXED", hs.OS ?? ""),
                     new Variable("PLATFORM", "FIXED", hs.Platform ?? ""),
                     new Variable("ADDRESS", "FIXED", hs.MonIPAddress ?? ""),
-                    new Variable("PORT", "FIXED", hs.MonIPPort ?? ""),
-                });
+                    new Variable("PORT", "FIXED", hs.MonIPPort ?? "")
+                );
 
                 // instance rules
                 instanceRules.ApplyInstanceRules(hs, groups);
@@ -311,12 +297,11 @@ namespace OKPluginCLBNaemonVariableResolution
                                     Regex.IsMatch(interfaceName, "IDRAC", RegexOptions.IgnoreCase)
                                 ))
                                 {
-                                    hs.AddVariables(new List<Variable>()
-                                    {
+                                    hs.AddVariables(
                                         new Variable("LOMADDRESS", "FIXED", @interface.IP ?? ""),
                                         new Variable("LOMTYPE", "FIXED", @interface.Name?.ToUpperInvariant() ?? ""),
-                                        new Variable("LOMNAME", "FIXED", @interface.DnsName ?? ""),
-                                    });
+                                        new Variable("LOMNAME", "FIXED", @interface.DnsName ?? "")
+                                    );
                                     break;
                                 }
                             }
@@ -334,11 +319,10 @@ namespace OKPluginCLBNaemonVariableResolution
                         if (foundServiceAction != null)
                         {
                             if (foundServiceAction.Type.Equals("MONITORING", StringComparison.InvariantCultureIgnoreCase))
-                                hs.AddVariables(new List<Variable>()
-                                {
+                                hs.AddVariables(
                                     new Variable("ORACLECONNECT", "FIXED", (foundServiceAction.Command ?? "").Replace(" ", "")),
-                                    new Variable("ORACLEUSER", "FIXED", foundServiceAction.CommandUser ?? ""),
-                                });
+                                    new Variable("ORACLEUSER", "FIXED", foundServiceAction.CommandUser ?? "")
+                                );
                         }
                     }
 
@@ -349,11 +333,10 @@ namespace OKPluginCLBNaemonVariableResolution
                         if (foundServiceAction != null)
                         {
                             if (foundServiceAction.Type.Equals("MONITORING", StringComparison.InvariantCultureIgnoreCase))
-                                hs.AddVariables(new List<Variable>()
-                                {
+                                hs.AddVariables(
                                     new Variable("SDWANCHECKCONFIG", "FIXED", foundServiceAction.Command ?? ""),
-                                    new Variable("SDWANORG", "FIXED", foundServiceAction.CommandUser ?? ""),
-                                });
+                                    new Variable("SDWANORG", "FIXED", foundServiceAction.CommandUser ?? "")
+                                );
                         }
                     }
                 }
@@ -414,8 +397,7 @@ namespace OKPluginCLBNaemonVariableResolution
                 else
                     monitoringProfileOrig = "NONE";
 
-                hs.AddVariables(new List<Variable>()
-                {
+                hs.AddVariables(
                     new Variable("CIID", "FIXED", hs.ID),
                     new Variable("CINAME", "FIXED", hs.Name ?? ""),
                     new Variable("CONFIGSOURCE", "FIXED", "monmanagement"),
@@ -424,7 +406,7 @@ namespace OKPluginCLBNaemonVariableResolution
                     new Variable("MONITORINGPROFILE_ORIG", "FIXED", monitoringProfileOrig),
 
                     new Variable("CUST", "FIXED", customerNickname),
-                    new Variable("CUST_ESCAPED", "FIXED", escapeCustomerNickname(customerNickname)),
+                    new Variable("CUST_ESCAPED", "FIXED", EscapeCustomerNickname(customerNickname)),
 
                     new Variable("ENVIRONMENT", "FIXED", hs.Environment ?? ""),
                     new Variable("STATUS", "FIXED", hs.Status ?? ""),
@@ -435,8 +417,8 @@ namespace OKPluginCLBNaemonVariableResolution
 
                     new Variable("INSTANCE", "FIXED", hs.Instance ?? ""),
                     new Variable("FSOURCE", "FIXED", hs.ForeignSource ?? ""),
-                    new Variable("FKEY", "FIXED", hs.ForeignKey ?? ""),
-                });
+                    new Variable("FKEY", "FIXED", hs.ForeignKey ?? "")
+                );
             }
 
             var debugOutput = false; // TODO: remove or make configurable
@@ -452,7 +434,7 @@ namespace OKPluginCLBNaemonVariableResolution
             // reference: getCapabilityMap()
             var capMap = new Dictionary<string, ISet<Guid>>(); // key: capability name, value: list of CIIDs of naemon instances
             var invertedCapMap = new Dictionary<Guid, ISet<string>>(); // key: naemon ciid, value: list of capabilities
-            foreach (var kv in naemonInstances)
+            foreach (var kv in filteredNaemonInstances)
             {
                 var naemonCIID = kv.Key;
                 var naemon = kv.Value;
@@ -480,8 +462,8 @@ namespace OKPluginCLBNaemonVariableResolution
                 var cap = $"cap_lp_{profile.Name.ToLowerInvariant()}";
 
                 // TODO: restrict naemons to those in list(s), see "naemons-config-generateprofiles" in yml config files (per environment)
-                capMap.AddNaemons(cap, naemonInstances.Keys);
-                foreach (var naemonInstanceCII in naemonInstances.Keys)
+                capMap.AddNaemons(cap, filteredNaemonInstances.Keys);
+                foreach (var naemonInstanceCII in filteredNaemonInstances.Keys)
                     invertedCapMap.AddCapability(naemonInstanceCII, cap);
             }
 
@@ -512,7 +494,7 @@ namespace OKPluginCLBNaemonVariableResolution
             // check requirements vs capabilities
             // calculate which naemons monitor which hosts/services
             // reference: enrichNormalizedCiData()
-            var allNaemonCIIDs = naemonInstances.Select(i => i.Key).ToHashSet();
+            var allNaemonCIIDs = filteredNaemonInstances.Select(i => i.Key).ToHashSet();
             var naemons2hos = new List<(Guid naemonCIID, Guid hosCIID)>();
             foreach (var (ciid, hs) in evenMoreFilteredHOS)
             {
@@ -612,6 +594,16 @@ namespace OKPluginCLBNaemonVariableResolution
                 OtherLayersValueHandlingForceWrite.Instance);
 
             return true;
+        }
+
+        private string EscapeCustomerNickname(string customerNickname)
+        {
+            return customerNickname
+                .Replace(' ', '-')
+                .Replace('(', '-')
+                .Replace(')', '-')
+                .Replace('[', '-')
+                .Replace(']', '-');
         }
     }
 

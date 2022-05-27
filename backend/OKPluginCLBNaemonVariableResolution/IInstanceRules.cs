@@ -5,6 +5,7 @@
         void ApplyInstanceRules(HostOrService hs, IDictionary<Guid, Group> groups);
         bool FilterTarget(HostOrService hs);
         bool FilterCustomer(Customer customer);
-        bool FilterCmdbProfile(Category category);
+        bool FilterProfileFromCmdbCategory(Category category);
+        bool FilterNaemonInstance(NaemonInstanceV1 naemonInstance);
     }
 }

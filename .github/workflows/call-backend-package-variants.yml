@@ -1,4 +1,4 @@
-name: call-package-variants
+name: call-backend-package-variants
 
 on:
   workflow_dispatch:
@@ -16,13 +16,12 @@ jobs:
         echo "variantName=tsa" >> $GITHUB_ENV
         echo "baseVersion=${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
         echo "pluginsBackend=OKPluginGenericJSONIngest:${{ github.event.inputs.baseVersion }};OKPluginCLBNaemonVariableResolution:${{ github.event.inputs.baseVersion }};OKPluginVisualization:${{ github.event.inputs.baseVersion }};" >> $GITHUB_ENV
-        echo "pluginsFrontend=@max-bytes/okplugin-generic-json-ingest@${{ github.event.inputs.baseVersion }} @max-bytes/okplugin-visualization@${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
-    - name: "Invoke variant: TSA"
+    - name: "Invoke backend variant: TSA"
       uses: benc-uk/workflow-dispatch@v1
       with:
-        workflow: package-variants
+        workflow: package-backend-variants
         token: ${{ secrets.PAT }}
-        inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "pluginsFrontend": "${{ env.pluginsFrontend }}", "runSystemTests": "false" }'
+        inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "runSystemTests": "false" }'
   call-package-variant-internal:
     runs-on: ubuntu-20.04
     steps:
@@ -31,10 +30,9 @@ jobs:
         echo "variantName=internal" >> $GITHUB_ENV
         echo "baseVersion=${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
         echo "pluginsBackend=OKPluginGenericJSONIngest:${{ github.event.inputs.baseVersion }};OKPluginActiveDirectoryXMLIngest:${{ github.event.inputs.baseVersion }};OKPluginAnsibleInventoryScanIngest:${{ github.event.inputs.baseVersion }};OKPluginVisualization:${{ github.event.inputs.baseVersion }};OKPluginInsightDiscoveryScanIngest:${{ github.event.inputs.baseVersion }};" >> $GITHUB_ENV
-        echo "pluginsFrontend=@max-bytes/okplugin-generic-json-ingest@${{ github.event.inputs.baseVersion }} @max-bytes/okplugin-visualization@${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
-    - name: "Invoke variant: internal"
+    - name: "Invoke backend variant: internal"
       uses: benc-uk/workflow-dispatch@v1
       with:
-        workflow: package-variants
+        workflow: package-backend-variants
         token: ${{ secrets.PAT }}
-        inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "pluginsFrontend": "${{ env.pluginsFrontend }}", "runSystemTests": "true" }'
+        inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "runSystemTests": "true" }'

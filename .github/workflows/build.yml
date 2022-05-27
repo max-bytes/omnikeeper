@@ -180,15 +180,27 @@ jobs:
           bash clients/scripts/python/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_PYTHON }}"
           bash clients/scripts/java/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_JAVA }}"
           bash clients/scripts/powershell/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_POWERSHELL }}"
-  call-package-variants:
+  call-backend-package-variants:
     runs-on: ubuntu-20.04
-    needs: [build-backend-vanilla, build-publish-backend-okplugins, build-publish-frontend-okplugin-generic-json-ingest, build-publish-frontend-okplugin-visualization]
+    needs: [build-backend-vanilla, build-publish-backend-okplugins]
     steps:
     - name: Set version
       run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-    - name: "Invoke packaing variants"
+    - name: "Invoke backend packaging variants"
       uses: benc-uk/workflow-dispatch@v1
       with:
-        workflow: call-package-variants
+        workflow: call-backend-package-variants
+        token: ${{ secrets.PAT }}
+        inputs: '{ "baseVersion": "${{ env.VERSION }}" }'
+  call-frontend-package-variants:
+    runs-on: ubuntu-20.04
+    needs: [build-publish-frontend-okplugin-generic-json-ingest, build-publish-frontend-okplugin-visualization]
+    steps:
+    - name: Set version
+      run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - name: "Invoke frontend packaging variants"
+      uses: benc-uk/workflow-dispatch@v1
+      with:
+        workflow: call-frontend-package-variants
         token: ${{ secrets.PAT }}
         inputs: '{ "baseVersion": "${{ env.VERSION }}" }'

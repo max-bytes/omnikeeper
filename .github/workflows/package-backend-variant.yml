@@ -1,4 +1,4 @@
-name: package-variants
+name: package-backend-variant
 
 env:
   REGISTRY: ghcr.io
@@ -16,9 +16,6 @@ on:
         required: true
       pluginsBackend: 
         description: "Backend-Plugin spec; example: OKPluginGenericJSONIngest:0.14.80;OKPluginActiveDirectoryXMLIngest:0.14.80;"
-        required: true
-      pluginsFrontend: 
-        description: "Frontend-Plugin spec; example: okplugin-generic-json-ingest@0.14.80 okplugin-plugin2@0.14.80"
         required: true
       runSystemTests:
         description: "Whether or not to run system tests after a successful image build/publish; \"true\" or \"false\""
@@ -93,50 +90,3 @@ jobs:
         with:
           workflow: run-system-tests
           token: ${{ secrets.PAT }}
-
-  build-publish-variant-frontend:
-    runs-on: ubuntu-20.04
-    env:
-      VARIANT_NAME: ${{ github.event.inputs.variantName }}
-      BASE_VERSION: ${{ github.event.inputs.baseVersion }}
-      PLUGINS_FRONTEND: ${{ github.event.inputs.pluginsFrontend }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ env.BASE_VERSION }}
-      - name: Log in to the Container registry
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set final frontend version
-        run: |
-          # create plugin hash from plugins string
-          PLUGIN_HASH=`echo $PLUGINS_FRONTEND | md5sum | cut -f1 -d" " | cut -c1-10`
-
-          # NOTE: according to semver, we should use a '+', followed by the plugin hash to specify the "build-metadata"
-          # but docker image tags do not allow '+', so we use a '-' instead
-          echo "FINAL_VERSION_FRONTEND=${BASE_VERSION}-${PLUGIN_HASH}" >> $GITHUB_ENV
-      - name: Extract metadata (tags, labels) for docker frontend
-        id: meta_frontend
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/frontend/${{ env.VARIANT_NAME }}
-          tags: |
-            type=raw,value=${{ env.FINAL_VERSION_FRONTEND }}
-          flavor: |
-            latest=true
-      - name: Build and push frontend Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: "./frontend/core"
-          file: "./frontend/core/cicd/Dockerfile"
-          push: true
-          build-args: |
-            version=${{ env.FINAL_VERSION_FRONTEND }}
-            plugins=${{ env.PLUGINS_FRONTEND }}
-            npm_repo_key=${{ secrets.GITHUB_TOKEN }}
-          tags: ${{ steps.meta_frontend.outputs.tags }}
-          labels: ${{ steps.meta_frontend.outputs.labels }}
