@@ -69,7 +69,14 @@ function CIRelations(props) {
       })
       : null;
 
-      return <RelatedCI mergedRelation={r} predicates={dataPredicates.predicates} onRemove={onRemove} isOutgoingRelation={areOutgoingRelations} />;
+      return <div
+      style={{
+          padding: "5px",
+          backgroundColor: index % 2 === 0 ? "#eee" : "#fff",
+          overflow: 'hidden'
+      }}>
+        <RelatedCI mergedRelation={r} predicates={dataPredicates.predicates} onRemove={onRemove} isOutgoingRelation={areOutgoingRelations} />
+      </div>;
     };
 
     return (<div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
