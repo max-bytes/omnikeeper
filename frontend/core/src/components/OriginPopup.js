@@ -44,11 +44,8 @@ function OriginPopup(props) {
   });
   const [visible, setVisible] = useState(false);
 
-  if (loading) return (<FontAwesomeIcon icon={faSync} />);
-  if (error) return (<FontAwesomeIcon icon={faExclamationCircle} />);
 
-
-  const icon = (function(originType) {
+  let icon = (function(originType) {
     switch(originType) {
       case 'MANUAL':
         return faUser;
@@ -67,18 +64,20 @@ function OriginPopup(props) {
     }
   })((data) ? ((data.changeset) ? data.changeset.dataOrigin.type : 'GENERATOR') : 'UNKNOWN');
 
+  if (loading) icon = faSync;
+  if (error) icon=faExclamationCircle;
+
     return (
       <Popover
         placement="topRight"
         trigger="click"
         content={data ? (data.changeset ? <InnerPopup changeset={data.changeset} /> : "No changeset / Calculated") : "Loading..."}
-        // on='click'
-        visible={visible}
+        visible={visible && !loading}
         onVisibleChange={(visible) => setVisible(visible)}
         position='top right'
       >
-        <Button size='small' style={{ marginRight: "5px" }} onClick={() => {load(); setVisible(old => { return !old; });}}>
-          <FontAwesomeIcon icon={icon} color={"gray"} />
+        <Button size='small' style={{ marginRight: "5px" }} onClick={() => load()}>
+          <FontAwesomeIcon icon={icon} color={"gray"} fixedWidth />
         </Button>
       </Popover>
     );
