@@ -99,15 +99,11 @@ function Layers(props) {
           var nextLayer = layers[index + 1];
           var previousLayer = layers[index - 1];
 
-          const layerDescPopup = <Popover
-            placement="topRight"
-            trigger="click"
-            content={<ul style={{marginBottom: '0px'}}><li>ID: {layer.id}</li><li>Description: {layer.description}</li></ul>}
-            on='click'
-            position='top right'
-          >
-            <Button size='small'><FontAwesomeIcon fixedWidth icon={faInfo} /></Button>
-          </Popover>
+          let layerText = <span style={{flexGrow: '1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: (layer.visible) ? 'unset': '#ccc'}}>{layer.id} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>;
+
+          // if (layer.description) {
+            layerText = <Popover placement="bottom" content={layer.description ? layer.description : <i>No description</i>}>{layerText}</Popover>;
+          // }
 
           return (
             <Flipped key={layer.id} flipId={layer.id}>
@@ -115,9 +111,8 @@ function Layers(props) {
                 {!layer.writable && (<FontAwesomeIcon fixedWidth icon={faBan} />)}
                 {layer.writable && (<FontAwesomeIcon fixedWidth icon={faEdit} />)}
                 &nbsp;
-                {layerDescPopup} 
                 <LayerIcon layer={layer} />
-                <span style={{flexGrow: '1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: (layer.visible) ? 'unset': '#ccc'}}>{layer.id} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
+                {layerText}
                 {layer.clConfigID !== "" && (<FontAwesomeIcon icon={faCogs} fixedWidth />)}
                 {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} fixedWidth />)}
                 &nbsp;&nbsp;
