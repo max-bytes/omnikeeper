@@ -80,8 +80,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
         return {
           headers: {
             ...headers,
-            ...(token ? {authorization: `Bearer ${token}s`} : {}),
-            // authorization: token ? `Bearer ${token}` : "",
+            ...(token ? {authorization: `Bearer ${token}`} : {}),
           }
         }
       });
