@@ -100,11 +100,8 @@ function Layers(props) {
           var previousLayer = layers[index - 1];
 
           let layerText = <span style={{flexGrow: '1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: (layer.visible) ? 'unset': '#ccc'}}>{layer.id} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>;
-
-          // if (layer.description) {
-            layerText = <Popover placement="bottom" content={layer.description ? layer.description : <i>No description</i>}>{layerText}</Popover>;
-          // }
-
+          layerText = <Popover placement="bottom" content={layer.description ? layer.description : <i>No description</i>}>{layerText}</Popover>;
+          
           return (
             <Flipped key={layer.id} flipId={layer.id}>
               <div style={{paddingBottom: '5px', display: 'flex', alignItems: 'center'}}>
