@@ -89,8 +89,10 @@ export function InputControl(props) {
         //     style={{flexGrow: 1, border: "1px solid #ced4da", borderRadius: ".25rem"}}/>; // TODO
         var value = props.value;
         if (props.type === 'JSON') {
-            var o = JSON.parse(value);
-            value = JSON.stringify(o, null, 2);
+            try {
+                var o = JSON.parse(value);
+                value = JSON.stringify(o, null, 2);
+            } catch (e) {}
         }
         return <AceEditor
             value={value}
