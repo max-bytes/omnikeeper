@@ -18,12 +18,6 @@ function EditableAttributeValue(props) {
     const canRemoveItem = values.length > 1;
 
     return <div style={{ display: 'flex', flexDirection: 'column', flexGrow: '1', alignSelf: 'center' }}>
-      {values.length === 0 && isEditable && <Button icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px", marginLeft: "0.25rem"}}/>} disabled={!isEditable} onClick={e => {
-                e.preventDefault();
-                let newValues = values.slice();
-                newValues.splice(0, 0, '');
-                props.setValues(newValues);
-                }}></Button>}
         {values.map((v, index) => {
           return <Row key={index} id={`value:${name}:${index}:${controlIdSuffix}`} gutter={4}>
             <Col style={{flexGrow: 1}}>
@@ -37,32 +31,37 @@ function EditableAttributeValue(props) {
                 }} />
             </Col>
             <Col>
-                {isEditable && <Button icon={<FontAwesomeIcon icon={faTimes} />} style={{ width: "35px" }} disabled={!canRemoveItem || !isEditable} onClick={e => {
+                {isEditable && <Button disabled={!canRemoveItem || !isEditable} onClick={e => {
                 e.preventDefault();
                 let newValues = values.slice();
                 newValues.splice(index, 1);
                 props.setValues(newValues);
-                }}/>}
+                }}><FontAwesomeIcon icon={faTimes} /></Button>}
             </Col>
             <Col>
-                {isEditable && <Button icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px", marginLeft: "0.25rem"}}/>} style={{ width: "70px" }} disabled={!isEditable} onClick={e => {
+                {isEditable && <Button disabled={!isEditable} onClick={e => {
                 e.preventDefault();
                 let newValues = values.slice();
                 newValues.splice(index, 0, '');
                 props.setValues(newValues);
-                }}><FontAwesomeIcon icon={faChevronUp} /></Button>}
-            </Col>
-            <Col>
-                {isEditable && <Button icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px", marginLeft: "0.25rem"}}/>} style={{ width: "70px" }} disabled={!isEditable}  onClick={e => {
-                e.preventDefault();
-                let newValues = values.slice();
-                newValues.splice(index + 1, 0, '');
-                props.setValues(newValues);
-                }}><FontAwesomeIcon icon={faChevronDown} /></Button>}
+                }}>
+                  <span className="fa-layers fa-fw">
+                    <FontAwesomeIcon icon={faPlus} />
+                    <FontAwesomeIcon icon={faChevronUp} transform="shrink-6 up-10" />
+                  </span>
+                </Button>}
             </Col>
           </Row>
           })
         }
+        {isEditable && <Button disabled={!isEditable} onClick={e => {
+          e.preventDefault();
+          let newValues = values.slice();
+          newValues.splice(values.length, 0, '');
+          props.setValues(newValues);
+          }}>
+            <FontAwesomeIcon icon={faPlus}/>
+          </Button>}
     </div>;
   } else {
     return <InputControl hideNameLabel={props.hideNameLabel} attributeName={name} ciid={ciid} setHasErrors={setHasErrors} 
