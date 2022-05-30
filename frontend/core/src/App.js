@@ -44,12 +44,7 @@ const keycloak = new Keycloak({
 })
 
 const keycloakProviderInitOptions = {
-  // workaround, disabling of checking iframe cookie, because its a cross-site one, and chrome stopped accepting them
-  // when they don't have SameSite=None set... and keycloak doesn't send a proper cookie yet: 
-  // https://issues.redhat.com/browse/KEYCLOAK-12125
-  "checkLoginIframe": false,
-  onLoad: 'check-sso',
-  // promiseType: 'native'
+  onLoad: 'check-sso'
 }
 
 function LayerSettingsContextProvider(props) {
@@ -215,7 +210,7 @@ function App() {
   }
 
   return (
-    <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakProviderInitOptions} 
+    <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakProviderInitOptions} autoRefreshToken={true}
       onTokens={tokenSetter}  LoadingComponent={<>Loading...</>}>
         <ApolloWrapper component={BR} />
     </ReactKeycloakProvider>

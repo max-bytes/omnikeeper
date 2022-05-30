@@ -1,7 +1,8 @@
 import React from 'react';
 import { queries } from '../graphql/queries'
-import { ApolloProvider, ApolloClient, createHttpLink, InMemoryCache,gql,defaultDataIdFromObject  } from '@apollo/client';
+import { ApolloProvider, ApolloClient, createHttpLink, from, InMemoryCache,gql,defaultDataIdFromObject  } from '@apollo/client';
 import { ApolloProvider as ApolloHooksProvider } from '@apollo/client'
+import { onError } from "@apollo/client/link/error";
 import { setContext } from "@apollo/client/link/context";
 import moment from 'moment'
 import env from "@beam-australia/react-env";
@@ -79,7 +80,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
         return {
           headers: {
             ...headers,
-            ...(token ? {authorization: `Bearer ${token}`} : {}),
+            ...(token ? {authorization: `Bearer ${token}s`} : {}),
             // authorization: token ? `Bearer ${token}` : "",
           }
         }
@@ -89,6 +90,17 @@ function ApolloWrapper({ component: Component, ...rest }) {
       uri: env('BACKEND_URL') + "/graphql",
       credentials: 'include'
     });
+
+    const errorLink = onError(({ graphQLErrors, networkError }) => {
+        if (graphQLErrors)
+          graphQLErrors.forEach(({ message, locations, path }) =>
+            console.log(
+              `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
+            ),
+          );
+      
+        if (networkError) console.log(`[Network error]: ${networkError}`);
+      });
 
     function setInitialState() {
         var initialState = {
@@ -113,7 +125,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
 
     const client = new ApolloClient({
       cache,
-      link: authLink.concat(httpLink),
+      link: from([errorLink, authLink, httpLink]),
       typeDefs: typeDefs,
       resolvers: resolvers,
       defaultOptions: {
