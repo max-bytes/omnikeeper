@@ -276,6 +276,9 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitAttribute("group", "cmdb.category.group")]
         public string Group;
 
+        [TraitAttribute("instance", "cmdb.category.instance")]
+        public string Instance;
+
         [TraitRelation("members", "has_category_member", true)]
         public Guid[] Members;
 
@@ -285,6 +288,7 @@ namespace OKPluginCLBNaemonVariableResolution
             Name = "";
             Tree = "";
             Group = "";
+            Instance = "";
             Members = Array.Empty<Guid>();
         }
     }

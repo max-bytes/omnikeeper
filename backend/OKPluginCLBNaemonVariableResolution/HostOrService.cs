@@ -1,10 +1,4 @@
-﻿using Omnikeeper.Base.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
 
 namespace OKPluginCLBNaemonVariableResolution
 {
@@ -13,12 +7,13 @@ namespace OKPluginCLBNaemonVariableResolution
         private readonly TargetHost? host;
         private readonly TargetService? service;
 
-        public HostOrService(TargetHost? host, TargetService? service, List<string> profiles, Customer customer)
+        public HostOrService(TargetHost? host, TargetService? service, List<string> profiles, List<Category> categories, Customer customer)
         {
             this.host = host;
             this.service = service;
             Customer = customer;
             Profiles = profiles;
+            Categories = categories;
             Variables = new SortedDictionary<string, List<Variable>>();
             Tags = new HashSet<string>();
         }
@@ -52,6 +47,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
         // additional data
         public List<string> Profiles { get; set; }
+        public List<Category> Categories { get; }
         public Customer Customer { get; }
         public SortedDictionary<string, List<Variable>> Variables { get; }
 

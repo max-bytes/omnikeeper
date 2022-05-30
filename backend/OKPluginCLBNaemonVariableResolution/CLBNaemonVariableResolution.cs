@@ -9,6 +9,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace OKPluginCLBNaemonVariableResolution
@@ -30,14 +31,15 @@ namespace OKPluginCLBNaemonVariableResolution
             this.attributeModel = attributeModel;
         }
 
-        public enum Stage
-        {
-            DEV, PROD
-        }
-
         private Configuration ParseConfig(JsonDocument configJson)
         {
-            var tmpCfg = JsonSerializer.Deserialize<Configuration>(configJson);
+            var tmpCfg = JsonSerializer.Deserialize<Configuration>(configJson, new JsonSerializerOptions()
+            {
+                Converters = {
+                    new JsonStringEnumConverter()
+                },
+            });
+
             if (tmpCfg == null)
                 throw new Exception("Could not parse configuration");
             return tmpCfg;
@@ -64,7 +66,7 @@ namespace OKPluginCLBNaemonVariableResolution
         {
             Configuration cfg = ParseConfig(config);
 
-            var stage = Stage.PROD; // TODO: make configurable
+            logger.LogInformation($"Stage: {cfg.Stage}");
 
             var timeThreshold = changesetProxy.TimeThreshold;
 
@@ -85,14 +87,18 @@ namespace OKPluginCLBNaemonVariableResolution
             var naemonInstanceModel = new GenericTraitEntityModel<NaemonInstanceV1, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var tagModel = new GenericTraitEntityModel<TagV1>(effectiveTraitModel, ciModel, attributeModel, relationModel);
 
-            var instanceRules = stage switch
+            var instanceRules = cfg.Stage switch
             {
-                Stage.DEV => (IInstanceRules)new InstanceRulesDev(),
-                Stage.PROD => new InstanceRulesProd(),
+                Stage.Dev => (IInstanceRules)new InstanceRulesDev(),
+                Stage.Prod => new InstanceRulesProd(),
                 _ => throw new NotImplementedException(),
             };
 
-            var categories = await categoryModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+            var allCategories = await categoryModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
+
+            var categories = allCategories
+                .Where(kv => kv.Value.Instance == "SERVER") // TODO: correct?
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             var hosts = await targetHostModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var services = await targetServiceModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
@@ -110,7 +116,8 @@ namespace OKPluginCLBNaemonVariableResolution
             var filteredCustomers = customers.Where(c => instanceRules.FilterCustomer(c.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // filter cmdb profiles
-            var cmdbProfiles = categories.Where(kv => instanceRules.FilterProfileFromCmdbCategory(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
+            var cmdbProfiles = categories
+                .Where(kv => instanceRules.FilterProfileFromCmdbCategory(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // filter naemon instances
             var filteredNaemonInstances = naemonInstances.Where(kv => instanceRules.FilterNaemonInstance(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
@@ -120,6 +127,11 @@ namespace OKPluginCLBNaemonVariableResolution
                 memberOfCategories
                 .Where(categoryCIID => cmdbProfiles.ContainsKey(categoryCIID))
                 .Select(p => cmdbProfiles[p].Name)
+                .ToList(); 
+            List<Category> CalculateCategories(Guid[] memberOfCategories) =>
+                memberOfCategories
+                .Where(categoryCIID => categories.ContainsKey(categoryCIID))
+                .Select(p => categories[p])
                 .ToList();
             Customer? CalculateCustomer(Guid? customerCIID) => 
                 (customerCIID.HasValue && filteredCustomers.TryGetValue(customerCIID.Value, out var customer)) ? customer : null;
@@ -131,7 +143,8 @@ namespace OKPluginCLBNaemonVariableResolution
                 if (customer != null)
                 {
                     var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
-                    hos.Add(kv.Key, new HostOrService(kv.Value, null, profilesOfCI, customer));
+                    var categoriesOfCI = CalculateCategories(kv.Value.MemberOfCategories);
+                    hos.Add(kv.Key, new HostOrService(kv.Value, null, profilesOfCI, categoriesOfCI, customer));
                 }
             }
             foreach (var kv in services)
@@ -140,7 +153,8 @@ namespace OKPluginCLBNaemonVariableResolution
                 if (customer != null)
                 {
                     var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
-                    hos.Add(kv.Key, new HostOrService(null, kv.Value, profilesOfCI, customer));
+                    var categoriesOfCI = CalculateCategories(kv.Value.MemberOfCategories);
+                    hos.Add(kv.Key, new HostOrService(null, kv.Value, profilesOfCI, categoriesOfCI, customer));
                 }
             }
 
@@ -166,11 +180,12 @@ namespace OKPluginCLBNaemonVariableResolution
             // reference: roughly updateNormalizedCiData_varsFromDatabase()
             var hosByNameLookup = filteredHOS.ToDictionary(h => h.Value.ID, h => h.Value);
             var customerNicknameLookup = filteredCustomers.ToDictionary(c => c.Value.Nickname, c => c.Value);
-            // TODO: this is not properly defined, because there can be multiple categories with the same name in different trees 
-            // TODO: lookup how monman_v1 implements this and how it looks up the proper category from the profile
+            // HACK: this is not properly defined, because there can be multiple categories with the same name in different trees/groups
+            // and even multiple categories with the same name in the same tree and group
             // for now, we just pick the first that fits at random
             // also, we uppercase the category names
             var categoryNameLookup = categories.GroupBy(c => c.Value.Name).ToDictionary(t => t.Key.ToUpperInvariant(), t => t.First().Value);
+            //var categoryNameLookup = cmdbProfiles.ToDictionary(kv => kv.Value.Name.ToUpperInvariant(), kv => kv.Value);
             foreach (var v in naemonV1Variables)
             {
                 // replace secret values with fetch command
@@ -421,11 +436,8 @@ namespace OKPluginCLBNaemonVariableResolution
                 );
             }
 
-            var debugOutput = false; // TODO: remove or make configurable
-
             // filter out hosts and services that contain no monitoring profile, because there is no use in creating resolved variables for them
             var evenMoreFilteredHOS = filteredHOS
-                //.Where(kv => kv.Value.Variables.Any(v => v.Name == "MONITORINGPROFILE" && v.Value != "NONE"))
                 .Where(kv => kv.Value.Profiles.Count != 0)
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
@@ -460,8 +472,6 @@ namespace OKPluginCLBNaemonVariableResolution
             foreach (var profile in profiles.Values)
             {
                 var cap = $"cap_lp_{profile.Name.ToLowerInvariant()}";
-
-                // TODO: restrict naemons to those in list(s), see "naemons-config-generateprofiles" in yml config files (per environment)
                 capMap.AddNaemons(cap, filteredNaemonInstances.Keys);
                 foreach (var naemonInstanceCII in filteredNaemonInstances.Keys)
                     invertedCapMap.AddCapability(naemonInstanceCII, cap);
@@ -478,17 +488,17 @@ namespace OKPluginCLBNaemonVariableResolution
                 }
 
                 // reference: updateNormalizedCiData_addGenericCmdbCapTags()
-                // TODO
-                //if (array_key_exists('MONITORING_CAP', $ci['CATEGORIES']))
-                //{
-                //    foreach (sequentialOrAssocToSequential($ci['CATEGORIES']['MONITORING_CAP']) as $category) {
-                //        array_push($ciDataRef[$id]['TAGS'], strtolower('cap_'. $category['TREE']. '_'. $category['NAME']));
-                //    }
-                //}
-                //else
-                //{
-                //    array_push($ciDataRef[$id]['TAGS'], 'cap_default');
-                //}
+                var hasMonitoringCapCategory = false;
+                foreach (var category in hs.Categories.Where(c => c.Group == "MONITORING_CAP"))
+                {
+                    var tag = $"cap_{category.Tree}_{category.Name}".ToLowerInvariant();
+                    hs.Tags.Add(tag);
+                    hasMonitoringCapCategory = true;
+                }
+                if (!hasMonitoringCapCategory)
+                {
+                    hs.Tags.Add("cap_default");
+                }
             }
 
             // check requirements vs capabilities
@@ -525,7 +535,6 @@ namespace OKPluginCLBNaemonVariableResolution
             // variables
             foreach (var kv in evenMoreFilteredHOS)
             {
-                var debugStr = "";
                 var d = new JsonObject();
                 foreach (var variableGroup in kv.Value.Variables)
                 {
@@ -535,9 +544,6 @@ namespace OKPluginCLBNaemonVariableResolution
                     var first = ordered.First();
                     inner["value"] = first.Value;
                     inner["refType"] = first.RefType;
-
-                    if (debugOutput)
-                        debugStr += $"{variableGroup.Key}           {first.Value}\n";
 
                     var chain = new JsonArray();
                     foreach (var vv in ordered.Skip(1))
@@ -552,11 +558,6 @@ namespace OKPluginCLBNaemonVariableResolution
                 }
                 var value = AttributeScalarValueJSON.BuildFromString(d.ToJsonString(), false);
                 attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables", value, kv.Key));
-                if (debugOutput)
-                {
-                    var valueDebug = new AttributeScalarValueText(debugStr, true);
-                    attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_variables_debug", valueDebug, kv.Key));
-                }
             }
             // naemons -> hosts/services
             foreach(var (naemonCIID, hosCIID) in naemons2hos)

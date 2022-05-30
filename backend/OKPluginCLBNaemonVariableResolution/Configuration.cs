@@ -2,6 +2,11 @@
 
 namespace OKPluginCLBNaemonVariableResolution
 {
+    public enum Stage
+    {
+        Dev, Prod
+    }
+
     public class Configuration
     {
         [JsonPropertyName("cmdb_input_layerset")]
@@ -13,6 +18,8 @@ namespace OKPluginCLBNaemonVariableResolution
         [JsonPropertyName("selfservice_variables_input_layerset")]
         public List<string> SelfserviceVariablesInputLayerSet { get; set; }
 
+        [JsonPropertyName("stage")]
+        public Stage Stage { get; set; }
         public Configuration()
         {
             CMDBInputLayerSet = new List<string>();

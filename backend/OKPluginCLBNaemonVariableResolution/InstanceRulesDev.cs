@@ -6,6 +6,11 @@ namespace OKPluginCLBNaemonVariableResolution
     {
         public void ApplyInstanceRules(HostOrService hs, IDictionary<Guid, Group> groups)
         {
+            /*
+            *********************************************************************
+               ALERTING
+            *********************************************************************
+            */
             hs.AddVariable(new Variable("ALERTS", "FIXED", "ON"));
 
             // disable ALERTS for non-active and non-infoalerting
@@ -16,32 +21,32 @@ namespace OKPluginCLBNaemonVariableResolution
             if ((hs.Environment == "DEV" || hs.Environment == "QM") && (hs.AppSupportGroup == argusGroupCIID || hs.OSSupportGroup == argusGroupCIID))
                 hs.AddVariable(new Variable("ALERTS", "FIXED", "OFF", 1));
 
-            //        if (in_array($ci['PROFILE'], ['profiledynamic-tsi-silverpeak-device', 'profiledynamic-tsi-silverpeak-orchestrator']))
-            //        {
-            //$resultRef[$id]['VARS']['ALERTS'] = 'ON';
-            //        }
+            // enable tsi sdwan silverpeak test
+            if (hs.HasAnyProfileOf("profiledynamic-tsi-silverpeak-device", "profiledynamic-tsi-silverpeak-orchestrator"))
+                hs.AddVariable(new Variable("ALERTS", "FIXED", "ON", 2));
 
-            //        /* enable tsi sdwan versa test */
-            //        if (in_array($ci['PROFILE'], ['profiledynamic-tsi-versa-device', 'profiledynamic-tsi-versa-orchestrator']))
-            //        {
-            //$resultRef[$id]['VARS']['ALERTS'] = 'ON';
-            //        }
+            // enable tsi sdwan versa test
+            if (hs.HasAnyProfileOf("profiledynamic-tsi-versa-device", "profiledynamic-tsi-versa-orchestrator"))
+                hs.AddVariable(new Variable("ALERTS", "FIXED", "ON", 2));
 
-            // TODO
-
+            /*
+            *********************************************************************
+                customer scoping
+            *********************************************************************
+            */
             var capCust = $"cap_cust_{hs.Customer.Nickname.ToLowerInvariant()}";
             hs.Tags.Add(capCust);
 
-            // TODO
-
-
-
+            /*
+            *********************************************************************
+               Event Generator, please place at last
+            *********************************************************************
+            */
             if (hs.HasProfile("profiledev-default-app-naemon-eventgenerator"))
             {
                 hs.Tags.Clear();
                 hs.Tags.Add("cap_eventgenerator");
             }
-
         }
 
         public bool FilterTarget(HostOrService hs)
