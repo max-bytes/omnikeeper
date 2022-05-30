@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Row, Col } from "antd";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTimes, faPlus, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faPlus, faChevronUp } from '@fortawesome/free-solid-svg-icons'
 import { InputControl } from 'utils/attributeTypes'
 
 function EditableAttributeValue(props) {
