@@ -8,6 +8,7 @@
           "id"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -34,6 +35,7 @@
           "id"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -60,6 +62,7 @@
           "id"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -107,6 +110,7 @@
           "id"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -154,6 +158,7 @@
           "id"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {

@@ -26,6 +26,8 @@ namespace OKPluginGenericJSONIngest
         public string tempID;
         public IInboundIDMethod idMethod;
         [JsonConverter(typeof(JsonStringEnumConverter))]
+        public SameTempIDHandling sameTempIDHandling;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public SameTargetCIHandling sameTargetCIHandling;
         public IEnumerable<GenericInboundAttribute> attributes;
     }

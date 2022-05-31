@@ -8,6 +8,7 @@
           "cmdb.host.id"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -392,6 +393,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -468,6 +470,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -553,6 +556,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -638,6 +642,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -723,6 +728,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -808,6 +814,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -893,6 +900,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -978,6 +986,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -1063,6 +1072,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -1148,6 +1158,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -1233,6 +1244,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -1318,6 +1330,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -1403,6 +1416,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -1471,6 +1485,7 @@
           "cmdb.host.id"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -2047,6 +2062,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -2195,6 +2211,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -2362,6 +2379,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -2445,6 +2463,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -2519,6 +2538,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -2593,6 +2613,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -2667,6 +2688,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -2745,6 +2767,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -2816,6 +2839,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -2887,6 +2911,7 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {

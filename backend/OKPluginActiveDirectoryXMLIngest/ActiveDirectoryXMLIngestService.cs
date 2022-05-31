@@ -87,7 +87,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 var ad = new CICandidateAttributeData(fragments);
                 var ciCandidate = new CICandidate(Guid.NewGuid(), "User xyz", // TODO: proper temp-ID
                     CIIdentificationMethodByData.BuildFromAttributes(IdentifiableUserAttributes, ad, searchLayers), 
-                    SameTargetCIHandling.Error, ad);
+                    SameTempIDHandling.DropAndWarn, SameTargetCIHandling.Error, ad);
                 yield return ciCandidate;
             }
         }
@@ -138,7 +138,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
 
                 var ad = new CICandidateAttributeData(fragments);
                 var ciCandidate = new CICandidate(computerGuid, "Computer xyz", // TODO: proper temp-ID
-                    CIIdentificationMethodByData.BuildFromAttributes(IdentifiableComputerAttributes, ad, searchLayers), SameTargetCIHandling.Error, ad);
+                    CIIdentificationMethodByData.BuildFromAttributes(IdentifiableComputerAttributes, ad, searchLayers), SameTempIDHandling.DropAndWarn, SameTargetCIHandling.Error, ad);
                 computers.Add(ciCandidate);
             }
 
@@ -194,7 +194,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
 
                 var ad = new CICandidateAttributeData(fragments);
                 var ciCandidate = new CICandidate(groupGuid, "Group xyz", // TODO: proper temp-ID
-                    CIIdentificationMethodByData.BuildFromAttributes(IdentifiableGroupAttributes, ad, searchLayers), SameTargetCIHandling.Error, ad);
+                    CIIdentificationMethodByData.BuildFromAttributes(IdentifiableGroupAttributes, ad, searchLayers), SameTempIDHandling.DropAndWarn, SameTargetCIHandling.Error, ad);
                 groups.Add(ciCandidate);
             }
 

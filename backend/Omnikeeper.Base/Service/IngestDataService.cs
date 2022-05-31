@@ -45,17 +45,43 @@ namespace Omnikeeper.Base.Service
             var cisToCreate = new List<Guid>();
             var ciCandidatesToInsert = new Dictionary<Guid, (CICandidateAttributeData attributes, Guid targetCIID, string tempID)>();
             var droppedCandidateCIs = new HashSet<Guid>();
+            var processedTempIDs = new HashSet<string>();
 
             foreach (var cic in data.CICandidates)
             {
                 var attributes = cic.Attributes;
-                var ciCandidateCIID = cic.TempCIID; // TODO: detect duplicate tempCIIDs in source -> throw exception if so, each candidate MUST have a unique ID
+                var ciCandidateCIID = cic.TempCIID;
                 try
                 {
+                    // detect if another candidate CI with the same tempID was already prepared and act according to SameTempIDHandling
+                    var dropCandidateCIBecauseOfSameTempID = false;
+                    if (processedTempIDs.Contains(cic.TempID))
+                    {
+                        switch (cic.SameTempIDHandling)
+                        {
+                            case SameTempIDHandling.Drop:
+                                dropCandidateCIBecauseOfSameTempID = true;
+                                break;
+                            case SameTempIDHandling.DropAndWarn:
+                                dropCandidateCIBecauseOfSameTempID = true;
+                                logger.LogWarning($"Dropping candidate CI with temp-ID {cic.TempID}, as there is already a candidate CI with that tempID");
+                                break;
+                        }
+                    } 
+                    else
+                    {
+                        processedTempIDs.Add(cic.TempID);
+                    }
+                    if (dropCandidateCIBecauseOfSameTempID)
+                    {
+                        droppedCandidateCIs.Add(ciCandidateCIID);
+                        continue;
+                    }
+
                     // find out if it's a new CI or an existing one
                     var foundCIIDs = await ciMappingService.TryToMatch(cic.IdentificationMethod, ciMappingContext, trans, logger);
 
-                    var dropCandidateCI = false;
+                    var dropCandidateCIBecauseOfSameTargetCI = false;
                     Guid? mergeIntoOtherTargetCIID = null;
                     if (!foundCIIDs.IsEmpty() && ciCandidatesToInsert.ContainsKey(foundCIIDs[0]))
                     {
@@ -66,10 +92,10 @@ namespace Omnikeeper.Base.Service
                             case SameTargetCIHandling.Error:
                                 throw new Exception($"Candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
                             case SameTargetCIHandling.Drop:
-                                dropCandidateCI = true;
+                                dropCandidateCIBecauseOfSameTargetCI = true;
                                 break;
                             case SameTargetCIHandling.DropAndWarn:
-                                dropCandidateCI = true;
+                                dropCandidateCIBecauseOfSameTargetCI = true;
                                 logger.LogWarning($"Dropping candidate CI with temp-ID {cic.TempID}, as candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
                                 break;
                             case SameTargetCIHandling.Evade:
@@ -103,7 +129,7 @@ namespace Omnikeeper.Base.Service
                         cisToCreate.Add(newCIID);
                     }
 
-                    if (dropCandidateCI)
+                    if (dropCandidateCIBecauseOfSameTargetCI)
                     { // drop candidate completely
                         droppedCandidateCIs.Add(ciCandidateCIID);
                     } else if (mergeIntoOtherTargetCIID.HasValue)
@@ -208,19 +234,27 @@ namespace Omnikeeper.Base.Service
         Merge
     }
 
+    public enum SameTempIDHandling
+    {
+        DropAndWarn, // default
+        Drop
+    };
+
     public class CICandidate
     {
         public Guid TempCIID { get; set; }
         public string TempID { get; set; }
         public ICIIdentificationMethod IdentificationMethod { get; private set; }
+        public SameTempIDHandling SameTempIDHandling { get; private set; }
         public SameTargetCIHandling SameTargetCIHandling { get; private set; }
         public CICandidateAttributeData Attributes { get; private set; }
 
-        public CICandidate(Guid tempCIID, string tempID, ICIIdentificationMethod identificationMethod, SameTargetCIHandling sameTargetCIHandling, CICandidateAttributeData attributes)
+        public CICandidate(Guid tempCIID, string tempID, ICIIdentificationMethod identificationMethod, SameTempIDHandling sameTempIDHandling, SameTargetCIHandling sameTargetCIHandling, CICandidateAttributeData attributes)
         {
             TempCIID = tempCIID;
             TempID = tempID;
             IdentificationMethod = identificationMethod;
+            SameTempIDHandling = sameTempIDHandling;
             SameTargetCIHandling = sameTargetCIHandling;
             Attributes = attributes;
         }

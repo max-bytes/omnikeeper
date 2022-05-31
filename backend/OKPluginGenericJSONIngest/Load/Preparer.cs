@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -38,7 +37,7 @@ namespace OKPluginGenericJSONIngest.Load
                     var tempGuid = Guid.NewGuid();
                     tempCIIDMapping.TryAdd(ci.tempID, tempGuid);
 
-                    ciCandidates.Add(new CICandidate(tempGuid, ci.tempID, idMethod, ci.sameTargetCIHandling, attributes));
+                    ciCandidates.Add(new CICandidate(tempGuid, ci.tempID, idMethod, ci.sameTempIDHandling, ci.sameTargetCIHandling, attributes));
                 }
                 catch (Exception e)
                 {

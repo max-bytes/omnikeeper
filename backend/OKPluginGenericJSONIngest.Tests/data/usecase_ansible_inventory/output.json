@@ -8,6 +8,7 @@
           "fqdn"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -193,6 +194,7 @@
           "mount"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -312,6 +314,7 @@
           "mount"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -429,6 +432,7 @@
           "__name"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -476,6 +480,7 @@
           "__name"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -520,6 +525,7 @@
           "fqdn"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -704,6 +710,7 @@
           "mount"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -823,6 +830,7 @@
           "mount"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -940,6 +948,7 @@
           "__name"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -985,6 +994,7 @@
         "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest",
         "tempID": "tempCIID\u003Eh1jmplx01.mhx.at"
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -1013,6 +1023,7 @@
         "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest",
         "tempID": "tempCIID\u003Eh1jmplx01.mhx.at"
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
@@ -1047,6 +1058,7 @@
         "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest",
         "tempID": "tempCIID\u003Eh1jmplx01.mhx.at"
       },
+      "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
       "attributes": [
         {
