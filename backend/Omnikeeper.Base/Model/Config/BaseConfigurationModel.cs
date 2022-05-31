@@ -23,7 +23,7 @@ namespace Omnikeeper.Base.Model.Config
             {
                 return new BaseConfigurationV2(
                     TimeSpan.FromDays(90),
-                    "*/15 * * * * ?",
+                    "*/5 * * * * ?",
                     "*/5 * * * * ?",
                     "* * * * * ?",
                     "0 0 1 * * ?"

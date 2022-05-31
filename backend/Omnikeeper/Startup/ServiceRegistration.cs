@@ -217,6 +217,8 @@ namespace Omnikeeper.Startup
             builder.RegisterType<InnerLayerDataModel>().SingleInstance();
             builder.RegisterType<ODataAPIContextModel>().SingleInstance();
             builder.RegisterType<UsageStatsModel>().As<IUsageStatsModel>().SingleInstance();
+            builder.RegisterGeneric(typeof(GenericTraitEntityModel<,>)).SingleInstance();
+            builder.RegisterGeneric(typeof(GenericTraitEntityModel<>)).SingleInstance();
 
             // these aren't real models, but we keep them here because they are closely related to models
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();

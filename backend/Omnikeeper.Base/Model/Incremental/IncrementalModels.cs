@@ -10,7 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.Base.CLB
+namespace Omnikeeper.Base.Model.Incremental
 {
     public class IncrementalCISelectionModel
     {
@@ -157,7 +157,7 @@ namespace Omnikeeper.Base.CLB
             if (!store.TryGet<IDictionary<Guid, EffectiveTrait>>(key, out var so) || cis.ForcedFullUpdate)
             {
                 var tmp = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, cis.All.Values, layerSet, trans, timeThreshold);
-                store.Set<IDictionary<Guid, EffectiveTrait>>(key, tmp);
+                store.Set(key, tmp);
                 return new UpdateSet((IReadOnlyDictionary<Guid, EffectiveTrait>)tmp, (IReadOnlyDictionary<Guid, EffectiveTrait>)tmp, ImmutableList<Guid>.Empty, true);
             }
             else
@@ -204,7 +204,7 @@ namespace Omnikeeper.Base.CLB
             {
                 var entities = ets.All.ToDictionary(kv => kv.Key, kv => GenericTraitEntityHelper.EffectiveTrait2Object<T>(kv.Value, attributeFieldInfos, relationFieldInfos));
                 store.Set<IDictionary<Guid, T>>(key, entities);
-                return new UpdateSet((IReadOnlyDictionary<Guid, T>)entities, (IReadOnlyDictionary<Guid, T>)entities, ImmutableList<Guid>.Empty, true);
+                return new UpdateSet(entities, entities, ImmutableList<Guid>.Empty, true);
             }
             else
             {
@@ -222,7 +222,7 @@ namespace Omnikeeper.Base.CLB
                     so[uet.Key] = uet.Value;
                 }
 
-                return new UpdateSet((IReadOnlyDictionary<Guid, T>)so, (IReadOnlyDictionary<Guid, T>)updatedEntities, removedEntities, false);
+                return new UpdateSet((IReadOnlyDictionary<Guid, T>)so, updatedEntities, removedEntities, false);
             }
         }
         public class UpdateSet : IncrementalUpdateSet<IReadOnlyDictionary<Guid, T>, IReadOnlyDictionary<Guid, T>>
@@ -244,7 +244,7 @@ namespace Omnikeeper.Base.CLB
             All = all;
             Updated = updated;
             Removed = removed;
-            this.ForcedFullUpdate = forcedFullUpdate;
+            ForcedFullUpdate = forcedFullUpdate;
         }
     }
 

@@ -81,6 +81,11 @@ namespace Omnikeeper.Runners
         private async Task TriggerCLB(CLConfigV1 clConfig, LayerData layerData)
         {
             var jobKey = new JobKey($"{clConfig.ID}@{layerData.LayerID}");
+            var triggerKey = new TriggerKey($"trigger@{clConfig.ID}@{layerData.LayerID}");
+
+            // resume triggers that ran into an error, see https://stackoverflow.com/questions/32273540/recover-from-trigger-error-state-after-job-constructor-threw-an-exception
+            if (await scheduler.GetTriggerState(triggerKey) == TriggerState.Error)
+                await scheduler.ResumeTrigger(triggerKey);
 
             if (!await scheduler.CheckExists(jobKey))
             { // only trigger if we are not already running a job with that ID (which would mean that the previous run is still running)
@@ -90,7 +95,7 @@ namespace Omnikeeper.Runners
                 job.JobDataMap.Add("clConfig_CLBrainReference", clConfig.CLBrainReference);
                 job.JobDataMap.Add("layerID", layerData.LayerID);
 
-                ITrigger trigger = TriggerBuilder.Create().StartNow().Build();
+                ITrigger trigger = TriggerBuilder.Create().WithIdentity(triggerKey).StartNow().Build();
                 await scheduler.ScheduleJob(job, trigger);
             }
         }

@@ -17,18 +17,44 @@ namespace OKPluginCLBNaemonVariableResolution
     public class CLBNaemonVariableResolution : CLBBase
     {
         private readonly IRelationModel relationModel;
-        private readonly ICIModel ciModel;
-        private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ILayerModel layerModel;
         private readonly IAttributeModel attributeModel;
-        public CLBNaemonVariableResolution(ICIModel ciModel, ILayerModel layerModel, IEffectiveTraitModel effectiveTraitModel,
-            IRelationModel relationModel, IAttributeModel attributeModel)
+        private readonly GenericTraitEntityModel<TargetHost, string> targetHostModel;
+        private readonly GenericTraitEntityModel<TargetService, string> targetServiceModel;
+        private readonly GenericTraitEntityModel<NaemonVariableV1, long> naemonV1VariableModel;
+        private readonly GenericTraitEntityModel<SelfServiceVariable, (string refType, string refID, string name)> selfServiceVariableModel;
+        private readonly GenericTraitEntityModel<Customer, string> customerModel;
+        private readonly GenericTraitEntityModel<Profile, long> profileModel;
+        private readonly GenericTraitEntityModel<Category, string> categoryModel;
+        private readonly GenericTraitEntityModel<ServiceAction, string> serviceActionModel;
+        private readonly GenericTraitEntityModel<Interface, string> interfaceModel;
+        private readonly GenericTraitEntityModel<Group, string> groupModel;
+        private readonly GenericTraitEntityModel<NaemonInstanceV1, string> naemonInstanceModel;
+        private readonly GenericTraitEntityModel<TagV1> tagModel;
+
+        public CLBNaemonVariableResolution(ILayerModel layerModel, IRelationModel relationModel, IAttributeModel attributeModel,
+            GenericTraitEntityModel<TargetHost, string> targetHostModel, GenericTraitEntityModel<TargetService, string> targetServiceModel, 
+            GenericTraitEntityModel<NaemonVariableV1, long> naemonV1VariableModel, GenericTraitEntityModel<SelfServiceVariable, (string refType, string refID, string name)> selfServiceVariableModel,
+            GenericTraitEntityModel<Customer, string> customerModel, GenericTraitEntityModel<Profile, long> profileModel,
+            GenericTraitEntityModel<Category, string> categoryModel, GenericTraitEntityModel<ServiceAction, string> serviceActionModel,
+            GenericTraitEntityModel<Interface, string> interfaceModel, GenericTraitEntityModel<Group, string> groupModel,
+            GenericTraitEntityModel<NaemonInstanceV1, string> naemonInstanceModel, GenericTraitEntityModel<TagV1> tagModel)
         {
             this.relationModel = relationModel;
-            this.ciModel = ciModel;
-            this.effectiveTraitModel = effectiveTraitModel;
             this.layerModel = layerModel;
             this.attributeModel = attributeModel;
+            this.targetHostModel = targetHostModel;
+            this.naemonV1VariableModel = naemonV1VariableModel;
+            this.selfServiceVariableModel = selfServiceVariableModel;
+            this.customerModel = customerModel;
+            this.profileModel = profileModel;
+            this.categoryModel = categoryModel;
+            this.serviceActionModel = serviceActionModel;
+            this.interfaceModel = interfaceModel;
+            this.groupModel = groupModel;
+            this.naemonInstanceModel = naemonInstanceModel;
+            this.tagModel = tagModel;
+            this.targetServiceModel = targetServiceModel;
         }
 
         private Configuration ParseConfig(JsonDocument configJson)
@@ -74,19 +100,6 @@ namespace OKPluginCLBNaemonVariableResolution
             var monmanV1InputLayerset = await layerModel.BuildLayerSet(cfg.MonmanV1InputLayerSet.ToArray(), trans);
             var selfserviceVariablesInputLayerset = await layerModel.BuildLayerSet(cfg.SelfserviceVariablesInputLayerSet.ToArray(), trans);
 
-            var targetHostModel = new GenericTraitEntityModel<TargetHost, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var targetServiceModel = new GenericTraitEntityModel<TargetService, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var naemonV1VariableModel = new GenericTraitEntityModel<NaemonVariableV1, long>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var selfServiceVariableModel = new GenericTraitEntityModel<SelfServiceVariable, (string refType, string refID, string name)>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var customerModel = new GenericTraitEntityModel<Customer, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var profileModel = new GenericTraitEntityModel<Profile, long>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var categoryModel = new GenericTraitEntityModel<Category, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var serviceActionModel = new GenericTraitEntityModel<ServiceAction, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var interfaceModel = new GenericTraitEntityModel<Interface, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var groupModel = new GenericTraitEntityModel<Group, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var naemonInstanceModel = new GenericTraitEntityModel<NaemonInstanceV1, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var tagModel = new GenericTraitEntityModel<TagV1>(effectiveTraitModel, ciModel, attributeModel, relationModel);
-
             var instanceRules = cfg.Stage switch
             {
                 Stage.Dev => (IInstanceRules)new InstanceRulesDev(),
@@ -95,11 +108,6 @@ namespace OKPluginCLBNaemonVariableResolution
             };
 
             var allCategories = await categoryModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-
-            var categories = allCategories
-                .Where(kv => kv.Value.Instance == "SERVER") // TODO: correct?
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
-
             var hosts = await targetHostModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var services = await targetServiceModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var customers = await customerModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
@@ -111,6 +119,11 @@ namespace OKPluginCLBNaemonVariableResolution
             var groups = await groupModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
             var naemonInstances = await naemonInstanceModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
             var tags = await tagModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
+
+            // filter categories
+            var categories = allCategories
+                .Where(kv => kv.Value.Instance == "SERVER") // TODO: correct?
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // filter customers
             var filteredCustomers = customers.Where(c => instanceRules.FilterCustomer(c.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
