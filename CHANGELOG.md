@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [18.0.0] - 2022-05-31
+### Added
+- (breaking) Ingest: added configurable setting for SameTempIDHandling
+- implemented new CLB: OKPluginCLBNaemonVariableResolution
+- technical frontend:
+  - added prettyfying of JSON attribute values in editor
+  - enabled text selection for all manage ag grid crud tables
+  - implemented and use JSONCellEditor for clBrainConfig editing
+  - added default sort order for multiple management tables
+  - implemented toggle for visibility for all layers
+  - sort effective traits in CI view, fixes #209
+  - removed keycloak workaround, improved graphql error handling
+  - improved origin popup
+  - small improvement to attribute value array UI
+  - improved layer icon popovers
+  - visual improvements to relations lists
+- trait entities: implemented support for singular trait relations
+- usage stats: added operation column
+- new graph visualization: based on usage data and layer-centric
+### Changed
+- CLBs:
+  - (breaking) changed CLB interface
+  - (breaking) renamed CLBs
+  - reworked CLBs to use different user per instance
+  - reworked CLB scheduling to run CLBs asynchronously and in parallel
+  - implemented CLBLastRunCache writing/reading into database instead of in-memory
+- scheduling:
+  - split into local and distributed scheduler
+  - made quartz distributed instance id configurable
+- big performance improvement for trait entities
+- split CI/CD pipeline into frontend and backend
+### Fixed
+- fixed issue with long-running CLBs
+- bugfix in trait entity for singular trait relation that is null/empty
+- technical frontend:
+  - bugfix when managing predicates
+  - fixed bug with non-updating layersetting, fixes #157
+
 ## [17.0.0] - 2022-05-06
 ### Added
 - (breaking) reworked odata support based on trait entities
