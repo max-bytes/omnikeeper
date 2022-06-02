@@ -477,11 +477,11 @@ namespace Omnikeeper.GraphQL
                     var predicates = await predicateModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement PredicateProvider
                     var generators = await generatorModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement GeneratorProvider
 
-                    var numCIIDs = await layerStatisticsModel.GetCIIDs(userContext.Transaction);
-                    var numActiveAttributes = await layerStatisticsModel.GetActiveAttributes(null, userContext.Transaction);
-                    var numAttributeChanges = await layerStatisticsModel.GetAttributeChangesHistory(null, userContext.Transaction);
-                    var numActiveRelations = await layerStatisticsModel.GetActiveRelations(null, userContext.Transaction);
-                    var numRelationChanges = await layerStatisticsModel.GetRelationChangesHistory(null, userContext.Transaction);
+                    var numCIIDs = await layerStatisticsModel.GetCIIDsApproximate(userContext.Transaction);
+                    var numActiveAttributes = await layerStatisticsModel.GetActiveAttributesApproximate(userContext.Transaction);
+                    var numAttributeChanges = await layerStatisticsModel.GetAttributeChangesHistoryApproximate(userContext.Transaction);
+                    var numActiveRelations = await layerStatisticsModel.GetActiveRelationsApproximate(userContext.Transaction);
+                    var numRelationChanges = await layerStatisticsModel.GetRelationChangesHistoryApproximate(userContext.Transaction);
                     var numChangesets = await changesetModel.GetNumberOfChangesets(userContext.Transaction);
 
                     return new Statistics(numCIIDs, numActiveAttributes, numActiveRelations, numChangesets, numAttributeChanges, numRelationChanges, layers.Count(), traits.Count(), predicates.Count(), generators.Count());
