@@ -47,7 +47,7 @@ function CIRelations(props) {
     if (fromCIIDCompare !== 0)
       return fromCIIDCompare;
     return a.relation.toCIID.localeCompare(b.relation.toCIID)
-  }, []);
+  }, [areOutgoingRelations]);
 
   const [sortedRelations, setSortedRelations] = useState(null);
   useEffect(() => {
