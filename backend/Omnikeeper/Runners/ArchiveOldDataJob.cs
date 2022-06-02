@@ -110,7 +110,7 @@ namespace Omnikeeper.Runners
             }
             catch (Exception e)
             {
-                logger.LogError("Error running archive-old-data job", e);
+                logger.LogError(e, "Error running archive-old-data job");
             }
         }
     }
