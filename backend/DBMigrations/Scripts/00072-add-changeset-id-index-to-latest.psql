@@ -1,0 +1,3 @@
+﻿--- added to make deleting changesets not time out
+CREATE INDEX ON public.attribute_latest USING btree (changeset_id ASC NULLS LAST);
+CREATE INDEX ON public.relation_latest USING btree (changeset_id ASC NULLS LAST);
