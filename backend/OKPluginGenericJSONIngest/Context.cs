@@ -46,7 +46,7 @@ namespace OKPluginGenericJSONIngest
             ExtractConfig = extractConfig;
             TransformConfig = transformConfig;
             LoadConfig = loadConfig;
-            Name = $"GridView-Context {ID}";
+            Name = $"Generic-JSON-Ingest-Context {ID}";
         }
 
         public const string ContextIDRegexString = "^[a-z0-9_]+$";
