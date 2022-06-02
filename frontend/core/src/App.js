@@ -15,6 +15,7 @@ import Changeset from "components/changesets/Changeset";
 import GridView from './components/gridView/GridView'
 import Manage from './components/manage/Manage'
 import UserBar from './components/UserBar';
+import Page from './components/Page';
 import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
 import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
@@ -125,37 +126,37 @@ function App() {
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <Breadcrumbs style={{marginTop: '10px', marginBottom: '10px'}} />
                 <Switch>
-                  <Route path="/login">
+                  <Page path="/login" title="Login">
                     <LoginPage />
-                  </Route>
-                  <PrivateRoute path="/graphql-playground">
+                  </Page>
+                  <PrivateRoute path="/graphql-playground" title="GraphQL Playground">
                     <GraphQLPlayground />
                   </PrivateRoute>
-                  <PrivateRoute path="/diffing">
+                  <PrivateRoute path="/diffing" title="Diffing">
                     <Diffing />
                   </PrivateRoute>
-                  <PrivateRoute path="/createCI">
+                  <PrivateRoute path="/createCI" title="Create CI">
                     <AddNewCI />
                   </PrivateRoute>
-                  <PrivateRoute path="/explorer/:ciid">
+                  <PrivateRoute path="/explorer/:ciid" title="View CI">
                     <Explorer />
                   </PrivateRoute>
-                  <PrivateRoute path="/explorer">
+                  <PrivateRoute path="/explorer" title="Explore CIs">
                     <SearchCIAdvanced />
                   </PrivateRoute>
-                  <PrivateRoute path="/changesets/:changesetID">
+                  <PrivateRoute path="/changesets/:changesetID" title="View Changeset">
                     <Changeset />
                   </PrivateRoute>
-                  <PrivateRoute path="/changesets">
+                  <PrivateRoute path="/changesets" title="Changesets">
                     <ChangesetList />
                   </PrivateRoute>
-                  <PrivateRoute path="/grid-view">
+                  <PrivateRoute path="/grid-view" title="Grid-View">
                     <GridView/>
                   </PrivateRoute>
-                  <PrivateRoute path="/manage">
+                  <PrivateRoute path="/manage" title="Manage">
                     <Manage/>
                   </PrivateRoute>
-                  <PrivateRoute path="/traits/:traitID">
+                  <PrivateRoute path="/traits/:traitID" title="View Trait">
                     <Trait />
                   </PrivateRoute>
 
@@ -165,7 +166,7 @@ function App() {
                       {
                         const items = plugin.components.menuComponents.map(mc => {
                             const Component = mc.component;
-                            return <PrivateRoute key={mc.url} path={mc.url}>
+                            return <PrivateRoute key={mc.url} path={mc.url} title={mc.title}>
                               <Component />
                             </PrivateRoute>
                           }

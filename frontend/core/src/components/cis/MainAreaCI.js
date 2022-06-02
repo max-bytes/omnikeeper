@@ -1,9 +1,9 @@
 import { useQuery } from '@apollo/client';
 import React from 'react';
+import { Spin } from 'antd';
 import CI from './CI';
 import PropTypes from 'prop-types'
 import { queries } from 'graphql/queries'
-import LoadingOverlay from 'react-loading-overlay' // TODO: switch to antd spin
 import { ErrorView } from 'components/ErrorView';
 import { useExplorerLayers } from 'utils/layers';
 import { useSelectedTime } from 'utils/useSelectedTime';
@@ -28,19 +28,9 @@ function LoadingCI(props) {
   
   React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI(); }, [selectedTime, refetchCI]);
 
-  if (dataCI) return (<LoadingOverlay 
-    active={loadingCI} spinner
-    styles={{
-      wrapper: (base) => ({
-        ...base,
-        minHeight: '100%',
-        display: 'flex',
-        flexDirection: 'column'
-      })
-    }}
-    >
+  if (dataCI) return (<Spin spinning={loadingCI}>
       <CI timeThreshold={timeThreshold} ci={dataCI.cis[0]} isEditable={isEditable} ></CI>
-    </LoadingOverlay>);
+    </Spin>);
   else if (loadingCI) return <p>Loading...</p>;
   else if (errorCI) return <ErrorView error={errorCI}/>;
   else return <p>?</p>;

@@ -28,49 +28,49 @@ export default function Manage(props) {
     return (
         <Switch>
             <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
-            <PrivateRoute path={`${path}/base-configuration`}>
+            <PrivateRoute path={`${path}/base-configuration`} title="Manage Base Configuration">
                 <ManageBaseConfiguration />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/predicates`}>
+            <PrivateRoute path={`${path}/predicates`} title="Manage Predicates">
                 <ManagePredicates />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/layers/operations/:layerID`}>
+            <PrivateRoute path={`${path}/layers/operations/:layerID`} title="Layer Operations">
                 <LayerOperations />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/layers`}>
+            <PrivateRoute path={`${path}/layers`} title="Manage Layers">
                 <ManageLayers />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/oiacontexts`}>
+            <PrivateRoute path={`${path}/oiacontexts`} title="Manage OIA Contexts">
                 <ManageOIAContexts />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/odataapicontexts`}>
+            <PrivateRoute path={`${path}/odataapicontexts`} title="Manage OData API Contexts">
                 <ManageODataAPIContexts />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/traits`}>
+            <PrivateRoute path={`${path}/traits`} title="Manage Traits">
                 <ManageTraits />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/generators`}>
+            <PrivateRoute path={`${path}/generators`} title="Manage Generators">
                 <ManageGenerators />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/auth-roles`}>
+            <PrivateRoute path={`${path}/auth-roles`} title="Manage Auth-Roles">
                 <ManageAuthRoles />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/cl-configs`}>
+            <PrivateRoute path={`${path}/cl-configs`} title="Manage Compute-Layer Configurations">
                 <ManageCLConfigs />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/current-user`}>
+            <PrivateRoute path={`${path}/current-user`} title="Debug Current User">
                 <ManageCurrentUser />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/version`}>
+            <PrivateRoute path={`${path}/version`} title="Show Version">
                 <ShowVersion/>
             </PrivateRoute>
-            <PrivateRoute path={`${path}/logs`}>
+            <PrivateRoute path={`${path}/logs`} title="Show Logs">
                 <ShowLogs />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/usage-stats`}>
+            <PrivateRoute path={`${path}/usage-stats`} title="Show Usage Stats">
                 <UsageStats />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/restart-application`}>
+            <PrivateRoute path={`${path}/restart-application`} title="Restart Application">
                 <ManageRestartApplication />
             </PrivateRoute>
             {
@@ -92,7 +92,7 @@ export default function Manage(props) {
                 )
             }
 
-            <PrivateRoute path={path}>
+            <PrivateRoute path={path} title="Manage">
                 <div><h2>Management</h2>
                     <h3>Core Management</h3>
                     <ul>

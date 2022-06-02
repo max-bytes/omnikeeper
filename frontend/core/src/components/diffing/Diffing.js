@@ -6,8 +6,7 @@ import { Fragments } from 'graphql/fragments';
 import { useLocation } from 'react-router-dom'
 import { Card, Divider } from "antd";
 import { useQuery, useLazyQuery } from '@apollo/client';
-import { Form, Row, Col, Button, Checkbox } from "antd";
-import LoadingOverlay from 'react-loading-overlay'; // TODO: switch to antd spin
+import { Form, Row, Col, Button, Checkbox, Spin } from "antd";
 import queryString from 'query-string';
 import { withRouter } from 'react-router-dom';
 import gql from 'graphql-tag';
@@ -285,9 +284,9 @@ function Diffing(props) {
         </Card>
         <Row>
           <Col span={24}>
-            <LoadingOverlay fadeSpeed={100} active={loadingDiffResults} spinner>
+            <Spin spinning={loadingDiffResults}>
               <DiffArea diffResults={dataDiffResults?.ciDiffing} />
-            </LoadingOverlay>
+            </Spin>
           </Col>
         </Row>
       </div>

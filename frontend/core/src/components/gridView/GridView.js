@@ -36,19 +36,18 @@ function GridView(props) {
         />
         <Switch>
             <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
-            <PrivateRoute path={`${path}/explorer/:contextName`}>
+            <PrivateRoute path={`${path}/explorer/:contextName`} title="View Grid-View">
                 <Context swaggerClient={swaggerClient} apiVersion={apiVersion} />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/edit-context/:contextName`}>
+            <PrivateRoute path={`${path}/edit-context/:contextName`} title="Edit Grid-View">
                 <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/create-context`}>
+            <PrivateRoute path={`${path}/create-context`} title="Add Grid-View">
                 <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} />
             </PrivateRoute>
-            <PrivateRoute path={`${path}/explorer`}>
+            <PrivateRoute path={`${path}/explorer`} title="List Grid-Views">
                 <GridViewExplorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
             </PrivateRoute>
-
             <PrivateRoute path={path}>
                 <Redirect to={`${path}/explorer`} />
             </PrivateRoute>

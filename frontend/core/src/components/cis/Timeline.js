@@ -2,8 +2,7 @@ import { useQuery } from '@apollo/client';
 import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types'
 import { queries } from 'graphql/queries'
-import LoadingOverlay from 'react-loading-overlay' // TODO: switch to antd spin
-import { Form, Button, Space } from "antd";
+import { Form, Button, Space, Spin } from "antd";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync, faExchangeAlt, faArrowDown, faList } from '@fortawesome/free-solid-svg-icons'
 import { mutations } from 'graphql/mutations';
@@ -113,8 +112,7 @@ function LoadingTimeline(props) {
         </Form>
       </div>
       <div style={{ minHeight: "60px" }}>
-          <LoadingOverlay active={loadingChangesets} spinner>
-              
+        <Spin spinning={loadingChangesets}>
           {changesets && changesets.map((cs) => {
               const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
               const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{formatTimestamp(cs.timestamp)} - {userLabel}</span>;
@@ -144,7 +142,7 @@ function LoadingTimeline(props) {
               setLimit(l => l + 10);
               }}><FontAwesomeIcon icon={loadingChangesets ? faSync : faArrowDown} spin={loadingChangesets} color={"grey"} style={{ padding: "2px"}} /></Button>}
           </Form>
-          </LoadingOverlay>
+        </Spin>
       </div>
     </div>);
 }

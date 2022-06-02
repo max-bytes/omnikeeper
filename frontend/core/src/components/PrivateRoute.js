@@ -1,16 +1,17 @@
 import React from 'react'
-import { Route, Redirect } from 'react-router-dom'
+import { Redirect } from 'react-router-dom'
 import { useKeycloak } from '@react-keycloak/web'
+import Page from './Page';
 
 export function PrivateRoute(props) {
 
-  const { children, ...rest} = props;
+  const { children, title, ...rest} = props;
 
   const { keycloak, initialized } = useKeycloak();
 
   if (!initialized) return "Loading...";
 
-  return <Route
+  return <Page title={title}
       {...rest}
       render={pprops => {
         if (keycloak.authenticated) {
