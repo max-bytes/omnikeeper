@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [18.1.0] - 2022-06-02
+### Changed
+- performance improvements to LayerStatisticsModel
+- improved error message for ArchiveOldDataJob
+### Bugfix
+- fix for wrongly named Generic-JSON-Ingest context CI
+
 ## [18.0.0] - 2022-05-31
 ### Added
 - (breaking) Ingest: added configurable setting for SameTempIDHandling

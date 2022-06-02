@@ -20,8 +20,8 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
-    <PackageReference Include="Npgsql" Version="5.0.7" />
-    <PackageReference Include="Npgsql.Json.NET" Version="5.0.7" />
+    <PackageReference Include="Npgsql" Version="5.0.13" />
+    <PackageReference Include="Npgsql.Json.NET" Version="5.0.13" />
     <PackageReference Include="Scriban" Version="4.0.2" />
     <PackageReference Include="SpanJson" Version="3.2.0" />
     <PackageReference Include="System.Collections.Immutable" Version="6.0.0" />
