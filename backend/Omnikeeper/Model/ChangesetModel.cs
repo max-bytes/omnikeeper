@@ -263,14 +263,25 @@ namespace Omnikeeper.Model
 
         public async Task<int> DeleteEmptyChangesets(IModelContext trans)
         {
-            var query = @"delete from changeset c where c.id not in (
-                select distinct changeset_id from attribute
-                union
-                select distinct changeset_id from relation
-            )";
+            // NOTE: we do it in this roundabout way because otherwise, query takes a long time and might timeout for large datasets
+            var emptyChangesetsQuery = @"
+                select c.id from changeset c where c.id not in (
+	            select distinct changeset_id from attribute
+	            union
+	            select distinct changeset_id from relation
+	            )";
+            using var emptyChangesetsCommand = new NpgsqlCommand(emptyChangesetsQuery, trans.DBConnection, trans.DBTransaction);
+            emptyChangesetsCommand.Prepare();
+            var emptyChangesets = new List<Guid>();
+            using (var dr = await emptyChangesetsCommand.ExecuteReaderAsync())
+            {
+                while (await dr.ReadAsync())
+                    emptyChangesets.Add(dr.GetGuid(0));
+            }
 
+            var query = @"delete from changeset c where c.id = any(@empty_changesets)";
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
-
+            command.Parameters.AddWithValue("empty_changesets", emptyChangesets);
             command.Prepare();
 
             var numArchived = await command.ExecuteNonQueryAsync();
