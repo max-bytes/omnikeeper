@@ -96,5 +96,13 @@ namespace Omnikeeper.Model
 
             return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
+
+        public async Task<long> GetCIIDs(IModelContext trans)
+        {
+            // return number of ciids
+            using var command = new NpgsqlCommand($@"select count(id) from ci", trans.DBConnection, trans.DBTransaction);
+
+            return ((long?)await command.ExecuteScalarAsync())!.Value;
+        }
     }
 }

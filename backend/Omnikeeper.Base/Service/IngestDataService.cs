@@ -129,6 +129,8 @@ namespace Omnikeeper.Base.Service
                         cisToCreate.Add(newCIID);
                     }
 
+                    // TODO: add handling option for new CIs: if its allowed or not
+
                     if (dropCandidateCIBecauseOfSameTargetCI)
                     { // drop candidate completely
                         droppedCandidateCIs.Add(ciCandidateCIID);

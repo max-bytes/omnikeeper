@@ -5,6 +5,7 @@ namespace Omnikeeper.Base.Model
 {
     public interface ILayerStatisticsModel
     {
+        Task<long> GetCIIDs(IModelContext trans);
         Task<long> GetActiveAttributes(string? layerID, IModelContext trans);
         Task<long> GetAttributeChangesHistory(string? layerID, IModelContext trans);
         Task<long> GetActiveRelations(string? layerID, IModelContext trans);
