@@ -11,17 +11,21 @@ namespace Omnikeeper.Model
         public async Task<long> GetActiveAttributes(string? layerID, IModelContext trans)
         {
             // return number of all active attributes
-            using var commandActiveLayers = new NpgsqlCommand($@"
-                SELECT COUNT(*)
-                FROM attribute_latest
-                WHERE {((layerID != null) ? "layer_id = @layer_id" : "1=1")}
-            ", trans.DBConnection, trans.DBTransaction);
-
             if (layerID != null)
-                commandActiveLayers.Parameters.AddWithValue("layer_id", layerID);
-            commandActiveLayers.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
-
-            return ((long?)await commandActiveLayers.ExecuteScalarAsync())!.Value;
+            {
+                using var command = new NpgsqlCommand($@"
+                    SELECT COUNT(*)
+                    FROM attribute_latest
+                    WHERE layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
+                command.Parameters.AddWithValue("layer_id", layerID);
+                return ((long?)await command.ExecuteScalarAsync())!.Value;
+            } 
+            else
+            {
+                using var command = new NpgsqlCommand(CreateCountQuery("attribute_latest"), trans.DBConnection, trans.DBTransaction);
+                return ((long?)await command.ExecuteScalarAsync())!.Value;
+            }
+            
         }
 
         public async Task<bool> IsLayerEmpty(string layerID, IModelContext trans)
@@ -36,50 +40,60 @@ namespace Omnikeeper.Model
         public async Task<long> GetAttributeChangesHistory(string? layerID, IModelContext trans)
         {
             // return number of all historic attribute changes
-            using var command = new NpgsqlCommand($@"
-                SELECT COUNT(*) 
-                FROM attribute ATT 
-                WHERE ATT.timestamp <= @time_threshold AND {((layerID != null) ? "ATT.layer_id = @layer_id" : "1=1")}
-
-            ", trans.DBConnection, trans.DBTransaction);
-
             if (layerID != null)
+            {
+                using var command = new NpgsqlCommand($@"
+                    SELECT COUNT(*) 
+                    FROM attribute ATT 
+                    WHERE ATT.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
-
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+                return ((long?)await command.ExecuteScalarAsync())!.Value;
+            } 
+            else
+            {
+                using var command = new NpgsqlCommand(CreateCountQueryForPartitionedTable("attribute"), trans.DBConnection, trans.DBTransaction);
+                return ((long?)await command.ExecuteScalarAsync())!.Value;
+            }
         }
 
         public async Task<long> GetActiveRelations(string? layerID, IModelContext trans)
         {
             // return number of all active relations
-            using var command = new NpgsqlCommand($@"
+            if (layerID != null)
+            {
+                using var command = new NpgsqlCommand($@"
                 SELECT count(*)
                 FROM relation_latest
-                WHERE {((layerID != null) ? "layer_id = @layer_id" : "1=1")}
-            ", trans.DBConnection, trans.DBTransaction);
-
-            if (layerID != null)
+                WHERE layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
-
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+                command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
+                return ((long?)await command.ExecuteScalarAsync())!.Value;
+            } 
+            else
+            {
+                using var command = new NpgsqlCommand(CreateCountQuery("relation_latest"), trans.DBConnection, trans.DBTransaction);
+                return ((long?)await command.ExecuteScalarAsync())!.Value;
+            }
         }
 
         public async Task<long> GetRelationChangesHistory(string? layerID, IModelContext trans)
         {
             // return number of all historic relation changes
-            using var command = new NpgsqlCommand($@"
-                SELECT COUNT(*)
-                FROM relation R
-                WHERE R.timestamp <= @time_threshold AND {((layerID != null) ? "R.layer_id = @layer_id" : "1=1")}
-            ", trans.DBConnection, trans.DBTransaction);
-
             if (layerID != null)
+            {
+                using var command = new NpgsqlCommand($@"
+                    SELECT COUNT(*)
+                    FROM relation R
+                    WHERE R.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
-
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+                command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
+                return ((long?)await command.ExecuteScalarAsync())!.Value;
+            } 
+            else
+            {
+                using var command = new NpgsqlCommand(CreateCountQueryForPartitionedTable("relation"), trans.DBConnection, trans.DBTransaction);
+                return ((long?)await command.ExecuteScalarAsync())!.Value;
+            }
         }
 
         public async Task<long> GetLayerChangesetsHistory(string layerID, IModelContext trans)
@@ -100,9 +114,42 @@ namespace Omnikeeper.Model
         public async Task<long> GetCIIDs(IModelContext trans)
         {
             // return number of ciids
-            using var command = new NpgsqlCommand($@"select count(id) from ci", trans.DBConnection, trans.DBTransaction);
+            //var query = $@"select count(id) from ci";
+            var query = CreateCountQuery("ci");
+            using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
 
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+            var d = await command.ExecuteScalarAsync();
+            return ((long?)d)!.Value;
+        }
+
+        private string CreateCountQuery(string tableName)
+        {
+            // much faster, but inaccurate
+            // taken from https://stackoverflow.com/a/7945274
+            return $@"SELECT(CASE WHEN c.reltuples < 0 THEN NULL
+                         WHEN c.relpages = 0 THEN float8 '0'
+                         ELSE c.reltuples / c.relpages END
+                 * (pg_catalog.pg_relation_size(c.oid)
+                  / pg_catalog.current_setting('block_size')::int)
+                   )::bigint
+            FROM   pg_catalog.pg_class c
+            WHERE c.oid = '{tableName}'::regclass";
+        }
+
+        private string CreateCountQueryForPartitionedTable(string tableName)
+        {
+            // taken from https://stackoverflow.com/a/7945274 and adapted for partitioned table
+            return $@"SELECT SUM(i.tableSize)::bigint FROM(
+                SELECT(CASE WHEN c.reltuples < 0 THEN NULL
+                         WHEN c.relpages = 0 THEN float8 '0'
+                         ELSE c.reltuples / c.relpages END
+                 * (pg_catalog.pg_relation_size(c.oid)
+                  / pg_catalog.current_setting('block_size')::int)
+                   )::bigint tableSize
+                FROM   pg_catalog.pg_class c
+
+                WHERE c.relname LIKE '{tableName}%' AND c.relispartition = true AND c.relkind = 'r'
+            ) i";
         }
     }
 }
