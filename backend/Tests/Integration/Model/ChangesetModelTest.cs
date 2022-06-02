@@ -129,7 +129,7 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                Assert.AreEqual(0, await GetService<IChangesetModel>().DeleteEmptyChangesets(trans));
+                Assert.AreEqual(0, await GetService<IChangesetModel>().DeleteEmptyChangesets(1, trans));
                 trans.Commit();
             }
 
@@ -141,7 +141,7 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                Assert.AreEqual(1, await GetService<IChangesetModel>().DeleteEmptyChangesets(trans));
+                Assert.AreEqual(1, await GetService<IChangesetModel>().DeleteEmptyChangesets(2, trans));
                 trans.Commit();
             }
         }

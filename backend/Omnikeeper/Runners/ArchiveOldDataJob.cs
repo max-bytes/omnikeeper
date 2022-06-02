@@ -82,15 +82,21 @@ namespace Omnikeeper.Runners
                 // archive empty changesets
                 // NOTE: several procedures exist that can delete attributes/relations, but do not check if the associated changeset becomes empty
                 // that's why we need a procedure here that checks for empty changesets and deletes them
+                // NOTE: we delete in batches (of 1), to get out of high load scenarios and still make progress
                 logger.LogDebug($"Deleting empty changesets");
-                using (var trans = modelContextBuilder.BuildDeferred())
+                int numDeletedEmptyChangesets = 0;
+                int numDeletedEmptyChangesetsInRun = 0;
+                do
                 {
-                    var numDeletedEmptyChangesets = await changesetModel.DeleteEmptyChangesets(trans);
-                    if (numDeletedEmptyChangesets > 0)
-                        logger.LogInformation($"Deleted {numDeletedEmptyChangesets} changesets because they were empty");
-
-                    trans.Commit();
-                }
+                    using (var trans = modelContextBuilder.BuildDeferred())
+                    {
+                        numDeletedEmptyChangesetsInRun = await changesetModel.DeleteEmptyChangesets(1, trans);
+                        trans.Commit();
+                    }
+                    numDeletedEmptyChangesets += numDeletedEmptyChangesetsInRun;
+                } while (numDeletedEmptyChangesetsInRun > 0);
+                if (numDeletedEmptyChangesets > 0)
+                    logger.LogInformation($"Deleted {numDeletedEmptyChangesets} changesets because they were empty");
                 logger.LogDebug($"Done deleting empty changesets");
 
                 // remove unused CIs

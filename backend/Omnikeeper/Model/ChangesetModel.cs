@@ -261,7 +261,7 @@ namespace Omnikeeper.Model
             return new Changeset(id, user, layerID, origin, timestamp);
         }
 
-        public async Task<int> DeleteEmptyChangesets(IModelContext trans)
+        public async Task<int> DeleteEmptyChangesets(int limit, IModelContext trans)
         {
             // NOTE: we do it in this roundabout way because otherwise, query takes a long time and might timeout for large datasets
             var emptyChangesetsQuery = @"
@@ -269,8 +269,9 @@ namespace Omnikeeper.Model
 	            select distinct changeset_id from attribute
 	            union
 	            select distinct changeset_id from relation
-	            )";
+	            ) limit @limit";
             using var emptyChangesetsCommand = new NpgsqlCommand(emptyChangesetsQuery, trans.DBConnection, trans.DBTransaction);
+            emptyChangesetsCommand.Parameters.AddWithValue("limit", limit);
             emptyChangesetsCommand.Prepare();
             var emptyChangesets = new List<Guid>();
             using (var dr = await emptyChangesetsCommand.ExecuteReaderAsync())

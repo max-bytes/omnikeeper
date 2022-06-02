@@ -52,7 +52,7 @@ namespace Omnikeeper.Base.Model
 
         [Obsolete("Archiving full-changesets-only is not necessary anymore, consider writing a simpler method that just removes outdated attributes/relations")]
         Task<int> ArchiveUnusedChangesetsOlderThan(DateTimeOffset threshold, IModelContext trans);
-        Task<int> DeleteEmptyChangesets(IModelContext trans);
+        Task<int> DeleteEmptyChangesets(int limit, IModelContext trans);
         Task<long> GetNumberOfChangesets(IModelContext trans);
         Task<long> GetNumberOfChangesets(string layerID, IModelContext trans);
         Task<IReadOnlyList<Changeset>> GetChangesetsAfter(Guid afterChangesetID, string[] layerIDs, IModelContext trans, TimeThreshold timeThreshold);
