@@ -25,3 +25,9 @@ TODO: consider making this more specific to not interfere with other uses of ant
   flex-grow: 1;
   min-width: 0px; /* see https://stackoverflow.com/a/41675912 for an explanation */
 }
+
+.workaround-antd-spinner-flex-full-height {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}

@@ -28,7 +28,7 @@ function LoadingCI(props) {
   
   React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI(); }, [selectedTime, refetchCI]);
 
-  if (dataCI) return (<Spin spinning={loadingCI}>
+  if (dataCI) return (<Spin spinning={loadingCI} wrapperClassName="workaround-antd-spinner-flex-full-height">
       <CI timeThreshold={timeThreshold} ci={dataCI.cis[0]} isEditable={isEditable} ></CI>
     </Spin>);
   else if (loadingCI) return <p>Loading...</p>;
