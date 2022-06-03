@@ -95,7 +95,6 @@ function App() {
                 render={({ location }) =>  (
                   <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{justifyContent: 'flex-end'}}>
                     <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Explore CIs</Link></Menu.Item>
-                    <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faCog} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
                     <Menu.Item key="changesets"><Link to="/changesets"><FontAwesomeIcon icon={faList} style={{ marginRight: "0.5rem" }}/> Changesets</Link></Menu.Item>
                     <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
                     <SubMenu key="tools" title={<span><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/>Tools</span>}>
@@ -116,6 +115,7 @@ function App() {
                         })
                       }
                     </SubMenu>
+                    <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faCog} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
                     
                   </Menu>
                 )}
