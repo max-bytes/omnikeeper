@@ -6,23 +6,22 @@ import { Collapse } from "antd";
 import { onAppear, onExit } from 'utils/animation';
 import { Row, Col } from "antd";
 import { MissingLabel, CompareLabel, EmptyLabel, stateBasedBackgroundColor } from './DiffUtilComponents';
-import {useAttributeSegmentsToggler} from 'utils/useAttributeSegmentsToggler'
 
 const { Panel } = Collapse;
 
 // TODO: consider merging with ExplorerAttributeList?
 function DiffAttributeList(props) {
 
+  const {attributes, setOpenAttributeSegments, isSegmentActive} = props;
+
   // TODO: does not work with nested groups yet
-  const nestedAttributes = _.groupBy(props.attributes, (t) => {
+  const nestedAttributes = _.groupBy(attributes, (t) => {
     const splits = t.name.split('.');
     if (splits.length <= 1) return "__base";
     else return splits.slice(0, -1).join(".");
   });
 
-  const [setOpenAttributeSegments, isSegmentActive /*, toggleExpandCollapseAll*/] = useAttributeSegmentsToggler(_.keys(nestedAttributes));
-
-  if (_.size(props.attributes) === 0)
+  if (_.size(attributes) === 0)
     return EmptyLabel();
 
   const attributeAccordionItems = [];
