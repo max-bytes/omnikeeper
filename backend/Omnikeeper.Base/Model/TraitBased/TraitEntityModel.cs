@@ -31,8 +31,6 @@ namespace Omnikeeper.Base.Model.TraitBased
             relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Concat(trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet();
         }
 
-        public ITrait UnderlyingTrait => trait;
-
         private IOtherLayersValueHandling GetOtherLayersValueHandling(LayerSet readLayerSet, string writeLayerID)
         {
             return OtherLayersValueHandlingTakeIntoAccount.Build(readLayerSet, writeLayerID);

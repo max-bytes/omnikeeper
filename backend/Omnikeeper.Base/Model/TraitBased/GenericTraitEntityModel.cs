@@ -221,8 +221,6 @@ namespace Omnikeeper.Base.Model.TraitBased
             traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
         }
 
-        public ITrait UnderlyingTrait => traitEntityModel.UnderlyingTrait;
-
         public async Task<(T entity, Guid ciid)> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var et = await traitEntityModel.GetSingleByCIID(ciid, layerSet, trans, timeThreshold);
