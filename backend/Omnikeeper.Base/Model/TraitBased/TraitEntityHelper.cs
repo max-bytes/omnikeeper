@@ -106,12 +106,12 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (foundCIID == default) ? null : foundCIID;
         }
 
-        public static IDataLoaderResult<IReadOnlySet<Guid>> GetMatchingCIIDsByRelationFilters(IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<TraitRelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
+        public static IDataLoaderResult<IReadOnlySet<Guid>> GetMatchingCIIDsByRelationFilters(IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<RelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
 
-            var relationsDL = dataLoaderService.SetupAndLoadRelation(RelationSelectionWithPredicate.Build(filters.Select(t => t.traitRelation.RelationTemplate.PredicateID)), relationModel, layerSet, timeThreshold, trans);
+            var relationsDL = dataLoaderService.SetupAndLoadRelation(RelationSelectionWithPredicate.Build(filters.Select(t => t.PredicateID)), relationModel, layerSet, timeThreshold, trans);
 
             return relationsDL.Then(async relations =>
             {
@@ -120,23 +120,22 @@ namespace Omnikeeper.Base.Model.TraitBased
                 IList<IDataLoaderResult<IEnumerable<Guid>>> dls = new List<IDataLoaderResult<IEnumerable<Guid>>>();
                 foreach (var filter in filters)
                 {
-                    var template = filter.traitRelation.RelationTemplate;
-                    var candidateRelations = relationsLookup[template.PredicateID];
-                    var ciidGroupedRelations = (template.DirectionForward) ? candidateRelations.GroupBy(r => r.Relation.FromCIID) : candidateRelations.GroupBy(r => r.Relation.ToCIID);
+                    var candidateRelations = relationsLookup[filter.PredicateID];
+                    var ciidGroupedRelations = (filter.DirectionForward) ? candidateRelations.GroupBy(r => r.Relation.FromCIID) : candidateRelations.GroupBy(r => r.Relation.ToCIID);
 
                     // TODO: performance improvement: after the first filter, we should reduce the input list
 
                     // NOTE: because the set of cis WITH and cis WITHOUT relations are a partition (i.e. have no overlap), we can do these two loops consecutively
-                    if (filter.filter.RequiresCheckOfCIsWithNonEmptyRelations())
+                    if (filter.Filter.RequiresCheckOfCIsWithNonEmptyRelations())
                     {
-                        dls.Add(filter.filter.MatchAgainstNonEmpty(ciidGroupedRelations));
+                        dls.Add(filter.Filter.MatchAgainstNonEmpty(ciidGroupedRelations));
                     }
-                    if (filter.filter.RequiresCheckOfCIsWithEmptyRelations())
+                    if (filter.Filter.RequiresCheckOfCIsWithEmptyRelations())
                     {
                         var allCIIDs = await ciidModel.GetCIIDs(trans); // TODO: use dataloader?
                         var ciidsWithoutRelations = allCIIDs.Except(ciidGroupedRelations.Select(g => g.Key));
 
-                        dls.Add(filter.filter.MatchAgainstEmpty(ciidsWithoutRelations));
+                        dls.Add(filter.Filter.MatchAgainstEmpty(ciidsWithoutRelations));
                     }
                 }
 
@@ -158,32 +157,27 @@ namespace Omnikeeper.Base.Model.TraitBased
         /*
         * NOTE: this does not care whether or not the CIs are actually a trait entities or not
         */
-        public static IDataLoaderResult<IReadOnlySet<Guid>> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IEnumerable<TraitAttributeFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
+        public static async Task<IReadOnlySet<Guid>> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IEnumerable<AttributeFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
 
-            return new SimpleDataLoader<IReadOnlySet<Guid>>(async token =>
+            foreach (var taFilter in filters)
             {
-                foreach (var taFilter in filters)
-                {
-                    var attributeName = taFilter.traitAttribute.AttributeTemplate.Name;
-                    var attributeSelection = NamedAttributesWithValueFiltersSelection.Build(new Dictionary<string, AttributeScalarTextFilter>() { { attributeName, taFilter.filter } });
+                var attributeSelection = NamedAttributesWithValueFiltersSelection.Build(new Dictionary<string, AttributeScalarTextFilter>() { { taFilter.attributeName, taFilter.filter } });
 
-                    // TODO: use dataloader
-                    var attributes = await attributeModel.GetMergedAttributes(ciSelection, attributeSelection, layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
-                    // NOTE: we reduce the ciSelection with each filter, and in the end, return the resulting ciSelection
-                    ciSelection = SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet());
-                }
+                // TODO: use dataloader
+                var attributes = await attributeModel.GetMergedAttributes(ciSelection, attributeSelection, layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
+                // NOTE: we reduce the ciSelection with each filter, and in the end, return the resulting ciSelection
+                ciSelection = SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet());
+            }
 
-                return ciSelection switch
-                {
-                    SpecificCIIDsSelection s => s.CIIDs,
-                    NoCIIDsSelection _ => ImmutableHashSet<Guid>.Empty,
-                    _ => throw new Exception("Invalid ciSelection detected"),
-                };
-            });
-
+            return ciSelection switch
+            {
+                SpecificCIIDsSelection s => s.CIIDs,
+                NoCIIDsSelection _ => ImmutableHashSet<Guid>.Empty,
+                _ => throw new Exception("Invalid ciSelection detected"),
+            };
         }
     }
 }

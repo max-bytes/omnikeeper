@@ -6,15 +6,15 @@ using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
-    public class TraitAttributeFilter
+    public class AttributeFilter
     {
-        public readonly TraitAttribute traitAttribute;
+        public readonly string attributeName;
         // TODO: support non-text filters
         public readonly AttributeScalarTextFilter filter;
 
-        public TraitAttributeFilter(TraitAttribute traitAttribute, AttributeScalarTextFilter filter)
+        public AttributeFilter(string attributeName, AttributeScalarTextFilter filter)
         {
-            this.traitAttribute = traitAttribute;
+            this.attributeName = attributeName;
             this.filter = filter;
         }
     }
@@ -51,7 +51,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         private AttributeScalarTextFilter() { }
 
-        public static object Build(TextFilterRegexInput? regexObj, string? exact)
+        public static AttributeScalarTextFilter Build(TextFilterRegexInput? regexObj, string? exact)
         {
             if (regexObj == null && exact == null)
                 throw new Exception("At least one filter option needs to be set for AttributeTextFilter");

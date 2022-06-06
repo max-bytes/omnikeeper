@@ -7,29 +7,32 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
-    public class TraitRelationFilter
+    public class RelationFilter
     {
-        public readonly TraitRelation traitRelation;
-        public readonly RelationFilter filter;
+        public readonly InnerRelationFilter Filter;
+        public readonly string PredicateID;
+        public readonly bool DirectionForward;
 
-        public TraitRelationFilter(TraitRelation traitRelation, RelationFilter filter)
+        public RelationFilter(string predicateID, bool directionForward, InnerRelationFilter filter)
         {
-            this.traitRelation = traitRelation;
-            this.filter = filter;
+            PredicateID = predicateID;
+            DirectionForward = directionForward;
+            Filter = filter;
         }
+
     }
 
-    public class RelationFilter
+    public class InnerRelationFilter
     {
         public uint? ExactAmount;
 
-        private RelationFilter() { }
+        private InnerRelationFilter() { }
 
         public static object Build(uint? exactAmount)
         {
             if (exactAmount == null)
                 throw new Exception("At least one filter option needs to be set for RelationFilter");
-            return new RelationFilter()
+            return new InnerRelationFilter()
             {
                 ExactAmount = exactAmount
             };
@@ -39,7 +42,7 @@ namespace Omnikeeper.Base.Model.TraitBased
     public static class RelationFilterHelper
     {
         // NOTE: expects that the passed relations are exactly the correct relations applicable for this filter: correct predicateID, direction, CI, ...
-        public static IDataLoaderResult<IEnumerable<Guid>> MatchAgainstNonEmpty(this RelationFilter filter, IEnumerable<IGrouping<Guid, MergedRelation>> relations)
+        public static IDataLoaderResult<IEnumerable<Guid>> MatchAgainstNonEmpty(this InnerRelationFilter filter, IEnumerable<IGrouping<Guid, MergedRelation>> relations)
         {
             if (filter.ExactAmount != null)
             {
@@ -50,7 +53,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             throw new Exception("Encountered relation filter in unknown state");
         }
 
-        public static IDataLoaderResult<IEnumerable<Guid>> MatchAgainstEmpty(this RelationFilter filter, IEnumerable<Guid> relations)
+        public static IDataLoaderResult<IEnumerable<Guid>> MatchAgainstEmpty(this InnerRelationFilter filter, IEnumerable<Guid> relations)
         {
             if (filter.ExactAmount != null)
             {
@@ -61,7 +64,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             throw new Exception("Encountered relation filter in unknown state");
         }
 
-        public static bool RequiresCheckOfCIsWithEmptyRelations(this RelationFilter filter)
+        public static bool RequiresCheckOfCIsWithEmptyRelations(this InnerRelationFilter filter)
         {
             if (filter.ExactAmount != null)
             {
@@ -69,7 +72,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             }
             throw new Exception("Encountered relation filter in unknown state");
         }
-        public static bool RequiresCheckOfCIsWithNonEmptyRelations(this RelationFilter filter)
+        public static bool RequiresCheckOfCIsWithNonEmptyRelations(this InnerRelationFilter filter)
         {
             if (filter.ExactAmount != null)
             {

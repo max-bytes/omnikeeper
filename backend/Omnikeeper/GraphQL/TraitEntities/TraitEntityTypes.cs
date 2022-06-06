@@ -75,12 +75,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (!filter.RelationFilters.IsEmpty() && !filter.AttributeFilters.IsEmpty())
                         {
                             matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService)
-                            .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(SpecificCIIDsSelection.Build(matchingCIIDs), attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService))
-                            .ResolveNestedResults(); // resolve one level to be correct type again
+                            .Then(async matchingCIIDs =>
+                                await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(SpecificCIIDsSelection.Build(matchingCIIDs), attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
+                            );
                         }
                         else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
                         {
-                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService);
+                            matchingCIIDs = new SimpleDataLoader<IReadOnlySet<Guid>>(async token =>
+                                await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
+                            );
                         }
                         else if (filter.AttributeFilters.IsEmpty() && !filter.RelationFilters.IsEmpty())
                         {

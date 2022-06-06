@@ -95,7 +95,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
-    public class RelationFilterInputType : InputObjectGraphType<RelationFilter>
+    public class RelationFilterInputType : InputObjectGraphType<InnerRelationFilter>
     {
         public RelationFilterInputType()
         {
@@ -106,16 +106,16 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             var exactAmount = value.TryGetValue("exactAmount", out var e) ? (uint?)e : null;
 
-            return RelationFilter.Build(exactAmount);
+            return InnerRelationFilter.Build(exactAmount);
         }
     }
 
     public class FilterInput
     {
-        public readonly TraitAttributeFilter[] AttributeFilters;
-        public readonly TraitRelationFilter[] RelationFilters;
+        public readonly AttributeFilter[] AttributeFilters;
+        public readonly RelationFilter[] RelationFilters;
 
-        public FilterInput(TraitAttributeFilter[] attributeFilters, TraitRelationFilter[] relationFilters)
+        public FilterInput(AttributeFilter[] attributeFilters, RelationFilter[] relationFilters)
         {
             AttributeFilters = attributeFilters;
             RelationFilters = relationFilters;
@@ -125,7 +125,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
     public class FilterInputType : InputObjectGraphType<FilterInput>
     {
         private readonly ITrait trait;
-        private readonly IDictionary<string, TraitAttribute> FieldName2TraitAttributeMap = new Dictionary<string, TraitAttribute>();
+        private readonly IDictionary<string, string> FieldName2AttributeNameMap = new Dictionary<string, string>();
         private readonly IDictionary<string, TraitRelation> FieldName2TraitRelationMap = new Dictionary<string, TraitRelation>();
 
         public FilterInputType(ITrait trait)
@@ -147,7 +147,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             Type = typeof(AttributeTextFilterInputType),
                             Name = attributeFieldName,
                         });
-                        FieldName2TraitAttributeMap.Add(attributeFieldName, ta);
+                        FieldName2AttributeNameMap.Add(attributeFieldName, ta.AttributeTemplate.Name);
                     }
                 }
             }
@@ -169,23 +169,23 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
-            var attributeFilters = new List<TraitAttributeFilter>();
-            var relationFilters = new List<TraitRelationFilter>();
+            var attributeFilters = new List<AttributeFilter>();
+            var relationFilters = new List<RelationFilter>();
             foreach (var kv in value)
             {
                 var inputFieldName = kv.Key;
 
-                if (FieldName2TraitAttributeMap.TryGetValue(inputFieldName, out var attribute))
+                if (FieldName2AttributeNameMap.TryGetValue(inputFieldName, out var attributeName))
                 {
                     if (kv.Value is not AttributeScalarTextFilter f)
                         throw new Exception($"Unknown attribute filter for attribute {inputFieldName} detected");
-                    attributeFilters.Add(new TraitAttributeFilter(attribute, f));
+                    attributeFilters.Add(new AttributeFilter(attributeName, f));
                 }
                 else if (FieldName2TraitRelationMap.TryGetValue(inputFieldName, out var relation))
                 {
-                    if (kv.Value is not RelationFilter f)
+                    if (kv.Value is not InnerRelationFilter f)
                         throw new Exception($"Unknown relation filter for relation {inputFieldName} detected");
-                    relationFilters.Add(new TraitRelationFilter(relation, f));
+                    relationFilters.Add(new RelationFilter(relation.RelationTemplate.PredicateID, relation.RelationTemplate.DirectionForward, f));
                 }
                 else
                 {

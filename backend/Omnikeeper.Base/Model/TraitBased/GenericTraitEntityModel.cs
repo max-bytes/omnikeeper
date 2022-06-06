@@ -115,6 +115,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         /*
          * NOTE: unlike the regular insert, this does not do any checks if the updated entities actually fulfill the trait requirements 
          * and will be considered as this trait's entities going forward
+         * NOTE: relevantCISelection is only an upper bound on the relevant CIs; only CIs in this selection that ALSO fulfill the trait are considered
          */
         public async Task<bool> BulkReplace(ICIIDSelection relevantCISelection, IDictionary<ID, T> t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
@@ -219,6 +220,8 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
         }
+
+        public ITrait UnderlyingTrait => traitEntityModel.UnderlyingTrait;
 
         public async Task<(T entity, Guid ciid)> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
