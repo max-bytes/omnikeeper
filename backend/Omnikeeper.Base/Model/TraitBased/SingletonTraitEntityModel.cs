@@ -15,7 +15,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         }
         public async Task<(Guid, T)> TryToGet(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            var a = await GetAllByCIID(layerSet, trans, timeThreshold);
+            var a = await GetByCIID(AllCIIDsSelection.Instance, layerSet, trans, timeThreshold);
             if (a.IsEmpty()) return default;
 
             var f = a

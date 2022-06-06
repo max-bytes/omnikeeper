@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -42,7 +43,7 @@ namespace Omnikeeper.GridView.Queries
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
 
-                var contexts = await gridViewContextModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+                var contexts = await gridViewContextModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
 
                 return (new GetContextsResponse(contexts.Values.ToList()), null);
             }

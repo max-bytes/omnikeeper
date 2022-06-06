@@ -70,14 +70,20 @@ namespace Omnikeeper.Base.Model.TraitBased
             if (!trait.OptionalRelations.IsEmpty())
             {
                 var relevantOutgoingRelations = trait.OptionalRelations.Where(rr => rr.RelationTemplate.DirectionForward).SelectMany(rr => relevantCIIDs.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
-                var outgoingScope = new BulkRelationDataCIAndPredicateScope(writeLayer, outgoingRelations, relevantOutgoingRelations, true);
-                var tmpChanged = await WriteRelations(outgoingScope, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
-                changed = changed || tmpChanged;
+                if (!relevantOutgoingRelations.IsEmpty())
+                {
+                    var outgoingScope = new BulkRelationDataCIAndPredicateScope(writeLayer, outgoingRelations, relevantOutgoingRelations, true);
+                    var tmpChanged = await WriteRelations(outgoingScope, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+                    changed = changed || tmpChanged;
+                }
 
                 var relevantIncomingRelations = trait.OptionalRelations.Where(rr => !rr.RelationTemplate.DirectionForward).SelectMany(rr => relevantCIIDs.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
-                var incomingScope = new BulkRelationDataCIAndPredicateScope(writeLayer, incomingRelations, relevantIncomingRelations, false);
-                tmpChanged = await WriteRelations(incomingScope, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
-                changed = changed || tmpChanged;
+                if (!relevantIncomingRelations.IsEmpty())
+                {
+                    var incomingScope = new BulkRelationDataCIAndPredicateScope(writeLayer, incomingRelations, relevantIncomingRelations, false);
+                    var tmpChanged = await WriteRelations(incomingScope, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+                    changed = changed || tmpChanged;
+                }
             }
 
             return changed;

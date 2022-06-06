@@ -17,8 +17,8 @@ namespace Tests.Integration.Model
                 SpecificCIIDsSelection.Build(ga, gb, gc),
                 CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), SpecificCIIDsSelection.Build(ga, gb, gc) }));
             Assert.AreEqual(
-                new AllCIIDsSelection(),
-                CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), new AllCIIDsSelection() }));
+                AllCIIDsSelection.Instance,
+                CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), AllCIIDsSelection.Instance }));
             Assert.AreEqual(
                 SpecificCIIDsSelection.Build(ga, gb),
                 CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), SpecificCIIDsSelection.Build(ga, gb), new NoCIIDsSelection() }));
@@ -26,8 +26,8 @@ namespace Tests.Integration.Model
                 AllCIIDsExceptSelection.Build(gb),
                 CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), AllCIIDsExceptSelection.Build(ga, gb) }));
             Assert.AreEqual(
-                new AllCIIDsSelection(),
-                CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), AllCIIDsExceptSelection.Build(ga, gb), new AllCIIDsSelection() }));
+                AllCIIDsSelection.Instance,
+                CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), AllCIIDsExceptSelection.Build(ga, gb), AllCIIDsSelection.Instance }));
         }
 
         [Test]
@@ -46,7 +46,7 @@ namespace Tests.Integration.Model
                 SpecificCIIDsSelection.Build(ga, gb).Except(AllCIIDsExceptSelection.Build(gb, gc)));
             Assert.AreEqual(
                 new NoCIIDsSelection(),
-                SpecificCIIDsSelection.Build(ga, gb).Except(new AllCIIDsSelection()));
+                SpecificCIIDsSelection.Build(ga, gb).Except(AllCIIDsSelection.Instance));
             Assert.AreEqual(
                 SpecificCIIDsSelection.Build(ga, gb),
                 SpecificCIIDsSelection.Build(ga, gb).Except(new NoCIIDsSelection()));
@@ -60,7 +60,7 @@ namespace Tests.Integration.Model
                 AllCIIDsExceptSelection.Build(ga, gb).Except(AllCIIDsExceptSelection.Build(gb, gc)));
             Assert.AreEqual(
                 new NoCIIDsSelection(),
-                AllCIIDsExceptSelection.Build(ga, gb).Except(new AllCIIDsSelection()));
+                AllCIIDsExceptSelection.Build(ga, gb).Except(AllCIIDsSelection.Instance));
             Assert.AreEqual(
                 AllCIIDsExceptSelection.Build(ga, gb),
                 AllCIIDsExceptSelection.Build(ga, gb).Except(new NoCIIDsSelection()));
@@ -68,16 +68,16 @@ namespace Tests.Integration.Model
             // all.Except(X)
             Assert.AreEqual(
                 AllCIIDsExceptSelection.Build(gb, gc),
-                new AllCIIDsSelection().Except(SpecificCIIDsSelection.Build(gb, gc)));
+                AllCIIDsSelection.Instance.Except(SpecificCIIDsSelection.Build(gb, gc)));
             Assert.AreEqual(
                 SpecificCIIDsSelection.Build(gb, gc),
-                new AllCIIDsSelection().Except(AllCIIDsExceptSelection.Build(gb, gc)));
+                AllCIIDsSelection.Instance.Except(AllCIIDsExceptSelection.Build(gb, gc)));
             Assert.AreEqual(
                 new NoCIIDsSelection(),
-                new AllCIIDsSelection().Except(new AllCIIDsSelection()));
+                AllCIIDsSelection.Instance.Except(AllCIIDsSelection.Instance));
             Assert.AreEqual(
-                new AllCIIDsSelection(),
-                new AllCIIDsSelection().Except(new NoCIIDsSelection()));
+                AllCIIDsSelection.Instance,
+                AllCIIDsSelection.Instance.Except(new NoCIIDsSelection()));
 
             // None.Except(X)
             Assert.AreEqual(
@@ -88,7 +88,7 @@ namespace Tests.Integration.Model
                 new NoCIIDsSelection().Except(AllCIIDsExceptSelection.Build(gb, gc)));
             Assert.AreEqual(
                 new NoCIIDsSelection(),
-                new NoCIIDsSelection().Except(new AllCIIDsSelection()));
+                new NoCIIDsSelection().Except(AllCIIDsSelection.Instance));
             Assert.AreEqual(
                 new NoCIIDsSelection(),
                 new NoCIIDsSelection().Except(new NoCIIDsSelection()));
@@ -111,7 +111,7 @@ namespace Tests.Integration.Model
                 SpecificCIIDsSelection.Build(ga, gb).Intersect(AllCIIDsExceptSelection.Build(gb, gc)));
             Assert.AreEqual(
                 SpecificCIIDsSelection.Build(ga, gb),
-                SpecificCIIDsSelection.Build(ga, gb).Intersect(new AllCIIDsSelection()));
+                SpecificCIIDsSelection.Build(ga, gb).Intersect(AllCIIDsSelection.Instance));
             Assert.AreEqual(
                 new NoCIIDsSelection(),
                 SpecificCIIDsSelection.Build(ga, gb).Intersect(new NoCIIDsSelection()));
@@ -125,7 +125,7 @@ namespace Tests.Integration.Model
                 AllCIIDsExceptSelection.Build(ga, gb).Intersect(AllCIIDsExceptSelection.Build(gb, gc)));
             Assert.AreEqual(
                 AllCIIDsExceptSelection.Build(ga, gb),
-                AllCIIDsExceptSelection.Build(ga, gb).Intersect(new AllCIIDsSelection()));
+                AllCIIDsExceptSelection.Build(ga, gb).Intersect(AllCIIDsSelection.Instance));
             Assert.AreEqual(
                 new NoCIIDsSelection(),
                 AllCIIDsExceptSelection.Build(ga, gb).Intersect(new NoCIIDsSelection()));
@@ -133,16 +133,16 @@ namespace Tests.Integration.Model
             // all.Intersect(X)
             Assert.AreEqual(
                 SpecificCIIDsSelection.Build(gb, gc),
-                new AllCIIDsSelection().Intersect(SpecificCIIDsSelection.Build(gb, gc)));
+                AllCIIDsSelection.Instance.Intersect(SpecificCIIDsSelection.Build(gb, gc)));
             Assert.AreEqual(
                 AllCIIDsExceptSelection.Build(gb, gc),
-                new AllCIIDsSelection().Intersect(AllCIIDsExceptSelection.Build(gb, gc)));
+                AllCIIDsSelection.Instance.Intersect(AllCIIDsExceptSelection.Build(gb, gc)));
             Assert.AreEqual(
-                new AllCIIDsSelection(),
-                new AllCIIDsSelection().Intersect(new AllCIIDsSelection()));
+                AllCIIDsSelection.Instance,
+                AllCIIDsSelection.Instance.Intersect(AllCIIDsSelection.Instance));
             Assert.AreEqual(
                 new NoCIIDsSelection(),
-                new AllCIIDsSelection().Intersect(new NoCIIDsSelection()));
+                AllCIIDsSelection.Instance.Intersect(new NoCIIDsSelection()));
 
             // None.Intersect(X)
             Assert.AreEqual(
@@ -153,7 +153,7 @@ namespace Tests.Integration.Model
                 new NoCIIDsSelection().Intersect(AllCIIDsExceptSelection.Build(gb, gc)));
             Assert.AreEqual(
                 new NoCIIDsSelection(),
-                new NoCIIDsSelection().Intersect(new AllCIIDsSelection()));
+                new NoCIIDsSelection().Intersect(AllCIIDsSelection.Instance));
             Assert.AreEqual(
                 new NoCIIDsSelection(),
                 new NoCIIDsSelection().Intersect(new NoCIIDsSelection()));

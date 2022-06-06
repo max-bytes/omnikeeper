@@ -48,7 +48,7 @@ namespace Tests.Integration.Model
                 await em.InsertOrUpdate(e2, layerset12, layer2.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
-            var r1 = await em.GetAllByDataID(layerset12, transI, TimeThreshold.BuildLatest());
+            var r1 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset12, transI, TimeThreshold.BuildLatest());
             r1.Should().BeEquivalentTo(new Dictionary<string, TestEntity1>()
             {
                 {"id1", e1 },
@@ -64,14 +64,14 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the update
-            var r2 = await em.GetAllByDataID(layerset12, transI, TimeThreshold.BuildLatest());
+            var r2 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset12, transI, TimeThreshold.BuildLatest());
             r2.Should().BeEquivalentTo(new Dictionary<string, TestEntity1>()
             {
                 {"id1", e1U },
                 {"id2", e2 }
             });
             // reading from both layers in order l2,l1 should NOT contain the update
-            var r3 = await em.GetAllByDataID(layerset21, transI, TimeThreshold.BuildLatest());
+            var r3 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset21, transI, TimeThreshold.BuildLatest());
             r3.Should().BeEquivalentTo(new Dictionary<string, TestEntity1>()
             {
                 {"id1", e1 },
@@ -87,7 +87,7 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the update again, masking the underlying attribute of entity e1
-            var r4 = await em.GetAllByDataID(layerset12, transI, TimeThreshold.BuildLatest());
+            var r4 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset12, transI, TimeThreshold.BuildLatest());
             r4.Should().BeEquivalentTo(new Dictionary<string, TestEntity1>()
             {
                 {"id1", e1UU },
@@ -102,14 +102,14 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the deletion
-            var r5 = await em.GetAllByDataID(layerset12, transI, TimeThreshold.BuildLatest());
+            var r5 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset12, transI, TimeThreshold.BuildLatest());
             r5.Should().BeEquivalentTo(new Dictionary<string, TestEntity1>()
             {
                 {"id1", e1UU }
             });
 
             // reading from both layers in order l2,l1 should STILL return the old state
-            var r6 = await em.GetAllByDataID(layerset21, transI, TimeThreshold.BuildLatest());
+            var r6 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset21, transI, TimeThreshold.BuildLatest());
             r6.Should().BeEquivalentTo(new Dictionary<string, TestEntity1>()
             {
                 {"id1", e1 },
@@ -125,14 +125,14 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the addition
-            var r7 = await em.GetAllByDataID(layerset12, transI, TimeThreshold.BuildLatest());
+            var r7 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset12, transI, TimeThreshold.BuildLatest());
             r7.Should().BeEquivalentTo(new Dictionary<string, TestEntity1>()
             {
                 {"id1", e1UU },
                 {"id3", e3 }
             });
             // reading from both layers in order l2,l1 should also return the new addition, but not the deletion or the other changes to e1
-            var r8 = await em.GetAllByDataID(layerset21, transI, TimeThreshold.BuildLatest());
+            var r8 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset21, transI, TimeThreshold.BuildLatest());
             r8.Should().BeEquivalentTo(new Dictionary<string, TestEntity1>()
             {
                 {"id1", e1 },
@@ -140,7 +140,7 @@ namespace Tests.Integration.Model
                 {"id3", e3 }
             });
             // reading from layer l2 only should not show any changes to l1
-            var r9 = await em.GetAllByDataID(layerset2, transI, TimeThreshold.BuildLatest());
+            var r9 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset2, transI, TimeThreshold.BuildLatest());
             r9.Should().BeEquivalentTo(new Dictionary<string, TestEntity1>()
             {
                 {"id1", e1 },
@@ -202,7 +202,7 @@ namespace Tests.Integration.Model
                 await em.InsertOrUpdate(e2, layerset12, layer2.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
-            var r1 = await em.GetAllByDataID(layerset12, transI, TimeThreshold.BuildLatest());
+            var r1 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset12, transI, TimeThreshold.BuildLatest());
             r1.Should().BeEquivalentTo(new Dictionary<string, TestEntity2>()
             {
                 {"id1", e1 },
@@ -218,14 +218,14 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the update
-            var r2 = await em.GetAllByDataID(layerset12, transI, TimeThreshold.BuildLatest());
+            var r2 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset12, transI, TimeThreshold.BuildLatest());
             r2.Should().BeEquivalentTo(new Dictionary<string, TestEntity2>()
             {
                 {"id1", e1U },
                 {"id2", e2 }
             });
             // reading from both layers in order l2,l1 should NOT contain the update
-            var r3 = await em.GetAllByDataID(layerset21, transI, TimeThreshold.BuildLatest());
+            var r3 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset21, transI, TimeThreshold.BuildLatest());
             r3.Should().BeEquivalentTo(new Dictionary<string, TestEntity2>()
             {
                 {"id1", e1 },
@@ -240,13 +240,13 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the deletion
-            var r4 = await em.GetAllByDataID(layerset12, transI, TimeThreshold.BuildLatest());
+            var r4 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset12, transI, TimeThreshold.BuildLatest());
             r4.Should().BeEquivalentTo(new Dictionary<string, TestEntity2>()
             {
                 {"id1", e1U }
             });
             // reading from both layers in order l2,l1 should STILL return the old state
-            var r5 = await em.GetAllByDataID(layerset21, transI, TimeThreshold.BuildLatest());
+            var r5 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset21, transI, TimeThreshold.BuildLatest());
             r5.Should().BeEquivalentTo(new Dictionary<string, TestEntity2>()
             {
                 {"id1", e1 },
@@ -263,7 +263,7 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the update
-            var r6 = await em.GetAllByDataID(layerset12, transI, TimeThreshold.BuildLatest());
+            var r6 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset12, transI, TimeThreshold.BuildLatest());
             r6.Should().BeEquivalentTo(new Dictionary<string, TestEntity2>()
             {
                 {"id1", e1UU },

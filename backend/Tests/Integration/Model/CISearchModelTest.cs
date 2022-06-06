@@ -59,11 +59,11 @@ namespace Tests.Integration.Model
 
             var transI = ModelContextBuilder.BuildImmediate();
 
-            var all = await GetService<ICIModel>().GetMergedCIs(new AllCIIDsSelection(), new LayerSet(layerID1, layerID2), true, AllAttributeSelection.Instance, transI, tt);
+            var all = await GetService<ICIModel>().GetMergedCIs(AllCIIDsSelection.Instance, new LayerSet(layerID1, layerID2), true, AllAttributeSelection.Instance, transI, tt);
 
             async Task<IEnumerable<MergedCI>> FindMergedCIsByTraits(ICIModel ciModel, IEffectiveTraitModel traitModel, IEnumerable<ITrait> withEffectiveTraits, IEnumerable<ITrait> withoutEffectiveTraits, LayerSet layerSet, IModelContext transI)
             {
-                var workCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, includeEmptyCIs: true, AllAttributeSelection.Instance, transI, tt);
+                var workCIs = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, layerSet, includeEmptyCIs: true, AllAttributeSelection.Instance, transI, tt);
                 return traitModel.FilterMergedCIsByTraits(workCIs, withEffectiveTraits, withoutEffectiveTraits, new LayerSet(layerID1, layerID2), transI, tt);
             }
 

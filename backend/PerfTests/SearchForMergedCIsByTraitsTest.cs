@@ -25,7 +25,7 @@ namespace PerfTests
         public async Task SearchForMergedCIsByTraits()
         {
             using var mc = modelContextBuilder!.BuildImmediate();
-            var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
+            var ciSelection = (SpecificCIs) ? selectedCIIDs : AllCIIDsSelection.Instance;
             var workCIs1 = await ciModel!.GetMergedCIs(ciSelection!, layerset!, includeEmptyCIs: true, AllAttributeSelection.Instance, mc, time);
             effectiveTraitModel!.FilterMergedCIsByTraits(workCIs1, requiredTraits!, Enumerable.Empty<ITrait>(), layerset!, mc, time).Consume(consumer);
         }

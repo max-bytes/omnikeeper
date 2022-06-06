@@ -89,7 +89,7 @@ namespace Omnikeeper.Controllers
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            ICIIDSelection ciidSelection = new AllCIIDsSelection();
+            ICIIDSelection ciidSelection = AllCIIDsSelection.Instance;
             if (ciids != null && ciids.Length > 0)
                 ciidSelection = SpecificCIIDsSelection.Build(ciids);
 

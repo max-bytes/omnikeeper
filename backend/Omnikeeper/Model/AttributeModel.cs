@@ -228,7 +228,7 @@ namespace Omnikeeper.Model
             return data switch
             {
                 BulkCIAttributeDataLayerScope _ => 
-                    await GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, layerset, trans, timeThreshold, GeneratedDataHandlingExclude.Instance),
+                    await GetMergedAttributes(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, layerset, trans, timeThreshold, GeneratedDataHandlingExclude.Instance),
                 BulkCIAttributeDataCIScope d =>
                     await GetMergedAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, layerset, trans: trans, atTime: timeThreshold, GeneratedDataHandlingExclude.Instance),
                 BulkCIAttributeDataCIAndAttributeNameScope a =>

@@ -130,7 +130,7 @@ namespace Omnikeeper.GraphQL
                     // use ciids list to reduce the CIIDSelection
                     var searchString = context.GetArgument<string>("searchString", "")!;
                     var ciids = context.GetArgument<Guid[]?>("ciids", null);
-                    ICIIDSelection ciidSelection = new AllCIIDsSelection();
+                    ICIIDSelection ciidSelection = AllCIIDsSelection.Instance;
                     if (ciids != null)
                     {
                         ciidSelection = SpecificCIIDsSelection.Build(ciids);
@@ -263,8 +263,8 @@ namespace Omnikeeper.GraphQL
                     IAttributeSelection rightAttributeSelection = AllAttributeSelection.Instance;
                     if (rightAttributes != null) rightAttributeSelection = NamedAttributesSelection.Build(rightAttributes);
 
-                    ICIIDSelection leftCIIDSelection = (leftCIIDs != null) ? SpecificCIIDsSelection.Build(leftCIIDs) : new AllCIIDsSelection();
-                    ICIIDSelection rightCIIDSelection = (rightCIIDs != null) ? SpecificCIIDsSelection.Build(rightCIIDs) : new AllCIIDsSelection();
+                    ICIIDSelection leftCIIDSelection = (leftCIIDs != null) ? SpecificCIIDsSelection.Build(leftCIIDs) : AllCIIDsSelection.Instance;
+                    ICIIDSelection rightCIIDSelection = (rightCIIDs != null) ? SpecificCIIDsSelection.Build(rightCIIDs) : AllCIIDsSelection.Instance;
 
                     var showEqual = context.GetArgument<bool?>($"showEqual").GetValueOrDefault(true);
 
@@ -317,7 +317,7 @@ namespace Omnikeeper.GraphQL
                         .WithTimeThreshold(context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()), context.Path);
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    var predicates = await predicateModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    var predicates = await predicateModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
 
                     return predicates.Values;
                 });
@@ -440,7 +440,7 @@ namespace Omnikeeper.GraphQL
                     if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
 
-                    ICIIDSelection ciidSelection = new AllCIIDsSelection();
+                    ICIIDSelection ciidSelection = AllCIIDsSelection.Instance;
                     if (ciids != null)
                     {
                         ciidSelection = SpecificCIIDsSelection.Build(ciids);
@@ -474,8 +474,8 @@ namespace Omnikeeper.GraphQL
 
                     var layers = await layerModel.GetLayers(userContext.Transaction); // TODO: we only need count, implement more efficient model method
                     var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-                    var predicates = await predicateModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement PredicateProvider
-                    var generators = await generatorModel.GetAllByDataID(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement GeneratorProvider
+                    var predicates = await predicateModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement PredicateProvider
+                    var generators = await generatorModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement GeneratorProvider
 
                     var numCIIDs = await layerStatisticsModel.GetCIIDsApproximate(userContext.Transaction);
                     var numActiveAttributes = await layerStatisticsModel.GetActiveAttributesApproximate(userContext.Transaction);

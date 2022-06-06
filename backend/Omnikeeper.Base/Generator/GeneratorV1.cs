@@ -196,7 +196,7 @@ namespace Omnikeeper.Base.Generator
                     if (activeGeneratorIDsForLayer.IsEmpty())
                         continue;
 
-                    availableGenerators ??= await generatorModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, timeThreshold);
+                    availableGenerators ??= await generatorModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, timeThreshold);
 
                     var applicableGenerators = activeGeneratorIDsForLayer.Select(id => availableGenerators.GetOrWithClass(id, null)).Where(g => g != null).Select(g => g!);
 

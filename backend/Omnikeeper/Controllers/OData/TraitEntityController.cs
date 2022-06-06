@@ -94,7 +94,7 @@ namespace Omnikeeper.Controllers.OData
 
                 // TODO: use dataloader
                 // TODO: integrate query options, if possible?
-                var ets = await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerset, trans, timeThreshold);
+                var ets = await traitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerset, trans, timeThreshold);
 
                 var e = ConvertEffectiveTraits2EdmEntities(ets.Select(kv => (ciid: kv.Key, et: kv.Value)), entityType, trait);
 

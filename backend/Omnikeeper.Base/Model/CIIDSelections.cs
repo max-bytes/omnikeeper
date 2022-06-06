@@ -68,12 +68,12 @@ namespace Omnikeeper.Base.Model
 
         public static ICIIDSelection Build(IReadOnlySet<Guid> ciids)
         {
-            if (ciids.IsEmpty()) return new AllCIIDsSelection();
+            if (ciids.IsEmpty()) return AllCIIDsSelection.Instance;
             return new AllCIIDsExceptSelection(ciids);
         }
         public static ICIIDSelection Build(params Guid[] ciids)
         {
-            if (ciids.IsEmpty()) return new AllCIIDsSelection();
+            if (ciids.IsEmpty()) return AllCIIDsSelection.Instance;
             return new AllCIIDsExceptSelection(ciids.ToImmutableHashSet());
         }
         public override int GetHashCode()
@@ -98,6 +98,10 @@ namespace Omnikeeper.Base.Model
         public override int GetHashCode() => 0;
         public override bool Equals(object? obj) => Equals(obj as AllCIIDsSelection);
         public bool Equals(AllCIIDsSelection? other) => other != null;
+
+        private AllCIIDsSelection() { }
+
+        public static AllCIIDsSelection Instance = new AllCIIDsSelection();
     }
 
     public class NoCIIDsSelection : ICIIDSelection, IEquatable<NoCIIDsSelection>

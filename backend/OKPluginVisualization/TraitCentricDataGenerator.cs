@@ -39,7 +39,7 @@ namespace OKPluginVisualization
             foreach (var trait in traits)
             {
                 var traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
-                var tes = await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerSet, trans, timeThreshold);
+                var tes = await traitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerSet, trans, timeThreshold);
                 foreach (var te in tes)
                 {
                     var ciid = te.Key;

@@ -112,7 +112,7 @@
 //        {
 //            var trans = modelContextBuilder.BuildImmediate();
 //            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
-//            var attributesDict = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
+//            var attributesDict = await attributeModel.GetMergedAttributes(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
 
 //            var attributes = attributesDict.SelectMany(a => a.Value.Values);
 
@@ -188,7 +188,7 @@
 //            { // ciid not set, try to match using ci name, which is set
 
 //                // TODO: performance improvements
-//                var ciNamesFromNameAttributes = await attributeModel.GetMergedCINames(new AllCIIDsSelection(), readLayerset, trans, timeThreshold);
+//                var ciNamesFromNameAttributes = await attributeModel.GetMergedCINames(AllCIIDsSelection.Instance, readLayerset, trans, timeThreshold);
 //                var foundCIIDs = ciNamesFromNameAttributes.Where(a => a.Value.Equals(attribute.CIName)).Select(a => a.Key).ToList();
 //                if (foundCIIDs.Count == 0)
 //                { // ok case, continue

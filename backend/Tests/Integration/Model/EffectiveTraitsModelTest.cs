@@ -33,7 +33,7 @@ namespace Tests.Integration.Model
             var testTrait2 = (await traitsProvider.GetActiveTrait("test_trait_2", trans, timeThreshold))!;
             var testTrait3 = (await traitsProvider.GetActiveTrait("test_trait_3", trans, timeThreshold))!;
 
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
+            var cis = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
             var et1 = await traitModel.GetEffectiveTraitsForTrait(testTrait1, cis, layerset, trans, timeThreshold);
             Assert.AreEqual(3, et1.Count());
             var et2 = await traitModel.GetEffectiveTraitsForTrait(testTrait2, cis, layerset, trans, timeThreshold);
@@ -64,7 +64,7 @@ namespace Tests.Integration.Model
 
             var t4 = await traitsProvider.GetActiveTrait("test_trait_4", trans, timeThreshold);
             var t5 = await traitsProvider.GetActiveTrait("test_trait_5", trans, timeThreshold);
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
+            var cis = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
 
             var t1 = await traitModel.GetEffectiveTraitsForTrait(t4!, cis, layerset, trans, timeThreshold);
             Assert.AreEqual(2, t1.Count());
@@ -80,7 +80,7 @@ namespace Tests.Integration.Model
             var (traitModel, ciModel, layerset, _) = await BaseSetup();
             var trans = ModelContextBuilder.BuildImmediate();
             var tt1 = await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold);
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
+            var cis = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
             var t1 = await traitModel.GetEffectiveTraitsForTrait(tt1!, cis, layerset, trans, timeThreshold);
             Assert.AreEqual(1, t1.Count());
         }

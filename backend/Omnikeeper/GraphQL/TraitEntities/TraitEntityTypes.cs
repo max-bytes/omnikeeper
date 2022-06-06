@@ -51,7 +51,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 var trans = userContext.Transaction;
 
                 // TODO: use dataloader
-                var ets = await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerset, trans, timeThreshold);
+                var ets = await traitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerset, trans, timeThreshold);
                 return ets.Select(kv => kv.Value);
             });
 
@@ -80,7 +80,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         }
                         else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
                         {
-                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(new AllCIIDsSelection(), attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService);
+                            matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService);
                         }
                         else if (filter.AttributeFilters.IsEmpty() && !filter.RelationFilters.IsEmpty())
                         {

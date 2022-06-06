@@ -310,7 +310,7 @@ namespace Tests.Integration.Model
             trans2.Commit();
 
             using var trans3 = ModelContextBuilder.BuildImmediate();
-            var a1 = (await GetService<IBaseAttributeModel>().GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a1 = (await GetService<IBaseAttributeModel>().GetAttributes(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(3, a1.Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a1").Count());
@@ -341,7 +341,7 @@ namespace Tests.Integration.Model
             await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
             await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
 
-            var a1 = await GetService<IAttributeModel>().FindMergedAttributesByFullName("a1", new AllCIIDsSelection(), new LayerSet(layer1.ID, layer2.ID), trans, TimeThreshold.BuildLatest());
+            var a1 = await GetService<IAttributeModel>().FindMergedAttributesByFullName("a1", AllCIIDsSelection.Instance, new LayerSet(layer1.ID, layer2.ID), trans, TimeThreshold.BuildLatest());
             a1.Keys.Should().BeEquivalentTo(new List<Guid>() { ciid1, ciid2 }, options => options.WithStrictOrdering());
             a1.Values.Select(a => a.Attribute.Value).Should().BeEquivalentTo(new List<IAttributeValue>()
             {

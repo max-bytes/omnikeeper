@@ -117,7 +117,7 @@ namespace Omnikeeper.Model
         public async Task<IDictionary<string, LayerData>> GetLayerData(IModelContext trans, TimeThreshold timeThreshold)
         {
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-            var layerData = await innerModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, timeThreshold);
+            var layerData = await innerModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, timeThreshold);
 
             // NOTE: we base the returned layer-data on the actually existing layers
             // that means that there can be layer-data entities that will not be returned and

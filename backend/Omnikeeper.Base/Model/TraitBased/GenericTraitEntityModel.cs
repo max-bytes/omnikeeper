@@ -36,9 +36,9 @@ namespace Omnikeeper.Base.Model.TraitBased
             return ret;
         }
 
-        public async Task<IDictionary<ID, T>> GetAllByDataID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IDictionary<ID, T>> GetByDataID(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ets = (await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerSet, trans, timeThreshold))
+            var ets = (await traitEntityModel.GetByCIID(ciSelection, layerSet, trans, timeThreshold))
                 .Values
                 .OrderBy(et => et.CIID); // we order by CIID to stay consistent even when multiple CIs would match
 
@@ -64,7 +64,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             if (ids.Length == 0)
                 return new Dictionary<ID, Guid>();
 
-            var cisWithIDAttributes = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), NamedAttributesSelection.Build(attributeNames.ToHashSet()), layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
+            var cisWithIDAttributes = await attributeModel.GetMergedAttributes(AllCIIDsSelection.Instance, NamedAttributesSelection.Build(attributeNames.ToHashSet()), layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
 
             // invert the dicationary and get a (attributeName, attributeValue) -> list of ciid
             var lookup = cisWithIDAttributes
@@ -116,12 +116,12 @@ namespace Omnikeeper.Base.Model.TraitBased
          * NOTE: unlike the regular insert, this does not do any checks if the updated entities actually fulfill the trait requirements 
          * and will be considered as this trait's entities going forward
          */
-        public async Task<bool> BulkReplace(IDictionary<ID, T> t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        public async Task<bool> BulkReplace(ICIIDSelection relevantCISelection, IDictionary<ID, T> t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             if (t.IsEmpty())
                 return false;
 
-            var outdated = await GetAllByCIID(layerSet, trans, changesetProxy.TimeThreshold);
+            var outdated = await GetByCIID(relevantCISelection, layerSet, trans, changesetProxy.TimeThreshold);
             // NOTE: we use Lookups instead of Dictionaries to support duplicate IDs at this level
             var outdatedCIIDLookup = outdated.ToLookup(kv => idAttributeInfos.ExtractIDFromEntity(kv.Value), kv => kv.Key);
 
@@ -229,16 +229,16 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (dc, ciid);
         }
 
-        public async Task<IDictionary<Guid, T>> GetAllByCIID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IDictionary<Guid, T>> GetByCIID(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ets = await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerSet, trans, timeThreshold);
+            var ets = await traitEntityModel.GetByCIID(ciSelection, layerSet, trans, timeThreshold);
             return ets.ToDictionary(kv => kv.Key, kv => GenericTraitEntityHelper.EffectiveTrait2Object<T>(kv.Value, attributeFieldInfos, relationFieldInfos));
         }
 
         // returns all relevant changesets that affect/contribute to all trait entities at that time
         public async Task<ISet<Guid>> GetRelevantChangesetIDsForAll(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ets = await traitEntityModel.GetByCIID(new AllCIIDsSelection(), layerSet, trans, timeThreshold);
+            var ets = await traitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerSet, trans, timeThreshold);
             var changesetIDs = ets.SelectMany(et => et.Value.GetRelevantChangesetIDs()).ToHashSet();
             return changesetIDs;
         }

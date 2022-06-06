@@ -50,14 +50,14 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var cis1 = await GetService<ICIModel>().GetMergedCIs(new AllCIIDsSelection(), new LayerSet(layerID1), false, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
+                var cis1 = await GetService<ICIModel>().GetMergedCIs(AllCIIDsSelection.Instance, new LayerSet(layerID1), false, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(2, cis1.Count());
                 Assert.AreEqual(1, cis1.Count(c => c.ID == ciid1 && c.MergedAttributes.ContainsKey("a1")));
                 Assert.AreEqual(1, cis1.Count(c => c.ID == ciid2 && c.MergedAttributes.ContainsKey("a2")));
-                var cis2 = await GetService<ICIModel>().GetMergedCIs(new AllCIIDsSelection(), new LayerSet(layerID2), false, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
+                var cis2 = await GetService<ICIModel>().GetMergedCIs(AllCIIDsSelection.Instance, new LayerSet(layerID2), false, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, cis2.Count());
                 Assert.AreEqual(1, cis2.Count(c => c.ID == ciid1 && c.MergedAttributes.ContainsKey("a3")));
-                var cis3 = await GetService<ICIModel>().GetMergedCIs(new AllCIIDsSelection(), new LayerSet(layerID2), true, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
+                var cis3 = await GetService<ICIModel>().GetMergedCIs(AllCIIDsSelection.Instance, new LayerSet(layerID2), true, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(3, cis3.Count());
                 Assert.AreEqual(1, cis3.Count(c => c.ID == ciid1 && c.MergedAttributes.ContainsKey("a3")));
                 Assert.AreEqual(1, cis3.Count(c => c.ID == ciid2 && c.MergedAttributes.Count() == 0));

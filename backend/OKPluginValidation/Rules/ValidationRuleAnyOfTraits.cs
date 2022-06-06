@@ -57,7 +57,7 @@ namespace OKPluginValidation.Rules
             var traits = await traitsProvider.GetActiveTraitsByIDs(parsedConfig.TraitIDs, trans, atTime);
             var attributeSelection = AllAttributeSelection.Instance;
 
-            var workCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset!, includeEmptyCIs: false, attributeSelection, trans, atTime);
+            var workCIs = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, layerset!, includeEmptyCIs: false, attributeSelection, trans, atTime);
             var cisThatDontHaveAnyTrait = effectiveTraitModel.FilterMergedCIsByTraits(workCIs, Enumerable.Empty<ITrait>(), traits.Values, layerset, trans, atTime);
 
             if (cisThatDontHaveAnyTrait.IsEmpty())

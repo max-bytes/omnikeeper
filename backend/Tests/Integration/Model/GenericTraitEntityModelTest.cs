@@ -161,7 +161,7 @@ namespace Tests.Integration.Model
             byDataID1.entity.Should().BeEquivalentTo(e1);
 
             // get all in a dictionary
-            var allByDataID1 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var allByDataID1 = await model.GetByDataID(AllCIIDsSelection.Instance, layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             allByDataID1.Should().BeEquivalentTo(new Dictionary<long, TestEntityForLongID>()
             {
                 {1L,new TestEntityForLongID(1L, null) },
@@ -272,7 +272,7 @@ namespace Tests.Integration.Model
             byDataID1.entity.Should().BeEquivalentTo(e1);
 
             // get all in a dictionary
-            var allByDataID1 = await model.GetAllByDataID(layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var allByDataID1 = await model.GetByDataID(AllCIIDsSelection.Instance, layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             allByDataID1.Should().BeEquivalentTo(new Dictionary<(long, string), TestEntityForTupleID>()
             {
                 {(1L, "id1"),new TestEntityForTupleID(1L, "id1", null) },

@@ -107,18 +107,18 @@ namespace OKPluginCLBNaemonVariableResolution
                 _ => throw new NotImplementedException(),
             };
 
-            var allCategories = await categoryModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-            var hosts = await targetHostModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-            var services = await targetServiceModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-            var customers = await customerModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-            var naemonV1Variables = await naemonV1VariableModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
-            var selfServiceVariables = await selfServiceVariableModel.GetAllByCIID(selfserviceVariablesInputLayerset, trans, timeThreshold);
-            var profiles = await profileModel.GetAllByDataID(monmanV1InputLayerset, trans, timeThreshold);
-            var serviceActions = await serviceActionModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-            var interfaces = await interfaceModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-            var groups = await groupModel.GetAllByCIID(cmdbInputLayerset, trans, timeThreshold);
-            var naemonInstances = await naemonInstanceModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
-            var tags = await tagModel.GetAllByCIID(monmanV1InputLayerset, trans, timeThreshold);
+            var allCategories = await categoryModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
+            var hosts = await targetHostModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
+            var services = await targetServiceModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
+            var customers = await customerModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
+            var naemonV1Variables = await naemonV1VariableModel.GetByCIID(AllCIIDsSelection.Instance, monmanV1InputLayerset, trans, timeThreshold);
+            var selfServiceVariables = await selfServiceVariableModel.GetByCIID(AllCIIDsSelection.Instance, selfserviceVariablesInputLayerset, trans, timeThreshold);
+            var profiles = await profileModel.GetByDataID(AllCIIDsSelection.Instance, monmanV1InputLayerset, trans, timeThreshold);
+            var serviceActions = await serviceActionModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
+            var interfaces = await interfaceModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
+            var groups = await groupModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
+            var naemonInstances = await naemonInstanceModel.GetByCIID(AllCIIDsSelection.Instance, monmanV1InputLayerset, trans, timeThreshold);
+            var tags = await tagModel.GetByCIID(AllCIIDsSelection.Instance, monmanV1InputLayerset, trans, timeThreshold);
 
             // filter categories
             var categories = allCategories

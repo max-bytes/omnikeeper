@@ -43,7 +43,7 @@ namespace OKPluginValidation
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var validations = await validationModel.GetAllByCIID(metaConfiguration.ConfigLayerset, modelContextBuilder.BuildImmediate(), timeThreshold);
+            var validations = await validationModel.GetByCIID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, modelContextBuilder.BuildImmediate(), timeThreshold);
 
             // user handling: get or create
             // TODO: generalize, offer method for upserting a special process user (consolidate with CLB users)
@@ -86,7 +86,7 @@ namespace OKPluginValidation
                 using var trans = modelContextBuilder.BuildDeferred();
                 var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
 
-                await validationIssueModel.BulkReplace(newIssues, validationWriteLayerset, validationWriteLayerID, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await validationIssueModel.BulkReplace(AllCIIDsSelection.Instance, newIssues, validationWriteLayerset, validationWriteLayerID, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                 // TODO: add relations from validation issue to validation
 

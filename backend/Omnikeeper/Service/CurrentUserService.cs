@@ -240,7 +240,7 @@ namespace Omnikeeper.Service
             {
                 var metaConfiguration = await MetaConfigurationModel.GetConfigOrDefault(trans);
 
-                var allAuthRoles = await AuthRoleModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+                var allAuthRoles = await AuthRoleModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
 
                 var activeAuthRoles = new List<AuthRole>();
                 foreach (var role in httpUser.ClientRoles)

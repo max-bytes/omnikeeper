@@ -187,7 +187,7 @@ namespace Omnikeeper.Base.Service
                 }
                 else
                 {
-                    var attributes = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), searchableLayers, trans, atTime);
+                    var attributes = await attributeModel.FindMergedAttributesByFullName(name, AllCIIDsSelection.Instance, searchableLayers, trans, atTime);
                     var attributesLookup = attributes.ToLookup(kv =>
                     {
                         var v = kv.Value.Attribute.Value.Value2String();

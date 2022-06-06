@@ -57,7 +57,7 @@ namespace OKPluginValidation.Rules
             var attributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute); // This is weird... it seems like we need to fetch at least ONE attribute otherwise, it's all empty.. which makes sense, but still...
 
             var traits = await traitsProvider.GetActiveTraitsByIDs(new string[] { CoreTraits.Named.ID }, trans, atTime);
-            var workCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset!, includeEmptyCIs: true, attributeSelection, trans, atTime);
+            var workCIs = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, layerset!, includeEmptyCIs: true, attributeSelection, trans, atTime);
             var unnamedCIs = effectiveTraitModel.FilterMergedCIsByTraits(workCIs, Enumerable.Empty<ITrait>(), traits.Values, layerset, trans, atTime);
 
             var unnamedCISelection = SpecificCIIDsSelection.Build(unnamedCIs.Select(ci => ci.ID).ToHashSet());

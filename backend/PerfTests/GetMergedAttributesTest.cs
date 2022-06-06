@@ -78,7 +78,7 @@ namespace PerfTests
 
             var selection = CIIDSelection switch
             {
-                "all" => new AllCIIDsSelection(),
+                "all" => AllCIIDsSelection.Instance,
                 "specific" => specificCIIDs!,
                 "allExcept" => allExceptCIIDs!,
                 _ => throw new Exception() // must not happen

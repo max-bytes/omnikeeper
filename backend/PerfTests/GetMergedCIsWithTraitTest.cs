@@ -30,7 +30,7 @@ namespace PerfTests
         {
             BaseAttributeModel._USE_LATEST_TABLE = UseLatestTable;
             using var mc = modelContextBuilder!.BuildImmediate();
-            var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
+            var ciSelection = (SpecificCIs) ? selectedCIIDs : AllCIIDsSelection.Instance;
             var cis = await ciModel!.GetMergedCIs(ciSelection!, layerset!, false, AllAttributeSelection.Instance, mc, time);
             effectiveTraitModel!.FilterCIsWithTrait(cis, trait!, layerset!, mc, time).Consume(consumer);
 

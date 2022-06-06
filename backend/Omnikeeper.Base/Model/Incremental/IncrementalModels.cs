@@ -51,7 +51,7 @@ namespace Omnikeeper.Base.Model.Incremental
 
             if (!canUpdateIncrementally)
             {
-                return new UpdateSet(new AllCIIDsSelection(), true);
+                return new UpdateSet(AllCIIDsSelection.Instance, true);
             }
             else
             {
@@ -92,7 +92,7 @@ namespace Omnikeeper.Base.Model.Incremental
 
             if (!store.TryGet<IDictionary<Guid, MergedCI>>(key, out var so) || ciSelection.ForcedFullUpdate)
             {
-                var initialCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, attributeSelection, trans, timeThreshold);
+                var initialCIs = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, layerSet, false, attributeSelection, trans, timeThreshold);
                 var newSo = new Dictionary<Guid, MergedCI>();
                 foreach (var ci in initialCIs)
                 {
