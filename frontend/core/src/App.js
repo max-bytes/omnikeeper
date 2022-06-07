@@ -5,11 +5,12 @@ import Diffing from './components/diffing/Diffing';
 import 'antd/dist/antd.min.css';
 import Keycloak from 'keycloak-js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faList, faLayerGroup, faPlayCircle, faCog } from '@fortawesome/free-solid-svg-icons';
+import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faList, faLayerGroup, faPlayCircle, faCog, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/cis/AddNewCI'
 import SearchCIAdvanced from './components/search/SearchCIAdvanced'
+import IssueList from "components/issues/IssueList";
 import ChangesetList from "components/changesets/ChangesetList";
 import Changeset from "components/changesets/Changeset";
 import GridView from './components/gridView/GridView'
@@ -96,6 +97,7 @@ function App() {
                   <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{justifyContent: 'flex-end'}}>
                     <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Explore CIs</Link></Menu.Item>
                     <Menu.Item key="changesets"><Link to="/changesets"><FontAwesomeIcon icon={faList} style={{ marginRight: "0.5rem" }}/> Changesets</Link></Menu.Item>
+                    <Menu.Item key="issues"><Link to="/issues"><FontAwesomeIcon icon={faExclamationTriangle} style={{ marginRight: "0.5rem" }}/> Issues</Link></Menu.Item>
                     <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
                     <SubMenu key="tools" title={<span><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/>Tools</span>}>
                       <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
@@ -149,6 +151,9 @@ function App() {
                   </PrivateRoute>
                   <PrivateRoute path="/changesets" title="Changesets">
                     <ChangesetList />
+                  </PrivateRoute>
+                  <PrivateRoute path="/issues" title="Issues">
+                    <IssueList />
                   </PrivateRoute>
                   <PrivateRoute path="/grid-view" title="Grid-View">
                     <GridView/>

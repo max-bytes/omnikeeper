@@ -189,6 +189,25 @@ export const queries = {
         }
         ${Fragments.attribute}
         `,
+    Issues: gql`
+        query {
+          traitEntities(layers: ["__okissues"]) {
+              m__meta__issue__issue {
+                all {
+                  entity {
+                    id
+                    type
+                    context
+                    message
+                    affectedCIs {
+                      relatedCIID
+                    }
+                  }
+                }
+              }
+            }
+          }          
+    `,
     SelectedTimeThreshold: gql`
         query {
             selectedTimeThreshold @client

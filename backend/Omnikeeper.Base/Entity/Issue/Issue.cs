@@ -23,7 +23,7 @@ namespace Omnikeeper.Base.Entity.Issue
         [TraitAttribute("name", "__name", optional: true)]
         public readonly string? Name;
 
-        [TraitRelation("affected_cis", "affects_ci", true)]
+        [TraitRelation("affectedCIs", "affects_ci", true)]
         public readonly Guid[] AffectedCIs;
 
 
