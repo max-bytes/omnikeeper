@@ -12,7 +12,7 @@ namespace Omnikeeper.Base.Model
 {
     public interface IIssueAccumulator
     {
-        void Add(string ID, string message, params Guid[] affectedCIs);
+        bool TryAdd(string ID, string message, params Guid[] affectedCIs);
     }
 
     public class IssueAccumulator : IIssueAccumulator
@@ -29,10 +29,10 @@ namespace Omnikeeper.Base.Model
             Context = context;
         }
 
-        public void Add(string ID, string message, params Guid[] affectedCIs)
+        public bool TryAdd(string ID, string message, params Guid[] affectedCIs)
         {
             var issue = new Issue(ID, Type, Context, message, affectedCIs);
-            Issues.Add((issue.ID, Type, Context), issue);
+            return Issues.TryAdd((issue.ID, Type, Context), issue);
         }
     }
 

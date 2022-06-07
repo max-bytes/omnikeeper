@@ -98,12 +98,10 @@ export default function IssueList(props) {
                                 sortable: true
                             }}
                             animateRows={true}
+                            enableCellTextSelection={true}
                             getRowNodeId={function (data) {
                                 return `${data.id}-${data.context}-${data.type}`;
                             }}
-                            // onFirstDataRendered={(grid) => {
-                            //     grid.api.resetRowHeights();
-                            // }}
                         />
                     </div>
                 </>

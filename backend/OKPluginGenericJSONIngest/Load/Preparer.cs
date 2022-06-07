@@ -41,7 +41,7 @@ namespace OKPluginGenericJSONIngest.Load
                 }
                 catch (Exception e)
                 {
-                    issueAccumulator.Add($"prepare_ci_{ci.tempID}", $"Could not create CI-candidate with temp ID {ci.tempID}: {e.Message}");
+                    issueAccumulator.TryAdd($"prepare_ci_{ci.tempID}", $"Could not create CI-candidate with temp ID {ci.tempID}: {e.Message}");
                 }
             }
 
@@ -55,7 +55,7 @@ namespace OKPluginGenericJSONIngest.Load
                 {
                     if (gracefulFromErrorHandling)
                     {
-                        issueAccumulator.Add($"prepare_relation_{r.from}_{r.to}_{r.predicate}", $"From-ci \"{r.from}\" of relation could not be resolved");
+                        issueAccumulator.TryAdd($"prepare_relation_{r.from}_{r.to}_{r.predicate}", $"From-ci \"{r.from}\" of relation could not be resolved");
                         return null;
                     }
                     else
@@ -65,7 +65,7 @@ namespace OKPluginGenericJSONIngest.Load
                 {
                     if (gracefulToErrorHandling)
                     {
-                        issueAccumulator.Add($"prepare_relation_{r.from}_{r.to}_{r.predicate}", $"To-ci \"{r.to}\" of relation could not be resolved");
+                        issueAccumulator.TryAdd($"prepare_relation_{r.from}_{r.to}_{r.predicate}", $"To-ci \"{r.to}\" of relation could not be resolved");
                         return null;
                     }
                     else
@@ -84,7 +84,7 @@ namespace OKPluginGenericJSONIngest.Load
             {
                 if (a.attribute.value == null)
                 {
-                    issueAccumulator.Add($"prepare_id_method_by_attribute_{tempID}", $"Could not create fragment from generic attribute for idMethod CIIdentificationMethodByFragment using attribute name {a.attribute.name} on candidate CI with temp ID {tempID}");
+                    issueAccumulator.TryAdd($"prepare_id_method_by_attribute_{tempID}", $"Could not create fragment from generic attribute for idMethod CIIdentificationMethodByFragment using attribute name {a.attribute.name} on candidate CI with temp ID {tempID}");
                     return CIIdentificationMethodNoop.Build();
                 }
                 var fragment = new CICandidateAttributeData.Fragment(a.attribute.name, a.attribute.value);

@@ -59,7 +59,7 @@ namespace Omnikeeper.Base.Service
                                 break;
                             case SameTempIDHandling.DropAndWarn:
                                 dropCandidateCIBecauseOfSameTempID = true;
-                                issueAccumulator.Add($"same_temp_id_{ciCandidateCIID}", $"Dropping candidate CI with temp-ID {cic.TempID}, as there is already a candidate CI with that tempID");
+                                issueAccumulator.TryAdd($"same_temp_id_{ciCandidateCIID}", $"Dropping candidate CI with temp-ID {cic.TempID}, as there is already a candidate CI with that tempID");
                                 break;
                         }
                     } 
@@ -91,7 +91,7 @@ namespace Omnikeeper.Base.Service
                                 break;
                             case SameTargetCIHandling.DropAndWarn:
                                 dropCandidateCIBecauseOfSameTargetCI = true;
-                                issueAccumulator.Add($"same_target_ci_{ciCandidateCIID}", $"Dropping candidate CI with temp-ID {cic.TempID}, as candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
+                                issueAccumulator.TryAdd($"same_target_ci_{ciCandidateCIID}", $"Dropping candidate CI with temp-ID {cic.TempID}, as candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
                                 break;
                             case SameTargetCIHandling.Evade:
                             case SameTargetCIHandling.EvadeAndWarn:
@@ -104,7 +104,7 @@ namespace Omnikeeper.Base.Service
                                             foundCIIDs.RemoveAt(i);
                                             if (cic.SameTargetCIHandling == SameTargetCIHandling.EvadeAndWarn)
                                             {
-                                                issueAccumulator.Add($"same_target_ci_{ciCandidateCIID}", $"Candidate CI with temp-ID {cic.TempID}: evading to other CI, because candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[i]].tempID} already targets the CI with ID {foundCIIDs[i]}");
+                                                issueAccumulator.TryAdd($"same_target_ci_{ciCandidateCIID}", $"Candidate CI with temp-ID {cic.TempID}: evading to other CI, because candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[i]].tempID} already targets the CI with ID {foundCIIDs[i]}");
                                             }
                                         }
                                     }
@@ -153,7 +153,7 @@ namespace Omnikeeper.Base.Service
                             // NOTE: how to deal with ambiguities? In other words: more than one CI fit, where to put the data?
                             // ciMappingService.TryToMatch() returns an already ordered list (by varying criteria, or - if nothing else - by CIID)
                             finalCIID = foundCIIDs.First();
-                            issueAccumulator.Add($"multiple_target_cis_{ciCandidateCIID}", $"Multiple CIs match for candidate with temp-ID {cic.TempID}: {string.Join(",", foundCIIDs)}, taking first one", foundCIIDs.ToArray());
+                            issueAccumulator.TryAdd($"multiple_target_cis_{ciCandidateCIID}", $"Multiple CIs match for candidate with temp-ID {cic.TempID}: {string.Join(",", foundCIIDs)}, taking first one", foundCIIDs.ToArray());
                         }
 
                         // add to mapping context
@@ -205,7 +205,7 @@ namespace Omnikeeper.Base.Service
                 if (usedRelations.Contains((fromCIID, toCIID, cic.PredicateID)))
                 {
                     // TODO: different handling options
-                    issueAccumulator.Add($"duplcate_relation_candidate_{tempFromCIID}_{tempToCIID}_{cic.PredicateID}", $"Duplicate relation candidate detected: (fromCIID: {fromCIID}, toCIID: {toCIID}, predicateID: {cic.PredicateID}), dropping", fromCIID, toCIID);
+                    issueAccumulator.TryAdd($"duplicate_relation_candidate_{tempFromCIID}_{tempToCIID}_{cic.PredicateID}", $"Duplicate relation candidate detected: (fromCIID: {fromCIID}, toCIID: {toCIID}, predicateID: {cic.PredicateID}), dropping", fromCIID, toCIID);
                     continue;
                 }
 
