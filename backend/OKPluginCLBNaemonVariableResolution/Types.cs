@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using System.Text.Json;
 
 namespace OKPluginCLBNaemonVariableResolution
 {
@@ -81,11 +82,15 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitRelation("tags", "has_tag", true)]
         public Guid[] Tags;
 
+        [TraitRelation("monitoringTargets", "monitors", true)]
+        public Guid[] MonitoringTargets;
+
         public NaemonInstanceV1()
         {
             ID = "";
             Name = "";
             Tags = Array.Empty<Guid>();
+            MonitoringTargets = Array.Empty<Guid>();
         }
     }
 
@@ -98,6 +103,23 @@ namespace OKPluginCLBNaemonVariableResolution
         public TagV1()
         {
             Name = "";
+        }
+    }
+
+    [TraitEntity("monman_v2.varres.target", TraitOriginType.Plugin)]
+    public class Target : TraitEntity
+    {
+        [TraitAttribute("id", "cmdb.id")]
+        [TraitEntityID]
+        public string ID;
+
+        [TraitAttribute("resolvedVariables", "monman_v2.resolved_variables")]
+        public JsonDocument ResolvedVariables;
+
+        public Target()
+        {
+            ID = "";
+            ResolvedVariables = null;
         }
     }
 

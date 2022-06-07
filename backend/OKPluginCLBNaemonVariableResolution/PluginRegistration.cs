@@ -19,6 +19,7 @@ namespace OKPluginCLBNaemonVariableResolution
             GenericTraitEntityHelper.Class2RecursiveTrait<TagV1>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<TargetHost>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<TargetService>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<Target>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<Profile>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<Category>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<Customer>(),
