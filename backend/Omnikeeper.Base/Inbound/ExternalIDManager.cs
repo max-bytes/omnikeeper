@@ -56,7 +56,7 @@ namespace Omnikeeper.Base.Inbound
 
                     try
                     {
-                        var foundCIIDs = await ciMappingService.TryToMatch(idMethod, ciMappingContext, trans, logger);
+                        var foundCIIDs = await ciMappingService.TryToMatch(idMethod, ciMappingContext, trans);
 
                         Guid ciid;
                         if (!foundCIIDs.IsEmpty())

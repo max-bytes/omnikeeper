@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
@@ -80,7 +79,7 @@ namespace Tests.Integration.Service
                 thirdInterfaceFinalCIID,
             });
 
-            var r = await service.TryToMatch(idMethod, ciMappingContext.Object, trans.Object, NullLogger.Instance);
+            var r = await service.TryToMatch(idMethod, ciMappingContext.Object, trans.Object);
 
             r.Should().BeEquivalentTo(new Guid[] { targetInterfaceFinalCIID, secondInterfaceFinalCIID, thirdInterfaceFinalCIID });
         }

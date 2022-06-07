@@ -3,6 +3,7 @@ using OKPluginGenericJSONIngest.Extract;
 using OKPluginGenericJSONIngest.Load;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
@@ -22,9 +23,12 @@ namespace OKPluginGenericJSONIngest
         private readonly ICurrentUserAccessor currentUserAccessor;
         private readonly ILayerBasedAuthorizationService authorizationService;
         private readonly IngestDataService ingestDataService;
+        private readonly IChangesetModel changesetModel;
+        private readonly IIssuePersister issuePersister;
 
         public GenericJsonIngestService(IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel, ContextModel contextModel, 
-            ILayerModel layerModel, ICurrentUserAccessor currentUserAccessor, ILayerBasedAuthorizationService authorizationService, IngestDataService ingestDataService)
+            ILayerModel layerModel, ICurrentUserAccessor currentUserAccessor, ILayerBasedAuthorizationService authorizationService, IngestDataService ingestDataService,
+            IChangesetModel changesetModel, IIssuePersister issuePersister)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.metaConfigurationModel = metaConfigurationModel;
@@ -33,6 +37,8 @@ namespace OKPluginGenericJSONIngest
             this.currentUserAccessor = currentUserAccessor;
             this.authorizationService = authorizationService;
             this.ingestDataService = ingestDataService;
+            this.changesetModel = changesetModel;
+            this.issuePersister = issuePersister;
         }
 
         public async Task Ingest(string contextID, string inputJson, ILogger logger)
@@ -106,14 +112,23 @@ namespace OKPluginGenericJSONIngest
 
             logger.LogInformation($"Converting to ingest data...");
 
+            var issueAccumulator = new IssueAccumulator("DataIngest", $"GenericJsonIngest_{contextID}");
+
             var preparer = new Preparer();
-            var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, logger);
+            var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, issueAccumulator);
 
             logger.LogInformation($"Done converting to ingest data");
 
             logger.LogInformation($"Performing ingest...");
 
-            var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
+
+            var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator);
+
+            using var transUpdateIssues = modelContextBuilder.BuildDeferred();
+            await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
+            transUpdateIssues.Commit();
+
             logger.LogInformation($"Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");
         }
     }

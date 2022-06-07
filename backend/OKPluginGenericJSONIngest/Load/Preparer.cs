@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using System;
@@ -10,7 +10,7 @@ namespace OKPluginGenericJSONIngest.Load
 {
     public class Preparer
     {
-        public IngestData GenericInboundData2IngestData(GenericInboundData data, LayerSet searchLayers, ILogger logger)
+        public IngestData GenericInboundData2IngestData(GenericInboundData data, LayerSet searchLayers, IIssueAccumulator issueAccumulator)
         {
             var tempCIIDMapping = new Dictionary<string, Guid>(); // maps tempIDs to temporary Guids
 
@@ -32,7 +32,7 @@ namespace OKPluginGenericJSONIngest.Load
 
                     var attributes = new CICandidateAttributeData(fragments!);
 
-                    ICIIdentificationMethod idMethod = BuildCIIDMethod(ci.idMethod, attributes, searchLayers, ci.tempID, tempCIIDMapping, logger);
+                    ICIIdentificationMethod idMethod = BuildCIIDMethod(ci.idMethod, attributes, searchLayers, ci.tempID, tempCIIDMapping, issueAccumulator);
 
                     var tempGuid = Guid.NewGuid();
                     tempCIIDMapping.TryAdd(ci.tempID, tempGuid);
@@ -41,7 +41,7 @@ namespace OKPluginGenericJSONIngest.Load
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, $"Could not create CI-candidate with temp ID {ci.tempID}");
+                    issueAccumulator.Add($"prepare_ci_{ci.tempID}", $"Could not create CI-candidate with temp ID {ci.tempID}: {e.Message}");
                 }
             }
 
@@ -55,7 +55,7 @@ namespace OKPluginGenericJSONIngest.Load
                 {
                     if (gracefulFromErrorHandling)
                     {
-                        logger.LogWarning($"From-ci \"{r.from}\" of relation could not be resolved");
+                        issueAccumulator.Add($"prepare_relation_{r.from}_{r.to}_{r.predicate}", $"From-ci \"{r.from}\" of relation could not be resolved");
                         return null;
                     }
                     else
@@ -65,7 +65,7 @@ namespace OKPluginGenericJSONIngest.Load
                 {
                     if (gracefulToErrorHandling)
                     {
-                        logger.LogWarning($"To-ci \"{r.to}\" of relation could not be resolved");
+                        issueAccumulator.Add($"prepare_relation_{r.from}_{r.to}_{r.predicate}", $"To-ci \"{r.to}\" of relation could not be resolved");
                         return null;
                     }
                     else
@@ -78,13 +78,13 @@ namespace OKPluginGenericJSONIngest.Load
             return new IngestData(ciCandidates, relationCandidates!);
         }
 
-        private ICIIdentificationMethod BuildCIIDMethod(IInboundIDMethod idMethod, CICandidateAttributeData attributes, LayerSet searchLayers, string tempCIID, Dictionary<string, Guid> tempCIIDMapping, ILogger logger)
+        private ICIIdentificationMethod BuildCIIDMethod(IInboundIDMethod idMethod, CICandidateAttributeData attributes, LayerSet searchLayers, string tempID, Dictionary<string, Guid> tempCIIDMapping, IIssueAccumulator issueAccumulator)
         {
             ICIIdentificationMethod attributeF(InboundIDMethodByAttribute a)
             {
                 if (a.attribute.value == null)
                 {
-                    logger.LogWarning($"Could not create fragment from generic attribute for idMethod CIIdentificationMethodByFragment using attribute name {a.attribute.name}");
+                    issueAccumulator.Add($"prepare_id_method_by_attribute_{tempID}", $"Could not create fragment from generic attribute for idMethod CIIdentificationMethodByFragment using attribute name {a.attribute.name} on candidate CI with temp ID {tempID}");
                     return CIIdentificationMethodNoop.Build();
                 }
                 var fragment = new CICandidateAttributeData.Fragment(a.attribute.name, a.attribute.value);
@@ -98,9 +98,9 @@ namespace OKPluginGenericJSONIngest.Load
                 InboundIDMethodByAttribute a => attributeF(a),
                 InboundIDMethodByRelatedTempID rt => CIIdentificationMethodByRelatedTempCIID.Build(tempCIIDMapping.GetValueOrDefault(rt.tempID), rt.outgoingRelation, rt.predicateID, searchLayers),
                 InboundIDMethodByTemporaryCIID t => CIIdentificationMethodByTempCIID.Build(tempCIIDMapping.GetValueOrDefault(t.tempID)),
-                InboundIDMethodByByUnion f => CIIdentificationMethodByUnion.Build(f.inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempCIID, tempCIIDMapping, logger)).ToArray()),
-                InboundIDMethodByIntersect a => CIIdentificationMethodByIntersect.Build(a.inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempCIID, tempCIIDMapping, logger)).ToArray()),
-                _ => throw new Exception($"unknown idMethod \"{idMethod.GetType()}\" for ci candidate \"{tempCIID}\" encountered")
+                InboundIDMethodByByUnion f => CIIdentificationMethodByUnion.Build(f.inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempID, tempCIIDMapping, issueAccumulator)).ToArray()),
+                InboundIDMethodByIntersect a => CIIdentificationMethodByIntersect.Build(a.inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempID, tempCIIDMapping, issueAccumulator)).ToArray()),
+                _ => throw new Exception($"unknown idMethod \"{idMethod.GetType()}\" for ci candidate \"{tempID}\" encountered")
             };
         }
     }

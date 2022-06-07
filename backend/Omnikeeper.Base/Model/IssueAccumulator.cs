@@ -36,7 +36,12 @@ namespace Omnikeeper.Base.Model
         }
     }
 
-    public class IssuePersister
+    public interface IIssuePersister
+    {
+        Task<bool> Persist(IssueAccumulator from, IModelContext trans, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy);
+    }
+
+    public class IssuePersister : IIssuePersister
     {
         private readonly GenericTraitEntityModel<Issue, (string id, string type, string context)> model;
         private readonly IAttributeModel attributeModel;

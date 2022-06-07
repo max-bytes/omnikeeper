@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -30,9 +31,12 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService authorizationService;
         private readonly ILogger<ActiveDirectoryXMLIngestController> logger;
+        private readonly IIssuePersister issuePersister;
+        private readonly IChangesetModel changesetModel;
 
         public ActiveDirectoryXMLIngestController(IngestDataService ingestDataService, ICurrentUserAccessor currentUserService, ILayerModel layerModel, ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService,
-            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger)
+            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger,
+            IIssuePersister issuePersister, IChangesetModel changesetModel)
         {
             this.ingestDataService = ingestDataService;
             this.currentUserService = currentUserService;
@@ -41,6 +45,8 @@ namespace Omnikeeper.Controllers.Ingest
             this.modelContextBuilder = modelContextBuilder;
             this.authorizationService = authorizationService;
             this.logger = logger;
+            this.issuePersister = issuePersister;
+            this.changesetModel = changesetModel;
         }
 
         // TODO: rework into a context based approach?
@@ -70,7 +76,14 @@ namespace Omnikeeper.Controllers.Ingest
                ));
                 var (ciCandidates, relationCandidates) = ingestActiveDirectoryXMLService.Files2IngestCandidates(fileStreams, searchLayers, logger);
                 var ingestData = new IngestData(ciCandidates, relationCandidates);
-                var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
+                var issueAccumulator = new IssueAccumulator("DataIngest", $"ActiveDirectoryXMLIngest_{writeLayerID}");
+                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+                var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator);
+
+                using var transUpdateIssues = modelContextBuilder.BuildDeferred();
+                await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
+                transUpdateIssues.Commit();
+
                 logger.LogInformation($"Active Directory XML Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");
 
                 return Ok();

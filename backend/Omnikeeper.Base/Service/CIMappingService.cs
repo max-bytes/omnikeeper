@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -16,7 +15,7 @@ namespace Omnikeeper.Base.Service
         /// <summary>
         /// returns a distinct list of matching CIIDs, sorted by preference
         /// </summary>
-        public async Task<IList<Guid>> TryToMatch(ICIIdentificationMethod method, ICIMappingContext ciMappingContext, IModelContext trans, ILogger logger)
+        public async Task<IList<Guid>> TryToMatch(ICIIdentificationMethod method, ICIMappingContext ciMappingContext, IModelContext trans)
         {
             switch (method)
             {
@@ -63,7 +62,7 @@ namespace Omnikeeper.Base.Service
                         var isFirst = true;
                         foreach (var inner in a.Inner)
                         {
-                            var ciids = await TryToMatch(inner, ciMappingContext, trans, logger);
+                            var ciids = await TryToMatch(inner, ciMappingContext, trans);
                             if (isFirst)
                             {
                                 ret.AddRange(ciids);
@@ -93,7 +92,7 @@ namespace Omnikeeper.Base.Service
                         var tmpSet = new HashSet<Guid>();
                         foreach (var inner in f.Inner)
                         {
-                            var r = await TryToMatch(inner, ciMappingContext, trans, logger);
+                            var r = await TryToMatch(inner, ciMappingContext, trans);
                             foreach (var rr in r)
                             {
                                 if (!tmpSet.Contains(rr))
@@ -110,8 +109,7 @@ namespace Omnikeeper.Base.Service
                 case CIIdentificationMethodNoop _:
                     return new List<Guid>() { };
                 default:
-                    logger.LogWarning("Unknown CI Identification method detected");
-                    return new List<Guid>() { };
+                    throw new Exception($"Unknown CI Identification method detected");
             }
         }
 

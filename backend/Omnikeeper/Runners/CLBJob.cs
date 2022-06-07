@@ -118,13 +118,13 @@ namespace Omnikeeper.Runners
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly CLBProcessedChangesetsCache clbProcessedChangesetsCache;
-        private readonly IssuePersister issuePersister;
+        private readonly IIssuePersister issuePersister;
         private readonly ILoggerFactory loggerFactory;
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
 
         public CLBSingleJob(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, ILifetimeScope lifetimeScope, IChangesetModel changesetModel, ILogger<CLBSingleJob> genericLogger,
             ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, ILoggerFactory loggerFactory, CLBProcessedChangesetsCache clbProcessedChangesetsCache,
-             IssuePersister issuePersister)
+             IIssuePersister issuePersister)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.lifetimeScope = lifetimeScope;

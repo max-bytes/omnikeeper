@@ -5,8 +5,10 @@ using OKPluginGenericJSONIngest;
 using OKPluginGenericJSONIngest.Load;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
@@ -26,10 +28,12 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ILogger<AnsibleInventoryScanIngestController> logger;
         private readonly ICurrentUserAccessor currentUserService;
         private readonly IModelContextBuilder modelContextBuilder;
+        private readonly IChangesetModel changesetModel;
+        private readonly IIssuePersister issuePersister;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
         public AnsibleInventoryScanIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserAccessor currentUserService,
-            IModelContextBuilder modelContextBuilder,
+            IModelContextBuilder modelContextBuilder, IChangesetModel changesetModel, IIssuePersister issuePersister,
             ILayerBasedAuthorizationService authorizationService, ILogger<AnsibleInventoryScanIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
@@ -37,6 +41,8 @@ namespace Omnikeeper.Controllers.Ingest
             this.logger = logger;
             this.currentUserService = currentUserService;
             this.modelContextBuilder = modelContextBuilder;
+            this.changesetModel = changesetModel;
+            this.issuePersister = issuePersister;
             this.authorizationService = authorizationService;
         }
 
@@ -82,11 +88,19 @@ namespace Omnikeeper.Controllers.Ingest
                 //System.IO.File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                 //    "files", "output_intermediate.json"), JToken.Parse(genericInboundDataJson).ToString(Formatting.Indented));
 
+                var issueAccumulator = new IssueAccumulator("DataIngest", $"AnsibleInventoryScanIngest_{writeLayerID}");
 
                 var preparer = new Preparer();
-                var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, logger);
+                var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, issueAccumulator);
 
-                var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
+                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator);
+
+                using var transUpdateIssues = modelContextBuilder.BuildDeferred();
+                await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
+                transUpdateIssues.Commit();
+
                 logger.LogInformation($"Ansible Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");
 
                 return Ok();

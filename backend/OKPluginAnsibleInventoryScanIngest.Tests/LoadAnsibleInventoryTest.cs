@@ -61,7 +61,9 @@ namespace Tests.Ingest
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
             var modelContextBuilder = new ModelContextBuilder(conn, NullLogger<IModelContext>.Instance);
-            var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService(), modelContextBuilder, NullLogger<IngestDataService>.Instance);
+            var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService(), modelContextBuilder);
+            var changesetModel = new ChangesetModel(userModel);
+            var issuePersister = new Mock<IIssuePersister>();
 
             var mc = modelContextBuilder.BuildImmediate();
 
@@ -79,10 +81,11 @@ namespace Tests.Ingest
             var hosts = new string[] { "h1jmplx01.mhx.at", "h1lscapet01.mhx.local" };
             var layerSet = await layerModel.BuildLayerSet(new string[] { layer1.ID }, mc);
 
-            var controller = new AnsibleInventoryScanIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, modelContextBuilder, mockAuthorizationService.Object, NullLogger<AnsibleInventoryScanIngestController>.Instance);
+            var controller = new AnsibleInventoryScanIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, modelContextBuilder, changesetModel, issuePersister.Object, mockAuthorizationService.Object, NullLogger<AnsibleInventoryScanIngestController>.Instance);
 
             var response = await PerformIngest(controller, hosts, insertLayer, layerSet);
             Assert.IsTrue(response is OkResult);
+            Assert.AreEqual(1, issuePersister.Invocations.Count);
 
             var cis = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, layerSet, false, AllAttributeSelection.Instance, mc, TimeThreshold.BuildLatest());
             Assert.That(cis.Select(ci => ci.CIName), Is.SupersetOf(hosts));

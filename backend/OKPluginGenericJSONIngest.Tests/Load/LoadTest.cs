@@ -1,7 +1,8 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Load;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -26,7 +27,9 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                 relations = new List<GenericInboundRelation> { }
             };
 
-            var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), NullLogger.Instance);
+            var issueAccumulator = new Mock<IIssueAccumulator>();
+
+            var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), issueAccumulator.Object);
 
             ingestData.Should().BeEquivalentTo(
                 new IngestData(
@@ -63,7 +66,8 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                 relations = new List<GenericInboundRelation> { }
             };
 
-            var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), NullLogger.Instance);
+            var issueAccumulator = new Mock<IIssueAccumulator>();
+            var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), issueAccumulator.Object);
 
             var jsonValue = ingestData.CICandidates.ToList().First().Attributes.Fragments.First().Value;
             jsonValue.Should().BeEquivalentTo(AttributeArrayValueJSON.BuildFromString(new string[] { }, false), options => options.WithStrictOrdering().ComparingByMembers<JsonElement>());
@@ -102,7 +106,8 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                 }
             };
 
-            var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), NullLogger.Instance);
+            var issueAccumulator = new Mock<IIssueAccumulator>();
+            var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"), issueAccumulator.Object);
             ingestData.Should().NotBeNull();
             ingestData.RelationCandidates.Should().BeEmpty();
         }
