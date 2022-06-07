@@ -2,13 +2,9 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Incremental;
-using Omnikeeper.Base.Model.TraitBased;
-using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -36,7 +32,8 @@ namespace Omnikeeper.Base.CLB
         }
         public override ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger) => new HashSet<string>() { "tsa_cmdb" };
 
-        public override async Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger)
+        public override async Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, 
+            JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger, IIssueAccumulator issueAccumulator)
         {
             var incrementalCISelectionModel = new IncrementalCISelectionModel(changesetModel);
             var incrementalCIModel = new IncrementalCIModel(ciModel, attributeModel, store);

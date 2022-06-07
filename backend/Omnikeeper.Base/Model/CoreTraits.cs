@@ -1,5 +1,6 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
+using Omnikeeper.Base.Entity.Issue;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Entity.AttributeValues;
@@ -23,7 +24,8 @@ namespace Omnikeeper.Base.Model
             GenericTraitEntityHelper.Class2RecursiveTrait<Predicate>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<AuthRole>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<GeneratorV1>(),
-            GenericTraitEntityHelper.Class2RecursiveTrait<CLConfigV1>()
+            GenericTraitEntityHelper.Class2RecursiveTrait<CLConfigV1>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<Issue>()
             //TraitBuilderFromClass.Class2RecursiveTrait<GridViewContext>(), // TODO: add?
         };
     }

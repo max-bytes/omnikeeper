@@ -41,7 +41,9 @@ namespace Omnikeeper.Model
 
             return new MetaConfiguration(
                 new string[] { "__okconfig" },
-                "__okconfig"
+                "__okconfig",
+                new string[] { "__okissues" },
+                "__okissues"
             );
         }
 

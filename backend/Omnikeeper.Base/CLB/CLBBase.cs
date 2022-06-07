@@ -15,13 +15,14 @@ namespace Omnikeeper.Base.CLB
 
         public virtual ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger) => null;
 
-        public async Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, JsonDocument config, IChangesetProxy changesetProxy, IModelContextBuilder modelContextBuilder, ILogger logger)
+        public async Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, JsonDocument config, 
+            IChangesetProxy changesetProxy, IModelContextBuilder modelContextBuilder, ILogger logger, IIssueAccumulator issueAccumulator)
         {
             try
             {
                 using var trans = modelContextBuilder.BuildDeferred();
 
-                var result = await Run(targetLayerID, unprocessedChangesets, config, changesetProxy, trans, logger);
+                var result = await Run(targetLayerID, unprocessedChangesets, config, changesetProxy, trans, logger, issueAccumulator);
 
                 if (result)
                 {
@@ -37,7 +38,8 @@ namespace Omnikeeper.Base.CLB
             }
         }
 
-        public abstract Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger);
+        public abstract Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, 
+            JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger, IIssueAccumulator issueAccumulator);
 
     }
 }

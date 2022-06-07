@@ -116,6 +116,7 @@ namespace Omnikeeper.Base.Model.TraitBased
          * NOTE: unlike the regular insert, this does not do any checks if the updated entities actually fulfill the trait requirements 
          * and will be considered as this trait's entities going forward
          * NOTE: relevantCISelection is only an upper bound on the relevant CIs; only CIs in this selection that ALSO fulfill the trait are considered
+         * NOTE: does not offer any special handling for naming CIs; if you need to write __name attributes, add the attribute to the trait
          */
         public async Task<bool> BulkReplace(ICIIDSelection relevantCISelection, IDictionary<ID, T> t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {

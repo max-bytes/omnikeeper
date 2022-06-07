@@ -3,6 +3,7 @@ using Autofac.Features.Indexed;
 using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
@@ -28,7 +29,7 @@ namespace Omnikeeper.Runners
         {
             this.clConfigModel = clConfigModel;
             this.metaConfigurationModel = metaConfigurationModel;
-            this.scheduler = schedulers["distributedScheduler"];
+            this.scheduler = schedulers["localScheduler"];
             this.layerDataModel = layerDataModel;
             this.modelContextBuilder = modelContextBuilder;
             this.baseLogger = baseLogger;
@@ -83,9 +84,9 @@ namespace Omnikeeper.Runners
             var jobKey = new JobKey($"{clConfig.ID}@{layerData.LayerID}");
             var triggerKey = new TriggerKey($"trigger@{clConfig.ID}@{layerData.LayerID}");
 
-            // resume triggers that ran into an error, see https://stackoverflow.com/questions/32273540/recover-from-trigger-error-state-after-job-constructor-threw-an-exception
+            // delete job (and triggers) that ran into an error, see https://stackoverflow.com/questions/32273540/recover-from-trigger-error-state-after-job-constructor-threw-an-exception
             if (await scheduler.GetTriggerState(triggerKey) == TriggerState.Error)
-                await scheduler.ResumeTrigger(triggerKey);
+                await scheduler.DeleteJob(jobKey);
 
             if (!await scheduler.CheckExists(jobKey))
             { // only trigger if we are not already running a job with that ID (which would mean that the previous run is still running)
@@ -117,11 +118,13 @@ namespace Omnikeeper.Runners
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly CLBProcessedChangesetsCache clbProcessedChangesetsCache;
+        private readonly IssuePersister issuePersister;
         private readonly ILoggerFactory loggerFactory;
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
 
         public CLBSingleJob(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, ILifetimeScope lifetimeScope, IChangesetModel changesetModel, ILogger<CLBSingleJob> genericLogger,
-            ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, ILoggerFactory loggerFactory, CLBProcessedChangesetsCache clbProcessedChangesetsCache)
+            ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, ILoggerFactory loggerFactory, CLBProcessedChangesetsCache clbProcessedChangesetsCache,
+             IssuePersister issuePersister)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.lifetimeScope = lifetimeScope;
@@ -131,6 +134,7 @@ namespace Omnikeeper.Runners
             this.modelContextBuilder = modelContextBuilder;
             this.loggerFactory = loggerFactory;
             this.clbProcessedChangesetsCache = clbProcessedChangesetsCache;
+            this.issuePersister = issuePersister;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -234,10 +238,12 @@ namespace Omnikeeper.Runners
 
                     var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
+                    var issueAccumulator = new IssueAccumulator("ComputeLayerBrain", $"{clConfig_ID}@{layerID}");
+
                     clLogger.LogInformation($"Running CLB {clb.Name} on layer {layerID}");
                     var stopWatch = new Stopwatch();
                     stopWatch.Start();
-                    var successful = await clb.Run(layerID, unprocessedChangesets, clBrainConfig, changesetProxy, modelContextBuilder, clLogger);
+                    var successful = await clb.Run(layerID, unprocessedChangesets, clBrainConfig, changesetProxy, modelContextBuilder, clLogger, issueAccumulator);
                     stopWatch.Stop();
                     TimeSpan ts = stopWatch.Elapsed;
                     string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
@@ -248,6 +254,15 @@ namespace Omnikeeper.Runners
                         using var transI2 = modelContextBuilder.BuildImmediate();
                         await clbProcessedChangesetsCache.UpdateCache(clConfig_ID, layerID, latestSeenChangesets, transI2);
                     }
+
+                    if (!successful)
+                    {
+                        issueAccumulator.Add("clb_run_result", "Run of CLB failed");
+                    }
+
+                    using var transUpdateIssues = modelContextBuilder.BuildDeferred();
+                    await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy);
+                    transUpdateIssues.Commit();
                 }
                 finally
                 {
