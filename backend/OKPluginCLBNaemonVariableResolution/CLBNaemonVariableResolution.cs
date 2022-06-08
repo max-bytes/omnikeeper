@@ -582,14 +582,14 @@ namespace OKPluginCLBNaemonVariableResolution
             foreach (var kv in evenMoreFilteredHOS)
             {
                 var ciid = kv.Key;
-                var v = AttributeArrayValueText.BuildFromString(kv.Value.Tags);
+                var v = AttributeArrayValueText.BuildFromString(kv.Value.Tags.OrderBy(t => t));
                 attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.resolved_tags", v, ciid));
             }
             // naemon capabilities, for debugging purposes
             foreach(var kv in invertedCapMap)
             {
                 var ciid = kv.Key;
-                var v = AttributeArrayValueText.BuildFromString(kv.Value);
+                var v = AttributeArrayValueText.BuildFromString(kv.Value.OrderBy(t => t));
                 attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.capabilities", v, ciid));
             }
 

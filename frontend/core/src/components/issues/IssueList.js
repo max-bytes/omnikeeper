@@ -7,11 +7,14 @@ import { AgGridReact } from "ag-grid-react";
 import moment from 'moment';
 import { SyncOutlined } from '@ant-design/icons';
 import { CIID } from "utils/uuidRenderers";
+import { useAGGridEnterprise } from 'utils/useAGGridEnterprise';
 
 export default function IssueList(props) {
     
     const [search, { loading: loadingIssues, data: dataIssues }] = useLazyQuery(queries.Issues);
-
+    
+    useAGGridEnterprise();
+    
     // debounce search, so its not called too often
     const debouncedSearch = useCallback(_.debounce(search, 500), [search]);
 
@@ -46,7 +49,7 @@ export default function IssueList(props) {
             field: "affectedCIs",
             filter: false,
             resizable: false,
-            width: 260,
+            width: 265,
             cellRenderer: "affectedCIsCellRenderer",
             sortable: false
         },
