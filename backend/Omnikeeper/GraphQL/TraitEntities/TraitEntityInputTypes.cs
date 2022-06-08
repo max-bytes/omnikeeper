@@ -84,14 +84,16 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             Field("regex", x => x.Regex, nullable: true, type: typeof(TextFilterRegexInputType));
             Field("exact", x => x.Exact, nullable: true);
+            Field("isSet", x => x.IsSet, nullable: true);
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
             var exact = value.TryGetValue("exact", out var e) ? (string?)e : null;
             var regexObj = value.TryGetValue("regex", out var r) ? (TextFilterRegexInput?)r : null;
+            var isSet = value.TryGetValue("isSet", out var i) ? (bool?)i : null;
 
-            return AttributeScalarTextFilter.Build(regexObj, exact);
+            return AttributeScalarTextFilter.Build(regexObj, exact, isSet);
         }
     }
 

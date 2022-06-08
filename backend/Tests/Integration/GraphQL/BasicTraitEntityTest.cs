@@ -851,7 +851,18 @@ mutation {
           }
         }
       ]
-      optionalAttributes: []
+      optionalAttributes: [
+        {
+          identifier: ""optional""
+          template: {
+            name: ""test_trait_a.optional""
+            type: TEXT
+            isID: false
+            isArray: false
+            valueConstraints: []
+          }
+        }
+      ]
       optionalRelations: [],
       requiredTraits: []
     }
@@ -873,21 +884,22 @@ mutation {
             await ReinitSchema();
 
             var mutationInsert = @"
-mutation($name: String!, $id: String!) {
+mutation($name: String!, $id: String!, $optional: String) {
   insertNew_test_trait_a(
     layers: [""layer_1""]
     writeLayer: ""layer_1""
     ciName: $name
-    input: { id: $id, name: $name }
+    input: { id: $id, name: $name, optional: $optional }
   ) {
                 entity { id }
   }
         }
 ";
 
-            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_1" }, { "name", "Entity 1" } }));
-            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_2" }, { "name", "Entity 2" } }));
-            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_3" }, { "name", "Entity 3" } }));
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_1" }, { "name", "Entity 1" }, { "optional", null } }));
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_2" }, { "name", "Entity 2" }, { "optional", "set" } }));
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_3" }, { "name", "Entity 3" }, { "optional", null } }));
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_4" }, { "name", "Entity 4" }, { "optional", "set" } }));
 
 
             var queryFiltered = @"
@@ -898,6 +910,7 @@ mutation($name: String!, $id: String!) {
                     entity {
                         id
                         name
+                        optional
                     }
                 }
             }
@@ -912,7 +925,8 @@ mutation($name: String!, $id: String!) {
           {
             ""entity"": {
               ""id"": ""entity_2"",
-              ""name"": ""Entity 2""
+              ""name"": ""Entity 2"",
+              ""optional"": ""set""
             }
           }
         ]
@@ -921,6 +935,82 @@ mutation($name: String!, $id: String!) {
 }
 ";
             AssertQuerySuccess(queryFiltered, expected5, user);
+
+
+            var queryFiltered2 = @"
+{
+  traitEntities(layers: [""layer_1""]) {
+    test_trait_a {
+                filtered(filter: {name: {regex:{pattern: ""Entity [34]""}}, optional: {isSet: false}}) {
+                    entity {
+                        id
+                        name
+                        optional
+                    }
+                }
+            }
+        }
+    }
+";
+            var expected6 = @"
+{
+  ""traitEntities"": {
+	  ""test_trait_a"": {
+	    ""filtered"": [
+          {
+            ""entity"": {
+              ""id"": ""entity_3"",
+              ""name"": ""Entity 3"",
+              ""optional"": null
+            }
+          }
+        ]
+	  }
+  }
+}
+";
+            AssertQuerySuccess(queryFiltered2, expected6, user);
+
+            var queryFiltered3 = @"
+{
+  traitEntities(layers: [""layer_1""]) {
+    test_trait_a {
+                filtered(filter: {name: {regex:{pattern: ""Entity [234]""}}, optional: {isSet: true}}) {
+                    entity {
+                        id
+                        name
+                        optional
+                    }
+                }
+            }
+        }
+    }
+";
+            var expected7 = @"
+{
+  ""traitEntities"": {
+	  ""test_trait_a"": {
+	    ""filtered"": [
+          {
+            ""entity"": {
+              ""id"": ""entity_2"",
+              ""name"": ""Entity 2"",
+              ""optional"": ""set""
+            }
+          },
+          {
+            ""entity"": {
+              ""id"": ""entity_4"",
+              ""name"": ""Entity 4"",
+              ""optional"": ""set""
+            }
+          }
+        ]
+	  }
+  }
+}
+";
+            AssertQuerySuccess(queryFiltered3, expected7, user);
         }
     }
 }

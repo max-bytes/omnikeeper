@@ -58,13 +58,12 @@ namespace Omnikeeper.Base.Model
             var config = await metaConfigurationModel.GetConfigOrDefault(trans);
             var traitAttributeFilter = new AttributeFilter[]
             {
-                new AttributeFilter("issue.type", AttributeScalarTextFilter.Build(null, from.Type)),
-                new AttributeFilter("issue.context", AttributeScalarTextFilter.Build(null, from.Context))
+                new AttributeFilter("issue.type", AttributeScalarTextFilter.Build(null, from.Type, null)),
+                new AttributeFilter("issue.context", AttributeScalarTextFilter.Build(null, from.Context, null))
             };
 
-            var matchingCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, traitAttributeFilter, config.IssueLayerset, trans, changesetProxy.TimeThreshold);
-            var ciSelection = SpecificCIIDsSelection.Build(matchingCIIDs);
-            var r = await model.BulkReplace(ciSelection, from.Issues, config.IssueLayerset, config.IssueWriteLayer, dataOrigin, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            var relevantCISelection = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, traitAttributeFilter, config.IssueLayerset, trans, changesetProxy.TimeThreshold);
+            var r = await model.BulkReplace(relevantCISelection, from.Issues, config.IssueLayerset, config.IssueWriteLayer, dataOrigin, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return r;
         }
     }

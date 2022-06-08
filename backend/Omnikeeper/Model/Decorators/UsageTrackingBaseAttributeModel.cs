@@ -44,10 +44,10 @@ namespace Omnikeeper.Model.Decorators
         {
             var usedAttributes = attributeSelection switch
             {
-                AllAttributeSelection _ => new string[] {"*"},
+                AllAttributeSelection _ => (IEnumerable<string>)new string[] {"*"},
                 NoAttributesSelection _ => Array.Empty<string>(),
                 NamedAttributesSelection n => n.AttributeNames,
-                NamedAttributesWithValueFiltersSelection f => f.NamesAndFilters.Select(t => t.Key),
+                //NamedAttributesWithValueFiltersSelection f => f.NamesAndFilters.Select(t => t.Key),
                 _ => throw new NotImplementedException("")
             };
             TrackAttributeUsages(usedAttributes, layerIDs, UsageStatsOperation.Read);

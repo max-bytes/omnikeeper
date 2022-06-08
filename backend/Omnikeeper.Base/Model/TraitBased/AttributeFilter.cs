@@ -1,6 +1,7 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Entity.AttributeValues;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -48,44 +49,20 @@ namespace Omnikeeper.Base.Model.TraitBased
     {
         public TextFilterRegexInput? Regex;
         public string? Exact;
+        public bool? IsSet;
 
         private AttributeScalarTextFilter() { }
 
-        public static AttributeScalarTextFilter Build(TextFilterRegexInput? regexObj, string? exact)
+        public static AttributeScalarTextFilter Build(TextFilterRegexInput? regexObj, string? exact, bool? isSet)
         {
-            if (regexObj == null && exact == null)
+            if (regexObj == null && exact == null && isSet == null)
                 throw new Exception("At least one filter option needs to be set for AttributeTextFilter");
             return new AttributeScalarTextFilter()
             {
                 Exact = exact,
-                Regex = regexObj
+                Regex = regexObj,
+                IsSet = isSet
             };
-        }
-
-        // .Net based implementation of this filter
-        // must be equivalent to the Postgres based implementation in BaseAttributeModel
-        public bool Contains(IAttributeValue attributeValue)
-        {
-            // type check
-            if (attributeValue.Type != AttributeValueType.Text && attributeValue.Type != AttributeValueType.MultilineText)
-                return false;
-            if (attributeValue.IsArray)
-                return false;
-
-            var v = attributeValue.Value2String();
-
-            if (Exact != null)
-            {
-                if (v != Exact)
-                    return false;
-            }
-            if (Regex != null)
-            {
-                if (!Regex.IsMatch(v))
-                    return false;
-            }
-            return true;
-
         }
     }
 }

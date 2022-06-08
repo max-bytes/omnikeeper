@@ -106,7 +106,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (foundCIID == default) ? null : foundCIID;
         }
 
-        public static IDataLoaderResult<IReadOnlySet<Guid>> GetMatchingCIIDsByRelationFilters(IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<RelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
+        public static IDataLoaderResult<ICIIDSelection> GetMatchingCIIDsByRelationFilters(IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<RelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
@@ -149,35 +149,72 @@ namespace Omnikeeper.Base.Model.TraitBased
                             (ISet<Guid>)new HashSet<Guid>(re.First()),
                             (h, e) => { h.IntersectWith(e); return h; }
                         );
-                    return (IReadOnlySet<Guid>)intersection.ToImmutableHashSet();
+                    return SpecificCIIDsSelection.Build(intersection.ToImmutableHashSet());
                 });
             }).ResolveNestedResults();
         }
 
+        // TODO: this is not only applicable to trait entities -> move to somewhere more general
         /*
         * NOTE: this does not care whether or not the CIs are actually a trait entities or not
         */
-        public static async Task<IReadOnlySet<Guid>> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IEnumerable<AttributeFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public static async Task<ICIIDSelection> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IEnumerable<AttributeFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
 
             foreach (var taFilter in filters)
             {
-                var attributeSelection = NamedAttributesWithValueFiltersSelection.Build(new Dictionary<string, AttributeScalarTextFilter>() { { taFilter.attributeName, taFilter.filter } });
+                // TODO: re-introduce postgres-based implementation for performance improvements, whenever possible
+                //var attributeSelection = NamedAttributesWithValueFiltersSelection.Build(new Dictionary<string, AttributeScalarTextFilter>() { { taFilter.attributeName, taFilter.filter } });
+                var attributeSelection = NamedAttributesSelection.Build(taFilter.attributeName);
 
                 // TODO: use dataloader
                 var attributes = await attributeModel.GetMergedAttributes(ciSelection, attributeSelection, layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
+
                 // NOTE: we reduce the ciSelection with each filter, and in the end, return the resulting ciSelection
-                ciSelection = SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet());
+                if (taFilter.filter.IsSet.HasValue && !taFilter.filter.IsSet.Value)
+                {
+                    ciSelection = ciSelection.Except(SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet()));
+                }
+                else
+                {
+                    var filtered = attributes.Where(a =>
+                    {
+                        // check for existance
+                        // NOTE: we expect this method to only be called when the CI contains an attribute with name `filter.attributeName`
+                        // hence, if the IsSet filter is set to "false", we know this filter cannot match
+                        if (taFilter.filter.IsSet.HasValue && !taFilter.filter.IsSet.Value)
+                            return false;
+
+                        var attribute = a.Value[taFilter.attributeName];
+                        var attributeValue = attribute.Attribute.Value;
+                        // type check
+                        if (attributeValue.Type != AttributeValueType.Text && attributeValue.Type != AttributeValueType.MultilineText)
+                            return false;
+                        if (attributeValue.IsArray)
+                            return false;
+
+                        var v = attributeValue.Value2String();
+
+                        if (taFilter.filter.Exact != null)
+                        {
+                            if (v != taFilter.filter.Exact)
+                                return false;
+                        }
+                        if (taFilter.filter.Regex != null)
+                        {
+                            if (!taFilter.filter.Regex.IsMatch(v))
+                                return false;
+                        }
+                        return true;
+                    }).Select(kv => kv.Key).ToHashSet();
+
+                    ciSelection = SpecificCIIDsSelection.Build(filtered);
+                }
             }
 
-            return ciSelection switch
-            {
-                SpecificCIIDsSelection s => s.CIIDs,
-                NoCIIDsSelection _ => ImmutableHashSet<Guid>.Empty,
-                _ => throw new Exception("Invalid ciSelection detected"),
-            };
+            return ciSelection;
         }
     }
 }

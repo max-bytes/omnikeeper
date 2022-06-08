@@ -62,7 +62,7 @@ namespace Omnikeeper.Model.Decorators
                     var additionalAttributeNames = attributeSelection switch
                     {
                         NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection).ToImmutableHashSet(),
-                        NamedAttributesWithValueFiltersSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection).ToImmutableHashSet(),
+                        //NamedAttributesWithValueFiltersSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection).ToImmutableHashSet(),
                         AllAttributeSelection _ => ImmutableHashSet<string>.Empty, // we are fetching all attributes anyway, no need to add additional attributes
                         NoAttributesSelection _ => ImmutableHashSet<string>.Empty, // no attributes necessary
                         _ => throw new Exception("Invalid attribute selection encountered"),

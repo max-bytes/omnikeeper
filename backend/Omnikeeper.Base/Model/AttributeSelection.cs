@@ -43,35 +43,35 @@ namespace Omnikeeper.Base.Model
         public bool Equals(NamedAttributesSelection? other) => other != null && AttributeNames.SetEquals(other.AttributeNames);
     }
 
-    public class NamedAttributesWithValueFiltersSelection : IAttributeSelection, IEquatable<NamedAttributesWithValueFiltersSelection>
-    {
-        // NOTE: keys are attributeNames
-        public readonly IDictionary<string, AttributeScalarTextFilter> NamesAndFilters;
+    //public class NamedAttributesWithValueFiltersSelection : IAttributeSelection, IEquatable<NamedAttributesWithValueFiltersSelection>
+    //{
+    //    // NOTE: keys are attributeNames
+    //    public readonly IDictionary<string, AttributeScalarTextFilter> NamesAndFilters;
 
-        private NamedAttributesWithValueFiltersSelection(IDictionary<string, AttributeScalarTextFilter> namesAndFilters)
-        {
-            NamesAndFilters = namesAndFilters;
-        }
+    //    private NamedAttributesWithValueFiltersSelection(IDictionary<string, AttributeScalarTextFilter> namesAndFilters)
+    //    {
+    //        NamesAndFilters = namesAndFilters;
+    //    }
 
-        public static IAttributeSelection Build(IDictionary<string, AttributeScalarTextFilter> namesAndFilters)
-        {
-            if (namesAndFilters.IsEmpty())
-                return NoAttributesSelection.Instance;
-            return new NamedAttributesWithValueFiltersSelection(namesAndFilters);
-        }
+    //    public static IAttributeSelection Build(IDictionary<string, AttributeScalarTextFilter> namesAndFilters)
+    //    {
+    //        if (namesAndFilters.IsEmpty())
+    //            return NoAttributesSelection.Instance;
+    //        return new NamedAttributesWithValueFiltersSelection(namesAndFilters);
+    //    }
 
-        public bool ContainsAttributeName(string attributeName) => NamesAndFilters.ContainsKey(attributeName);
-        public bool ContainsAttribute(CIAttribute attribute)
-        {
-            if (!NamesAndFilters.TryGetValue(attribute.Name, out var filter))
-                return false;
+    //    public bool ContainsAttributeName(string attributeName) => NamesAndFilters.ContainsKey(attributeName);
+    //    public bool ContainsAttribute(CIAttribute attribute)
+    //    {
+    //        if (!NamesAndFilters.TryGetValue(attribute.Name, out var filter))
+    //            return false;
 
-            return filter.Contains(attribute.Value);
-        }
-        public override int GetHashCode() => NamesAndFilters.GetHashCode();
-        public override bool Equals(object? obj) => Equals(obj as NamedAttributesWithValueFiltersSelection);
-        public bool Equals(NamedAttributesWithValueFiltersSelection? other) => other != null && NamesAndFilters.SequenceEqual(other.NamesAndFilters);
-    }
+    //        return filter.Contains(attribute.Value);
+    //    }
+    //    public override int GetHashCode() => NamesAndFilters.GetHashCode();
+    //    public override bool Equals(object? obj) => Equals(obj as NamedAttributesWithValueFiltersSelection);
+    //    public bool Equals(NamedAttributesWithValueFiltersSelection? other) => other != null && NamesAndFilters.SequenceEqual(other.NamesAndFilters);
+    //}
 
     public class AllAttributeSelection : IAttributeSelection, IEquatable<AllAttributeSelection>
     {
@@ -110,7 +110,7 @@ namespace Omnikeeper.Base.Model
                 AllAttributeSelection _ => a,
                 NoAttributesSelection _ => other,
                 NamedAttributesSelection n => n.Union(other),
-                NamedAttributesWithValueFiltersSelection _ => throw new NotImplementedException(),
+                //NamedAttributesWithValueFiltersSelection _ => throw new NotImplementedException(),
                 _ => throw new NotImplementedException(),
             };
         }
@@ -122,7 +122,7 @@ namespace Omnikeeper.Base.Model
                 AllAttributeSelection _ => other,
                 NoAttributesSelection _ => a,
                 NamedAttributesSelection n => NamedAttributesSelection.Build(a.AttributeNames.Union(n.AttributeNames).ToHashSet()), // union
-                NamedAttributesWithValueFiltersSelection _ => throw new NotImplementedException(),
+                //NamedAttributesWithValueFiltersSelection _ => throw new NotImplementedException(),
                 _ => throw new NotImplementedException(),
             };
         }
@@ -139,8 +139,8 @@ namespace Omnikeeper.Base.Model
                     case NamedAttributesSelection s:
                         specific.UnionWith(s.AttributeNames);
                         break;
-                    case NamedAttributesWithValueFiltersSelection _:
-                        throw new NotImplementedException();
+                    //case NamedAttributesWithValueFiltersSelection _:
+                    //    throw new NotImplementedException();
                     case NoAttributesSelection _:
                         break;
                 }

@@ -71,17 +71,17 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         // use filter to reduce list of potential cis
                         var filter = context.GetArgument<FilterInput>("filter");
 
-                        IDataLoaderResult<IReadOnlySet<Guid>> matchingCIIDs;
+                        IDataLoaderResult<ICIIDSelection> matchingCIIDs;
                         if (!filter.RelationFilters.IsEmpty() && !filter.AttributeFilters.IsEmpty())
                         {
                             matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService)
                             .Then(async matchingCIIDs =>
-                                await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(SpecificCIIDsSelection.Build(matchingCIIDs), attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
+                                await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(matchingCIIDs, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
                             );
                         }
                         else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
                         {
-                            matchingCIIDs = new SimpleDataLoader<IReadOnlySet<Guid>>(async token =>
+                            matchingCIIDs = new SimpleDataLoader<ICIIDSelection>(async token =>
                                 await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
                             );
                         }
@@ -97,7 +97,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         return matchingCIIDs.Then(async matchingCIIDs =>
                         {
                             // TODO: use dataloader
-                            var ets = await traitEntityModel.GetByCIID(SpecificCIIDsSelection.Build(matchingCIIDs), layerset, trans, timeThreshold);
+                            var ets = await traitEntityModel.GetByCIID(matchingCIIDs, layerset, trans, timeThreshold);
 
                             return ets.Select(kv => kv.Value);
                         });
