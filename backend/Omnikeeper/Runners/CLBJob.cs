@@ -257,7 +257,7 @@ namespace Omnikeeper.Runners
 
                     if (!successful)
                     {
-                        issueAccumulator.TryAdd("clb_run_result", "Run of CLB failed");
+                        issueAccumulator.TryAdd("clb_run_result", "", "Run of CLB failed");
                     }
 
                     using var transUpdateIssues = modelContextBuilder.BuildDeferred();

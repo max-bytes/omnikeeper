@@ -195,9 +195,10 @@ export const queries = {
               m__meta__issue__issue {
                 all {
                   entity {
-                    id
                     type
                     context
+                    group
+                    id
                     message
                     affectedCIs {
                       relatedCIID

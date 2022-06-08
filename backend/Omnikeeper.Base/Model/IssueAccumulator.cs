@@ -1,5 +1,4 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
+﻿using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.Issue;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
@@ -12,7 +11,7 @@ namespace Omnikeeper.Base.Model
 {
     public interface IIssueAccumulator
     {
-        bool TryAdd(string ID, string message, params Guid[] affectedCIs);
+        bool TryAdd(string group, string ID, string message, params Guid[] affectedCIs);
     }
 
     public class IssueAccumulator : IIssueAccumulator
@@ -20,19 +19,19 @@ namespace Omnikeeper.Base.Model
         public string Type { get; }
         public string Context { get; }
 
-        public IDictionary<(string id, string type, string context), Issue> Issues { get; }
+        public IDictionary<(string type, string context, string group, string id), Issue> Issues { get; }
 
         public IssueAccumulator(string type, string context)
         {
-            Issues = new Dictionary<(string id, string type, string context), Issue>();
+            Issues = new Dictionary<(string type, string context, string group, string id), Issue>();
             Type = type;
             Context = context;
         }
 
-        public bool TryAdd(string ID, string message, params Guid[] affectedCIs)
+        public bool TryAdd(string group, string ID, string message, params Guid[] affectedCIs)
         {
-            var issue = new Issue(ID, Type, Context, message, affectedCIs);
-            return Issues.TryAdd((issue.ID, Type, Context), issue);
+            var issue = new Issue(Type, Context, group, ID, message, affectedCIs);
+            return Issues.TryAdd((Type, Context, group, issue.ID), issue);
         }
     }
 
@@ -43,11 +42,11 @@ namespace Omnikeeper.Base.Model
 
     public class IssuePersister : IIssuePersister
     {
-        private readonly GenericTraitEntityModel<Issue, (string id, string type, string context)> model;
+        private readonly GenericTraitEntityModel<Issue, (string type, string context, string group, string id)> model;
         private readonly IAttributeModel attributeModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
 
-        public IssuePersister(GenericTraitEntityModel<Issue, (string id, string type, string context)> model, IAttributeModel attributeModel, IMetaConfigurationModel metaConfigurationModel)
+        public IssuePersister(GenericTraitEntityModel<Issue, (string type, string context, string group, string id)> model, IAttributeModel attributeModel, IMetaConfigurationModel metaConfigurationModel)
         {
             this.model = model;
             this.attributeModel = attributeModel;

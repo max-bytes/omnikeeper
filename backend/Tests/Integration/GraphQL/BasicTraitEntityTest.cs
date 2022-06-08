@@ -595,10 +595,6 @@ mutation {
         }
 
 
-
-
-
-
         [Test]
         public async Task TestFiltering()
         {
@@ -801,6 +797,130 @@ mutation($name: String!, $id: String!) {
 }
 ";
             AssertQuerySuccess(queryFiltered2, expected6, user);
+        }
+
+
+
+
+
+        [Test]
+        public async Task TestAdvancedFiltering()
+        {
+            var userInDatabase = await SetupDefaultUser();
+            var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", ModelContextBuilder.BuildImmediate());
+            var user = new AuthenticatedUser(userInDatabase,
+                new AuthRole[]
+                {
+                    new AuthRole("ar1", new string[] {
+                        PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),
+                        PermissionUtils.GetLayerReadPermission(layerOkConfig), PermissionUtils.GetLayerWritePermission(layerOkConfig),
+                        PermissionUtils.GetManagementPermission()
+                    }),
+                });
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            string mutationCreateTrait = @"
+mutation {
+  manage_upsertRecursiveTrait(
+    trait: {
+      id: ""test_trait_a""
+      requiredAttributes: [
+        {
+          identifier: ""id""
+          template: {
+            name: ""test_trait_a.id""
+            type: TEXT
+            isID: true
+            isArray: false
+            valueConstraints: [
+                """"""{""$type"":""Omnikeeper.Base.Entity.CIAttributeValueConstraintTextLength, Omnikeeper.Base"",""Minimum"":1,""Maximum"":null}""""""
+            ]
+          }
+        }
+        {
+          identifier: ""name""
+          template: {
+            name: ""test_trait_a.name""
+            type: TEXT
+            isID: false
+            isArray: false
+            valueConstraints: []
+          }
+        }
+      ]
+      optionalAttributes: []
+      optionalRelations: [],
+      requiredTraits: []
+    }
+  ) {
+    id
+  }
+}
+";
+            var expected1 = @"
+{
+    ""manage_upsertRecursiveTrait"":
+        {
+            ""id"": ""test_trait_a""
+        }
+}";
+            AssertQuerySuccess(mutationCreateTrait, expected1, user);
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            var mutationInsert = @"
+mutation($name: String!, $id: String!) {
+  insertNew_test_trait_a(
+    layers: [""layer_1""]
+    writeLayer: ""layer_1""
+    ciName: $name
+    input: { id: $id, name: $name }
+  ) {
+                entity { id }
+  }
+        }
+";
+
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_1" }, { "name", "Entity 1" } }));
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_2" }, { "name", "Entity 2" } }));
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_3" }, { "name", "Entity 3" } }));
+
+
+            var queryFiltered = @"
+{
+  traitEntities(layers: [""layer_1""]) {
+    test_trait_a {
+                filtered(filter: {name: {regex:{pattern: ""Entity [23]""}}, id: {exact: ""entity_2""}}) {
+                    entity {
+                        id
+                        name
+                    }
+                }
+            }
+        }
+    }
+";
+            var expected5 = @"
+{
+  ""traitEntities"": {
+	  ""test_trait_a"": {
+	    ""filtered"": [
+          {
+            ""entity"": {
+              ""id"": ""entity_2"",
+              ""name"": ""Entity 2""
+            }
+          }
+        ]
+	  }
+  }
+}
+";
+            AssertQuerySuccess(queryFiltered, expected5, user);
         }
     }
 }

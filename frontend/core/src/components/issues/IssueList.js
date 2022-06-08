@@ -11,10 +11,12 @@ import { useAGGridEnterprise } from 'utils/useAGGridEnterprise';
 
 export default function IssueList(props) {
     
-    const [search, { loading: loadingIssues, data: dataIssues }] = useLazyQuery(queries.Issues);
+    const [search, { loading: loadingIssues, data: dataIssues }] = useLazyQuery(queries.Issues, {
+        notifyOnNetworkStatusChange: true
+    });
     
     useAGGridEnterprise();
-    
+
     // debounce search, so its not called too often
     const debouncedSearch = useCallback(_.debounce(search, 500), [search]);
 
@@ -40,7 +42,6 @@ export default function IssueList(props) {
             field: "message",
             filter: true,
             flex: 1,
-            wrapText: true,
             autoHeight: true, 
             cellClass: 'cell-wrap-text'
         },
@@ -64,6 +65,11 @@ export default function IssueList(props) {
             filter: true
         },
         {
+            headerName: "Group",
+            field: "group",
+            filter: true
+        },
+        {
             headerName: "ID",
             field: "id",
             filter: true
@@ -72,71 +78,33 @@ export default function IssueList(props) {
 
     const list = _.map(dataIssues?.traitEntities?.m__meta__issue__issue?.all, item => item.entity);
 
-    return <div style={styles.container}>
-        {/* left column - search */}
-        <div style={styles.filterColumn}>
-            <h2>Issues</h2>
-            <div style={styles.filterColumnEntry}>
-                <Row>
-                    <Col span={24}>
-                        <Button icon={<SyncOutlined />} type="primary" loading={loadingIssues} onClick={() => setRefreshNonce(moment().toISOString())}>Refresh</Button>
-                    </Col>
-                </Row>
-            </div>
-        </div>
-        {/* right column - results */}
-        <div style={styles.resultsColumn}>
-            {list && 
-                <>
+    return <>
+        <h2>Issues</h2>
+        {list && 
+            <>
+                <div style={{display: 'flex', justifyContent: 'space-between'}}>
                     <h3>Results: {list.length} Issues</h3>
-                    <div style={{height:'100%'}} className={"ag-theme-balham"}>
-                        <AgGridReact
-                            frameworkComponents={{
-                                affectedCIsCellRenderer: affectedCIsCellRenderer,
-                            }}
-                            rowData={list}
-                            columnDefs={columnDefs}
-                            defaultColDef={{
-                                resizable: true,
-                                sortable: true
-                            }}
-                            animateRows={true}
-                            enableCellTextSelection={true}
-                            getRowNodeId={function (data) {
-                                return `${data.id}-${data.context}-${data.type}`;
-                            }}
-                        />
-                    </div>
-                </>
-            }
-        </div>
-    </div>;
+                    <Button icon={<SyncOutlined />} type="primary" loading={loadingIssues} onClick={() => setRefreshNonce(moment().toISOString())}>Refresh</Button>
+                </div>
+                <div style={{height:'100%'}} className={"ag-theme-balham"}>
+                    <AgGridReact
+                        frameworkComponents={{
+                            affectedCIsCellRenderer: affectedCIsCellRenderer,
+                        }}
+                        rowData={list}
+                        columnDefs={columnDefs}
+                        defaultColDef={{
+                            resizable: true,
+                            sortable: true
+                        }}
+                        animateRows={true}
+                        enableCellTextSelection={true}
+                        getRowNodeId={function (data) {
+                            return `${data.id}-${data.context}-${data.type}`;
+                        }}
+                    />
+                </div>
+            </>
+        }
+    </>;
 }
-
-const styles = {
-    container: {
-        display: "flex",
-        flexDirection: "row",
-        height: "100%",
-    },
-    // left column
-    filterColumn: {
-        display: "flex",
-        flexDirection: "column",
-        margin: "10px",
-        overflowY: "auto",
-        width: "100px",
-        minWidth: "100px",
-    },
-    filterColumnEntry: {
-        marginBottom: "20px",
-    },
-
-    // right column - results
-    resultsColumn: {
-        display: "flex",
-        flexDirection: "column",
-        margin: "10px",
-        flex: "1 1 auto",
-    },
-};
