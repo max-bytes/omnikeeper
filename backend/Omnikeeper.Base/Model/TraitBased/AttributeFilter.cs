@@ -1,7 +1,4 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Entity.AttributeValues;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 

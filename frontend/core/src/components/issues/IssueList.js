@@ -1,6 +1,6 @@
 import { useLazyQuery } from "@apollo/client";
 import React, {useCallback, useEffect, useState} from "react";
-import { Button, Row, Col } from 'antd';
+import { Button } from 'antd';
 import _ from 'lodash';
 import { queries } from "../../graphql/queries";
 import { AgGridReact } from "ag-grid-react";

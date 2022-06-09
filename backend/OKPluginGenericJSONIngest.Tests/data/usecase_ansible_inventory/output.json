@@ -10,6 +10,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
@@ -196,6 +197,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
@@ -316,6 +318,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
@@ -434,6 +437,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
@@ -482,6 +486,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
@@ -527,6 +532,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
@@ -712,6 +718,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
@@ -832,6 +839,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
@@ -950,6 +958,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
@@ -996,6 +1005,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "yum.installed",
@@ -1025,6 +1035,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "yum.repos",
@@ -1060,6 +1071,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "yum.updates",

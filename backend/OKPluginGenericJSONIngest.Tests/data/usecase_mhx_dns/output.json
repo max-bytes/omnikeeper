@@ -10,6 +10,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "id",
@@ -37,6 +38,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "id",
@@ -64,6 +66,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "id",
@@ -112,6 +115,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "id",
@@ -160,6 +164,7 @@
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "id",

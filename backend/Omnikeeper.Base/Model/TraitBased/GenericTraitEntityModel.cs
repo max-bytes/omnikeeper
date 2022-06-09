@@ -95,6 +95,9 @@ namespace Omnikeeper.Base.Model.TraitBased
                         {
                             fitting.IntersectWith(candidates);
                         }
+                    } else
+                    {
+                        fitting.Clear();
                     }
 
                     if (fitting.Count == 0)
@@ -120,7 +123,7 @@ namespace Omnikeeper.Base.Model.TraitBased
          */
         public async Task<bool> BulkReplace(ICIIDSelection relevantCISelection, IDictionary<ID, T> t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            if (t.IsEmpty())
+            if (t.IsEmpty() && relevantCISelection is NoCIIDsSelection)
                 return false;
 
             var outdated = await GetByCIID(relevantCISelection, layerSet, trans, changesetProxy.TimeThreshold);

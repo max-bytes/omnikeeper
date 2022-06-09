@@ -58,8 +58,8 @@ namespace Omnikeeper.Base.Model
             var config = await metaConfigurationModel.GetConfigOrDefault(trans);
             var traitAttributeFilter = new AttributeFilter[]
             {
-                new AttributeFilter("issue.type", AttributeScalarTextFilter.Build(null, from.Type, null)),
-                new AttributeFilter("issue.context", AttributeScalarTextFilter.Build(null, from.Context, null))
+                new AttributeFilter("okissue.type", AttributeScalarTextFilter.Build(null, from.Type, null)),
+                new AttributeFilter("okissue.context", AttributeScalarTextFilter.Build(null, from.Context, null))
             };
 
             var relevantCISelection = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, traitAttributeFilter, config.IssueLayerset, trans, changesetProxy.TimeThreshold);

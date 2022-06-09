@@ -37,7 +37,7 @@ namespace OKPluginGenericJSONIngest.Load
                     var tempGuid = Guid.NewGuid();
                     tempCIIDMapping.TryAdd(ci.tempID, tempGuid);
 
-                    ciCandidates.Add(new CICandidate(tempGuid, ci.tempID, idMethod, ci.sameTempIDHandling, ci.sameTargetCIHandling, attributes));
+                    ciCandidates.Add(new CICandidate(tempGuid, ci.tempID, idMethod, ci.sameTempIDHandling, ci.sameTargetCIHandling, ci.noFoundTargetCIHandling, attributes));
                 }
                 catch (Exception e)
                 {

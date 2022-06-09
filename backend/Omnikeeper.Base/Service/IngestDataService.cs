@@ -59,7 +59,7 @@ namespace Omnikeeper.Base.Service
                                 break;
                             case SameTempIDHandling.DropAndWarn:
                                 dropCandidateCIBecauseOfSameTempID = true;
-                                issueAccumulator.TryAdd("same_temp_id", ciCandidateCIID.ToString(), $"Dropping candidate CI with temp-ID {cic.TempID}, as there is already a candidate CI with that tempID");
+                                issueAccumulator.TryAdd("same_temp_id", cic.TempID, $"Dropping candidate CI with temp-ID {cic.TempID}, as there is already a candidate CI with that tempID");
                                 break;
                         }
                     } 
@@ -91,7 +91,7 @@ namespace Omnikeeper.Base.Service
                                 break;
                             case SameTargetCIHandling.DropAndWarn:
                                 dropCandidateCIBecauseOfSameTargetCI = true;
-                                issueAccumulator.TryAdd("same_target_ci", ciCandidateCIID.ToString(), $"Dropping candidate CI with temp-ID {cic.TempID}, as candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
+                                issueAccumulator.TryAdd("same_target_ci", cic.TempID, $"Dropping candidate CI with temp-ID {cic.TempID}, as candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[0]].tempID} already targets the CI with ID {foundCIIDs[0]}");
                                 break;
                             case SameTargetCIHandling.Evade:
                             case SameTargetCIHandling.EvadeAndWarn:
@@ -104,7 +104,7 @@ namespace Omnikeeper.Base.Service
                                             foundCIIDs.RemoveAt(i);
                                             if (cic.SameTargetCIHandling == SameTargetCIHandling.EvadeAndWarn)
                                             {
-                                                issueAccumulator.TryAdd("same_target_ci", ciCandidateCIID.ToString(), $"Candidate CI with temp-ID {cic.TempID}: evading to other CI, because candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[i]].tempID} already targets the CI with ID {foundCIIDs[i]}");
+                                                issueAccumulator.TryAdd("same_target_ci", cic.TempID, $"Candidate CI with temp-ID {cic.TempID}: evading to other CI, because candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[i]].tempID} already targets the CI with ID {foundCIIDs[i]}");
                                             }
                                         }
                                     }
@@ -116,17 +116,35 @@ namespace Omnikeeper.Base.Service
                         }
                     }
 
+                    var dropCandidateCIBecauseOfNoFoundTargetCI = false;
                     if (foundCIIDs.IsEmpty())
                     {
-                        // CI is new, create a ciid for it (we'll later batch create all CIs)
-                        var newCIID = CIModel.CreateCIID();
-                        foundCIIDs = new Guid[] { newCIID }; // use a totally new CIID, do NOT use the temporary CIID of the ciCandidate
-                        cisToCreate.Add(newCIID);
+                        switch (cic.NoFoundTargetCIHandling)
+                        {
+                            case NoFoundTargetCIHandling.CreateNew:
+                            case NoFoundTargetCIHandling.CreateNewAndWarn:
+                                {
+                                    // CI is new, create a ciid for it (we'll later batch create all CIs)
+                                    var newCIID = CIModel.CreateCIID();
+                                    foundCIIDs = new Guid[] { newCIID }; // use a totally new CIID, do NOT use the temporary CIID of the ciCandidate
+                                    cisToCreate.Add(newCIID);
+
+                                    if (cic.NoFoundTargetCIHandling == NoFoundTargetCIHandling.CreateNewAndWarn)
+                                    {
+                                        issueAccumulator.TryAdd("no_found_target_ci", cic.TempID, $"Candidate CI with temp-ID {cic.TempID}: found no matching target CI, creating new CI", newCIID);
+                                    }
+                                }
+                                break;
+                            case NoFoundTargetCIHandling.Drop:
+                                dropCandidateCIBecauseOfNoFoundTargetCI = true;
+                                break;
+                        }
                     }
 
-                    // TODO: add handling option for new CIs: if its allowed or not
-
-                    if (dropCandidateCIBecauseOfSameTargetCI)
+                    if (dropCandidateCIBecauseOfNoFoundTargetCI)
+                    { // drop candidate completely
+                        droppedCandidateCIs.Add(ciCandidateCIID);
+                    } else if (dropCandidateCIBecauseOfSameTargetCI)
                     { // drop candidate completely
                         droppedCandidateCIs.Add(ciCandidateCIID);
                     } else if (mergeIntoOtherTargetCIID.HasValue)
@@ -153,7 +171,7 @@ namespace Omnikeeper.Base.Service
                             // NOTE: how to deal with ambiguities? In other words: more than one CI fit, where to put the data?
                             // ciMappingService.TryToMatch() returns an already ordered list (by varying criteria, or - if nothing else - by CIID)
                             finalCIID = foundCIIDs.First();
-                            issueAccumulator.TryAdd("multiple_target_cis", ciCandidateCIID.ToString(), $"Multiple CIs match for candidate with temp-ID {cic.TempID}: {string.Join(",", foundCIIDs)}, taking first one", foundCIIDs.ToArray());
+                            issueAccumulator.TryAdd("multiple_target_cis", cic.TempID, $"Multiple CIs match for candidate with temp-ID {cic.TempID}: {string.Join(",", foundCIIDs)}, taking first one", foundCIIDs.ToArray());
                         }
 
                         // add to mapping context
@@ -205,7 +223,7 @@ namespace Omnikeeper.Base.Service
                 if (usedRelations.Contains((fromCIID, toCIID, cic.PredicateID)))
                 {
                     // TODO: different handling options
-                    issueAccumulator.TryAdd("duplicate_relation_candidate", $"{tempFromCIID}_{tempToCIID}_{cic.PredicateID}", $"Duplicate relation candidate detected: (fromCIID: {fromCIID}, toCIID: {toCIID}, predicateID: {cic.PredicateID}), dropping", fromCIID, toCIID);
+                    issueAccumulator.TryAdd("duplicate_relation_candidate", $"{fromCIID}_{toCIID}_{cic.PredicateID}", $"Duplicate relation candidate detected: (fromCIID: {fromCIID}, toCIID: {toCIID}, predicateID: {cic.PredicateID}), dropping", fromCIID, toCIID);
                     continue;
                 }
 
@@ -237,6 +255,13 @@ namespace Omnikeeper.Base.Service
         Drop
     };
 
+    public enum NoFoundTargetCIHandling
+    {
+        CreateNew, // default
+        CreateNewAndWarn,
+        Drop
+    }
+
     public class CICandidate
     {
         public Guid TempCIID { get; set; }
@@ -244,15 +269,17 @@ namespace Omnikeeper.Base.Service
         public ICIIdentificationMethod IdentificationMethod { get; private set; }
         public SameTempIDHandling SameTempIDHandling { get; private set; }
         public SameTargetCIHandling SameTargetCIHandling { get; private set; }
+        public NoFoundTargetCIHandling NoFoundTargetCIHandling { get; private set; }
         public CICandidateAttributeData Attributes { get; private set; }
 
-        public CICandidate(Guid tempCIID, string tempID, ICIIdentificationMethod identificationMethod, SameTempIDHandling sameTempIDHandling, SameTargetCIHandling sameTargetCIHandling, CICandidateAttributeData attributes)
+        public CICandidate(Guid tempCIID, string tempID, ICIIdentificationMethod identificationMethod, SameTempIDHandling sameTempIDHandling, SameTargetCIHandling sameTargetCIHandling, NoFoundTargetCIHandling noFoundTargetCIHandling, CICandidateAttributeData attributes)
         {
             TempCIID = tempCIID;
             TempID = tempID;
             IdentificationMethod = identificationMethod;
             SameTempIDHandling = sameTempIDHandling;
             SameTargetCIHandling = sameTargetCIHandling;
+            NoFoundTargetCIHandling = noFoundTargetCIHandling;
             Attributes = attributes;
         }
     }

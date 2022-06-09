@@ -62,7 +62,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
             LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            if (attributeFragments.IsEmpty() || relevantCIIDs.IsEmpty())
+            if (attributeFragments.IsEmpty() && relevantCIIDs.IsEmpty() && outgoingRelations.IsEmpty() && incomingRelations.IsEmpty())
                 return false;
 
             var changed = await WriteAttributes(attributeFragments, relevantCIIDs, relevantAttributesForTrait, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);

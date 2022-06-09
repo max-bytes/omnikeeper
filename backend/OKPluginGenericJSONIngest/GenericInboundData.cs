@@ -29,6 +29,8 @@ namespace OKPluginGenericJSONIngest
         public SameTempIDHandling sameTempIDHandling;
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public SameTargetCIHandling sameTargetCIHandling;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public NoFoundTargetCIHandling noFoundTargetCIHandling;
         public IEnumerable<GenericInboundAttribute> attributes;
     }
 
