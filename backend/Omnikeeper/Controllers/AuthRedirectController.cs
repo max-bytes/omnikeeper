@@ -18,7 +18,8 @@ namespace Omnikeeper.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            var baseURL = configuration.GetSection("Authentication")["Authority"];
+            var defaultBaseURL = configuration.GetSection("Authentication")["Authority"];
+            var baseURL = configuration.GetSection("Authentication").GetValue<string>("AuthorityForFrontend", defaultBaseURL);
             return Redirect($"{baseURL}/.well-known/openid-configuration");
         }
     }
