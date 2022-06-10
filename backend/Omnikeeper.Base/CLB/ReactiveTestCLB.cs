@@ -30,7 +30,7 @@ namespace Omnikeeper.Base.CLB
             this.effectiveTraitModel = effectiveTraitModel;
             this.changesetModel = changesetModel;
         }
-        public override ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger) => new HashSet<string>() { "tsa_cmdb" };
+        public override ISet<string>? GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger) => new HashSet<string>() { "tsa_cmdb" };
 
         public override async Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, 
             JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger, IIssueAccumulator issueAccumulator)

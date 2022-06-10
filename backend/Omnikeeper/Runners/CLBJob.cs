@@ -188,7 +188,7 @@ namespace Omnikeeper.Runners
             var latestSeenChangesets = new Dictionary<string, Guid>();
             if (processedChangesets != null)
             {
-                var dependentLayerIDs = clb.GetDependentLayerIDs(clBrainConfig, clLogger);
+                var dependentLayerIDs = clb.GetDependentLayerIDs(layerID, clBrainConfig, clLogger);
                 if (dependentLayerIDs != null)
                 {
                     using var trans = modelContextBuilder.BuildImmediate();

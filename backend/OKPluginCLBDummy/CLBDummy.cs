@@ -29,7 +29,7 @@ namespace OKPluginCLBDummy
 
         private Config ParseConfig(JsonDocument config) => JsonSerializer.Deserialize<Config>(config);
 
-        public override ISet<string> GetDependentLayerIDs(JsonDocument config, ILogger logger)
+        public override ISet<string> GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger)
         {
             try
             {

@@ -71,7 +71,7 @@ namespace OKPluginCLBNaemonVariableResolution
             return tmpCfg;
         }
 
-        public override ISet<string>? GetDependentLayerIDs(JsonDocument config, ILogger logger)
+        public override ISet<string>? GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger)
         {
             try
             {

@@ -11,6 +11,7 @@ namespace OKPluginCLBNaemonVariableResolution
         public override void RegisterServices(IServiceCollection sc)
         {
             sc.AddSingleton<IComputeLayerBrain, CLBNaemonVariableResolution>();
+            sc.AddSingleton<IComputeLayerBrain, CLBThrukSiteComparer>();
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => new List<RecursiveTrait>() {
@@ -27,6 +28,9 @@ namespace OKPluginCLBNaemonVariableResolution
             GenericTraitEntityHelper.Class2RecursiveTrait<ServiceAction>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<Group>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<SelfServiceVariable>(),
+
+            GenericTraitEntityHelper.Class2RecursiveTrait<ThrukHost>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<ThrukService>(),
         };
     }
 }
