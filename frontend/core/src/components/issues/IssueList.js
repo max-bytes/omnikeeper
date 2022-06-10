@@ -14,8 +14,6 @@ export default function IssueList(props) {
     const [search, { loading: loadingIssues, data: dataIssues }] = useLazyQuery(queries.Issues, {
         notifyOnNetworkStatusChange: true
     });
-    
-    useAGGridEnterprise();
 
     // debounce search, so its not called too often
     const debouncedSearch = useCallback(_.debounce(search, 500), [search]);
@@ -27,6 +25,10 @@ export default function IssueList(props) {
             variables: {}
         });
     }, [debouncedSearch, refreshNonce]);
+
+    const [rowCount, setRowCount] = useState(0);
+    
+    useAGGridEnterprise();
 
     const affectedCIsCellRenderer = function(params) {
         return <>
@@ -83,7 +85,7 @@ export default function IssueList(props) {
         {list && 
             <>
                 <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                    <h3>Results: {list.length} Issues</h3>
+                    <h3>Results: {rowCount} Issues</h3>
                     <Button icon={<SyncOutlined />} type="primary" loading={loadingIssues} onClick={() => setRefreshNonce(moment().toISOString())}>Refresh</Button>
                 </div>
                 <div style={{height:'100%'}} className={"ag-theme-balham"}>
@@ -95,13 +97,15 @@ export default function IssueList(props) {
                         columnDefs={columnDefs}
                         defaultColDef={{
                             resizable: true,
-                            sortable: true
+                            sortable: true,
+                            filterParams: { newRowsAction: 'keep'}
                         }}
                         animateRows={true}
                         enableCellTextSelection={true}
                         getRowNodeId={function (data) {
                             return `${data.id}-${data.context}-${data.type}`;
                         }}
+                        onModelUpdated={(params) => setRowCount(params.api.getDisplayedRowCount())}
                     />
                 </div>
             </>
