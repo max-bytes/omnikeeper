@@ -177,6 +177,8 @@ namespace Omnikeeper.Runners
                 return;
             }
 
+            clLogger.LogDebug($"Trying to run {clb.Name} on layer {layerID}...");
+
             // NOTE: to avoid race conditions, we use a single timeThreshold and base everything off of this
             var timeThreshold = TimeThreshold.BuildLatest();
 
@@ -186,27 +188,24 @@ namespace Omnikeeper.Runners
             transI.Dispose();
             var unprocessedChangesets = new Dictionary<string, IReadOnlyList<Changeset>?>(); // null value means all changesets
             var latestSeenChangesets = new Dictionary<string, Guid>();
-            if (processedChangesets != null)
+            var dependentLayerIDs = clb.GetDependentLayerIDs(layerID, clBrainConfig, clLogger);
+            if (dependentLayerIDs != null)
             {
-                var dependentLayerIDs = clb.GetDependentLayerIDs(layerID, clBrainConfig, clLogger);
-                if (dependentLayerIDs != null)
+                using var trans = modelContextBuilder.BuildImmediate();
+                foreach (var dependentLayerID in dependentLayerIDs)
                 {
-                    using var trans = modelContextBuilder.BuildImmediate();
-                    foreach (var dependentLayerID in dependentLayerIDs)
+                    if (processedChangesets != null && processedChangesets.TryGetValue(dependentLayerID, out var lastProcessedChangesetID))
                     {
-                        if (processedChangesets.TryGetValue(dependentLayerID, out var lastProcessedChangesetID))
-                        {
-                            var up = await changesetModel.GetChangesetsAfter(lastProcessedChangesetID, new string[] { dependentLayerID }, trans, timeThreshold);
-                            var latestID = up.FirstOrDefault()?.ID ?? lastProcessedChangesetID;
-                            unprocessedChangesets.Add(dependentLayerID, up);
-                            latestSeenChangesets.Add(dependentLayerID, latestID);
-                        } else
-                        {
-                            unprocessedChangesets.Add(dependentLayerID, null);
-                            var latest = await changesetModel.GetLatestChangesetForLayer(dependentLayerID, trans, timeThreshold);
-                            if (latest != null)
-                                latestSeenChangesets.Add(dependentLayerID, latest.ID);
-                        }
+                        var up = await changesetModel.GetChangesetsAfter(lastProcessedChangesetID, new string[] { dependentLayerID }, trans, timeThreshold);
+                        var latestID = up.FirstOrDefault()?.ID ?? lastProcessedChangesetID;
+                        unprocessedChangesets.Add(dependentLayerID, up);
+                        latestSeenChangesets.Add(dependentLayerID, latestID);
+                    } else
+                    {
+                        unprocessedChangesets.Add(dependentLayerID, null);
+                        var latest = await changesetModel.GetLatestChangesetForLayer(dependentLayerID, trans, timeThreshold);
+                        if (latest != null)
+                            latestSeenChangesets.Add(dependentLayerID, latest.ID);
                     }
                 }
             }
@@ -216,7 +215,18 @@ namespace Omnikeeper.Runners
                 {
                     clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID}");
                     return; // <- all dependent layer have not changed since last run, we can skip
+                } else
+                {
+                    var layersWhereAllChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value == null).ToList();
+                    if (!layersWhereAllChangesetsAreUnprocessed.IsEmpty())
+                        clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets in layers: {string.Join(",", layersWhereAllChangesetsAreUnprocessed.Select(kv => kv.Key))}");
+                    var layersWhereSingleChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value != null && !kv.Value.IsEmpty()).ToList();
+                    if (!layersWhereSingleChangesetsAreUnprocessed.IsEmpty())
+                        clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets: {string.Join(",", layersWhereAllChangesetsAreUnprocessed.SelectMany(kv => kv.Value.Select(c => c.ID)))}");
                 }
+            } else
+            {
+                clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because CLB does not specify dependent layers");
             }
 
             // create a lifetime scope per clb invocation (similar to a HTTP request lifetime)
@@ -251,8 +261,9 @@ namespace Omnikeeper.Runners
 
                     if (successful)
                     {
-                        using var transI2 = modelContextBuilder.BuildImmediate();
-                        await clbProcessedChangesetsCache.UpdateCache(clConfig_ID, layerID, latestSeenChangesets, transI2);
+                        using var transUpdateCache = modelContextBuilder.BuildDeferred();
+                        await clbProcessedChangesetsCache.UpdateCache(clConfig_ID, layerID, latestSeenChangesets, transUpdateCache);
+                        transUpdateCache.Commit();
                     }
 
                     if (!successful)
