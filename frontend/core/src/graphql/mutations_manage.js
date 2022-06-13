@@ -130,7 +130,6 @@ export const mutations = {
     manage_removeAuthRole(id: $id)
   }
   `,
-
   
   UPSERT_CL_CONFIG: gql`
   mutation($config: UpsertCLConfigInputType!) {
@@ -144,6 +143,21 @@ export const mutations = {
   REMOVE_CL_CONFIG: gql`
   mutation($id: String!) {
     manage_removeCLConfig(id: $id)
+  }
+  `,
+
+  UPSERT_VALIDATOR_CONTEXT: gql`
+  mutation($context: UpsertValidatorContextInputType!) {
+    manage_upsertValidatorContext(context: $context) {
+        ...ValidatorContext
+    }
+  }
+  ${Fragments.validatorContext}
+  `,
+
+  REMOVE_VALIDATOR_CONTEXT: gql`
+  mutation($id: String!) {
+    manage_removeValidatorContext(id: $id)
   }
   `,
 };

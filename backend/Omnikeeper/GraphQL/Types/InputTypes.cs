@@ -226,6 +226,22 @@ namespace Omnikeeper.GraphQL.Types
         }
     }
 
+    public class UpsertValidatorContextInput
+    {
+        public string ID { get; private set; }
+        public string ValidatorReference { get; private set; }
+        public string Config { get; private set; }
+    }
+    public class UpsertValidatorContextInputType : InputObjectGraphType<UpsertValidatorContextInput>
+    {
+        public UpsertValidatorContextInputType()
+        {
+            Field("id", x => x.ID);
+            Field("validatorReference", x => x.ValidatorReference);
+            Field("config", x => x.Config);
+        }
+    }
+
     public class UpsertCLConfigInput
     {
         public string ID { get; private set; }

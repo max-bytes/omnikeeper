@@ -62,6 +62,14 @@ export const queries = {
         }
         ${Fragments.clConfig}
     `,
+    ValidatorContexts: gql`
+        query {
+            manage_validatorContexts {
+                ...ValidatorContext
+            }
+        }
+        ${Fragments.validatorContext}
+    `,
     AvailablePermissions: gql`
         query {
             manage_availablePermissions

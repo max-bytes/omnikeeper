@@ -198,6 +198,21 @@ namespace Omnikeeper.GraphQL
                     return clConfigs.Values;
                 });
 
+
+            FieldAsync<ListGraphType<ValidatorContextType>>("manage_validatorContexts",
+                resolve: async context =>
+                {
+                    var userContext = context.SetupUserContext()
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+
+                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                    CheckReadManagementThrow(userContext, metaConfiguration, "read validator contexts configs");
+
+                    var contexts = await validatorContextModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
+                    return contexts.Values;
+                });
+
             FieldAsync<ListGraphType<StringGraphType>>("manage_availablePermissions",
                 resolve: async context =>
                 {

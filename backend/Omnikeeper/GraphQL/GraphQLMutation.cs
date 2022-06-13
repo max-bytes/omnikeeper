@@ -35,10 +35,12 @@ namespace Omnikeeper.GraphQL
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly CLConfigV1Model clConfigModel;
+        private readonly ValidatorContextV1Model validatorContextModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
         private readonly CLBProcessedChangesetsCache clbProcessedChangesetsCache;
+        private readonly ValidatorProcessedChangesetsCache validatorProcessedChangesetsCache;
         private readonly IScheduler localScheduler;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
@@ -49,7 +51,7 @@ namespace Omnikeeper.GraphQL
             IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             IEnumerable<IPluginRegistration> plugins, IIndex<string, IScheduler> schedulers, CLBProcessedChangesetsCache clbProcessedChangesetsCache,
-            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, ILayerDataModel layerDataModel)
+            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, ILayerDataModel layerDataModel, ValidatorContextV1Model validatorContextModel, ValidatorProcessedChangesetsCache validatorProcessedChangesetsCache)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -211,6 +213,8 @@ namespace Omnikeeper.GraphQL
             this.localScheduler = schedulers["localScheduler"];
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.layerDataModel = layerDataModel;
+            this.validatorContextModel = validatorContextModel;
+            this.validatorProcessedChangesetsCache = validatorProcessedChangesetsCache;
 
             CreateManage();
             CreatePlugin(plugins);

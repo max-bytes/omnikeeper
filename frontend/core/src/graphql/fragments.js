@@ -179,4 +179,11 @@ export const Fragments = {
     clBrainConfig
   }
   `,
+  validatorContext: gql`
+  fragment ValidatorContext on ValidatorContextType {
+    id,
+    validatorReference,
+    config
+  }
+  `,
 };

@@ -41,6 +41,7 @@ namespace Omnikeeper.GraphQL
         private readonly ODataAPIContextModel odataAPIContextModel;
         private readonly AuthRoleModel authRoleModel;
         private readonly CLConfigV1Model clConfigModel;
+        private readonly ValidatorContextV1Model validatorContextModel;
         private readonly RecursiveTraitModel recursiveDataTraitModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly IBaseAttributeModel baseAttributeModel;
@@ -54,7 +55,7 @@ namespace Omnikeeper.GraphQL
             IOIAContextModel oiaContextModel, ODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel, CLConfigV1Model clConfigModel,
             RecursiveTraitModel recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
             IEnumerable<IPluginRegistration> plugins, IBaseAttributeModel baseAttributeModel,
-            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, IDataLoaderService dataLoaderService)
+            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, IDataLoaderService dataLoaderService, ValidatorContextV1Model validatorContextModel)
         {
             this.ciidModel = ciidModel;
             this.attributeModel = attributeModel;
@@ -79,6 +80,7 @@ namespace Omnikeeper.GraphQL
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.dataLoaderService = dataLoaderService;
+            this.validatorContextModel = validatorContextModel;
 
             CreateMain();
             CreateManage();

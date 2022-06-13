@@ -561,6 +561,70 @@ namespace Omnikeeper.GraphQL
 
                   return deleted;
               });
+
+
+
+
+            FieldAsync<ValidatorContextType>("manage_upsertValidatorContext",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<UpsertValidatorContextInputType>> { Name = "context" }
+              ),
+              resolve: async context =>
+              {
+                  var userContext = context.SetupUserContext()
+                      .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                      .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+
+                  var contextInput = context.GetArgument<UpsertValidatorContextInput>("context")!;
+
+                  var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                  CheckModifyManagementThrow(userContext, metaConfiguration, "modify cl configs");
+
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+
+                  using var config = JsonDocument.Parse(contextInput.Config);
+
+                  var updated = new ValidatorContextV1(contextInput.ID, contextInput.ValidatorReference, config);
+
+                  var newContext = await validatorContextModel.InsertOrUpdate(updated,
+                      metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
+                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                      changesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
+                  userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+
+                  // delete cache entries that affect this validator context
+                  validatorProcessedChangesetsCache.DeleteFromCache(contextInput.ID);
+
+                  return newContext.dc;
+              });
+
+            FieldAsync<BooleanGraphType>("manage_removeValidatorContext",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
+              ),
+              resolve: async context =>
+              {
+                  var userContext = context.SetupUserContext()
+                      .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                      .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+
+                  var id = context.GetArgument<string>("id")!;
+
+                  var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                  CheckModifyManagementThrow(userContext, metaConfiguration, "modify validator contexts");
+
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+
+                  var deleted = await validatorContextModel.TryToDelete(id,
+                      metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
+                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
+                  userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+
+                  // delete last cache entries that affect this context
+                  validatorProcessedChangesetsCache.DeleteFromCache(id);
+
+                  return deleted;
+              });
         }
     }
 }
