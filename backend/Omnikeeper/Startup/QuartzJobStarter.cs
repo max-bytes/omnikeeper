@@ -22,6 +22,7 @@ namespace Omnikeeper.Startup
         public IServiceScopeFactory _serviceScopeFactory;
         private readonly IConfiguration configuration;
         private static readonly JobKey JKCLB = new JobKey("CLB", "omnikeeper");
+        private static readonly JobKey JKValidator = new JobKey("Validator", "omnikeeper");
         private static readonly JobKey JKMarkedForDeletion = new JobKey("MarkedForDeletion", "omnikeeper");
         private static readonly JobKey JKExternalIDManager = new JobKey("ExternalIDManager", "omnikeeper");
         private static readonly JobKey JKArchiveOldData = new JobKey("ArchiveOldData", "omnikeeper");
@@ -63,7 +64,10 @@ namespace Omnikeeper.Startup
                 await ScheduleJob<ArchiveOldDataJob>(distributedScheduler, JKArchiveOldData, config.ArchiveOldDataRunnerInterval, logger, deleteOnly);
 
                 if (configuration.GetValue("RunComputeLayers", false))
+                {
                     await ScheduleJob<CLBJob>(localScheduler, JKCLB, config.CLBRunnerInterval, logger, deleteOnly);
+                    await ScheduleJob<ValidatorJob>(localScheduler, JKValidator, config.CLBRunnerInterval, logger, deleteOnly); // TODO: add own settings
+                }
                 await ScheduleJob<UsageDataWriterJob>(localScheduler, JKUsageDataWriter, "0 * * * * ?", logger, deleteOnly);
                 await ScheduleJob<GraphQLSchemaReloaderJob>(localScheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly);
                 await ScheduleJob<EdmModelReloaderJob>(localScheduler, JKEdmModelReloader, "0 * * * * ?", logger, deleteOnly);
@@ -98,7 +102,7 @@ namespace Omnikeeper.Startup
             try
             {
                 ITrigger trigger = TriggerBuilder.Create()
-                    .WithIdentity($"trigger_{jobKey.Name}", "omnikeeper")
+                    .WithIdentity($"trigger_for_job_{jobKey.Name}", jobKey.Group)
                     .StartNow()
                     .WithCronSchedule(cronSchedule)
                     .Build();

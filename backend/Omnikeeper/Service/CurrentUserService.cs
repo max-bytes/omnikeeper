@@ -98,18 +98,17 @@ namespace Omnikeeper.Service
         }
     }
 
-
     public class CurrentAuthorizedCLBUserService : ICurrentUserService
     {
-        public CurrentAuthorizedCLBUserService(CLBContext clbContext, IUserInDatabaseModel userModel, ILayerModel layerModel)
+        public CurrentAuthorizedCLBUserService(string username, IUserInDatabaseModel userModel, ILayerModel layerModel)
         {
-            this.clbContext = clbContext;
+            this.username = username;
             this.userModel = userModel;
             this.layerModel = layerModel;
         }
 
         private readonly ILayerModel layerModel;
-        private readonly CLBContext clbContext;
+        private readonly string username;
         private readonly IUserInDatabaseModel userModel;
 
         private AuthenticatedUser? cached = null;
@@ -129,7 +128,7 @@ namespace Omnikeeper.Service
 
         public string GetCurrentUsername()
         {
-            return clbContext.Username;
+            return username;
         }
 
         private async Task<AuthenticatedUser> _GetCurrentUser(IModelContext trans)

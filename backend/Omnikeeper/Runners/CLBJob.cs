@@ -81,8 +81,8 @@ namespace Omnikeeper.Runners
 
         private async Task TriggerCLB(CLConfigV1 clConfig, LayerData layerData)
         {
-            var jobKey = new JobKey($"{clConfig.ID}@{layerData.LayerID}");
-            var triggerKey = new TriggerKey($"trigger@{clConfig.ID}@{layerData.LayerID}");
+            var jobKey = new JobKey($"{clConfig.ID}@{layerData.LayerID}", "clb");
+            var triggerKey = new TriggerKey($"trigger@{clConfig.ID}@{layerData.LayerID}", "clb");
 
             // delete job (and triggers) that ran into an error, see https://stackoverflow.com/questions/32273540/recover-from-trigger-error-state-after-job-constructor-threw-an-exception
             if (await scheduler.GetTriggerState(triggerKey) == TriggerState.Error)
@@ -225,7 +225,7 @@ namespace Omnikeeper.Runners
                         clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets: {string.Join(",", layersWhereAllChangesetsAreUnprocessed.SelectMany(kv => kv.Value.Select(c => c.ID)))}");
                 }
             } else
-            {
+            { // TODO: handle case when layer contains no changesets at all separately -> skip
                 clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because CLB does not specify dependent layers");
             }
 
@@ -233,8 +233,7 @@ namespace Omnikeeper.Runners
             var username = $"__cl.{clConfig_ID}@{layerID}"; // construct username
             await using (var scope = lifetimeScope.BeginLifetimeScope(Autofac.Core.Lifetime.MatchingScopeLifetimeTags.RequestLifetimeScopeTag, builder =>
             {
-                builder.Register(builder => new CLBContext(username)).InstancePerLifetimeScope();
-                builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
+                builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().WithParameter("username", username).InstancePerLifetimeScope();
             }))
             {
                 scopedLifetimeAccessor.SetLifetimeScope(scope);

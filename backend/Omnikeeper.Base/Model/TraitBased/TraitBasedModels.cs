@@ -72,6 +72,13 @@ namespace Omnikeeper.Base.Model.TraitBased
         }
     }
 
+    public class ValidatorContextV1Model : GenericTraitEntityModel<ValidatorContextV1, string>
+    {
+        public ValidatorContextV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        {
+        }
+    }
+
     public class AuthRoleModel : GenericTraitEntityModel<AuthRole, string>
     {
         public AuthRoleModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)

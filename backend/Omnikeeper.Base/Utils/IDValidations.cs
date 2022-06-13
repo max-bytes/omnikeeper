@@ -24,6 +24,8 @@ namespace Omnikeeper.Base.Utils
         public const RegexOptions CLConfigIDRegexOptions = RegexOptions.None;
         //private static Regex CLConfigIDRegex = new Regex(CLConfigIDRegexString, CLConfigIDRegexOptions);
 
+        public const string ValidatorContextIDRegexString = "^[a-z0-9_.]+$";
+        public const RegexOptions ValidatorContextIDRegexOptions = RegexOptions.None;
 
         public const string GridViewContextIDRegexString = "^[a-z0-9_]+$";
         public const RegexOptions GridViewContextIDRegexOptions = RegexOptions.None;

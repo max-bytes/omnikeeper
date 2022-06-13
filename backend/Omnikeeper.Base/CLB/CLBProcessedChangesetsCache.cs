@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.CLB
 {
+    // TODO: make local (again), instead of persistent to postgres
     public class CLBProcessedChangesetsCache
     {
         private class CLBProcessedChangesetsEntry

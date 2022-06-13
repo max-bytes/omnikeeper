@@ -10,23 +10,37 @@ using System.Text.Json.Serialization;
 
 namespace OKPluginCLBNaemonVariableResolution
 {
-    public class CLBThrukSiteComparer : CLBBase
+    public class ValidatorThrukSiteComparer : IValidator
     {
         private readonly GenericTraitEntityModel<ThrukHost, (string name, string peerKey)> thrukHostModel;
         private readonly GenericTraitEntityModel<ThrukService, (string name, string peerKey, string description)> thrukServiceModel;
 
-        public CLBThrukSiteComparer(GenericTraitEntityModel<ThrukHost, (string name, string peerKey)> thrukHostModel, GenericTraitEntityModel<ThrukService, (string name, string peerKey, string description)> thrukServiceModel)
+        public string Name => GetType().Name!;
+
+        public ValidatorThrukSiteComparer(GenericTraitEntityModel<ThrukHost, (string name, string peerKey)> thrukHostModel, GenericTraitEntityModel<ThrukService, (string name, string peerKey, string description)> thrukServiceModel)
         {
             this.thrukHostModel = thrukHostModel;
             this.thrukServiceModel = thrukServiceModel;
         }
 
-        public override async Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger, IIssueAccumulator issueAccumulator)
+        private Config ParseConfig(JsonDocument configJson)
+        {
+            var tmpCfg = JsonSerializer.Deserialize<Config>(configJson, new JsonSerializerOptions());
+
+            if (tmpCfg == null)
+                throw new Exception("Could not parse configuration");
+            return tmpCfg;
+        }
+
+        public async Task<bool> Run(IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, JsonDocument config, IModelContextBuilder modelContextBuilder, TimeThreshold timeThreshold, ILogger logger, IIssueAccumulator issueAccumulator)
         {
             var cfg = ParseConfig(config);
+            var sourceLayerSet = new LayerSet(cfg.SourceLayers);
 
-            var thrukHosts = await thrukHostModel.GetByCIID(AllCIIDsSelection.Instance, new LayerSet(targetLayerID), trans, changesetProxy.TimeThreshold);
-            var thrukServices = await thrukServiceModel.GetByCIID(AllCIIDsSelection.Instance, new LayerSet(targetLayerID), trans, changesetProxy.TimeThreshold);
+            using var trans = modelContextBuilder.BuildImmediate();
+
+            var thrukHosts = await thrukHostModel.GetByCIID(AllCIIDsSelection.Instance, sourceLayerSet, trans, timeThreshold);
+            var thrukServices = await thrukServiceModel.GetByCIID(AllCIIDsSelection.Instance, sourceLayerSet, trans, timeThreshold);
 
             foreach (var sitePair in cfg.Pairs)
             {
@@ -100,18 +114,10 @@ namespace OKPluginCLBNaemonVariableResolution
             return true;
         }
 
-        public override ISet<string>? GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger)
+        public ISet<string> GetDependentLayerIDs(JsonDocument config, ILogger logger)
         {
-            return new HashSet<string>() { targetLayerID };
-        }
-
-        private Config ParseConfig(JsonDocument configJson)
-        {
-            var tmpCfg = JsonSerializer.Deserialize<Config>(configJson, new JsonSerializerOptions());
-
-            if (tmpCfg == null)
-                throw new Exception("Could not parse configuration");
-            return tmpCfg;
+            var cfg = ParseConfig(config);
+            return cfg.SourceLayers.ToHashSet();
         }
     }
 
@@ -126,10 +132,11 @@ namespace OKPluginCLBNaemonVariableResolution
 
     public class Config
     {
+        [JsonPropertyName("source_layers")]
+        public string[] SourceLayers { get; set; } = Array.Empty<string>();
+
         [JsonPropertyName("pairs")]
         public SitePair[] Pairs { get; set; } = Array.Empty<SitePair>();
-
-
     }
 
     [TraitEntity("monman_v2.thruk_host", TraitOriginType.Plugin)]

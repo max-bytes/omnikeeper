@@ -11,7 +11,7 @@ namespace OKPluginCLBNaemonVariableResolution
         public override void RegisterServices(IServiceCollection sc)
         {
             sc.AddSingleton<IComputeLayerBrain, CLBNaemonVariableResolution>();
-            sc.AddSingleton<IComputeLayerBrain, CLBThrukSiteComparer>();
+            sc.AddSingleton<IValidator, ValidatorThrukSiteComparer>();
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => new List<RecursiveTrait>() {
