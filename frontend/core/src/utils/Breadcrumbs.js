@@ -15,6 +15,7 @@ const breadcrumbNameMap = [
   { search: '^/manage/generators', name: 'Generators' },
   { search: '^/manage/auth-roles', name: 'Auth Roles' },
   { search: '^/manage/cl-configs', name: 'Compute Layer Configurations' },
+  { search: '^/manage/validator-contexts', name: 'Validator Contexts' },
   { search: '^/manage/usage-stats', name: 'Usage Stats' },
   { search: '^/manage/version', name: 'Version' },
   { search: '^/manage/current-user', name: 'Debug Current User' },
