@@ -24,60 +24,6 @@ namespace Omnikeeper.Model
             this.ciidModel = ciidModel;
         }
 
-        // TODO: integrate into _GetAttributes()
-        private async Task<CIAttribute?> _GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary)
-        {
-            NpgsqlCommand command;
-            if (atTime.IsLatest && _USE_LATEST_TABLE)
-            {
-                command = new NpgsqlCommand(@"
-                select id, ci_id, type, value_text, value_binary, value_control, changeset_id FROM attribute_latest
-                where ci_id = @ci_id and layer_id = @layer_id and name = @name LIMIT 1
-                ", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("ci_id", ciid);
-                command.Parameters.AddWithValue("layer_id", layerID);
-                command.Parameters.AddWithValue("name", name);
-            }
-            else
-            {
-                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
-
-                command = new NpgsqlCommand(@"
-                select id, ci_id, type, value_text, value_binary, value_control, changeset_id
-                from (
-                    select id, ci_id, type, value_text, value_binary, value_control, changeset_id FROM attribute 
-                    where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name and partition_index >= @partition_index
-                    order by timestamp DESC NULLS LAST LIMIT 1
-                ) i where removed = false
-                ", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("ci_id", ciid);
-                command.Parameters.AddWithValue("layer_id", layerID);
-                command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("time_threshold", atTime.Time);
-                command.Parameters.AddWithValue("partition_index", partitionIndex);
-            }
-
-            command.Prepare();
-
-            using var dr = await command.ExecuteReaderAsync();
-
-            command.Dispose();
-
-            if (!await dr.ReadAsync())
-                return null;
-
-            var id = dr.GetGuid(0);
-            var CIID = dr.GetGuid(1);
-            var type = dr.GetFieldValue<AttributeValueType>(2);
-            var valueText = dr.GetString(3);
-            var valueBinary = dr.GetFieldValue<byte[]>(4);
-            var valueControl = dr.GetFieldValue<byte[]>(5);
-            var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
-            var changesetID = dr.GetGuid(6);
-            var att = new CIAttribute(id, name, CIID, av, changesetID);
-            return att;
-        }
-
         private string CIIDSelection2WhereClause(ICIIDSelection selection)
         {
             return selection switch
@@ -238,7 +184,7 @@ namespace Omnikeeper.Model
             return selection;
         }
 
-        private async IAsyncEnumerable<(CIAttribute attribute, string layerID)> _GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
+        private async IAsyncEnumerable<(CIAttribute attribute, string layerID)> _GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection, bool fullBinary)
         {
             NpgsqlCommand command;
 
@@ -293,7 +239,7 @@ namespace Omnikeeper.Model
                 var valueText = dr.GetString(4);
                 var valueBinary = dr.GetFieldValue<byte[]>(5);
                 var valueControl = dr.GetFieldValue<byte[]>(6);
-                var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
                 var changesetID = dr.GetGuid(7);
                 var layerID = dr.GetString(8);
 
@@ -305,7 +251,9 @@ namespace Omnikeeper.Model
 
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
-            return await _GetAttribute(name, ciid, layerID, trans, atTime, true);
+            var a = await _GetAttributes(SpecificCIIDsSelection.Build(ciid), new string[] { layerID }, trans, atTime, NamedAttributesSelection.Build(name), true).FirstOrDefaultAsync();
+            if (a == default) return null;
+            return a.attribute;
         }
 
         // NOTE: returns a full array (one item for each layer), even when layer contains no attributes
@@ -317,7 +265,7 @@ namespace Omnikeeper.Model
             var tmp = new Dictionary<string, IDictionary<Guid, IDictionary<string, CIAttribute>>>(layerIDs.Length);
             foreach (var layerID in layerIDs)
                 tmp[layerID] = new Dictionary<Guid, IDictionary<string, CIAttribute>>();
-            await foreach (var (att, layerID) in _GetAttributes(selection, layerIDs, trans, atTime, attributeSelection))
+            await foreach (var (att, layerID) in _GetAttributes(selection, layerIDs, trans, atTime, attributeSelection, false))
             {
                 var r = tmp[layerID];
                 if (r.TryGetValue(att.CIID, out var l))
