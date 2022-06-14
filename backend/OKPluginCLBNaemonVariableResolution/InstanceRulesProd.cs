@@ -11,7 +11,7 @@ namespace OKPluginCLBNaemonVariableResolution
                ALERTING
             *********************************************************************
             */
-            if (hs.HasAnyProfileOf(
+            if (hs.HasAnyProfileOf(StringComparison.InvariantCultureIgnoreCase,
                 "profile-tma-mid-docker",
                 "profile-all-mid-sdwan-meraki",
                 "profile-all-mid-sdwan-silverpeak",
@@ -19,7 +19,7 @@ namespace OKPluginCLBNaemonVariableResolution
             ))
                 hs.AddVariable(new Variable("ALERTS", "FIXED", "ON"));
 
-            if (hs.HasAnyProfileOf(
+            if (hs.HasAnyProfileOf(StringComparison.InvariantCultureIgnoreCase,
                 "profile-default-ping-only-noalert"
             ))
                 hs.AddVariable(new Variable("ALERTS", "FIXED", "OFF"));
@@ -37,7 +37,7 @@ namespace OKPluginCLBNaemonVariableResolution
                NRPE alle Profile die kein NRPE benoetigen hier eintragen
             *********************************************************************
             */
-            if (hs.HasAnyProfileOf(
+            if (hs.HasAnyProfileOf(StringComparison.InvariantCultureIgnoreCase,
                 "profile-ami-host-ipconnection-only",
                 "profile-ami-host-hdw-sensor",
                 "profile-ami-network-mpls-2",
@@ -201,7 +201,7 @@ namespace OKPluginCLBNaemonVariableResolution
                disable Hardware Monitoring based by profile
             *********************************************************************
             */
-            if (hs.HasAnyProfileOf(
+            if (hs.HasAnyProfileOf(StringComparison.InvariantCultureIgnoreCase,
                 "profile-default-virt-esxi-host",
                 "profile-default-virt-esxi-host-vcenter-v7",
                 "profile-intern_shared-virt-esxi-host-vclassic",
@@ -376,7 +376,7 @@ namespace OKPluginCLBNaemonVariableResolution
             *********************************************************************
             */
             // remove all cap from this CI, add 'cap_eventgenerator'
-            if (hs.HasProfile("profile-default-app-naemon-eventgenerator"))
+            if (hs.HasProfile(StringComparison.InvariantCultureIgnoreCase, "profile-default-app-naemon-eventgenerator"))
             {
                 hs.Tags.Clear();
                 hs.Tags.Add("cap_eventgenerator");

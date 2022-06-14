@@ -22,11 +22,11 @@ namespace OKPluginCLBNaemonVariableResolution
                 hs.AddVariable(new Variable("ALERTS", "FIXED", "OFF", 1));
 
             // enable tsi sdwan silverpeak test
-            if (hs.HasAnyProfileOf("profiledynamic-tsi-silverpeak-device", "profiledynamic-tsi-silverpeak-orchestrator"))
+            if (hs.HasAnyProfileOf(StringComparison.InvariantCultureIgnoreCase, "profiledynamic-tsi-silverpeak-device", "profiledynamic-tsi-silverpeak-orchestrator"))
                 hs.AddVariable(new Variable("ALERTS", "FIXED", "ON", 2));
 
             // enable tsi sdwan versa test
-            if (hs.HasAnyProfileOf("profiledynamic-tsi-versa-device", "profiledynamic-tsi-versa-orchestrator"))
+            if (hs.HasAnyProfileOf(StringComparison.InvariantCultureIgnoreCase, "profiledynamic-tsi-versa-device", "profiledynamic-tsi-versa-orchestrator"))
                 hs.AddVariable(new Variable("ALERTS", "FIXED", "ON", 2));
 
             /*
@@ -42,7 +42,7 @@ namespace OKPluginCLBNaemonVariableResolution
                Event Generator, please place at last
             *********************************************************************
             */
-            if (hs.HasProfile("profiledev-default-app-naemon-eventgenerator"))
+            if (hs.HasProfile(StringComparison.InvariantCultureIgnoreCase, "profiledev-default-app-naemon-eventgenerator"))
             {
                 hs.Tags.Clear();
                 hs.Tags.Add("cap_eventgenerator");

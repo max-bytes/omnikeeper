@@ -238,6 +238,12 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitAttribute("type", "cmdb.service.type", optional: true)]
         public string? Type;
 
+        [TraitAttribute("monIPAddress", "cmdb.service.mon_ip_address", optional: true)]
+        public string? MonIPAddress;
+
+        [TraitAttribute("monIPPort", "cmdb.service.mon_ip_port", optional: true)]
+        public string? MonIPPort;
+
         [TraitRelation("customer", "is_assigned_to_customer", true)]
         public Guid? Customer;
 
@@ -259,6 +265,8 @@ namespace OKPluginCLBNaemonVariableResolution
             ForeignKey = null;
             Instance = null;
             Type = null;
+            MonIPAddress = null;
+            MonIPPort = null;
             Customer = null;
             SupportGroup = null;
             MemberOfCategories = Array.Empty<Guid>();
@@ -408,6 +416,64 @@ namespace OKPluginCLBNaemonVariableResolution
         {
             ID = "";
             Name = "";
+        }
+    }
+
+
+    [TraitEntity("monman_v2.thruk_host", TraitOriginType.Plugin)]
+    public class ThrukHost : TraitEntity
+    {
+        [TraitAttribute("name", "thruk.host.name")]
+        [TraitEntityID]
+        public string Name;
+
+        [TraitAttribute("peerKey", "thruk.host.peer_key")]
+        [TraitEntityID]
+        public string PeerKey;
+
+        [TraitAttribute("customVariables", "thruk.host.custom_variables")]
+        public JsonDocument CustomVariables;
+
+        [TraitRelation("services", "belongs_to_thruk_host", false)]
+        public Guid[] Services;
+
+        [TraitRelation("cmdbCI", "corresponds_to", true)]
+        public Guid? CMDBCI;
+
+        public ThrukHost()
+        {
+            Name = "";
+            PeerKey = "";
+            CustomVariables = null;
+            Services = Array.Empty<Guid>();
+            CMDBCI = null;
+        }
+    }
+
+    [TraitEntity("monman_v2.thruk_service", TraitOriginType.Plugin)]
+    public class ThrukService : TraitEntity
+    {
+        [TraitAttribute("hostName", "thruk.service.host_name")]
+        [TraitEntityID]
+        public string HostName;
+
+        [TraitAttribute("peerKey", "thruk.service.peer_key")]
+        [TraitEntityID]
+        public string PeerKey;
+
+        [TraitAttribute("description", "thruk.service.description")]
+        [TraitEntityID]
+        public string Description;
+
+        [TraitRelation("host", "belongs_to_thruk_host", true)]
+        public Guid? Host;
+
+        public ThrukService()
+        {
+            HostName = "";
+            PeerKey = "";
+            Description = "";
+            Host = null;
         }
     }
 }

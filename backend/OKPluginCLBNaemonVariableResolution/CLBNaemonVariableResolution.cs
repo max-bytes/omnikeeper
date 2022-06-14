@@ -190,6 +190,13 @@ namespace OKPluginCLBNaemonVariableResolution
                 );
             }
 
+            foreach (var (ciid, hs) in filteredHOS)
+            {
+                hs.AddVariables(
+                    new Variable("TICKETTARGET", "INIT", "OS", -100) // TODO: is this feasible?
+                );
+            }
+
             // ...from variables in monman
             // reference: roughly updateNormalizedCiData_varsFromDatabase()
             var hosByNameLookup = filteredHOS.ToDictionary(h => h.Value.ID, h => h.Value);
@@ -413,16 +420,16 @@ namespace OKPluginCLBNaemonVariableResolution
 
                 string monitoringProfile;
                 if (hs.Profiles.Count == 1)
-                    monitoringProfile = hs.Profiles[0];
+                    monitoringProfile = hs.Profiles[0].ToLowerInvariant(); // HACK: we transform to lowercase for historical reasons
                 else if (hs.Profiles.Count > 1)
                     monitoringProfile = "MULTIPLE";
                 else
                     monitoringProfile = "NONE";
                 string monitoringProfileOrig;
                 if (hs.Profiles.Count == 1)
-                    monitoringProfileOrig = hs.Profiles[0];
+                    monitoringProfileOrig = hs.Profiles[0].ToLowerInvariant(); // HACK: we transform to lowercase for historical reasons
                 else if (hs.Profiles.Count > 1)
-                    monitoringProfileOrig = string.Join(',', hs.Profiles);
+                    monitoringProfileOrig = string.Join(',', hs.Profiles).ToLowerInvariant(); // HACK: we transform to lowercase for historical reasons
                 else
                     monitoringProfileOrig = "NONE";
 

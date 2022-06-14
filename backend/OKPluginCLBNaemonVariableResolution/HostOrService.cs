@@ -39,8 +39,8 @@ namespace OKPluginCLBNaemonVariableResolution
         public string? Location => Get(h => h.Location, s => null);
         public string? OS => Get(h => h.OS, s => null);
         public string? Platform => Get(h => h.Platform, s => null);
-        public string? MonIPAddress => Get(h => h.MonIPAddress, s => null);
-        public string? MonIPPort => Get(h => h.MonIPPort, s => null);
+        public string? MonIPAddress => Get(h => h.MonIPAddress, s => s.MonIPAddress);
+        public string? MonIPPort => Get(h => h.MonIPPort, s => s.MonIPPort);
 
         public TargetHost? Host => host;
         public TargetService? Service => service;
@@ -78,9 +78,9 @@ namespace OKPluginCLBNaemonVariableResolution
             return null;
         }
 
-        public bool HasProfile(string profile) => Profiles.Contains(profile);
+        public bool HasProfile(StringComparison stringComparison, string profile) => Profiles.Any(p => p.Equals(profile, stringComparison));
         public bool HasProfileMatchingRegex(string pattern, RegexOptions regexOptions = RegexOptions.None) => Profiles.Any(p => Regex.IsMatch(p, pattern, regexOptions));
-        public bool HasAnyProfileOf(params string[] profiles) => Profiles.Any(p => profiles.Contains(p));
+        public bool HasAnyProfileOf(StringComparison stringComparison, params string[] profiles) => Profiles.Any(pp => profiles.Any(p => p.Equals(pp, stringComparison)));
     }
 
 

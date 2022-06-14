@@ -184,7 +184,7 @@ namespace Omnikeeper.Runners
 
             // calculate unprocessed changesets
             var transI = modelContextBuilder.BuildImmediate();
-            var processedChangesets = await clbProcessedChangesetsCache.TryGetValue(clConfig_ID, layerID, transI);
+            var processedChangesets = clbProcessedChangesetsCache.TryGetValue(clConfig_ID, layerID);
             transI.Dispose();
             var unprocessedChangesets = new Dictionary<string, IReadOnlyList<Changeset>?>(); // null value means all changesets
             var latestSeenChangesets = new Dictionary<string, Guid>();
@@ -260,9 +260,7 @@ namespace Omnikeeper.Runners
 
                     if (successful)
                     {
-                        using var transUpdateCache = modelContextBuilder.BuildDeferred();
-                        await clbProcessedChangesetsCache.UpdateCache(clConfig_ID, layerID, latestSeenChangesets, transUpdateCache);
-                        transUpdateCache.Commit();
+                        clbProcessedChangesetsCache.UpdateCache(clConfig_ID, layerID, latestSeenChangesets);
                     }
 
                     if (!successful)

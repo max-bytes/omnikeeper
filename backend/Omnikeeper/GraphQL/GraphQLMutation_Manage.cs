@@ -529,7 +529,7 @@ namespace Omnikeeper.GraphQL
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                   // delete cache entries that affect this clConfig
-                  await clbProcessedChangesetsCache.DeleteFromCache(clConfig.ID, userContext.Transaction);
+                  clbProcessedChangesetsCache.DeleteFromCache(clConfig.ID);
 
                   return newCLConfig.dc;
               });
@@ -557,7 +557,7 @@ namespace Omnikeeper.GraphQL
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                   // delete last cache entries that affect this clConfig
-                  await clbProcessedChangesetsCache.DeleteFromCache(id, userContext.Transaction);
+                  clbProcessedChangesetsCache.DeleteFromCache(id);
 
                   return deleted;
               });

@@ -80,8 +80,7 @@ namespace OKPluginCLBNaemonVariableResolution
                 foreach (var (a, b) in matchedHosts)
                 {
                     // compare custom variables
-                    if (!jsonComparer.Equals(a.Value.CustomVariables.RootElement, b.Value.CustomVariables.RootElement))
-                        issueAccumulator.TryAdd("host_custom_variables_different", a.Value.Name, $"Thruk host custom variables are different for site {peerKeyB} and site {peerKeyA}", a.Key, b.Key);
+                    CompareVariables(a, b, peerKeyA, peerKeyB, issueAccumulator, jsonComparer);
 
                     // compare CMDB-CI
                     if (a.Value.CMDBCI != b.Value.CMDBCI)
@@ -114,6 +113,52 @@ namespace OKPluginCLBNaemonVariableResolution
             return true;
         }
 
+        private void CompareVariables(KeyValuePair<Guid, ThrukHost> a, KeyValuePair<Guid, ThrukHost> b, string peerKeyA, string peerKeyB, IIssueAccumulator issueAccumulator, JsonElementComparer jsonComparer)
+        {
+            //if (!jsonComparer.Equals(a.Value.CustomVariables.RootElement, b.Value.CustomVariables.RootElement))
+            //    issueAccumulator.TryAdd("host_custom_variables_different", a.Value.Name, $"Thruk host custom variables are different for site {peerKeyB} and site {peerKeyA}", a.Key, b.Key);
+            try
+            {
+                var customVariablesA = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(a.Value.CustomVariables.RootElement)!.ToList();
+                var customVariablesB = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(b.Value.CustomVariables.RootElement)!.ToList();
+                var (variablesOnlyInA, variablesOnlyInB, differentVariables) = MatchVariables(customVariablesA, customVariablesB, jsonComparer);
+
+                foreach (var va in variablesOnlyInA)
+                    issueAccumulator.TryAdd("variable_only_in_one_site", $"{va.Key}@{a.Value.Name}", $"Custom variable {va.Key} on host {a.Value.Name} is only present in site {peerKeyA}, missing in site {peerKeyB}", a.Key, b.Key);
+                foreach (var vb in variablesOnlyInB)
+                    issueAccumulator.TryAdd("variable_only_in_one_site", $"{vb.Key}@{b.Value.Name}", $"Custom variable {vb.Key} on host {a.Value.Name} is only present in site {peerKeyB}, missing in site {peerKeyA}", a.Key, b.Key);
+                foreach (var d in differentVariables)
+                        issueAccumulator.TryAdd("variable_value_different", d.a.Key, $"Custom variable {d.a.Key} on host {a.Value.Name} is different between site {peerKeyA} and {peerKeyB} (\"{d.a.Value.GetRawText()}\" vs. \"{d.b.Value.GetRawText()}\")", a.Key, b.Key);
+            }
+            catch (Exception e)
+            {
+                issueAccumulator.TryAdd("error_parsing_custom_variables", a.Value.Name, $"Thruk host custom variables could not be parsed: {e.Message}", a.Key, b.Key);
+            }
+        }
+
+        public static (IList<KeyValuePair<string, JsonElement>> variablesOnlyInA, IList<KeyValuePair<string, JsonElement>> variablesOnlyInB, IEnumerable<(KeyValuePair<string, JsonElement> a, KeyValuePair<string, JsonElement> b)> differentVariables) 
+            MatchVariables(IList<KeyValuePair<string, JsonElement>> customVariablesA, IList<KeyValuePair<string, JsonElement>> customVariablesB, JsonElementComparer jsonElementComparer)
+        {
+            var matchedVariables = new List<(KeyValuePair<string, JsonElement> a, KeyValuePair<string, JsonElement> b)>();
+            for (int i = customVariablesA.Count - 1; i >= 0; i--)
+            {
+                var va = customVariablesA[i];
+                for (int j = customVariablesB.Count - 1; j >= 0; j--)
+                {
+                    var vb = customVariablesB[j];
+                    if (va.Key == vb.Key)
+                    {
+                        customVariablesA.RemoveAt(i);
+                        customVariablesB.RemoveAt(j);
+                        matchedVariables.Add((va, vb));
+                    }
+                }
+            }
+
+            var differentVariables = matchedVariables.Where(t => !jsonElementComparer.Equals(t.a.Value, t.b.Value));
+                return (customVariablesA, customVariablesB, differentVariables);
+        }
+
         public ISet<string> GetDependentLayerIDs(JsonDocument config, ILogger logger)
         {
             var cfg = ParseConfig(config);
@@ -137,62 +182,5 @@ namespace OKPluginCLBNaemonVariableResolution
 
         [JsonPropertyName("pairs")]
         public SitePair[] Pairs { get; set; } = Array.Empty<SitePair>();
-    }
-
-    [TraitEntity("monman_v2.thruk_host", TraitOriginType.Plugin)]
-    public class ThrukHost : TraitEntity
-    {
-        [TraitAttribute("name", "thruk.host.name")]
-        [TraitEntityID]
-        public string Name;
-
-        [TraitAttribute("peerKey", "thruk.host.peer_key")]
-        [TraitEntityID]
-        public string PeerKey;
-
-        [TraitAttribute("customVariables", "thruk.host.custom_variables")]
-        public JsonDocument CustomVariables;
-
-        [TraitRelation("services", "belongs_to_thruk_host", false)]
-        public Guid[] Services;
-
-        [TraitRelation("cmdbCI", "corresponds_to", true)]
-        public Guid? CMDBCI;
-
-        public ThrukHost()
-        {
-            Name = "";
-            PeerKey = "";
-            CustomVariables = null;
-            Services = Array.Empty<Guid>();
-            CMDBCI = null;
-        }
-    }
-
-    [TraitEntity("monman_v2.thruk_service", TraitOriginType.Plugin)]
-    public class ThrukService : TraitEntity
-    {
-        [TraitAttribute("hostName", "thruk.service.host_name")]
-        [TraitEntityID]
-        public string HostName;
-
-        [TraitAttribute("peerKey", "thruk.service.peer_key")]
-        [TraitEntityID]
-        public string PeerKey;
-
-        [TraitAttribute("description", "thruk.service.description")]
-        [TraitEntityID]
-        public string Description;
-
-        [TraitRelation("host", "belongs_to_thruk_host", true)]
-        public Guid? Host;
-
-        public ThrukService()
-        {
-            HostName = "";
-            PeerKey = "";
-            Description = "";
-            Host = null;
-        }
     }
 }
