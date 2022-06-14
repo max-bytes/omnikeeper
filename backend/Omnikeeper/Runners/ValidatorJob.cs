@@ -14,6 +14,7 @@ using Omnikeeper.Service;
 using Quartz;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
@@ -174,11 +175,16 @@ namespace Omnikeeper.Runners
                     unprocessedChangesets.Add(dependentLayerID, up);
                     latestSeenChangesets.Add(dependentLayerID, latestID);
                 } else
-                {
-                    unprocessedChangesets.Add(dependentLayerID, null);
+                { // we have not processed any changesets for this layer
                     var latest = await changesetModel.GetLatestChangesetForLayer(dependentLayerID, trans, timeThreshold);
                     if (latest != null)
+                    { // there is at least one changeset for this layer
+                        unprocessedChangesets.Add(dependentLayerID, null);
                         latestSeenChangesets.Add(dependentLayerID, latest.ID);
+                    } else
+                    { // there exists no changeset for this layer at all
+                        unprocessedChangesets.Add(dependentLayerID, ImmutableList<Changeset>.Empty);
+                    }
                 }
             }
             if (unprocessedChangesets.All(kv => kv.Value != null && kv.Value.IsEmpty()))
