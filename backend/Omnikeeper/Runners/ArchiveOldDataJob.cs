@@ -3,6 +3,7 @@ using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
@@ -19,6 +20,7 @@ namespace Omnikeeper.Runners
     {
         private readonly ILogger<ArchiveOldDataJob> logger;
         private readonly IExternalIDMapPersister externalIDMapPersister;
+        private readonly IArchiveOutdatedIssuesService archiveOutdatedIssuesService;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
         private readonly IChangesetModel changesetModel;
@@ -27,12 +29,13 @@ namespace Omnikeeper.Runners
         private readonly ILayerModel layerModel;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public ArchiveOldDataJob(ILogger<ArchiveOldDataJob> logger, IExternalIDMapPersister externalIDMapPersister,
+        public ArchiveOldDataJob(ILogger<ArchiveOldDataJob> logger, IExternalIDMapPersister externalIDMapPersister, IArchiveOutdatedIssuesService archiveOutdatedIssuesService,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             IChangesetModel changesetModel, IMetaConfigurationModel metaConfigurationModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder)
         {
             this.logger = logger;
             this.externalIDMapPersister = externalIDMapPersister;
+            this.archiveOutdatedIssuesService = archiveOutdatedIssuesService;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
             this.changesetModel = changesetModel;
@@ -50,6 +53,12 @@ namespace Omnikeeper.Runners
                 stopWatch.Start();
                 logger.LogInformation("Start");
 
+                // remove outdated issues
+                logger.LogDebug($"Archiving outdated issues");
+                var numArchivedissues = await archiveOutdatedIssuesService.ArchiveOutdatedIssues(modelContextBuilder, logger);
+                if (numArchivedissues > 0)
+                    logger.LogInformation($"Archived {numArchivedissues} issues because they are outdated");
+                logger.LogDebug($"Done archiving outdated issues");
 
                 var now = TimeThreshold.BuildLatest();
                 // delete outdated attributes and relations (empty changesets are deleted afterwards)

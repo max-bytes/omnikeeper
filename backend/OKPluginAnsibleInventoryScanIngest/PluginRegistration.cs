@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Plugins;
-using Omnikeeper.Controllers.Ingest;
+using Omnikeeper.Base.Service;
 
 namespace OKPluginAnsibleInventoryScanIngest
 {
@@ -9,6 +9,7 @@ namespace OKPluginAnsibleInventoryScanIngest
         public override void RegisterServices(IServiceCollection sc)
         {
             sc.AddTransient<AnsibleInventoryScanIngestController>();
+            sc.AddSingleton<IIssueContextSource, IssueContextSource>();
         }
     }
 }

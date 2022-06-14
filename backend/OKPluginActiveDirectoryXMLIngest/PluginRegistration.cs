@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Plugins;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Controllers.Ingest;
 using Omnikeeper.Ingest.ActiveDirectoryXML;
 
@@ -11,6 +12,7 @@ namespace OKPluginActiveDirectoryXMLIngest
         {
             sc.AddSingleton<ActiveDirectoryXMLIngestService>();
             sc.AddTransient<ActiveDirectoryXMLIngestController>();
+            sc.AddSingleton<IIssueContextSource, IssueContextSource>();
         }
     }
 }

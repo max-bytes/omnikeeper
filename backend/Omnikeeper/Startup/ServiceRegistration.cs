@@ -180,6 +180,7 @@ namespace Omnikeeper.Startup
 
             builder.RegisterType<DiffingCIService>().SingleInstance();
 
+            builder.RegisterType<ArchiveOutdatedIssuesService>().As<IArchiveOutdatedIssuesService>().SingleInstance();
         }
 
         public static void RegisterLogging(ContainerBuilder builder)
@@ -225,6 +226,8 @@ namespace Omnikeeper.Startup
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();
             builder.RegisterType<EffectiveGeneratorProvider>().As<IEffectiveGeneratorProvider>().SingleInstance();
             builder.RegisterType<IssuePersister>().As<IIssuePersister>().SingleInstance();
+            builder.RegisterType<CLBIssueContextSource>().As<IIssueContextSource>().SingleInstance();
+            builder.RegisterType<ValidatorIssueContextSource>().As<IIssueContextSource>().SingleInstance();
 
             if (enablePerRequestModelCaching)
             {

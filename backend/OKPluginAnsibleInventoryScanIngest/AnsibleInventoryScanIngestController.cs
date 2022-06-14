@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.Controllers.Ingest
+namespace OKPluginAnsibleInventoryScanIngest
 {
     [ApiController]
     [ApiVersion("1.0")]

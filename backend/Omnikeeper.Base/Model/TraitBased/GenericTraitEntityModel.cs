@@ -248,6 +248,11 @@ namespace Omnikeeper.Base.Model.TraitBased
             return changesetIDs;
         }
 
+        public async Task<bool> TryToDelete(Guid ciid, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        {
+            return await traitEntityModel.TryToDelete(ciid, layerSet, writeLayerID, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+        }
+
         protected IList<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> Entities2Fragments(IEnumerable<(T t, Guid ciid)> entities)
         {
             var fragments = new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>();

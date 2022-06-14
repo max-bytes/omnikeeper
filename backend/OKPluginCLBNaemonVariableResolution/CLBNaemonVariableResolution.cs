@@ -222,7 +222,7 @@ namespace OKPluginCLBNaemonVariableResolution
                         if (hosByNameLookup.TryGetValue(refID, out var foundHS))
                             foundHS.AddVariable(v.Value.ToResolvedVariable());
                         else
-                            issueAccumulator.TryAdd("variable", v.Value.ID.ToString(), $"Could not find referenced CI with refID \"{refID}\" or referenced CI does not meet criteria; for variable \"{v.Value.ID}\", skipping", v.Key);
+                            issueAccumulator.TryAdd("variable_cant_find_referenced_ci", v.Value.ID.ToString(), $"Could not find referenced CI with refID \"{refID}\" or referenced CI does not meet criteria; for variable \"{v.Value.ID}\", skipping", v.Key);
                         break;
                     case "GLOBAL":
                         foreach (var rv in filteredHOS)
@@ -232,7 +232,7 @@ namespace OKPluginCLBNaemonVariableResolution
                         // approach: get the profile, look up its name, then fetch the corresponding CMDB category, then its member CIs
                         if (!long.TryParse(refID, out var refIDProfile))
                         {
-                            issueAccumulator.TryAdd("variable", v.Value.ID.ToString(), $"Could not parse refID \"{refID}\" into number to look up profile", v.Key);
+                            issueAccumulator.TryAdd("variable_cant_parse_referenced_profile", v.Value.ID.ToString(), $"Could not parse refID \"{refID}\" into number to look up profile", v.Key);
                             break;
                         }
                         if (profiles.TryGetValue(refIDProfile, out var foundProfile))
@@ -249,12 +249,12 @@ namespace OKPluginCLBNaemonVariableResolution
                             }
                             else
                             {
-                                issueAccumulator.TryAdd("variable", v.Value.ID.ToString(), $"Could not find category with name \"{profileName}\", skipping variable", v.Key);
+                                issueAccumulator.TryAdd("variable_cant_find_referenced_profile_as_category", v.Value.ID.ToString(), $"Could not find category with name \"{profileName}\", skipping variable", v.Key);
                             }
                         }
                         else
                         {
-                            issueAccumulator.TryAdd("variable", v.Value.ID.ToString(), $"Could not find referenced profile with refID \"{refIDProfile}\" for variable \"{v.Value.ID}\", skipping variable", v.Key);
+                            issueAccumulator.TryAdd("variable_cant_find_referenced_profile", v.Value.ID.ToString(), $"Could not find referenced profile with refID \"{refIDProfile}\" for variable \"{v.Value.ID}\", skipping variable", v.Key);
                         }
                         break;
                     case "CUST":
@@ -269,11 +269,11 @@ namespace OKPluginCLBNaemonVariableResolution
                         }
                         else
                         {
-                            issueAccumulator.TryAdd("variable", v.Value.ID.ToString(), $"Could not find referenced customer with refID \"{refID}\" for variable \"{v.Value.ID}\", skipping variable", v.Key);
+                            issueAccumulator.TryAdd("variable_cant_find_referenced_customer", v.Value.ID.ToString(), $"Could not find referenced customer with refID \"{refID}\" for variable \"{v.Value.ID}\", skipping variable", v.Key);
                         }
                         break;
                     default:
-                        issueAccumulator.TryAdd("variable", v.Value.ID.ToString(), $"Could not process monman variable \"{v.Value.ID}\": invalid refType \"{v.Value.refType}\"", v.Key);
+                        issueAccumulator.TryAdd("variable_invalid_ref_type", v.Value.ID.ToString(), $"Could not process monman variable \"{v.Value.ID}\": invalid refType \"{v.Value.refType}\"", v.Key);
                         break;
                 }
             }

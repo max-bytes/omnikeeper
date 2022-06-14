@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Controllers.Ingest;
 using System.Collections.Generic;
 
@@ -17,6 +18,7 @@ namespace OKPluginGenericJSONIngest
             sc.AddSingleton<GenericJsonIngestService>();
             sc.AddSingleton<PassiveFilesController>();
             sc.AddSingleton<ManageContextController>();
+            sc.AddSingleton<IIssueContextSource, IssueContextSource>();
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => new List<RecursiveTrait>() {

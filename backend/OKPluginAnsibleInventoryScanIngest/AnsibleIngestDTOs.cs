@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Omnikeeper.Controllers.Ingest
+namespace OKPluginAnsibleInventoryScanIngest
 {
     public class AnsibleInventoryScanDTO
     {
