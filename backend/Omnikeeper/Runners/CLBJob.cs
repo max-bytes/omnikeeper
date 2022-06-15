@@ -191,7 +191,7 @@ namespace Omnikeeper.Runners
             var (unprocessedChangesets, latestSeenChangesets) = await calculateUnprocessedChangesetsService.CalculateUnprocessedChangesets(processedChangesets, dependentLayerIDs, timeThreshold, trans);
             if (unprocessedChangesets.All(kv => kv.Value != null && kv.Value.IsEmpty()))
             {
-                clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID}");
+                clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID} because no unprocessed changesets exist for dependent layers");
                 return; // <- all dependent layers have not changed since last run, we can skip
             }
             else

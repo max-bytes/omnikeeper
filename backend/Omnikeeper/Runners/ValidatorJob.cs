@@ -168,7 +168,7 @@ namespace Omnikeeper.Runners
             var (unprocessedChangesets, latestSeenChangesets) = await calculateUnprocessedChangesetsService.CalculateUnprocessedChangesets(processedChangesets, dependentLayerIDs, timeThreshold, trans);
             if (unprocessedChangesets.All(kv => kv.Value != null && kv.Value.IsEmpty()))
             {
-                clLogger.LogDebug($"Skipping run of validator {context_ID}");
+                clLogger.LogDebug($"Skipping run of validator {context_ID} because no unprocessed changesets exist for dependent layers");
                 return; // <- all dependent layers have not changed since last run, we can skip
             }
             else

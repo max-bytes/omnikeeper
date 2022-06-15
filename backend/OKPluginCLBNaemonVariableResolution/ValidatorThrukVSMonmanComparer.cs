@@ -38,12 +38,16 @@ namespace OKPluginCLBNaemonVariableResolution
             var thrukLayerset = new LayerSet(cfg.ThrukLayers);
             var monmanLayerset = new LayerSet(cfg.MonmanLayers);
 
+            logger.LogDebug($"Comparing thruk hosts in layerset [{thrukLayerset}] with monitoring targets in layerset [{monmanLayerset}]");
+
             using var trans = modelContextBuilder.BuildImmediate();
 
             var thrukHosts = await thrukHostModel.GetByCIID(AllCIIDsSelection.Instance, thrukLayerset, trans, timeThreshold);
             var targets = await targetModel.GetByCIID(AllCIIDsSelection.Instance, monmanLayerset, trans, timeThreshold);
 
             var jsonComparer = new JsonElementComparer();
+
+            logger.LogDebug($"Comparing {thrukHosts.Count} thruk hosts with {targets.Count} monitoring targets");
 
             foreach (var thrukHost in thrukHosts)
             {
