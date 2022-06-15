@@ -454,6 +454,26 @@ namespace OKPluginCLBNaemonVariableResolution
                 .Where(kv => kv.Value.Profiles.Count != 0)
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
+            // calculate "uses" per host/service
+            // reference:  naemon-templates-objects.php
+            foreach(var (ciid, hs) in evenMoreFilteredHOS)
+            {
+                if (hs.Profiles.Count == 1 && hs.HasProfile(StringComparison.InvariantCultureIgnoreCase, "dynamic-nrpe"))
+                {
+                    hs.UseDirective.Add("global-variables");
+                    hs.UseDirective.Add("tsa-generic-host");
+                } 
+                else if (hs.Profiles.Count > 1)
+                {
+                    hs.UseDirective.Add("global-variables");
+                    hs.UseDirective.Add("tsa-generic-host");
+                } 
+                else
+                {
+                    // NOTE: we can be sure the host/service has at least one profile, because we filtered out those without any profiles before
+                    hs.UseDirective.Add(hs.Profiles[0].ToLowerInvariant()); // HACK: we transform to lowercase for historical reasons
+                }
+            }
 
             // build capability map 
             // reference: getCapabilityMap()
@@ -577,6 +597,13 @@ namespace OKPluginCLBNaemonVariableResolution
             {
                 relationFragments.Add(new BulkRelationDataLayerScope.Fragment(naemonCIID, hosCIID, "monitors", false));
             }
+            // uses
+            foreach (var kv in evenMoreFilteredHOS)
+            {
+                var ciid = kv.Key;
+                var v = AttributeArrayValueText.BuildFromString(kv.Value.UseDirective);
+                attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.use_directive", v, ciid));
+            }
             // host/service tags, for debugging purposes
             foreach (var kv in evenMoreFilteredHOS)
             {
@@ -591,8 +618,6 @@ namespace OKPluginCLBNaemonVariableResolution
                 var v = AttributeArrayValueText.BuildFromString(kv.Value.OrderBy(t => t));
                 attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.capabilities", v, ciid));
             }
-
-            // TODO: add "use" output
 
             await attributeModel.BulkReplaceAttributes(
                 new BulkCIAttributeDataLayerScope(targetLayerID, attributeFragments),

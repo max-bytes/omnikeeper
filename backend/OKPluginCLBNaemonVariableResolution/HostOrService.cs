@@ -16,6 +16,7 @@ namespace OKPluginCLBNaemonVariableResolution
             Categories = categories;
             Variables = new SortedDictionary<string, List<Variable>>();
             Tags = new HashSet<string>();
+            UseDirective = new List<string>();
         }
 
         private R Get<R>(Func<TargetHost, R> hostF, Func<TargetService, R> serviceF)
@@ -51,9 +52,12 @@ namespace OKPluginCLBNaemonVariableResolution
         public Customer Customer { get; }
         public SortedDictionary<string, List<Variable>> Variables { get; }
 
-        public HashSet<string> Tags {get;}
+        public HashSet<string> Tags {get; }
+        public List<string> UseDirective { get; set; }
 
         private static VariableComparer VariableComparer = new VariableComparer();
+
+        // helper methods
         public void AddVariable(Variable v)
         {
             if (Variables.TryGetValue(v.Name, out var l))
@@ -77,7 +81,6 @@ namespace OKPluginCLBNaemonVariableResolution
                 return list.FirstOrDefault()?.Value;
             return null;
         }
-
         public bool HasProfile(StringComparison stringComparison, string profile) => Profiles.Any(p => p.Equals(profile, stringComparison));
         public bool HasProfileMatchingRegex(string pattern, RegexOptions regexOptions = RegexOptions.None) => Profiles.Any(p => Regex.IsMatch(p, pattern, regexOptions));
         public bool HasAnyProfileOf(StringComparison stringComparison, params string[] profiles) => Profiles.Any(pp => profiles.Any(p => p.Equals(pp, stringComparison)));

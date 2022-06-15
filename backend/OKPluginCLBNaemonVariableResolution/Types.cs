@@ -116,10 +116,14 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitAttribute("resolvedVariables", "monman_v2.resolved_variables")]
         public JsonDocument ResolvedVariables;
 
+        [TraitAttribute("useDirective", "monman_v2.use_directive")]
+        public string[] UseDirective;
+
         public Target()
         {
             ID = "";
             ResolvedVariables = null;
+            UseDirective = Array.Empty<string>();
         }
     }
 
