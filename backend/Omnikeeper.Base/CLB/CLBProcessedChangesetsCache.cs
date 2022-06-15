@@ -1,18 +1,13 @@
-﻿using Npgsql;
-using NpgsqlTypes;
-using Omnikeeper.Base.Utils.ModelContext;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.CLB
 {
     public class CLBProcessedChangesetsCache
     {
-        private static IDictionary<string, IDictionary<string, Guid>> Cache = new Dictionary<string, IDictionary<string, Guid>>();
+        private static IDictionary<string, IReadOnlyDictionary<string, Guid>> Cache = new Dictionary<string, IReadOnlyDictionary<string, Guid>>();
 
-        public void UpdateCache(string clConfigID, string layerID, IDictionary<string, Guid> latestChangesets)
+        public void UpdateCache(string clConfigID, string layerID, IReadOnlyDictionary<string, Guid> latestChangesets)
         {
             var key = $"{clConfigID}{layerID}";
             Cache[key] = latestChangesets;
@@ -30,7 +25,7 @@ namespace Omnikeeper.Base.CLB
                 Cache.Remove(key);
         }
 
-        public IDictionary<string, Guid>? TryGetValue(string clConfigID, string layerID)
+        public IReadOnlyDictionary<string, Guid>? TryGetValue(string clConfigID, string layerID)
         {
             var key = $"{clConfigID}{layerID}";
             if (Cache.TryGetValue(key, out var d))

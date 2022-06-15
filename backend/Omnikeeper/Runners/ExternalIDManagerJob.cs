@@ -8,7 +8,6 @@ using Quartz;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -78,8 +77,7 @@ namespace Omnikeeper.Runners
                         {
                             logger.LogInformation($"Running external ID update for OILP {adapterName}");
 
-                            Stopwatch stopWatch = new Stopwatch();
-                            stopWatch.Start();
+                            var t = new StopTimer();
                             try
                             {
                                 using var transD = modelContextBuilder.BuildDeferred();
@@ -101,10 +99,7 @@ namespace Omnikeeper.Runners
                             {
                                 logger.LogError(e, $"An error occured when updating external IDs for OILP {adapterName}");
                             }
-                            stopWatch.Stop();
-                            TimeSpan ts = stopWatch.Elapsed;
-                            string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                            logger.LogInformation($"Done in {elapsedTime}");
+                            t.Stop((ts, elapsedTime) => logger.LogInformation($"Done in {elapsedTime}"));
                             lastRuns[adapterName] = DateTimeOffset.Now;
                         }
                         else

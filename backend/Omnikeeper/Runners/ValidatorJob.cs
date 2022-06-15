@@ -14,8 +14,6 @@ using Omnikeeper.Service;
 using Quartz;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -103,12 +101,13 @@ namespace Omnikeeper.Runners
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ValidatorProcessedChangesetsCache processedChangesetsCache;
         private readonly IIssuePersister issuePersister;
+        private readonly ICalculateUnprocessedChangesetsService calculateUnprocessedChangesetsService;
         private readonly ILoggerFactory loggerFactory;
         private readonly IDictionary<string, IValidator> existingValidators;
 
         public ValidatorSingleJob(IEnumerable<IValidator> existingValidators, ILifetimeScope lifetimeScope, IChangesetModel changesetModel, ILogger<ValidatorSingleJob> genericLogger,
             ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, ILoggerFactory loggerFactory, ValidatorProcessedChangesetsCache processedChangesetsCache,
-             IIssuePersister issuePersister)
+             IIssuePersister issuePersister, ICalculateUnprocessedChangesetsService calculateUnprocessedChangesetsService)
         {
             this.existingValidators = existingValidators.ToDictionary(l => l.Name);
             this.lifetimeScope = lifetimeScope;
@@ -119,6 +118,7 @@ namespace Omnikeeper.Runners
             this.loggerFactory = loggerFactory;
             this.processedChangesetsCache = processedChangesetsCache;
             this.issuePersister = issuePersister;
+            this.calculateUnprocessedChangesetsService = calculateUnprocessedChangesetsService;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -158,47 +158,30 @@ namespace Omnikeeper.Runners
             // NOTE: to avoid race conditions, we use a single timeThreshold and base everything off of this
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            // calculate unprocessed changesets
-            var processedChangesets = processedChangesetsCache.TryGetValue(context_ID);
-            var unprocessedChangesets = new Dictionary<string, IReadOnlyList<Changeset>?>(); // null value means all changesets
-            var latestSeenChangesets = new Dictionary<string, Guid>();
             var dependentLayerIDs = validator.GetDependentLayerIDs(config, clLogger);
             if (dependentLayerIDs.IsEmpty())
                 throw new Exception("Validator must have a non-empty set of dependent layer IDs");
+
+            // calculate unprocessed changesets
+            var processedChangesets = processedChangesetsCache.TryGetValue(context_ID);
             using var trans = modelContextBuilder.BuildImmediate();
-            foreach (var dependentLayerID in dependentLayerIDs)
-            {
-                if (processedChangesets != null && processedChangesets.TryGetValue(dependentLayerID, out var lastProcessedChangesetID))
-                {
-                    var up = await changesetModel.GetChangesetsAfter(lastProcessedChangesetID, new string[] { dependentLayerID }, trans, timeThreshold);
-                    var latestID = up.FirstOrDefault()?.ID ?? lastProcessedChangesetID;
-                    unprocessedChangesets.Add(dependentLayerID, up);
-                    latestSeenChangesets.Add(dependentLayerID, latestID);
-                } else
-                { // we have not processed any changesets for this layer
-                    var latest = await changesetModel.GetLatestChangesetForLayer(dependentLayerID, trans, timeThreshold);
-                    if (latest != null)
-                    { // there is at least one changeset for this layer
-                        unprocessedChangesets.Add(dependentLayerID, null);
-                        latestSeenChangesets.Add(dependentLayerID, latest.ID);
-                    } else
-                    { // there exists no changeset for this layer at all
-                        unprocessedChangesets.Add(dependentLayerID, ImmutableList<Changeset>.Empty);
-                    }
-                }
-            }
+            var (unprocessedChangesets, latestSeenChangesets) = await calculateUnprocessedChangesetsService.CalculateUnprocessedChangesets(processedChangesets, dependentLayerIDs, timeThreshold, trans);
             if (unprocessedChangesets.All(kv => kv.Value != null && kv.Value.IsEmpty()))
             {
                 clLogger.LogDebug($"Skipping run of validator {context_ID}");
                 return; // <- all dependent layers have not changed since last run, we can skip
-            } else
+            }
+            else
             {
-                var layersWhereAllChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value == null).ToList();
-                if (!layersWhereAllChangesetsAreUnprocessed.IsEmpty())
-                    clLogger.LogDebug($"Cannot skip run of validator {context_ID} because of unprocessed changesets in layers: {string.Join(",", layersWhereAllChangesetsAreUnprocessed.Select(kv => kv.Key))}");
-                var layersWhereSingleChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value != null && !kv.Value.IsEmpty()).ToList();
-                if (!layersWhereSingleChangesetsAreUnprocessed.IsEmpty())
-                    clLogger.LogDebug($"Cannot skip run of validator {context_ID} because of unprocessed changesets: {string.Join(",", layersWhereSingleChangesetsAreUnprocessed.SelectMany(kv => kv.Value!.Select(c => c.ID)))}");
+                if (clLogger.IsEnabled(LogLevel.Debug))
+                {
+                    var layersWhereAllChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value == null).ToList();
+                    if (!layersWhereAllChangesetsAreUnprocessed.IsEmpty())
+                        clLogger.LogDebug($"Cannot skip run of validator {context_ID} because of unprocessed changesets in layers: {string.Join(",", layersWhereAllChangesetsAreUnprocessed.Select(kv => kv.Key))}");
+                    var layersWhereSingleChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value != null && !kv.Value.IsEmpty()).ToList();
+                    if (!layersWhereSingleChangesetsAreUnprocessed.IsEmpty())
+                        clLogger.LogDebug($"Cannot skip run of validator {context_ID} because of unprocessed changesets: {string.Join(",", layersWhereSingleChangesetsAreUnprocessed.SelectMany(kv => kv.Value!.Select(c => c.ID)))}");
+                }
             }
 
             // create a lifetime scope per validator invocation (similar to a HTTP request lifetime)
@@ -221,13 +204,9 @@ namespace Omnikeeper.Runners
                     var issueAccumulator = new IssueAccumulator("Validator", context_ID);
 
                     clLogger.LogInformation($"Running Validator {context_ID}");
-                    var stopWatch = new Stopwatch();
-                    stopWatch.Start();
+                    var t = new StopTimer();
                     var successful = await validator.Run(unprocessedChangesets, config, modelContextBuilder, timeThreshold, clLogger, issueAccumulator);
-                    stopWatch.Stop();
-                    TimeSpan ts = stopWatch.Elapsed;
-                    string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                    clLogger.LogInformation($"Done in {elapsedTime}; result: {(successful ? "success" : "failure")}");
+                    t.Stop((ts, elapsedTime) => clLogger.LogInformation($"Done in {elapsedTime}; result: {(successful ? "success" : "failure")}"));
 
                     if (successful)
                     {

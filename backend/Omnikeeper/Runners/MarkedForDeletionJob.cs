@@ -9,7 +9,6 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using Quartz;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Runners
@@ -58,8 +57,7 @@ namespace Omnikeeper.Runners
 
                         var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                        var stopWatch = new Stopwatch();
-                        stopWatch.Start();
+                        var t = new StopTimer();
                         logger.LogTrace("Start");
 
                         // try to delete marked layers
@@ -87,10 +85,7 @@ namespace Omnikeeper.Runners
                             }
                         }
 
-                        stopWatch.Stop();
-                        TimeSpan ts = stopWatch.Elapsed;
-                        string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                        logger.LogTrace($"Finished in {elapsedTime}");
+                        t.Stop((ts, elapsedTime) => logger.LogTrace($"Finished in {elapsedTime}"));
                     }
                     finally
                     {

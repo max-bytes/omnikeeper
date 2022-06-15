@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Quartz;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Runners
@@ -26,8 +26,7 @@ namespace Omnikeeper.Runners
         {
             try
             {
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();
+                var t = new StopTimer();
                 logger.LogTrace("Start");
 
                 var deleteThreshold = DateTimeOffset.Now.Subtract(TimeSpan.FromDays(30));
@@ -43,10 +42,7 @@ namespace Omnikeeper.Runners
                     trans.Commit();
                 }
 
-                stopWatch.Stop();
-                TimeSpan ts = stopWatch.Elapsed;
-                string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                logger.LogTrace($"Finished in {elapsedTime}");
+                t.Stop((ts, elapsedTime) => logger.LogTrace($"Finished in {elapsedTime}"));
             }
             catch (Exception e)
             {

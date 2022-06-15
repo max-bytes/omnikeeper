@@ -3,7 +3,6 @@ using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -31,16 +30,8 @@ namespace OKPluginCLBDummy
 
         public override ISet<string> GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger)
         {
-            try
-            {
-                var parsedConfig = ParseConfig(config);
-                return parsedConfig.SourceLayerset.ToHashSet();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Cannot parse CLB config");
-                return null; // we hit an error parsing the config, cannot extract dependent layers
-            }
+            var parsedConfig = ParseConfig(config);
+            return parsedConfig.SourceLayerset.ToHashSet();
         }
 
         public override async Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, 

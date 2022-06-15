@@ -9,7 +9,6 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using Quartz;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -49,9 +48,8 @@ namespace Omnikeeper.Runners
         {
             try
             {
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();
                 logger.LogInformation("Start");
+                var t = new StopTimer();
 
                 // remove outdated issues
                 logger.LogDebug($"Archiving outdated issues");
@@ -117,11 +115,7 @@ namespace Omnikeeper.Runners
                     logger.LogInformation($"Archived {numArchivedCIs} CIs because they are unused");
                 logger.LogDebug($"Done archiving unused CIs");
 
-
-                stopWatch.Stop();
-                TimeSpan ts = stopWatch.Elapsed;
-                string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                logger.LogInformation($"Finished in {elapsedTime}");
+                t.Stop((ts, elapsedTime) => logger.LogInformation($"Finished in {elapsedTime}"));
             }
             catch (Exception e)
             {

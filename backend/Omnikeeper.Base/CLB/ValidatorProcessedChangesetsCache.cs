@@ -5,9 +5,9 @@ namespace Omnikeeper.Base.CLB
 {
     public class ValidatorProcessedChangesetsCache
     {
-        private static IDictionary<string, IDictionary<string, Guid>> Cache = new Dictionary<string, IDictionary<string, Guid>>();
+        private static IDictionary<string, IReadOnlyDictionary<string, Guid>> Cache = new Dictionary<string, IReadOnlyDictionary<string, Guid>>();
 
-        public void UpdateCache(string contextID, IDictionary<string, Guid> latestChangesets)
+        public void UpdateCache(string contextID, IReadOnlyDictionary<string, Guid> latestChangesets)
         {
             Cache[contextID] = latestChangesets;
         }
@@ -17,7 +17,7 @@ namespace Omnikeeper.Base.CLB
             Cache.Remove(contextID);
         }
 
-        public IDictionary<string, Guid>? TryGetValue(string contextID)
+        public IReadOnlyDictionary<string, Guid>? TryGetValue(string contextID)
         {
             if (Cache.TryGetValue(contextID, out var d))
                 return d;

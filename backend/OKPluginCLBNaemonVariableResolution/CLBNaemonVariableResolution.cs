@@ -71,21 +71,13 @@ namespace OKPluginCLBNaemonVariableResolution
             return tmpCfg;
         }
 
-        public override ISet<string>? GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger)
+        public override ISet<string> GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger)
         {
-            try
-            {
-                var cfg = ParseConfig(config);
-                return cfg.CMDBInputLayerSet
-                    .Union(cfg.MonmanV1InputLayerSet)
-                    .Union(cfg.SelfserviceVariablesInputLayerSet)
-                    .ToHashSet();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Cannot get dependent layers");
-                return null;
-            }
+            var cfg = ParseConfig(config);
+            return cfg.CMDBInputLayerSet
+                .Union(cfg.MonmanV1InputLayerSet)
+                .Union(cfg.SelfserviceVariablesInputLayerSet)
+                .ToHashSet();
         }
 
         public override async Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, 
@@ -599,6 +591,8 @@ namespace OKPluginCLBNaemonVariableResolution
                 var v = AttributeArrayValueText.BuildFromString(kv.Value.OrderBy(t => t));
                 attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.capabilities", v, ciid));
             }
+
+            // TODO: add "use" output
 
             await attributeModel.BulkReplaceAttributes(
                 new BulkCIAttributeDataLayerScope(targetLayerID, attributeFragments),

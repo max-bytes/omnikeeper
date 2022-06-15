@@ -181,6 +181,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<DiffingCIService>().SingleInstance();
 
             builder.RegisterType<ArchiveOutdatedIssuesService>().As<IArchiveOutdatedIssuesService>().SingleInstance();
+            builder.RegisterType<CalculateUnprocessedChangesetsService>().As<ICalculateUnprocessedChangesetsService>().SingleInstance();
         }
 
         public static void RegisterLogging(ContainerBuilder builder)

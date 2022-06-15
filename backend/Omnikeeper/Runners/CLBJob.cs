@@ -14,7 +14,6 @@ using Omnikeeper.Service;
 using Quartz;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -119,12 +118,13 @@ namespace Omnikeeper.Runners
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly CLBProcessedChangesetsCache clbProcessedChangesetsCache;
         private readonly IIssuePersister issuePersister;
+        private readonly ICalculateUnprocessedChangesetsService calculateUnprocessedChangesetsService;
         private readonly ILoggerFactory loggerFactory;
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
 
         public CLBSingleJob(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, ILifetimeScope lifetimeScope, IChangesetModel changesetModel, ILogger<CLBSingleJob> genericLogger,
             ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, ILoggerFactory loggerFactory, CLBProcessedChangesetsCache clbProcessedChangesetsCache,
-             IIssuePersister issuePersister)
+             IIssuePersister issuePersister, ICalculateUnprocessedChangesetsService calculateUnprocessedChangesetsService)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.lifetimeScope = lifetimeScope;
@@ -135,6 +135,7 @@ namespace Omnikeeper.Runners
             this.loggerFactory = loggerFactory;
             this.clbProcessedChangesetsCache = clbProcessedChangesetsCache;
             this.issuePersister = issuePersister;
+            this.calculateUnprocessedChangesetsService = calculateUnprocessedChangesetsService;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -182,51 +183,28 @@ namespace Omnikeeper.Runners
             // NOTE: to avoid race conditions, we use a single timeThreshold and base everything off of this
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            // calculate unprocessed changesets
-            var transI = modelContextBuilder.BuildImmediate();
-            var processedChangesets = clbProcessedChangesetsCache.TryGetValue(clConfig_ID, layerID);
-            transI.Dispose();
-            var unprocessedChangesets = new Dictionary<string, IReadOnlyList<Changeset>?>(); // null value means all changesets
-            var latestSeenChangesets = new Dictionary<string, Guid>();
             var dependentLayerIDs = clb.GetDependentLayerIDs(layerID, clBrainConfig, clLogger);
-            if (dependentLayerIDs != null)
+
+            // calculate unprocessed changesets
+            var processedChangesets = clbProcessedChangesetsCache.TryGetValue(clConfig_ID, layerID);
+            using var trans = modelContextBuilder.BuildImmediate();
+            var (unprocessedChangesets, latestSeenChangesets) = await calculateUnprocessedChangesetsService.CalculateUnprocessedChangesets(processedChangesets, dependentLayerIDs, timeThreshold, trans);
+            if (unprocessedChangesets.All(kv => kv.Value != null && kv.Value.IsEmpty()))
             {
-                using var trans = modelContextBuilder.BuildImmediate();
-                foreach (var dependentLayerID in dependentLayerIDs)
-                {
-                    if (processedChangesets != null && processedChangesets.TryGetValue(dependentLayerID, out var lastProcessedChangesetID))
-                    {
-                        var up = await changesetModel.GetChangesetsAfter(lastProcessedChangesetID, new string[] { dependentLayerID }, trans, timeThreshold);
-                        var latestID = up.FirstOrDefault()?.ID ?? lastProcessedChangesetID;
-                        unprocessedChangesets.Add(dependentLayerID, up);
-                        latestSeenChangesets.Add(dependentLayerID, latestID);
-                    } else
-                    {
-                        unprocessedChangesets.Add(dependentLayerID, null);
-                        var latest = await changesetModel.GetLatestChangesetForLayer(dependentLayerID, trans, timeThreshold);
-                        if (latest != null)
-                            latestSeenChangesets.Add(dependentLayerID, latest.ID);
-                    }
-                }
+                clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID}");
+                return; // <- all dependent layers have not changed since last run, we can skip
             }
-            if (!unprocessedChangesets.IsEmpty())
+            else
             {
-                if (unprocessedChangesets.All(kv => kv.Value != null && kv.Value.IsEmpty()))
-                {
-                    clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID}");
-                    return; // <- all dependent layer have not changed since last run, we can skip
-                } else
+                if (clLogger.IsEnabled(LogLevel.Debug))
                 {
                     var layersWhereAllChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value == null).ToList();
                     if (!layersWhereAllChangesetsAreUnprocessed.IsEmpty())
                         clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets in layers: {string.Join(",", layersWhereAllChangesetsAreUnprocessed.Select(kv => kv.Key))}");
                     var layersWhereSingleChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value != null && !kv.Value.IsEmpty()).ToList();
                     if (!layersWhereSingleChangesetsAreUnprocessed.IsEmpty())
-                        clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets: {string.Join(",", layersWhereAllChangesetsAreUnprocessed.SelectMany(kv => kv.Value.Select(c => c.ID)))}");
+                        clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets: {string.Join(",", layersWhereSingleChangesetsAreUnprocessed.SelectMany(kv => kv.Value.Select(c => c.ID)))}");
                 }
-            } else
-            { // TODO: handle case when layer contains no changesets at all separately -> skip
-                clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because CLB does not specify dependent layers");
             }
 
             // create a lifetime scope per clb invocation (similar to a HTTP request lifetime)
@@ -250,13 +228,9 @@ namespace Omnikeeper.Runners
                     var issueAccumulator = new IssueAccumulator("ComputeLayerBrain", $"{clConfig_ID}@{layerID}");
 
                     clLogger.LogInformation($"Running CLB {clb.Name} on layer {layerID}");
-                    var stopWatch = new Stopwatch();
-                    stopWatch.Start();
+                    var t = new StopTimer();
                     var successful = await clb.Run(layerID, unprocessedChangesets, clBrainConfig, changesetProxy, modelContextBuilder, clLogger, issueAccumulator);
-                    stopWatch.Stop();
-                    TimeSpan ts = stopWatch.Elapsed;
-                    string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                    clLogger.LogInformation($"Done in {elapsedTime}; result: {(successful ? "success" : "failure")}");
+                    t.Stop((ts, elapsedTime) => clLogger.LogInformation($"Done in {elapsedTime}; result: {(successful ? "success" : "failure")}"));
 
                     if (successful)
                     {
