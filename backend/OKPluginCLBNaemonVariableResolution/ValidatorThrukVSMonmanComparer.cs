@@ -52,6 +52,7 @@ namespace OKPluginCLBNaemonVariableResolution
             foreach (var thrukHost in thrukHosts)
             {
                 var cmdbCI = thrukHost.Value.CMDBCI;
+                logger.LogTrace($"Looking at thruk host {thrukHost.Value.Name}");
                 if (!cmdbCI.HasValue)
                 {
                     issueAccumulator.TryAdd("cmdb_ci_not_set", thrukHost.Value.Name, "Thruk host is not associated with a CMDB CI", thrukHost.Key);
@@ -79,9 +80,9 @@ namespace OKPluginCLBNaemonVariableResolution
                         foreach (var va in variablesOnlyInThruk)
                             issueAccumulator.TryAdd("variable_only_in_thruk", $"{va.Key}@{thrukHost.Value.Name}", $"Variable {va.Key} is only present on thruk host {thrukHost.Value.Name}, missing in monman", thrukHost.Key, cmdbCI.Value);
                         foreach (var vb in variablesOnlyInMonman)
-                            issueAccumulator.TryAdd("variable_only_in_monman", $"{vb.Key}@{target.ID}", $"Variable {vb.Key} is only present on monman target {target.ID}, missing in thruk", thrukHost.Key, cmdbCI.Value);
-                        foreach (var d in differentVariables)
-                            issueAccumulator.TryAdd("variable_value_different", d.a.Key, $"Variable {d.a.Key} on thruk host {thrukHost.Value.Name} is different from variable on monman target {target.ID} (\"{d.a.Value.GetRawText()}\" vs. \"{d.b.Value.GetRawText()}\")", thrukHost.Key, cmdbCI.Value);
+                            issueAccumulator.TryAdd("variable_only_in_monman", $"{vb.Key}@{thrukHost.Value.Name}", $"Variable {vb.Key} is only present on monman target {target.ID}, missing in thruk", thrukHost.Key, cmdbCI.Value);
+                        foreach (var (a, b) in differentVariables)
+                            issueAccumulator.TryAdd("variable_value_different", $"{a.Key}@{thrukHost.Value.Name}", $"Variable {a.Key} on thruk host {thrukHost.Value.Name} is different from variable on monman target {target.ID} ({a.Value.GetRawText()} vs. {b.Value.GetRawText()})", thrukHost.Key, cmdbCI.Value);
                     }
                     catch (Exception e)
                     {

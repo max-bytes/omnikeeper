@@ -406,7 +406,7 @@ namespace OKPluginCLBNaemonVariableResolution
                 var osSupportGroupName = "UNKNOWN";
                 if (hs.OSSupportGroup.HasValue && groups.TryGetValue(hs.OSSupportGroup.Value, out var osSupportGroup))
                     osSupportGroupName = osSupportGroup.Name;
-                var appSupportGroupName = "UNKNOWN";
+                var appSupportGroupName = "00EMPTY"; // TODO: bad default, but we first have to fix service app support groups
                 if (hs.AppSupportGroup.HasValue && groups.TryGetValue(hs.AppSupportGroup.Value, out var appSupportGroup))
                     appSupportGroupName = appSupportGroup.Name;
 
@@ -575,14 +575,16 @@ namespace OKPluginCLBNaemonVariableResolution
 
                     var inner = new JsonObject();
                     var first = ordered.First();
-                    inner["value"] = first.Value;
+                    // NOTE: naemon/thruk seem to trim variable values anyway, so we do that here too, to produce better comparable results
+                    inner["value"] = first.Value.Trim();
                     inner["refType"] = first.RefType;
 
                     var chain = new JsonArray();
                     foreach (var vv in ordered.Skip(1))
                         chain.Add(new JsonObject()
                         {
-                            ["value"] = vv.Value,
+                            // NOTE: naemon/thruk seem to trim variable values anyway, so we do that here too, to produce better comparable results
+                            ["value"] = vv.Value.Trim(),
                             ["refType"] = vv.RefType
                         });
                     inner["chain"] = chain;

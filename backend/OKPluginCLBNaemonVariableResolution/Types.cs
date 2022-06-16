@@ -119,11 +119,15 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitAttribute("useDirective", "monman_v2.use_directive")]
         public string[] UseDirective;
 
+        [TraitRelation("monitoredByThrukHosts", "is_monitored_by_thruk_host", true, new string[] { "monman_v2.thruk_host" })]
+        public Guid[] MonitoredByThrukHosts;
+
         public Target()
         {
             ID = "";
             ResolvedVariables = null;
             UseDirective = Array.Empty<string>();
+            MonitoredByThrukHosts = Array.Empty<Guid>();
         }
     }
 
@@ -438,10 +442,10 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitAttribute("customVariables", "thruk.host.custom_variables")]
         public JsonDocument CustomVariables;
 
-        [TraitRelation("services", "belongs_to_thruk_host", false)]
+        [TraitRelation("services", "belongs_to_thruk_host", false, new string[] { "monman_v2.thruk_service" })]
         public Guid[] Services;
 
-        [TraitRelation("cmdbCI", "is_monitored_by_thruk_host", false)]
+        [TraitRelation("cmdbCI", "is_monitored_by_thruk_host", false, new string[] { "monman_v2.varres.target" })]
         public Guid? CMDBCI;
 
         public ThrukHost()
@@ -469,7 +473,7 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitEntityID]
         public string Description;
 
-        [TraitRelation("host", "belongs_to_thruk_host", true)]
+        [TraitRelation("host", "belongs_to_thruk_host", true, new string[] { "monman_v2.thruk_host" })]
         public Guid? Host;
 
         public ThrukService()
