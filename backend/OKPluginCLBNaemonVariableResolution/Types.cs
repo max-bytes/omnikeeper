@@ -441,7 +441,7 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitRelation("services", "belongs_to_thruk_host", false)]
         public Guid[] Services;
 
-        [TraitRelation("cmdbCI", "corresponds_to", true)]
+        [TraitRelation("cmdbCI", "is_monitored_by_thruk_host", false)]
         public Guid? CMDBCI;
 
         public ThrukHost()
