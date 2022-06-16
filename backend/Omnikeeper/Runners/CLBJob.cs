@@ -243,7 +243,7 @@ namespace Omnikeeper.Runners
                     }
 
                     using var transUpdateIssues = modelContextBuilder.BuildDeferred();
-                    clLogger.LogDebug($"Run produced {issueAccumulator.Issues.Count} issues");
+                    clLogger.LogInformation($"Run produced {issueAccumulator.Issues.Count} issues in total");
                     await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy);
                     transUpdateIssues.Commit();
                 }
