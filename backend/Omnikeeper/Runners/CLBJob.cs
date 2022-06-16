@@ -203,7 +203,7 @@ namespace Omnikeeper.Runners
                         clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets in layers: {string.Join(",", layersWhereAllChangesetsAreUnprocessed.Select(kv => kv.Key))}");
                     var layersWhereSingleChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value != null && !kv.Value.IsEmpty()).ToList();
                     if (!layersWhereSingleChangesetsAreUnprocessed.IsEmpty())
-                        clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets: {string.Join(",", layersWhereSingleChangesetsAreUnprocessed.SelectMany(kv => kv.Value.Select(c => c.ID)))}");
+                        clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets: {string.Join(",", layersWhereSingleChangesetsAreUnprocessed.SelectMany(kv => kv.Value!.Select(c => c.ID)))}");
                 }
             }
 
@@ -243,6 +243,7 @@ namespace Omnikeeper.Runners
                     }
 
                     using var transUpdateIssues = modelContextBuilder.BuildDeferred();
+                    clLogger.LogDebug($"Run produced {issueAccumulator.Issues.Count} issues");
                     await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy);
                     transUpdateIssues.Commit();
                 }

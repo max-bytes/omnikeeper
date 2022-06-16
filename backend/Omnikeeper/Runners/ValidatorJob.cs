@@ -220,6 +220,7 @@ namespace Omnikeeper.Runners
 
                     using var transUpdateIssues = modelContextBuilder.BuildDeferred();
                     var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
+                    clLogger.LogDebug($"Run produced {issueAccumulator.Issues.Count} issues");
                     await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy);
                     transUpdateIssues.Commit();
                 }
