@@ -106,13 +106,15 @@ namespace Omnikeeper.Base.Entity
         public readonly string trName;
         public readonly string predicateID;
         public readonly bool directionForward;
+        public readonly string[]? traitHints;
 
-        public TraitRelationAttribute(string trName, string predicateID, bool directionForward)
+        public TraitRelationAttribute(string trName, string predicateID, bool directionForward, string[]? traitHints = null)
         {
             this.trName = trName;
             this.predicateID = predicateID;
             this.predicateID = predicateID;
             this.directionForward = directionForward;
+            this.traitHints = traitHints;
         }
     }
 
