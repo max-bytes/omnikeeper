@@ -49,7 +49,7 @@ namespace Omnikeeper.Model
                 writerHistoric.Write(valueControl);
                 writerHistoric.Write(layerID);
                 writerHistoric.Write(false);
-                writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
+                writerHistoric.Write(changeset.Timestamp.ToUniversalTime(), NpgsqlDbType.TimestampTz);
                 writerHistoric.Write(changeset.ID);
                 writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
             }
@@ -69,7 +69,7 @@ namespace Omnikeeper.Model
                 writerHistoric.Write(valueControl);
                 writerHistoric.Write(layerID);
                 writerHistoric.Write(true);
-                writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
+                writerHistoric.Write(changeset.Timestamp.ToUniversalTime(), NpgsqlDbType.TimestampTz);
                 writerHistoric.Write(changeset.ID);
                 writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
             }

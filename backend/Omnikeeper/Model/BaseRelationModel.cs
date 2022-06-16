@@ -107,7 +107,7 @@ namespace Omnikeeper.Model
                 command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
                 foreach (var p in parameters)
                     command.Parameters.Add(p);
-                command.Parameters.AddWithValue("time_threshold", atTime.Time);
+                command.Parameters.AddWithValue("time_threshold", atTime.Time.ToUniversalTime());
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
                 command.Parameters.AddWithValue("partition_index", partitionIndex);
                 command.Prepare();
@@ -183,7 +183,7 @@ namespace Omnikeeper.Model
                     command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
                     foreach (var p in parameters)
                         command.Parameters.Add(p);
-                    command.Parameters.AddWithValue("time_threshold", atTime.Time);
+                    command.Parameters.AddWithValue("time_threshold", atTime.Time.ToUniversalTime());
                     command.Parameters.AddWithValue("layer_ids", layerIDs);
                     command.Parameters.AddWithValue("partition_index", partitionIndex);
                     command.Prepare();
@@ -255,7 +255,7 @@ namespace Omnikeeper.Model
                     writerHistoric.Write(changeset.ID);
                     writerHistoric.Write(layerID);
                     writerHistoric.Write(false);
-                    writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
+                    writerHistoric.Write(changeset.Timestamp.ToUniversalTime(), NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(mask);
                 }
@@ -271,7 +271,7 @@ namespace Omnikeeper.Model
                     writerHistoric.Write(changeset.ID);
                     writerHistoric.Write(layerID);
                     writerHistoric.Write(true);
-                    writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
+                    writerHistoric.Write(changeset.Timestamp.ToUniversalTime(), NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(mask);
                 }

@@ -38,7 +38,7 @@ namespace Omnikeeper.Model
             FROM relation_latest
             WHERE layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
+            command.Parameters.AddWithValue("time_threshold", DateTimeOffset.UtcNow);
             return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
 
@@ -50,7 +50,7 @@ namespace Omnikeeper.Model
                 FROM relation R
                 WHERE R.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
+            command.Parameters.AddWithValue("time_threshold", DateTimeOffset.UtcNow);
             return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
 
@@ -64,7 +64,7 @@ namespace Omnikeeper.Model
             ", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
+            command.Parameters.AddWithValue("time_threshold", DateTimeOffset.UtcNow);
 
             return ((long?)await command.ExecuteScalarAsync())!.Value;
         }

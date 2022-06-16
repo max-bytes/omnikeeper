@@ -36,7 +36,7 @@ namespace Omnikeeper.Model
                     writer.Write(ds.username);
                     writer.Write(layerID);
                     writer.Write(operation);
-                    writer.Write(ds.timestamp);
+                    writer.Write(ds.timestamp.ToUniversalTime());
                 }
             }
             writer.Complete();
@@ -49,7 +49,7 @@ namespace Omnikeeper.Model
 
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
 
-            command.Parameters.AddWithValue("delete_threshold", deleteThreshold);
+            command.Parameters.AddWithValue("delete_threshold", deleteThreshold.ToUniversalTime());
             command.Prepare();
 
             var numDeleted = await command.ExecuteNonQueryAsync();

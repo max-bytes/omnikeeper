@@ -29,7 +29,7 @@ namespace Omnikeeper.Service
                     order by ci_id, name, timestamp DESC NULLS LAST
                     ", trans.DBConnection, trans.DBTransaction);
                 commandGetHistoric.Parameters.AddWithValue("layer_id", layer.ID);
-                commandGetHistoric.Parameters.AddWithValue("time_threshold", atTime.Time);
+                commandGetHistoric.Parameters.AddWithValue("time_threshold", atTime.Time.ToUniversalTime());
                 commandGetHistoric.Parameters.AddWithValue("partition_index", partitionIndex);
                 commandGetHistoric.Prepare();
 
@@ -141,7 +141,7 @@ namespace Omnikeeper.Service
                 ";
                 using var commandBuild = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
                 commandBuild.Parameters.AddWithValue("layer_id", layer.ID);
-                commandBuild.Parameters.AddWithValue("time_threshold", atTime.Time);
+                commandBuild.Parameters.AddWithValue("time_threshold", atTime.Time.ToUniversalTime());
                 commandBuild.Parameters.AddWithValue("partition_index", partitionIndex);
                 await commandBuild.ExecuteNonQueryAsync();
             }
@@ -185,7 +185,7 @@ namespace Omnikeeper.Service
                 ";
                 using var commandBuild = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
                 commandBuild.Parameters.AddWithValue("layer_id", layer.ID);
-                commandBuild.Parameters.AddWithValue("time_threshold", atTime.Time);
+                commandBuild.Parameters.AddWithValue("time_threshold", atTime.Time.ToUniversalTime());
                 commandBuild.Parameters.AddWithValue("partition_index", partitionIndex);
                 await commandBuild.ExecuteNonQueryAsync();
             }

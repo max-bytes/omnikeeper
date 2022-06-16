@@ -18,7 +18,7 @@ namespace Omnikeeper.Model
 
             using var command = new NpgsqlCommand(@"INSERT INTO ""user"" (keycloak_id, timestamp, type, username, displayName) VALUES (@uuid, @timestamp, @type, @username, @displayName) returning id, timestamp", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("uuid", uuid);
-            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+            command.Parameters.AddWithValue("timestamp", DateTimeOffset.UtcNow);
             command.Parameters.AddWithValue("username", username);
             command.Parameters.AddWithValue("displayName", displayName);
             command.Parameters.AddWithValue("type", type);
@@ -43,7 +43,7 @@ namespace Omnikeeper.Model
             var username = dr.GetString(1);
             var displayName = dr.GetString(2);
             var usertype = dr.GetFieldValue<UserType>(3);
-            var timestamp = dr.GetTimeStamp(4).ToDateTime();
+            var timestamp = dr.GetDateTime(4);
             return new UserInDatabase(id, uuid, username, displayName, usertype, timestamp);
         }
 
@@ -60,7 +60,7 @@ namespace Omnikeeper.Model
                 return null;
 
             var id = dr.GetInt64(0);
-            var timestamp = dr.GetTimeStamp(1).ToDateTime();
+            var timestamp = dr.GetDateTime(1);
             var usertype = dr.GetFieldValue<UserType>(2);
             var displayName = dr.GetString(3);
             return new UserInDatabase(id, uuid, username, displayName, usertype, timestamp);

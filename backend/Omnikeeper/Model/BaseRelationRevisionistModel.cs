@@ -37,8 +37,8 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
 
             var now = TimeThreshold.BuildLatest();
-            command.Parameters.AddWithValue("delete_threshold", threshold);
-            command.Parameters.AddWithValue("now", atTime.Time);
+            command.Parameters.AddWithValue("delete_threshold", threshold.ToUniversalTime());
+            command.Parameters.AddWithValue("now", atTime.Time.ToUniversalTime());
             command.Parameters.AddWithValue("layer_ids", layerIDs);
             command.Prepare();
 

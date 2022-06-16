@@ -18,18 +18,19 @@ namespace Tests.Integration.Model
         public async Task TestBasics()
         {
             Guid ciid1;
+            Guid ciid2;
             Guid ciid3;
             string layerID1;
-            ChangesetProxy changeset;
+            var predicateID1 = "predicate1";
+            var predicateID2 = "predicate2";
+            TimeThreshold timeChangeset1;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                changeset = await CreateChangesetProxy();
+                var changeset = await CreateChangesetProxy();
 
                 ciid1 = await GetService<ICIModel>().CreateCI(trans);
-                var ciid2 = await GetService<ICIModel>().CreateCI(trans);
+                ciid2 = await GetService<ICIModel>().CreateCI(trans);
                 ciid3 = await GetService<ICIModel>().CreateCI(trans);
-                var predicateID1 = "predicate1";
-                var predicateID2 = "predicate2";
 
                 var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans);
                 layerID1 = layer1.ID;
@@ -69,6 +70,33 @@ namespace Tests.Integration.Model
                 var rr3 = r3.FirstOrDefault(r => r.Relation.ToCIID == ciid3);
 
                 trans.Commit();
+
+                timeChangeset1 = changeset.TimeThreshold;
+            }
+
+            // second changeset, remove one relation again
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var changeset = await CreateChangesetProxy();
+
+                var removed = await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                Assert.IsTrue(removed);
+
+                // test that its removed
+                var layerset = new LayerSet("l1");
+                var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.BuildWithAllPredicateIDs(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+                Assert.AreEqual(1, r1.Count());
+
+                trans.Commit();
+            }
+
+            // historic fetch
+            using (var trans = ModelContextBuilder.BuildImmediate())
+            {
+                var layerset = new LayerSet("l1");
+                var atTime = TimeThreshold.BuildAtTime(timeChangeset1.Time);
+                var r1 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.BuildWithAllPredicateIDs(ciid1), layerset, trans, atTime, MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
+                Assert.AreEqual(2, r1.Count()); // fetching at older timestamp, gets two relations
             }
         }
 

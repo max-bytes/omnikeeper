@@ -32,7 +32,7 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("user_id", userID);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("origin_type", dataOrigin.Type);
-            command.Parameters.AddWithValue("timestamp", timestamp.GetValueOrDefault(DateTimeOffset.Now));
+            command.Parameters.AddWithValue("timestamp", timestamp.GetValueOrDefault(DateTimeOffset.UtcNow).ToUniversalTime());
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var timestampR = reader.GetDateTime(0);
@@ -52,7 +52,7 @@ namespace Omnikeeper.Model
             if (!await dr.ReadAsync())
                 return null;
 
-            var timestamp = dr.GetTimeStamp(0).ToDateTime();
+            var timestamp = dr.GetDateTime(0);
             var userID = dr.GetInt64(1);
             var layerID = dr.GetString(2);
             var dataOriginType = dr.GetFieldValue<DataOriginType>(3);
@@ -61,7 +61,7 @@ namespace Omnikeeper.Model
             var displayName = dr.GetString(5);
             var keycloakUUID = dr.GetGuid(6);
             var userType = dr.GetFieldValue<UserType>(7);
-            var userTimestamp = dr.GetTimeStamp(8).ToDateTime();
+            var userTimestamp = dr.GetDateTime(8);
 
             var user = new UserInDatabase(userID, keycloakUUID, username, displayName, userType, userTimestamp);
             return new Changeset(id, user, layerID, origin, timestamp);
@@ -82,7 +82,7 @@ namespace Omnikeeper.Model
             while (await dr.ReadAsync())
             {
                 var id = dr.GetGuid(0);
-                var timestamp = dr.GetTimeStamp(1).ToDateTime();
+                var timestamp = dr.GetDateTime(1);
                 var userID = dr.GetInt64(2);
                 var layerID = dr.GetString(3);
                 var dataOriginType = dr.GetFieldValue<DataOriginType>(4);
@@ -91,7 +91,7 @@ namespace Omnikeeper.Model
                 var displayName = dr.GetString(6);
                 var keycloakUUID = dr.GetGuid(7);
                 var userType = dr.GetFieldValue<UserType>(8);
-                var userTimestamp = dr.GetTimeStamp(9).ToDateTime();
+                var userTimestamp = dr.GetDateTime(9);
 
                 var user = new UserInDatabase(userID, keycloakUUID, username, displayName, userType, userTimestamp);
                 ret.Add(new Changeset(id, user, layerID, origin, timestamp));
@@ -158,8 +158,8 @@ namespace Omnikeeper.Model
                 query += " LIMIT @limit";
 
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
-            command.Parameters.AddWithValue("from", from);
-            command.Parameters.AddWithValue("to", to);
+            command.Parameters.AddWithValue("from", from.ToUniversalTime());
+            command.Parameters.AddWithValue("to", to.ToUniversalTime());
             command.Parameters.AddWithValue("ciids", ciids);
             command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
             if (limit.HasValue)
@@ -175,12 +175,12 @@ namespace Omnikeeper.Model
                 var layerID = dr.GetString(2);
                 var dataOriginType = dr.GetFieldValue<DataOriginType>(3);
                 var origin = new DataOriginV1(dataOriginType);
-                var timestamp = dr.GetTimeStamp(4).ToDateTime();
+                var timestamp = dr.GetDateTime(4);
                 var username = dr.GetString(5);
                 var displayName = dr.GetString(6);
                 var userUUID = dr.GetGuid(7);
                 var userType = dr.GetFieldValue<UserType>(8);
-                var userTimestamp = dr.GetTimeStamp(9).ToDateTime();
+                var userTimestamp = dr.GetDateTime(9);
 
                 var user = new UserInDatabase(userID, userUUID, username, displayName, userType, userTimestamp);
                 var c = new Changeset(id, user, layerID, origin, timestamp);
@@ -200,8 +200,8 @@ namespace Omnikeeper.Model
                 query += " LIMIT @limit";
 
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
-            command.Parameters.AddWithValue("from", from);
-            command.Parameters.AddWithValue("to", to);
+            command.Parameters.AddWithValue("from", from.ToUniversalTime());
+            command.Parameters.AddWithValue("to", to.ToUniversalTime());
             command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
             if (limit.HasValue)
                 command.Parameters.AddWithValue("limit", limit.Value);
@@ -216,12 +216,12 @@ namespace Omnikeeper.Model
                 var layerID = dr.GetString(2);
                 var dataOriginType = dr.GetFieldValue<DataOriginType>(3);
                 var origin = new DataOriginV1(dataOriginType);
-                var timestamp = dr.GetTimeStamp(4).ToDateTime();
+                var timestamp = dr.GetDateTime(4);
                 var username = dr.GetString(5);
                 var displayName = dr.GetString(6);
                 var userUUID = dr.GetGuid(7);
                 var userType = dr.GetFieldValue<UserType>(8);
-                var userTimestamp = dr.GetTimeStamp(9).ToDateTime();
+                var userTimestamp = dr.GetDateTime(9);
 
                 var user = new UserInDatabase(userID, userUUID, username, displayName, userType, userTimestamp);
                 var c = new Changeset(id, user, layerID, origin, timestamp);
@@ -239,7 +239,7 @@ namespace Omnikeeper.Model
                 LIMIT 1", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("threshold", timeThreshold.Time);
+            command.Parameters.AddWithValue("threshold", timeThreshold.Time.ToUniversalTime());
             command.Prepare();
             using var dr = await command.ExecuteReaderAsync();
 
@@ -247,7 +247,7 @@ namespace Omnikeeper.Model
                 return null;
 
             var id = dr.GetGuid(0);
-            var timestamp = dr.GetTimeStamp(1).ToDateTime();
+            var timestamp = dr.GetDateTime(1);
             var userID = dr.GetInt64(2);
             var dataOriginType = dr.GetFieldValue<DataOriginType>(3);
             var origin = new DataOriginV1(dataOriginType);
@@ -255,7 +255,7 @@ namespace Omnikeeper.Model
             var displayName = dr.GetString(5);
             var keycloakUUID = dr.GetGuid(6);
             var userType = dr.GetFieldValue<UserType>(7);
-            var userTimestamp = dr.GetTimeStamp(8).ToDateTime();
+            var userTimestamp = dr.GetDateTime(8);
 
             var user = new UserInDatabase(userID, keycloakUUID, username, displayName, userType, userTimestamp);
             return new Changeset(id, user, layerID, origin, timestamp);
@@ -328,8 +328,8 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
 
             var now = TimeThreshold.BuildLatest();
-            command.Parameters.AddWithValue("delete_threshold", threshold);
-            command.Parameters.AddWithValue("now", now.Time);
+            command.Parameters.AddWithValue("delete_threshold", threshold.ToUniversalTime());
+            command.Parameters.AddWithValue("now", now.Time.ToUniversalTime());
             command.Prepare();
 
             var numArchived = await command.ExecuteNonQueryAsync();
@@ -363,7 +363,7 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("changeset_id", afterChangesetID);
             command.Parameters.AddWithValue("layer_ids", layerIDs);
-            command.Parameters.AddWithValue("threshold", timeThreshold.Time);
+            command.Parameters.AddWithValue("threshold", timeThreshold.Time.ToUniversalTime());
             command.Prepare();
             using var dr = await command.ExecuteReaderAsync();
 
@@ -375,12 +375,12 @@ namespace Omnikeeper.Model
                 var layerID = dr.GetString(2);
                 var dataOriginType = dr.GetFieldValue<DataOriginType>(3);
                 var origin = new DataOriginV1(dataOriginType);
-                var timestamp = dr.GetTimeStamp(4).ToDateTime();
+                var timestamp = dr.GetDateTime(4);
                 var username = dr.GetString(5);
                 var displayName = dr.GetString(6);
                 var userUUID = dr.GetGuid(7);
                 var userType = dr.GetFieldValue<UserType>(8);
-                var userTimestamp = dr.GetTimeStamp(9).ToDateTime();
+                var userTimestamp = dr.GetDateTime(9);
 
                 var user = new UserInDatabase(userID, userUUID, username, displayName, userType, userTimestamp);
                 var c = new Changeset(id, user, layerID, origin, timestamp);

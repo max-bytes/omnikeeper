@@ -217,7 +217,7 @@ namespace Omnikeeper.Model
                     ) i where removed = false
                     ", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
-                command.Parameters.AddWithValue("time_threshold", atTime.Time);
+                command.Parameters.AddWithValue("time_threshold", atTime.Time.ToUniversalTime());
                 command.Parameters.AddWithValue("partition_index", partitionIndex);
                 foreach (var p in AttributeSelection2Parameters(attributeSelection))
                     command.Parameters.Add(p);
@@ -311,7 +311,7 @@ namespace Omnikeeper.Model
                     ) i WHERE i.removed = false
                     ", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
-                command.Parameters.AddWithValue("time_threshold", atTime.Time);
+                command.Parameters.AddWithValue("time_threshold", atTime.Time.ToUniversalTime());
                 command.Parameters.AddWithValue("partition_index", partitionIndex);
             }
 

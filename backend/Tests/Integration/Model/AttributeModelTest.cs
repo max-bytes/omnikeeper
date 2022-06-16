@@ -42,12 +42,15 @@ namespace Tests.Integration.Model
 
             var layerset = await GetService<ILayerModel>().BuildLayerSet(new string[] { "l1" }, transI);
 
+            TimeThreshold insertTime1;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
                 await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 
                 trans.Commit();
+
+                insertTime1 = changeset.TimeThreshold;
             }
 
             using (var trans = ModelContextBuilder.BuildDeferred())
@@ -91,6 +94,16 @@ namespace Tests.Integration.Model
                 Assert.AreEqual(1, a4.Count);
                 var aa4 = a4.First().Value;
                 Assert.AreEqual(new AttributeScalarValueText("text3"), aa4.Attribute.Value);
+            }
+
+            // read at time of insertTime1
+            using (var trans = ModelContextBuilder.BuildImmediate())
+            {
+                var atTime = TimeThreshold.BuildAtTime(insertTime1.Time);
+                var a1InPast = (await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, atTime, GeneratedDataHandlingInclude.Instance)).Values.First();
+                Assert.AreEqual(1, a1InPast.Count);
+                var aa = a1InPast.First().Value;
+                Assert.AreEqual(new AttributeScalarValueText("text1"), aa.Attribute.Value);
             }
         }
 

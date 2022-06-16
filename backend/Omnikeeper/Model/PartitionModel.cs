@@ -12,7 +12,7 @@ namespace Omnikeeper.Model
         public async Task<DateTimeOffset> GetLatestPartitionIndex(TimeThreshold timeThreshold, IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"SELECT max(partition_index) FROM partition WHERE partition_index <= @timestamp", trans.DBConnection, trans.DBTransaction);
-            command.Parameters.AddWithValue("timestamp", timeThreshold.Time);
+            command.Parameters.AddWithValue("timestamp", timeThreshold.Time.ToUniversalTime());
             command.Prepare();
             var pi = ((DateTime?)await command.ExecuteScalarAsync())!.Value;
             return pi;
@@ -54,8 +54,8 @@ namespace Omnikeeper.Model
                 where timestamp <= @time_threshold and partition_index = @old_partition_index
                 order by ci_id, name, layer_id, timestamp DESC NULLS LAST) AS sub
             WHERE attribute.id = sub.id", trans.DBConnection, trans.DBTransaction);
-            commandMoveAttributes.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
-            commandMoveAttributes.Parameters.AddWithValue("old_partition_index", oldPartitionIndex);
+            commandMoveAttributes.Parameters.AddWithValue("time_threshold", timeThreshold.Time.ToUniversalTime());
+            commandMoveAttributes.Parameters.AddWithValue("old_partition_index", oldPartitionIndex.ToUniversalTime());
             commandMoveAttributes.Parameters.AddWithValue("new_partition_index", newPartitionIndex.Value.ToUniversalTime());
             await commandMoveAttributes.ExecuteNonQueryAsync();
 
@@ -76,8 +76,8 @@ namespace Omnikeeper.Model
                 where timestamp <= @time_threshold and partition_index = @old_partition_index
                 order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST) AS sub
             WHERE relation.id = sub.id", trans.DBConnection, trans.DBTransaction);
-            commandMoveRelations.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
-            commandMoveRelations.Parameters.AddWithValue("old_partition_index", oldPartitionIndex);
+            commandMoveRelations.Parameters.AddWithValue("time_threshold", timeThreshold.Time.ToUniversalTime());
+            commandMoveRelations.Parameters.AddWithValue("old_partition_index", oldPartitionIndex.ToUniversalTime());
             commandMoveRelations.Parameters.AddWithValue("new_partition_index", newPartitionIndex.Value.ToUniversalTime());
             await commandMoveRelations.ExecuteNonQueryAsync();
         }
