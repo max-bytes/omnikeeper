@@ -206,7 +206,6 @@ namespace Omnikeeper.Runners
                     clLogger.LogInformation($"Running Validator {context_ID}");
                     var t = new StopTimer();
                     var successful = await validator.Run(unprocessedChangesets, config, modelContextBuilder, timeThreshold, clLogger, issueAccumulator);
-                    t.Stop((ts, elapsedTime) => clLogger.LogInformation($"Done in {elapsedTime}; result: {(successful ? "success" : "failure")}"));
 
                     if (successful)
                     {
@@ -223,6 +222,8 @@ namespace Omnikeeper.Runners
                     clLogger.LogInformation($"Run produced {issueAccumulator.Issues.Count} issues in total");
                     await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy);
                     transUpdateIssues.Commit();
+
+                    t.Stop((ts, elapsedTime) => clLogger.LogInformation($"Done in {elapsedTime}; result: {(successful ? "success" : "failure")}"));
                 }
                 finally
                 {
