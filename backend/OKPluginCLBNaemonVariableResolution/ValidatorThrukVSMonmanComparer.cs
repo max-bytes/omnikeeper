@@ -7,6 +7,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace OKPluginCLBNaemonVariableResolution
 {
@@ -49,8 +50,16 @@ namespace OKPluginCLBNaemonVariableResolution
 
             logger.LogDebug($"Comparing {thrukHosts.Count} thruk hosts with {targets.Count} monitoring targets");
 
+            var thrukSiteSelectionRegex = new Regex(cfg.ThrukSiteSelectionRegex);
+
             foreach (var thrukHost in thrukHosts)
             {
+                if (!thrukSiteSelectionRegex.IsMatch(thrukHost.Value.PeerKey))
+                {
+                    logger.LogTrace($"Skipping thruk host {thrukHost.Value.Name} because thruk_site_selection_regex did not match site {thrukHost.Value.PeerKey}");
+                    continue;
+                }
+
                 var cmdbCI = thrukHost.Value.CMDBCI;
                 logger.LogTrace($"Looking at thruk host {thrukHost.Value.Name}");
                 if (!cmdbCI.HasValue)
@@ -108,6 +117,9 @@ namespace OKPluginCLBNaemonVariableResolution
 
             [JsonPropertyName("monman_layers")]
             public string[] MonmanLayers { get; set; } = Array.Empty<string>();
+
+            [JsonPropertyName("thruk_site_selection_regex")]
+            public string ThrukSiteSelectionRegex { get; set; } = "";
         }
     }
 }
