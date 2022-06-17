@@ -1,4 +1,5 @@
-﻿using GraphQL;
+﻿using Autofac.Features.Indexed;
+using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Types;
 using Omnikeeper.Base.Entity;
@@ -13,6 +14,7 @@ using Omnikeeper.GraphQL.TraitEntities;
 using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Service;
+using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -45,6 +47,8 @@ namespace Omnikeeper.GraphQL
         private readonly RecursiveTraitModel recursiveDataTraitModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly IBaseAttributeModel baseAttributeModel;
+        private readonly IScheduler localScheduler;
+        private readonly IScheduler distributedScheduler;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly IDataLoaderService dataLoaderService;
@@ -54,7 +58,7 @@ namespace Omnikeeper.GraphQL
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GeneratorV1Model generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, ODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel, CLConfigV1Model clConfigModel,
             RecursiveTraitModel recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
-            IEnumerable<IPluginRegistration> plugins, IBaseAttributeModel baseAttributeModel,
+            IEnumerable<IPluginRegistration> plugins, IBaseAttributeModel baseAttributeModel, IIndex<string, IScheduler> schedulers,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, IDataLoaderService dataLoaderService, ValidatorContextV1Model validatorContextModel)
         {
             this.ciidModel = ciidModel;
@@ -77,6 +81,8 @@ namespace Omnikeeper.GraphQL
             this.recursiveDataTraitModel = recursiveDataTraitModel;
             this.managementAuthorizationService = managementAuthorizationService;
             this.baseAttributeModel = baseAttributeModel;
+            this.localScheduler = schedulers["localScheduler"];
+            this.distributedScheduler = schedulers["distributedScheduler"];
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.dataLoaderService = dataLoaderService;

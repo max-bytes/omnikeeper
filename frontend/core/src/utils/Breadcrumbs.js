@@ -20,6 +20,7 @@ const breadcrumbNameMap = [
   { search: '^/manage/version', name: 'Version' },
   { search: '^/manage/current-user', name: 'Debug Current User' },
   { search: '^/manage/logs', name: 'Debug-Logs' },
+  { search: '^/manage/jobs', name: 'Jobs' },
   { search: '^/manage$', name: 'Manage' },
   
   { search: '^/explorer/(.*)', name: 'CI %1%' },

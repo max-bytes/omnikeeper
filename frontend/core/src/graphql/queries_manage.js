@@ -126,6 +126,15 @@ export const queries = {
         }
     }
     `,
+    Jobs: gql`
+    query {
+        manage_runningJobs {
+          name
+          startedAt
+          runningForMilliseconds
+        }
+      }      
+    `,
     Plugins: gql`
     query {
         manage_plugins {

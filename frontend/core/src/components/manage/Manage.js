@@ -18,6 +18,7 @@ import ManageCLConfigs from './ManageCLConfigs';
 import ManageValidatorContexts from './ManageValidatorContexts';
 import ManageRestartApplication from './ManageRestartApplication';
 import UsageStats from './UsageStats';
+import ShowJobs from './ShowJobs';
 
 export default function Manage(props) {
     let { path, url } = useRouteMatch();
@@ -71,6 +72,9 @@ export default function Manage(props) {
             <PrivateRoute path={`${path}/logs`} title="Show Logs">
                 <ShowLogs />
             </PrivateRoute>
+            <PrivateRoute path={`${path}/jobs`} title="Show Jobs">
+                <ShowJobs />
+            </PrivateRoute>
             <PrivateRoute path={`${path}/usage-stats`} title="Show Usage Stats">
                 <UsageStats />
             </PrivateRoute>
@@ -122,6 +126,7 @@ export default function Manage(props) {
                         <li><Link to={`${url}/version`}>Version</Link></li>
                         <li><Link to={`${url}/current-user`}>Current User Data</Link></li>
                         <li><Link to={`${url}/logs`}>Logs</Link></li>
+                        <li><Link to={`${url}/jobs`}>Jobs</Link></li>
                     </ul>
 
                     <h3>Stats</h3>

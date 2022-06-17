@@ -12,7 +12,9 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Service;
+using Quartz.Impl;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Omnikeeper.GraphQL
@@ -246,6 +248,30 @@ namespace Omnikeeper.GraphQL
                     var loadedPlugins = context.RequestServices!.GetServices<IPluginRegistration>();
                     var coreVersion = VersionService.GetVersion();
                     return new VersionDTO(coreVersion, loadedPlugins);
+                });
+
+            FieldAsync<ListGraphType<RunningJobType>>("manage_runningJobs",
+                resolve: async context =>
+                {
+                    var userContext = context.SetupUserContext()
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+
+                    CheckManagementPermissionThrow(userContext);
+
+                    var localJobs = await localScheduler.GetCurrentlyExecutingJobs();
+                    var distributedJobs = await distributedScheduler.GetCurrentlyExecutingJobs();
+                    var ret = new List<RunningJob>();
+                    foreach (var job in localJobs.Union(distributedJobs))
+                    {
+                        var startedAt = job.FireTimeUtc;
+                        var runningFor = DateTimeOffset.UtcNow.Subtract(startedAt);
+                        var name = "unknown";
+                        if(job.JobDetail is JobDetailImpl jdi)
+                            name = jdi.FullName;
+                        ret.Add(new RunningJob(name, startedAt, runningFor));
+                    }
+                    //ret.Add(new RunningJob("Dummy", DateTimeOffset.UtcNow.Subtract(TimeSpan.FromMinutes(1)), TimeSpan.FromMilliseconds(5234)));
+                    return ret;
                 });
 
             Field<ListGraphType<PluginRegistrationType>>("manage_plugins",
