@@ -1,5 +1,4 @@
-﻿
-using OKPluginGenericJSONIngest.Transform.JMESPath;
+﻿using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;

@@ -12,6 +12,9 @@ namespace Omnikeeper.Base.Model
     public interface IIssueAccumulator
     {
         bool TryAdd(string group, string ID, string message, params Guid[] affectedCIs);
+        string Type { get; }
+        string Context { get; }
+        IDictionary<(string type, string context, string group, string id), Issue> Issues { get; }
     }
 
     public class IssueAccumulator : IIssueAccumulator
@@ -37,7 +40,7 @@ namespace Omnikeeper.Base.Model
 
     public interface IIssuePersister
     {
-        Task<bool> Persist(IssueAccumulator from, IModelContext trans, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy);
+        Task<bool> Persist(IIssueAccumulator from, IModelContext trans, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy);
     }
 
     public class IssuePersister : IIssuePersister
@@ -53,7 +56,7 @@ namespace Omnikeeper.Base.Model
             this.metaConfigurationModel = metaConfigurationModel;
         }
 
-        public async Task<bool> Persist(IssueAccumulator from, IModelContext trans, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy)
+        public async Task<bool> Persist(IIssueAccumulator from, IModelContext trans, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy)
         {
             var config = await metaConfigurationModel.GetConfigOrDefault(trans);
             var traitAttributeFilter = new AttributeFilter[]

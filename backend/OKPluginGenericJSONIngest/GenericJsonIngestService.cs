@@ -41,7 +41,7 @@ namespace OKPluginGenericJSONIngest
             this.issuePersister = issuePersister;
         }
 
-        public async Task Ingest(string contextID, string inputJson, ILogger logger)
+        public async Task Ingest(string contextID, string inputJson, ILogger logger, IIssueAccumulator issueAccumulator)
         {
             using var mc = modelContextBuilder.BuildImmediate();
 
@@ -112,7 +112,54 @@ namespace OKPluginGenericJSONIngest
 
             logger.LogInformation($"Converting to ingest data...");
 
-            var issueAccumulator = new IssueAccumulator("DataIngest", $"GenericJsonIngest_{contextID}");
+            var preparer = new Preparer();
+            var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, issueAccumulator);
+
+            logger.LogInformation($"Done converting to ingest data");
+
+            logger.LogInformation($"Performing ingest...");
+
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
+
+            var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator);
+
+            using var transUpdateIssues = modelContextBuilder.BuildDeferred();
+            await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
+            transUpdateIssues.Commit();
+
+            logger.LogInformation($"Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");
+        }
+
+        public async Task IngestRaw(GenericInboundData genericInboundData, string[] searchLayerIDs, string writeLayerID, ILogger logger, IIssueAccumulator issueAccumulator)
+        {
+            using var mc = modelContextBuilder.BuildImmediate();
+
+            var timeThreshold = TimeThreshold.BuildLatest();
+
+            var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
+
+            var searchLayers = new LayerSet(searchLayerIDs);
+            var writeLayer = await layerModel.GetLayer(writeLayerID, mc);
+            if (writeLayer == null)
+            {
+                throw new Exception($"Cannot write to layer with ID {writeLayerID}: layer does not exist");
+            }
+
+            var user = await currentUserAccessor.GetCurrentUser(mc);
+
+            // authorization
+            if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
+            {
+                throw new UnauthorizedAccessException($"User {user.Username} cannot write to layer {writeLayer.ID}");
+            }
+            if (!authorizationService.CanUserReadFromAllLayers(user, searchLayers))
+            {
+                throw new UnauthorizedAccessException($"User {user.Username} cannot read from at least one of the layers: {string.Join(",", searchLayers.LayerIDs)}");
+            }
+            // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
+            // TODO: think about this!
+
+            logger.LogInformation($"Converting to ingest data...");
 
             var preparer = new Preparer();
             var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, issueAccumulator);

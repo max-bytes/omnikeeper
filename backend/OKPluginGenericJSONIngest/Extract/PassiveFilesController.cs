@@ -3,15 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using OKPluginGenericJSONIngest;
-using OKPluginGenericJSONIngest.Extract;
-using OKPluginGenericJSONIngest.Load;
-using OKPluginGenericJSONIngest.Transform.JMESPath;
-using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -104,7 +97,36 @@ namespace Omnikeeper.Controllers.Ingest
 
                 var inputJson = BuildJsonInput(files);
 
-                await ingestService.Ingest(context, inputJson, logger);
+                var issueAccumulator = new IssueAccumulator("DataIngest", $"GenericJsonIngest_{context}");
+
+                await ingestService.Ingest(context, inputJson, logger, issueAccumulator);
+
+                return Ok();
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                logger.LogError(e, "Ingest failed");
+                return Forbid();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Ingest failed");
+                return BadRequest(e);
+            }
+        }
+
+        [HttpPost("raw")]
+        [DisableRequestSizeLimit]
+        [RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
+        public async Task<ActionResult> IngestRaw([FromQuery, Required] string[] readLayerIDs, [FromQuery, Required] string writeLayerID, [FromBody, Required] GenericInboundData data)
+        {
+            var logger = loggerFactory.CreateLogger($"RawJSONIngest_{string.Join("-", readLayerIDs)}_{writeLayerID}");
+            logger.LogInformation($"Starting ingest");
+            try
+            {
+                var issueAccumulator = new IssueAccumulator("DataIngest", $"RawJsonIngest_{string.Join("-", readLayerIDs)}_{writeLayerID}");
+
+                await ingestService.IngestRaw(data, readLayerIDs, writeLayerID, logger, issueAccumulator);
 
                 return Ok();
             }

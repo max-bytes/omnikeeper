@@ -76,7 +76,7 @@ namespace SystemTests
    ]
 }
             ";
-            var ingestUrl = $"{BaseUrl}/api/v1/ingest/genericJSON/files?context=test_generic_json_ingest"; 
+            var ingestUrl = $"{BaseUrl}/api/v1/ingest/genericJSON/files?context=test_generic_json_ingest";
             var fileContent = new StringContent(ingestData, Encoding.UTF8, "application/json");
             fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
             using var multipartFormContent = new MultipartFormDataContent();
@@ -119,6 +119,111 @@ query {
                         new() { Attribute = new() { Name = "hostname", Value = new() { Values = new List<string>() { "host_c" } }  } }
                     } },
                 }, options => options.WithoutStrictOrdering());
+        }
+
+
+        [Test]
+        public async Task TestRaw()
+        {
+            // create layer_1
+            var createLayer1 = new GraphQLRequest
+            {
+                Query = @"mutation {
+                    manage_createLayer(id: ""layer_1"") {
+                        id
+                    }
+                }"
+            };
+            var r2 = await Query(createLayer1, () => new { manage_createLayer = new { id = "" } });
+            Assert.IsNull(r2.Errors);
+
+            var httpClient = new HttpClient();
+
+            // prepare ingest data and perform ingest
+            var ingestData = @"
+{
+   ""cis"":[
+      {
+         ""tempID"":""tempID_01"",
+         ""idMethod"":{
+            ""type"":""OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"",
+            ""attributes"":[
+               ""id""
+            ]
+         },
+         ""attributes"":[
+            {
+               ""name"":""id"",
+               ""value"":{
+                  ""type"":""Text"",
+                  ""value"":""id_01""
+               }
+            }
+         ]
+      },
+      {
+         ""tempID"":""tempID_02"",
+         ""idMethod"":{
+            ""type"":""OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"",
+            ""attributes"":[
+               ""id""
+            ]
+         },
+         ""attributes"":[
+            {
+               ""name"":""id"",
+               ""value"":{
+                  ""type"":""Text"",
+                  ""value"":""id_02""
+               }
+            }
+         ]
+      }
+   ],
+   ""relations"":[
+      {
+         ""from"":""tempID_01"",
+         ""predicate"":""relates_to"",
+         ""to"":""tempID_02""
+      }
+   ]
+}
+                ";
+            var ingestUrl = $"{BaseUrl}/api/v1/ingest/genericJSON/files/raw?readLayerIDs=layer_1&writeLayerID=layer_1";
+            var content = new StringContent(ingestData, Encoding.UTF8, "application/json");
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json") { CharSet = Encoding.UTF8.WebName };
+            var responseIngest = await httpClient.PostAsync(ingestUrl, content);
+            Assert.AreEqual(HttpStatusCode.OK, responseIngest.StatusCode);
+
+            // check results
+            var query = @"
+    query {
+      cis(layers: [""layer_1""], withoutEffectiveTraits: [""empty""]) {
+        mergedAttributes{
+                    attribute{
+                        name
+                        value{
+                            values
+                        }
+                    }
+                }
+            }
+        }";
+            var graphQLResponse = await Query(query, () => new { cis = new List<ResultCI>() });
+
+            Assert.IsNull(graphQLResponse.Errors);
+            Assert.AreEqual(3, graphQLResponse.Data.cis.Count);
+
+            graphQLResponse.Data.cis.Should().BeEquivalentTo(
+                new List<ResultCI>() {
+                        new ResultCI() { MergedAttributes = new() {
+                            new() { Attribute = new() { Name = "id", Value = new() { Values = new List<string>() { "id_01" } }  } }
+                        } },
+                        new ResultCI() { MergedAttributes = new() {
+                            new() { Attribute = new() { Name = "id", Value = new() { Values = new List<string>() { "id_02" } }  } }
+                        } },
+                }, options => options.WithoutStrictOrdering());
+            // TODO: check for relations too
         }
     }
 

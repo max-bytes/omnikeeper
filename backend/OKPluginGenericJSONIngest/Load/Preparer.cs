@@ -45,37 +45,44 @@ namespace OKPluginGenericJSONIngest.Load
                 }
             }
 
-            var relationCandidates = data.relations.Select(r =>
+            List<RelationCandidate> relationCandidates;
+            if (data.relations != null)
             {
-                // TODO: make configurable
-                var gracefulFromErrorHandling = true;
-                var gracefulToErrorHandling = true;
+                relationCandidates = data.relations.Select(r =>
+                {
+                    // TODO: make configurable
+                    var gracefulFromErrorHandling = true;
+                    var gracefulToErrorHandling = true;
 
-                if (!tempCIIDMapping.TryGetValue(r.from, out var tempFromGuid))
-                {
-                    if (gracefulFromErrorHandling)
+                    if (!tempCIIDMapping.TryGetValue(r.from, out var tempFromGuid))
                     {
-                        issueAccumulator.TryAdd("prepare_relation", $"{r.from}_{r.to}_{r.predicate}", $"From-ci \"{r.from}\" of relation could not be resolved");
-                        return null;
+                        if (gracefulFromErrorHandling)
+                        {
+                            issueAccumulator.TryAdd("prepare_relation", $"{r.from}_{r.to}_{r.predicate}", $"From-ci \"{r.from}\" of relation could not be resolved");
+                            return null;
+                        }
+                        else
+                            throw new Exception($"From-ci \"{r.from}\" of relation could not be resolved");
                     }
-                    else
-                        throw new Exception($"From-ci \"{r.from}\" of relation could not be resolved");
-                }
-                if (!tempCIIDMapping.TryGetValue(r.to, out var tempToGuid))
-                {
-                    if (gracefulToErrorHandling)
+                    if (!tempCIIDMapping.TryGetValue(r.to, out var tempToGuid))
                     {
-                        issueAccumulator.TryAdd("prepare_relation", $"{r.from}_{r.to}_{r.predicate}", $"To-ci \"{r.to}\" of relation could not be resolved");
-                        return null;
+                        if (gracefulToErrorHandling)
+                        {
+                            issueAccumulator.TryAdd("prepare_relation", $"{r.from}_{r.to}_{r.predicate}", $"To-ci \"{r.to}\" of relation could not be resolved");
+                            return null;
+                        }
+                        else
+                            throw new Exception($"To-ci \"{r.to}\" of relation could not be resolved");
                     }
-                    else
-                        throw new Exception($"To-ci \"{r.to}\" of relation could not be resolved");
-                }
-                return new RelationCandidate(
-                    CIIdentificationMethodByTempCIID.Build(tempFromGuid),
-                    CIIdentificationMethodByTempCIID.Build(tempToGuid), r.predicate);
-            }).Where(d => d != null).ToList(); // NOTE: we force linq evaluation here
-            return new IngestData(ciCandidates, relationCandidates!);
+                    return new RelationCandidate(
+                        CIIdentificationMethodByTempCIID.Build(tempFromGuid),
+                        CIIdentificationMethodByTempCIID.Build(tempToGuid), r.predicate);
+                }).Where(d => d != null).Cast<RelationCandidate>().ToList(); // NOTE: we force linq evaluation here
+            } else
+            {
+                relationCandidates = new List<RelationCandidate>();
+            }
+            return new IngestData(ciCandidates, relationCandidates);
         }
 
         private ICIIdentificationMethod BuildCIIDMethod(IInboundIDMethod idMethod, CICandidateAttributeData attributes, LayerSet searchLayers, string tempID, Dictionary<string, Guid> tempCIIDMapping, IIssueAccumulator issueAccumulator)
