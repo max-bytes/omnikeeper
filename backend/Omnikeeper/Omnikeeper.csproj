@@ -48,7 +48,7 @@
     <PackageReference Include="Quartz.Serialization.Json" Version="3.3.3" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
 	<PackageReference Include="SpanJson.AspNetCore.Formatter" Version="3.1.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" />
     <PackageReference Include="System.Linq" Version="4.3.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.18" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
