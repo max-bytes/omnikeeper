@@ -30,8 +30,8 @@ namespace OKPluginCLBNaemonVariableResolution
         public string ID => Get(h => h.ID, s => s.ID);
         public string? Name => Get(h => h.Hostname, s => s.Name);
         public Guid? CustomerCIID => Get(h => h.Customer, s => s.Customer);
-        public Guid? OSSupportGroup => Get(h => h.OSSupportGroup, s => s.SupportGroup); // TODO: is this correct for services?
-        public Guid? AppSupportGroup => Get(h => h.AppSupportGroup, s => null);  // TODO: services have AppSuppotrGroups too
+        public Guid? OSSupportGroup => Get(h => h.OSSupportGroup, s => s.OSSupportGroup);
+        public Guid? AppSupportGroup => Get(h => h.AppSupportGroup, s => s.AppSupportGroup);
         public string? Environment => Get(h => h.Environment, s => s.Environment);
         public string? Criticality => Get(h => h.Criticality, s => s.Criticality);
         public string? Instance => Get(h => h.Instance, s => s.Instance);

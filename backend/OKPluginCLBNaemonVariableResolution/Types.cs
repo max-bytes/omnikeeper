@@ -255,8 +255,11 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitRelation("customer", "is_assigned_to_customer", true)]
         public Guid? Customer;
 
-        [TraitRelation("supportGroup", "belongs_to_service_support_group", true)]
-        public Guid? SupportGroup;
+        [TraitRelation("osSupportGroup", "belongs_to_service_support_group", true)]
+        public Guid? OSSupportGroup;
+
+        [TraitRelation("appSupportGroup", "belongs_to_service_app_support_group", true)]
+        public Guid? AppSupportGroup;
 
         [TraitRelation("memberOfCategories", "has_category_member", false)]
         public Guid[] MemberOfCategories;
@@ -276,7 +279,8 @@ namespace OKPluginCLBNaemonVariableResolution
             MonIPAddress = null;
             MonIPPort = null;
             Customer = null;
-            SupportGroup = null;
+            OSSupportGroup = null;
+            AppSupportGroup = null;
             MemberOfCategories = Array.Empty<Guid>();
         }
     }
