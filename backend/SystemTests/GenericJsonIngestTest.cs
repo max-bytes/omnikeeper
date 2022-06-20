@@ -212,7 +212,7 @@ query {
             var graphQLResponse = await Query(query, () => new { cis = new List<ResultCI>() });
 
             Assert.IsNull(graphQLResponse.Errors);
-            Assert.AreEqual(3, graphQLResponse.Data.cis.Count);
+            Assert.AreEqual(2, graphQLResponse.Data.cis.Count);
 
             graphQLResponse.Data.cis.Should().BeEquivalentTo(
                 new List<ResultCI>() {
