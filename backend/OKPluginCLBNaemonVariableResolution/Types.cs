@@ -446,6 +446,9 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitAttribute("customVariables", "thruk.host.custom_variables")]
         public JsonDocument CustomVariables;
 
+        [TraitAttribute("checkCommand", "thruk.host.check_command", optional: true)] // TODO: set optional: false
+        public string CheckCommand;
+
         [TraitRelation("services", "belongs_to_thruk_host", false, new string[] { "monman_v2.thruk_service" })]
         public Guid[] Services;
 
@@ -457,6 +460,7 @@ namespace OKPluginCLBNaemonVariableResolution
             Name = "";
             PeerKey = "";
             CustomVariables = null;
+            CheckCommand = "";
             Services = Array.Empty<Guid>();
             CMDBCI = null;
         }
@@ -477,6 +481,9 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitEntityID]
         public string Description;
 
+        [TraitAttribute("checkCommand", "thruk.service.check_command", optional: true)] // TODO: set optional: false
+        public string CheckCommand;
+
         [TraitRelation("host", "belongs_to_thruk_host", true, new string[] { "monman_v2.thruk_host" })]
         public Guid? Host;
 
@@ -485,6 +492,7 @@ namespace OKPluginCLBNaemonVariableResolution
             HostName = "";
             PeerKey = "";
             Description = "";
+            CheckCommand = "";
             Host = null;
         }
     }
