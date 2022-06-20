@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using OKPluginGenericJSONIngest;
+using Omnikeeper.Base.Model;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
@@ -75,7 +76,9 @@ namespace OKPluginInsightDiscoveryScanIngest
             var hostList = ObjectSerializer.Instance.XMLDeserializeObject<List<HostInfo>>(xml);
             var inputJson = JsonSerializer.Serialize(hostList, new JsonSerializerOptions() { });
 
-            await ingestService.Ingest(context.GenericJsonIngestContextID, inputJson, logger);
+            var issueAccumulator = new IssueAccumulator("DataIngest", $"InsightDiscoveryScanIngest_{context.GenericJsonIngestContextID}");
+
+            await ingestService.Ingest(context.GenericJsonIngestContextID, inputJson, logger, issueAccumulator);
         }
     }
 }
