@@ -2,7 +2,7 @@ import React from "react";
 import LayerStackIcons from "components/LayerStackIcons";
 import { Form, Button } from 'antd';
 import OriginPopup from "components/OriginPopup";
-import RelatedCIText from "./RelatedCIText";
+import { RelatedCIText } from "./RelatedCIText";
 
 export default function RelatedCI(props) {
 
