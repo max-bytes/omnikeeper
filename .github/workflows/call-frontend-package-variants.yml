@@ -22,6 +22,20 @@ jobs:
         workflow: package-frontend-variant
         token: ${{ secrets.PAT }}
         inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsFrontend": "${{ env.pluginsFrontend }}" }'
+  call-frontend-package-variant-caritas:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Set env variables
+      run: |
+        echo "variantName=caritas" >> $GITHUB_ENV
+        echo "baseVersion=${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
+        echo "pluginsFrontend=@max-bytes/okplugin-generic-json-ingest@${{ github.event.inputs.baseVersion }} @max-bytes/okplugin-visualization@${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
+    - name: "Invoke frontend variant: Caritas"
+      uses: benc-uk/workflow-dispatch@v1
+      with:
+        workflow: package-frontend-variant
+        token: ${{ secrets.PAT }}
+        inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsFrontend": "${{ env.pluginsFrontend }}" }'
   call-frontend-package-variant-internal:
     runs-on: ubuntu-20.04
     steps:

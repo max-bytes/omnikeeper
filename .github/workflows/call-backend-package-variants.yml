@@ -22,6 +22,20 @@ jobs:
         workflow: package-backend-variant
         token: ${{ secrets.PAT }}
         inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "runSystemTests": "false" }'
+  call-package-variant-caritas:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Set env variables
+      run: |
+        echo "variantName=caritas" >> $GITHUB_ENV
+        echo "baseVersion=${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
+        echo "pluginsBackend=OKPluginGenericJSONIngest:${{ github.event.inputs.baseVersion }};OKPluginVisualization:${{ github.event.inputs.baseVersion }};OKPluginInsightDiscoveryScanIngest:${{ github.event.inputs.baseVersion }};" >> $GITHUB_ENV
+    - name: "Invoke backend variant: Caritas"
+      uses: benc-uk/workflow-dispatch@v1
+      with:
+        workflow: package-backend-variant
+        token: ${{ secrets.PAT }}
+        inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsBackend": "${{ env.pluginsBackend }}", "runSystemTests": "false" }'
   call-package-variant-internal:
     runs-on: ubuntu-20.04
     steps:
