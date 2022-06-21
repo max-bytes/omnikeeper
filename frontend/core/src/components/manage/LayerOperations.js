@@ -2,7 +2,7 @@ import React, {useCallback, useState} from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { queries } from '../../graphql/queries_manage'
 import { mutations } from '../../graphql/mutations_manage'
-import { Button, Card, Col, Divider, Popconfirm, Row, Statistic, Typography, Upload, Space, Alert, Radio, Form } from "antd";
+import { Button, Card, Col, Divider, Popconfirm, Row, Statistic, Typography, Upload, Space, Alert, Radio, Form, Spin } from "antd";
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { useParams } from 'react-router-dom'
@@ -16,7 +16,7 @@ const { Text } = Typography;
 export default function LayerOperations(props) {
   const { layerID } = useParams();
   
-  const { data, loading: loadingStatistics, refetch: refetchStatistics } = useQuery(queries.LayerStatistics, {
+  const { data, loading: loadingStatistics, refetch: refetchStatistics, error } = useQuery(queries.LayerStatistics, {
     variables: { layerID: layerID }
   });
   const { data: swaggerClient } = useSwaggerClient();
@@ -42,14 +42,14 @@ export default function LayerOperations(props) {
   const [importError, setImportError] = useState(undefined);
   const [importSuccess, setImportSuccess] = useState(undefined);
   const importLayer = useCallback(async () => {
-    if (data && swaggerClient) {
+    if (swaggerClient) {
       setImportingLayers(true);
       setImportError(undefined);
       setImportSuccess(undefined);
       try {
         await swaggerClient.apis.ImportExportLayer.ImportLayer({ 
             version: 1, 
-            overwriteLayerID: data.manage_layerStatistics.layer.id 
+            overwriteLayerID: layerID
           }, {
             requestBody: {
               files: [fileToImport]
@@ -71,33 +71,37 @@ export default function LayerOperations(props) {
         setImportingLayers(false);
       }
     }
-  }, [swaggerClient, data, fileToImport, setFileToImport, refetchStatistics]);
+  }, [swaggerClient, fileToImport, setFileToImport, refetchStatistics, layerID]);
 
-  if (data && swaggerClient) {
     return <>
       <h2>Layer Statistics</h2>
-      <h3>Layer-ID: {data.manage_layerStatistics.layer.id}</h3>
-      <Row gutter={4}>
-        <Col span={4}>
-          <Statistic title="Active Attributes" value={data.manage_layerStatistics.numActiveAttributes} />
-        </Col>
-        <Col span={4}>
-          <Statistic title="Attributes Changes" value={data.manage_layerStatistics.numAttributeChangesHistory} />
-        </Col>
-        <Col span={4}>
-          <Statistic title="Active Relations" value={data.manage_layerStatistics.numActiveRelations} />
-        </Col>
-        <Col span={4}>
-          <Statistic title="Relation Changes" value={data.manage_layerStatistics.numRelationChangesHistory} />
-        </Col>
-        <Col span={4}>
-          <Statistic title="Layer Changesets" value={data.manage_layerStatistics.numLayerChangesetsHistory} />
-        </Col>
-        <Col span={4}>
-          <Statistic title="Latest Change" value={data.manage_layerStatistics.latestChange} formatter={(value) => (value) ? formatTimestamp(value) : "Unknown" } />
-        </Col>
-      </Row>
-      <Text italic>Note: showing statistics for stored data only, not showing data from online inbound adapters or generators</Text>
+      <h3>Layer-ID: {layerID}</h3>
+      <Spin spinning={loadingStatistics}>
+        {data && <>
+          <Row gutter={4}>
+            <Col span={4}>
+              <Statistic title="Active Attributes" value={data.manage_layerStatistics.numActiveAttributes} />
+            </Col>
+            <Col span={4}>
+              <Statistic title="Attributes Changes" value={data.manage_layerStatistics.numAttributeChangesHistory} />
+            </Col>
+            <Col span={4}>
+              <Statistic title="Active Relations" value={data.manage_layerStatistics.numActiveRelations} />
+            </Col>
+            <Col span={4}>
+              <Statistic title="Relation Changes" value={data.manage_layerStatistics.numRelationChangesHistory} />
+            </Col>
+            <Col span={4}>
+              <Statistic title="Layer Changesets" value={data.manage_layerStatistics.numLayerChangesetsHistory} />
+            </Col>
+            <Col span={4}>
+              <Statistic title="Latest Change" value={data.manage_layerStatistics.latestChange} formatter={(value) => (value) ? formatTimestamp(value) : "Unknown" } />
+            </Col>
+          </Row>
+        </>}
+        {error && <div>error</div>}
+        <Text italic>Note: showing statistics for stored data only, not showing data from online inbound adapters or generators</Text>
+      </Spin>
 
       <Divider />
 
@@ -136,7 +140,7 @@ export default function LayerOperations(props) {
             <p><Text type="danger">WARNING: truncating a layer deletes ALL of its attributes and relations. This includes both currently active ones as well as all of its history.</Text></p>
 
             <Popconfirm
-                title={`Are you sure you want to truncate layer ${data.manage_layerStatistics.layer.id}?`}
+                title={`Are you sure you want to truncate layer ${layerID}?`}
                 onConfirm={truncateLayer}
                 okText="Yes, truncate!"
                 okButtonProps={{type: "danger"}}
@@ -149,11 +153,6 @@ export default function LayerOperations(props) {
       </Row>
         
       </>;
-  } else if (loadingStatistics) {
-    return "Loading";
-  } else {
-    return "Error";
-  }
 }
 
 function ExportLayer(props) {
