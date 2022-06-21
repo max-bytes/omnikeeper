@@ -110,7 +110,8 @@ export default function LayerOperations(props) {
         </Col><Col span={8}>
           <Card title="Import Layer">
             <p><Text>Import the attributes and relations from an .okl1 file and insert them into the current layer.</Text></p>
-            <p><Text>Note: before importing, make sure the layer is completely empty. Importing into a non-empty layer will fail. You may truncate the layer, if necessary.</Text></p>
+            <p><Text>Note: the imported data will overwrite any existing data in the layer. After import, the layer data matches the data in the import file. 
+              However, only data that is actually different will be written. For example, importing the same file a second time will result in no second changeset because there are no changes to be done.</Text></p>
             <p><Text>Note: the data will be inserted as a new changeset from your current user and at the current timestamp.</Text></p>
             <Space direction="vertical">
               <Upload fileList={fileToImport ? [fileToImport] : []}

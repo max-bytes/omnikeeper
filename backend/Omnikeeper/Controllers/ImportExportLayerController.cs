@@ -176,12 +176,6 @@ namespace Omnikeeper.Controllers
                         return Forbid();
                     }
 
-                    // check if layer is empty, if not -> error
-                    if (!await layerStatisticsModel.IsLayerEmpty(writeLayer.ID, trans))
-                    {
-                        return BadRequest($"Cannot write to layer with ID {data.LayerID}: layer is not empty; consider truncating layer before import");
-                    }
-
                     // layer import works as follows:
                     // timestamp, changeset, user, data-origin, state, attribute- and relation-id is different
                     // ciid and other data stays as it was exported
@@ -199,6 +193,7 @@ namespace Omnikeeper.Controllers
 
                     var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID, t.Mask));
                     await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, maskHandling, otherLayersValueHandling);
+
                 }
 
                 trans.Commit();
