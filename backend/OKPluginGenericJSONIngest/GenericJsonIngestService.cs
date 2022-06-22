@@ -43,6 +43,8 @@ namespace OKPluginGenericJSONIngest
 
         public async Task Ingest(string contextID, string inputJson, ILogger logger, IIssueAccumulator issueAccumulator)
         {
+            var t = new StopTimer();
+
             using var mc = modelContextBuilder.BuildImmediate();
 
             var timeThreshold = TimeThreshold.BuildLatest();
@@ -127,11 +129,13 @@ namespace OKPluginGenericJSONIngest
             await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
             transUpdateIssues.Commit();
 
-            logger.LogInformation($"Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");
+            t.Stop((ts, elapsedTime) => logger.LogInformation($"Ingest successful, done in {elapsedTime}; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations"));
         }
 
         public async Task IngestRaw(GenericInboundData genericInboundData, string[] searchLayerIDs, string writeLayerID, ILogger logger, IIssueAccumulator issueAccumulator)
         {
+            var t = new StopTimer();
+
             using var mc = modelContextBuilder.BuildImmediate();
 
             var timeThreshold = TimeThreshold.BuildLatest();
@@ -176,7 +180,7 @@ namespace OKPluginGenericJSONIngest
             await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
             transUpdateIssues.Commit();
 
-            logger.LogInformation($"Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");
+            t.Stop((ts, elapsedTime) => logger.LogInformation($"Ingest successful, done in {elapsedTime}; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations"));
         }
     }
 }
