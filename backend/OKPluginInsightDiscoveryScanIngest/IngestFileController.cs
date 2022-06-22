@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using OKPluginGenericJSONIngest;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils.ModelContext;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
@@ -20,11 +21,13 @@ namespace OKPluginInsightDiscoveryScanIngest
     {
         private readonly GenericJsonIngestService ingestService;
         private readonly ILoggerFactory loggerFactory;
+        private readonly IModelContextBuilder modelContextBuilder;
 
-        public IngestFileController(GenericJsonIngestService ingestService, ILoggerFactory loggerFactory)
+        public IngestFileController(GenericJsonIngestService ingestService, ILoggerFactory loggerFactory, IModelContextBuilder modelContextBuilder)
         {
             this.ingestService = ingestService;
             this.loggerFactory = loggerFactory;
+            this.modelContextBuilder = modelContextBuilder;
         }
 
         // TODO: get from model
@@ -78,7 +81,7 @@ namespace OKPluginInsightDiscoveryScanIngest
 
             var issueAccumulator = new IssueAccumulator("DataIngest", $"InsightDiscoveryScanIngest_{context.GenericJsonIngestContextID}");
 
-            await ingestService.Ingest(context.GenericJsonIngestContextID, inputJson, logger, issueAccumulator);
+            await ingestService.Ingest(context.GenericJsonIngestContextID, inputJson, logger, issueAccumulator, modelContextBuilder);
         }
     }
 }

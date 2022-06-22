@@ -107,7 +107,7 @@ namespace PerfTests
             if (runPartitioning)
             {
                 var dataPartitionService = ServiceProvider.GetRequiredService<IDataPartitionService>();
-                await dataPartitionService.StartNewPartition();
+                await dataPartitionService.StartNewPartition(modelContextBuilder);
             }
 
             // NOTE: optimizing postgres with

@@ -16,7 +16,6 @@ namespace OKPluginGenericJSONIngest
 {
     public class GenericJsonIngestService
     {
-        private readonly IModelContextBuilder modelContextBuilder;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ContextModel contextModel;
         private readonly ILayerModel layerModel;
@@ -26,11 +25,10 @@ namespace OKPluginGenericJSONIngest
         private readonly IChangesetModel changesetModel;
         private readonly IIssuePersister issuePersister;
 
-        public GenericJsonIngestService(IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel, ContextModel contextModel, 
+        public GenericJsonIngestService(IMetaConfigurationModel metaConfigurationModel, ContextModel contextModel, 
             ILayerModel layerModel, ICurrentUserAccessor currentUserAccessor, ILayerBasedAuthorizationService authorizationService, IngestDataService ingestDataService,
             IChangesetModel changesetModel, IIssuePersister issuePersister)
         {
-            this.modelContextBuilder = modelContextBuilder;
             this.metaConfigurationModel = metaConfigurationModel;
             this.contextModel = contextModel;
             this.layerModel = layerModel;
@@ -41,7 +39,7 @@ namespace OKPluginGenericJSONIngest
             this.issuePersister = issuePersister;
         }
 
-        public async Task Ingest(string contextID, string inputJson, ILogger logger, IIssueAccumulator issueAccumulator)
+        public async Task Ingest(string contextID, string inputJson, ILogger logger, IIssueAccumulator issueAccumulator, IModelContextBuilder modelContextBuilder)
         {
             var t = new StopTimer();
 
@@ -123,7 +121,9 @@ namespace OKPluginGenericJSONIngest
 
             var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
-            var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator);
+            using var transIngest = modelContextBuilder.BuildDeferred();
+            var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
+            transIngest.Commit();
 
             using var transUpdateIssues = modelContextBuilder.BuildDeferred();
             await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
@@ -132,7 +132,7 @@ namespace OKPluginGenericJSONIngest
             t.Stop((ts, elapsedTime) => logger.LogInformation($"Ingest successful, done in {elapsedTime}; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations"));
         }
 
-        public async Task IngestRaw(GenericInboundData genericInboundData, string[] searchLayerIDs, string writeLayerID, ILogger logger, IIssueAccumulator issueAccumulator)
+        public async Task IngestRaw(GenericInboundData genericInboundData, string[] searchLayerIDs, string writeLayerID, ILogger logger, IIssueAccumulator issueAccumulator, IModelContextBuilder modelContextBuilder)
         {
             var t = new StopTimer();
 
@@ -174,7 +174,10 @@ namespace OKPluginGenericJSONIngest
 
             var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
-            var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator);
+
+            using var transIngest = modelContextBuilder.BuildDeferred();
+            var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
+            transIngest.Commit();
 
             using var transUpdateIssues = modelContextBuilder.BuildDeferred();
             await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);

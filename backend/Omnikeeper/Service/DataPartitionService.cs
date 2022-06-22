@@ -12,16 +12,14 @@ namespace Omnikeeper.Service
     {
         private readonly ILogger<DataPartitionService> logger;
         private readonly IPartitionModel partitionModel;
-        private readonly IModelContextBuilder modelContextBuilder;
 
-        public DataPartitionService(ILogger<DataPartitionService> logger, IPartitionModel partitionModel, IModelContextBuilder modelContextBuilder)
+        public DataPartitionService(ILogger<DataPartitionService> logger, IPartitionModel partitionModel)
         {
             this.logger = logger;
             this.partitionModel = partitionModel;
-            this.modelContextBuilder = modelContextBuilder;
         }
 
-        public async Task<bool> StartNewPartition()
+        public async Task<bool> StartNewPartition(IModelContextBuilder modelContextBuilder)
         {
             try
             {

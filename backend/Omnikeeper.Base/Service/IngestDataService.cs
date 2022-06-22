@@ -13,29 +13,23 @@ namespace Omnikeeper.Base.Service
     public class IngestDataService
     {
         private readonly CIMappingService ciMappingService;
-        private readonly IModelContextBuilder modelContextBuilder;
 
         private IAttributeModel AttributeModel { get; }
         private ICIModel CIModel { get; }
-        private IChangesetModel ChangesetModel { get; }
         private IRelationModel RelationModel { get; }
 
-        public IngestDataService(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, IRelationModel relationModel,
-            CIMappingService ciMappingService, IModelContextBuilder modelContextBuilder)
+        public IngestDataService(IAttributeModel attributeModel, ICIModel ciModel, IRelationModel relationModel, CIMappingService ciMappingService)
         {
             AttributeModel = attributeModel;
             CIModel = ciModel;
-            ChangesetModel = changesetModel;
             RelationModel = relationModel;
             this.ciMappingService = ciMappingService;
-            this.modelContextBuilder = modelContextBuilder;
         }
 
         // TODO: add ci-based authorization
-        public async Task<(int numAffectedAttributes, int numAffectedRelations)> Ingest(IngestData data, Layer writeLayer, ChangesetProxy changesetProxy, IIssueAccumulator issueAccumulator)
+        public async Task<(int numAffectedAttributes, int numAffectedRelations)> Ingest(IngestData data, Layer writeLayer, ChangesetProxy changesetProxy, 
+            IIssueAccumulator issueAccumulator, IModelContext trans)
         {
-            using var trans = modelContextBuilder.BuildDeferred();
-
             var ciMappingContext = new CIMappingService.CIMappingContext(AttributeModel, RelationModel, changesetProxy.TimeThreshold);
             var cisToCreate = new List<Guid>();
             var ciCandidatesToInsert = new Dictionary<Guid, (CICandidateAttributeData attributes, Guid targetCIID, string tempID)>();
@@ -232,8 +226,6 @@ namespace Omnikeeper.Base.Service
             }
             var bulkRelationData = new BulkRelationDataLayerScope(writeLayer.ID, relationFragments.ToArray());
             var numAffectedRelations = await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans, maskHandling, otherLayersValueHandling);
-
-            trans.Commit();
 
             return (numAffectedAttributes, numAffectedRelations);
         }

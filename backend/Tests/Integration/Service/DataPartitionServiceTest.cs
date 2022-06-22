@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,7 +28,7 @@ namespace Tests.Integration.Service
             var attributesBefore = await attributeModel.GetMergedAttributes(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
             var relationsBefore = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
 
-            Assert.IsTrue(await dataPartitionService.StartNewPartition());
+            Assert.IsTrue(await dataPartitionService.StartNewPartition(ServiceProvider.GetRequiredService<IModelContextBuilder>()));
 
             var attributesAfter = await attributeModel.GetMergedAttributes(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
             var relationsAfter = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
@@ -37,7 +38,7 @@ namespace Tests.Integration.Service
 
             Thread.Sleep(1000); // need to sleep because partitioning service does not support performing a new partitioning in the same second
 
-            Assert.IsTrue(await dataPartitionService.StartNewPartition());
+            Assert.IsTrue(await dataPartitionService.StartNewPartition(ServiceProvider.GetRequiredService<IModelContextBuilder>()));
         }
 
     }

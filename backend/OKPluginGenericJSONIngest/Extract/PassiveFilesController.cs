@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using OKPluginGenericJSONIngest;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -23,11 +24,13 @@ namespace Omnikeeper.Controllers.Ingest
     {
         private readonly ILoggerFactory loggerFactory;
         private readonly GenericJsonIngestService ingestService;
+        private readonly IModelContextBuilder modelContextBuilder;
 
-        public PassiveFilesController(ILoggerFactory loggerFactory, GenericJsonIngestService ingestService)
+        public PassiveFilesController(ILoggerFactory loggerFactory, GenericJsonIngestService ingestService, IModelContextBuilder modelContextBuilder)
         {
             this.loggerFactory = loggerFactory;
             this.ingestService = ingestService;
+            this.modelContextBuilder = modelContextBuilder;
         }
 
         private string BuildJsonInput(IEnumerable<IFormFile> files)
@@ -99,7 +102,7 @@ namespace Omnikeeper.Controllers.Ingest
 
                 var issueAccumulator = new IssueAccumulator("DataIngest", $"GenericJsonIngest_{context}");
 
-                await ingestService.Ingest(context, inputJson, logger, issueAccumulator);
+                await ingestService.Ingest(context, inputJson, logger, issueAccumulator, modelContextBuilder);
 
                 return Ok();
             }
@@ -126,7 +129,7 @@ namespace Omnikeeper.Controllers.Ingest
             {
                 var issueAccumulator = new IssueAccumulator("DataIngest", $"RawJsonIngest_{string.Join("-", readLayerIDs)}_{writeLayerID}");
 
-                await ingestService.IngestRaw(data, readLayerIDs, writeLayerID, logger, issueAccumulator);
+                await ingestService.IngestRaw(data, readLayerIDs, writeLayerID, logger, issueAccumulator, modelContextBuilder);
 
                 return Ok();
             }

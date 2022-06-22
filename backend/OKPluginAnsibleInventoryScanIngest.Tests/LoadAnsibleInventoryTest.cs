@@ -61,7 +61,7 @@ namespace Tests.Ingest
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
             var modelContextBuilder = new ModelContextBuilder(conn, NullLogger<IModelContext>.Instance);
-            var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService(), modelContextBuilder);
+            var ingestDataService = new IngestDataService(attributeModel, ciModel, relationModel, new CIMappingService());
             var changesetModel = new ChangesetModel(userModel);
             var issuePersister = new Mock<IIssuePersister>();
 

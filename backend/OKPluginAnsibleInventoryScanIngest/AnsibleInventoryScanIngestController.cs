@@ -95,7 +95,9 @@ namespace OKPluginAnsibleInventoryScanIngest
 
                 var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator);
+                using var transIngest = modelContextBuilder.BuildDeferred();
+                var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
+                transIngest.Commit();
 
                 using var transUpdateIssues = modelContextBuilder.BuildDeferred();
                 await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
