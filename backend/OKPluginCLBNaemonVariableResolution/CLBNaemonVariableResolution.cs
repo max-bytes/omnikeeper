@@ -294,11 +294,31 @@ namespace OKPluginCLBNaemonVariableResolution
             foreach (var (ciid, hs) in filteredHOS)
             {
                 hs.AddVariables(
-                    new Variable("LOCATION", "FIXED", Regex.Replace(hs.Location ?? "", @"\p{C}+", string.Empty)),
                     new Variable("OS", "FIXED", hs.OS ?? ""),
                     new Variable("PLATFORM", "FIXED", hs.Platform ?? ""),
                     new Variable("ADDRESS", "FIXED", hs.MonIPAddress ?? ""),
                     new Variable("PORT", "FIXED", hs.MonIPPort ?? "")
+                );
+
+                // location
+                // reference: updateNormalizedCiData_updateLocationField()
+                var location = hs.Location;
+                if (location == null || location.Length == 0)
+                {
+                    if (hs.Service != null)
+                    { // NOTE: we only do this for services; the old code doesn't explicitly say that it only does it for services, but implicitly, it does
+                        // try to find location via runsOn relation
+                        if (hs.RunsOn.HasValue)
+                        {
+                            if (filteredHOS.TryGetValue(hs.RunsOn.Value, out var parentHS))
+                            {
+                                location = parentHS.Location;
+                            }
+                        }
+                    }
+                }
+                hs.AddVariables(
+                    new Variable("LOCATION", "FIXED", Regex.Replace(location ?? "", @"\p{C}+", string.Empty))
                 );
 
                 // instance rules
@@ -406,7 +426,7 @@ namespace OKPluginCLBNaemonVariableResolution
                 var osSupportGroupName = "UNKNOWN";
                 if (hs.OSSupportGroup.HasValue && groups.TryGetValue(hs.OSSupportGroup.Value, out var osSupportGroup))
                     osSupportGroupName = osSupportGroup.Name;
-                var appSupportGroupName = "UNKNOWN";
+                var appSupportGroupName = "00EMPTY";
                 if (hs.AppSupportGroup.HasValue && groups.TryGetValue(hs.AppSupportGroup.Value, out var appSupportGroup))
                     appSupportGroupName = appSupportGroup.Name;
 

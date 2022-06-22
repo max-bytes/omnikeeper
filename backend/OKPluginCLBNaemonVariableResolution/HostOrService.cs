@@ -32,12 +32,13 @@ namespace OKPluginCLBNaemonVariableResolution
         public Guid? CustomerCIID => Get(h => h.Customer, s => s.Customer);
         public Guid? OSSupportGroup => Get(h => h.OSSupportGroup, s => s.OSSupportGroup);
         public Guid? AppSupportGroup => Get(h => h.AppSupportGroup, s => s.AppSupportGroup);
+        public Guid? RunsOn => Get(h => h.RunsOn, s => s.RunsOn);
         public string? Environment => Get(h => h.Environment, s => s.Environment);
         public string? Criticality => Get(h => h.Criticality, s => s.Criticality);
         public string? Instance => Get(h => h.Instance, s => s.Instance);
         public string? ForeignSource => Get(h => h.ForeignSource, s => s.ForeignSource);
         public string? ForeignKey => Get(h => h.ForeignKey, s => s.ForeignKey);
-        public string? Location => Get(h => h.Location, s => "00EMPTY"); // TODO: services have locations too
+        public string? Location => Get(h => h.Location, s => null);
         public string? OS => Get(h => h.OS, s => null);
         public string? Platform => Get(h => h.Platform, s => null);
         public string? MonIPAddress => Get(h => h.MonIPAddress, s => s.MonIPAddress);
