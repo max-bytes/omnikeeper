@@ -5,7 +5,6 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -18,24 +17,22 @@ namespace OKPluginVisualization
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [Authorize]
-    public class GraphvizDotController : ControllerBase
+    public class CytoscapeController : ControllerBase
     {
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ITraitsProvider traitsProvider;
         private readonly ICurrentUserAccessor currentUserAccessor;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly TraitCentricDataGenerator traitCentricDataGenerator;
-        private readonly LayerCentricUsageGenerator layerCentricUsageGenerator;
 
-        public GraphvizDotController(IModelContextBuilder modelContextBuilder, ITraitsProvider traitsProvider, ICurrentUserAccessor currentUserAccessor,
-            ILayerBasedAuthorizationService layerBasedAuthorizationService, TraitCentricDataGenerator traitCentricDataGenerator, LayerCentricUsageGenerator layerCentricUsageGenerator)
+        public CytoscapeController(IModelContextBuilder modelContextBuilder, ITraitsProvider traitsProvider, ICurrentUserAccessor currentUserAccessor,
+            ILayerBasedAuthorizationService layerBasedAuthorizationService, TraitCentricDataGenerator traitCentricDataGenerator)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.traitsProvider = traitsProvider;
             this.currentUserAccessor = currentUserAccessor;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.traitCentricDataGenerator = traitCentricDataGenerator;
-            this.layerCentricUsageGenerator = layerCentricUsageGenerator;
         }
 
         [HttpGet("traitCentric")]
@@ -61,30 +58,9 @@ namespace OKPluginVisualization
             else
                 return BadRequest("No trait IDs specified");
 
-            var ret = await traitCentricDataGenerator.GenerateDot(layerSet, traits, trans, timeThreshold);
+            var ret = await traitCentricDataGenerator.GenerateCytoscape(layerSet, traits, trans, timeThreshold);
 
-            return Content(ret);
-        }
-
-
-        [HttpGet("layerCentric")]
-        public async Task<IActionResult> LayerCentric([FromQuery, Required] string[] layerIDs, [FromQuery, Required] DateTimeOffset from, [FromQuery, Required] DateTimeOffset to)
-        {
-            if (layerIDs.IsEmpty())
-                return BadRequest("No layer IDs specified");
-
-            using var trans = modelContextBuilder.BuildImmediate();
-
-            var user = await currentUserAccessor.GetCurrentUser(trans);
-            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
-                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
-
-            var layerSet = new LayerSet(layerIDs);
-            var timeThreshold = TimeThreshold.BuildLatest();
-
-            var ret = await layerCentricUsageGenerator.Generate(layerSet, from, to, trans, timeThreshold);
-
-            return Content(ret);
+            return Ok(ret.RootElement);
         }
     }
 }

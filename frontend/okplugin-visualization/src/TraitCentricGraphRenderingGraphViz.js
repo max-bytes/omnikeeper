@@ -11,7 +11,7 @@ import Text from "antd/lib/typography/Text";
 import _ from 'lodash';
 import Graph from "./Graph.js";
 
-export default function TraitCentricGraphRendering(props) {
+export default function TraitCentricGraphRenderingGraphViz(props) {
     
     const [graphDefinition, setGraphDefinition] = useState(null);
     const [graphDefinitionLoading, setGraphDefinitionLoading] = useState(null);
@@ -24,7 +24,7 @@ export default function TraitCentricGraphRendering(props) {
     
     return <div style={styles.container}>
         <div style={styles.filterColumn}>
-            <h2>Trait-Centric Graph Rendering</h2>
+            <h2>Trait-Centric Graph Rendering (GraphViz)</h2>
             <div style={styles.filterColumnEntry}>
                 <Paragraph>
                     Visualizes CIs that fulfill the selected traits as nodes in a graph, and relations with predicates as edges between them. 

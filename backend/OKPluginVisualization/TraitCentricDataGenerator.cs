@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 namespace OKPluginVisualization
@@ -30,7 +32,26 @@ namespace OKPluginVisualization
             this.baseRelationModel = baseRelationModel;
             this.layerDataModel = layerDataModel;
         }
-        public async Task<string> Generate(LayerSet layerSet, IEnumerable<ITrait> traits, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<string> GenerateDot(LayerSet layerSet, IEnumerable<ITrait> traits, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            var (ciidsByTraitSet, layerIDsByCIID, relationEdges) = await Process(layerSet, traits, trans, timeThreshold);
+
+            var layerData = await layerDataModel.GetLayerData(trans, timeThreshold);
+
+            return RenderDot(ciidsByTraitSet, layerIDsByCIID, relationEdges, layerData);
+        }
+
+        public async Task<JsonDocument> GenerateCytoscape(LayerSet layerSet, IEnumerable<ITrait> traits, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            var (ciidsByTraitSet, layerIDsByCIID, relationEdges) = await Process(layerSet, traits, trans, timeThreshold);
+
+            var layerData = await layerDataModel.GetLayerData(trans, timeThreshold);
+
+            return RenderCytoscape(ciidsByTraitSet, layerIDsByCIID, relationEdges, layerData);
+        }
+
+        private async Task<(IDictionary<string, IList<Guid>> ciidsByTraitSet, IDictionary<Guid, ISet<string>> layerIDsByCIID, IDictionary<(string from, string to, string predicateID), IList<MergedRelation>> relationEdges)> 
+            Process(LayerSet layerSet, IEnumerable<ITrait> traits, IModelContext trans, TimeThreshold timeThreshold)
         {
             var predicateIDs = await baseRelationModel.GetPredicateIDs(RelationSelectionAll.Instance, layerSet.LayerIDs, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
 
@@ -103,8 +124,12 @@ namespace OKPluginVisualization
                 }
             }
 
-            var layerData = await layerDataModel.GetLayerData(trans, timeThreshold);
+            return (ciidsByTraitSet, layerIDsByCIID, relationEdges);
+        }
 
+        private string RenderDot(IDictionary<string, IList<Guid>> ciidsByTraitSet, IDictionary<Guid, ISet<string>> layerIDsByCIID, 
+            IDictionary<(string from, string to, string predicateID), IList<MergedRelation>> relationEdges, IDictionary<string, LayerData> layerData)
+        {
             var sb = new StringBuilder();
 
             sb.AppendLine("digraph {");
@@ -137,6 +162,55 @@ namespace OKPluginVisualization
 
             return sb.ToString();
         }
+
+        private JsonDocument RenderCytoscape(IDictionary<string, IList<Guid>> ciidsByTraitSet, IDictionary<Guid, ISet<string>> layerIDsByCIID,
+            IDictionary<(string from, string to, string predicateID), IList<MergedRelation>> relationEdges, IDictionary<string, LayerData> layerData)
+        {
+            var elements = new JsonArray();
+            foreach (var kv in ciidsByTraitSet)
+            {
+                var traitSetKey = kv.Key;
+                var ciids = kv.Value;
+                var traitIDsForNode = traitSetKey.Split('#');
+                var affectingLayerIDs = ciids.SelectMany(ciid => layerIDsByCIID[ciid]).ToHashSet();
+                var layerColors = affectingLayerIDs.Select(layerID => layerData.GetOrWithClass(layerID, null)?.Color).Where(color => color.HasValue).Select(color => ARGBToHexString(color!.Value));
+                //var layerColorIcons = string.Join("", layerColors.Select(color => $"<FONT COLOR=\"{color}\">&#9646;</FONT>"));
+                var nodeColor = (layerColors.Count() == 1) ? layerColors.First() : "black";
+
+                var label = $"{string.Join("\n", traitIDsForNode)}\n({kv.Value.Count()})";
+                elements.Add(new JsonObject()
+                {
+                    ["data"] = new JsonObject() { 
+                        ["id"] = traitSetKey,
+                        ["label"] = label,
+                        ["color"] = nodeColor
+                    },
+                });
+            }
+            foreach (var relationEdge in relationEdges)
+            {
+                var key = relationEdge.Key;
+                var affectingLayerIDs = relationEdge.Value.Select(r => r.LayerStackIDs.First()).ToHashSet();
+                var layerColors = affectingLayerIDs.Select(layerID => layerData.GetOrWithClass(layerID, null)?.Color).Where(color => color.HasValue).Select(color => ARGBToHexString(color!.Value));
+                //var layerColorIcons = string.Join("", layerColors.Select(color => $"<FONT COLOR=\"{color}\">&#9646;</FONT>"));
+                var edgeColor = (layerColors.Count() == 1) ? layerColors.First() : "black";
+
+                elements.Add(new JsonObject()
+                {
+                    ["data"] = new JsonObject()
+                    {
+                        ["id"] = $"{key.from} -> {key.to}",
+                        ["source"] = key.from,
+                        ["target"] = key.to,
+                        ["label"] = $"{ key.predicateID }\n({ relationEdge.Value.Count() })",
+                        ["color"] = edgeColor,
+                    }
+                });
+            }
+
+            return JsonSerializer.SerializeToDocument(elements);
+        }
+
         private string ARGBToHexString(long color)
         {
             return '#' + (color & 0xFFFFFF).ToString("X6");
