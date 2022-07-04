@@ -111,53 +111,65 @@ namespace Omnikeeper.Startup
                         .GroupBy(e => e.TargetFramework.GetShortFolderName())
                         .Last()
                         .Select(e => e.Entry)
-                        .ToArray();
+                        .ToList();
 
                     var pluginAssemblies = new List<string>();
                     PluginLoadContext loadContext = new PluginLoadContext();
-                    foreach (var e in dllEntries)
+
+                    // load plugins
+                    // NOTE: we load plugins in a double loop to be able to load plugins with dependencies on other plugins. Eventually, all plugins will be loaded
+                    var stopLoading = true;
+                    do
                     {
-                        var finalDLLFile = Path.Combine(extractedFolder, e.Name);
-                        e.ExtractToFile(finalDLLFile, overwrite: true);
-
-                        Assembly? assembly;
-                        bool isMainPluginAssembly = false;
-                        try
+                        stopLoading = true;
+                        for(var index = dllEntries.Count - 1;index >= 0;index--)
                         {
-                            loadContext.AddResolverFromPath(finalDLLFile);
-                            assembly = loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(finalDLLFile)));
+                            var e = dllEntries[index];
+                            var finalDLLFile = Path.Combine(extractedFolder, e.Name);
+                            e.ExtractToFile(finalDLLFile, overwrite: true);
 
-                            // we use a temporary container to extract the plugin registration, which then does the actual registration
-                            var tmpBuilder = new ContainerBuilder();
-                            tmpBuilder.RegisterAssemblyTypes(assembly).Where(t => t.IsAssignableTo<IPluginRegistration>()).AsImplementedInterfaces().SingleInstance();
-                            using var tmpContainer = tmpBuilder.Build();
-                            var x = tmpContainer.ComponentRegistry.Registrations;
-                            if (tmpContainer.TryResolve<IPluginRegistration>(out var pr))
+                            Assembly? assembly;
+                            bool isMainPluginAssembly = false;
+                            try
                             {
-                                // register plugin itself and its own services
-                                builder.RegisterInstance(pr);
-                                var serviceCollection = new ServiceCollection();
-                                pr.RegisterServices(serviceCollection);
-                                builder.Populate(serviceCollection);
+                                loadContext.AddResolverFromPath(finalDLLFile);
+                                assembly = loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(finalDLLFile)));
 
-                                Console.WriteLine($"Loaded OKPlugin {pr.Name}, Version {pr.Version}"); // TODO: better logging
+                                // we use a temporary container to extract the plugin registration, which then does the actual registration
+                                var tmpBuilder = new ContainerBuilder();
+                                tmpBuilder.RegisterAssemblyTypes(assembly).Where(t => t.IsAssignableTo<IPluginRegistration>()).AsImplementedInterfaces().SingleInstance();
+                                using var tmpContainer = tmpBuilder.Build();
+                                var x = tmpContainer.ComponentRegistry.Registrations;
+                                if (tmpContainer.TryResolve<IPluginRegistration>(out var pr))
+                                {
+                                    // register plugin itself and its own services
+                                    builder.RegisterInstance(pr);
+                                    var serviceCollection = new ServiceCollection();
+                                    pr.RegisterServices(serviceCollection);
+                                    builder.Populate(serviceCollection);
 
-                                isMainPluginAssembly = true;
+                                    Console.WriteLine($"Loaded OKPlugin {pr.Name}, Version {pr.Version}"); // TODO: better logging
+
+                                    isMainPluginAssembly = true;
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"Encountered OKPlugin without IPluginRegistration, skipping! Assembly: {assembly.FullName}"); // TODO: better logging
+                                }
+
+                                dllEntries.RemoveAt(index);
+                                stopLoading = false; // whenever we were able to load another dll, we repeat the outer loop and try to load more, to 
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                Console.WriteLine($"Encountered OKPlugin without IPluginRegistration! Assembly: {assembly.FullName}"); // TODO: better logging
+                                Console.WriteLine($"Could not load assembly at location {finalDLLFile}: {ex.Message}"); // TODO: better error handling
+                                continue;
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Could not load assembly at location {finalDLLFile}: {ex.Message}"); // TODO: better error handling
-                            continue;
-                        }
 
-                        if (isMainPluginAssembly)
-                            yield return assembly; // we only return those assemblies that contain an IPluginRegistration
-                    }
+                            if (isMainPluginAssembly)
+                                yield return assembly; // we only return those assemblies that contain an IPluginRegistration
+                        }
+                    } while (!dllEntries.IsEmpty() && !stopLoading);
                 }
             }
         }
