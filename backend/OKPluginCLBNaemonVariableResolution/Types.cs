@@ -85,7 +85,7 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitRelation("monitoringTargets", "monitors", true)]
         public Guid[] MonitoringTargets;
 
-        [TraitRelation("runsOn", "runs_on", true)]
+        [TraitRelation("runsOn", "runs_on", true, new string[] { "tsa_cmdb.host" })]
         public Guid? RunsOn;
 
         public NaemonInstanceV1()
