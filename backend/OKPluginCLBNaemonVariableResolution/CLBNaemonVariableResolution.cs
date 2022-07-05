@@ -393,6 +393,12 @@ namespace OKPluginCLBNaemonVariableResolution
             // reference: updateNormalizedCiData_postProcessVars()
             foreach (var (ciid, hs) in filteredHOS)
             {
+                // ensure dynamic module injection off for ping-only patterns
+                if (hs.HasProfileMatchingRegex("ping-only", RegexOptions.IgnoreCase))
+                {
+                    hs.AddVariable(new Variable("DYNAMICMODULES", "FIXED", "NO"));
+                }
+
                 // dynamically set profile under certain circumstances
                 if (hs.Profiles.Count != 1 && hs.Host != null)
                 {
