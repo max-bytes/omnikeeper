@@ -13,7 +13,7 @@ namespace Omnikeeper.Base.Model
         IDictionary<Guid, T> FilterDictionary2Dictionary<T>(IDictionary<Guid, T> items);
     }
 
-    public class SpecificCIIDsSelection : ICIIDSelection, IEquatable<SpecificCIIDsSelection>
+    public sealed class SpecificCIIDsSelection : ICIIDSelection, IEquatable<SpecificCIIDsSelection>
     {
         public IReadOnlySet<Guid> CIIDs { get; }
         private SpecificCIIDsSelection(IReadOnlySet<Guid> ciids)
@@ -52,7 +52,7 @@ namespace Omnikeeper.Base.Model
         public bool Equals(SpecificCIIDsSelection? other) => other != null && CIIDs.SetEquals(other.CIIDs);
     }
 
-    public class AllCIIDsExceptSelection : ICIIDSelection, IEquatable<AllCIIDsExceptSelection>
+    public sealed class AllCIIDsExceptSelection : ICIIDSelection, IEquatable<AllCIIDsExceptSelection>
     {
         public IReadOnlySet<Guid> ExceptCIIDs { get; }
         private AllCIIDsExceptSelection(IReadOnlySet<Guid> ciids)
@@ -90,7 +90,7 @@ namespace Omnikeeper.Base.Model
         public bool Equals(AllCIIDsExceptSelection? other) => other != null && ExceptCIIDs.SetEquals(other.ExceptCIIDs);
     }
 
-    public class AllCIIDsSelection : ICIIDSelection, IEquatable<AllCIIDsSelection>
+    public sealed class AllCIIDsSelection : ICIIDSelection, IEquatable<AllCIIDsSelection>
     {
         public bool Contains(Guid ciid) => true;
         public IDictionary<Guid, T> FilterDictionary2Dictionary<T>(IDictionary<Guid, T> items) => items;
@@ -104,7 +104,7 @@ namespace Omnikeeper.Base.Model
         public static AllCIIDsSelection Instance = new AllCIIDsSelection();
     }
 
-    public class NoCIIDsSelection : ICIIDSelection, IEquatable<NoCIIDsSelection>
+    public sealed class NoCIIDsSelection : ICIIDSelection, IEquatable<NoCIIDsSelection>
     {
         public bool Contains(Guid ciid) => false;
         public IDictionary<Guid, T> FilterDictionary2Dictionary<T>(IDictionary<Guid, T> items) => ImmutableDictionary<Guid, T>.Empty;

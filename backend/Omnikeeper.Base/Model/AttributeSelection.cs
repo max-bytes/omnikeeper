@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
@@ -14,7 +13,7 @@ namespace Omnikeeper.Base.Model
         bool ContainsAttribute(CIAttribute attribute);
     }
 
-    public class NamedAttributesSelection : IAttributeSelection, IEquatable<NamedAttributesSelection>
+    public sealed class NamedAttributesSelection : IAttributeSelection, IEquatable<NamedAttributesSelection>
     {
         public readonly IReadOnlySet<string> AttributeNames;
 
@@ -73,7 +72,7 @@ namespace Omnikeeper.Base.Model
     //    public bool Equals(NamedAttributesWithValueFiltersSelection? other) => other != null && NamesAndFilters.SequenceEqual(other.NamesAndFilters);
     //}
 
-    public class AllAttributeSelection : IAttributeSelection, IEquatable<AllAttributeSelection>
+    public sealed class AllAttributeSelection : IAttributeSelection, IEquatable<AllAttributeSelection>
     {
         private AllAttributeSelection() { }
 
@@ -87,7 +86,7 @@ namespace Omnikeeper.Base.Model
         public bool Equals(AllAttributeSelection? other) => other != null;
     }
 
-    public class NoAttributesSelection : IAttributeSelection, IEquatable<NoAttributesSelection>
+    public sealed class NoAttributesSelection : IAttributeSelection, IEquatable<NoAttributesSelection>
     {
         private NoAttributesSelection() { }
 

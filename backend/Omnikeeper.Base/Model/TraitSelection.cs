@@ -10,7 +10,7 @@ namespace Omnikeeper.Base.Model
         bool Contains(string traitID);
     }
 
-    public class NamedTraitsSelection : ITraitSelection, IEquatable<NamedTraitsSelection>
+    public sealed class NamedTraitsSelection : ITraitSelection, IEquatable<NamedTraitsSelection>
     {
         public readonly IReadOnlySet<string> TraitIDs;
         private readonly int hashCode;
@@ -47,7 +47,7 @@ namespace Omnikeeper.Base.Model
 
     }
 
-    public class AllTraitsSelection : ITraitSelection, IEquatable<AllTraitsSelection>
+    public sealed class AllTraitsSelection : ITraitSelection, IEquatable<AllTraitsSelection>
     {
         private AllTraitsSelection() { }
 
@@ -60,7 +60,7 @@ namespace Omnikeeper.Base.Model
         public bool Equals(AllTraitsSelection? other) => other != null;
     }
 
-    public class NoTraitsSelection : ITraitSelection, IEquatable<NoTraitsSelection>
+    public sealed class NoTraitsSelection : ITraitSelection, IEquatable<NoTraitsSelection>
     {
         private NoTraitsSelection() { }
 

@@ -9,7 +9,7 @@ namespace Omnikeeper.Base.Model
     public interface IRelationSelection
     {
     }
-    public class RelationSelectionFrom : IRelationSelection, IEquatable<RelationSelectionFrom>
+    public sealed class RelationSelectionFrom : IRelationSelection, IEquatable<RelationSelectionFrom>
     {
         public IReadOnlySet<Guid> FromCIIDs { get; }
         public IReadOnlySet<string>? PredicateIDs { get; } // NOTE: null means all
@@ -57,7 +57,7 @@ namespace Omnikeeper.Base.Model
         public override bool Equals(object? obj) => Equals(obj as RelationSelectionFrom);
         public bool Equals(RelationSelectionFrom? other) => other != null && FromCIIDs.SetEquals(other.FromCIIDs);
     }
-    public class RelationSelectionTo : IRelationSelection, IEquatable<RelationSelectionTo>
+    public sealed class RelationSelectionTo : IRelationSelection, IEquatable<RelationSelectionTo>
     {
         public IReadOnlySet<Guid> ToCIIDs { get; }
         public IReadOnlySet<string>? PredicateIDs { get; } // NOTE: null means all
@@ -103,7 +103,7 @@ namespace Omnikeeper.Base.Model
         public override bool Equals(object? obj) => Equals(obj as RelationSelectionTo);
         public bool Equals(RelationSelectionTo? other) => other != null && ToCIIDs.SetEquals(other.ToCIIDs);
     }
-    public class RelationSelectionWithPredicate : IRelationSelection, IEquatable<RelationSelectionWithPredicate>
+    public sealed class RelationSelectionWithPredicate : IRelationSelection, IEquatable<RelationSelectionWithPredicate>
     {
         public readonly ISet<string> PredicateIDs;
 
@@ -134,7 +134,7 @@ namespace Omnikeeper.Base.Model
         public bool Equals(RelationSelectionWithPredicate? other) => other != null && PredicateIDs.SetEquals(other.PredicateIDs);
     }
 
-    public class RelationSelectionSpecific : IRelationSelection, IEquatable<RelationSelectionSpecific>
+    public sealed class RelationSelectionSpecific : IRelationSelection, IEquatable<RelationSelectionSpecific>
     {
         public ISet<(Guid from, Guid to, string predicateID)> Specifics { get; }
         private RelationSelectionSpecific(ISet<(Guid from, Guid to, string predicateID)> specifics)
@@ -161,12 +161,12 @@ namespace Omnikeeper.Base.Model
         public bool Equals(RelationSelectionSpecific? other) => other != null && Specifics.SetEquals(other.Specifics);
     }
 
-    public class RelationSelectionAll : IRelationSelection
+    public sealed class RelationSelectionAll : IRelationSelection
     {
         private RelationSelectionAll() { }
         public static RelationSelectionAll Instance = new RelationSelectionAll();
     }
-    public class RelationSelectionNone : IRelationSelection
+    public sealed class RelationSelectionNone : IRelationSelection
     {
         private RelationSelectionNone() { }
         public static RelationSelectionNone Instance = new RelationSelectionNone();

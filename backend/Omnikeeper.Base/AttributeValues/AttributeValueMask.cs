@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Omnikeeper.Entity.AttributeValues
+﻿namespace Omnikeeper.Entity.AttributeValues
 {
     public interface IAttributeValueMask
     {
