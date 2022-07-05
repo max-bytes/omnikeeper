@@ -183,7 +183,8 @@ namespace OKPluginVisualization
                     ["data"] = new JsonObject() { 
                         ["id"] = traitSetKey,
                         ["label"] = label,
-                        ["color"] = nodeColor
+                        //["color"] = nodeColor,
+                        ["colors"] = JsonSerializer.SerializeToNode(layerColors.ToArray())
                     },
                 });
             }
@@ -199,11 +200,12 @@ namespace OKPluginVisualization
                 {
                     ["data"] = new JsonObject()
                     {
-                        ["id"] = $"{key.from} -> {key.to}",
+                        ["id"] = $"{key.from} -> {key.predicateID} -> {key.to}",
                         ["source"] = key.from,
                         ["target"] = key.to,
                         ["label"] = $"{ key.predicateID }\n({ relationEdge.Value.Count() })",
-                        ["color"] = edgeColor,
+                        //["color"] = edgeColor,
+                        ["colors"] = JsonSerializer.SerializeToNode(layerColors.ToArray())
                     }
                 });
             }

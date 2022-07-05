@@ -27,7 +27,8 @@ export default function TraitCentricGraphRenderingCytoscape(props) {
     const layoutOptions = {
         name: 'fcose',
         quality: "proof",
-        animate: false,
+        animate: true,
+        animationEasing: 'ease-out-cubic',
         nodeDimensionsIncludeLabels: true,
         idealEdgeLength: edge => 300,
       };
@@ -52,9 +53,13 @@ export default function TraitCentricGraphRenderingCytoscape(props) {
                     'shape': 'rectangle',
                     'width': calculateNodeWidth,
                     'height': calculateNodeHeight,
-                    'background-color': '#fff',
-                    'border-width': '2',
-                    'border-color': 'data(color)',
+                    // 'background-color': '#fff',
+                    'background-fill': 'linear-gradient',
+                    'background-gradient-stop-colors': calculateBackgroundGradientStopColors, // 'white white red red green green blue blue white',
+                    'background-gradient-stop-positions': calculateBackgroundGradientStopPositions,//'0px 3px 3px 9px 9px 15px 15px 21px 21px',
+                    // 'padding-top': '18px',
+                    'border-width': '3px',
+                    'border-color': (node) => node.data('colors')[0],
                     'label': 'data(label)',
                     'text-halign': 'center',
                     'text-valign': 'center',
@@ -66,8 +71,8 @@ export default function TraitCentricGraphRenderingCytoscape(props) {
                 selector: 'edge',
                 style: {
                     // 'width': 3,
-                    'line-color': 'data(color)',
-                    'target-arrow-color': 'data(color)',
+                    'line-color': (node) => node.data('colors')[0],
+                    'target-arrow-color': (node) => node.data('colors')[0],
                     'target-arrow-shape': 'triangle',
                     'curve-style': 'bezier',
                     'label': 'data(label)',
@@ -218,11 +223,7 @@ function calculateNodeHeight(node) {
     const family = node.pstyle('font-family').strValue;
     const weight = node.pstyle('font-weight').strValue;
     ctx.font = fStyle + ' ' + weight + ' ' + size + ' ' + family;
-
-    // For multiple lines, evaluate the width of the largest line
-    const lines = node.data('label').split('\n')
-    const lengths = lines.map(a => a.length);
-    // const max_line = lengths.indexOf(Math.max(...lengths));
+    const lines = node.data('label').split('\n');
 
     // User-defined padding
     const padding = 20
@@ -231,4 +232,21 @@ function calculateNodeHeight(node) {
         const tm = ctx.measureText(line);
         return tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
     })) + padding;
+}
+
+function calculateBackgroundGradientStopColors(node) {
+    const layerColors = node.data('colors');
+    const inners = _.flatMap(layerColors, color => [color, color]);
+    const ret = _.join(_.flatten([['white'], inners, ['white']]), ' ');
+    // console.log(ret);
+    return ret;
+}
+function calculateBackgroundGradientStopPositions(node) {
+    const layerColors = node.data('colors');
+    const positionOffset = 3 - 0.01; // equal to border
+    const layerThickness = 6;
+    const inners = _.flatMap(layerColors, (color, i) => [positionOffset + i * layerThickness, positionOffset + i * layerThickness + layerThickness]);
+    const ret = _.join(_.flatten([[positionOffset], inners, [positionOffset + layerColors.length * layerThickness]]), ' ');
+    // console.log(ret);
+    return ret;
 }
