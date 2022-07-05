@@ -6,8 +6,7 @@ namespace Omnikeeper.Entity.AttributeValues
     {
     }
 
-    //[ProtoContract(SkipConstructor = true)]
-    public class AttributeScalarValueMask : IAttributeScalarValue<object>, IEquatable<AttributeScalarValueMask>, IAttributeValueMask
+    public sealed record class AttributeScalarValueMask() : IAttributeScalarValue<object>, IAttributeValueMask
     {
         private static readonly object o = new object();
         private static readonly string[] oArray = new string[] { "" };
@@ -25,12 +24,6 @@ namespace Omnikeeper.Entity.AttributeValues
         public object Value => o;
 
         public bool Equals(IAttributeValue? other) => Equals(other as AttributeScalarValueMask);
-        public bool Equals(AttributeScalarValueMask? other) => other != null;
-        public override int GetHashCode() => o.GetHashCode();
-
-        private AttributeScalarValueMask()
-        {
-        }
 
         public static readonly AttributeScalarValueMask Instance = new AttributeScalarValueMask();
     }

@@ -37,26 +37,8 @@ namespace Omnikeeper.Entity.AttributeValues
         public S[] Values { get; }
     }
 
-    //[ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
-    //[ProtoInclude(2, typeof(AttributeArrayValueImage))]
-    //[ProtoInclude(3, typeof(AttributeArrayValueInteger))]
-    //[ProtoInclude(4, typeof(AttributeArrayValueJSON))]
-    //[ProtoInclude(5, typeof(AttributeArrayValueText))]
-    //[ProtoInclude(6, typeof(AttributeArrayValueYAML))]
-    public abstract class AttributeArrayValue<S, T> : IAttributeArrayValue<S, T>, IEquatable<AttributeArrayValue<S, T>> where S : IAttributeScalarValue<T>
+    public abstract record class AttributeArrayValue<S, T>(S[] Values) : IAttributeArrayValue<S, T>, IEquatable<AttributeArrayValue<S, T>> where S : IAttributeScalarValue<T>
     {
-        public S[] Values => values;
-        //[ProtoMember(1)]
-        private readonly S[] values = Array.Empty<S>();
-
-        protected AttributeArrayValue(S[] values)
-        {
-            this.values = values;
-        }
-
-#pragma warning disable CS8618
-        protected AttributeArrayValue() { }
-#pragma warning restore CS8618
 
         public abstract AttributeValueType Type { get; }
 
@@ -67,7 +49,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public override string ToString() => $"AV-Array: {Value2String()}";
 
         public bool Equals(IAttributeValue? other) => Equals(other as AttributeArrayValue<S, T>);
-        public bool Equals(AttributeArrayValue<S, T>? other) => other != null && Values.SequenceEqual(other.Values); // does this work?, or do we have to use zip()?
+        public virtual bool Equals(AttributeArrayValue<S, T>? other) => other != null && Values.SequenceEqual(other.Values); // does this work?, or do we have to use zip()?
         public override int GetHashCode() => Values.GetHashCode();
 
         public string[] ToRawDTOValues() => Values.Select(v => v.ToRawDTOValues()[0]).ToArray();

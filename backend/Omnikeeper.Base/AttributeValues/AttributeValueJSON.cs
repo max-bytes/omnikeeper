@@ -6,7 +6,8 @@ using System.Text.Json;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    public class AttributeScalarValueJSON : IAttributeScalarValue<JsonDocument>, IEquatable<AttributeScalarValueJSON>
+    // NOTE: not a record class because we do things like lazy initialization
+    public sealed class AttributeScalarValueJSON : IAttributeScalarValue<JsonDocument>, IEquatable<AttributeScalarValueJSON>
     {
         private JsonDocument? value;
         private readonly string valueStr;
@@ -106,16 +107,8 @@ namespace Omnikeeper.Entity.AttributeValues
         }
     }
 
-    public class AttributeArrayValueJSON : AttributeArrayValue<AttributeScalarValueJSON, JsonDocument>
+    public sealed record class AttributeArrayValueJSON(AttributeScalarValueJSON[] Values) : AttributeArrayValue<AttributeScalarValueJSON, JsonDocument>(Values)
     {
-        protected AttributeArrayValueJSON(AttributeScalarValueJSON[] values) : base(values)
-        {
-        }
-
-#pragma warning disable CS8618
-        protected AttributeArrayValueJSON() { }
-#pragma warning restore CS8618
-
         public override AttributeValueType Type => AttributeValueType.JSON;
 
         public static AttributeArrayValueJSON BuildFromString(IEnumerable<string> values, bool parse)

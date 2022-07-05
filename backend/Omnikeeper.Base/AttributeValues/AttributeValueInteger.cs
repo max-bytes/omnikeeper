@@ -4,10 +4,8 @@ using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    public class AttributeScalarValueInteger : IAttributeScalarValue<long>, IEquatable<AttributeScalarValueInteger>
+    public sealed record class AttributeScalarValueInteger(long Value) : IAttributeScalarValue<long>
     {
-        private readonly long value;
-        public long Value => value;
         public string Value2String() => Value.ToString();
         public string[] ToRawDTOValues() => new string[] { Value.ToString() };
         public object ToGenericObject() => Value;
@@ -19,13 +17,6 @@ namespace Omnikeeper.Entity.AttributeValues
         public AttributeValueType Type => AttributeValueType.Integer;
 
         public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeScalarValueInteger);
-        public bool Equals([AllowNull] AttributeScalarValueInteger other) => other != null && Value == other.Value;
-        public override int GetHashCode() => Value.GetHashCode();
-
-        public AttributeScalarValueInteger(long value)
-        {
-            this.value = value;
-        }
 
         public static AttributeScalarValueInteger BuildFromString(string value)
         {
@@ -37,16 +28,8 @@ namespace Omnikeeper.Entity.AttributeValues
 
     }
 
-    public class AttributeArrayValueInteger : AttributeArrayValue<AttributeScalarValueInteger, long>
+    public sealed record class AttributeArrayValueInteger(AttributeScalarValueInteger[] Values) : AttributeArrayValue<AttributeScalarValueInteger, long>(Values)
     {
-        public AttributeArrayValueInteger(AttributeScalarValueInteger[] values) : base(values)
-        {
-        }
-
-#pragma warning disable CS8618
-        protected AttributeArrayValueInteger() { }
-#pragma warning restore CS8618
-
         public override AttributeValueType Type => AttributeValueType.Integer;
 
         public static AttributeArrayValueInteger Build(long[] values)

@@ -7,10 +7,8 @@ using System.Text.Json;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    public class AttributeScalarValueImage : IAttributeScalarValue<BinaryScalarAttributeValueProxy>, IEquatable<AttributeScalarValueImage>
+    public sealed record class AttributeScalarValueImage(BinaryScalarAttributeValueProxy Value) : IAttributeScalarValue<BinaryScalarAttributeValueProxy>
     {
-        private readonly BinaryScalarAttributeValueProxy value;
-        public BinaryScalarAttributeValueProxy Value => value;
         public string Value2String() => Value.ToString();
         public string[] ToRawDTOValues()
         {
@@ -28,26 +26,10 @@ namespace Omnikeeper.Entity.AttributeValues
         public AttributeValueType Type => AttributeValueType.Image;
 
         public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeScalarValueImage);
-        public bool Equals([AllowNull] AttributeScalarValueImage other) => other != null && Value.Equals(other.Value);
-        public override int GetHashCode() => Value.GetHashCode();
-
-        public AttributeScalarValueImage(BinaryScalarAttributeValueProxy proxy)
-        {
-            this.value = proxy;
-        }
     }
 
-    //[ProtoContract]
-    public class AttributeArrayValueImage : AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>
+    public sealed record class AttributeArrayValueImage(AttributeScalarValueImage[] Values) : AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>(Values)
     {
-        protected AttributeArrayValueImage(AttributeScalarValueImage[] values) : base(values)
-        {
-        }
-
-#pragma warning disable CS8618
-        protected AttributeArrayValueImage() { }
-#pragma warning restore CS8618
-
         public override AttributeValueType Type => AttributeValueType.Image;
 
         public static AttributeArrayValueImage Build(IEnumerable<BinaryScalarAttributeValueProxy> proxies)

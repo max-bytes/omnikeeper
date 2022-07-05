@@ -5,10 +5,8 @@ using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    public class AttributeScalarValueDouble : IAttributeScalarValue<double>, IEquatable<AttributeScalarValueDouble>
+    public sealed record class AttributeScalarValueDouble(double Value) : IAttributeScalarValue<double>
     {
-        private readonly double value;
-        public double Value => value;
         public string Value2String() => Value.ToString(CultureInfo.InvariantCulture);
         public string[] ToRawDTOValues() => new string[] { Value.ToString(CultureInfo.InvariantCulture) };
         public object ToGenericObject() => Value;
@@ -22,13 +20,6 @@ namespace Omnikeeper.Entity.AttributeValues
         public AttributeValueType Type => AttributeValueType.Double;
 
         public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeScalarValueDouble);
-        public bool Equals([AllowNull] AttributeScalarValueDouble other) => other != null && Value == other.Value;
-        public override int GetHashCode() => Value.GetHashCode();
-
-        public AttributeScalarValueDouble(double value)
-        {
-            this.value = value;
-        }
 
         public static AttributeScalarValueDouble BuildFromBytes(byte[] value)
         {
@@ -51,16 +42,8 @@ namespace Omnikeeper.Entity.AttributeValues
                 NumberStyles.AllowExponent;
     }
 
-    public class AttributeArrayValueDouble : AttributeArrayValue<AttributeScalarValueDouble, double>
+    public sealed record class AttributeArrayValueDouble(AttributeScalarValueDouble[] Values) : AttributeArrayValue<AttributeScalarValueDouble, double>(Values)
     {
-        public AttributeArrayValueDouble(AttributeScalarValueDouble[] values) : base(values)
-        {
-        }
-
-#pragma warning disable CS8618
-        protected AttributeArrayValueDouble() { }
-#pragma warning restore CS8618
-
         public override AttributeValueType Type => AttributeValueType.Double;
 
         public static AttributeArrayValueDouble Build(double[] values)

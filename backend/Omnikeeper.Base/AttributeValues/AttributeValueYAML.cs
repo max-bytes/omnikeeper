@@ -7,27 +7,15 @@ using YamlDotNet.RepresentationModel;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    //[ProtoContract(Serializer = typeof(AttributeScalarValueYAMLSerializer))]
-    public class AttributeScalarValueYAML : IAttributeScalarValue<YamlDocument>, IEquatable<AttributeScalarValueYAML>
+    public sealed record class AttributeScalarValueYAML(YamlDocument Value, string ValueStr) : IAttributeScalarValue<YamlDocument>
     {
-        private AttributeScalarValueYAML(YamlDocument value, string valueStr)
-        {
-            this.value = value;
-            this.valueStr = valueStr;
-        }
-
-        private readonly YamlDocument value;
-        public YamlDocument Value => value;
-        private readonly string valueStr;
-        public string ValueStr => valueStr;
-
         public override string ToString() => $"AV-YAML: {Value2String()}";
 
         public string Value2String() => ValueStr;
         public string[] ToRawDTOValues() => new string[] { ValueStr };
         public object ToGenericObject() => Value;
         public bool IsArray => false;
-        public object ToGraphQLValue() => valueStr;
+        public object ToGraphQLValue() => ValueStr;
 
         public AttributeValueType Type => AttributeValueType.YAML;
 
@@ -96,17 +84,8 @@ namespace Omnikeeper.Entity.AttributeValues
     //}
 
 
-    //[ProtoContract]
-    public class AttributeArrayValueYAML : AttributeArrayValue<AttributeScalarValueYAML, YamlDocument>
+    public sealed record class AttributeArrayValueYAML(AttributeScalarValueYAML[] Values) : AttributeArrayValue<AttributeScalarValueYAML, YamlDocument>(Values)
     {
-        public AttributeArrayValueYAML(AttributeScalarValueYAML[] values) : base(values)
-        {
-        }
-
-#pragma warning disable CS8618
-        protected AttributeArrayValueYAML() { }
-#pragma warning restore CS8618
-
         public override AttributeValueType Type => AttributeValueType.YAML;
 
         public static AttributeArrayValueYAML BuildFromString(string[] values)
