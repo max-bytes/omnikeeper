@@ -85,12 +85,16 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitRelation("monitoringTargets", "monitors", true)]
         public Guid[] MonitoringTargets;
 
+        [TraitRelation("runsOn", "runs_on", true)]
+        public Guid? RunsOn;
+
         public NaemonInstanceV1()
         {
             ID = "";
             Name = "";
             Tags = Array.Empty<Guid>();
             MonitoringTargets = Array.Empty<Guid>();
+            RunsOn = null;
         }
     }
 
