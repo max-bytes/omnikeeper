@@ -125,13 +125,11 @@ namespace Omnikeeper.Model
                 await commandUpdateLatest.ExecuteNonQueryAsync();
             }
 
-            // TODO: improve performance
-            // add index, use CTEs
-            foreach (var (_, _, _, attributeID, _) in removes)
+            if (!removes.IsEmpty())
             {
-                using var commandRemoveLatest = new NpgsqlCommand(@"
-                    DELETE FROM attribute_latest WHERE id = @id", trans.DBConnection, trans.DBTransaction);
-                commandRemoveLatest.Parameters.AddWithValue("id", attributeID);
+                using var commandRemoveLatest = new NpgsqlCommand(@$"
+                        WITH to_remove(attribute_id) AS (VALUES {string.Join(",", removes.Select(t => $"('{t.attributeID}'::uuid)"))})
+                        DELETE FROM attribute_latest WHERE id IN (select attribute_id from to_remove)", trans.DBConnection, trans.DBTransaction);
                 await commandRemoveLatest.ExecuteNonQueryAsync();
             }
 
