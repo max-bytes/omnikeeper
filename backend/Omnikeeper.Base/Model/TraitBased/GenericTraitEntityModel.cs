@@ -58,7 +58,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         /*
          * NOTE: this does not care whether or not the CI is actually a trait entity or not
          */
-        // TODO: test
+        // TODO: improve performance for tuple-id case
         private async Task<IDictionary<ID, Guid>> FindMatchingCIIDsFromIDs(string[] attributeNames, ID[] ids, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             if (ids.Length == 0)
@@ -70,7 +70,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var lookup = cisWithIDAttributes
                 .SelectMany(t => t.Value.Select(tt => (ciid: t.Key, attributeName: tt.Key, attributeValue: tt.Value.Attribute.Value)))
                 .GroupBy(t => (t.attributeName, t.attributeValue), t => t.ciid)
-                .ToDictionary(t => t.Key, t => t.ToList());
+                .ToDictionary(t => t.Key, t => t.ToHashSet());
 
             var ret = new Dictionary<ID, Guid>(ids.Length);
             for (var i = 0; i < ids.Length; i++)
@@ -79,29 +79,23 @@ namespace Omnikeeper.Base.Model.TraitBased
 
                 var idValues = idAttributeInfos.ExtractAttributeValuesFromID(id);
 
-                HashSet<Guid>? fitting = new HashSet<Guid>();
-                for (var j = 0; j < idValues.Length; j++)
+                var candidatesLists = idValues.Select((attributeValue, j) =>
                 {
                     var attributeName = attributeNames[j];
-                    var attributeValue = idValues[j];
-
                     if (lookup.TryGetValue((attributeName, attributeValue), out var candidates))
-                    {
-                        if (j == 0)
-                        {
-                            fitting.UnionWith(candidates);
-                        }
-                        else
-                        {
-                            fitting.IntersectWith(candidates);
-                        }
-                    } else
-                    {
-                        fitting.Clear();
-                    }
+                        return candidates;
+                    return (IEnumerable<Guid>)ImmutableList<Guid>.Empty;
+                }).ToList();
 
-                    if (fitting.Count == 0)
-                        break;
+                HashSet<Guid>? fitting;
+
+                // check if any of the candidate lists is empty, if so, we don't even need to compare anything anymore
+                if (candidatesLists.Any(cl => cl.IsEmpty()))
+                {
+                    fitting = new HashSet<Guid>();
+                } else
+                {
+                    fitting = candidatesLists.Skip(1).Aggregate(new HashSet<Guid>(candidatesLists.First()), (h, e) => { h.IntersectWith(e); return h; });
                 }
 
                 if (fitting.Count == 1)
