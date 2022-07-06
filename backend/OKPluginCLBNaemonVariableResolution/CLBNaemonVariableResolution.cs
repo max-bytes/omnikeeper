@@ -113,16 +113,11 @@ namespace OKPluginCLBNaemonVariableResolution
             var naemonInstances = await naemonInstanceModel.GetByCIID(AllCIIDsSelection.Instance, monmanV1InputLayerset, trans, timeThreshold);
             var tags = await tagModel.GetByCIID(AllCIIDsSelection.Instance, monmanV1InputLayerset, trans, timeThreshold);
 
-            // filter categories
-            var categories = allCategories
-                .Where(kv => kv.Value.Instance == "SERVER" || kv.Value.Instance == "SERVER-CH") // TODO: correct?
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
-
             // filter customers
             var filteredCustomers = customers.Where(c => instanceRules.FilterCustomer(c.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // filter cmdb profiles
-            var cmdbProfiles = categories
+            var cmdbProfiles = allCategories
                 .Where(kv => instanceRules.FilterProfileFromCmdbCategory(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // filter naemon instances
@@ -136,8 +131,8 @@ namespace OKPluginCLBNaemonVariableResolution
                 .ToList(); 
             List<Category> CalculateCategories(Guid[] memberOfCategories) =>
                 memberOfCategories
-                .Where(categoryCIID => categories.ContainsKey(categoryCIID))
-                .Select(p => categories[p])
+                .Where(categoryCIID => allCategories.ContainsKey(categoryCIID))
+                .Select(p => allCategories[p])
                 .ToList();
 
             var hos = new Dictionary<Guid, HostOrService>(hosts.Count + services.Count);
@@ -187,7 +182,8 @@ namespace OKPluginCLBNaemonVariableResolution
             // and even multiple categories with the same name in the same tree and group
             // for now, we just pick the first that fits at random
             // also, we uppercase the category names
-            var categoryNameLookup = categories.GroupBy(c => c.Value.Name).ToDictionary(t => t.Key.ToUpperInvariant(), t => t.First().Value);
+            var categoryInstanceAndNameLookup = allCategories.GroupBy(kv => (kv.Value.Instance, kv.Value.Name)).ToDictionary(g => g.Key, g => g.First().Value);
+            //var categoryNameLookup = categories.GroupBy(c => c.Value.Name).ToDictionary(t => t.Key.ToUpperInvariant(), t => t.First().Value);
             //var categoryNameLookup = cmdbProfiles.ToDictionary(kv => kv.Value.Name.ToUpperInvariant(), kv => kv.Value);
             foreach (var v in naemonV1Variables)
             {
@@ -220,7 +216,7 @@ namespace OKPluginCLBNaemonVariableResolution
                         if (profiles.TryGetValue(refIDProfile, out var foundProfile))
                         {
                             var profileName = foundProfile.Name.ToUpperInvariant(); // transform to uppercase for proper comparison
-                            if (categoryNameLookup.TryGetValue(profileName, out var category))
+                            if (categoryInstanceAndNameLookup.TryGetValue(("SERVER", profileName), out var category))
                             {
                                 foreach (var targetCIID in category.Members)
                                 {
@@ -228,7 +224,16 @@ namespace OKPluginCLBNaemonVariableResolution
                                         hs.AddVariable(v.Value.ToResolvedVariable());
                                     else { } // member CI of category is neither host nor service, ignore
                                 }
-                            }
+                            } 
+                            //else if (categoryInstanceAndNameLookup.TryGetValue(("SERVER-CH", profileName), out var categoryCH))
+                            //{
+                            //    foreach (var targetCIID in categoryCH.Members)
+                            //    {
+                            //        if (filteredHOS.TryGetValue(targetCIID, out var hs))
+                            //            hs.AddVariable(v.Value.ToResolvedVariable());
+                            //        else { } // member CI of category is neither host nor service, ignore
+                            //    }
+                            //}
                             else
                             {
                                 issueAccumulator.TryAdd("variable_cant_find_referenced_profile_as_category", v.Value.ID.ToString(), $"Could not find category with name \"{profileName}\", skipping variable", v.Key);
