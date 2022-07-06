@@ -218,7 +218,14 @@ namespace OKPluginCLBNaemonVariableResolution
                                 foreach (var targetCIID in category.Members)
                                 {
                                     if (filteredHOS.TryGetValue(targetCIID, out var hs))
-                                        hs.AddVariable(v.Value.ToResolvedVariable());
+                                    {
+                                        if (hs.Profiles.Count == 1)
+                                        { 
+                                            // NOTE: we only apply profile variables to CIs that have a single profile, not multiple, not none
+                                            // that seems to be consistent with the old implementation
+                                            hs.AddVariable(v.Value.ToResolvedVariable());
+                                        }
+                                    }
                                     else { } // member CI of category is neither host nor service, ignore
                                 }
                             } 
