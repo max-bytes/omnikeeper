@@ -182,7 +182,7 @@ namespace OKPluginCLBNaemonVariableResolution
             // and even multiple categories with the same name in the same tree and group
             // for now, we just pick the first that fits at random
             // also, we uppercase the category names
-            var categoryInstanceAndNameLookup = allCategories.GroupBy(kv => (kv.Value.Instance, kv.Value.Name)).ToDictionary(g => g.Key, g => g.First().Value);
+            var categoryNameLookup = allCategories.Where(kv => kv.Value.Instance == "SERVER").GroupBy(kv => kv.Value.Name.ToUpperInvariant()).ToDictionary(g => g.Key, g => g.First().Value);
             //var categoryNameLookup = categories.GroupBy(c => c.Value.Name).ToDictionary(t => t.Key.ToUpperInvariant(), t => t.First().Value);
             //var categoryNameLookup = cmdbProfiles.ToDictionary(kv => kv.Value.Name.ToUpperInvariant(), kv => kv.Value);
             foreach (var v in naemonV1Variables)
@@ -216,7 +216,7 @@ namespace OKPluginCLBNaemonVariableResolution
                         if (profiles.TryGetValue(refIDProfile, out var foundProfile))
                         {
                             var profileName = foundProfile.Name.ToUpperInvariant(); // transform to uppercase for proper comparison
-                            if (categoryInstanceAndNameLookup.TryGetValue(("SERVER", profileName), out var category))
+                            if (categoryNameLookup.TryGetValue(profileName, out var category))
                             {
                                 foreach (var targetCIID in category.Members)
                                 {
