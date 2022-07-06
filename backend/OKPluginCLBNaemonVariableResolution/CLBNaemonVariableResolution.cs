@@ -115,7 +115,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
             // filter categories
             var categories = allCategories
-                .Where(kv => kv.Value.Instance == "SERVER") // TODO: correct?
+                .Where(kv => kv.Value.Instance == "SERVER" || kv.Value.Instance == "SERVER-CH") // TODO: correct?
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // filter customers
