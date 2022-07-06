@@ -36,17 +36,6 @@ namespace OKPluginCLBNaemonVariableResolution
             */
             var capCust = $"cap_cust_{hs.CustomerNickname.ToLowerInvariant()}";
             hs.Tags.Add(capCust);
-
-            /*
-            *********************************************************************
-               Event Generator, please place at last
-            *********************************************************************
-            */
-            if (hs.HasProfile(StringComparison.InvariantCultureIgnoreCase, "profiledev-default-app-naemon-eventgenerator"))
-            {
-                hs.Tags.Clear();
-                hs.Tags.Add("cap_eventgenerator");
-            }
         }
 
         public bool FilterTarget(HostOrService hs)
@@ -54,9 +43,9 @@ namespace OKPluginCLBNaemonVariableResolution
             return true;
         }
 
-        public bool FilterCustomer(Customer customer)
+        public bool FilterCustomer(string customerNickname)
         {
-            return ValidCustomers.Contains(customer.Nickname);
+            return ValidCustomers.Contains(customerNickname);
         }
 
         public bool FilterProfileFromCmdbCategory(Category category)

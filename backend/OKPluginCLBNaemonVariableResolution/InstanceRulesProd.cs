@@ -369,18 +369,6 @@ namespace OKPluginCLBNaemonVariableResolution
             // UNIQA
             if (!hs.Tags.Contains("cap_uniqa_uan") && hs.CustomerNickname.Equals("UNIQA", StringComparison.InvariantCultureIgnoreCase))
                 hs.Tags.Add("cap_uniqa_nonuan");
-
-            /*
-            *********************************************************************
-               Event Generator, please place at last
-            *********************************************************************
-            */
-            // remove all cap from this CI, add 'cap_eventgenerator'
-            if (hs.HasProfile(StringComparison.InvariantCultureIgnoreCase, "profile-default-app-naemon-eventgenerator"))
-            {
-                hs.Tags.Clear();
-                hs.Tags.Add("cap_eventgenerator");
-            }
         }
 
         private static HashSet<string> RelevantStatuus = new HashSet<string>()
@@ -397,9 +385,9 @@ namespace OKPluginCLBNaemonVariableResolution
             return RelevantStatuus.Contains(hs.Status ?? "");
         }
 
-        public bool FilterCustomer(Customer customer)
+        public bool FilterCustomer(string customerNickname)
         {
-            return ValidCustomers.Contains(customer.Nickname);
+            return ValidCustomers.Contains(customerNickname);
         }
 
         public bool FilterProfileFromCmdbCategory(Category category)

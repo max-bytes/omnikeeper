@@ -103,7 +103,6 @@ namespace OKPluginCLBNaemonVariableResolution
             var allCategories = await categoryModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
             var hosts = await targetHostModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
             var services = await targetServiceModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
-            var customers = await customerModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
             var naemonV1Variables = await naemonV1VariableModel.GetByCIID(AllCIIDsSelection.Instance, monmanV1InputLayerset, trans, timeThreshold);
             var selfServiceVariables = await selfServiceVariableModel.GetByCIID(AllCIIDsSelection.Instance, selfserviceVariablesInputLayerset, trans, timeThreshold);
             var profiles = await profileModel.GetByDataID(AllCIIDsSelection.Instance, monmanV1InputLayerset, trans, timeThreshold);
@@ -112,9 +111,6 @@ namespace OKPluginCLBNaemonVariableResolution
             var groups = await groupModel.GetByCIID(AllCIIDsSelection.Instance, cmdbInputLayerset, trans, timeThreshold);
             var naemonInstances = await naemonInstanceModel.GetByCIID(AllCIIDsSelection.Instance, monmanV1InputLayerset, trans, timeThreshold);
             var tags = await tagModel.GetByCIID(AllCIIDsSelection.Instance, monmanV1InputLayerset, trans, timeThreshold);
-
-            // filter customers
-            var filteredCustomers = customers.Where(c => instanceRules.FilterCustomer(c.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // filter cmdb profiles
             var cmdbProfiles = allCategories
@@ -150,7 +146,7 @@ namespace OKPluginCLBNaemonVariableResolution
             }
 
             // filter hosts and services
-            var filteredHOS = hos.Where(kv => instanceRules.FilterTarget(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value);
+            var filteredHOS = hos.Where(kv => instanceRules.FilterTarget(kv.Value) && instanceRules.FilterCustomer(kv.Value.CustomerNickname)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // collect variables...
 
@@ -177,7 +173,8 @@ namespace OKPluginCLBNaemonVariableResolution
             // ...from variables in monman
             // reference: roughly updateNormalizedCiData_varsFromDatabase()
             var hosByNameLookup = filteredHOS.ToDictionary(h => h.Value.ID, h => h.Value);
-            var customerNicknameLookup = filteredCustomers.ToDictionary(c => c.Value.Nickname, c => c.Value);
+            var hosByCustomerNicknameLookup = filteredHOS.ToLookup(h => h.Value.CustomerNickname, h => h.Value);
+
             // HACK: this is not properly defined, because there can be multiple categories with the same name in different trees/groups
             // and even multiple categories with the same name in the same tree and group
             // for now, we just pick the first that fits at random
@@ -245,18 +242,10 @@ namespace OKPluginCLBNaemonVariableResolution
                         }
                         break;
                     case "CUST":
-                        if (customerNicknameLookup.TryGetValue(refID, out var foundCustomer))
+                        var targetHOS = hosByCustomerNicknameLookup[refID];
+                        foreach (var targetHS in targetHOS)
                         {
-                            foreach (var targetCIID in foundCustomer.AssociatedCIs)
-                            {
-                                if (filteredHOS.TryGetValue(targetCIID, out var hs))
-                                    hs.AddVariable(v.Value.ToResolvedVariable());
-                                else { } // associated CI of customer is neither host nor service, ignore
-                            }
-                        }
-                        else
-                        {
-                            issueAccumulator.TryAdd("variable_cant_find_referenced_customer", v.Value.ID.ToString(), $"Could not find referenced customer with refID \"{refID}\" for variable \"{v.Value.ID}\", skipping variable", v.Key);
+                            targetHS.AddVariable(v.Value.ToResolvedVariable());
                         }
                         break;
                     default:
@@ -315,9 +304,6 @@ namespace OKPluginCLBNaemonVariableResolution
                 hs.AddVariables(
                     new Variable("LOCATION", "FIXED", Regex.Replace(location ?? "", @"\p{C}+", string.Empty))
                 );
-
-                // instance rules
-                instanceRules.ApplyInstanceRules(hs, groups);
 
                 // set alerting ID to foreign key for special instances
                 if (hs.Instance == "SERVER-CH")
@@ -420,6 +406,9 @@ namespace OKPluginCLBNaemonVariableResolution
                         }
                     }
                 }
+
+                // instance rules
+                instanceRules.ApplyInstanceRules(hs, groups);
             }
 
             // reference: updateNormalizedCiData_postProcessVars()
