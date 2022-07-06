@@ -301,7 +301,8 @@ namespace OKPluginCLBNaemonVariableResolution
                         // try to find location via runsOn relation
                         if (hs.RunsOn.HasValue)
                         {
-                            if (filteredHOS.TryGetValue(hs.RunsOn.Value, out var parentHS))
+                            // NOTE: we lookup in ALL hosts/services, not just the filtered ones
+                            if (hos.TryGetValue(hs.RunsOn.Value, out var parentHS))
                             {
                                 location = parentHS.Location;
                             }
@@ -471,13 +472,7 @@ namespace OKPluginCLBNaemonVariableResolution
                     monitoringProfile = "MULTIPLE";
                 else
                     monitoringProfile = "NONE";
-                string monitoringProfileOrig;
-                if (hs.Profiles.Count == 1)
-                    monitoringProfileOrig = hs.Profiles[0].ToLowerInvariant(); // HACK: we transform to lowercase for historical reasons
-                else if (hs.Profiles.Count > 1)
-                    monitoringProfileOrig = string.Join(',', hs.Profiles).ToLowerInvariant(); // HACK: we transform to lowercase for historical reasons
-                else
-                    monitoringProfileOrig = "NONE";
+                string monitoringProfileOrig = string.Join(',', hs.ProfilesOrig).ToLowerInvariant(); // HACK: we transform to lowercase for historical reasons
 
                 hs.AddVariables(
                     new Variable("CIID", "FIXED", hs.ID),

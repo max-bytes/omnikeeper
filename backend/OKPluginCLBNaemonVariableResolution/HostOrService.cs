@@ -12,6 +12,7 @@ namespace OKPluginCLBNaemonVariableResolution
             this.host = host;
             this.service = service;
             Profiles = profiles;
+            ProfilesOrig = new List<string>(profiles); // NOTE: we create a copy, to be safe
             Categories = categories;
             Variables = new SortedDictionary<string, List<Variable>>();
             Tags = new HashSet<string>();
@@ -52,6 +53,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
         // additional data
         public List<string> Profiles { get; set; }
+        public List<string> ProfilesOrig { get; }
         public List<Category> Categories { get; }
         public SortedDictionary<string, List<Variable>> Variables { get; }
 
