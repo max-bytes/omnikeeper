@@ -296,17 +296,36 @@ namespace OKPluginCLBNaemonVariableResolution
                 var location = hs.Location;
                 if (location == null || location.Length == 0)
                 {
-                    if (hs.Service != null)
-                    { // NOTE: we only do this for services; the old code doesn't explicitly say that it only does it for services, but implicitly, it does
-                        // try to find location via runsOn relation
-                        if (hs.RunsOn.HasValue)
-                        {
-                            // NOTE: we lookup in ALL hosts/services, not just the filtered ones
-                            if (hos.TryGetValue(hs.RunsOn.Value, out var parentHS))
+                    var numRecursions = 0;
+                    var current = hs;
+                    while (numRecursions < 10)
+                    {
+                        if (current.Service != null)
+                        { // NOTE: we only do this for services; the old code doesn't explicitly say that it only does it for services, but implicitly, it does
+                          // try to find location via runsOn relation
+                            if (current.RunsOn.HasValue)
                             {
-                                location = parentHS.Location;
+                                // NOTE: we lookup in ALL hosts/services, not just the filtered ones
+                                if (hos.TryGetValue(current.RunsOn.Value, out var parentHS))
+                                {
+                                    current = parentHS;
+                                } else
+                                {
+                                    // couldn't find its parent host/service, bail
+                                    break;
+                                }
+                            } else
+                            {
+                                // current service does not run on anything, bail
+                                break;
                             }
+                        } else
+                        {
+                            // reached a host
+                            location = current.Location;
+                            break;
                         }
+                        numRecursions++;
                     }
                 }
                 hs.AddVariables(
