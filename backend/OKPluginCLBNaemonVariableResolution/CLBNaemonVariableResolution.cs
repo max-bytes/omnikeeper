@@ -507,10 +507,38 @@ namespace OKPluginCLBNaemonVariableResolution
                 );
             }
 
+            // reference: getNaemonConfigObjectsFromTSISilverpeakTemplates()
+            foreach (var (ciid, hs) in filteredHOS)
+            {
+                if (hs.HasProfile(StringComparison.InvariantCultureIgnoreCase, "profiledynamic-tsi-silverpeak-orchestrator"))
+                {
+                    hs.AddVariable(new Variable("ORGNAME", "FIXED", hs.CustomerNickname));
+                }
+                if (hs.HasProfile(StringComparison.InvariantCultureIgnoreCase, "profiledynamic-tsi-silverpeak-device"))
+                {
+                    hs.AddVariable(new Variable("ORGNAME", "FIXED", hs.CustomerNickname));
+                    hs.AddVariable(new Variable("DEVICENAME", "FIXED", hs.Name ?? ""));
+                }
+            }
+
+            // reference: getNaemonConfigObjectsFromTSIVersaTemplates()
+            foreach (var (ciid, hs) in filteredHOS)
+            {
+                if (hs.HasProfile(StringComparison.InvariantCultureIgnoreCase, "profiledynamic-tsi-versa-orchestrator"))
+                {
+                    hs.AddVariable(new Variable("ORGNAME", "FIXED", hs.CustomerNickname));
+                }
+                if (hs.HasProfile(StringComparison.InvariantCultureIgnoreCase, "profiledynamic-tsi-versa-device"))
+                {
+                    hs.AddVariable(new Variable("ORGNAME", "FIXED", hs.CustomerNickname));
+                    hs.AddVariable(new Variable("DEVICENAME", "FIXED", hs.Name ?? ""));
+                }
+            }
+
             // filter out hosts and services that contain no monitoring profile, because there is no use in creating resolved variables for them
             var evenMoreFilteredHOS = filteredHOS
-                .Where(kv => kv.Value.Profiles.Count != 0)
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
+            .Where(kv => kv.Value.Profiles.Count != 0)
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // calculate "uses" per host/service
             // reference:  naemon-templates-objects.php
