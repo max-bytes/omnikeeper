@@ -61,9 +61,9 @@ namespace OKPluginCLBNaemonVariableResolution
                 }
 
                 var cf = thrukHost.Value.CustomVariables.RootElement.EnumerateObject().FirstOrDefault(p => p.Name == "CONFIGSOURCE");
-                if (!cf.Value.ValueEquals("monmanagement"))
+                if (cf.Value.ValueKind != JsonValueKind.String || !cf.Value.ValueEquals("monmanagement"))
                 { // thruk host is not configured via monmanagement -> create issue and skip rest
-                    issueAccumulator.TryAdd("thruk_host_not_configured_by_monman", thrukHost.Value.Name, $"Thruk host is not configured via mon-management, variable CONFIGSOURCE is {cf.Value.ToString()}", thrukHost.Key);
+                    issueAccumulator.TryAdd("thruk_host_not_configured_by_monman", thrukHost.Value.Name, $"Thruk host is not configured via mon-management, variable CONFIGSOURCE is {cf.Value}", thrukHost.Key);
                     continue;
                 }
 
