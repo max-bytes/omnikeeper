@@ -157,6 +157,9 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitAttribute("status", "cmdb.host.status", optional: true)]
         public string? Status;
 
+        [TraitAttribute("customerNickname", "cmdb.host.customer")]
+        public string CustomerNickname;
+
         [TraitAttribute("environment", "cmdb.host.environment", optional: true)]
         public string? Environment;
 
@@ -181,9 +184,6 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitRelation("interfaces", "has_interface", true)]
         public Guid[] Interfaces;
 
-        [TraitRelation("customer", "is_assigned_to_customer", true)]
-        public Guid? Customer;
-
         [TraitRelation("appSupportGroup", "belongs_to_host_app_support_group", true)]
         public Guid? AppSupportGroup;
 
@@ -204,6 +204,7 @@ namespace OKPluginCLBNaemonVariableResolution
             OS = null;
             Platform = null;
             Status = null;
+            CustomerNickname = "";
             Environment = null;
             MonIPAddress = null;
             MonIPPort = null;
@@ -211,7 +212,6 @@ namespace OKPluginCLBNaemonVariableResolution
             Criticality = null;
             ForeignSource = null;
             ForeignKey = null;
-            Customer = null;
             Interfaces = Array.Empty<Guid>();
             AppSupportGroup = null;
             OSSupportGroup = null;
@@ -235,6 +235,9 @@ namespace OKPluginCLBNaemonVariableResolution
 
         [TraitAttribute("status", "cmdb.service.status", optional: true)]
         public string? Status;
+
+        [TraitAttribute("customerNickname", "cmdb.service.customer")]
+        public string CustomerNickname;
 
         [TraitAttribute("environment", "cmdb.service.environment", optional: true)]
         public string? Environment;
@@ -260,9 +263,6 @@ namespace OKPluginCLBNaemonVariableResolution
         [TraitAttribute("monIPPort", "cmdb.service.mon_ip_port", optional: true)]
         public string? MonIPPort;
 
-        [TraitRelation("customer", "is_assigned_to_customer", true)]
-        public Guid? Customer;
-
         [TraitRelation("osSupportGroup", "belongs_to_service_support_group", true)]
         public Guid? OSSupportGroup;
 
@@ -281,6 +281,7 @@ namespace OKPluginCLBNaemonVariableResolution
             Name = null;
             Class = null;
             Status = null;
+            CustomerNickname = "";
             Environment = null;
             Criticality = null;
             ForeignSource = null;
@@ -289,7 +290,6 @@ namespace OKPluginCLBNaemonVariableResolution
             Type = null;
             MonIPAddress = null;
             MonIPPort = null;
-            Customer = null;
             OSSupportGroup = null;
             AppSupportGroup = null;
             MemberOfCategories = Array.Empty<Guid>();

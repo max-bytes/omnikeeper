@@ -34,7 +34,7 @@ namespace OKPluginCLBNaemonVariableResolution
                 customer scoping
             *********************************************************************
             */
-            var capCust = $"cap_cust_{hs.Customer.Nickname.ToLowerInvariant()}";
+            var capCust = $"cap_cust_{hs.CustomerNickname.ToLowerInvariant()}";
             hs.Tags.Add(capCust);
 
             /*

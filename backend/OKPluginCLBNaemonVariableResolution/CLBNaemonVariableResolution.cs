@@ -115,7 +115,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
             // filter categories
             var categories = allCategories
-                .Where(kv => kv.Value.Instance == "SERVER" || kv.Value.Instance == "SDWAN-INT") // TODO: correct?
+                .Where(kv => kv.Value.Instance == "SERVER") // TODO: correct?
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             // filter customers
@@ -139,29 +139,19 @@ namespace OKPluginCLBNaemonVariableResolution
                 .Where(categoryCIID => categories.ContainsKey(categoryCIID))
                 .Select(p => categories[p])
                 .ToList();
-            Customer? CalculateCustomer(Guid? customerCIID) => 
-                (customerCIID.HasValue && filteredCustomers.TryGetValue(customerCIID.Value, out var customer)) ? customer : null;
 
             var hos = new Dictionary<Guid, HostOrService>(hosts.Count + services.Count);
             foreach (var kv in hosts)
             {
-                var customer = CalculateCustomer(kv.Value.Customer);
-                if (customer != null)
-                {
-                    var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
-                    var categoriesOfCI = CalculateCategories(kv.Value.MemberOfCategories);
-                    hos.Add(kv.Key, new HostOrService(kv.Value, null, profilesOfCI, categoriesOfCI, customer));
-                }
+                var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
+                var categoriesOfCI = CalculateCategories(kv.Value.MemberOfCategories);
+                hos.Add(kv.Key, new HostOrService(kv.Value, null, profilesOfCI, categoriesOfCI));
             }
             foreach (var kv in services)
             {
-                var customer = CalculateCustomer(kv.Value.Customer);
-                if (customer != null)
-                {
-                    var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
-                    var categoriesOfCI = CalculateCategories(kv.Value.MemberOfCategories);
-                    hos.Add(kv.Key, new HostOrService(null, kv.Value, profilesOfCI, categoriesOfCI, customer));
-                }
+                var profilesOfCI = CalculateCIProfiles(kv.Value.MemberOfCategories);
+                var categoriesOfCI = CalculateCategories(kv.Value.MemberOfCategories);
+                hos.Add(kv.Key, new HostOrService(null, kv.Value, profilesOfCI, categoriesOfCI));
             }
 
             // filter hosts and services
@@ -329,6 +319,7 @@ namespace OKPluginCLBNaemonVariableResolution
                     hs.AddVariable(new Variable("ALERTCIID", "FIXED", hs.ForeignKey ?? ""));
 
                 // host-specific stuff
+                // reference: naemon-vars-ci.php
                 if (hs.Host != null)
                 {
                     // hardware monitoring
@@ -358,6 +349,7 @@ namespace OKPluginCLBNaemonVariableResolution
                 }
 
                 // service-specific stuff
+                // reference: naemon-vars-ci.php
                 if (hs.Service != null)
                 {
                     // extract oracle db connection string
@@ -385,6 +377,41 @@ namespace OKPluginCLBNaemonVariableResolution
                                     new Variable("SDWANCHECKCONFIG", "FIXED", foundServiceAction.Command ?? ""),
                                     new Variable("SDWANORG", "FIXED", foundServiceAction.CommandUser ?? "")
                                 );
+                        }
+                    }
+
+                    // TSI Silverpeak
+                    if (hs.Service.Instance == "SDWAN-INT")
+                    {
+                        if (hs.Service.Class == "APP_MGMT" && hs.Service.Type == "SILVERPEAK_ORCHESTRATOR")
+                        {
+                            hs.Tags.Add("cap_tsi_silverpeak");
+                            hs.Profiles = new List<string>() { "profiledynamic-tsi-silverpeak-orchestrator" };
+                        }
+                        if (hs.Service.Class == "APP_ROUTING" && hs.Service.Type == "SILVERPEAK_DEVICE")
+                        {
+                            hs.Tags.Add("cap_tsi_silverpeak");
+                            hs.Profiles = new List<string>() { "profiledynamic-tsi-silverpeak-device" };
+                        }
+                    }
+
+                    // TSI Versa
+                    if (hs.Service.Instance == "SDWAN-INT")
+                    {
+                        if (hs.Service.Class == "APP_MGMT" && hs.Service.Type == "VERSA_ORCHESTRATOR")
+                        {
+                            hs.Tags.Add("cap_tsi_versa");
+                            hs.Profiles = new List<string>() { "profiledynamic-tsi-versa-orchestrator" };
+                        }
+                        if (hs.Service.Class == "APP_MGMT" && hs.Service.Type == "VERSA_DIRECTOR")
+                        {
+                            hs.Tags.Add("cap_tsi_versa");
+                            hs.Profiles = new List<string>() { "profiledynamic-tsi-versa-orchestrator" };
+                        }
+                        if (hs.Service.Class == "APP_ROUTING" && hs.Service.Type == "VERSA_DEVICE")
+                        {
+                            hs.Tags.Add("cap_tsi_versa");
+                            hs.Profiles = new List<string>() { "profiledynamic-tsi-versa-device" };
                         }
                     }
                 }
@@ -427,7 +454,7 @@ namespace OKPluginCLBNaemonVariableResolution
                     }
                 }
 
-                var customerNickname = hs.Customer.Nickname;
+                var customerNickname = hs.CustomerNickname;
 
                 var osSupportGroupName = "UNKNOWN";
                 if (hs.OSSupportGroup.HasValue && groups.TryGetValue(hs.OSSupportGroup.Value, out var osSupportGroup))
@@ -482,7 +509,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
             // calculate "uses" per host/service
             // reference:  naemon-templates-objects.php
-            foreach(var (ciid, hs) in evenMoreFilteredHOS)
+            foreach (var (ciid, hs) in evenMoreFilteredHOS)
             {
                 if (hs.Profiles.Count == 1 && hs.HasProfile(StringComparison.InvariantCultureIgnoreCase, "dynamic-nrpe"))
                 {

@@ -7,11 +7,10 @@ namespace OKPluginCLBNaemonVariableResolution
         private readonly TargetHost? host;
         private readonly TargetService? service;
 
-        public HostOrService(TargetHost? host, TargetService? service, List<string> profiles, List<Category> categories, Customer customer)
+        public HostOrService(TargetHost? host, TargetService? service, List<string> profiles, List<Category> categories)
         {
             this.host = host;
             this.service = service;
-            Customer = customer;
             Profiles = profiles;
             Categories = categories;
             Variables = new SortedDictionary<string, List<Variable>>();
@@ -29,7 +28,6 @@ namespace OKPluginCLBNaemonVariableResolution
         public Guid[] MemberOfCategories => Get(h => h.MemberOfCategories, s => s.MemberOfCategories);
         public string ID => Get(h => h.ID, s => s.ID);
         public string? Name => Get(h => h.Hostname, s => s.Name);
-        public Guid? CustomerCIID => Get(h => h.Customer, s => s.Customer);
         public Guid? OSSupportGroup => Get(h => h.OSSupportGroup, s => s.OSSupportGroup);
         public Guid? AppSupportGroup => Get(h => h.AppSupportGroup, s => s.AppSupportGroup);
         public Guid? RunsOn => Get(h => h.RunsOn, s => s.RunsOn);
@@ -44,13 +42,17 @@ namespace OKPluginCLBNaemonVariableResolution
         public string? MonIPAddress => Get(h => h.MonIPAddress, s => s.MonIPAddress);
         public string? MonIPPort => Get(h => h.MonIPPort, s => s.MonIPPort);
 
+        // NOTE: we would like to not use the text field for the customer, but instead use the relation to the proper CMDB customer object.
+        // But the data quality is bad and many hosts and services belong to customers that do not have a CMDB customer object.
+        // Example: service-CI "A13347855", customer nickname "COVESTRO-SP-SDW"
+        public string CustomerNickname => Get(h => h.CustomerNickname, s => s.CustomerNickname);
+
         public TargetHost? Host => host;
         public TargetService? Service => service;
 
         // additional data
         public List<string> Profiles { get; set; }
         public List<Category> Categories { get; }
-        public Customer Customer { get; }
         public SortedDictionary<string, List<Variable>> Variables { get; }
 
         public HashSet<string> Tags {get; }

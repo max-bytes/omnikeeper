@@ -230,7 +230,7 @@ namespace OKPluginCLBNaemonVariableResolution
             *********************************************************************
             */
 
-            var capCust = $"cap_cust_{hs.Customer.Nickname.ToLowerInvariant()}";
+            var capCust = $"cap_cust_{hs.CustomerNickname.ToLowerInvariant()}";
             hs.Tags.Add(capCust);
 
             // build negated sdwan capability
@@ -238,7 +238,7 @@ namespace OKPluginCLBNaemonVariableResolution
                 hs.Tags.Add("cap_nosdwan");
 
             // add customer specific scoping
-            if (hs.Customer.Nickname == "TMA")
+            if (hs.CustomerNickname == "TMA")
             {
                 hs.Tags.Add("cap_scope_tmamain");
 
@@ -260,7 +260,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
                 }
             }
-            else if (hs.Customer.Nickname == "INTERN")
+            else if (hs.CustomerNickname == "INTERN")
             {
                 hs.Tags.Add("cap_scope_internmain");
                 if (Regex.IsMatch(hs.Name ?? "", "svclxnaemp", RegexOptions.IgnoreCase))
@@ -269,7 +269,7 @@ namespace OKPluginCLBNaemonVariableResolution
                     hs.Tags.Add("cap_scope_internmom");
                 }
             }
-            else if (hs.Customer.Nickname == "AMSINT")
+            else if (hs.CustomerNickname == "AMSINT")
             {
                 hs.Tags.Add("cap_scope_amsintmain");
                 if (hs.Name != null && new string[] {
@@ -297,7 +297,7 @@ namespace OKPluginCLBNaemonVariableResolution
                     hs.Tags.Add("cap_scope_amsintmom");
                 }
             }
-            else if (hs.Customer.Nickname == "BGT")
+            else if (hs.CustomerNickname == "BGT")
             {
                 hs.Tags.Add("cap_scope_bgtmain");
                 if (hs.Name != null && new string[] {
@@ -313,7 +313,7 @@ namespace OKPluginCLBNaemonVariableResolution
                     hs.Tags.Add("cap_scope_bgtmom");
                 }
             }
-            else if (hs.Customer.Nickname == "TS-CH")
+            else if (hs.CustomerNickname == "TS-CH")
             {
                 hs.Tags.Add("cap_scope_ts-chmain");
                 if (hs.Name != null && new string[] {
@@ -359,15 +359,15 @@ namespace OKPluginCLBNaemonVariableResolution
             */
 
             // DSSMITH
-            if (!hs.Tags.Contains("cap_dssmith_uan") && hs.Customer.Nickname.Equals("DSSMITH", StringComparison.InvariantCultureIgnoreCase))
+            if (!hs.Tags.Contains("cap_dssmith_uan") && hs.CustomerNickname.Equals("DSSMITH", StringComparison.InvariantCultureIgnoreCase))
                 hs.Tags.Add("cap_dssmith_nonuan");
 
             // PRINZHORN
-            if (!hs.Tags.Contains("cap_prinzhorn_uan") && hs.Customer.Nickname.Equals("PRINZHORN", StringComparison.InvariantCultureIgnoreCase))
+            if (!hs.Tags.Contains("cap_prinzhorn_uan") && hs.CustomerNickname.Equals("PRINZHORN", StringComparison.InvariantCultureIgnoreCase))
                 hs.Tags.Add("cap_prinzhorn_nonuan");
 
             // UNIQA
-            if (!hs.Tags.Contains("cap_uniqa_uan") && hs.Customer.Nickname.Equals("UNIQA", StringComparison.InvariantCultureIgnoreCase))
+            if (!hs.Tags.Contains("cap_uniqa_uan") && hs.CustomerNickname.Equals("UNIQA", StringComparison.InvariantCultureIgnoreCase))
                 hs.Tags.Add("cap_uniqa_nonuan");
 
             /*
