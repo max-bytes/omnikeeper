@@ -31,7 +31,7 @@ namespace OKPluginCLBNaemonVariableResolution
         public string? Name => Get(h => h.Hostname, s => s.Name);
         public Guid? OSSupportGroup => Get(h => h.OSSupportGroup, s => s.OSSupportGroup);
         public Guid? AppSupportGroup => Get(h => h.AppSupportGroup, s => s.AppSupportGroup);
-        public Guid? RunsOn => Get(h => h.RunsOn, s => s.RunsOn);
+        public Guid[] RunsOn => Get(h => h.RunsOn, s => s.RunsOn);
         public string? Environment => Get(h => h.Environment, s => s.Environment);
         public string? Criticality => Get(h => h.Criticality, s => s.Criticality);
         public string? Instance => Get(h => h.Instance, s => s.Instance);

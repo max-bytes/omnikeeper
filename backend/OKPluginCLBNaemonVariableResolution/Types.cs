@@ -194,7 +194,7 @@ namespace OKPluginCLBNaemonVariableResolution
         public Guid[] MemberOfCategories;
 
         [TraitRelation("runsOn", "runs_on", true)]
-        public Guid? RunsOn;
+        public Guid[] RunsOn;
 
         public TargetHost()
         {
@@ -216,7 +216,7 @@ namespace OKPluginCLBNaemonVariableResolution
             AppSupportGroup = null;
             OSSupportGroup = null;
             MemberOfCategories = Array.Empty<Guid>();
-            RunsOn = null;
+            RunsOn = Array.Empty<Guid>();
         }
     }
 
@@ -273,7 +273,7 @@ namespace OKPluginCLBNaemonVariableResolution
         public Guid[] MemberOfCategories;
 
         [TraitRelation("runsOn", "runs_on", true)]
-        public Guid? RunsOn;
+        public Guid[] RunsOn;
 
         public TargetService()
         {
@@ -293,7 +293,7 @@ namespace OKPluginCLBNaemonVariableResolution
             OSSupportGroup = null;
             AppSupportGroup = null;
             MemberOfCategories = Array.Empty<Guid>();
-            RunsOn = null;
+            RunsOn = Array.Empty<Guid>();
         }
     }
 

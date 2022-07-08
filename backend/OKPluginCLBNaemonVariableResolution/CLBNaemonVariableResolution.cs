@@ -296,17 +296,17 @@ namespace OKPluginCLBNaemonVariableResolution
                 var location = hs.Location;
                 if (location == null || location.Length == 0)
                 {
-                    var numRecursions = 0;
+                    var numSteps = 0;
                     var current = hs;
-                    while (numRecursions < 10)
+                    while (numSteps < 10)
                     {
                         if (current.Service != null)
                         { // NOTE: we only do this for services; the old code doesn't explicitly say that it only does it for services, but implicitly, it does
-                          // try to find location via runsOn relation
-                            if (current.RunsOn.HasValue)
+                            // try to find location via runsOn relation
+                            if (!current.RunsOn.IsEmpty())
                             {
                                 // NOTE: we lookup in ALL hosts/services, not just the filtered ones
-                                if (hos.TryGetValue(current.RunsOn.Value, out var parentHS))
+                                if (hos.TryGetValue(current.RunsOn[0], out var parentHS)) // NOTE, TODO: we pick the first runsOn relation we find, might lead to inconsistent results
                                 {
                                     current = parentHS;
                                 } else
@@ -325,7 +325,7 @@ namespace OKPluginCLBNaemonVariableResolution
                             location = current.Location;
                             break;
                         }
-                        numRecursions++;
+                        numSteps++;
                     }
                 }
                 hs.AddVariables(
