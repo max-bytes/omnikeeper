@@ -56,8 +56,17 @@ namespace OKPluginCLBNaemonVariableResolution
 
         public bool FilterNaemonInstance(NaemonInstanceV1 naemonInstance)
         {
-            return true;
+            return ValidNaemonInstances.Contains(naemonInstance.Name);
         }
+
+        private static string[] ValidNaemonInstances = new string[]
+        {
+            "uansvclxnaemd01",
+             "uansvclxnaemd02",
+             "svuitemon01",
+             "deznaemd01",
+             "dmztsilxnaemd01"
+        };
 
         private static string[] ValidCustomers = new string[]
         {

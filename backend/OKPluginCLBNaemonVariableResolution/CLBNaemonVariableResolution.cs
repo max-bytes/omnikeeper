@@ -635,6 +635,7 @@ namespace OKPluginCLBNaemonVariableResolution
             // reference: enrichNormalizedCiData()
             var allNaemonCIIDs = filteredNaemonInstances.Select(i => i.Key).ToHashSet();
             var naemons2hos = new List<(Guid naemonCIID, Guid hosCIID)>();
+            var targetsWithAtLeastOneNaemonInstanceMonitoringIt = new HashSet<Guid>();
             foreach (var (ciid, hs) in evenMoreFilteredHOS)
             {
                 var naemonsAvail = new HashSet<Guid>(allNaemonCIIDs);
@@ -653,16 +654,24 @@ namespace OKPluginCLBNaemonVariableResolution
                         }
                     }
                 }
-                foreach (var naemonAvail in naemonsAvail)
-                    naemons2hos.Add((naemonAvail, ciid));
+                if (!naemonsAvail.IsEmpty())
+                {
+                    targetsWithAtLeastOneNaemonInstanceMonitoringIt.Add(ciid);
+
+                    foreach (var naemonAvail in naemonsAvail)
+                            naemons2hos.Add((naemonAvail, ciid));
+                }
             }
 
+            // filter out targets which are not monitored by any naemon instance
+            // TODO: really necessary?
+            var extremelyFilteredHOS = evenMoreFilteredHOS.Where(kv => targetsWithAtLeastOneNaemonInstanceMonitoringIt.Contains(kv.Key)).ToList();
 
             // write output
             var attributeFragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
             // variables
-            foreach (var kv in evenMoreFilteredHOS)
+            foreach (var kv in extremelyFilteredHOS)
             {
                 var d = new JsonObject();
                 foreach (var variableGroup in kv.Value.Variables)
@@ -674,6 +683,11 @@ namespace OKPluginCLBNaemonVariableResolution
                     // NOTE: naemon/thruk seem to trim variable values anyway, so we do that here too, to produce better comparable results
                     inner["value"] = first.Value.Trim();
                     inner["refType"] = first.RefType;
+
+                    if (first.IsSecret)
+                    { // NOTE: only add isSecret flag if variable is actually a secret, to keep the JSON small
+                        inner["isSecret"] = true;
+                    }
 
                     var chain = new JsonArray();
                     foreach (var vv in ordered.Skip(1))
@@ -696,14 +710,14 @@ namespace OKPluginCLBNaemonVariableResolution
                 relationFragments.Add(new BulkRelationDataLayerScope.Fragment(naemonCIID, hosCIID, "monitors", false));
             }
             // uses
-            foreach (var kv in evenMoreFilteredHOS)
+            foreach (var kv in extremelyFilteredHOS)
             {
                 var ciid = kv.Key;
                 var v = AttributeArrayValueText.BuildFromString(kv.Value.UseDirective);
                 attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.use_directive", v, ciid));
             }
             // host/service tags, for debugging purposes
-            foreach (var kv in evenMoreFilteredHOS)
+            foreach (var kv in extremelyFilteredHOS)
             {
                 var ciid = kv.Key;
                 var v = AttributeArrayValueText.BuildFromString(kv.Value.Tags.OrderBy(t => t));
@@ -750,7 +764,7 @@ namespace OKPluginCLBNaemonVariableResolution
     {
         public static Variable ToResolvedVariable(this NaemonVariableV1 input)
         {
-            return new Variable(input.name.ToUpperInvariant(), input.refType, input.value, input.precedence, input.ID);
+            return new Variable(input.name.ToUpperInvariant(), input.refType, input.value, input.precedence, input.ID, input.isSecret);
         }
     }
 
@@ -759,7 +773,7 @@ namespace OKPluginCLBNaemonVariableResolution
         public static Variable ToResolvedVariable(this SelfServiceVariable input)
         {
             // NOTE: high precedence to make it override other variables by default
-            return new Variable(input.name.ToUpperInvariant(), input.refType, input.value, precedence: 200, externalID: 0L);
+            return new Variable(input.name.ToUpperInvariant(), input.refType, input.value, precedence: 200, externalID: 0L, isSecret: false);
         }
     }
 

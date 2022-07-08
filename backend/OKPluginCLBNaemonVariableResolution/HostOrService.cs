@@ -146,14 +146,16 @@ namespace OKPluginCLBNaemonVariableResolution
         public readonly string RefType;
         public readonly long Precedence;
         public readonly long ExternalID;
+        public readonly bool IsSecret;
 
-        public Variable(string name, string refType, string value, long precedence = 0, long externalID = 0L)
+        public Variable(string name, string refType, string value, long precedence = 0, long externalID = 0L, bool isSecret = false)
         {
             Name = name;
             Value = value;
             RefType = refType;
             Precedence = precedence;
             ExternalID = externalID;
+            IsSecret = isSecret;
         }
     }
 }
