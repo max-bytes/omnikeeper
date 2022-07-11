@@ -23,7 +23,6 @@ namespace OKPluginCLBNaemonVariableResolution
         private readonly GenericTraitEntityModel<TargetService, string> targetServiceModel;
         private readonly GenericTraitEntityModel<NaemonVariableV1, long> naemonV1VariableModel;
         private readonly GenericTraitEntityModel<SelfServiceVariable, (string refType, string refID, string name)> selfServiceVariableModel;
-        private readonly GenericTraitEntityModel<Customer, string> customerModel;
         private readonly GenericTraitEntityModel<Profile, long> profileModel;
         private readonly GenericTraitEntityModel<Category, string> categoryModel;
         private readonly GenericTraitEntityModel<ServiceAction, string> serviceActionModel;
@@ -35,7 +34,7 @@ namespace OKPluginCLBNaemonVariableResolution
         public CLBNaemonVariableResolution(ILayerModel layerModel, IRelationModel relationModel, IAttributeModel attributeModel,
             GenericTraitEntityModel<TargetHost, string> targetHostModel, GenericTraitEntityModel<TargetService, string> targetServiceModel, 
             GenericTraitEntityModel<NaemonVariableV1, long> naemonV1VariableModel, GenericTraitEntityModel<SelfServiceVariable, (string refType, string refID, string name)> selfServiceVariableModel,
-            GenericTraitEntityModel<Customer, string> customerModel, GenericTraitEntityModel<Profile, long> profileModel,
+            GenericTraitEntityModel<Profile, long> profileModel,
             GenericTraitEntityModel<Category, string> categoryModel, GenericTraitEntityModel<ServiceAction, string> serviceActionModel,
             GenericTraitEntityModel<Interface, string> interfaceModel, GenericTraitEntityModel<Group, string> groupModel,
             GenericTraitEntityModel<NaemonInstanceV1, string> naemonInstanceModel, GenericTraitEntityModel<TagV1> tagModel)
@@ -46,7 +45,6 @@ namespace OKPluginCLBNaemonVariableResolution
             this.targetHostModel = targetHostModel;
             this.naemonV1VariableModel = naemonV1VariableModel;
             this.selfServiceVariableModel = selfServiceVariableModel;
-            this.customerModel = customerModel;
             this.profileModel = profileModel;
             this.categoryModel = categoryModel;
             this.serviceActionModel = serviceActionModel;
@@ -86,6 +84,9 @@ namespace OKPluginCLBNaemonVariableResolution
             Configuration cfg = ParseConfig(config);
 
             logger.LogInformation($"Stage: {cfg.Stage}");
+
+            string? debugTargetCMDBID = "A14139540";
+            bool lostTraceOfDebugTargetCMDB = false;
 
             var timeThreshold = changesetProxy.TimeThreshold;
 
@@ -145,8 +146,59 @@ namespace OKPluginCLBNaemonVariableResolution
                 hos.Add(kv.Key, new HostOrService(null, kv.Value, profilesOfCI, categoriesOfCI));
             }
 
+            if (!lostTraceOfDebugTargetCMDB && debugTargetCMDBID != null)
+            {
+                if (hos.Any(hs => hs.Value.ID == debugTargetCMDBID))
+                    logger.LogInformation($"Debug Target {debugTargetCMDBID} exists");
+                else
+                {
+                    logger.LogInformation($"Debug Target {debugTargetCMDBID} does NOT exist!");
+                    lostTraceOfDebugTargetCMDB = true;
+                }
+            }
+
             // filter hosts and services
             var filteredHOS = hos.Where(kv => instanceRules.FilterTarget(kv.Value) && instanceRules.FilterCustomer(kv.Value.CustomerNickname)).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+            if (!lostTraceOfDebugTargetCMDB && debugTargetCMDBID != null)
+            {
+                if (filteredHOS.Any(hs => hs.Value.ID == debugTargetCMDBID))
+                    logger.LogInformation($"Debug Target {debugTargetCMDBID} was not filtered out by instance-rules");
+                else
+                {
+                    logger.LogInformation($"Debug Target {debugTargetCMDBID} was filtered out by instance-rules");
+                    lostTraceOfDebugTargetCMDB = true;
+                }
+            }
+
+
+            // reference: updateNormalizedCiDataFieldProfile()
+            foreach (var kv in filteredHOS)
+            {
+                var hs = kv.Value;
+                if (hs.Profiles.Count == 1 && hs.HasProfileMatchingRegex("^profile", RegexOptions.IgnoreCase))
+                {
+                    // add legacy profile capability
+                    hs.Tags.Add($"cap_lp_{hs.Profiles.First().ToLowerInvariant()}");
+                }
+            }
+
+            // calculate target host/service requirements/tags
+            // reference: updateNormalizedCiData_addGenericCmdbCapTags()
+            foreach (var (ciid, hs) in filteredHOS)
+            {
+                var hasMonitoringCapCategory = false;
+                foreach (var category in hs.Categories.Where(c => c.Group == "MONITORING_CAP"))
+                {
+                    var tag = $"cap_{category.Tree}_{category.Name}".ToLowerInvariant();
+                    hs.Tags.Add(tag);
+                    hasMonitoringCapCategory = true;
+                }
+                if (!hasMonitoringCapCategory)
+                {
+                    hs.Tags.Add("cap_default");
+                }
+            }
 
             // collect variables...
 
@@ -547,8 +599,19 @@ namespace OKPluginCLBNaemonVariableResolution
 
             // filter out hosts and services that contain no monitoring profile, because there is no use in creating resolved variables for them
             var evenMoreFilteredHOS = filteredHOS
-            .Where(kv => kv.Value.Profiles.Count != 0)
-            .ToDictionary(kv => kv.Key, kv => kv.Value);
+                .Where(kv => kv.Value.Profiles.Count != 0)
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+            if (!lostTraceOfDebugTargetCMDB && debugTargetCMDBID != null)
+            {
+                if (evenMoreFilteredHOS.Any(hs => hs.Value.ID == debugTargetCMDBID))
+                    logger.LogInformation($"Debug Target {debugTargetCMDBID} was not filtered out by profile-count check");
+                else
+                {
+                    logger.LogInformation($"Debug Target {debugTargetCMDBID} was filtered out by profile-count check");
+                    lostTraceOfDebugTargetCMDB = true;
+                }
+            }
 
             // calculate "uses" per host/service
             // reference:  naemon-templates-objects.php
@@ -566,8 +629,11 @@ namespace OKPluginCLBNaemonVariableResolution
                 } 
                 else
                 {
-                    // NOTE: we can be sure the host/service has at least one profile, because we filtered out those without any profiles before
-                    hs.UseDirective.Add(hs.Profiles[0].ToLowerInvariant()); // HACK: we transform to lowercase for historical reasons
+                    if (!hs.Profiles.IsEmpty())
+                    {
+                        // NOTE: we can be sure the host/service has at least one profile, because we filtered out those without any profiles before
+                        hs.UseDirective.Add(hs.Profiles[0].ToLowerInvariant()); // HACK: we transform to lowercase for historical reasons
+                    }
                 }
             }
 
@@ -606,30 +672,6 @@ namespace OKPluginCLBNaemonVariableResolution
                     invertedCapMap.AddCapability(naemonInstanceCII, cap);
             }
 
-            // calculate target host/service requirements/tags
-            foreach (var (ciid, hs) in evenMoreFilteredHOS)
-            {
-                // reference: updateNormalizedCiDataFieldProfile()
-                if (hs.Profiles.Count == 1 && hs.HasProfileMatchingRegex("^profile", RegexOptions.IgnoreCase))
-                {
-                    // add legacy profile capability
-                    hs.Tags.Add($"cap_lp_{hs.Profiles.First().ToLowerInvariant()}");
-                }
-
-                // reference: updateNormalizedCiData_addGenericCmdbCapTags()
-                var hasMonitoringCapCategory = false;
-                foreach (var category in hs.Categories.Where(c => c.Group == "MONITORING_CAP"))
-                {
-                    var tag = $"cap_{category.Tree}_{category.Name}".ToLowerInvariant();
-                    hs.Tags.Add(tag);
-                    hasMonitoringCapCategory = true;
-                }
-                if (!hasMonitoringCapCategory)
-                {
-                    hs.Tags.Add("cap_default");
-                }
-            }
-
             // check requirements vs capabilities
             // calculate which naemons monitor which hosts/services
             // reference: enrichNormalizedCiData()
@@ -665,7 +707,18 @@ namespace OKPluginCLBNaemonVariableResolution
 
             // filter out targets which are not monitored by any naemon instance
             // TODO: really necessary?
-            var extremelyFilteredHOS = evenMoreFilteredHOS.Where(kv => targetsWithAtLeastOneNaemonInstanceMonitoringIt.Contains(kv.Key)).ToList();
+            var extremelyFilteredHOS = evenMoreFilteredHOS;//.Where(kv => targetsWithAtLeastOneNaemonInstanceMonitoringIt.Contains(kv.Key)).ToList();
+
+            if (!lostTraceOfDebugTargetCMDB && debugTargetCMDBID != null)
+            {
+                if (extremelyFilteredHOS.Any(hs => hs.Value.ID == debugTargetCMDBID))
+                    logger.LogInformation($"Debug Target {debugTargetCMDBID} was not filtered out by at-least-one-naemon-instance-monitoring-it check");
+                else
+                {
+                    logger.LogInformation($"Debug Target {debugTargetCMDBID} was filtered out by at-least-one-naemon-instance-monitoring-it check");
+                    lostTraceOfDebugTargetCMDB = true;
+                }
+            }
 
             // write output
             var attributeFragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
@@ -717,7 +770,7 @@ namespace OKPluginCLBNaemonVariableResolution
                 attributeFragments.Add(new BulkCIAttributeDataLayerScope.Fragment("monman_v2.use_directive", v, ciid));
             }
             // host/service tags, for debugging purposes
-            foreach (var kv in extremelyFilteredHOS)
+            foreach (var kv in evenMoreFilteredHOS)
             {
                 var ciid = kv.Key;
                 var v = AttributeArrayValueText.BuildFromString(kv.Value.Tags.OrderBy(t => t));
