@@ -85,7 +85,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
             logger.LogInformation($"Stage: {cfg.Stage}");
 
-            string? debugTargetCMDBID = "A14139540";
+            string? debugTargetCMDBID = cfg.DebugTargetCMDBID;
             bool lostTraceOfDebugTargetCMDB = false;
 
             var timeThreshold = changesetProxy.TimeThreshold;

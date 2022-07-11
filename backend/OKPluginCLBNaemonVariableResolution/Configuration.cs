@@ -18,6 +18,9 @@ namespace OKPluginCLBNaemonVariableResolution
         [JsonPropertyName("selfservice_variables_input_layerset")]
         public List<string> SelfserviceVariablesInputLayerSet { get; set; }
 
+        [JsonPropertyName("debug_target_cmdb_id")]
+        public string? DebugTargetCMDBID { get; set; }
+
         [JsonPropertyName("stage")]
         public Stage Stage { get; set; }
         public Configuration()
@@ -25,6 +28,7 @@ namespace OKPluginCLBNaemonVariableResolution
             CMDBInputLayerSet = new List<string>();
             MonmanV1InputLayerSet = new List<string>();
             SelfserviceVariablesInputLayerSet = new List<string>();
+            DebugTargetCMDBID = null;
         }
     }
 }
