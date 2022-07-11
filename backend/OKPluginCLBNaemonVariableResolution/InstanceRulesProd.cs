@@ -468,6 +468,7 @@ namespace OKPluginCLBNaemonVariableResolution
             "SEMPERIT",
             "SI AUDIMATCH",
             "SWARCO",
+            "SWISSCARD",
             "TIGER",
             "TIGER-SP-SDW",
             "TMA",
@@ -494,6 +495,7 @@ namespace OKPluginCLBNaemonVariableResolution
             "BESI-SP-SDW",
             "DTGBS-TEST-VN-SDW",
             "MSIG-SP-SDW",
+            "UMDASCH-SP-SDW"
         };
     }
 }
