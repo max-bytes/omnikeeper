@@ -397,8 +397,48 @@ namespace OKPluginCLBNaemonVariableResolution
         }
         public bool FilterNaemonInstance(NaemonInstanceV1 naemonInstance)
         {
-            return true;
+            return ValidNaemonInstances.Contains(naemonInstance.Name);
         }
+
+        private static string[] ValidNaemonInstances = new string[]
+        {
+            "svphg200mon001",
+            "svphg200mon002",
+            "uansvclxnaemp01",
+            "uansvclxnaemp02",
+            "uansvclxnaemp03",
+            "uansvclxnaemp04",
+            "uansvclxnaemp05",
+            "uansvclxnaemp06",
+            "uansvclxnaemp07",
+            "uansvclxnaemp08",
+            "uansvclxnaemp09",
+            "uansvclxnaemp10",
+            "uansvclxnaemp91",
+            "uansvclxnaemq01",
+            "dmzlxnaemp01",
+            "dmzlxnaemp02",
+            "lxmonargusp01",
+            "svuitpmon01",
+            "svuitpmon03",
+            "nagiosup01",
+            "nagiosup02",
+            "nagiostx01",
+            "nagiostx02",
+            "nagiostp01",
+            "nagiostp02",
+            "deznaemd01",
+            "pbsaurmon01",
+            "pbsparmon01",
+            "pbsprd-mon-01",
+            "dmztsilxnaemp01",
+            "dmztsilxnaemp02",
+            "svdsmpmon01",
+            "svdsmpmon02",
+            "uvairz5091",
+            "uvairz5112",
+            "uvairz5113",
+        };
 
         private static string[] ValidCustomers = new string[]
         {

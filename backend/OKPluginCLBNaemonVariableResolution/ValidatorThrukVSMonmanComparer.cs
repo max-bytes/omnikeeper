@@ -60,6 +60,12 @@ namespace OKPluginCLBNaemonVariableResolution
                     continue;
                 }
 
+                if (thrukHost.Value.CheckCommand == "check_thruk_bp")
+                {
+                    logger.LogTrace($"Skipping thruk host {thrukHost.Value.Name} because it is a business process");
+                    continue;
+                }
+
                 var cf = thrukHost.Value.CustomVariables.RootElement.EnumerateObject().FirstOrDefault(p => p.Name == "CONFIGSOURCE");
                 if (cf.Value.ValueKind == JsonValueKind.Undefined) // NOTE: JsonValueKind.Undefined is the value when the JsonProperty struct is default
                 {
