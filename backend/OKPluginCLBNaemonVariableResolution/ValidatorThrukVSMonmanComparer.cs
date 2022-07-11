@@ -108,7 +108,15 @@ namespace OKPluginCLBNaemonVariableResolution
                         foreach (var vb in variablesOnlyInMonman)
                             issueAccumulator.TryAdd("variable_only_in_monman", $"{vb.Key}@{thrukHost.Value.Name}", $"Variable {vb.Key} is only present on monman target {target.ID}, missing in thruk", thrukHost.Key, cmdbCI.Value);
                         foreach (var (a, b) in differentVariables)
+                        {
+                            // a few special cases that we handle differently
+                            if (a.Key == "SUPP_APP" && a.Value.ValueEquals("") && b.Value.ValueEquals("00EMPTY"))
+                                continue;
+                            if (a.Key == "SUPP_OS" && a.Value.ValueEquals("") && b.Value.ValueEquals("00EMPTY"))
+                                continue;
+
                             issueAccumulator.TryAdd("variable_value_different", $"{a.Key}@{thrukHost.Value.Name}", $"Variable {a.Key} on thruk host {thrukHost.Value.Name} is different from variable on monman target {target.ID} ({a.Value.GetRawText()} vs. {b.Value.GetRawText()})", thrukHost.Key, cmdbCI.Value);
+                        }
                     }
                     catch (Exception e)
                     {

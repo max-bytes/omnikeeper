@@ -529,7 +529,7 @@ namespace OKPluginCLBNaemonVariableResolution
 
                 var customerNickname = hs.CustomerNickname;
 
-                var osSupportGroupName = "UNKNOWN";
+                var osSupportGroupName = "00EMPTY";
                 if (hs.OSSupportGroup.HasValue && groups.TryGetValue(hs.OSSupportGroup.Value, out var osSupportGroup))
                     osSupportGroupName = osSupportGroup.Name;
                 var appSupportGroupName = "00EMPTY";
