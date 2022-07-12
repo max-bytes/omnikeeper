@@ -62,18 +62,6 @@ export const queries = {
         ${Fragments.mergedAttribute}
         ${Fragments.attribute}
     `,
-    FullCIs: gql`
-        query($ciids: [Guid], $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
-            cis(searchString: "", ciids: $ciids, sortByCIName: false, withEffectiveTraits: [], withoutEffectiveTraits: [], layers: $layers, timeThreshold: $timeThreshold) {
-                ...FullCI
-            }
-        }
-        ${Fragments.outgoingMergedRelation}
-        ${Fragments.incomingMergedRelation}
-        ${Fragments.fullCI}
-        ${Fragments.mergedAttribute}
-        ${Fragments.attribute}
-    `,
     Layers: gql`
         query {
             layers {
