@@ -727,7 +727,7 @@ namespace OKPluginCLBNaemonVariableResolution
             foreach (var kv in extremelyFilteredHOS)
             {
                 var d = new JsonObject();
-                foreach (var variableGroup in kv.Value.Variables)
+                foreach (var variableGroup in kv.Value.Variables.OrderBy(kv => kv.Key))
                 {
                     var ordered = variableGroup.Value;
 

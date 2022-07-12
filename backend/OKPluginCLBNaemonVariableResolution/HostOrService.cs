@@ -14,7 +14,7 @@ namespace OKPluginCLBNaemonVariableResolution
             Profiles = profiles;
             ProfilesOrig = new List<string>(profiles); // NOTE: we create a copy, to be safe
             Categories = categories;
-            Variables = new SortedDictionary<string, List<Variable>>();
+            Variables = new Dictionary<string, List<Variable>>();
             Tags = new HashSet<string>();
             UseDirective = new List<string>();
         }
@@ -55,7 +55,7 @@ namespace OKPluginCLBNaemonVariableResolution
         public List<string> Profiles { get; set; }
         public List<string> ProfilesOrig { get; }
         public List<Category> Categories { get; }
-        public SortedDictionary<string, List<Variable>> Variables { get; }
+        public IDictionary<string, List<Variable>> Variables { get; }
 
         public HashSet<string> Tags {get; }
         public List<string> UseDirective { get; set; }
