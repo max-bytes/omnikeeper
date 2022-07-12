@@ -11,6 +11,7 @@ import _ from 'lodash';
 import cytoscape from 'cytoscape';
 import fcose from 'cytoscape-fcose';
 import layoutUtilities from 'cytoscape-layout-utilities';
+import { calculateNodeWidth, calculateNodeHeight } from './cytoscape_utils';
 
 export default function TraitCentricGraphRenderingCytoscape(props) {
     
@@ -42,10 +43,7 @@ export default function TraitCentricGraphRenderingCytoscape(props) {
     useEffect(() => {
         var cy = cytoscape({
             container: document.getElementById('graph'), // TODO: use ref
-            layout: {
-                name: 'grid',
-                rows: 1
-              },
+            layout: {},
             style: [ // the stylesheet for the graph
                 {
                 selector: 'node',
@@ -53,11 +51,9 @@ export default function TraitCentricGraphRenderingCytoscape(props) {
                     'shape': 'rectangle',
                     'width': calculateNodeWidth,
                     'height': calculateNodeHeight,
-                    // 'background-color': '#fff',
                     'background-fill': 'linear-gradient',
                     'background-gradient-stop-colors': calculateBackgroundGradientStopColors, // 'white white red red green green blue blue white',
                     'background-gradient-stop-positions': calculateBackgroundGradientStopPositions,//'0px 3px 3px 9px 9px 15px 15px 21px 21px',
-                    // 'padding-top': '18px',
                     'border-width': '3px',
                     'border-color': (node) => node.data('colors')[0],
                     'label': 'data(label)',
@@ -70,7 +66,6 @@ export default function TraitCentricGraphRenderingCytoscape(props) {
                 {
                 selector: 'edge',
                 style: {
-                    // 'width': 3,
                     'line-color': (node) => node.data('colors')[0],
                     'target-arrow-color': (node) => node.data('colors')[0],
                     'target-arrow-shape': 'triangle',
@@ -194,45 +189,6 @@ const styles = {
         flex: "1 1 auto",
     },
 };
-
-function calculateNodeWidth(node) {
-    // Create element with attributes needed to calculate text size
-    const ctx = document.createElement('canvas').getContext("2d");
-    const fStyle = node.pstyle('font-style').strValue;
-    const size = node.pstyle('font-size').pfValue + 'px';
-    const family = node.pstyle('font-family').strValue;
-    const weight = node.pstyle('font-weight').strValue;
-    ctx.font = fStyle + ' ' + weight + ' ' + size + ' ' + family;
-
-    // For multiple lines, evaluate the width of the largest line
-    const lines = node.data('label').split('\n')
-    const lengths = lines.map(a => a.length);
-    const max_line = lengths.indexOf(Math.max(...lengths));
-
-    // User-defined padding
-    const padding = 20
-
-    return ctx.measureText(lines[max_line]).width + padding;
-}
-
-function calculateNodeHeight(node) {
-    // Create element with attributes needed to calculate text size
-    const ctx = document.createElement('canvas').getContext("2d");
-    const fStyle = node.pstyle('font-style').strValue;
-    const size = node.pstyle('font-size').pfValue + 'px';
-    const family = node.pstyle('font-family').strValue;
-    const weight = node.pstyle('font-weight').strValue;
-    ctx.font = fStyle + ' ' + weight + ' ' + size + ' ' + family;
-    const lines = node.data('label').split('\n');
-
-    // User-defined padding
-    const padding = 20
-
-    return _.sum(_.map(lines, line => {
-        const tm = ctx.measureText(line);
-        return tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
-    })) + padding;
-}
 
 function calculateBackgroundGradientStopColors(node) {
     const layerColors = node.data('colors');
