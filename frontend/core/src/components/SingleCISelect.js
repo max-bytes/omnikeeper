@@ -11,7 +11,7 @@ function SingleCISelect(props) {
   const { refetch: searchCIs } = useQuery(queries.SearchCIs, { skip: true });
 
   return <DebounceSelect
-    style={{minWidth: '400px'}}
+    style={{minWidth: '350px'}}
     placeholder="Search+select CI (min 3 characters)"
     value={selectedCIID}
     onChange={(value) => { setSelectedCIID(value); }}
