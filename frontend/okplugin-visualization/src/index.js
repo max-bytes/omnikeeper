@@ -4,6 +4,7 @@ import { faEye } from '@fortawesome/free-solid-svg-icons';
 import TraitCentricGraphRenderingGraphViz from "./TraitCentricGraphRenderingGraphViz.js";
 import LayerCentricUsageGraphRendering from "./LayerCentricUsageGraphRendering.js";
 import TraitCentricGraphRenderingCytoscape from "./TraitCentricGraphRenderingCytoscape.js";
+import RelationGraphRendering from "./RelationGraphRendering";
 
 export default function OKPluginVisualization() {
     return {
@@ -25,6 +26,12 @@ export default function OKPluginVisualization() {
                 url: "/layer-centric-usage-graph-rendering",
                 icon: faEye,
                 component: (props) => <LayerCentricUsageGraphRendering {...props} />
+            },
+            {
+                title: "Relation Graph Rendering",
+                url: "/relation-graph-rendering",
+                icon: faEye,
+                component: (props) => <RelationGraphRendering {...props} />
             }
         ]
     };
