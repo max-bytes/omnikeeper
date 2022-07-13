@@ -18,14 +18,14 @@ namespace Omnikeeper.Base.Entity
         [TraitAttribute("id", "auth_role.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("permissions", "auth_role.permissions", optional: true)]
-        public readonly string[] Permissions;
+        public string[] Permissions;
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
+        public string Name;
 
         public override bool Equals(object? obj) => Equals(obj as AuthRole);
         public bool Equals(AuthRole? other)

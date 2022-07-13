@@ -15,20 +15,20 @@ namespace OKPluginGenericJSONIngest
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(ContextIDRegexString, ContextIDRegexOptions)]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("extract_config", "gji_context.extract_config", jsonSerializer: typeof(ContextModel.ExtractConfigSerializer))]
-        public readonly IExtractConfig ExtractConfig;
+        public IExtractConfig ExtractConfig;
 
         [TraitAttribute("transform_config", "gji_context.transform_config", jsonSerializer: typeof(ContextModel.TransformConfigSerializer))]
-        public readonly ITransformConfig TransformConfig;
+        public ITransformConfig TransformConfig;
 
         [TraitAttribute("load_config", "gji_context.load_config", jsonSerializer: typeof(ContextModel.LoadConfigSerializer))]
-        public readonly ILoadConfig LoadConfig;
+        public ILoadConfig LoadConfig;
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
+        public string Name;
 
         public Context()
         {

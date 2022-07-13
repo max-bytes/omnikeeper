@@ -20,10 +20,10 @@ namespace Tests.Integration.Model
     {
         [TraitAttribute("id", "id")]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("test_attribute_a", "test_attribute_a", optional: true)]
-        public readonly string? TestAttributeA;
+        public string? TestAttributeA;
 
         public TestEntityForStringID()
         {
@@ -115,10 +115,10 @@ namespace Tests.Integration.Model
     {
         [TraitAttribute("id", "id")]
         [TraitEntityID]
-        public readonly long ID;
+        public long ID;
 
         [TraitAttribute("test_attribute_a", "test_attribute_a", optional: true)]
-        public readonly string? TestAttributeA;
+        public string? TestAttributeA;
 
         public TestEntityForLongID()
         {
@@ -221,13 +221,13 @@ namespace Tests.Integration.Model
     {
         [TraitAttribute("id1", "id1")]
         [TraitEntityID]
-        public readonly long ID1;
+        public long ID1;
         [TraitAttribute("id2", "id2")]
         [TraitEntityID]
-        public readonly string ID2;
+        public string ID2;
 
         [TraitAttribute("test_attribute_a", "test_attribute_a", optional: true)]
-        public readonly string? TestAttributeA;
+        public string? TestAttributeA;
 
         public TestEntityForTupleID()
         {
@@ -348,10 +348,10 @@ namespace Tests.Integration.Model
     {
         [TraitAttribute("id", "id")]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitRelation("tr", "predicate_id", true)]
-        public readonly Guid[] TestRelations;
+        public Guid[] TestRelations;
 
         public TestEntityForOutgoingTraitRelation()
         {
@@ -459,10 +459,10 @@ namespace Tests.Integration.Model
     {
         [TraitAttribute("id", "id")]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitRelation("tr", "predicate_id", false)]
-        public readonly Guid[] TestRelations;
+        public Guid[] TestRelations;
 
         public TestEntityForIncomingTraitRelation()
         {
@@ -570,10 +570,10 @@ namespace Tests.Integration.Model
     {
         [TraitAttribute("id", "test.id")]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("test_attribute_a", "test.test_attribute_a")]
-        public readonly string TestAttributeA;
+        public string TestAttributeA;
 
         public TestEntityForPartialEntity()
         {
@@ -621,10 +621,10 @@ namespace Tests.Integration.Model
     {
         [TraitAttribute("id", "id")]
         [TraitEntityID]
-        public readonly long ID;
+        public long ID;
 
         [TraitAttribute("test_attribute_a", "test_attribute_a")]
-        public readonly double TestAttributeA;
+        public double TestAttributeA;
 
         public TestEntityForDouble()
         {
@@ -700,10 +700,10 @@ namespace Tests.Integration.Model
     {
         [TraitAttribute("id", "id")]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitRelation("tr", "predicate_id", false)]
-        public readonly Guid? TestRelation;
+        public Guid? TestRelation;
 
         public TestEntityWithSingularTraitRelation()
         {

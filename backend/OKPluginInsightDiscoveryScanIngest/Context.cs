@@ -11,15 +11,15 @@ namespace OKPluginInsightDiscoveryScanIngest
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(ContextIDRegexString, ContextIDRegexOptions)]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
+        public string Name;
 
         [TraitAttribute("genericJsonIngestContextID", "insight_discovers_ingest_context.generic_json_ingest_context_id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string GenericJsonIngestContextID;
+        public string GenericJsonIngestContextID;
 
         public Context()
         {

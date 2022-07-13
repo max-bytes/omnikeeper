@@ -12,22 +12,22 @@ namespace Omnikeeper.GridView.Entity
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(IDValidations.GridViewContextIDRegexString, IDValidations.GridViewContextIDRegexOptions)]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("speaking_name", "gridview_context.speaking_name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string SpeakingName;
+        public string SpeakingName;
 
         [TraitAttribute("description", "gridview_context.description", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Description;
+        public string Description;
 
         [TraitAttribute("name", ICIModel.NameAttribute, optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
+        public string Name;
 
         [TraitAttribute("config", "gridview_context.config", jsonSerializer: typeof(GridViewContextModel.ConfigSerializer))]
-        public readonly GridViewConfiguration Configuration;
+        public GridViewConfiguration Configuration;
 
         public GridViewContext(string id, string speakingName, string description, GridViewConfiguration configuration)
         {

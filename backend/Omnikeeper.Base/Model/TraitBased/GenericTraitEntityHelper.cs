@@ -42,11 +42,11 @@ namespace Omnikeeper.Base.Model.TraitBased
 
 
                         var (attributeValueType, isArray) = Type2AttributeValueType(fInfo, taa);
-                        attributeFieldInfos.Add(new TraitAttributeFieldInfo(fInfo, taa, attributeValueType, isArray, isID, jsonSerializer));
+                        attributeFieldInfos.Add(new TraitAttributeFieldInfo(fInfo, type, taa, attributeValueType, isArray, isID, jsonSerializer));
                     }
                     else if (tra != null)
                     {
-                        relationFieldInfos.Add(new TraitRelationFieldInfo(fInfo, tra));
+                        relationFieldInfos.Add(new TraitRelationFieldInfo(fInfo, type, tra));
                     }
                     else
                     {
@@ -79,15 +79,9 @@ namespace Omnikeeper.Base.Model.TraitBased
             return new GenericTraitEntityIDAttributeInfos<C, ID>(outFields);
         }
 
-        public static C EffectiveTrait2Object<C>(EffectiveTrait et) where C : TraitEntity, new()
-        {
-            var (_, attributeFieldInfos, relationFieldInfos) = ExtractFieldInfos<C>();
-
-            return EffectiveTrait2Object<C>(et, attributeFieldInfos, relationFieldInfos);
-        }
-
         public static C EffectiveTrait2Object<C>(EffectiveTrait et, IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos, IEnumerable<TraitRelationFieldInfo> relationFieldInfos) where C : TraitEntity, new()
         {
+            // TODO: explore if it is faster to do a constructor call instead of setting the fields
             var ret = new C();
 
             foreach (var taFieldInfo in attributeFieldInfos)
@@ -106,7 +100,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     {
                         entityFieldValue = attribute.Attribute.Value.ToGenericObject();
                     }
-                    taFieldInfo.FieldInfo.SetValue(ret, entityFieldValue);
+                    taFieldInfo.Accessor.Set(ret, entityFieldValue);
                 }
                 else
                 {
@@ -116,7 +110,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     else
                     {
                         // set to default value, to ensure consistency and not rely on default constructor
-                        taFieldInfo.FieldInfo.SetValue(ret, default);
+                        taFieldInfo.Accessor.Set(ret, default);
                     }
                 }
             }
@@ -132,9 +126,9 @@ namespace Omnikeeper.Base.Model.TraitBased
                     var otherCIIDs = ((isForward) ? relations.Select(r => r.Relation.ToCIID) : relations.Select(r => r.Relation.FromCIID)).ToArray();
 
                     if (trFieldInfo.FieldInfo.FieldType.IsArray)
-                        trFieldInfo.FieldInfo.SetValue(ret, otherCIIDs);
+                        trFieldInfo.Accessor.Set(ret, otherCIIDs);
                     else
-                        trFieldInfo.FieldInfo.SetValue(ret, (otherCIIDs.Length == 0) ? null : otherCIIDs.First());
+                        trFieldInfo.Accessor.Set(ret, (otherCIIDs.Length == 0) ? null : otherCIIDs.First());
                 }
                 else
                 {

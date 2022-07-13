@@ -38,14 +38,14 @@ namespace Omnikeeper.Base.Entity
         [TraitAttribute("id", "odata_context.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("config", "odata_context.config", jsonSerializer: typeof(ConfigSerializer))]
-        public readonly IConfig CConfig;
+        public IConfig CConfig;
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
+        public string Name;
 
         public static SystemTextJSONSerializer<IConfig> ConfigSerializer = new SystemTextJSONSerializer<IConfig>(new JsonSerializerOptions());
 

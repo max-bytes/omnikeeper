@@ -28,18 +28,18 @@ namespace Omnikeeper.Base.Entity
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(IDValidations.ValidatorContextIDRegexString, IDValidations.ValidatorContextIDRegexOptions)]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("validator_reference", "validator_context.validator_reference")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string ValidatorReference;
+        public string ValidatorReference;
 
         [TraitAttribute("config", "validator_context.config")]
-        public readonly JsonDocument Config;
+        public JsonDocument Config;
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
+        public string Name;
 
         public override bool Equals(object? obj) => Equals(obj as ValidatorContextV1);
         public bool Equals(ValidatorContextV1? other)

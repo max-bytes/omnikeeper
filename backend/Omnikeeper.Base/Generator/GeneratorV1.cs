@@ -34,14 +34,14 @@ namespace Omnikeeper.Base.Generator
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(IDValidations.GeneratorIDRegexString, IDValidations.GeneratorIDRegexOptions)]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("attribute_name", "generator.attribute_name")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string AttributeName;
+        public string AttributeName;
 
         [TraitAttribute("attribute_value_template", "generator.attribute_value_template", multilineTextHint: true)]
-        public readonly string TemplateString;
+        public string TemplateString;
 
         // TODO: better caching of templates, currently they are created new at each request
         private GeneratorAttributeValue? _template = null;
@@ -59,7 +59,7 @@ namespace Omnikeeper.Base.Generator
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
+        public string Name;
 
         public static readonly Guid StaticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
 

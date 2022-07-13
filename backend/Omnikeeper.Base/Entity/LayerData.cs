@@ -23,31 +23,31 @@ namespace Omnikeeper.Base.Entity
         [TraitAttribute("id", "layer_data.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitEntityID]
-        public readonly string LayerID;
+        public string LayerID;
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
+        public string Name;
 
         [TraitAttribute("description", "layer_data.description")]
-        public readonly string Description;
+        public string Description;
 
         [TraitAttribute("color", "layer_data.color")]
-        public readonly long Color;
+        public long Color;
 
         [TraitAttribute("cl_config_id", "layer_data.cl_config_id")]
-        public readonly string CLConfigID;
+        public string CLConfigID;
 
         [TraitAttribute("generators", "layer_data.generators")]
-        public readonly string[] Generators;
+        public string[] Generators;
 
         [TraitAttribute("oia_reference", "layer_data.oia_reference")]
-        public readonly string OIAReference;
+        public string OIAReference;
 
         [TraitAttribute("state", "layer_data.state")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         // TODO: constraint to enum values, support enums
-        public readonly string State;
+        public string State;
 
         public override bool Equals(object? obj) => Equals(obj as LayerData);
         public bool Equals(LayerData? other)

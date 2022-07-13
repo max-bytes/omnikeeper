@@ -7,28 +7,28 @@ namespace Omnikeeper.Base.Entity.Issue
     {
         [TraitAttribute("type", "okissue.type")]
         [TraitEntityID]
-        public readonly string Type;
+        public string Type;
 
         [TraitAttribute("context", "okissue.context")]
         [TraitEntityID]
-        public readonly string Context;
+        public string Context;
 
         [TraitAttribute("group", "okissue.group")]
         [TraitEntityID]
-        public readonly string Group;
+        public string Group;
 
         [TraitAttribute("id", "okissue.id")]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("message", "okissue.message")]
-        public readonly string Message;
+        public string Message;
 
         [TraitAttribute("name", "__name", optional: true)]
-        public readonly string? Name;
+        public string? Name;
 
         [TraitRelation("affectedCIs", "affects_ci", true)]
-        public readonly Guid[] AffectedCIs;
+        public Guid[] AffectedCIs;
 
 
         public Issue()

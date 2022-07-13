@@ -295,7 +295,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 {
                     foreach (var trFieldInfo in relationFieldInfos)
                     {
-                        var entityValue = trFieldInfo.FieldInfo.GetValue(t);
+                        var entityValue = trFieldInfo.Accessor.Get(t);
 
                         if (entityValue != null)
                         {
@@ -328,23 +328,22 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             return (outgoingRelations, incomingRelations);
         }
-
     }
-
-
 
     public class TraitAttributeFieldInfo
     {
         public readonly FieldInfo FieldInfo;
+        public readonly FieldAccessor Accessor;
         public readonly TraitAttributeAttribute TraitAttributeAttribute;
         public readonly AttributeValueType AttributeValueType;
         public readonly bool IsArray;
         public readonly bool IsID;
         public readonly IAttributeJSONSerializer? JsonSerializer;
 
-        public TraitAttributeFieldInfo(FieldInfo fieldInfo, TraitAttributeAttribute traitAttributeAttribute, AttributeValueType attributeValueType, bool isArray, bool isID, IAttributeJSONSerializer? jsonSerializer)
+        public TraitAttributeFieldInfo(FieldInfo fieldInfo, Type entityType, TraitAttributeAttribute traitAttributeAttribute, AttributeValueType attributeValueType, bool isArray, bool isID, IAttributeJSONSerializer? jsonSerializer)
         {
             FieldInfo = fieldInfo;
+            Accessor = new FieldAccessor(fieldInfo, entityType);
             TraitAttributeAttribute = traitAttributeAttribute;
             AttributeValueType = attributeValueType;
             IsArray = isArray;
@@ -356,11 +355,13 @@ namespace Omnikeeper.Base.Model.TraitBased
     public class TraitRelationFieldInfo
     {
         public readonly FieldInfo FieldInfo;
+        public readonly FieldAccessor Accessor;
         public readonly TraitRelationAttribute TraitRelationAttribute;
 
-        public TraitRelationFieldInfo(FieldInfo fieldInfo, TraitRelationAttribute traitRelationAttribute)
+        public TraitRelationFieldInfo(FieldInfo fieldInfo, Type entityType, TraitRelationAttribute traitRelationAttribute)
         {
             FieldInfo = fieldInfo;
+            Accessor = new FieldAccessor(fieldInfo, entityType);
             TraitRelationAttribute = traitRelationAttribute;
         }
     }

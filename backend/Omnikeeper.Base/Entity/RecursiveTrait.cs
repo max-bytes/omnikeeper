@@ -57,26 +57,26 @@ namespace Omnikeeper.Base.Entity
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(IDValidations.TraitIDRegexString, IDValidations.TraitIDRegexOptions)]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         public TraitOriginV1 Origin { get; }
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
+        public string Name;
 
         [TraitAttribute("required_attributes", "trait.required_attributes", jsonSerializer: typeof(RecursiveTraitModel.TraitAttributeSerializer))]
         [TraitAttributeValueConstraintArrayLength(1, -1)]
-        public readonly TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
+        public TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
 
         [TraitAttribute("optional_attributes", "trait.optional_attributes", jsonSerializer: typeof(RecursiveTraitModel.TraitAttributeSerializer), optional: true)]
-        public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
+        public TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
 
         [TraitAttribute("optional_relations", "trait.optional_relations", jsonSerializer: typeof(RecursiveTraitModel.TraitRelationSerializer), optional: true)]
-        public readonly TraitRelation[] OptionalRelations = Array.Empty<TraitRelation>();
+        public TraitRelation[] OptionalRelations = Array.Empty<TraitRelation>();
 
         [TraitAttribute("required_traits", "trait.required_traits", optional: true)]
-        public readonly string[] RequiredTraits = Array.Empty<string>();
+        public string[] RequiredTraits = Array.Empty<string>();
 
         public RecursiveTrait()
         {

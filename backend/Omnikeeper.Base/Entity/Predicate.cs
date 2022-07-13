@@ -26,19 +26,19 @@ namespace Omnikeeper.Base.Entity
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(IDValidations.PredicateIDRegexString, IDValidations.PredicateIDRegexOptions)]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("wording_from", "predicate.wording_from")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string WordingFrom;
+        public string WordingFrom;
 
         [TraitAttribute("wording_to", "predicate.wording_to")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string WordingTo;
+        public string WordingTo;
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
+        public string Name;
 
         public override bool Equals(object? obj) => Equals(obj as Predicate);
         public bool Equals(Predicate? other)

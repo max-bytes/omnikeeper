@@ -28,18 +28,18 @@ namespace Omnikeeper.Base.Entity
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(IDValidations.CLConfigIDRegexString, IDValidations.CLConfigIDRegexOptions)]
         [TraitEntityID]
-        public readonly string ID;
+        public string ID;
 
         [TraitAttribute("cl_brain_reference", "cl_config.cl_brain_reference")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string CLBrainReference;
+        public string CLBrainReference;
 
         [TraitAttribute("cl_brain_config", "cl_config.cl_brain_config")]
-        public readonly JsonDocument CLBrainConfig;
+        public JsonDocument CLBrainConfig;
 
         [TraitAttribute("name", "__name", optional: true)]
         [TraitAttributeValueConstraintTextLength(1, -1)]
-        public readonly string Name;
+        public string Name;
 
         public override bool Equals(object? obj) => Equals(obj as CLConfigV1);
         public bool Equals(CLConfigV1? other)
