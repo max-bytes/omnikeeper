@@ -134,7 +134,7 @@ jobs:
           #buildPublish OKPluginOIAOmnikeeper
           #buildPublish OKPluginOIAKeycloak
           #buildPublish OKPluginCLBMonitoring
-          buildPublish OKPluginCLBNaemonVariableResolution
+          #buildPublish OKPluginCLBNaemonVariableResolution
           #buildPublish OKPluginCLBVariableRendering
           #buildPublish OKPluginCLBNaemonConfig
           buildPublish OKPluginAnsibleInventoryScanIngest

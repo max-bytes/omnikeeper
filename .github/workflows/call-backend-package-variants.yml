@@ -15,7 +15,7 @@ jobs:
       run: |
         echo "variantName=tsa" >> $GITHUB_ENV
         echo "baseVersion=${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
-        echo "pluginsBackend=OKPluginGenericJSONIngest:${{ github.event.inputs.baseVersion }};OKPluginCLBNaemonVariableResolution:${{ github.event.inputs.baseVersion }};OKPluginVisualization:${{ github.event.inputs.baseVersion }};" >> $GITHUB_ENV
+        echo "pluginsBackend=OKPluginGenericJSONIngest:${{ github.event.inputs.baseVersion }};OKPluginVisualization:${{ github.event.inputs.baseVersion }};" >> $GITHUB_ENV
     - name: "Invoke backend variant: TSA"
       uses: benc-uk/workflow-dispatch@v1
       with:
