@@ -15,10 +15,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public readonly TraitEntityRootType RootQueryType;
         public readonly IDInputType? IDInputType;
         public readonly UpsertInputType UpsertInputType;
-        public readonly InsertInputType InsertInputType;
+        public readonly UpsertInputType UpdateInputType;
 
         public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType,
-            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, InsertInputType insertInputType)
+            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, UpsertInputType updateInputType)
         {
             Trait = trait;
             Element = element;
@@ -26,7 +26,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             IDInputType = iDInputType;
             RootQueryType = rootQueryType;
             UpsertInputType = upsertInputType;
-            InsertInputType = insertInputType;
+            UpdateInputType = updateInputType;
         }
     }
 
@@ -89,10 +89,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     var filterInputType = FilterInputType.Build(at.Value);
                     var idt = IDInputType.Build(at.Value);
                     var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, ciidModel, attributeModel, relationModel, dataLoaderService, ttWrapper, filterInputType, idt);
-                    var upsertInputType = new UpsertInputType(at.Value);
-                    var insertInputType = new InsertInputType(at.Value);
+                    var upsertInputType = new UpsertInputType(at.Value, false);
+                    var updateInputType = new UpsertInputType(at.Value, true);
 
-                    elementTypes.Add(new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType, insertInputType));
+                    elementTypes.Add(new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType, updateInputType));
                 }
                 catch (Exception e)
                 {

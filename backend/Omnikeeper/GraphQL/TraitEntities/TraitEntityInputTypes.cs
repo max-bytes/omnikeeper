@@ -13,10 +13,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
 {
     public class IDInput
     {
-        public readonly (string name, IAttributeValue value)[] AttributeValues;
-        public IDInput((string name, IAttributeValue value)[] attributeValues)
+        public readonly (TraitAttribute traitAttribute, IAttributeValue value)[] IDAttributeValues;
+        public IDInput((TraitAttribute traitAttribute, IAttributeValue value)[] idAttributeValues)
         {
-            AttributeValues = attributeValues;
+            IDAttributeValues = idAttributeValues;
         }
     }
 
@@ -49,12 +49,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
-            var (attributeValues, relationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(value, trait);
+            var (attributeValues, relationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(value, trait, false, true);
 
             if (relationValues.Length != 0)
                 throw new Exception($"Encountered unexpected input field(s)");
 
-            var t = attributeValues.Where(t => t.isID).Select(t => (t.name, t.value)).ToArray();
+            var t = attributeValues.Where(t => t.traitAttribute.AttributeTemplate.IsID.GetValueOrDefault(false)).ToArray();
             return new IDInput(t);
         }
 
@@ -209,79 +209,34 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class UpsertInput
     {
-        public readonly (string name, IAttributeValue value, bool isID)[] AttributeValues;
-        public UpsertInput((string name, IAttributeValue value, bool isID)[] attributeValues)
-        {
-            AttributeValues = attributeValues;
-        }
-    }
-
-    public class UpsertInputType : InputObjectGraphType<UpsertInput>
-    {
-        private readonly ITrait trait;
-
-        public UpsertInputType(ITrait trait)
-        {
-            Name = TraitEntityTypesNameGenerator.GenerateUpsertTraitEntityInputGraphTypeName(trait);
-
-            foreach (var ta in trait.RequiredAttributes)
-            {
-                var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
-                AddField(new FieldType()
-                {
-                    Name = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta),
-                    ResolvedType = new NonNullGraphType(graphType)
-                });
-            }
-            foreach (var ta in trait.OptionalAttributes)
-            {
-                var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
-                AddField(new FieldType()
-                {
-                    Name = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta),
-                    ResolvedType = graphType
-                });
-            }
-
-            this.trait = trait;
-        }
-        public override object ParseDictionary(IDictionary<string, object?> value)
-        {
-            var (attributeValues, relationValues) = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(value, trait);
-
-            if (relationValues.Length != 0)
-                throw new Exception($"Encountered unexpected input field(s)");
-
-            return new UpsertInput(attributeValues);
-        }
-    }
-
-    public class InsertInput
-    {
-        public readonly (string name, IAttributeValue value, bool isID)[] AttributeValues;
-        public readonly (string predicateID, bool forward, Guid[] relatedCIIDs)[] RelationValues;
-        public InsertInput((string name, IAttributeValue value, bool isID)[] attributeValues, (string predicateID, bool forward, Guid[] relatedCIIDs)[] relationValues)
+        public readonly (TraitAttribute traitAttribute, IAttributeValue value)[] AttributeValues;
+        public readonly (TraitRelation traitRelation, Guid[] relatedCIIDs)[] RelationValues;
+        public UpsertInput((TraitAttribute traitAttribute, IAttributeValue value)[] attributeValues, (TraitRelation traitRelation, Guid[] relatedCIIDs)[] relationValues)
         {
             AttributeValues = attributeValues;
             RelationValues = relationValues;
         }
     }
 
-    public class InsertInputType : InputObjectGraphType<InsertInput>
+    public class UpsertInputType : InputObjectGraphType<UpsertInput>
     {
         private readonly ITrait trait;
+        private readonly bool isPureUpdate;
 
-        public InsertInputType(ITrait trait)
+        // NOTE: a pure update is one that has less restrictions on what the input must be
+        // a pure update does not require that all required attributes or all ID attributes are present
+        public UpsertInputType(ITrait trait, bool isPureUpdate)
         {
             Name = TraitEntityTypesNameGenerator.GenerateInsertTraitEntityInputGraphTypeName(trait);
 
             foreach (var ta in trait.RequiredAttributes)
             {
                 var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
+                var resolvedType = (isPureUpdate) ? graphType : new NonNullGraphType(graphType);
                 AddField(new FieldType()
                 {
                     Name = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta),
-                    ResolvedType = new NonNullGraphType(graphType)
+                    ResolvedType = resolvedType
                 });
             }
             foreach (var ta in trait.OptionalAttributes)
@@ -303,12 +258,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
             }
 
             this.trait = trait;
+            this.isPureUpdate = isPureUpdate;
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
-            var t = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(value, trait);
-            return new InsertInput(t.Item1, t.Item2);
+            var t = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(value, trait, throwOnMissingRequiredAttribute: !isPureUpdate, throwOnMissingIDAttribute: !isPureUpdate);
+            return new UpsertInput(t.Item1, t.Item2);
         }
     }
 }

@@ -16,58 +16,69 @@ namespace Omnikeeper.Base.Model.TraitBased
 {
     public static class TraitEntityHelper
     {
-        public static ((string name, IAttributeValue value, bool isID)[], (string predicateID, bool forward, Guid[] relatedCIIDs)[]) InputDictionary2AttributeAndRelationTuples(IDictionary<string, object?> inputDict, ITrait trait)
+        public static ((TraitAttribute traitAttribute, IAttributeValue value)[], (TraitRelation traitRelation, Guid[] relatedCIIDs)[]) 
+            InputDictionary2AttributeAndRelationTuples(IDictionary<string, object?> inputDict, ITrait trait, bool throwOnMissingRequiredAttribute, bool throwOnMissingIDAttribute)
         {
-            var attributeValues = new List<(string name, IAttributeValue value, bool isID)>();
-            var relationValues = new List<(string predicateID, bool forward, Guid[] relatedCIIDs)>();
+            var attributeValues = new List<(TraitAttribute traitAttribute, IAttributeValue value)>();
+            var relationValues = new List<(TraitRelation traitRelation, Guid[] relatedCIIDs)>();
 
-            foreach (var kv in inputDict)
+            foreach(var attribute in trait.RequiredAttributes)
             {
-                var inputFieldName = kv.Key;
-
-                if (kv.Value == null)
+                var convertedAttributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(attribute);
+                var fittingInputField = inputDict.FirstOrDefault(kv => convertedAttributeFieldName == kv.Key);
+                if (fittingInputField.Equals(default(KeyValuePair<string, object?>)))
                 {
-                    // input field is specified, but its value is null, so we treat it like it was not specified and skip it
-                    continue;
-                }
-
-                // lookup value type based on input attribute name
-                var attribute = trait.RequiredAttributes.Concat(trait.OptionalAttributes).FirstOrDefault(ra =>
-                {
-                    var convertedAttributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ra);
-                    return convertedAttributeFieldName == inputFieldName;
-                });
-
-                if (attribute == null)
-                {
-                    // lookup relation
-                    var relation = trait.OptionalRelations.FirstOrDefault(r =>
-                    {
-                        var convertedRelationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
-                        return convertedRelationFieldName == inputFieldName;
-                    });
-
-                    if (relation == null)
-                    {
-                        throw new Exception($"Invalid input field for trait {trait.ID}: {inputFieldName}");
-                    }
+                    if (attribute.AttributeTemplate.IsID.GetValueOrDefault(false) && throwOnMissingIDAttribute)
+                        throw new Exception($"Missing required ID input field {convertedAttributeFieldName} for trait {trait.ID}");
+                    else if (throwOnMissingRequiredAttribute)
+                        throw new Exception($"Missing required input field {convertedAttributeFieldName} for trait {trait.ID}");
                     else
-                    {
-                        var array = (object[])kv.Value;
-                        var relatedCIIDs = array.Select(a =>
-                        {
-                            var relatedCIID = (Guid)a;
-                            return relatedCIID;
-                        }).ToArray();
-                        relationValues.Add((relation.RelationTemplate.PredicateID, relation.RelationTemplate.DirectionForward, relatedCIIDs));
-                    }
+                        continue;
                 }
-                else
+                if (fittingInputField.Value == null) // input field is specified, but its value is null
                 {
-                    var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
-                    IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, kv.Value);
-                    attributeValues.Add((attribute.AttributeTemplate.Name, attributeValue, attribute.AttributeTemplate.IsID.GetValueOrDefault(false)));
+                    if (attribute.AttributeTemplate.IsID.GetValueOrDefault(false) && throwOnMissingIDAttribute)
+                        throw new Exception($"Required ID input field {convertedAttributeFieldName} for trait {trait.ID} is null");
+                    else if (throwOnMissingRequiredAttribute)
+                        throw new Exception($"Required input field {convertedAttributeFieldName} for trait {trait.ID} is null");
+                    else
+                        continue;
                 }
+
+                var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
+                IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, fittingInputField.Value);
+                attributeValues.Add((attribute, attributeValue));
+            }
+
+            foreach(var attribute in trait.OptionalAttributes)
+            {
+                var convertedAttributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(attribute);
+                var fittingInputField = inputDict.FirstOrDefault(kv => convertedAttributeFieldName == kv.Key);
+                if (fittingInputField.Equals(default(KeyValuePair<string, object?>)))
+                    continue;
+                if (fittingInputField.Value == null) // input field is specified, but its value is null
+                    continue;
+
+                var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
+                IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, fittingInputField.Value);
+                attributeValues.Add((attribute, attributeValue));
+            }
+
+            foreach(var relation in trait.OptionalRelations)
+            {
+                var convertedRelationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(relation);
+                var fittingInputField = inputDict.FirstOrDefault(kv => convertedRelationFieldName == kv.Key);
+                if (fittingInputField.Equals(default(KeyValuePair<string, object?>)))
+                    continue;
+                if (fittingInputField.Value == null) // input field is specified, but its value is null
+                    continue;
+                var array = (object[])fittingInputField.Value;
+                var relatedCIIDs = array.Select(a =>
+                {
+                    var relatedCIID = (Guid)a;
+                    return relatedCIID;
+                }).ToArray();
+                relationValues.Add((relation, relatedCIIDs));
             }
 
             return (attributeValues.ToArray(), relationValues.ToArray());

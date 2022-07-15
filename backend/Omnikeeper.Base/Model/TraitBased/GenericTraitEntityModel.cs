@@ -178,7 +178,8 @@ namespace Omnikeeper.Base.Model.TraitBased
             var attributeFragments = Entities2Fragments(tuples);
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(tuples);
             string? ciName = null;
-            var (et, changed) = await traitEntityModel.InsertOrUpdateFull(ciid, attributeFragments, outgoingRelations, incomingRelations, ciName, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            // TODO: we should specify the actually relevant trait relations (through their predicateIDs, not ALL relations)
+            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, null, null, ciName, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
 
             var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, attributeFieldInfos, relationFieldInfos);
 
@@ -254,7 +255,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             {
                 foreach (var (t, ciid) in entities)
                 {
-                    var entityValue = taFieldInfo.FieldInfo.GetValue(t);
+                    var entityValue = taFieldInfo.Accessor.Get(t);
                     var attributeName = taFieldInfo.TraitAttributeAttribute.aName;
 
                     if (entityValue != null)

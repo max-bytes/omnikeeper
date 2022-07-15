@@ -137,7 +137,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var id = context.GetArgument<IDInput>("id");
 
                         // TODO: use data loader
-                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, id.AttributeValues, layerset, trans, timeThreshold);
+                        var idAttributeTuples = id.IDAttributeValues.Select(t => (t.traitAttribute.AttributeTemplate.Name, t.value)).ToArray();
+                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
 
                         if (!foundCIID.HasValue)
                         {
