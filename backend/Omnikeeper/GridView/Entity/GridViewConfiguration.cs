@@ -1,5 +1,6 @@
 ﻿using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.GridView.Entity
 {
@@ -28,6 +29,7 @@ namespace Omnikeeper.GridView.Entity
         public string SourceAttributeName { get; set; }
         public string[]? SourceAttributePath { get; set; }
         public string ColumnDescription { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public AttributeValueType? ValueType { get; set; }
         public string? WriteLayer { get; set; }
 

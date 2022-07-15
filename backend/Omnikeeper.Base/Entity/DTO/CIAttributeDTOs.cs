@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Omnikeeper.Base.Entity.DTO
 {
@@ -55,6 +56,7 @@ namespace Omnikeeper.Base.Entity.DTO
 
     public class AttributeValueDTO : IEquatable<AttributeValueDTO>
     {
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public AttributeValueType Type { get; set; } = default;
         public bool IsArray { get; set; } = default;
         public string[] Values { get; set; } = default;
