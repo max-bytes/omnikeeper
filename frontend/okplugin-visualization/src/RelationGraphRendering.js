@@ -5,7 +5,8 @@ import { SyncOutlined } from '@ant-design/icons';
 import { useLazyQuery } from "@apollo/client";
 import _ from 'lodash';
 import cytoscape from 'cytoscape';
-import dagre from 'cytoscape-dagre';
+// import dagre from 'cytoscape-dagre';
+import fcose from 'cytoscape-fcose';
 import layoutUtilities from 'cytoscape-layout-utilities';
 import { calculateNodeWidth, calculateNodeHeight } from './cytoscape_utils';
 import gql from 'graphql-tag';
@@ -22,25 +23,25 @@ export default function RelationGraphRendering(props) {
 
     var [cy, setCY] = useState(null);
 
-    const baseLayoutOptions = {
-        nodeSep: 50,
-        rankSep: 200,
-        animate: true,
-        fit: false,
-        rankDir: 'LR',
-        name: "dagre",
-        padding: 20,
-        spacingFactor: 1
-      };
-      
     // const baseLayoutOptions = {
-    //     name: 'fcose',
-    //     quality: "proof",
+    //     nodeSep: 50,
+    //     rankSep: 200,
     //     animate: true,
-    //     animationEasing: 'ease-out-cubic',
-    //     nodeDimensionsIncludeLabels: true,
-    //     idealEdgeLength: edge => 300,
+    //     fit: false,
+    //     rankDir: 'LR',
+    //     name: "dagre",
+    //     padding: 20,
+    //     spacingFactor: 1
     //   };
+      
+    const baseLayoutOptions = {
+        name: 'fcose',
+        // quality: "proof",
+        animate: true,
+        animationEasing: 'ease-out-cubic',
+        nodeDimensionsIncludeLabels: true,
+        idealEdgeLength: edge => 300,
+      };
 
     const [layoutOptions, setLayoutOptions] = useState(baseLayoutOptions);
 
@@ -51,7 +52,7 @@ export default function RelationGraphRendering(props) {
     // TODO: should be remountable
     useEffect(() => {
         cytoscape.use( layoutUtilities );
-        cytoscape.use( dagre );
+        cytoscape.use( fcose );
     }, []);
 
     useEffect(() => {
@@ -141,6 +142,8 @@ export default function RelationGraphRendering(props) {
                                     relativePlacementConstraint: relativeConstraints,
                                     alignmentConstraint: {vertical: alignmentConstraints}
                                 });
+                                console.log(elements);
+                                console.log(layoutOptions);
                                 // NOTE: do not animate first run, so it's run syncronously and we can call cy.fit() right afterwards
                                 cy.layout({...layoutOptions, animate: false}).run(); 
                                 cy.fit();
@@ -191,8 +194,11 @@ function ci2elements(baseCI, includeBaseCI, path, skipRelationID, edgeLimit) {
         g => _.take(g, edgeLimit));
     const incoming = _.sortBy(unsortedIncoming, [r => r.relation.predicateID, r => r.relation.fromCIName]);
 
+    const groupedOutgoing = _.groupBy(outgoing, r => r.relation.predicateID);
+    const groupedIncoming = _.groupBy(incoming, r => r.relation.predicateID);
+
     // outgoing
-    const outgoingGroups = _.map(_.groupBy(outgoing, r => r.relation.predicateID), (value, predicateID) => {
+    const outgoingGroups = _.map(groupedOutgoing, (value, predicateID) => {
         return {data: {id: createGroupID(baseCI.id, true, predicateID), label: ''}};
     });
     const outgoingElements = _.map(outgoing, r => {
@@ -204,8 +210,7 @@ function ci2elements(baseCI, includeBaseCI, path, skipRelationID, edgeLimit) {
             }
         }
     });
-    // TODO: re-use grouped relations by predicate
-    const outgoingRelations = _.map(_.groupBy(outgoing, r => r.relation.predicateID), (value, predicateID) => {
+    const outgoingRelations = _.map(groupedOutgoing, (value, predicateID) => {
         return {
             data: {
                 id: createEdgeID(baseCI.id, true, predicateID),// createID(predicateID, path), // TODO, HACK: weird
@@ -215,11 +220,11 @@ function ci2elements(baseCI, includeBaseCI, path, skipRelationID, edgeLimit) {
             }
         }
     });
-    // TODO: re-use grouped relations by predicate
-    const outgoingRelativeConstraints = _.map(_.groupBy(outgoing, r => r.relation.predicateID), (value, predicateID) => {
-        return {left: createNodeID(baseCI.id, path), right: createGroupID(baseCI.id, true, predicateID)}
-    });
-    const outgoingAlignmentConstraints = _.map(_.groupBy(outgoing, r => r.relation.predicateID), (value, predicateID) => {
+    const outgoingRelativeConstraints = [];
+    // _.map(groupedOutgoing, (value, predicateID) => {
+    //     return {left: createNodeID(baseCI.id, path), right: createGroupID(baseCI.id, true, predicateID)}
+    // });
+    const outgoingAlignmentConstraints = _.map(groupedOutgoing, (value, predicateID) => {
         return createGroupID(baseCI.id, true, predicateID);
     });
 
@@ -230,28 +235,36 @@ function ci2elements(baseCI, includeBaseCI, path, skipRelationID, edgeLimit) {
     });
 
     // incoming
+    const incomingGroups = _.map(groupedIncoming, (value, predicateID) => {
+        return {data: {id: createGroupID(baseCI.id, false, predicateID), label: ''}};
+    });
     const incomingElements = _.map(incoming, r => {
         return {
             data: {
                 id: createNodeID(r.relation.fromCIID, [...path, r.relation.id]),
+                parent: createGroupID(baseCI.id, false, r.relation.predicateID),
                 label: r.relation.fromCIName
             }
         }
     });
-    const incomingRelations = _.map(incoming, r => {
+    const incomingRelations = _.map(groupedIncoming, (value, predicateID) => {
         return {
             data: {
-                id: createNodeID(r.relation.id, path),
-                label: r.relation.predicateID,
-                source: createNodeID(r.relation.fromCIID, [...path, r.relation.id]),
+                id: createEdgeID(baseCI.id, false, predicateID),// createID(predicateID, path), // TODO, HACK: weird
+                label: predicateID,
+                source: createGroupID(baseCI.id, false, predicateID),// createID(r.relation.toCIID, [...path, r.relation.id])
                 target: createNodeID(baseCI.id, path)
             }
         }
     });
-    const incomingRelativeConstraints = _.map(incoming, r => {
-        return {left: createNodeID(r.relation.fromCIID, [...path, r.relation.id]), right: createNodeID(baseCI.id, path)}
+
+    const incomingRelativeConstraints = [];
+    // _.map(incoming, r => {
+    //     return {left: createNodeID(r.relation.fromCIID, [...path, r.relation.id]), right: createNodeID(baseCI.id, path)}
+    // });
+    const incomingAlignmentConstraints = _.map(groupedIncoming, (value, predicateID) => {
+        return createGroupID(baseCI.id, false, predicateID);
     });
-    const incomingAlignmentConstraints = _.map(incoming, r => createNodeID(r.relation.fromCIID, [...path, r.relation.id]));
 
     const innerIncomingCIs = _.map(incoming, r => {
         if (r.relation.fromCI)
@@ -261,11 +274,9 @@ function ci2elements(baseCI, includeBaseCI, path, skipRelationID, edgeLimit) {
 
     // joining it all together
     const elements = _.flattenDeep([baseElement, 
-        // incomingElements, 
-        outgoingElements,
-        outgoingGroups, 
-        // incomingRelations, 
-        outgoingRelations,
+        outgoingElements, incomingElements,
+        outgoingGroups, incomingGroups,
+        outgoingRelations, incomingRelations,
         _.map(innerIncomingCIs, t => t.elements), _.map(innerOutgoingCIs, t => t.elements)
     ]);
 
