@@ -139,7 +139,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     // NOTE: because the set of cis WITH and cis WITHOUT relations are a partition (i.e. have no overlap), we can do these two loops consecutively
                     if (filter.Filter.RequiresCheckOfCIsWithNonEmptyRelations())
                     {
-                        dls.Add(filter.Filter.MatchAgainstNonEmpty(ciidGroupedRelations));
+                        dls.Add(filter.MatchAgainstNonEmpty(ciidGroupedRelations));
                     }
                     if (filter.Filter.RequiresCheckOfCIsWithEmptyRelations())
                     {

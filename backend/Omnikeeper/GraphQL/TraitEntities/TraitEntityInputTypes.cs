@@ -102,13 +102,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public RelationFilterInputType()
         {
             Field("exactAmount", x => x.ExactAmount, nullable: true);
+            Field("exactOtherCIID", x => x.ExactOtherCIID, nullable: true, type: typeof(GuidGraphType));
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
-            var exactAmount = value.TryGetValue("exactAmount", out var e) ? (uint?)e : null;
+            var exactAmount = value.TryGetValue("exactAmount", out var ea) ? (uint?)ea : null;
+            var exactOtherCIID = value.TryGetValue("exactOtherCIID", out var eociid) ? (Guid?)eociid : null;
 
-            return InnerRelationFilter.Build(exactAmount);
+            return InnerRelationFilter.Build(exactAmount, exactOtherCIID);
         }
     }
 
