@@ -234,12 +234,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         return matchingCIIDs.Then(async matchingCIIDs =>
                         {
                             var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
-
                             Guid finalCIID;
                             if (ciids.IsEmpty())
                                 finalCIID = await ciModel.CreateCI(trans);
                             else
-                                finalCIID = ciids.OrderBy(ciid => ciid).FirstOrDefault(); // we order by GUID to stay consistent even when multiple CIs would match
+                                finalCIID = ciids.OrderBy(ciid => ciid).First(); // we order by GUID to stay consistent even when multiple CIs would match
 
                             var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
@@ -249,8 +248,53 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             return et;
                         });
-
                     });
+
+
+                tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateDeleteSingleByFilterMutationName(traitID), new BooleanGraphType(),
+                    arguments: new QueryArguments(
+                        new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                        new QueryArgument(elementTypeContainer.FilterInputType) { Name = "filter" }
+                    ),
+                    description: @"Note on the return value: only returns true if the trait entity was present 
+                            (and found through the filter) first, and it is not present anymore after the deletion at that CIID.",
+                        resolve: async context =>
+                        {
+                            var layerStrings = context.GetArgument<string[]>("layers")!;
+                            var writeLayerID = context.GetArgument<string>("writeLayer")!;
+                            var filter = context.GetArgument<FilterInput>("filter");
+
+                            var userContext = await context.SetupUserContext()
+                                .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                                .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                                .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                            var layerset = userContext.GetLayerSet(context.Path);
+                            var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                            var trans = userContext.Transaction;
+
+                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
+                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
+                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+
+                            var matchingCIIDs = filter.Apply(attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
+                            return matchingCIIDs.Then(async matchingCIIDs =>
+                            {
+                                var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
+                                if (ciids.IsEmpty())
+                                    return false;
+                                var foundCIID = ciids.OrderBy(ciid => ciid).First(); // we order by GUID to stay consistent even when multiple CIs would match
+
+                                var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                                var removed = await traitEntityModel.TryToDelete(foundCIID, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+
+                                userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+
+                                return removed;
+                            });
+                        });
 
                 if (elementTypeContainer.IDInputType != null) // only add *byDataID-mutations for trait entities that have an ID
                 {
@@ -311,8 +355,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                             new QueryArgument(new NonNullGraphType(elementTypeContainer.IDInputType)) { Name = "id" }
                         ),
-                        description: @"Note on the return value: deleteByDataID* only returns true if the trait entity was present 
-                            (and found through its ID) first, and it is not present anymore after the deletion.",
+                        description: @"Note on the return value: only returns true if the trait entity was present 
+                            (and found through its ID) first, and it is not present anymore after the deletion at that CIID.",
                         resolve: async context =>
                         {
                             var layerStrings = context.GetArgument<string[]>("layers")!;

@@ -305,7 +305,7 @@ mutation {
 
 
         [Test]
-        public async Task TestUpsertSingleByFilter()
+        public async Task TestUpsertSingleAndDeletionByFilter()
         {
             var userInDatabase = await SetupDefaultUser();
             var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
@@ -577,6 +577,50 @@ mutation {
             }
             ";
             AssertQuerySuccess(queryTestTraitA, expected7, user);
+
+            // delete a trait entity by filter
+            var mutationDelete1 = @"
+            mutation {
+              deleteSingleByFilter_test_trait_a(
+                layers: [""layer_1""]
+                writeLayer: ""layer_1""
+                filter: {name: {exact:""Entity 1 changed""}}
+              )
+            }
+            ";
+            var expected8 = @"
+            {
+              ""deleteSingleByFilter_test_trait_a"": true
+            }";
+            AssertQuerySuccess(mutationDelete1, expected8, user);
+
+
+            // try to delete again
+            var expected9 = @"
+            {
+              ""deleteSingleByFilter_test_trait_a"": false
+            }";
+            AssertQuerySuccess(mutationDelete1, expected9, user);
+
+            var expected10 = @"
+            {
+              ""traitEntities"": {
+            	  ""test_trait_a"": {
+            	    ""all"": [
+                      {
+                        ""entity"": {
+                          ""name"": ""Entity 2"",
+                          ""optional"": null,
+                          ""assignments"": [],
+                          ""members"": []
+                        }
+                      }
+                    ]
+            	  }
+              }
+            }
+            ";
+            AssertQuerySuccess(queryTestTraitA, expected10, user);
         }
     }
 }

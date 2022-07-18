@@ -49,6 +49,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public static string GenerateUpsertByDataIDMutationName(string traitID) => "upsertByDataID_" + SanitizeMutationName(traitID);
         public static string GenerateDeleteByDataIDMutationName(string traitID) => "deleteByDataID_" + SanitizeMutationName(traitID);
         public static string GenerateUpsertSingleByFilterMutationName(string traitID) => "upsertSingleByFilter_" + SanitizeMutationName(traitID);
+        public static string GenerateDeleteSingleByFilterMutationName(string traitID) => "deleteSingleByFilter_" + SanitizeMutationName(traitID);
         public static string GenerateTraitAttributeFieldName(TraitAttribute ta)
         {
             // TODO: what if two unsanitized field names map to the same sanitized field name? TODO: detect this and provide a work-around

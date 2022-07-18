@@ -172,6 +172,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
             });
             this.Field<ChangesetType>("latestChange", resolve: (context) =>
             {
+                // TODO: this does not really work as a user would expect:
+                // for example, when an optional attribute gets removed from a trait entity, it does not affect the "latestChange" timestamp returned from here
+                // because this implementation only checks the timestamps of changesets that contribute to the CURRENTLY existing trait entity
+                // what we must actually do is go through the trait's underlying attributes and relations and for each, getting the latest change.
                 var et = context.Source!;
 
                 if (et == null)
