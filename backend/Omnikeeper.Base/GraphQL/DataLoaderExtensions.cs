@@ -34,6 +34,7 @@ namespace Omnikeeper.Base.GraphQL
             });
         }
 
+        // TODO: is there a better way to do this?
         public static IDataLoaderResult<T> ResolveNestedResults<T>(this IDataLoaderResult<IDataLoaderResult<T>> data)
         {
             return new SimpleDataLoader<T>(async token =>

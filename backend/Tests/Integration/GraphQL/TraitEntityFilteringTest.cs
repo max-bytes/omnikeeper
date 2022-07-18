@@ -530,21 +530,6 @@ mutation($name: String!, $id: String!, $assignments: [Guid]!) {
             RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_2" }, { "name", "Entity 2" }, { "assignments", new Guid[] { relatedCIID1 } } }));
             RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_3" }, { "name", "Entity 3" }, { "assignments", new Guid[] { relatedCIID1, relatedCIID2 } } }));
 
-            var queryTestTraitA = @"
-{
-  traitEntities(layers: [""layer_1""]) {
-    test_trait_a {
-                all {
-                    entity {
-                        id
-                        name
-                    }
-                }
-            }
-        }
-    }
-";
-
             var queryFiltered = @"
 {
   traitEntities(layers: [""layer_1""]) {

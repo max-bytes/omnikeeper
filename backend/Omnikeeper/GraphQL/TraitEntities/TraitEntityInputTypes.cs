@@ -1,8 +1,12 @@
-﻿using GraphQL.Types;
+﻿using GraphQL.DataLoader;
+using GraphQL.Types;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.GraphQL;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -126,6 +130,37 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
+    public static class FilterInputExtensions
+    {
+        public static IDataLoaderResult<ICIIDSelection> Apply(this FilterInput filter, IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel, IDataLoaderService dataLoaderService,
+            LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            IDataLoaderResult<ICIIDSelection> matchingCIIDs;
+            if (!filter.RelationFilters.IsEmpty() && !filter.AttributeFilters.IsEmpty())
+            {
+                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService)
+                .Then(async matchingCIIDs =>
+                    await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(matchingCIIDs, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
+                );
+            }
+            else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
+            {
+                matchingCIIDs = new SimpleDataLoader<ICIIDSelection>(async token =>
+                    await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
+                );
+            }
+            else if (filter.AttributeFilters.IsEmpty() && !filter.RelationFilters.IsEmpty())
+            {
+                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService);
+            }
+            else
+            {
+                throw new Exception("At least one filter must be set");
+            }
+            return matchingCIIDs;
+        }
+    }
+
     public class FilterInputType : InputObjectGraphType<FilterInput>
     {
         private readonly ITrait trait;
@@ -200,11 +235,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
             return new FilterInput(attributeFilters.ToArray(), relationFilters.ToArray());
         }
 
-        public static FilterInputType? Build(ITrait at)
+        public static FilterInputType Build(ITrait at)
         {
             var t = new FilterInputType(at);
-            if (t.Fields.IsEmpty())
-                return null;
             return t;
         }
     }

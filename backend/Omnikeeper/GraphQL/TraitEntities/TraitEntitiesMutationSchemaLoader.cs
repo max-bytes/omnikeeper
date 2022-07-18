@@ -1,7 +1,9 @@
 ﻿using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
@@ -19,17 +21,22 @@ namespace Omnikeeper.GraphQL.TraitEntities
     {
         private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
+        private readonly ICIIDModel ciidModel;
+        private readonly IDataLoaderService dataLoaderService;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
         private readonly ILayerModel layerModel;
         private readonly IChangesetModel changesetModel;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
-        public TraitEntitiesMutationSchemaLoader(IAttributeModel attributeModel, IRelationModel relationModel,
+        public TraitEntitiesMutationSchemaLoader(IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel, 
+            IDataLoaderService dataLoaderService,
             IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
+            this.ciidModel = ciidModel;
+            this.dataLoaderService = dataLoaderService;
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.layerModel = layerModel;
@@ -192,6 +199,57 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
 
                         return removed;
+                    });
+
+                tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateUpsertSingleByFilterMutationName(traitID), elementTypeContainer.ElementWrapper,
+                    arguments: new QueryArguments(
+                        new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" },
+                        new QueryArgument(elementTypeContainer.FilterInputType) { Name = "filter" },
+                        new QueryArgument<StringGraphType> { Name = "ciName" }),
+                    resolve: async context =>
+                    {
+                        var layerStrings = context.GetArgument<string[]>("layers")!;
+                        var writeLayerID = context.GetArgument<string>("writeLayer")!;
+                        var ciName = context.GetArgument<string?>("ciName", null);
+                        var filter = context.GetArgument<FilterInput>("filter");
+                        var input = context.GetArgument<UpsertInput>("input");
+
+                        var userContext = await context.SetupUserContext()
+                            .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                            .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                            .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                        var layerset = userContext.GetLayerSet(context.Path);
+                        var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                        var trans = userContext.Transaction;
+
+                        if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
+                        if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+
+                        var matchingCIIDs = filter.Apply(attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
+                        return matchingCIIDs.Then(async matchingCIIDs =>
+                        {
+                            var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
+
+                            Guid finalCIID;
+                            if (ciids.IsEmpty())
+                                finalCIID = await ciModel.CreateCI(trans);
+                            else
+                                finalCIID = ciids.OrderBy(ciid => ciid).FirstOrDefault(); // we order by GUID to stay consistent even when multiple CIs would match
+
+                            var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+
+                            var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
+
+                            userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+
+                            return et;
+                        });
+
                     });
 
                 if (elementTypeContainer.IDInputType != null) // only add *byDataID-mutations for trait entities that have an ID
