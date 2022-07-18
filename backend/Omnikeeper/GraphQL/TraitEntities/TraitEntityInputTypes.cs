@@ -132,6 +132,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public static class FilterInputExtensions
     {
+        // NOTE: resulting CIIDs do NOT necessarily fulfill any trait requirements, systems using this method need to perform these checks if needed
         public static IDataLoaderResult<ICIIDSelection> Apply(this FilterInput filter, IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel, IDataLoaderService dataLoaderService,
             LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
         {

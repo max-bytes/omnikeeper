@@ -84,16 +84,35 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (attributeValues.ToArray(), relationValues.ToArray());
         }
 
+        // returns both the "best" matching CIID according to its corresponding EffectiveTrait (if ci actually fulfills that)
+        // when at least one CI is found, the returned ciid is not null, but if none of them fulfill the trait, the returned EffectiveTrait is null
+        public static async Task<(Guid, EffectiveTrait?)> GetSingleBestMatchingCI(IEnumerable<Guid> candidateCIIDs, TraitEntityModel traitEntityModel, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            if (candidateCIIDs.IsEmpty())
+                throw new Exception("This method must not be called with an empty CIID list");
+
+            return await GetSingleBestMatchingCI((SpecificCIIDsSelection)SpecificCIIDsSelection.Build(candidateCIIDs.ToHashSet()), traitEntityModel, layerSet, trans, timeThreshold);
+        }
+        public static async Task<(Guid, EffectiveTrait?)> GetSingleBestMatchingCI(SpecificCIIDsSelection candidateCIIDs, TraitEntityModel traitEntityModel, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            // TODO: use data loader
+            var foundETs = await traitEntityModel.GetByCIID(candidateCIIDs, layerSet, trans, timeThreshold);
+
+            if (foundETs.IsEmpty())
+                return (candidateCIIDs.CIIDs.OrderBy(ciid => ciid).First(), null); // we order by GUID to stay consistent even when multiple CIs would match
+            else
+                return foundETs.OrderBy(kv => kv.Key).Select(kv => (kv.Key, kv.Value)).First(); // we order by GUID to stay consistent even when multiple CIs would match
+        }
 
         /*
-         * NOTE: this does not care whether or not the CI is actually a trait entity or not
-         */
-        public static async Task<Guid?> GetMatchingCIIDByAttributeValues(IAttributeModel attributeModel, (string name, IAttributeValue value)[] attributeTuples, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+            * NOTE: this does not care whether or not the CI is actually a trait entity or not
+            */
+        public static async Task<IEnumerable<Guid>> GetMatchingCIIDsByAttributeValues(IAttributeModel attributeModel, (string name, IAttributeValue value)[] attributeTuples, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...
             var cisWithIDAttributes = await attributeModel.GetMergedAttributes(AllCIIDsSelection.Instance, NamedAttributesSelection.Build(attributeTuples.Select(t => t.name).ToHashSet()), layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
 
-            var foundCIID = cisWithIDAttributes.Where(t =>
+            var foundCIIDs = cisWithIDAttributes.Where(t =>
             {
                 for (var i = 0; i < attributeTuples.Length; i++)
                 {
@@ -110,11 +129,8 @@ namespace Omnikeeper.Base.Model.TraitBased
                     }
                 }
                 return true;
-            })
-                .Select(t => t.Key)
-                .OrderBy(t => t) // we order by GUID to stay consistent even when multiple CIs would match
-                .FirstOrDefault();
-            return (foundCIID == default) ? null : foundCIID;
+            }).Select(kv => kv.Key);
+            return foundCIIDs;
         }
 
         public static IDataLoaderResult<ICIIDSelection> GetMatchingCIIDsByRelationFilters(IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<RelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
@@ -160,7 +176,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                             (ISet<Guid>)new HashSet<Guid>(re.First()),
                             (h, e) => { h.IntersectWith(e); return h; }
                         );
-                    return SpecificCIIDsSelection.Build(intersection.ToImmutableHashSet());
+                    return (ICIIDSelection)SpecificCIIDsSelection.Build(intersection.ToImmutableHashSet());
                 });
             }).ResolveNestedResults();
         }

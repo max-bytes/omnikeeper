@@ -27,13 +27,20 @@ namespace Omnikeeper.Base.Model.TraitBased
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var idAttributeValues = idAttributeInfos.ExtractAttributeValuesFromID(id);
-            var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames().Zip(idAttributeValues).ToArray(), layerSet, trans, timeThreshold);
+            var foundCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames().Zip(idAttributeValues).ToArray(), layerSet, trans, timeThreshold);
 
-            if (!foundCIID.HasValue)
+            if (foundCIIDs.IsEmpty())
                 return default;
 
-            var ret = await GetSingleByCIID(foundCIID.Value, layerSet, trans, timeThreshold);
-            return ret;
+            // if the foundCIIDs contains any CIs that have the trait, we need to use this, not just the first CIID (which might NOT have the trait)
+            var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(foundCIIDs, traitEntityModel, layerSet, trans, timeThreshold);
+
+            if (bestMatchingET == null)
+                return default;
+
+            var entity = GenericTraitEntityHelper.EffectiveTrait2Object<T>(bestMatchingET, attributeFieldInfos, relationFieldInfos);
+
+            return (entity, bestMatchingCIID);
         }
 
         public async Task<IDictionary<ID, T>> GetByDataID(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
@@ -170,9 +177,18 @@ namespace Omnikeeper.Base.Model.TraitBased
             // NOTE: we do a CIID lookup based on the ID attributes and their values, but we DON'T require that the found CI must already be a trait entity
             var id = idAttributeInfos.ExtractIDFromEntity(t);
             var idAttributeValues = idAttributeInfos.ExtractAttributeValuesFromID(id);
-            var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames().Zip(idAttributeValues).ToArray(), layerSet, trans, changesetProxy.TimeThreshold);
+            var foundCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames().Zip(idAttributeValues).ToArray(), layerSet, trans, changesetProxy.TimeThreshold);
 
-            var ciid = foundCIID.HasValue ? foundCIID.Value : await ciModel.CreateCI(trans);
+            Guid ciid;
+            if (foundCIIDs.IsEmpty())
+                ciid = await ciModel.CreateCI(trans);
+            else
+            {
+                // if the foundCIIDs contains any CIs that have the trait, we need to use this preferably, not just the first CIID (which might NOT have the trait)
+                // only if there are no CIs that fulfill the trait, we can use the first one ordered by CIID only
+                var (bestMatchingCIID, _) = await TraitEntityHelper.GetSingleBestMatchingCI(foundCIIDs, traitEntityModel, layerSet, trans, changesetProxy.TimeThreshold);
+                ciid = bestMatchingCIID;
+            }
 
             var tuples = new (T t, Guid ciid)[] { (t, ciid) };
             var attributeFragments = Entities2Fragments(tuples);

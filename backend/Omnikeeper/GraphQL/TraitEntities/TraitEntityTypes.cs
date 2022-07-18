@@ -79,6 +79,33 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         return ets.Select(kv => kv.Value);
                     });
                 });
+            this.Field("filteredSingle", wrapperElementGraphType,
+                arguments: new QueryArguments(
+                    new QueryArgument(filterGraphType) { Name = "filter" }
+                ),
+                resolve: context =>
+                {
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var layerset = userContext.GetLayerSet(context.Path);
+                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                    var trans = userContext.Transaction;
+
+                    // use filter to reduce list of potential cis
+                    var filter = context.GetArgument<FilterInput>("filter");
+
+                    var matchingCIIDs = filter.Apply(attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
+
+                    return matchingCIIDs.Then(async matchingCIIDs =>
+                    {
+                        var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
+                        if (ciids.IsEmpty())
+                            return null;
+
+                        // if the foundCIIDs contains any CIs that have the trait, we need to use this, not just the first CIID (which might NOT have the trait)
+                        var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, traitEntityModel, layerset, trans, timeThreshold);
+                        return bestMatchingET;
+                    });
+                });
 
             this.FieldAsync("byCIID", wrapperElementGraphType,
                 arguments: new QueryArguments(
@@ -114,15 +141,14 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         // TODO: use data loader
                         var idAttributeTuples = id.IDAttributeValues.Select(t => (t.traitAttribute.AttributeTemplate.Name, t.value)).ToArray();
-                        var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
+                        var foundCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
 
-                        if (!foundCIID.HasValue)
-                        {
+                        if (foundCIIDs.IsEmpty())
                             return null;
-                        }
 
-                        // TODO: use data loader
-                        return await traitEntityModel.GetSingleByCIID(foundCIID.Value, layerset, trans, timeThreshold);
+                        // if the foundCIIDs contains any CIs that have the trait, we need to use this, not just the first CIID (which might NOT have the trait)
+                        var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(foundCIIDs, traitEntityModel, layerset, trans, timeThreshold);
+                        return bestMatchingET;
                     });
             }
         }

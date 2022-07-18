@@ -144,19 +144,34 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var insertInput = context.GetArgument<UpsertInput>("input");
 
                         // check if the trait entity has an ID, and if so, check that there is no existing entity with that ID
+                        Guid finalCIID;
                         if (elementTypeContainer.IDInputType != null)
                         {
                             var idAttributeTuples = insertInput.AttributeValues.Where(t => t.traitAttribute.AttributeTemplate.IsID.GetValueOrDefault(false)).Select(t => (t.traitAttribute.AttributeTemplate.Name, t.value)).ToArray();
-                            var currentCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
-                            if (currentCIID.HasValue)
-                            { // there is already a trait entity with that ID -> error
-                                throw new Exception($"A CI with that data ID already exists; CIID: {currentCIID.Value})");
+                            var currentCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
+
+                            if (!currentCIIDs.IsEmpty())
+                            { // there is already a CI with that ID attributes
+
+                                // check if any of the found CIIDs actually fulfill the trait, only throw exception if so
+                                // if not, keep going and use the found CIID for the new trait entity
+                                var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(currentCIIDs, traitEntityModel, layerset, trans, timeThreshold);
+
+                                if (bestMatchingET != null)
+                                    throw new Exception($"A trait entity with that data ID already exists; CIID: {bestMatchingCIID})");
+                                else
+                                    finalCIID = bestMatchingCIID;
+                            } else
+                            {
+                                finalCIID = await ciModel.CreateCI(trans);
                             }
+                        } else
+                        {
+                            finalCIID = await ciModel.CreateCI(trans);
                         }
 
                         var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
-                        var finalCIID = await ciModel.CreateCI(trans);
                         var et = await Upsert(finalCIID, insertInput.AttributeValues, insertInput.RelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
 
                         userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
@@ -238,7 +253,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (ciids.IsEmpty())
                                 finalCIID = await ciModel.CreateCI(trans);
                             else
-                                finalCIID = ciids.OrderBy(ciid => ciid).First(); // we order by GUID to stay consistent even when multiple CIs would match
+                            {
+                                // if the matchingCIIDs contains any CIs that have the trait, we need to use this preferably, not just the first CIID (which might NOT have the trait)
+                                // only if there are no CIs that fulfill the trait, we can use the first one ordered by CIID only
+                                var (bestMatchingCIID, _) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, traitEntityModel, layerset, trans, timeThreshold);
+                                finalCIID = bestMatchingCIID;
+                            }
 
                             var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
 
@@ -285,10 +305,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
                                 if (ciids.IsEmpty())
                                     return false;
-                                var foundCIID = ciids.OrderBy(ciid => ciid).First(); // we order by GUID to stay consistent even when multiple CIs would match
+
+                                // if the ciids contains any CIs that have the trait, we need to use this, not just the first CIID (which might NOT have the trait)
+                                // otherwise, return
+                                var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, traitEntityModel, layerset, trans, timeThreshold);
+                                if (bestMatchingET == null)
+                                    return false;
 
                                 var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
-                                var removed = await traitEntityModel.TryToDelete(foundCIID, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                                var removed = await traitEntityModel.TryToDelete(bestMatchingCIID, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                                 userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
 
@@ -333,15 +358,20 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 throw new Exception("Cannot mutate trait entity that does not have proper ID field(s)");
                             }
 
-                            var currentCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
+                            var currentCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
+
+                            // if the currentCIIDs contains any CIs that have the trait, we need to use this preferably, not just the first CIID (which might NOT have the trait)
+                            // only if there are no CIs that fulfill the trait, we can use the first one ordered by CIID only
+                            Guid finalCIID;
+                            if (currentCIIDs.IsEmpty())
+                                finalCIID = await ciModel.CreateCI(trans);
+                            else
+                            {
+                                var (bestMatchingCIID, _) = await TraitEntityHelper.GetSingleBestMatchingCI(currentCIIDs, traitEntityModel, layerset, trans, timeThreshold);
+                                finalCIID = bestMatchingCIID;
+                            }
 
                             var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
-
-                            Guid finalCIID;
-                            if (currentCIID.HasValue)
-                                finalCIID = currentCIID.Value;
-                            else
-                                finalCIID = await ciModel.CreateCI(trans);
 
                             var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
                             userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
@@ -380,13 +410,25 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             // TODO: use data loader?
                             var idAttributeTuples = id.IDAttributeValues.Select(t => (t.traitAttribute.AttributeTemplate.Name, t.value)).ToArray();
-                            var foundCIID = await TraitEntityHelper.GetMatchingCIIDByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
-
-                            if (!foundCIID.HasValue)
+                            var foundCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
+                                
+                            Guid finalCIID;
+                            if (foundCIIDs.IsEmpty())
                                 return false;
+                            else
+                            {
+                                // if the foundCIIDs contains any CIs that have the trait, we need to use this, not just the first CIID (which might NOT have the trait)
+                                // if there are no CIs that fulfill the trait, we return as there is nothing to delete
+                                var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(foundCIIDs, traitEntityModel, layerset, trans, timeThreshold);
+
+                                if (bestMatchingET == null)
+                                    return false;
+                                else
+                                    finalCIID = bestMatchingCIID;
+                            }
 
                             var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
-                            var removed = await traitEntityModel.TryToDelete(foundCIID.Value, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var removed = await traitEntityModel.TryToDelete(finalCIID, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                             userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
 
