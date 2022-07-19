@@ -215,17 +215,24 @@ function ci2elements(baseCI, includeBaseCI, path, skipRelationID, edgeLimit) {
     const outgoingRelations = _.map(groupedOutgoing, (value, predicateID) => {
         return {
             data: {
-                id: createEdgeID(baseCI.id, true, predicateID),// createID(predicateID, path), // TODO, HACK: weird
+                id: createEdgeID(baseCI.id, true, predicateID),
                 label: predicateID,
                 source: createNodeID(baseCI.id, path),
-                target: createGroupID(baseCI.id, true, predicateID)// createID(r.relation.toCIID, [...path, r.relation.id])
+                target: createGroupID(baseCI.id, true, predicateID)
             }
         }
     });
-    const outgoingRelativeConstraints = 
+    const outgoingRelativeConstraints = _.concat(
         _.map(outgoing, r => {
             return {left: createNodeID(baseCI.id, path), right: createNodeID(r.relation.toCIID, [...path, r.relation.id])}
-        });
+        }),
+        // _.map(groupedOutgoing, (value, predicateID) => {
+        //     return _.map(eachCons(value, 2), t => {return {
+        //         top: createNodeID(t[0].relation.toCIID, [...path, t[0].relation.id]), 
+        //         bottom: createNodeID(t[1].relation.toCIID, [...path, t[1].relation.id]), 
+        //         gap: 10};})
+        // })
+    );
     const outgoingAlignmentConstraints = 
         _.filter(
             _.map(groupedOutgoing, (value, predicateID) => _.map(value, r => createNodeID(r.relation.toCIID, [...path, r.relation.id]))),
@@ -261,10 +268,17 @@ function ci2elements(baseCI, includeBaseCI, path, skipRelationID, edgeLimit) {
         }
     });
 
-    const incomingRelativeConstraints = 
+    const incomingRelativeConstraints = _.concat(
         _.map(incoming, r => {
             return {left: createNodeID(r.relation.fromCIID, [...path, r.relation.id]), right: createNodeID(baseCI.id, path)}
-        });
+        }),
+        // _.map(groupedIncoming, (value, predicateID) => {
+        //     return _.map(eachCons(value, 2), t => {return {
+        //         top: createNodeID(t[0].relation.fromCIID, [...path, t[0].relation.id]), 
+        //         bottom: createNodeID(t[1].relation.fromCIID, [...path, t[1].relation.id]), 
+        //         gap: 10};})
+        // })
+    );
         
     const incomingAlignmentConstraints = 
         _.filter(
@@ -371,3 +385,9 @@ query($ciid: Guid!, $layers: [String]!, $n1: Boolean!) {
     }
 }
 `;
+
+// // taken from https://stackoverflow.com/questions/57477912/equivalent-of-rubys-each-cons-in-javascript
+// const eachCons = (array, num) => {
+//     return Array.from({ length: array.length - num + 1 },
+//                       (_, i) => array.slice(i, i + num))
+// }
