@@ -16,10 +16,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public readonly IDInputType? IDInputType;
         public readonly UpsertInputType UpsertInputType;
         public readonly UpsertInputType UpdateInputType;
-        public readonly FilterInputType FilterInputType;
+        public readonly FilterInputType? FilterInputType;
 
         public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType,
-            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, UpsertInputType updateInputType, FilterInputType filterInputType)
+            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, UpsertInputType updateInputType, FilterInputType? filterInputType)
         {
             Trait = trait;
             Element = element;

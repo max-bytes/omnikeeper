@@ -37,7 +37,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
     {
         public TraitEntityRootType(ITrait at, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ICIIDModel ciidModel, IAttributeModel attributeModel, IRelationModel relationModel,
             IDataLoaderService dataLoaderService,
-            ElementWrapperType wrapperElementGraphType, FilterInputType filterGraphType, IDInputType? idGraphType)
+            ElementWrapperType wrapperElementGraphType, FilterInputType? filterGraphType, IDInputType? idGraphType)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityRootGraphTypeName(at);
 
@@ -55,57 +55,60 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 return ets.Select(kv => kv.Value);
             });
 
-            this.Field("filtered", new ListGraphType(wrapperElementGraphType),
-                arguments: new QueryArguments(
-                    new QueryArgument(filterGraphType) { Name = "filter" }
-                ),
-                resolve: context =>
-                {
-                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    var layerset = userContext.GetLayerSet(context.Path);
-                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                    var trans = userContext.Transaction;
-
-                    // use filter to reduce list of potential cis
-                    var filter = context.GetArgument<FilterInput>("filter");
-
-                    var matchingCIIDs = filter.Apply(attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
-
-                    return matchingCIIDs.Then(async matchingCIIDs =>
+            if (filterGraphType != null)
+            {
+                this.Field("filtered", new ListGraphType(wrapperElementGraphType),
+                    arguments: new QueryArguments(
+                        new QueryArgument(filterGraphType) { Name = "filter" }
+                    ),
+                    resolve: context =>
                     {
-                        // TODO: use dataloader
-                        var ets = await traitEntityModel.GetByCIID(matchingCIIDs, layerset, trans, timeThreshold);
+                        var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                        var layerset = userContext.GetLayerSet(context.Path);
+                        var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                        var trans = userContext.Transaction;
 
-                        return ets.Select(kv => kv.Value);
+                        // use filter to reduce list of potential cis
+                        var filter = context.GetArgument<FilterInput>("filter");
+
+                        var matchingCIIDs = filter.Apply(attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
+
+                        return matchingCIIDs.Then(async matchingCIIDs =>
+                        {
+                            // TODO: use dataloader
+                            var ets = await traitEntityModel.GetByCIID(matchingCIIDs, layerset, trans, timeThreshold);
+
+                            return ets.Select(kv => kv.Value);
+                        });
                     });
-                });
-            this.Field("filteredSingle", wrapperElementGraphType,
-                arguments: new QueryArguments(
-                    new QueryArgument(filterGraphType) { Name = "filter" }
-                ),
-                resolve: context =>
-                {
-                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    var layerset = userContext.GetLayerSet(context.Path);
-                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                    var trans = userContext.Transaction;
-
-                    // use filter to reduce list of potential cis
-                    var filter = context.GetArgument<FilterInput>("filter");
-
-                    var matchingCIIDs = filter.Apply(attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
-
-                    return matchingCIIDs.Then(async matchingCIIDs =>
+                this.Field("filteredSingle", wrapperElementGraphType,
+                    arguments: new QueryArguments(
+                        new QueryArgument(filterGraphType) { Name = "filter" }
+                    ),
+                    resolve: context =>
                     {
-                        var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
-                        if (ciids.IsEmpty())
-                            return null;
+                        var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                        var layerset = userContext.GetLayerSet(context.Path);
+                        var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                        var trans = userContext.Transaction;
 
-                        // if the foundCIIDs contains any CIs that have the trait, we need to use this, not just the first CIID (which might NOT have the trait)
-                        var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, traitEntityModel, layerset, trans, timeThreshold);
-                        return bestMatchingET;
+                        // use filter to reduce list of potential cis
+                        var filter = context.GetArgument<FilterInput>("filter");
+
+                        var matchingCIIDs = filter.Apply(attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
+
+                        return matchingCIIDs.Then(async matchingCIIDs =>
+                        {
+                            var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
+                            if (ciids.IsEmpty())
+                                return null;
+
+                            // if the foundCIIDs contains any CIs that have the trait, we need to use this, not just the first CIID (which might NOT have the trait)
+                            var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, traitEntityModel, layerset, trans, timeThreshold);
+                            return bestMatchingET;
+                        });
                     });
-                });
+            }
 
             this.FieldAsync("byCIID", wrapperElementGraphType,
                 arguments: new QueryArguments(

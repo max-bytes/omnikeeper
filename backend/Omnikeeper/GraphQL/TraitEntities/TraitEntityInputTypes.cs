@@ -236,9 +236,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
             return new FilterInput(attributeFilters.ToArray(), relationFilters.ToArray());
         }
 
-        public static FilterInputType Build(ITrait at)
+        public static FilterInputType? Build(ITrait at)
         {
             var t = new FilterInputType(at);
+            if (t.Fields.IsEmpty())
+                return null;
             return t;
         }
     }
