@@ -36,11 +36,14 @@ export default function RelationGraphRendering(props) {
       
     const baseLayoutOptions = {
         name: 'fcose',
-        // quality: "proof",
+        quality: "proof",
         animate: true,
         animationEasing: 'ease-out-cubic',
         nodeDimensionsIncludeLabels: true,
+        uniformNodeDimensions: false,
+        packComponents: true,
         idealEdgeLength: edge => 300,
+        nodeRepulsion: node => 1,
       };
 
     const [layoutOptions, setLayoutOptions] = useState(baseLayoutOptions);
@@ -138,14 +141,13 @@ export default function RelationGraphRendering(props) {
                                     elements: elements
                                 });
 
-                                setLayoutOptions({...baseLayoutOptions, 
+                                const newLayoutOptions = {...baseLayoutOptions, 
                                     relativePlacementConstraint: relativeConstraints,
                                     alignmentConstraint: {vertical: alignmentConstraints}
-                                });
-                                console.log(elements);
-                                console.log(layoutOptions);
+                                };
+                                setLayoutOptions(newLayoutOptions);
                                 // NOTE: do not animate first run, so it's run syncronously and we can call cy.fit() right afterwards
-                                cy.layout({...layoutOptions, animate: false}).run(); 
+                                cy.layout({...newLayoutOptions, animate: false}).run(); 
                                 cy.fit();
                               }).finally(() => setGraphDefinitionLoading(false));
 
@@ -220,13 +222,14 @@ function ci2elements(baseCI, includeBaseCI, path, skipRelationID, edgeLimit) {
             }
         }
     });
-    const outgoingRelativeConstraints = [];
-    // _.map(groupedOutgoing, (value, predicateID) => {
-    //     return {left: createNodeID(baseCI.id, path), right: createGroupID(baseCI.id, true, predicateID)}
-    // });
-    const outgoingAlignmentConstraints = _.map(groupedOutgoing, (value, predicateID) => {
-        return createGroupID(baseCI.id, true, predicateID);
-    });
+    const outgoingRelativeConstraints = 
+        _.map(outgoing, r => {
+            return {left: createNodeID(baseCI.id, path), right: createNodeID(r.relation.toCIID, [...path, r.relation.id])}
+        });
+    const outgoingAlignmentConstraints = 
+        _.filter(
+            _.map(groupedOutgoing, (value, predicateID) => _.map(value, r => createNodeID(r.relation.toCIID, [...path, r.relation.id]))),
+            e => e.length > 1);
 
     const innerOutgoingCIs = _.map(outgoing, r => {
         if (r.relation.toCI)
@@ -258,19 +261,22 @@ function ci2elements(baseCI, includeBaseCI, path, skipRelationID, edgeLimit) {
         }
     });
 
-    const incomingRelativeConstraints = [];
-    // _.map(incoming, r => {
-    //     return {left: createNodeID(r.relation.fromCIID, [...path, r.relation.id]), right: createNodeID(baseCI.id, path)}
-    // });
-    const incomingAlignmentConstraints = _.map(groupedIncoming, (value, predicateID) => {
-        return createGroupID(baseCI.id, false, predicateID);
-    });
+    const incomingRelativeConstraints = 
+        _.map(incoming, r => {
+            return {left: createNodeID(r.relation.fromCIID, [...path, r.relation.id]), right: createNodeID(baseCI.id, path)}
+        });
+        
+    const incomingAlignmentConstraints = 
+        _.filter(
+            _.map(groupedIncoming, (value, predicateID) => _.map(value, r => createNodeID(r.relation.fromCIID, [...path, r.relation.id]))),
+            e => e.length > 1);
 
-    const innerIncomingCIs = _.map(incoming, r => {
-        if (r.relation.fromCI)
-            return ci2elements(r.relation.fromCI, false, [...path, r.relation.id], r.relation.id, edgeLimit);
-        return {elements: [], relativeConstraints: [], alignmentConstraints: []};
-    });
+    const innerIncomingCIs = 
+        _.map(incoming, r => {
+            if (r.relation.fromCI)
+                return ci2elements(r.relation.fromCI, false, [...path, r.relation.id], r.relation.id, edgeLimit);
+            return {elements: [], relativeConstraints: [], alignmentConstraints: []};
+        });
 
     // joining it all together
     const elements = _.flattenDeep([baseElement, 
@@ -287,7 +293,7 @@ function ci2elements(baseCI, includeBaseCI, path, skipRelationID, edgeLimit) {
     const innerOutgoingAlignmentConstraints = _.flatten(_.map(innerOutgoingCIs, t => t.alignmentConstraints));
     const innerIncomingAlignmentConstraints = _.flatten(_.map(innerIncomingCIs, t => t.alignmentConstraints));
     const alignmentConstraints = _.concat(
-        [outgoingAlignmentConstraints, incomingAlignmentConstraints], 
+        outgoingAlignmentConstraints, incomingAlignmentConstraints, 
         innerIncomingAlignmentConstraints, innerOutgoingAlignmentConstraints);
 
     return { elements, relativeConstraints, alignmentConstraints };
