@@ -1,0 +1,1 @@
+﻿ALTER TYPE attributevaluetype ADD VALUE 'date_time_with_offset' AFTER 'boolean';

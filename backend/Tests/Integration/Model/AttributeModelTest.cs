@@ -480,8 +480,6 @@ namespace Tests.Integration.Model
             }
         }
 
-
-
         [Test]
         public async Task TestAttributeValueBoolean()
         {
@@ -506,6 +504,58 @@ namespace Tests.Integration.Model
 
             var a1Value = new AttributeScalarValueBoolean(true);
             var a2Value = AttributeArrayValueBoolean.Build(new bool[] { false, true, true, false });
+
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var changeset = await CreateChangesetProxy();
+                await GetService<IAttributeModel>().InsertAttribute("a1", a1Value, ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a2", a2Value, ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+
+                trans.Commit();
+            }
+
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var cis = await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
+                Assert.AreEqual(1, cis.Count);
+                var attributes = cis.First().Value;
+                Assert.AreEqual(2, attributes.Count);
+
+                Assert.AreEqual(a1Value, attributes["a1"].Attribute.Value);
+                Assert.AreEqual(a2Value, attributes["a2"].Attribute.Value);
+                trans.Commit();
+            }
+        }
+
+        [Test]
+        public async Task TestAttributeValueDateTimeWithOffset()
+        {
+            var transI = ModelContextBuilder.BuildImmediate();
+            Guid ciid1;
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                ciid1 = await GetService<ICIModel>().CreateCI(trans);
+                trans.Commit();
+            }
+
+            string layerID1;
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans);
+                layerID1 = layer1.ID;
+                Assert.AreEqual("l1", layerID1);
+                trans.Commit();
+            }
+
+            var layerset = await GetService<ILayerModel>().BuildLayerSet(new string[] { "l1" }, transI);
+
+            var a1Value = new AttributeScalarValueDateTimeWithOffset(DateTimeOffset.Now);
+            var a2Value = AttributeArrayValueDateTimeWithOffset.Build(new DateTimeOffset[] { 
+                new DateTimeOffset(DateTimeOffset.Now.Ticks, TimeSpan.FromMinutes(156.0)),
+                DateTimeOffset.Now,
+                DateTimeOffset.MinValue,
+                DateTimeOffset.MaxValue,
+                DateTimeOffset.FromUnixTimeSeconds(1232313L) });
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {

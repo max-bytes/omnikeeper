@@ -76,6 +76,17 @@ namespace Omnikeeper.Base.AttributeValues
                             else
                                 throw new Exception($"Expected object {o} to be boolean, found {o.GetType().Name}");
                         }
+                    case AttributeValueType.DateTimeWithOffset:
+                        {
+                            if (o == null)
+                                throw new Exception($"Expected object {o} to be DateTimeWithOffset, found null");
+                            else if (o is DateTimeOffset[] da)
+                                return AttributeArrayValueDateTimeWithOffset.Build(da);
+                            else if (o is DateTimeOffset d)
+                                return new AttributeScalarValueDateTimeWithOffset(d);
+                            else
+                                throw new Exception($"Expected object {o} to be DateTimeWithOffset, found {o.GetType().Name}");
+                        }
                     case AttributeValueType.JSON:
                         {
                             if (o == null)
@@ -211,6 +222,18 @@ namespace Omnikeeper.Base.AttributeValues
                                 throw new Exception($"Expected JsonElement {el} to be convertible to boolean, found {el.ValueKind}");
                         }
                     }
+                case AttributeValueType.DateTimeWithOffset:
+                    {
+                        switch (el.ValueKind)
+                        {
+                            case JsonValueKind.Array:
+                                return AttributeArrayValueDateTimeWithOffset.BuildFromString(el.EnumerateArray().Select(e => e.GetString()!).ToArray());
+                            case JsonValueKind.String:
+                                return AttributeScalarValueDateTimeWithOffset.BuildFromString(el.GetString()!);
+                            default:
+                                throw new Exception($"Expected JsonElement {el} to be convertible to DateTimeWithOffset, found {el.ValueKind}");
+                        }
+                    }
                 case AttributeValueType.JSON:
                     {
                         return AttributeScalarValueJSON.BuildFromJsonElement(el);
@@ -251,6 +274,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(generic.Values),
                     AttributeValueType.Double => AttributeArrayValueDouble.BuildFromString(generic.Values),
                     AttributeValueType.Boolean => AttributeArrayValueBoolean.BuildFromString(generic.Values),
+                    AttributeValueType.DateTimeWithOffset => AttributeArrayValueDateTimeWithOffset.BuildFromString(generic.Values),
                     AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(generic.Values, true),
                     AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(generic.Values),
                     AttributeValueType.Mask => AttributeScalarValueMask.Instance,
@@ -265,6 +289,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(generic.Values[0]),
                     AttributeValueType.Double => AttributeScalarValueDouble.BuildFromString(generic.Values[0]),
                     AttributeValueType.Boolean => AttributeScalarValueBoolean.BuildFromString(generic.Values[0]),
+                    AttributeValueType.DateTimeWithOffset => AttributeScalarValueDateTimeWithOffset.BuildFromString(generic.Values[0]),
                     AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(generic.Values[0], true),
                     AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(generic.Values[0]),
                     AttributeValueType.Mask => AttributeScalarValueMask.Instance,
@@ -282,6 +307,7 @@ namespace Omnikeeper.Base.AttributeValues
                 AttributeValueType.Integer => new LongGraphType(),
                 AttributeValueType.Double => new FloatGraphType(), // Note: GraphQL's Float type is actually double-precision and hence, a double
                 AttributeValueType.Boolean => new BooleanGraphType(),
+                AttributeValueType.DateTimeWithOffset => new DateTimeOffsetGraphType(),
                 AttributeValueType.JSON => new StringGraphType(),
                 AttributeValueType.YAML => new StringGraphType(),
                 AttributeValueType.Image => new StringGraphType(),
@@ -297,41 +323,8 @@ namespace Omnikeeper.Base.AttributeValues
         public static IAttributeValue Unmarshal(string valueText, byte[] valueBinary, byte[] valueControl, AttributeValueType type, bool fullBinary)
         {
             if (valueControl.Length == 0)
-            { // V1 TODO: remove once no longer used
-                var multiplicityIndicator = valueText[..1];
-                var finalValue = valueText[1..];
-                if (multiplicityIndicator == "A")
-                {
-                    var tokenized = finalValue.Tokenize(',', '\\');
-                    var finalValues = tokenized.Select(v => v.Replace("\\\\", "\\")).ToArray();
-                    return type switch
-                    {
-                        AttributeValueType.Text => AttributeArrayValueText.BuildFromString(finalValues, false),
-                        AttributeValueType.MultilineText => AttributeArrayValueText.BuildFromString(finalValues, true),
-                        AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(finalValues),
-                        AttributeValueType.Double => AttributeArrayValueDouble.BuildFromString(finalValues),
-                        AttributeValueType.Boolean => AttributeArrayValueBoolean.BuildFromString(finalValues),
-                        AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(finalValues, false),
-                        AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(finalValues),
-                        AttributeValueType.Mask => AttributeScalarValueMask.Instance,
-                        _ => throw new Exception($"Unknown type {type} encountered"),
-                    };
-                }
-                else
-                {
-                    return type switch
-                    {
-                        AttributeValueType.Text => new AttributeScalarValueText(finalValue, false),
-                        AttributeValueType.MultilineText => new AttributeScalarValueText(finalValue, true),
-                        AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(finalValue),
-                        AttributeValueType.Double => AttributeScalarValueDouble.BuildFromString(finalValue),
-                        AttributeValueType.Boolean => AttributeScalarValueBoolean.BuildFromString(finalValue),
-                        AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(finalValue, false),
-                        AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(finalValue),
-                        AttributeValueType.Mask => AttributeScalarValueMask.Instance,
-                        _ => throw new Exception($"Unknown type {type} encountered"),
-                    };
-                }
+            {
+                throw new Exception("Version 0x01 not supported any longer");
             }
             else
             { // non-V1
@@ -389,6 +382,13 @@ namespace Omnikeeper.Base.AttributeValues
                             else
                                 return AttributeScalarValueBoolean.BuildFromBytes(UnmarshalSimpleBinaryV2(valueBinary, valueControl));
                         }
+                    case AttributeValueType.DateTimeWithOffset:
+                        {
+                            if (isArray)
+                                return AttributeArrayValueDateTimeWithOffset.BuildFromBytes(UnmarshalSimpleBinaryArrayV2(valueBinary, valueControl));
+                            else
+                                return AttributeScalarValueDateTimeWithOffset.BuildFromBytes(UnmarshalSimpleBinaryV2(valueBinary, valueControl));
+                        }
                     case AttributeValueType.JSON:
                         {
                             if (isArray)
@@ -444,19 +444,7 @@ namespace Omnikeeper.Base.AttributeValues
             byte version = 0x02;
             if (version == 0x01)
             { // V1
-              // HACK: first converting to DTO here is not very clean, but a DTO contains the value(s) as suitable-for-database string(s)
-              // TODO: once V1 is no longer used, remove
-
-                var vdto = AttributeValueDTO.Build(value);
-                if (vdto.IsArray)
-                {
-                    var marshalled = string.Join(",", vdto.Values.Select(value => value.Replace("\\", "\\\\").Replace(",", "\\,")));
-                    return ($"A{marshalled}", Array.Empty<byte>(), Array.Empty<byte>());
-                }
-                else
-                {
-                    return ($"S{vdto.Values[0]}", Array.Empty<byte>(), Array.Empty<byte>());
-                }
+                throw new Exception("Version 0x01 not supported any longer");
             }
             else if (version == 0x02)
             { // V2
@@ -480,6 +468,8 @@ namespace Omnikeeper.Base.AttributeValues
                 AttributeArrayValueDouble a => MarshalSimpleBinaryArrayV2(a.Values.Select(v => v.ToBytes())),
                 AttributeScalarValueBoolean a => MarshalSimpleBinaryV2(a.ToBytes()),
                 AttributeArrayValueBoolean a => MarshalSimpleBinaryArrayV2(a.Values.Select(v => v.ToBytes())),
+                AttributeScalarValueDateTimeWithOffset a => MarshalSimpleBinaryV2(a.ToBytes()),
+                AttributeArrayValueDateTimeWithOffset a => MarshalSimpleBinaryArrayV2(a.Values.Select(v => v.ToBytes())),
                 AttributeScalarValueJSON a => MarshalStringV2(a.Value2String()),
                 AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value2String())),
                 AttributeScalarValueYAML a => MarshalStringV2((a.Value.ToString())!),

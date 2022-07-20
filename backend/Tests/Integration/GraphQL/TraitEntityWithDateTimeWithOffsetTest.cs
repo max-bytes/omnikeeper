@@ -1,13 +1,17 @@
-﻿using NUnit.Framework;
+﻿using GraphQL;
+using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using System;
+using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Tests.Integration.GraphQL.Base;
 
 namespace Tests.Integration.GraphQL
 {
-    class TraitEntityWithDateTimeWithOffsetTest : QueryTestBase
+    class TraitEntityWithJsonTest : QueryTestBase
     {
         [Test]
         public async Task Test()
@@ -45,10 +49,10 @@ mutation {
           }
         }
         {
-          identifier: ""datetime""
+          identifier: ""json""
           template: {
-            name: ""test_trait_a.datetime""
-            type: DATE_TIME_WITH_OFFSET
+            name: ""test_trait_a.json""
+            type: JSON
             isID: false
             isArray: false
             valueConstraints: []
@@ -84,7 +88,7 @@ mutation {
                 all {
                     entity {
                         id
-                        datetime
+                        json
                     }
                 }
             }
@@ -108,7 +112,7 @@ mutation {
     layers: [""layer_1""]
     writeLayer: ""layer_1""
     ciName: ""Entity 1""
-    input: { id: ""entity_1"", datetime: ""2009-06-15T13:45:30.0000123-07:00"" }
+    input: { id: ""entity_1"", json: ""{\""foo\"":    \""bar\""}"" }
   ) {
                 entity { id }
   }
@@ -135,7 +139,7 @@ mutation {
           {
             ""entity"": {
               ""id"": ""entity_1"",
-              ""datetime"": ""2009-06-15T13:45:30.0000123-07:00""
+              ""json"": ""{\""foo\"":    \""bar\""}""
             }
           }
         ]
@@ -145,13 +149,13 @@ mutation {
 ";
             AssertQuerySuccess(queryTestTraitA, expected4, user);
 
-            // test that inserting the same datetime produces no change, and no changeset
+            // test that inserting the same json produces no change, and no changeset
             var mutationUpdateAttribute = @"
 mutation {
   upsertByDataID_test_trait_a(
     layers: [""layer_1""]
     writeLayer: ""layer_1""
-    input: { id: ""entity_1"", datetime: ""2009-06-15T13:45:30.0000123-07:00"" }
+    input: { id: ""entity_1"", json: ""{\""foo\"":    \""bar\""}"" }
   ) {
                 entity { id }
   }
@@ -176,7 +180,7 @@ mutation {
           {
             ""entity"": {
               ""id"": ""entity_1"",
-              ""datetime"": ""2009-06-15T13:45:30.0000123-07:00""
+              ""json"": ""{\""foo\"":    \""bar\""}""
             }
           }
         ]

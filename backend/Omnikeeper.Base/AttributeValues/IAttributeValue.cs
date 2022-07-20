@@ -7,7 +7,7 @@ namespace Omnikeeper.Entity.AttributeValues
 {
     public enum AttributeValueType
     {
-        Text, MultilineText, Integer, JSON, YAML, Image, Mask, Double, Boolean
+        Text, MultilineText, Integer, JSON, YAML, Image, Mask, Double, Boolean, DateTimeWithOffset
     }
     public interface IAttributeValue : IEquatable<IAttributeValue>
     {

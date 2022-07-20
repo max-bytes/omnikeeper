@@ -19,6 +19,7 @@ namespace Omnikeeper.Controllers.OData
                 AttributeValueType.Mask => throw new Exception("Not supported"),
                 AttributeValueType.Double => EdmPrimitiveTypeKind.Double,
                 AttributeValueType.Boolean => EdmPrimitiveTypeKind.Boolean,
+                AttributeValueType.DateTimeWithOffset => EdmPrimitiveTypeKind.DateTimeOffset,
                 _ => throw new Exception("Not supported"),
             };
         }
@@ -32,6 +33,7 @@ namespace Omnikeeper.Controllers.OData
                 AttributeScalarValueText t => t.Value,
                 AttributeScalarValueDouble d => d.Value,
                 AttributeScalarValueBoolean d => d.Value,
+                AttributeScalarValueDateTimeWithOffset d => d.Value,
                 AttributeScalarValueInteger d => d.Value,
                 AttributeScalarValueImage _ => throw new Exception("Not supported"),
                 AttributeScalarValueJSON j => j.ValueStr,
