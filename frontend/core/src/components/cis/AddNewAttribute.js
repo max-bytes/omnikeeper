@@ -76,7 +76,12 @@ function AddNewAttribute(props) {
                     <Select style={{ width: "100%" }} placeholder='Select attribute type' showSearch value={newAttribute.type}
                         onChange={(e, data) => {
                           // we'll clear the value, to be safe, TODO: better value migration between types
-                          setNewAttribute({...newAttribute, type: data.value, value: ''});
+                          var newBaseValues = [''];
+                          if (data.value === 'BOOLEAN') {
+                            newBaseValues = ['false'];
+                          }
+
+                          setNewAttribute({...newAttribute, type: data.value, values: newBaseValues});
                         }}
                         options={AttributeTypes.map(at => { return {key: at.id, value: at.id, label: at.name }; })}
                     />

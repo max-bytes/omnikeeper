@@ -140,7 +140,7 @@ export function InputControl(props) {
             </div>
         </Form.Item>
     } else if (props.type === 'BOOLEAN') {
-        return <Form.Item style={{ marginBottom: 0 }} labelCol={props.hideNameLabel ? {} : { span: "4" }} name={props.name} label={props.hideNameLabel ? "" : props.name} initialValue={props.value ?? false}>
+        return <Form.Item style={{ marginBottom: 0 }} labelCol={props.hideNameLabel ? {} : { span: "4" }} name={props.name} label={props.hideNameLabel ? "" : props.name} initialValue={props.value === 'true'}>
             <Checkbox 
                 autoFocus={props.autoFocus}
                 disabled={props.disabled}
