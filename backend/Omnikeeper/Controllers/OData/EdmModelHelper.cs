@@ -1,5 +1,4 @@
 ﻿using Microsoft.OData.Edm;
-using Omnikeeper.Base.Entity;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 
@@ -19,6 +18,7 @@ namespace Omnikeeper.Controllers.OData
                 AttributeValueType.Image => throw new Exception("Not supported"),
                 AttributeValueType.Mask => throw new Exception("Not supported"),
                 AttributeValueType.Double => EdmPrimitiveTypeKind.Double,
+                AttributeValueType.Boolean => EdmPrimitiveTypeKind.Boolean,
                 _ => throw new Exception("Not supported"),
             };
         }
@@ -31,6 +31,7 @@ namespace Omnikeeper.Controllers.OData
             {
                 AttributeScalarValueText t => t.Value,
                 AttributeScalarValueDouble d => d.Value,
+                AttributeScalarValueBoolean d => d.Value,
                 AttributeScalarValueInteger d => d.Value,
                 AttributeScalarValueImage _ => throw new Exception("Not supported"),
                 AttributeScalarValueJSON j => j.ValueStr,

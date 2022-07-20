@@ -65,6 +65,17 @@ namespace Omnikeeper.Base.AttributeValues
                             else
                                 throw new Exception($"Expected object {o} to be double, found {o.GetType().Name}");
                         }
+                    case AttributeValueType.Boolean:
+                        {
+                            if (o == null)
+                                throw new Exception($"Expected object {o} to be boolean, found null");
+                            else if (o is bool[] da)
+                                return AttributeArrayValueBoolean.Build(da);
+                            else if (o is bool d)
+                                return new AttributeScalarValueBoolean(d);
+                            else
+                                throw new Exception($"Expected object {o} to be boolean, found {o.GetType().Name}");
+                        }
                     case AttributeValueType.JSON:
                         {
                             if (o == null)
@@ -187,6 +198,19 @@ namespace Omnikeeper.Base.AttributeValues
                                 throw new Exception($"Expected JsonElement {el} to be convertible to double, found {el.ValueKind}");
                         }
                     }
+                case AttributeValueType.Boolean:
+                    {
+                        switch (el.ValueKind)
+                        {
+                            case JsonValueKind.Array:
+                                return AttributeArrayValueBoolean.Build(el.EnumerateArray().Select(e => e.GetBoolean()!).ToArray());
+                            case JsonValueKind.True:
+                            case JsonValueKind.False:
+                                return new AttributeScalarValueBoolean(el.GetBoolean());
+                            default:
+                                throw new Exception($"Expected JsonElement {el} to be convertible to boolean, found {el.ValueKind}");
+                        }
+                    }
                 case AttributeValueType.JSON:
                     {
                         return AttributeScalarValueJSON.BuildFromJsonElement(el);
@@ -226,6 +250,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.MultilineText => AttributeArrayValueText.BuildFromString(generic.Values, true),
                     AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(generic.Values),
                     AttributeValueType.Double => AttributeArrayValueDouble.BuildFromString(generic.Values),
+                    AttributeValueType.Boolean => AttributeArrayValueBoolean.BuildFromString(generic.Values),
                     AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(generic.Values, true),
                     AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(generic.Values),
                     AttributeValueType.Mask => AttributeScalarValueMask.Instance,
@@ -239,6 +264,7 @@ namespace Omnikeeper.Base.AttributeValues
                     AttributeValueType.MultilineText => new AttributeScalarValueText(generic.Values[0], true),
                     AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(generic.Values[0]),
                     AttributeValueType.Double => AttributeScalarValueDouble.BuildFromString(generic.Values[0]),
+                    AttributeValueType.Boolean => AttributeScalarValueBoolean.BuildFromString(generic.Values[0]),
                     AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(generic.Values[0], true),
                     AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(generic.Values[0]),
                     AttributeValueType.Mask => AttributeScalarValueMask.Instance,
@@ -255,6 +281,7 @@ namespace Omnikeeper.Base.AttributeValues
                 AttributeValueType.MultilineText => new StringGraphType(),
                 AttributeValueType.Integer => new LongGraphType(),
                 AttributeValueType.Double => new FloatGraphType(), // Note: GraphQL's Float type is actually double-precision and hence, a double
+                AttributeValueType.Boolean => new BooleanGraphType(),
                 AttributeValueType.JSON => new StringGraphType(),
                 AttributeValueType.YAML => new StringGraphType(),
                 AttributeValueType.Image => new StringGraphType(),
@@ -283,6 +310,7 @@ namespace Omnikeeper.Base.AttributeValues
                         AttributeValueType.MultilineText => AttributeArrayValueText.BuildFromString(finalValues, true),
                         AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(finalValues),
                         AttributeValueType.Double => AttributeArrayValueDouble.BuildFromString(finalValues),
+                        AttributeValueType.Boolean => AttributeArrayValueBoolean.BuildFromString(finalValues),
                         AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(finalValues, false),
                         AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(finalValues),
                         AttributeValueType.Mask => AttributeScalarValueMask.Instance,
@@ -297,6 +325,7 @@ namespace Omnikeeper.Base.AttributeValues
                         AttributeValueType.MultilineText => new AttributeScalarValueText(finalValue, true),
                         AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(finalValue),
                         AttributeValueType.Double => AttributeScalarValueDouble.BuildFromString(finalValue),
+                        AttributeValueType.Boolean => AttributeScalarValueBoolean.BuildFromString(finalValue),
                         AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(finalValue, false),
                         AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(finalValue),
                         AttributeValueType.Mask => AttributeScalarValueMask.Instance,
@@ -352,6 +381,13 @@ namespace Omnikeeper.Base.AttributeValues
                                 return AttributeArrayValueDouble.BuildFromBytes(UnmarshalSimpleBinaryArrayV2(valueBinary, valueControl));
                             else
                                 return AttributeScalarValueDouble.BuildFromBytes(UnmarshalSimpleBinaryV2(valueBinary, valueControl));
+                        }
+                    case AttributeValueType.Boolean:
+                        {
+                            if (isArray)
+                                return AttributeArrayValueBoolean.BuildFromBytes(UnmarshalSimpleBinaryArrayV2(valueBinary, valueControl));
+                            else
+                                return AttributeScalarValueBoolean.BuildFromBytes(UnmarshalSimpleBinaryV2(valueBinary, valueControl));
                         }
                     case AttributeValueType.JSON:
                         {
@@ -442,6 +478,8 @@ namespace Omnikeeper.Base.AttributeValues
                 AttributeArrayValueInteger a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
                 AttributeScalarValueDouble a => MarshalSimpleBinaryV2(a.ToBytes()),
                 AttributeArrayValueDouble a => MarshalSimpleBinaryArrayV2(a.Values.Select(v => v.ToBytes())),
+                AttributeScalarValueBoolean a => MarshalSimpleBinaryV2(a.ToBytes()),
+                AttributeArrayValueBoolean a => MarshalSimpleBinaryArrayV2(a.Values.Select(v => v.ToBytes())),
                 AttributeScalarValueJSON a => MarshalStringV2(a.Value2String()),
                 AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value2String())),
                 AttributeScalarValueYAML a => MarshalStringV2((a.Value.ToString())!),

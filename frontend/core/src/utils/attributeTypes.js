@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Input, InputNumber } from 'antd';
+import { Checkbox, Form, Input, InputNumber } from 'antd';
 import 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import AceEditor from "react-ace";
@@ -28,6 +28,10 @@ export const AttributeTypes = [
     {
         id: 'DOUBLE',
         name: 'Double'
+    },
+    {
+        id: 'BOOLEAN',
+        name: 'Boolean'
     },
     {
         id: 'JSON',
@@ -134,6 +138,14 @@ export function InputControl(props) {
             <div style={{minHeight: '32px', border: '1px dashed black', background: '#f0f0f0', opacity: '0.7', display: 'flex', alignItems: 'center'}}>
                 <span>[MASK]</span>
             </div>
+        </Form.Item>
+    } else if (props.type === 'BOOLEAN') {
+        return <Form.Item style={{ marginBottom: 0 }} labelCol={props.hideNameLabel ? {} : { span: "4" }} name={props.name} label={props.hideNameLabel ? "" : props.name} initialValue={props.value ?? false}>
+            <Checkbox 
+                autoFocus={props.autoFocus}
+                disabled={props.disabled}
+                checked={props.value === 'true'}
+                onChange={e => props.onChange(e.target.checked.toString())} />
         </Form.Item>
     } else {
         // simple type, simple handling
