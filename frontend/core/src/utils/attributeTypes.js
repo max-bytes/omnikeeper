@@ -1,5 +1,5 @@
 import React from "react";
-import { Checkbox, Form, Input, InputNumber } from 'antd';
+import { Checkbox, DatePicker, Form, Input, InputNumber } from 'antd';
 import 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import AceEditor from "react-ace";
@@ -11,6 +11,7 @@ import buildUrl from 'build-url';
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/mode-yaml";
 import "ace-builds/src-noconflict/theme-textmate";
+import moment from "moment";
 
 export const AttributeTypes = [
     {
@@ -32,6 +33,10 @@ export const AttributeTypes = [
     {
         id: 'BOOLEAN',
         name: 'Boolean'
+    },
+    {
+        id: 'DATE_TIME_WITH_OFFSET',
+        name: 'DateTimeWithOffset'
     },
     {
         id: 'JSON',
@@ -146,6 +151,16 @@ export function InputControl(props) {
                 disabled={props.disabled}
                 checked={props.value === 'true'}
                 onChange={e => props.onChange(e.target.checked.toString())} />
+        </Form.Item>
+    } else if (props.type === 'DATE_TIME_WITH_OFFSET') {
+        return <Form.Item style={{ marginBottom: 0 }} labelCol={props.hideNameLabel ? {} : { span: "4" }} name={props.name} label={props.hideNameLabel ? "" : props.name} initialValue={props.value}>
+            <DatePicker 
+                autoFocus={props.autoFocus}
+                disabled={props.disabled}
+                allowClear={false}
+                showTime={true} 
+                value={moment(props.value)} 
+                onChange={(date, dateString) => props.onChange(date.format())} />
         </Form.Item>
     } else {
         // simple type, simple handling

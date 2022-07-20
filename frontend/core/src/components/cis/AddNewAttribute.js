@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/client';
+import moment from "moment";
 import { mutations } from 'graphql/mutations'
 import { AttributeTypes } from 'utils/attributeTypes'
 import EditableAttributeValue from "./EditableAttributeValue";
@@ -79,6 +80,8 @@ function AddNewAttribute(props) {
                           var newBaseValues = [''];
                           if (data.value === 'BOOLEAN') {
                             newBaseValues = ['false'];
+                          } else if (data.value === 'DATE_TIME_WITH_OFFSET') {
+                            newBaseValues = [moment().format()];
                           }
 
                           setNewAttribute({...newAttribute, type: data.value, values: newBaseValues});
