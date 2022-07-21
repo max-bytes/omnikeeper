@@ -33,8 +33,7 @@ namespace Omnikeeper.Model
             this.logger = logger;
         }
 
-        // TODO: caching of active trait sets
-        public async Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold, Action<string> errorF)
         {
             var pluginTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>();
             foreach (var plugin in loadedPlugins)
@@ -45,7 +44,9 @@ namespace Omnikeeper.Model
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, $"Could not load defined traits from plugin {plugin.Name}");
+                    var errorStr = $"Could not load defined traits from plugin {plugin.Name}: {e.Message}";
+                    errorF(errorStr);
+                    logger.LogError(e, errorStr);
                 }
             }
 
@@ -66,16 +67,20 @@ namespace Omnikeeper.Model
             {
                 var source = kv.Key;
                 foreach (var rt in kv.Value)
-                    ret[rt.ID] = rt;
+                {
+                    if (!ret.TryAdd(rt.ID, rt))
+                        errorF($"Could not add trait with ID {rt.ID} from source {source}. A trait with that ID was already added.");
+                }
             }
 
-            var flattened = RecursiveTraitService.FlattenRecursiveTraits(ret);
+            var flattened = RecursiveTraitService.FlattenRecursiveTraits(ret, errorF);
 
             var finalTraits = new Dictionary<string, ITrait>();
             foreach (var kv in flattened)
                 finalTraits.Add(kv.Key, kv.Value);
             var traitEmpty = new TraitEmpty();
-            finalTraits.Add(traitEmpty.ID, traitEmpty); // mix in empty trait
+            if (!finalTraits.TryAdd(traitEmpty.ID, traitEmpty)) // mix in empty trait
+                errorF($"Could not add trait with ID {traitEmpty.ID}. A trait with that ID was already added.");
             return finalTraits;
         }
 
@@ -97,7 +102,7 @@ namespace Omnikeeper.Model
         public async Task<ITrait?> GetActiveTrait(string traitID, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: can be done more efficiently? here we get ALL traits, just to select a single one... but the flattening is necessary
-            var ts = await GetActiveTraits(trans, timeThreshold);
+            var ts = await GetActiveTraits(trans, timeThreshold, _ => { });
 
             if (ts.TryGetValue(traitID, out var trait))
                 return trait;
@@ -110,7 +115,7 @@ namespace Omnikeeper.Model
                 return ImmutableDictionary<string, ITrait>.Empty;
 
             // TODO: can be done more efficiently?
-            var ts = await GetActiveTraits(trans, timeThreshold);
+            var ts = await GetActiveTraits(trans, timeThreshold, _ => { });
 
             var foundTraits = ts.Where(t => IDs.Contains(t.Key)).ToDictionary(t => t.Key, t => t.Value);
             if (foundTraits.Count() < IDs.Count())

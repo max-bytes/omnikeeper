@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,23 +13,28 @@ namespace Omnikeeper.Base.Service
             return FlattenRecursiveTraits(dict);
         }
 
-        public static IDictionary<string, GenericTrait> FlattenRecursiveTraits(IDictionary<string, RecursiveTrait> input)
+        public static IDictionary<string, GenericTrait> FlattenRecursiveTraits(IDictionary<string, RecursiveTrait> input, Action<string> errorF)
         {
             var flattened = new Dictionary<string, GenericTrait>();
             var unflattened = new Dictionary<string, RecursiveTrait>(input);
             foreach (var kvi in input)
             {
-                FlattenDependentTraitsRec(kvi.Value, flattened, unflattened);
+                FlattenDependentTraitsRec(kvi.Value, flattened, unflattened, errorF);
             }
             return flattened;
         }
 
-        public static GenericTrait FlattenSingleRecursiveTrait(RecursiveTrait rt)
+        public static IDictionary<string, GenericTrait> FlattenRecursiveTraits(IDictionary<string, RecursiveTrait> input)
         {
-            return FlattenDependentTraitsRec(rt, new Dictionary<string, GenericTrait>(), new Dictionary<string, RecursiveTrait>());
+            return FlattenRecursiveTraits(input, (_) => { });
         }
 
-        private static GenericTrait FlattenDependentTraitsRec(RecursiveTrait trait, IDictionary<string, GenericTrait> flattened, IDictionary<string, RecursiveTrait> unflattened)
+        public static GenericTrait FlattenSingleRecursiveTrait(RecursiveTrait rt)
+        {
+            return FlattenDependentTraitsRec(rt, new Dictionary<string, GenericTrait>(), new Dictionary<string, RecursiveTrait>(), (_) => { });
+        }
+
+        private static GenericTrait FlattenDependentTraitsRec(RecursiveTrait trait, IDictionary<string, GenericTrait> flattened, IDictionary<string, RecursiveTrait> unflattened, Action<string> errorF)
         {
             if (flattened.ContainsKey(trait.ID)) return flattened[trait.ID];
 
@@ -41,13 +47,13 @@ namespace Omnikeeper.Base.Service
                     flattenedDependencies.Add(resolvedRT);
                 else if (unflattened.TryGetValue(rts, out var unflattenedRT))
                 { // dependency is not yet resolved, recursively resolve
-                    var flattenedRT = FlattenDependentTraitsRec(unflattenedRT, flattened, unflattened);
+                    var flattenedRT = FlattenDependentTraitsRec(unflattenedRT, flattened, unflattened, errorF);
                     flattenedDependencies.Add(flattenedRT);
                 }
                 else
                 {
                     // we hit a loop! stop recursing
-                    // TODO: what to do? Not adding the dependency is a good start
+                    errorF($"Hit a loop while flattening trait with ID {trait.ID}");
                 }
             }
 
@@ -73,6 +79,5 @@ namespace Omnikeeper.Base.Service
 
             return flattenedTrait;
         }
-
     }
 }

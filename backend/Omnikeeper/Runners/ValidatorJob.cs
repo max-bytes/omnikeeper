@@ -158,7 +158,7 @@ namespace Omnikeeper.Runners
             // NOTE: to avoid race conditions, we use a single timeThreshold and base everything off of this
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var dependentLayerIDs = validator.GetDependentLayerIDs(config, clLogger);
+            var dependentLayerIDs = await validator.GetDependentLayerIDs(config, clLogger, modelContextBuilder);
             if (dependentLayerIDs.IsEmpty())
                 throw new Exception("Validator must have a non-empty set of dependent layer IDs");
 

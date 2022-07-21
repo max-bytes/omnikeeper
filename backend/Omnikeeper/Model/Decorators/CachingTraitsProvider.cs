@@ -30,21 +30,21 @@ namespace Omnikeeper.Model.Decorators
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
         }
 
-        public async Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold, Action<string> errorF)
         {
-            var all = await _GetFromCache(trans, timeThreshold);
+            var all = await _GetFromCache(trans, timeThreshold, errorF);
             return all;
         }
 
         public async Task<ITrait?> GetActiveTrait(string traitID, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var all = await _GetFromCache(trans, timeThreshold);
+            var all = await _GetFromCache(trans, timeThreshold, (_) => { }); // TODO: errorF handling does not work well with caching
             return all.GetOrWithClass(traitID, null);
         }
 
         public async Task<IDictionary<string, ITrait>> GetActiveTraitsByIDs(IEnumerable<string> IDs, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var all = await _GetFromCache(trans, timeThreshold);
+            var all = await _GetFromCache(trans, timeThreshold, (_) => { }); // TODO: errorF handling does not work well with caching
             return all.Where(kv => IDs.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
@@ -54,9 +54,9 @@ namespace Omnikeeper.Model.Decorators
             return await Provider.GetLatestChangeToActiveDataTraits(trans, timeThreshold);
         }
 
-        private async Task<IDictionary<string, ITrait>> _GetFromCache(IModelContext trans, TimeThreshold timeThreshold)
+        private async Task<IDictionary<string, ITrait>> _GetFromCache(IModelContext trans, TimeThreshold timeThreshold, Action<string> errorF)
         {
-            return await PerRequestTraitsProviderCache.GetFromScopedCache<PerRequestTraitsProviderCache>(scopedLifetimeAccessor, logger, async () => await Provider.GetActiveTraits(trans, timeThreshold));
+            return await PerRequestTraitsProviderCache.GetFromScopedCache<PerRequestTraitsProviderCache>(scopedLifetimeAccessor, logger, async () => await Provider.GetActiveTraits(trans, timeThreshold, errorF));
         }
     }
 }

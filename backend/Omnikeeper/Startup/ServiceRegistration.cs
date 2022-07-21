@@ -29,6 +29,7 @@ using Omnikeeper.Runners;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using Omnikeeper.Utils.Decorators;
+using Omnikeeper.Validators;
 using Quartz;
 using Quartz.Spi;
 using System;
@@ -392,6 +393,9 @@ namespace Omnikeeper.Startup
             builder.RegisterType<UsageDataWriterJob>().InstancePerLifetimeScope();
             builder.RegisterType<GraphQLSchemaReloaderJob>().InstancePerLifetimeScope();
             builder.RegisterType<EdmModelReloaderJob>().InstancePerLifetimeScope();
+
+            // validators
+            builder.RegisterType<ValidatorTraits>().As<IValidator>().SingleInstance();
 
             // TODO: remove
             builder.RegisterType<ReactiveTestCLB>().As<IComputeLayerBrain>().SingleInstance();

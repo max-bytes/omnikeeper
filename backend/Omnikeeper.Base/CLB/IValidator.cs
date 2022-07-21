@@ -16,6 +16,6 @@ namespace Omnikeeper.Base.CLB
         Task<bool> Run(IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, JsonDocument config, 
             IModelContextBuilder modelContextBuilder, TimeThreshold timeThreshold, ILogger logger, IIssueAccumulator issueAccumulator);
 
-        ISet<string> GetDependentLayerIDs(JsonDocument config, ILogger logger);
+        Task<ISet<string>> GetDependentLayerIDs(JsonDocument config, ILogger logger, IModelContextBuilder modelContextBuilder);
     }
 }

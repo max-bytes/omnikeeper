@@ -135,14 +135,14 @@ namespace Tests.Integration.Controller
         {
             public async Task<ITrait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
             {
-                var ts = await GetActiveTraits(trans, timeThreshold);
+                var ts = await GetActiveTraits(trans, timeThreshold, _ => { });
 
                 if (ts.TryGetValue(traitName, out var trait))
                     return trait;
                 return null;
             }
 
-            public Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold)
+            public Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold, Action<string> errorF)
             {
                 var r = new List<RecursiveTrait>() {
                 new RecursiveTrait("test_trait_1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
@@ -161,7 +161,7 @@ namespace Tests.Integration.Controller
 
             public async Task<IDictionary<string, ITrait>> GetActiveTraitsByIDs(IEnumerable<string> IDs, IModelContext trans, TimeThreshold timeThreshold)
             {
-                var ts = await GetActiveTraits(trans, timeThreshold);
+                var ts = await GetActiveTraits(trans, timeThreshold, _ => { });
 
                 var foundTraits = ts.Where(t => IDs.Contains(t.Key)).ToDictionary(t => t.Key, t => t.Value);
                 if (foundTraits.Count() < IDs.Count())
