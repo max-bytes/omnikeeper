@@ -1,1 +1,52 @@
-{}
+{
+  "cis": [
+    {
+      "tempID": "tempCIID",
+      "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
+        "attributes": [
+          "foo"
+        ]
+      },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
+      "attributes": [
+        {
+          "name": "textscalar",
+          "value": {
+            "type": 0,
+            "value": "value 1"
+          }
+        },
+        {
+          "name": "textarray",
+          "value": {
+            "type": 0,
+            "value": [
+              "value 1",
+              "value 2"
+            ]
+          }
+        },
+        {
+          "name": "jsonarray",
+          "value": {
+            "type": 3,
+            "value": [
+              {
+                "foo": "bar",
+                "blub": "bla"
+              },
+              {
+                "foo2": "bar2",
+                "blub2": "bla2"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

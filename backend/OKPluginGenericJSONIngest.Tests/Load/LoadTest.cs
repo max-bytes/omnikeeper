@@ -21,10 +21,10 @@ namespace OKPluginGenericJSONIngest.Tests.Load
 
             var inboundData = new GenericInboundData
             {
-                cis = new List<GenericInboundCI>
+                CIs = new List<GenericInboundCI>
                 {
                 },
-                relations = new List<GenericInboundRelation> { }
+                Relations = new List<GenericInboundRelation> { }
             };
 
             var issueAccumulator = new Mock<IIssueAccumulator>();
@@ -47,23 +47,23 @@ namespace OKPluginGenericJSONIngest.Tests.Load
 
             var inboundData = new GenericInboundData
             {
-                cis = new List<GenericInboundCI>
+                CIs = new List<GenericInboundCI>
                 {
                     new GenericInboundCI
                     {
-                        idMethod = new InboundIDMethodByData(Array.Empty<string>()),
-                        tempID = "foo",
-                        attributes = new List<GenericInboundAttribute>
+                        IDMethod = new InboundIDMethodByData(Array.Empty<string>()),
+                        TempID = "foo",
+                        Attributes = new List<GenericInboundAttribute>
                         {
                             new GenericInboundAttribute
                             {
-                                name = "a",
-                                value = AttributeArrayValueJSON.BuildFromString(new string[0], false)
+                                Name = "a",
+                                Value = AttributeArrayValueJSON.BuildFromString(new string[0], false)
                             }
                         }
                     }
                 },
-                relations = new List<GenericInboundRelation> { }
+                Relations = new List<GenericInboundRelation> { }
             };
 
             var issueAccumulator = new Mock<IIssueAccumulator>();
@@ -81,27 +81,27 @@ namespace OKPluginGenericJSONIngest.Tests.Load
 
             var inboundData = new GenericInboundData
             {
-                cis = new List<GenericInboundCI>
+                CIs = new List<GenericInboundCI>
                 {
                     new GenericInboundCI
                     {
-                        tempID = "ci1",
-                        idMethod = new InboundIDMethodByData(Array.Empty<string>()),
-                        attributes = new List<GenericInboundAttribute>()
+                        TempID = "ci1",
+                        IDMethod = new InboundIDMethodByData(Array.Empty<string>()),
+                        Attributes = new List<GenericInboundAttribute>()
                     },
                     new GenericInboundCI
                     {
-                        tempID = "ci2",
-                        idMethod = new InboundIDMethodByData(Array.Empty<string>()),
-                        attributes = new List<GenericInboundAttribute>()
+                        TempID = "ci2",
+                        IDMethod = new InboundIDMethodByData(Array.Empty<string>()),
+                        Attributes = new List<GenericInboundAttribute>()
                     }
                 },
-                relations = new List<GenericInboundRelation> {
+                Relations = new List<GenericInboundRelation> {
                     new GenericInboundRelation
                     {
-                        from = "ci1",
-                        to = "unknown ci",
-                        predicate = "predicate"
+                        From = "ci1",
+                        To = "unknown ci",
+                        Predicate = "predicate"
                     }
                 }
             };

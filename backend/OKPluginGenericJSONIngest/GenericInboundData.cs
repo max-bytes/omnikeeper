@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -16,21 +17,37 @@ namespace OKPluginGenericJSONIngest
 
     public class GenericInboundData
     {
-        public IEnumerable<GenericInboundCI> cis;
-        public IEnumerable<GenericInboundRelation> relations;
+        // NOTE, HACK: I'd much rather use fields instead of properties, but swashbuckle schema generation does not seem to support that properly
+        // so we use properties for now and explicitly set the propertyName on this class and all related classes
+        [JsonPropertyName("cis")]
+        public IEnumerable<GenericInboundCI> CIs { get; set; }
+
+        [JsonPropertyName("relations")]
+        public IEnumerable<GenericInboundRelation> Relations { get; set; }
     }
 
     public class GenericInboundCI
     {
-        public string tempID;
-        public IInboundIDMethod idMethod;
+        [JsonPropertyName("tempID")]
+        public string TempID { get; set; }
+
+        [JsonPropertyName("idMethod")]
+        public IInboundIDMethod IDMethod { get; set; }
+
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public SameTempIDHandling sameTempIDHandling;
+        [JsonPropertyName("sameTempIDHandling")]
+        public SameTempIDHandling SameTempIDHandling { get; set; }
+
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public SameTargetCIHandling sameTargetCIHandling;
+        [JsonPropertyName("sameTargetCIHandling")]
+        public SameTargetCIHandling SameTargetCIHandling { get; set; }
+
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public NoFoundTargetCIHandling noFoundTargetCIHandling;
-        public IEnumerable<GenericInboundAttribute> attributes;
+        [JsonPropertyName("noFoundTargetCIHandling")]
+        public NoFoundTargetCIHandling NoFoundTargetCIHandling { get; set; }
+
+        [JsonPropertyName("attributes")]
+        public IEnumerable<GenericInboundAttribute> Attributes { get; set; }
     }
 
 
@@ -42,6 +59,14 @@ namespace OKPluginGenericJSONIngest
     }
 
     [JsonConverter(typeof(InboundIDMethodDiscriminatorConverter))]
+    [SwaggerDiscriminator("type")]
+    [SwaggerSubType(typeof(InboundIDMethodByData))]
+    [SwaggerSubType(typeof(InboundIDMethodByAttributeModifiers))]
+    [SwaggerSubType(typeof(InboundIDMethodByAttribute))]
+    [SwaggerSubType(typeof(InboundIDMethodByRelatedTempID))]
+    [SwaggerSubType(typeof(InboundIDMethodByTemporaryCIID))]
+    [SwaggerSubType(typeof(InboundIDMethodByByUnion))]
+    [SwaggerSubType(typeof(InboundIDMethodByIntersect))]
     public interface IInboundIDMethod
     {
         string type { get; }
@@ -51,96 +76,115 @@ namespace OKPluginGenericJSONIngest
     {
         public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
-        public readonly string[] attributes;
+        [JsonPropertyName("attributes")]
+        public string[] Attributes { get; }
 
+        [JsonConstructor]
         public InboundIDMethodByData(string[] attributes)
         {
-            this.attributes = attributes;
+            Attributes = attributes;
         }
     }
 
     public class InboundIDMethodByAttributeModifiers
     {
-        public readonly bool caseInsensitive;
+        [JsonPropertyName("caseInsensitive")]
+        public bool CaseInsensitive { get; }
 
         public InboundIDMethodByAttributeModifiers(bool caseInsensitive)
         {
-            this.caseInsensitive = caseInsensitive;
+            CaseInsensitive = caseInsensitive;
         }
     }
 
     public class InboundIDMethodByAttribute : IInboundIDMethod
     {
         public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
-        public readonly GenericInboundAttribute attribute;
-        public readonly InboundIDMethodByAttributeModifiers modifiers;
+        [JsonPropertyName("attribute")]
+        public GenericInboundAttribute Attribute { get; set; }
+        [JsonPropertyName("modifiers")]
+        public InboundIDMethodByAttributeModifiers Modifiers { get; set; }
 
         public InboundIDMethodByAttribute(GenericInboundAttribute attribute, InboundIDMethodByAttributeModifiers modifiers)
         {
-            this.attribute = attribute;
-            this.modifiers = modifiers;
+            Attribute = attribute;
+            Modifiers = modifiers;
         }
     }
 
     public class InboundIDMethodByRelatedTempID : IInboundIDMethod
     {
         public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
-        public readonly string tempID;
-        public readonly bool outgoingRelation;
-        public readonly string predicateID;
+        [JsonPropertyName("tempID")]
+        public string TempID { get; set; }
+        [JsonPropertyName("outgoingRelation")]
+        public bool OutgoingRelation { get; set; }
+        [JsonPropertyName("predicateID")]
+        public string PredicateID { get; set; }
 
         public InboundIDMethodByRelatedTempID(string tempID, bool outgoingRelation, string predicateID)
         {
-            this.tempID = tempID;
-            this.outgoingRelation = outgoingRelation;
-            this.predicateID = predicateID;
+            TempID = tempID;
+            OutgoingRelation = outgoingRelation;
+            PredicateID = predicateID;
         }
     }
 
     public class InboundIDMethodByTemporaryCIID : IInboundIDMethod
     {
         public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
-        public readonly string tempID;
+        [JsonPropertyName("tempID")]
+        public string TempID { get; set; }
 
         public InboundIDMethodByTemporaryCIID(string tempID)
         {
-            this.tempID = tempID;
+            TempID = tempID;
         }
     }
 
     public class InboundIDMethodByByUnion : IInboundIDMethod
     {
         public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
-        public readonly IInboundIDMethod[] inner;
+        [JsonPropertyName("inner")]
+        public IInboundIDMethod[] Inner { get; set; }
 
         public InboundIDMethodByByUnion(IInboundIDMethod[] inner)
         {
-            this.inner = inner;
+            Inner = inner;
         }
     }
     public class InboundIDMethodByIntersect : IInboundIDMethod
     {
         public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
-        public readonly IInboundIDMethod[] inner;
+        [JsonPropertyName("inner")]
+        public IInboundIDMethod[] Inner { get; set; }
 
         public InboundIDMethodByIntersect(IInboundIDMethod[] inner)
         {
-            this.inner = inner;
+            Inner = inner;
         }
     }
 
     public class GenericInboundAttribute
     {
-        public string name;
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
         [JsonConverter(typeof(SystemTextJsonAttributeValueConverter))]
-        public IAttributeValue value;
+        [JsonPropertyName("value")]
+        public IAttributeValue Value { get; set; }
     }
 
     public class GenericInboundRelation
     {
-        public string from;
-        public string predicate;
-        public string to;
+        [JsonPropertyName("from")]
+        public string From { get; set; }
+
+        [JsonPropertyName("predicate")]
+        public string Predicate { get; set; }
+
+        [JsonPropertyName("to")]
+        public string To { get; set; }
     }
 }
 #pragma warning restore CS8618

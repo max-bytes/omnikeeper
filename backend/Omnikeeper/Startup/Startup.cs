@@ -92,9 +92,12 @@ namespace Omnikeeper.Startup
             mvcBuilder = services.AddControllers()
                 .AddJsonOptions(options =>
                 {
+                    // NOTE: this is (among other things) used for swashbuckle/swagger schema generation
+                    // but, not all settings are honored, it seems, like IncludeFields
                     options.JsonSerializerOptions.IncludeFields = true;
                     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                     options.JsonSerializerOptions.Converters.Add(new ExceptionConverter()); // System.Text.Json does not support serializing exceptions, so we add a custom converter
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 })
                 .AddOData((opt, sp) => { });
 
@@ -170,6 +173,7 @@ namespace Omnikeeper.Startup
 
             services.AddSwaggerGen(c =>
             {
+                c.EnableAnnotations(enableAnnotationsForInheritance: true, enableAnnotationsForPolymorphism: true);
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Landscape omnikeeper REST API", Version = "v1" });
                 c.TagActionsBy(api =>
                 {

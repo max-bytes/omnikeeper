@@ -26,24 +26,24 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
             // test that attribute values that are arrays are also properly deserialized 
             var expected = new GenericInboundData
             {
-                cis = new List<GenericInboundCI>
+                CIs = new List<GenericInboundCI>
                 {
                     new GenericInboundCI
                     {
-                        tempID = "tempCIID",
-                        idMethod = new InboundIDMethodByData(new string[]{ "foo" }),
-                        attributes = new List<GenericInboundAttribute>
+                        TempID = "tempCIID",
+                        IDMethod = new InboundIDMethodByData(new string[]{ "foo" }),
+                        Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "textscalar", value = new AttributeScalarValueText("value 1") },
-                            new GenericInboundAttribute { name = "textarray", value = AttributeArrayValueText.BuildFromString(new string[] {"value 1", "value 2" }) },
-                            new GenericInboundAttribute { name = "jsonarray", value = AttributeArrayValueJSON.BuildFromString(new string [] {
+                            new GenericInboundAttribute { Name = "textscalar", Value = new AttributeScalarValueText("value 1") },
+                            new GenericInboundAttribute { Name = "textarray", Value = AttributeArrayValueText.BuildFromString(new string[] {"value 1", "value 2" }) },
+                            new GenericInboundAttribute { Name = "jsonarray", Value = AttributeArrayValueJSON.BuildFromString(new string [] {
                                 @"{""foo"": ""bar"", ""blub"": ""bla""}",
                                 @"{ ""foo2"": ""bar2"", ""blub2"": ""bla2""}"
                             }, false)},
                         }
                     },
                 },
-                relations = new List<GenericInboundRelation> { }
+                Relations = new List<GenericInboundRelation> { }
             };
             result.Should().BeEquivalentTo(expected, options => options.WithStrictOrdering());
 

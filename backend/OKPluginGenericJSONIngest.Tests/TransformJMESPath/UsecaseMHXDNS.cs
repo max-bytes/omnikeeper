@@ -39,88 +39,88 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
 
             var expected = new GenericInboundData
             {
-                cis = new List<GenericInboundCI>
+                CIs = new List<GenericInboundCI>
                 {
                     new GenericInboundCI
                     {
-                        tempID = "tempCIID>zone>mhx-consulting.at",
-                        idMethod = new InboundIDMethodByData(new string[]{ "id" }),
-                        attributes = new List<GenericInboundAttribute>
+                        TempID = "tempCIID>zone>mhx-consulting.at",
+                        IDMethod = new InboundIDMethodByData(new string[]{ "id" }),
+                        Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "id", value = new AttributeScalarValueInteger(718656) },
-                            new GenericInboundAttribute { name = "name", value = new AttributeScalarValueText("mhx-consulting.at") },
+                            new GenericInboundAttribute { Name = "id", Value = new AttributeScalarValueInteger(718656) },
+                            new GenericInboundAttribute { Name = "name", Value = new AttributeScalarValueText("mhx-consulting.at") },
                         }
                     },
                     new GenericInboundCI
                     {
-                        tempID = "tempCIID>zone>mhx.at",
-                        idMethod = new InboundIDMethodByData(new string[]{ "id" }),
-                        attributes = new List<GenericInboundAttribute>
+                        TempID = "tempCIID>zone>mhx.at",
+                        IDMethod = new InboundIDMethodByData(new string[]{ "id" }),
+                        Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "id", value = new AttributeScalarValueInteger(742507) },
-                            new GenericInboundAttribute { name = "name", value = new AttributeScalarValueText("mhx.at") },
+                            new GenericInboundAttribute { Name = "id", Value = new AttributeScalarValueInteger(742507) },
+                            new GenericInboundAttribute { Name = "name", Value = new AttributeScalarValueText("mhx.at") },
                         }
                     },
 
                     new GenericInboundCI
                     {
-                        tempID = "tempCIID>record>1569516122",
-                        idMethod = new InboundIDMethodByData(new string[]{ "id" }),
-                        attributes = new List<GenericInboundAttribute>
+                        TempID = "tempCIID>record>1569516122",
+                        IDMethod = new InboundIDMethodByData(new string[]{ "id" }),
+                        Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "id", value = new AttributeScalarValueInteger(1569516122) },
-                            new GenericInboundAttribute { name = "name", value = new AttributeScalarValueText("mhx-consulting.at") },
-                            new GenericInboundAttribute { name = "ttl", value = new AttributeScalarValueInteger(86400) },
-                            new GenericInboundAttribute { name = "type", value = new AttributeScalarValueText("NS") },
-                            new GenericInboundAttribute { name = "value", value = new AttributeScalarValueText("ns1.he.net") },
+                            new GenericInboundAttribute { Name = "id", Value = new AttributeScalarValueInteger(1569516122) },
+                            new GenericInboundAttribute { Name = "name", Value = new AttributeScalarValueText("mhx-consulting.at") },
+                            new GenericInboundAttribute { Name = "ttl", Value = new AttributeScalarValueInteger(86400) },
+                            new GenericInboundAttribute { Name = "type", Value = new AttributeScalarValueText("NS") },
+                            new GenericInboundAttribute { Name = "value", Value = new AttributeScalarValueText("ns1.he.net") },
                         }
                     },
                     new GenericInboundCI
                     {
-                        tempID = "tempCIID>record>1569516123",
-                        idMethod = new InboundIDMethodByData(new string[]{ "id" }),
-                        attributes = new List<GenericInboundAttribute>
+                        TempID = "tempCIID>record>1569516123",
+                        IDMethod = new InboundIDMethodByData(new string[]{ "id" }),
+                        Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "id", value = new AttributeScalarValueInteger(1569516123) },
-                            new GenericInboundAttribute { name = "name", value = new AttributeScalarValueText("mhx-consulting.at") },
-                            new GenericInboundAttribute { name = "ttl", value = new AttributeScalarValueInteger(86400) },
-                            new GenericInboundAttribute { name = "type", value = new AttributeScalarValueText("NS") },
-                            new GenericInboundAttribute { name = "value", value = new AttributeScalarValueText("ns2.he.net") },
+                            new GenericInboundAttribute { Name = "id", Value = new AttributeScalarValueInteger(1569516123) },
+                            new GenericInboundAttribute { Name = "name", Value = new AttributeScalarValueText("mhx-consulting.at") },
+                            new GenericInboundAttribute { Name = "ttl", Value = new AttributeScalarValueInteger(86400) },
+                            new GenericInboundAttribute { Name = "type", Value = new AttributeScalarValueText("NS") },
+                            new GenericInboundAttribute { Name = "value", Value = new AttributeScalarValueText("ns2.he.net") },
                         }
                     },
                     new GenericInboundCI
                     {
-                        tempID = "tempCIID>record>2569516148",
-                        idMethod = new InboundIDMethodByData(new string[]{ "id" }),
-                        attributes = new List<GenericInboundAttribute>
+                        TempID = "tempCIID>record>2569516148",
+                        IDMethod = new InboundIDMethodByData(new string[]{ "id" }),
+                        Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { name = "id", value = new AttributeScalarValueInteger(2569516148) },
-                            new GenericInboundAttribute { name = "name", value = new AttributeScalarValueText("mhx.at") },
-                            new GenericInboundAttribute { name = "ttl", value = new AttributeScalarValueInteger(86400) },
-                            new GenericInboundAttribute { name = "type", value = new AttributeScalarValueText("NS") },
-                            new GenericInboundAttribute { name = "value", value = new AttributeScalarValueText("ns-mhx1.he.net") },
+                            new GenericInboundAttribute { Name = "id", Value = new AttributeScalarValueInteger(2569516148) },
+                            new GenericInboundAttribute { Name = "name", Value = new AttributeScalarValueText("mhx.at") },
+                            new GenericInboundAttribute { Name = "ttl", Value = new AttributeScalarValueInteger(86400) },
+                            new GenericInboundAttribute { Name = "type", Value = new AttributeScalarValueText("NS") },
+                            new GenericInboundAttribute { Name = "value", Value = new AttributeScalarValueText("ns-mhx1.he.net") },
                         }
                     },
                 },
-                relations = new List<GenericInboundRelation>
+                Relations = new List<GenericInboundRelation>
                 {
                     new GenericInboundRelation
                     {
-                        from = "tempCIID>record>1569516122",
-                        predicate = "assigned_to",
-                        to = "tempCIID>zone>mhx-consulting.at"
+                        From = "tempCIID>record>1569516122",
+                        Predicate = "assigned_to",
+                        To = "tempCIID>zone>mhx-consulting.at"
                     },
                     new GenericInboundRelation
                     {
-                        from = "tempCIID>record>1569516123",
-                        predicate = "assigned_to",
-                        to = "tempCIID>zone>mhx-consulting.at"
+                        From = "tempCIID>record>1569516123",
+                        Predicate = "assigned_to",
+                        To = "tempCIID>zone>mhx-consulting.at"
                     },
                     new GenericInboundRelation
                     {
-                        from = "tempCIID>record>2569516148",
-                        predicate = "assigned_to",
-                        to = "tempCIID>zone>mhx.at"
+                        From = "tempCIID>record>2569516148",
+                        Predicate = "assigned_to",
+                        To = "tempCIID>zone>mhx.at"
                     },
                 }
             };
