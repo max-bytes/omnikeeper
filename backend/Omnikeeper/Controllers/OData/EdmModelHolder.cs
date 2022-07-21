@@ -142,16 +142,20 @@ namespace Omnikeeper.Controllers.OData
                         var baseEdmEntity = edmEntityTypeMap[at.Key];
                         foreach (var targetTraitID in tr.RelationTemplate.TraitHints)
                         {
-                            var targetEdmEntity = edmEntityTypeMap[targetTraitID];
-
-                            var navProp = baseEdmEntity.AddUnidirectionalNavigation(new EdmNavigationPropertyInfo
+                            if (edmEntityTypeMap.TryGetValue(targetTraitID, out var targetEdmEntity))
                             {
-                                Name = tr.Identifier + "_as_" + targetTraitID,
-                                TargetMultiplicity = EdmMultiplicity.Many,
-                                Target = targetEdmEntity,
-                                ContainsTarget = false,
-                            });
-                            edmEntitySetMap[at.Key].AddNavigationTarget(navProp, edmEntitySetMap[targetTraitID]);
+                                var navProp = baseEdmEntity.AddUnidirectionalNavigation(new EdmNavigationPropertyInfo
+                                {
+                                    Name = tr.Identifier + "_as_" + targetTraitID,
+                                    TargetMultiplicity = EdmMultiplicity.Many,
+                                    Target = targetEdmEntity,
+                                    ContainsTarget = false,
+                                });
+                                edmEntitySetMap[at.Key].AddNavigationTarget(navProp, edmEntitySetMap[targetTraitID]);
+                            } else
+                            {
+                                // TODO: error handling when trait hint could not be found
+                            }
                         }
                     }
                     catch (Exception ex)
