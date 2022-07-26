@@ -578,5 +578,64 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
         }
+
+        [Test]
+        public async Task TestGetCIIDsWithAttributes()
+        {
+            var transI = ModelContextBuilder.BuildImmediate();
+            Guid ciid1, ciid2, ciid3;
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                ciid1 = await GetService<ICIModel>().CreateCI(trans);
+                ciid2 = await GetService<ICIModel>().CreateCI(trans);
+                ciid3 = await GetService<ICIModel>().CreateCI(trans);
+                trans.Commit();
+            }
+
+            string layerID1, layerID2;
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans);
+                layerID1 = layer1.ID;
+                var (layer2, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l2", trans);
+                layerID2 = layer2.ID;
+                trans.Commit();
+            }
+
+            var layerset1 = await GetService<ILayerModel>().BuildLayerSet(new string[] { "l1" }, transI);
+            var layerset2 = await GetService<ILayerModel>().BuildLayerSet(new string[] { "l2" }, transI);
+            var layerset12 = await GetService<ILayerModel>().BuildLayerSet(new string[] { "l1", "l2" }, transI);
+
+
+            TimeThreshold insert1TimeThreshold;
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var changeset = await CreateChangesetProxy();
+                await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("value_a1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                trans.Commit();
+
+                insert1TimeThreshold = TimeThreshold.BuildAtTime(changeset.TimeThreshold.Time);
+            }
+
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var changeset = await CreateChangesetProxy();
+                await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("value_a2"), ciid2, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                trans.Commit();
+            }
+
+            var r1 = await GetService<IBaseAttributeModel>().GetCIIDsWithAttributes(AllCIIDsSelection.Instance, layerset1.LayerIDs, transI, TimeThreshold.BuildLatest());
+            r1.Should().BeEquivalentTo(new List<Guid>() { ciid1 }, options => options.WithoutStrictOrdering());
+
+            var r2 = await GetService<IBaseAttributeModel>().GetCIIDsWithAttributes(AllCIIDsSelection.Instance, layerset2.LayerIDs, transI, TimeThreshold.BuildLatest());
+            r2.Should().BeEquivalentTo(new List<Guid>() { ciid2 }, options => options.WithoutStrictOrdering());
+
+            var r3 = await GetService<IBaseAttributeModel>().GetCIIDsWithAttributes(AllCIIDsSelection.Instance, layerset12.LayerIDs, transI, TimeThreshold.BuildLatest());
+            r3.Should().BeEquivalentTo(new List<Guid>() { ciid1, ciid2 }, options => options.WithoutStrictOrdering());
+
+            // check historic
+            var r4 = await GetService<IBaseAttributeModel>().GetCIIDsWithAttributes(AllCIIDsSelection.Instance, layerset12.LayerIDs, transI, insert1TimeThreshold);
+            r4.Should().BeEquivalentTo(new List<Guid>() { ciid1 }, options => options.WithoutStrictOrdering());
+        }
     }
 }

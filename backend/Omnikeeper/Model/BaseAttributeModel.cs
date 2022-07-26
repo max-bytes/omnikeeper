@@ -36,68 +36,13 @@ namespace Omnikeeper.Model
             };
         }
 
-        // NOTE: postgres-based implementation of filtering by attribute value
-        // must work equivalent to AttributeScalarTextFilter.Contains()
-        //private string NamedAttributesWithValueFiltersSelection2WhereClause(NamedAttributesWithValueFiltersSelection s)
-        //{
-        //    var attributeFilterClauses = new List<string>();
-        //    IList<NpgsqlParameter> filterParameters = new List<NpgsqlParameter>();
-        //    var index = 0;
-        //    foreach (var (attributeName, filter) in s.NamesAndFilters)
-        //    {
-        //        string valueClause;
-        //        if (filter.Exact != null)
-        //        {
-        //            valueClause = $"value_text = @filterAttributeValue{index}";
-        //            filterParameters.Add(new NpgsqlParameter($"filterAttributeValue{index}", filter.Exact));
-        //        }
-        //        else if (filter.Regex != null)
-        //        {
-        //            // TODO: either support, or restrict other regex options
-        //            var ignoreCase = (filter.Regex.Options & System.Text.RegularExpressions.RegexOptions.IgnoreCase) != 0;
-        //            valueClause = $"value_text ~{(ignoreCase ? "*" : "")} @filterAttributeValue{index}";
-        //            filterParameters.Add(new NpgsqlParameter($"filterAttributeValue{index}", filter.Regex.Pattern));
-        //        }
-        //        else
-        //            throw new Exception("Invalid filter detected");
-        //        // TODO: support other attribute value types
-        //        var filterClause = $"((type = 'text' OR type = 'multiline_text') AND {AttributeValueHelper.BuildSQLIsScalarCheckClause()} AND name = @filterAttributeName{index} AND {valueClause})";
-
-        //        filterParameters.Add(new NpgsqlParameter($"filterAttributeName{index}", attributeName));
-        //        attributeFilterClauses.Add(filterClause);
-
-        //        index++;
-        //    }
-
-        //    var attributeFilterClause = string.Join(" AND ", attributeFilterClauses);
-        //    return $"({attributeFilterClause})";
-        //}
-        //private IEnumerable<NpgsqlParameter> NamedAttributesWithValueFiltersSelection2Parameters(NamedAttributesWithValueFiltersSelection selection)
-        //{
-        //    var index = 0;
-        //    foreach (var (attributeName, filter) in selection.NamesAndFilters)
-        //    {
-        //        if (filter.Exact != null)
-        //            yield return new NpgsqlParameter($"filterAttributeValue{index}", filter.Exact);
-        //        else if (filter.Regex != null)
-        //            yield return new NpgsqlParameter($"filterAttributeValue{index}", filter.Regex.Pattern);
-        //        else
-        //            throw new Exception("Invalid filter detected");
-
-        //        yield return new NpgsqlParameter($"filterAttributeName{index}", attributeName);
-
-        //        index++;
-        //    }
-        //}
-
-        private string AttributeSelection2WhereClause(IAttributeSelection selection)
+        private string AttributeSelection2WhereClause(IAttributeSelection selection, ref int parameterIndex)
         {
             return selection switch
             {
                 AllAttributeSelection _ => "1=1",
                 NoAttributesSelection _ => "1=0",
-                NamedAttributesSelection _ => "name = ANY(@names)",
-                //NamedAttributesWithValueFiltersSelection f => NamedAttributesWithValueFiltersSelection2WhereClause(f),
+                NamedAttributesSelection _ => $"name = ANY({SetParameter(ref parameterIndex)})",
                 _ => throw new NotImplementedException("")
             };
         }
@@ -110,13 +55,8 @@ namespace Omnikeeper.Model
                 case NoAttributesSelection _:
                     break;
                 case NamedAttributesSelection n:
-                    yield return new NpgsqlParameter("@names", n.AttributeNames.ToArray());
+                    yield return new NpgsqlParameter(null, n.AttributeNames.ToArray());
                     break;
-                //case NamedAttributesWithValueFiltersSelection f:
-                //    var t = NamedAttributesWithValueFiltersSelection2Parameters(f);
-                //    foreach (var tt in t)
-                //        yield return tt;
-                //    break;
                 default:
                     throw new NotImplementedException("");
             };
@@ -184,21 +124,28 @@ namespace Omnikeeper.Model
             return selection;
         }
 
+        private string SetParameter(ref int cur)
+        {
+            return $"${++cur}";
+        }
+
         private async IAsyncEnumerable<(CIAttribute attribute, string layerID)> _GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection, bool fullBinary)
         {
             NpgsqlCommand command;
 
             var ciidSelection2CTEClause = CIIDSelection2CTEClause(selection);
 
+
+            int parameterIndex = 0;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
                 command = new NpgsqlCommand($@"
                     {ciidSelection2CTEClause}
                     select id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute_latest a
                     {CIIDSelection2JoinClause(selection)}
-                    where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY(@layer_ids)
-                    and ({AttributeSelection2WhereClause(attributeSelection)})", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("layer_ids", layerIDs);
+                    where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY({SetParameter(ref parameterIndex)})
+                    and ({AttributeSelection2WhereClause(attributeSelection, ref parameterIndex)})", trans.DBConnection, trans.DBTransaction);
+                command.Parameters.Add(new NpgsqlParameter { Value = layerIDs });
                 foreach (var p in AttributeSelection2Parameters(attributeSelection))
                     command.Parameters.Add(p);
             }
@@ -211,14 +158,14 @@ namespace Omnikeeper.Model
                     select id, name, ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id from (
                         select distinct on(a.ci_id, name, layer_id) removed, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
                         {CIIDSelection2JoinClause(selection)}
-                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and layer_id = ANY(@layer_ids) and partition_index >= @partition_index
-                        and ({AttributeSelection2WhereClause(attributeSelection)})
+                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= {SetParameter(ref parameterIndex)} and layer_id = ANY({SetParameter(ref parameterIndex)}) and partition_index >= {SetParameter(ref parameterIndex)}
+                        and ({AttributeSelection2WhereClause(attributeSelection, ref parameterIndex)})
                         order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
                     ) i where removed = false
                     ", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("layer_ids", layerIDs);
-                command.Parameters.AddWithValue("time_threshold", atTime.Time.ToUniversalTime());
-                command.Parameters.AddWithValue("partition_index", partitionIndex);
+                command.Parameters.AddWithValue(atTime.Time.ToUniversalTime());
+                command.Parameters.AddWithValue(layerIDs);
+                command.Parameters.AddWithValue(partitionIndex);
                 foreach (var p in AttributeSelection2Parameters(attributeSelection))
                     command.Parameters.Add(p);
             }
@@ -283,19 +230,19 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        // TODO: test
         public async Task<IReadOnlySet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
             NpgsqlCommand command;
+            int parameterIndex = 0;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
                 command = new NpgsqlCommand($@"
                     {CIIDSelection2CTEClause(selection)}
                     select distinct a.ci_id FROM attribute_latest a
                     {CIIDSelection2JoinClause(selection)}
-                    where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY(@layer_ids)
+                    where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY({SetParameter(ref parameterIndex)})
                     ", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("layer_ids", layerIDs);
+                command.Parameters.AddWithValue(layerIDs);
             }
             else
             {
@@ -306,13 +253,13 @@ namespace Omnikeeper.Model
                     select distinct i.ci_id from (
                         select distinct on(a.ci_id, name, layer_id) a.ci_id as ci_id, removed FROM attribute a
                         {CIIDSelection2JoinClause(selection)}
-                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and layer_id = ANY(@layer_ids) and partition_index >= @partition_index
+                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= {SetParameter(ref parameterIndex)} and layer_id = ANY({SetParameter(ref parameterIndex)}) and partition_index >= {SetParameter(ref parameterIndex)}
                         order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
                     ) i WHERE i.removed = false
                     ", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("layer_ids", layerIDs);
-                command.Parameters.AddWithValue("time_threshold", atTime.Time.ToUniversalTime());
-                command.Parameters.AddWithValue("partition_index", partitionIndex);
+                command.Parameters.AddWithValue(atTime.Time.ToUniversalTime());
+                command.Parameters.AddWithValue(layerIDs);
+                command.Parameters.AddWithValue(partitionIndex);
             }
 
             command.Prepare();
@@ -330,16 +277,17 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-
+        // TODO: test
         public async Task<IReadOnlyList<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
+            int parameterIndex = 0;
             var ret = new List<CIAttribute>();
             using var command = new NpgsqlCommand($@"
             select id, name, ci_id, type, value_text, value_binary, value_control FROM attribute 
-            where changeset_id = @changeset_id AND removed = @removed
+            where changeset_id = {SetParameter(ref parameterIndex)} AND removed = {SetParameter(ref parameterIndex)}
             ", trans.DBConnection, trans.DBTransaction);
-            command.Parameters.AddWithValue("changeset_id", changesetID);
-            command.Parameters.AddWithValue("removed", getRemoved);
+            command.Parameters.AddWithValue(changesetID);
+            command.Parameters.AddWithValue(getRemoved);
 
             command.Prepare();
 
