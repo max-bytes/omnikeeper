@@ -105,23 +105,25 @@ namespace Omnikeeper.Model
             }
 
             // updates (actual updates and removals)
-            // TODO: improve performance
-            // add index, use CTEs
-            var actualModified = inserts.Where(t => t.existingAttributeID != null);
-            foreach (var (ciid, fullName, value, existingAttributeID, newAttributeID) in actualModified)
+            // use CTEs
+            var cteValues = inserts
+                .Where(t => t.existingAttributeID != null)
+                .Select(((Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID) t) =>
+                    {
+                        var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(t.value);
+                        // NOTE: we have to translate CLR enum to postgres enum manually
+                        var type = trans.DBConnection.TypeMapper.DefaultNameTranslator.TranslateTypeName(t.value.Type.ToString());
+                        return $"('{t.newAttributeID}'::uuid, '{type}'::attributevaluetype, '{valueText}', '\\x{Convert.ToHexString(valueBinary)}'::bytea, '\\x{Convert.ToHexString(valueControl)}'::bytea, '{changeset.ID}'::uuid, '{t.existingAttributeID!}'::uuid)";
+                    });
+            if (cteValues.Any())
             {
-                using var commandUpdateLatest = new NpgsqlCommand(@"
-                    UPDATE attribute_latest SET id = @id, type = @type, value_text = @value_text, value_binary = @value_binary, 
-                    value_control = @value_control, changeset_id = @changeset_id
-                    WHERE id = @old_id", trans.DBConnection, trans.DBTransaction);
-                var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(value);
-                commandUpdateLatest.Parameters.AddWithValue("id", newAttributeID);
-                commandUpdateLatest.Parameters.AddWithValue("old_id", existingAttributeID!);
-                commandUpdateLatest.Parameters.AddWithValue("type", value.Type);
-                commandUpdateLatest.Parameters.AddWithValue("value_text", valueText);
-                commandUpdateLatest.Parameters.AddWithValue("value_binary", valueBinary);
-                commandUpdateLatest.Parameters.AddWithValue("value_control", valueControl);
-                commandUpdateLatest.Parameters.AddWithValue("changeset_id", changeset.ID);
+                using var commandUpdateLatest = new NpgsqlCommand($@"
+                UPDATE attribute_latest SET id = cte.new_id, type = cte.type, value_text = cte.value_text, value_binary = cte.value_binary, 
+                value_control = cte.value_control, changeset_id = cte.changeset_id
+                FROM (
+                    VALUES {string.Join(", ", cteValues)}
+                ) AS cte(new_id, type, value_text, value_binary, value_control, changeset_id, old_id)
+                WHERE id = cte.old_id", trans.DBConnection, trans.DBTransaction);
                 await commandUpdateLatest.ExecuteNonQueryAsync();
             }
 
