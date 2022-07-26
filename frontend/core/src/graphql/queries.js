@@ -182,6 +182,9 @@ export const queries = {
           traitEntities(layers: ["__okissues"]) {
               m__meta__issue__issue {
                 all {
+                  latestChange {
+                    timestamp
+                  }
                   entity {
                     type
                     context

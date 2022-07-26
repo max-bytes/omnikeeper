@@ -8,6 +8,8 @@ import moment from 'moment';
 import { SyncOutlined } from '@ant-design/icons';
 import { CIID } from "utils/uuidRenderers";
 import { useAGGridEnterprise } from 'utils/useAGGridEnterprise';
+import { formatTimestamp } from "utils/datetime";
+
 
 export default function IssueList(props) {
     
@@ -37,6 +39,9 @@ export default function IssueList(props) {
             })}
         </>
     }
+    const timestampCellRenderer = function(params) {
+        return formatTimestamp(params.value);
+    }
     
     const columnDefs = [
         {
@@ -59,7 +64,8 @@ export default function IssueList(props) {
         {
             headerName: "Type",
             field: "type",
-            filter: true
+            filter: true,
+            width: 85
         },
         {
             headerName: "Context",
@@ -76,9 +82,18 @@ export default function IssueList(props) {
             field: "id",
             filter: true
         },
+        {
+            headerName: "Occured at",
+            field: "timestamp",
+            filter: true,
+            cellRenderer: "timestampCellRenderer",
+            width: 140
+        },
     ];
 
-    const list = _.map(dataIssues?.traitEntities?.m__meta__issue__issue?.all, item => item.entity);
+    const list = _.map(dataIssues?.traitEntities?.m__meta__issue__issue?.all, item => {
+        return {...item.entity, timestamp: item.latestChange.timestamp};
+    });
 
     return <>
         <h2>Issues</h2>
@@ -92,6 +107,7 @@ export default function IssueList(props) {
                     <AgGridReact
                         frameworkComponents={{
                             affectedCIsCellRenderer: affectedCIsCellRenderer,
+                            timestampCellRenderer: timestampCellRenderer,
                         }}
                         rowData={list}
                         columnDefs={columnDefs}
