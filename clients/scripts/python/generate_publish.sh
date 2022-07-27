@@ -50,7 +50,7 @@ EOF
 fi
 
 # delete old lib, we recreate everything all the time
-rm -r * .*
+rm -r * # this does NOT delete .git
 
 # create updated library
 echo "Generating client version ${version}"
