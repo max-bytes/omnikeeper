@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
 using GraphQL;
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -123,7 +122,7 @@ query {
 
 
         [Test]
-        public async Task TestRaw()
+        public async Task TestData()
         {
             // create layer_1
             var createLayer1 = new GraphQLRequest
@@ -189,7 +188,7 @@ query {
    ]
 }
                 ";
-            var ingestUrl = $"{BaseUrl}/api/v1/ingest/genericJSON/files/raw?readLayerIDs=layer_1&writeLayerID=layer_1";
+            var ingestUrl = $"{BaseUrl}/api/v1/ingest/genericJSON/data?readLayerIDs=layer_1&writeLayerID=layer_1";
             var content = new StringContent(ingestData, Encoding.UTF8, "application/json");
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json") { CharSet = Encoding.UTF8.WebName };
             var responseIngest = await httpClient.PostAsync(ingestUrl, content);
