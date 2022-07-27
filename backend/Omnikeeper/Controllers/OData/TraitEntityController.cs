@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers.OData
 {
+    [ApiExplorerSettings(IgnoreApi = true)] // NOTE: swashbuckle has troubles creating unique operationIDs for this controller, so we skip it (for now)
     public class TraitEntityController : ODataController
     {
         private readonly ITraitsProvider traitsProvider;

@@ -137,9 +137,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -212,9 +210,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       },
@@ -299,9 +295,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -319,9 +313,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -377,9 +369,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -481,9 +471,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       },
@@ -525,9 +513,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -629,9 +615,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -687,9 +671,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -746,9 +728,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -777,9 +757,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -819,9 +797,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       },
@@ -1027,9 +1003,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       },
@@ -1150,9 +1124,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -1351,9 +1323,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -1391,9 +1361,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -1434,9 +1402,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -1647,9 +1613,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -1696,9 +1660,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -1759,9 +1721,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -1871,9 +1831,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -1983,9 +1941,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -2117,9 +2073,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -2181,9 +2135,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -2341,9 +2293,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       },
@@ -2536,9 +2486,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -2656,9 +2604,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       },
@@ -2774,9 +2720,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -2868,9 +2812,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -2898,805 +2840,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
-          }
-        ]
-      }
-    },
-    "/api/odata/{context}/{entityset}": {
-      "get": {
-        "tags": [
-          "TraitEntity"
-        ],
-        "operationId": "TraitEntity_Get",
-        "parameters": [
-          {
-            "name": "context",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "entityset",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/xml": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=minimal;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=minimal;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=minimal": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=full;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=full;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=full": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=none;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=none;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=none": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/octet-stream": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [
-              
-            ]
-          }
-        ]
-      }
-    },
-    "/api/odata/{context}/{entityset}({key})": {
-      "get": {
-        "tags": [
-          "TraitEntity"
-        ],
-        "operationId": "TraitEntity_Get",
-        "parameters": [
-          {
-            "name": "context",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "entityset",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/xml": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=minimal;odata.streaming=true": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=minimal;odata.streaming=false": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=minimal": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=full;odata.streaming=true": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=full;odata.streaming=false": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=full": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=none;odata.streaming=true": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=none;odata.streaming=false": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=none": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.streaming=true": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.streaming=false": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/octet-stream": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [
-              
-            ]
-          }
-        ]
-      }
-    },
-    "/api/odata/{context}/{entityset}/{key}": {
-      "get": {
-        "tags": [
-          "TraitEntity"
-        ],
-        "operationId": "TraitEntity_Get",
-        "parameters": [
-          {
-            "name": "context",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "entityset",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/xml": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=minimal;odata.streaming=true": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=minimal;odata.streaming=false": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=minimal": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=full;odata.streaming=true": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=full;odata.streaming=false": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=full": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=none;odata.streaming=true": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=none;odata.streaming=false": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.metadata=none": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.streaming=true": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/json;odata.streaming=false": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "application/octet-stream": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmEntityObject"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [
-              
-            ]
-          }
-        ]
-      }
-    },
-    "/api/odata/{context}/{entityset}({key})/{navigation}": {
-      "get": {
-        "tags": [
-          "TraitEntity"
-        ],
-        "operationId": "TraitEntity_GetNavigation",
-        "parameters": [
-          {
-            "name": "context",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "entityset",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "navigation",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/xml": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=minimal;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=minimal;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=minimal": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=full;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=full;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=full": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=none;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=none;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=none": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/octet-stream": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [
-              
-            ]
-          }
-        ]
-      }
-    },
-    "/api/odata/{context}/{entityset}/{key}/{navigation}": {
-      "get": {
-        "tags": [
-          "TraitEntity"
-        ],
-        "operationId": "TraitEntity_GetNavigation",
-        "parameters": [
-          {
-            "name": "context",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "entityset",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "navigation",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/xml": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=minimal;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=minimal;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=minimal": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=full;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=full;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=full": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=none;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=none;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.metadata=none": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.streaming=true": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/json;odata.streaming=false": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "application/octet-stream": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IEdmEntityObject"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -3742,9 +2886,7 @@
         },
         "security": [
           {
-            "oauth2": [
-              
-            ]
+            "oauth2": [ ]
           }
         ]
       }
@@ -4204,10 +3346,6 @@
         },
         "additionalProperties": false
       },
-      "IEdmEntityObject": {
-        "type": "object",
-        "additionalProperties": false
-      },
       "IEdmExpression": {
         "type": "object",
         "properties": {
@@ -4659,9 +3797,7 @@
             "nullable": true
           }
         },
-        "additionalProperties": {
-          
-        }
+        "additionalProperties": { }
       },
       "SameTargetCIHandling": {
         "enum": [
@@ -4705,17 +3841,13 @@
         "flows": {
           "clientCredentials": {
             "tokenUrl": "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/token",
-            "scopes": {
-              
-            }
+            "scopes": { }
           },
           "authorizationCode": {
             "authorizationUrl": "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/auth",
             "tokenUrl": "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/token",
             "refreshUrl": "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/token",
-            "scopes": {
-              
-            }
+            "scopes": { }
           }
         }
       }
