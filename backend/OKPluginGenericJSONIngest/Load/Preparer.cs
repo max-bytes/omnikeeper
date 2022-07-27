@@ -86,7 +86,7 @@ namespace OKPluginGenericJSONIngest.Load
             return new IngestData(ciCandidates, relationCandidates);
         }
 
-        private ICIIdentificationMethod BuildCIIDMethod(IInboundIDMethod idMethod, CICandidateAttributeData attributes, LayerSet searchLayers, string tempID, Dictionary<string, Guid> tempCIIDMapping, IIssueAccumulator issueAccumulator)
+        private ICIIdentificationMethod BuildCIIDMethod(AbstractInboundIDMethod idMethod, CICandidateAttributeData attributes, LayerSet searchLayers, string tempID, Dictionary<string, Guid> tempCIIDMapping, IIssueAccumulator issueAccumulator)
         {
             ICIIdentificationMethod attributeF(InboundIDMethodByAttribute a)
             {

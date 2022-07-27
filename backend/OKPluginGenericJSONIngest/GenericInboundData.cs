@@ -31,7 +31,7 @@ namespace OKPluginGenericJSONIngest
         public string TempID { get; set; }
 
         [JsonPropertyName("idMethod")]
-        public IInboundIDMethod IDMethod { get; set; }
+        public AbstractInboundIDMethod IDMethod { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         [JsonPropertyName("sameTempIDHandling")]
@@ -50,7 +50,7 @@ namespace OKPluginGenericJSONIngest
     }
 
 
-    public class InboundIDMethodDiscriminatorConverter : TypeDiscriminatorConverter<IInboundIDMethod>
+    public class InboundIDMethodDiscriminatorConverter : TypeDiscriminatorConverter<AbstractInboundIDMethod>
     {
         public InboundIDMethodDiscriminatorConverter() : base("type", typeof(InboundIDMethodDiscriminatorConverter))
         {
@@ -59,21 +59,22 @@ namespace OKPluginGenericJSONIngest
 
     [JsonConverter(typeof(InboundIDMethodDiscriminatorConverter))]
     [SwaggerDiscriminator("type")]
-    [SwaggerSubType(typeof(InboundIDMethodByData))]
-    [SwaggerSubType(typeof(InboundIDMethodByAttributeModifiers))]
-    [SwaggerSubType(typeof(InboundIDMethodByAttribute))]
-    [SwaggerSubType(typeof(InboundIDMethodByRelatedTempID))]
-    [SwaggerSubType(typeof(InboundIDMethodByTemporaryCIID))]
-    [SwaggerSubType(typeof(InboundIDMethodByByUnion))]
-    [SwaggerSubType(typeof(InboundIDMethodByIntersect))]
-    public interface IInboundIDMethod
+    [SwaggerSubType(typeof(InboundIDMethodByData))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByAttributeModifiers))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByAttributeModifiers, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByAttribute))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByAttribute, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByRelatedTempID))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByRelatedTempID, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByTemporaryCIID))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByByUnion))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByByUnion, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByIntersect))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByIntersect, OKPluginGenericJSONIngest")]
+    public abstract class AbstractInboundIDMethod
     {
-        string type { get; }
+        public abstract string type { get; }
     }
 
-    public class InboundIDMethodByData : IInboundIDMethod
+    public class InboundIDMethodByData : AbstractInboundIDMethod
     {
-        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+        [JsonPropertyName("type")]
+        public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
         [JsonPropertyName("attributes")]
         public string[] Attributes { get; }
@@ -96,9 +97,9 @@ namespace OKPluginGenericJSONIngest
         }
     }
 
-    public class InboundIDMethodByAttribute : IInboundIDMethod
+    public class InboundIDMethodByAttribute : AbstractInboundIDMethod
     {
-        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+        public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         [JsonPropertyName("attribute")]
         public GenericInboundAttribute Attribute { get; set; }
         [JsonPropertyName("modifiers")]
@@ -111,9 +112,9 @@ namespace OKPluginGenericJSONIngest
         }
     }
 
-    public class InboundIDMethodByRelatedTempID : IInboundIDMethod
+    public class InboundIDMethodByRelatedTempID : AbstractInboundIDMethod
     {
-        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+        public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         [JsonPropertyName("tempID")]
         public string TempID { get; set; }
         [JsonPropertyName("outgoingRelation")]
@@ -129,9 +130,9 @@ namespace OKPluginGenericJSONIngest
         }
     }
 
-    public class InboundIDMethodByTemporaryCIID : IInboundIDMethod
+    public class InboundIDMethodByTemporaryCIID : AbstractInboundIDMethod
     {
-        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+        public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         [JsonPropertyName("tempID")]
         public string TempID { get; set; }
 
@@ -141,24 +142,24 @@ namespace OKPluginGenericJSONIngest
         }
     }
 
-    public class InboundIDMethodByByUnion : IInboundIDMethod
+    public class InboundIDMethodByByUnion : AbstractInboundIDMethod
     {
-        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+        public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         [JsonPropertyName("inner")]
-        public IInboundIDMethod[] Inner { get; set; }
+        public AbstractInboundIDMethod[] Inner { get; set; }
 
-        public InboundIDMethodByByUnion(IInboundIDMethod[] inner)
+        public InboundIDMethodByByUnion(AbstractInboundIDMethod[] inner)
         {
             Inner = inner;
         }
     }
-    public class InboundIDMethodByIntersect : IInboundIDMethod
+    public class InboundIDMethodByIntersect : AbstractInboundIDMethod
     {
-        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+        public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         [JsonPropertyName("inner")]
-        public IInboundIDMethod[] Inner { get; set; }
+        public AbstractInboundIDMethod[] Inner { get; set; }
 
-        public InboundIDMethodByIntersect(IInboundIDMethod[] inner)
+        public InboundIDMethodByIntersect(AbstractInboundIDMethod[] inner)
         {
             Inner = inner;
         }
