@@ -117,32 +117,5 @@ namespace Omnikeeper.Controllers.Ingest
                 return BadRequest(e);
             }
         }
-
-        [HttpPost("raw")]
-        [DisableRequestSizeLimit]
-        [RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
-        public async Task<ActionResult> IngestRaw([FromQuery, Required] string[] readLayerIDs, [FromQuery, Required] string writeLayerID, [FromBody, Required] GenericInboundData data)
-        {
-            var logger = loggerFactory.CreateLogger($"RawJSONIngest_{string.Join("-", readLayerIDs)}_{writeLayerID}");
-            logger.LogInformation($"Starting ingest");
-            try
-            {
-                var issueAccumulator = new IssueAccumulator("DataIngest", $"RawJsonIngest_{string.Join("-", readLayerIDs)}_{writeLayerID}");
-
-                await ingestService.IngestRaw(data, readLayerIDs, writeLayerID, logger, issueAccumulator, modelContextBuilder);
-
-                return Ok();
-            }
-            catch (UnauthorizedAccessException e)
-            {
-                logger.LogError(e, "Ingest failed");
-                return Forbid();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Ingest failed");
-                return BadRequest(e);
-            }
-        }
     }
 }

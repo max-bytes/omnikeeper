@@ -17,6 +17,7 @@ namespace OKPluginGenericJSONIngest
             sc.AddSingleton<ContextModel>();
             sc.AddSingleton<GenericJsonIngestService>();
             sc.AddSingleton<PassiveFilesController>();
+            sc.AddSingleton<PassiveDataController>();
             sc.AddSingleton<ManageContextController>();
             sc.AddSingleton<IIssueContextSource, IssueContextSource>();
         }
