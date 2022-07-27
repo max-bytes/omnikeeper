@@ -3105,7 +3105,7 @@
             "nullable": true
           },
           "value": {
-            "$ref": "#/components/schemas/IAttributeValue"
+            "$ref": "#/components/schemas/AttributeValueDTO"
           }
         },
         "additionalProperties": false
@@ -3276,19 +3276,6 @@
           "trait": {
             "type": "string",
             "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "IAttributeValue": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "$ref": "#/components/schemas/AttributeValueType"
-          },
-          "isArray": {
-            "type": "boolean",
-            "readOnly": true
           }
         },
         "additionalProperties": false
