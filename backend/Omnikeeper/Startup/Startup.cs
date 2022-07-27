@@ -231,7 +231,7 @@ namespace Omnikeeper.Startup
                 {
                     string? oid = null;
                     if (apiDesc.ActionDescriptor is ControllerActionDescriptor ad)
-                        oid = ad.ActionName;
+                        oid = $"{ad.RouteValues["controller"]}_{ad.ActionName}";
                     else
                         throw new Exception("Invalid API description encountered");
 

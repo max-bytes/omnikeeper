@@ -4,13 +4,18 @@
     "title": "Landscape omnikeeper REST API",
     "version": "v1"
   },
+  "servers": [
+    {
+      "url": "https://localhost:44378"
+    }
+  ],
   "paths": {
     "/api/v{version}/Ingest/AnsibleInventoryScan": {
       "post": {
         "tags": [
           "AnsibleInventoryScanIngest"
         ],
-        "operationId": "IngestAnsibleInventoryScan",
+        "operationId": "AnsibleInventoryScanIngest_IngestAnsibleInventoryScan",
         "parameters": [
           {
             "name": "writeLayerID",
@@ -144,7 +149,7 @@
         "tags": [
           "AttributeValueImage"
         ],
-        "operationId": "Get",
+        "operationId": "AttributeValueImage_Get",
         "parameters": [
           {
             "name": "ciid",
@@ -217,7 +222,7 @@
         "tags": [
           "AttributeValueImage"
         ],
-        "operationId": "Post",
+        "operationId": "AttributeValueImage_Post",
         "parameters": [
           {
             "name": "ciid",
@@ -306,7 +311,7 @@
         "tags": [
           "AuthRedirect"
         ],
-        "operationId": "Index",
+        "operationId": "AuthRedirect_Index",
         "responses": {
           "200": {
             "description": "Success"
@@ -326,7 +331,7 @@
         "tags": [
           "Cytoscape"
         ],
-        "operationId": "TraitCentric",
+        "operationId": "Cytoscape_TraitCentric",
         "parameters": [
           {
             "name": "layerIDs",
@@ -384,7 +389,7 @@
         "tags": [
           "GraphQL"
         ],
-        "operationId": "Index",
+        "operationId": "GraphQL_Index",
         "requestBody": {
           "content": {
             "application/json": {
@@ -486,7 +491,7 @@
         "tags": [
           "GraphQL"
         ],
-        "operationId": "Get",
+        "operationId": "GraphQL_Get",
         "parameters": [
           {
             "name": "operationName",
@@ -532,7 +537,7 @@
         "tags": [
           "GraphQL"
         ],
-        "operationId": "Debug",
+        "operationId": "GraphQL_Debug",
         "requestBody": {
           "content": {
             "application/json": {
@@ -636,7 +641,7 @@
         "tags": [
           "GraphvizDot"
         ],
-        "operationId": "TraitCentric",
+        "operationId": "GraphvizDot_TraitCentric",
         "parameters": [
           {
             "name": "layerIDs",
@@ -694,7 +699,7 @@
         "tags": [
           "GraphvizDot"
         ],
-        "operationId": "LayerCentric",
+        "operationId": "GraphvizDot_LayerCentric",
         "parameters": [
           {
             "name": "layerIDs",
@@ -754,7 +759,7 @@
           "GridView"
         ],
         "summary": "Returns a list of contexts for grid view.",
-        "operationId": "GetGridViewContexts",
+        "operationId": "GridView_GetGridViewContexts",
         "parameters": [
           {
             "name": "version",
@@ -785,7 +790,7 @@
           "GridView"
         ],
         "summary": "Returns a single context in full",
-        "operationId": "GetGridViewContext",
+        "operationId": "GridView_GetGridViewContext",
         "parameters": [
           {
             "name": "name",
@@ -825,7 +830,7 @@
           "GridView"
         ],
         "summary": "Edits specific context",
-        "operationId": "EditContext",
+        "operationId": "GridView_EditContext",
         "parameters": [
           {
             "name": "name",
@@ -1033,7 +1038,7 @@
           "GridView"
         ],
         "summary": "Deletes specific context",
-        "operationId": "DeleteContext",
+        "operationId": "GridView_DeleteContext",
         "parameters": [
           {
             "name": "name",
@@ -1158,7 +1163,7 @@
           "GridView"
         ],
         "summary": "Adds new context",
-        "operationId": "AddContext",
+        "operationId": "GridView_AddContext",
         "parameters": [
           {
             "name": "version",
@@ -1359,7 +1364,7 @@
           "GridView"
         ],
         "summary": "Returns grid view schema for specific context",
-        "operationId": "GetSchema",
+        "operationId": "GridView_GetSchema",
         "parameters": [
           {
             "name": "context",
@@ -1399,7 +1404,7 @@
           "GridView"
         ],
         "summary": "Returns grid view data for specific context",
-        "operationId": "GetData",
+        "operationId": "GridView_GetData",
         "parameters": [
           {
             "name": "context",
@@ -1442,7 +1447,7 @@
           "GridView"
         ],
         "summary": "Saves grid view row changes and returns change results",
-        "operationId": "ChangeData",
+        "operationId": "GridView_ChangeData",
         "parameters": [
           {
             "name": "context",
@@ -1654,7 +1659,7 @@
         "tags": [
           "ImportExportLayer"
         ],
-        "operationId": "ExportLayer",
+        "operationId": "ImportExportLayer_ExportLayer",
         "parameters": [
           {
             "name": "layerID",
@@ -1703,7 +1708,7 @@
         "tags": [
           "ImportExportLayer"
         ],
-        "operationId": "ImportLayer",
+        "operationId": "ImportExportLayer_ImportLayer",
         "parameters": [
           {
             "name": "overwriteLayerID",
@@ -1766,7 +1771,7 @@
         "tags": [
           "Metadata"
         ],
-        "operationId": "GetMetadata",
+        "operationId": "Metadata_GetMetadata",
         "parameters": [
           {
             "name": "context",
@@ -1878,7 +1883,7 @@
         "tags": [
           "Metadata"
         ],
-        "operationId": "GetServiceDocument",
+        "operationId": "Metadata_GetServiceDocument",
         "parameters": [
           {
             "name": "context",
@@ -1985,76 +1990,12 @@
         ]
       }
     },
-    "/api/v{version}/ingest/genericJSON/files": {
+    "/api/v{version}/ingest/genericJSON/data": {
       "post": {
         "tags": [
           "OKPluginGenericJSONIngest"
         ],
-        "operationId": "Ingest",
-        "parameters": [
-          {
-            "name": "context",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "required": [
-                  "files"
-                ],
-                "type": "object",
-                "properties": {
-                  "files": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "format": "binary"
-                    }
-                  }
-                }
-              },
-              "encoding": {
-                "files": {
-                  "style": "form"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        },
-        "security": [
-          {
-            "oauth2": [
-              
-            ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/ingest/genericJSON/files/raw": {
-      "post": {
-        "tags": [
-          "OKPluginGenericJSONIngest"
-        ],
-        "operationId": "IngestRaw",
+        "operationId": "PassiveData_Ingest",
         "parameters": [
           {
             "name": "readLayerIDs",
@@ -2183,12 +2124,76 @@
         ]
       }
     },
+    "/api/v{version}/ingest/genericJSON/files": {
+      "post": {
+        "tags": [
+          "OKPluginGenericJSONIngest"
+        ],
+        "operationId": "PassiveFiles_Ingest",
+        "parameters": [
+          {
+            "name": "context",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "files"
+                ],
+                "type": "object",
+                "properties": {
+                  "files": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "files": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [
+              
+            ]
+          }
+        ]
+      }
+    },
     "/api/v{version}/ingest/genericJSON/manage/context": {
       "get": {
         "tags": [
           "OKPluginGenericJSONIngest"
         ],
-        "operationId": "GetAllContexts",
+        "operationId": "ManageContext_GetAllContexts",
         "parameters": [
           {
             "name": "version",
@@ -2346,7 +2351,7 @@
         "tags": [
           "OKPluginGenericJSONIngest"
         ],
-        "operationId": "UpsertContext",
+        "operationId": "ManageContext_UpsertContext",
         "parameters": [
           {
             "name": "version",
@@ -2543,7 +2548,7 @@
         "tags": [
           "OKPluginGenericJSONIngest"
         ],
-        "operationId": "GetContext",
+        "operationId": "ManageContext_GetContext",
         "parameters": [
           {
             "name": "id",
@@ -2661,7 +2666,7 @@
         "tags": [
           "OKPluginGenericJSONIngest"
         ],
-        "operationId": "RemoveContext",
+        "operationId": "ManageContext_RemoveContext",
         "parameters": [
           {
             "name": "id",
@@ -2781,7 +2786,7 @@
         "tags": [
           "OKPluginInsightDiscoveryIngest"
         ],
-        "operationId": "Ingest",
+        "operationId": "IngestFile_Ingest",
         "parameters": [
           {
             "name": "context",
@@ -2875,7 +2880,7 @@
         "tags": [
           "RestartApplication"
         ],
-        "operationId": "Restart",
+        "operationId": "RestartApplication_Restart",
         "parameters": [
           {
             "name": "version",
@@ -2905,7 +2910,7 @@
         "tags": [
           "TraitEntity"
         ],
-        "operationId": "Get",
+        "operationId": "TraitEntity_Get",
         "parameters": [
           {
             "name": "context",
@@ -3073,7 +3078,7 @@
         "tags": [
           "TraitEntity"
         ],
-        "operationId": "Get",
+        "operationId": "TraitEntity_Get",
         "parameters": [
           {
             "name": "context",
@@ -3202,7 +3207,7 @@
         "tags": [
           "TraitEntity"
         ],
-        "operationId": "Get",
+        "operationId": "TraitEntity_Get",
         "parameters": [
           {
             "name": "context",
@@ -3331,7 +3336,7 @@
         "tags": [
           "TraitEntity"
         ],
-        "operationId": "GetNavigation",
+        "operationId": "TraitEntity_GetNavigation",
         "parameters": [
           {
             "name": "context",
@@ -3516,7 +3521,7 @@
         "tags": [
           "TraitEntity"
         ],
-        "operationId": "GetNavigation",
+        "operationId": "TraitEntity_GetNavigation",
         "parameters": [
           {
             "name": "context",
@@ -3701,7 +3706,7 @@
         "tags": [
           "UsageStats"
         ],
-        "operationId": "Fetch",
+        "operationId": "UsageStats_Fetch",
         "parameters": [
           {
             "name": "from",
