@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.DotNet.InternalAbstractions;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
+using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.IO;
@@ -47,8 +48,8 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         IDMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { Name = "id", Value = new AttributeScalarValueInteger(718656) },
-                            new GenericInboundAttribute { Name = "name", Value = new AttributeScalarValueText("mhx-consulting.at") },
+                            new GenericInboundAttribute { Name = "id", Value = AttributeValueDTO.Build(new AttributeScalarValueInteger(718656)) },
+                            new GenericInboundAttribute { Name = "name", Value = AttributeValueDTO.Build(new AttributeScalarValueText("mhx-consulting.at")) },
                         }
                     },
                     new GenericInboundCI
@@ -57,8 +58,8 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         IDMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { Name = "id", Value = new AttributeScalarValueInteger(742507) },
-                            new GenericInboundAttribute { Name = "name", Value = new AttributeScalarValueText("mhx.at") },
+                            new GenericInboundAttribute { Name = "id", Value = AttributeValueDTO.Build(new AttributeScalarValueInteger(742507)) },
+                            new GenericInboundAttribute { Name = "name", Value = AttributeValueDTO.Build(new AttributeScalarValueText("mhx.at")) },
                         }
                     },
 
@@ -68,11 +69,11 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         IDMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { Name = "id", Value = new AttributeScalarValueInteger(1569516122) },
-                            new GenericInboundAttribute { Name = "name", Value = new AttributeScalarValueText("mhx-consulting.at") },
-                            new GenericInboundAttribute { Name = "ttl", Value = new AttributeScalarValueInteger(86400) },
-                            new GenericInboundAttribute { Name = "type", Value = new AttributeScalarValueText("NS") },
-                            new GenericInboundAttribute { Name = "value", Value = new AttributeScalarValueText("ns1.he.net") },
+                            new GenericInboundAttribute { Name = "id", Value = AttributeValueDTO.Build(new AttributeScalarValueInteger(1569516122)) },
+                            new GenericInboundAttribute { Name = "name", Value = AttributeValueDTO.Build(new AttributeScalarValueText("mhx-consulting.at")) },
+                            new GenericInboundAttribute { Name = "ttl", Value = AttributeValueDTO.Build(new AttributeScalarValueInteger(86400)) },
+                            new GenericInboundAttribute { Name = "type", Value = AttributeValueDTO.Build(new AttributeScalarValueText("NS")) },
+                            new GenericInboundAttribute { Name = "value", Value = AttributeValueDTO.Build(new AttributeScalarValueText("ns1.he.net")) },
                         }
                     },
                     new GenericInboundCI
@@ -81,11 +82,11 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         IDMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { Name = "id", Value = new AttributeScalarValueInteger(1569516123) },
-                            new GenericInboundAttribute { Name = "name", Value = new AttributeScalarValueText("mhx-consulting.at") },
-                            new GenericInboundAttribute { Name = "ttl", Value = new AttributeScalarValueInteger(86400) },
-                            new GenericInboundAttribute { Name = "type", Value = new AttributeScalarValueText("NS") },
-                            new GenericInboundAttribute { Name = "value", Value = new AttributeScalarValueText("ns2.he.net") },
+                            new GenericInboundAttribute { Name = "id", Value = AttributeValueDTO.Build(new AttributeScalarValueInteger(1569516123)) },
+                            new GenericInboundAttribute { Name = "name", Value = AttributeValueDTO.Build(new AttributeScalarValueText("mhx-consulting.at")) },
+                            new GenericInboundAttribute { Name = "ttl", Value = AttributeValueDTO.Build(new AttributeScalarValueInteger(86400)) },
+                            new GenericInboundAttribute { Name = "type", Value = AttributeValueDTO.Build(new AttributeScalarValueText("NS")) },
+                            new GenericInboundAttribute { Name = "value", Value = AttributeValueDTO.Build(new AttributeScalarValueText("ns2.he.net")) },
                         }
                     },
                     new GenericInboundCI
@@ -94,11 +95,11 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         IDMethod = new InboundIDMethodByData(new string[]{ "id" }),
                         Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { Name = "id", Value = new AttributeScalarValueInteger(2569516148) },
-                            new GenericInboundAttribute { Name = "name", Value = new AttributeScalarValueText("mhx.at") },
-                            new GenericInboundAttribute { Name = "ttl", Value = new AttributeScalarValueInteger(86400) },
-                            new GenericInboundAttribute { Name = "type", Value = new AttributeScalarValueText("NS") },
-                            new GenericInboundAttribute { Name = "value", Value = new AttributeScalarValueText("ns-mhx1.he.net") },
+                            new GenericInboundAttribute { Name = "id", Value = AttributeValueDTO.Build(new AttributeScalarValueInteger(2569516148)) },
+                            new GenericInboundAttribute { Name = "name", Value = AttributeValueDTO.Build(new AttributeScalarValueText("mhx.at")) },
+                            new GenericInboundAttribute { Name = "ttl", Value = AttributeValueDTO.Build(new AttributeScalarValueInteger(86400)) },
+                            new GenericInboundAttribute { Name = "type", Value = AttributeValueDTO.Build(new AttributeScalarValueText("NS")) },
+                            new GenericInboundAttribute { Name = "value", Value = AttributeValueDTO.Build(new AttributeScalarValueText("ns-mhx1.he.net")) },
                         }
                     },
                 },

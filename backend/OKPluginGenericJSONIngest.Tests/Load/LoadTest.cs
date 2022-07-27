@@ -2,6 +2,7 @@
 using Moq;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Load;
+using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
@@ -58,7 +59,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                             new GenericInboundAttribute
                             {
                                 Name = "a",
-                                Value = AttributeArrayValueJSON.BuildFromString(new string[0], false)
+                                Value = AttributeValueDTO.Build(AttributeArrayValueJSON.BuildFromString(new string[0], false))
                             }
                         }
                     }

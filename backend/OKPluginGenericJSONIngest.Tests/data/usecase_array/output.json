@@ -15,15 +15,19 @@
         {
           "name": "textscalar",
           "value": {
-            "type": 0,
-            "value": "value 1"
+            "type": "Text",
+            "isArray": false,
+            "values": [
+              "value 1"
+            ]
           }
         },
         {
           "name": "textarray",
           "value": {
-            "type": 0,
-            "value": [
+            "type": "Text",
+            "isArray": true,
+            "values": [
               "value 1",
               "value 2"
             ]
@@ -32,16 +36,11 @@
         {
           "name": "jsonarray",
           "value": {
-            "type": 3,
-            "value": [
-              {
-                "foo": "bar",
-                "blub": "bla"
-              },
-              {
-                "foo2": "bar2",
-                "blub2": "bla2"
-              }
+            "type": "JSON",
+            "isArray": true,
+            "values": [
+              "{\u0022foo\u0022:\u0022bar\u0022,\u0022blub\u0022:\u0022bla\u0022}",
+              "{\u0022foo2\u0022:\u0022bar2\u0022,\u0022blub2\u0022:\u0022bla2\u0022}"
             ]
           }
         }

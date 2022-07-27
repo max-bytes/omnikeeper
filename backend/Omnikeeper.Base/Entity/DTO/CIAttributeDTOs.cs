@@ -57,8 +57,11 @@ namespace Omnikeeper.Base.Entity.DTO
     public class AttributeValueDTO : IEquatable<AttributeValueDTO>
     {
         [JsonConverter(typeof(JsonStringEnumConverter))]
+        [JsonPropertyName("type")]
         public AttributeValueType Type { get; set; } = default;
+        [JsonPropertyName("isArray")]
         public bool IsArray { get; set; } = default;
+        [JsonPropertyName("values")]
         public string[] Values { get; set; } = default;
 
         public override bool Equals([AllowNull] object other) => Equals(other as AttributeValueDTO);

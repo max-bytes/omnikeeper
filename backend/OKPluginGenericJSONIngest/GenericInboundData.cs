@@ -1,7 +1,6 @@
-﻿using OKPluginGenericJSONIngest.Transform.JMESPath;
+﻿using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Entity.AttributeValues;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -170,9 +169,8 @@ namespace OKPluginGenericJSONIngest
         [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonConverter(typeof(SystemTextJsonAttributeValueConverter))]
         [JsonPropertyName("value")]
-        public IAttributeValue Value { get; set; }
+        public AttributeValueDTO Value { get; set; }
     }
 
     public class GenericInboundRelation

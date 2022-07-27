@@ -1,4 +1,5 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.AttributeValues;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -27,7 +28,7 @@ namespace OKPluginGenericJSONIngest.Load
 
                     var fragments = a.Select(a =>
                     {
-                        return new CICandidateAttributeData.Fragment(a.Name, a.Value);
+                        return new CICandidateAttributeData.Fragment(a.Name, AttributeValueHelper.BuildFromDTO(a.Value));
                     });
 
                     var attributes = new CICandidateAttributeData(fragments!);
@@ -94,7 +95,7 @@ namespace OKPluginGenericJSONIngest.Load
                     issueAccumulator.TryAdd("prepare_id_method_by_attribute", tempID, $"Could not create fragment from generic attribute for idMethod CIIdentificationMethodByFragment using attribute name {a.Attribute.Name} on candidate CI with temp ID {tempID}");
                     return CIIdentificationMethodNoop.Build();
                 }
-                var fragment = new CICandidateAttributeData.Fragment(a.Attribute.Name, a.Attribute.Value);
+                var fragment = new CICandidateAttributeData.Fragment(a.Attribute.Name, AttributeValueHelper.BuildFromDTO(a.Attribute.Value));
                 return CIIdentificationMethodByFragment.Build(fragment, a.Modifiers.CaseInsensitive, searchLayers);
             }
 

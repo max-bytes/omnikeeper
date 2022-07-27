@@ -8,103 +8,146 @@
           "cmdb.host.id"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "H13524429 - uansvclxnaemp01"
+            "isArray": false,
+            "values": [
+              "H13524429 - uansvclxnaemp01"
+            ]
           }
         },
         {
           "name": "cmdb.host.id",
           "value": {
             "type": "Text",
-            "value": "H13524429"
+            "isArray": false,
+            "values": [
+              "H13524429"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.configuration_files.nrpe",
           "value": {
             "type": "MultilineText",
-            "value": "log_facility=daemon\npid_file=varrunnrpenrpe.pid\nserver_port=5666\nnrpe_user=nrpe\nnrpe_group=nrpe\nallowed_hosts=127.0.0.1,185.49.176.16028,185.49.176.19226,10.48.202.84,2001:9d0:2:10f::b931:b0c8\ndont_blame_nrpe=1\ndebug=0\ncommand_timeout=60\nconnection_timeout=300\n\nssl_client_certs=2\nssl_version=TLSv1\u002B\nssl_cipher_list=ALL:!aNULL:!eNULL:!SSLv2:!LOW:!EXP:!RC4:!MD5:@STRENGTH\nssl_cacert_file=etcnagiosnrpe.ssl.ca-crt\nssl_cert_file=etcnagiosnrpe.ssl.crt\nssl_privatekey_file=etcnagiosnrpe.ssl.key\n\ncommand[check_process]=usrlib64nagiospluginscheck_procs $ARG1$\ncommand[check_users]=usrlib64nagiospluginscheck_users $ARG1$\ncommand[check_load]=usrlib64nagiospluginscheck_load $ARG1$\ncommand[check_disk]=usrlib64nagiospluginscheck_disk $ARG1$\ncommand[check_mem]=usrlib64nagiospluginscheck_mem $ARG1$\ncommand[check_cpu]=usrlib64nagiospluginscheck_cpu $ARG1$\ncommand[check_mailq]=usrlib64nagiospluginscheck_mailq $ARG1$\ncommand[check_dmesg]=usrlib64nagiospluginscheck_dmesg.sh $ARG1$\n\ninclude_dir=etcnrpe.d"
+            "isArray": false,
+            "values": [
+              "log_facility=daemon\npid_file=varrunnrpenrpe.pid\nserver_port=5666\nnrpe_user=nrpe\nnrpe_group=nrpe\nallowed_hosts=127.0.0.1,185.49.176.16028,185.49.176.19226,10.48.202.84,2001:9d0:2:10f::b931:b0c8\ndont_blame_nrpe=1\ndebug=0\ncommand_timeout=60\nconnection_timeout=300\n\nssl_client_certs=2\nssl_version=TLSv1\u002B\nssl_cipher_list=ALL:!aNULL:!eNULL:!SSLv2:!LOW:!EXP:!RC4:!MD5:@STRENGTH\nssl_cacert_file=etcnagiosnrpe.ssl.ca-crt\nssl_cert_file=etcnagiosnrpe.ssl.crt\nssl_privatekey_file=etcnagiosnrpe.ssl.key\n\ncommand[check_process]=usrlib64nagiospluginscheck_procs $ARG1$\ncommand[check_users]=usrlib64nagiospluginscheck_users $ARG1$\ncommand[check_load]=usrlib64nagiospluginscheck_load $ARG1$\ncommand[check_disk]=usrlib64nagiospluginscheck_disk $ARG1$\ncommand[check_mem]=usrlib64nagiospluginscheck_mem $ARG1$\ncommand[check_cpu]=usrlib64nagiospluginscheck_cpu $ARG1$\ncommand[check_mailq]=usrlib64nagiospluginscheck_mailq $ARG1$\ncommand[check_dmesg]=usrlib64nagiospluginscheck_dmesg.sh $ARG1$\n\ninclude_dir=etcnrpe.d"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.chassis",
           "value": {
             "type": "Text",
-            "value": ""
+            "isArray": false,
+            "values": [
+              ""
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.identifying_number",
           "value": {
             "type": "Text",
-            "value": "VMware-42 1f 5f 84 99 ed b1 8a-07 ba dd 16 e6 77 87 51"
+            "isArray": false,
+            "values": [
+              "VMware-42 1f 5f 84 99 ed b1 8a-07 ba dd 16 e6 77 87 51"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.manufacturer",
           "value": {
             "type": "Text",
-            "value": "VMware, Inc."
+            "isArray": false,
+            "values": [
+              "VMware, Inc."
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.platform",
           "value": {
             "type": "Text",
-            "value": "x86_64"
+            "isArray": false,
+            "values": [
+              "x86_64"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.processor_type",
           "value": {
             "type": "Text",
-            "value": "x86_64"
+            "isArray": false,
+            "values": [
+              "x86_64"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.product_name",
           "value": {
             "type": "Text",
-            "value": "VMware Virtual Platform"
+            "isArray": false,
+            "values": [
+              "VMware Virtual Platform"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.serial_number",
           "value": {
             "type": "Text",
-            "value": ""
+            "isArray": false,
+            "values": [
+              ""
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.machine_info.uuid",
           "value": {
             "type": "Text",
-            "value": "421f5f84-99ed-b18a-07ba-dd16e6778751"
+            "isArray": false,
+            "values": [
+              "421f5f84-99ed-b18a-07ba-dd16e6778751"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.memory.available_mb",
           "value": {
             "type": "Text",
-            "value": "14248"
+            "isArray": false,
+            "values": [
+              "14248"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.memory.total_size_mb",
           "value": {
             "type": "Text",
-            "value": "16257"
+            "isArray": false,
+            "values": [
+              "16257"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.network.dns_servers",
           "value": {
             "type": "Text",
-            "value": [
+            "isArray": true,
+            "values": [
               "185.49.177.40",
               "185.49.177.41",
               "2001:9d0:2:113::b931:b128",
@@ -116,19 +159,12 @@
           "name": "ecm_inv_scan.linux.ntp_servers",
           "value": {
             "type": "JSON",
-            "value": [
-              {
-                "name": "185.49.177.40"
-              },
-              {
-                "name": "185.49.177.41"
-              },
-              {
-                "name": "2001:9d0:2:113::b931:b128"
-              },
-              {
-                "name": "2001:9d0:2:113::b931:b129"
-              }
+            "isArray": true,
+            "values": [
+              "{\u0022name\u0022:\u0022185.49.177.40\u0022}",
+              "{\u0022name\u0022:\u0022185.49.177.41\u0022}",
+              "{\u0022name\u0022:\u00222001:9d0:2:113::b931:b128\u0022}",
+              "{\u0022name\u0022:\u00222001:9d0:2:113::b931:b129\u0022}"
             ]
           }
         },
@@ -136,154 +172,220 @@
           "name": "ecm_inv_scan.linux.operating_system.name",
           "value": {
             "type": "Text",
-            "value": "Red Hat Enterprise Linux Server 7.9"
+            "isArray": false,
+            "values": [
+              "Red Hat Enterprise Linux Server 7.9"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.operating_system.os_family",
           "value": {
             "type": "Text",
-            "value": "unix"
+            "isArray": false,
+            "values": [
+              "unix"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.operating_system.platform",
           "value": {
             "type": "Text",
-            "value": "linux"
+            "isArray": false,
+            "values": [
+              "linux"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.operating_system.release",
           "value": {
             "type": "Text",
-            "value": "redhat"
+            "isArray": false,
+            "values": [
+              "redhat"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.operating_system.release_name",
           "value": {
             "type": "Text",
-            "value": "Red Hat Enterprise Linux Server release 7.9 (Maipo)"
+            "isArray": false,
+            "values": [
+              "Red Hat Enterprise Linux Server release 7.9 (Maipo)"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.operating_system.version",
           "value": {
             "type": "Text",
-            "value": "7.9"
+            "isArray": false,
+            "values": [
+              "7.9"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.processors.cores_per_cpu",
           "value": {
             "type": "Integer",
-            "value": 1
+            "isArray": false,
+            "values": [
+              "1"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.processors.logical_processors",
           "value": {
             "type": "Integer",
-            "value": 6
+            "isArray": false,
+            "values": [
+              "6"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.processors.number_of_cpus",
           "value": {
             "type": "Integer",
-            "value": 6
+            "isArray": false,
+            "values": [
+              "6"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.processors.physical_processors",
           "value": {
             "type": "Integer",
-            "value": 6
+            "isArray": false,
+            "values": [
+              "6"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.processors.total_cores",
           "value": {
             "type": "Integer",
-            "value": 6
+            "isArray": false,
+            "values": [
+              "6"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.scan_time",
           "value": {
             "type": "Text",
-            "value": "2021-11-01 22:12:14"
+            "isArray": false,
+            "values": [
+              "2021-11-01 22:12:14"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.application_architecture",
           "value": {
             "type": "Text",
-            "value": "x86"
+            "isArray": false,
+            "values": [
+              "x86"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.hostname_domain",
           "value": {
             "type": "Text",
-            "value": "srv.dsh.at"
+            "isArray": false,
+            "values": [
+              "srv.dsh.at"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.hostname_fqdn",
           "value": {
             "type": "Text",
-            "value": "uansvclxnaemp01.srv.dsh.at"
+            "isArray": false,
+            "values": [
+              "uansvclxnaemp01.srv.dsh.at"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.install_date",
           "value": {
             "type": "Text",
-            "value": "2018-07-09 06:04:53"
+            "isArray": false,
+            "values": [
+              "2018-07-09 06:04:53"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.kernel_architecture",
           "value": {
             "type": "Text",
-            "value": "x64"
+            "isArray": false,
+            "values": [
+              "x64"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.kernel_bit_size",
           "value": {
             "type": "Text",
-            "value": "64"
+            "isArray": false,
+            "values": [
+              "64"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.kernel_name",
           "value": {
             "type": "Text",
-            "value": "Linux"
+            "isArray": false,
+            "values": [
+              "Linux"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.kernel_release",
           "value": {
             "type": "Text",
-            "value": "3.10.0-1160.45.1.el7.x86_64"
+            "isArray": false,
+            "values": [
+              "3.10.0-1160.45.1.el7.x86_64"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.last_reboot_time",
           "value": {
             "type": "Text",
-            "value": "2021-10-19 09:17:33"
+            "isArray": false,
+            "values": [
+              "2021-10-19 09:17:33"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.system.name",
           "value": {
             "type": "Text",
-            "value": "uansvclxnaemp01"
+            "isArray": false,
+            "values": [
+              "uansvclxnaemp01"
+            ]
           }
         }
       ]
@@ -302,7 +404,10 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "00:50:56:9f:84:e9"
+                    "isArray": false,
+                    "values": [
+                      "00:50:56:9f:84:e9"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -315,7 +420,10 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "0050569f84e9"
+                    "isArray": false,
+                    "values": [
+                      "0050569f84e9"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -328,7 +436,10 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "185.49.176.204"
+                    "isArray": false,
+                    "values": [
+                      "185.49.176.204"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -341,7 +452,10 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "fe80::250:56ff:fe9f:84e9"
+                    "isArray": false,
+                    "values": [
+                      "fe80::250:56ff:fe9f:84e9"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -354,7 +468,10 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "2001:9d0:2:10f::b931:b0cc"
+                    "isArray": false,
+                    "values": [
+                      "2001:9d0:2:10f::b931:b0cc"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -367,7 +484,10 @@
                   "name": "cmdb.interface.name",
                   "value": {
                     "type": "Text",
-                    "value": "lan1103"
+                    "isArray": false,
+                    "values": [
+                      "lan1103"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -391,51 +511,49 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Network Interface - lan1103"
+            "isArray": false,
+            "values": [
+              "Linux Network Interface - lan1103"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.network_interface.description",
           "value": {
             "type": "Text",
-            "value": "lan1103"
+            "isArray": false,
+            "values": [
+              "lan1103"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.network_interface.mac_address",
           "value": {
             "type": "Text",
-            "value": "00:50:56:9f:84:e9"
+            "isArray": false,
+            "values": [
+              "00:50:56:9f:84:e9"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.network_interface.ips",
           "value": {
             "type": "JSON",
-            "value": [
-              {
-                "address": "185.49.176.204",
-                "dnsName": "uansvclxnaemp01.srv.dsh.at",
-                "subnetMask": "255.255.255.192",
-                "version": "ipv4"
-              },
-              {
-                "address": "fe80::250:56ff:fe9f:84e9",
-                "scope": "link",
-                "subnetMask": 64,
-                "version": "ipv6"
-              },
-              {
-                "address": "2001:9d0:2:10f::b931:b0cc",
-                "scope": "global",
-                "subnetMask": 64,
-                "version": "ipv6"
-              }
+            "isArray": true,
+            "values": [
+              "{\u0022address\u0022:\u0022185.49.176.204\u0022,\u0022dnsName\u0022:\u0022uansvclxnaemp01.srv.dsh.at\u0022,\u0022subnetMask\u0022:\u0022255.255.255.192\u0022,\u0022version\u0022:\u0022ipv4\u0022}",
+              "{\u0022address\u0022:\u0022fe80::250:56ff:fe9f:84e9\u0022,\u0022scope\u0022:\u0022link\u0022,\u0022subnetMask\u0022:64,\u0022version\u0022:\u0022ipv6\u0022}",
+              "{\u0022address\u0022:\u00222001:9d0:2:10f::b931:b0cc\u0022,\u0022scope\u0022:\u0022global\u0022,\u0022subnetMask\u0022:64,\u0022version\u0022:\u0022ipv6\u0022}"
             ]
           }
         }
@@ -466,61 +584,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - devtmpfs"
+            "isArray": false,
+            "values": [
+              "Linux Partition - devtmpfs"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "devtmpfs"
+            "isArray": false,
+            "values": [
+              "devtmpfs"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "devtmpfs"
+            "isArray": false,
+            "values": [
+              "devtmpfs"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,nosuid,size=8117080k,nr_inodes=2029270,mode=755"
+            "isArray": false,
+            "values": [
+              "rw,nosuid,size=8117080k,nr_inodes=2029270,mode=755"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/dev"
+            "isArray": false,
+            "values": [
+              "/dev"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "8117080"
+            "isArray": false,
+            "values": [
+              "8117080"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "8117080"
+            "isArray": false,
+            "values": [
+              "8117080"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "0"
+            "isArray": false,
+            "values": [
+              "0"
+            ]
           }
         }
       ]
@@ -550,61 +695,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_sys-lv_root"
+            "isArray": false,
+            "values": [
+              "Linux Partition - /dev/mapper/vg_sys-lv_root"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_sys-lv_root"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_sys-lv_root"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "isArray": false,
+            "values": [
+              "ext4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "isArray": false,
+            "values": [
+              "rw,relatime,data=ordered"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/"
+            "isArray": false,
+            "values": [
+              "/"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "5029504"
+            "isArray": false,
+            "values": [
+              "5029504"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "1734464"
+            "isArray": false,
+            "values": [
+              "1734464"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "3016512"
+            "isArray": false,
+            "values": [
+              "3016512"
+            ]
           }
         }
       ]
@@ -634,61 +806,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/sda1"
+            "isArray": false,
+            "values": [
+              "Linux Partition - /dev/sda1"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/sda1"
+            "isArray": false,
+            "values": [
+              "/dev/sda1"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "isArray": false,
+            "values": [
+              "ext4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "isArray": false,
+            "values": [
+              "rw,relatime,data=ordered"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/boot"
+            "isArray": false,
+            "values": [
+              "/boot"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "999320"
+            "isArray": false,
+            "values": [
+              "999320"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "744116"
+            "isArray": false,
+            "values": [
+              "744116"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "186392"
+            "isArray": false,
+            "values": [
+              "186392"
+            ]
           }
         }
       ]
@@ -718,61 +917,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_sys-lv_var"
+            "isArray": false,
+            "values": [
+              "Linux Partition - /dev/mapper/vg_sys-lv_var"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_sys-lv_var"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_sys-lv_var"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "isArray": false,
+            "values": [
+              "ext4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "isArray": false,
+            "values": [
+              "rw,relatime,data=ordered"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/var"
+            "isArray": false,
+            "values": [
+              "/var"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "3030800"
+            "isArray": false,
+            "values": [
+              "3030800"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "2417320"
+            "isArray": false,
+            "values": [
+              "2417320"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "439812"
+            "isArray": false,
+            "values": [
+              "439812"
+            ]
           }
         }
       ]
@@ -802,61 +1028,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_sys-lv_tmp"
+            "isArray": false,
+            "values": [
+              "Linux Partition - /dev/mapper/vg_sys-lv_tmp"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_sys-lv_tmp"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_sys-lv_tmp"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "isArray": false,
+            "values": [
+              "ext4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "isArray": false,
+            "values": [
+              "rw,relatime,data=ordered"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/tmp"
+            "isArray": false,
+            "values": [
+              "/tmp"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "11320520"
+            "isArray": false,
+            "values": [
+              "11320520"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "10824120"
+            "isArray": false,
+            "values": [
+              "10824120"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "8172"
+            "isArray": false,
+            "values": [
+              "8172"
+            ]
           }
         }
       ]
@@ -886,61 +1139,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_sys-lv_var_log"
+            "isArray": false,
+            "values": [
+              "Linux Partition - /dev/mapper/vg_sys-lv_var_log"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_sys-lv_var_log"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_sys-lv_var_log"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "isArray": false,
+            "values": [
+              "ext4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "isArray": false,
+            "values": [
+              "rw,relatime,data=ordered"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/var/log"
+            "isArray": false,
+            "values": [
+              "/var/log"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "3063568"
+            "isArray": false,
+            "values": [
+              "3063568"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "2388716"
+            "isArray": false,
+            "values": [
+              "2388716"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "522160"
+            "isArray": false,
+            "values": [
+              "522160"
+            ]
           }
         }
       ]
@@ -970,61 +1250,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_sys-lv_opt"
+            "isArray": false,
+            "values": [
+              "Linux Partition - /dev/mapper/vg_sys-lv_opt"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_sys-lv_opt"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_sys-lv_opt"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "isArray": false,
+            "values": [
+              "ext4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "isArray": false,
+            "values": [
+              "rw,relatime,data=ordered"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/opt"
+            "isArray": false,
+            "values": [
+              "/opt"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "1998672"
+            "isArray": false,
+            "values": [
+              "1998672"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "1871276"
+            "isArray": false,
+            "values": [
+              "1871276"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "6156"
+            "isArray": false,
+            "values": [
+              "6156"
+            ]
           }
         }
       ]
@@ -1054,61 +1361,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_data-lv_data"
+            "isArray": false,
+            "values": [
+              "Linux Partition - /dev/mapper/vg_data-lv_data"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_data-lv_data"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "isArray": false,
+            "values": [
+              "ext4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "isArray": false,
+            "values": [
+              "rw,relatime,data=ordered"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/data"
+            "isArray": false,
+            "values": [
+              "/data"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "82434456"
+            "isArray": false,
+            "values": [
+              "82434456"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "77318456"
+            "isArray": false,
+            "values": [
+              "77318456"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "905520"
+            "isArray": false,
+            "values": [
+              "905520"
+            ]
           }
         }
       ]
@@ -1138,61 +1472,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_data-lv_data"
+            "isArray": false,
+            "values": [
+              "Linux Partition - /dev/mapper/vg_data-lv_data"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_data-lv_data"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "isArray": false,
+            "values": [
+              "ext4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "isArray": false,
+            "values": [
+              "rw,relatime,data=ordered"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/var/spool/perfdata"
+            "isArray": false,
+            "values": [
+              "/var/spool/perfdata"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         }
       ]
@@ -1222,61 +1583,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_data-lv_data"
+            "isArray": false,
+            "values": [
+              "Linux Partition - /dev/mapper/vg_data-lv_data"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_data-lv_data"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "isArray": false,
+            "values": [
+              "ext4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "isArray": false,
+            "values": [
+              "rw,relatime,data=ordered"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/home"
+            "isArray": false,
+            "values": [
+              "/home"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         }
       ]
@@ -1306,61 +1694,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_data-lv_data"
+            "isArray": false,
+            "values": [
+              "Linux Partition - /dev/mapper/vg_data-lv_data"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_data-lv_data"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "isArray": false,
+            "values": [
+              "ext4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "isArray": false,
+            "values": [
+              "rw,relatime,data=ordered"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/var/log/naemon"
+            "isArray": false,
+            "values": [
+              "/var/log/naemon"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         }
       ]
@@ -1390,61 +1805,88 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Linux Partition - /dev/mapper/vg_data-lv_data"
+            "isArray": false,
+            "values": [
+              "Linux Partition - /dev/mapper/vg_data-lv_data"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_data-lv_data"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.file_system_type",
           "value": {
             "type": "Text",
-            "value": "ext4"
+            "isArray": false,
+            "values": [
+              "ext4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,data=ordered"
+            "isArray": false,
+            "values": [
+              "rw,relatime,data=ordered"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.mount_point",
           "value": {
             "type": "Text",
-            "value": "/opt2"
+            "isArray": false,
+            "values": [
+              "/opt2"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.size_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.free_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.linux.partition.used_kb",
           "value": {
             "type": "Text",
-            "value": "null"
+            "isArray": false,
+            "values": [
+              "null"
+            ]
           }
         }
       ]
@@ -1457,444 +1899,455 @@
           "cmdb.host.id"
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "H13524429 - saladvpsqlc1n2"
+            "isArray": false,
+            "values": [
+              "H13524429 - saladvpsqlc1n2"
+            ]
           }
         },
         {
           "name": "cmdb.host.id",
           "value": {
             "type": "Text",
-            "value": "H13524429"
+            "isArray": false,
+            "values": [
+              "H13524429"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.scan_time",
           "value": {
             "type": "Text",
-            "value": "2021-11-01 23:41:18"
+            "isArray": false,
+            "values": [
+              "2021-11-01 23:41:18"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.name",
           "value": {
             "type": "Text",
-            "value": "Microsoft Windows Server 2019 Standard"
+            "isArray": false,
+            "values": [
+              "Microsoft Windows Server 2019 Standard"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.servicepack",
           "value": {
             "type": "Text",
-            "value": ""
+            "isArray": false,
+            "values": [
+              ""
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.last_bootup_time",
           "value": {
             "type": "Text",
-            "value": "2021-08-21 19:54:29"
+            "isArray": false,
+            "values": [
+              "2021-08-21 19:54:29"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.install_date",
           "value": {
             "type": "Text",
-            "value": "2020-10-08 15:40:01"
+            "isArray": false,
+            "values": [
+              "2020-10-08 15:40:01"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.architecture",
           "value": {
             "type": "Text",
-            "value": "64-bit"
+            "isArray": false,
+            "values": [
+              "64-bit"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.language",
           "value": {
             "type": "Text",
-            "value": "English \uFFFD\uFFFD\uFFFD United States"
+            "isArray": false,
+            "values": [
+              "English \uFFFD\uFFFD\uFFFD United States"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.product_suite",
           "value": {
             "type": "Text",
-            "value": "Unknown (Undocumented)"
+            "isArray": false,
+            "values": [
+              "Unknown (Undocumented)"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.type",
           "value": {
             "type": "Text",
-            "value": "WINNT"
+            "isArray": false,
+            "values": [
+              "WINNT"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.version",
           "value": {
             "type": "Text",
-            "value": "10.0.17763"
+            "isArray": false,
+            "values": [
+              "10.0.17763"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.build_number",
           "value": {
             "type": "Text",
-            "value": "17763"
+            "isArray": false,
+            "values": [
+              "17763"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.codeset",
           "value": {
             "type": "Text",
-            "value": "1252"
+            "isArray": false,
+            "values": [
+              "1252"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.country_code",
           "value": {
             "type": "Text",
-            "value": "43"
+            "isArray": false,
+            "values": [
+              "43"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.timezone",
           "value": {
             "type": "Text",
-            "value": "GMT \u002B1"
+            "isArray": false,
+            "values": [
+              "GMT \u002B1"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.ntp_server",
           "value": {
             "type": "Text",
-            "value": "time.windows.com,0x8"
+            "isArray": false,
+            "values": [
+              "time.windows.com,0x8"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.ntp_server_synchronisation_type",
           "value": {
             "type": "Text",
-            "value": "NT5DS"
+            "isArray": false,
+            "values": [
+              "NT5DS"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.dep_32_bit_applications",
           "value": {
             "type": "Text",
-            "value": "true"
+            "isArray": false,
+            "values": [
+              "true"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.dep_available",
           "value": {
             "type": "Text",
-            "value": "true"
+            "isArray": false,
+            "values": [
+              "true"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.dep_drivers",
           "value": {
             "type": "Text",
-            "value": "true"
+            "isArray": false,
+            "values": [
+              "true"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.dep_support_policy",
           "value": {
             "type": "Text",
-            "value": "Opt Out"
+            "isArray": false,
+            "values": [
+              "Opt Out"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.sku",
           "value": {
             "type": "Text",
-            "value": "Windows Server Standard Edition (Desktop Experience installation)"
+            "isArray": false,
+            "values": [
+              "Windows Server Standard Edition (Desktop Experience installation)"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.installation_type",
           "value": {
             "type": "Text",
-            "value": "Server"
+            "isArray": false,
+            "values": [
+              "Server"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.ubr",
           "value": {
             "type": "Text",
-            "value": "2114"
+            "isArray": false,
+            "values": [
+              "2114"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.edition_id",
           "value": {
             "type": "Text",
-            "value": "ServerStandard"
+            "isArray": false,
+            "values": [
+              "ServerStandard"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.registered_organization",
           "value": {
             "type": "Text",
-            "value": ""
+            "isArray": false,
+            "values": [
+              ""
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.operating_system.registered_owner",
           "value": {
             "type": "Text",
-            "value": "Windows User"
+            "isArray": false,
+            "values": [
+              "Windows User"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.fqdn",
           "value": {
             "type": "Text",
-            "value": "saladvpsqlc1n2.salres.com"
+            "isArray": false,
+            "values": [
+              "saladvpsqlc1n2.salres.com"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.machine_info.manufacturer",
           "value": {
             "type": "Text",
-            "value": "Dell Inc."
+            "isArray": false,
+            "values": [
+              "Dell Inc."
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.machine_info.product_name",
           "value": {
             "type": "Text",
-            "value": "PowerEdge R740"
+            "isArray": false,
+            "values": [
+              "PowerEdge R740"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.machine_info.identifying_number",
           "value": {
             "type": "Text",
-            "value": "7VN6K63"
+            "isArray": false,
+            "values": [
+              "7VN6K63"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.machine_info.chassis",
           "value": {
             "type": "Text",
-            "value": "Rack Mount Chassis"
+            "isArray": false,
+            "values": [
+              "Rack Mount Chassis"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.processors.physical_processors",
           "value": {
             "type": "Integer",
-            "value": 1
+            "isArray": false,
+            "values": [
+              "1"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.processors.logical_processors",
           "value": {
             "type": "Integer",
-            "value": 24
+            "isArray": false,
+            "values": [
+              "24"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.processors.total_cores",
           "value": {
             "type": "Integer",
-            "value": 12
+            "isArray": false,
+            "values": [
+              "12"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.processors.cores_per_cpu",
           "value": {
             "type": "Integer",
-            "value": 12
+            "isArray": false,
+            "values": [
+              "12"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.memory.total_size",
           "value": {
             "type": "Integer",
-            "value": 785031
+            "isArray": false,
+            "values": [
+              "785031"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.os_configuration.computer_role",
           "value": {
             "type": "Text",
-            "value": "Member Server"
+            "isArray": false,
+            "values": [
+              "Member Server"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.os_configuration.domain_name",
           "value": {
             "type": "Text",
-            "value": "salres.com"
+            "isArray": false,
+            "values": [
+              "salres.com"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.os_configuration.domain_type",
           "value": {
             "type": "Text",
-            "value": "domain"
+            "isArray": false,
+            "values": [
+              "domain"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.server_features",
           "value": {
             "type": "JSON",
-            "value": [
-              {
-                "id": 33,
-                "name": "Failover Clustering",
-                "parentid": 0
-              },
-              {
-                "id": 6,
-                "name": "File and iSCSI Services",
-                "parentid": 481
-              },
-              {
-                "id": 481,
-                "name": "File and Storage Services",
-                "parentid": 0
-              },
-              {
-                "id": 255,
-                "name": "File Server",
-                "parentid": 6
-              },
-              {
-                "id": 57,
-                "name": "Multipath I/O",
-                "parentid": 0
-              },
-              {
-                "id": 418,
-                "name": ".NET Framework 4.7",
-                "parentid": 466
-              },
-              {
-                "id": 466,
-                "name": ".NET Framework 4.7 Features",
-                "parentid": 0
-              },
-              {
-                "id": 220,
-                "name": ".NET Framework 3.5 (includes .NET 2.0 and 3.0)",
-                "parentid": 475
-              },
-              {
-                "id": 475,
-                "name": ".NET Framework 3.5 Features",
-                "parentid": 0
-              },
-              {
-                "id": 420,
-                "name": "WCF Services",
-                "parentid": 466
-              },
-              {
-                "id": 425,
-                "name": "TCP Port Sharing",
-                "parentid": 420
-              },
-              {
-                "id": 412,
-                "name": "Windows PowerShell 5.1",
-                "parentid": 417
-              },
-              {
-                "id": 351,
-                "name": "Windows PowerShell ISE",
-                "parentid": 417
-              },
-              {
-                "id": 411,
-                "name": "Windows PowerShell 2.0 Engine",
-                "parentid": 417
-              },
-              {
-                "id": 417,
-                "name": "Windows PowerShell",
-                "parentid": 0
-              },
-              {
-                "id": 67,
-                "name": "Remote Server Administration Tools",
-                "parentid": 0
-              },
-              {
-                "id": 331,
-                "name": "Active Directory module for Windows PowerShell",
-                "parentid": 329
-              },
-              {
-                "id": 329,
-                "name": "AD DS and AD LDS Tools",
-                "parentid": 256
-              },
-              {
-                "id": 268,
-                "name": "Failover Clustering Tools",
-                "parentid": 265
-              },
-              {
-                "id": 484,
-                "name": "Failover Cluster Management Tools",
-                "parentid": 268
-              },
-              {
-                "id": 483,
-                "name": "Failover Cluster Module for Windows PowerShell",
-                "parentid": 268
-              },
-              {
-                "id": 265,
-                "name": "Feature Administration Tools",
-                "parentid": 67
-              },
-              {
-                "id": 256,
-                "name": "Role Administration Tools",
-                "parentid": 67
-              },
-              {
-                "id": 482,
-                "name": "Storage Services",
-                "parentid": 481
-              },
-              {
-                "id": 1043,
-                "name": "System Data Archiver",
-                "parentid": 0
-              },
-              {
-                "id": 44,
-                "name": "Telnet Client",
-                "parentid": 0
-              },
-              {
-                "id": 296,
-                "name": "Windows Server Backup",
-                "parentid": 0
-              },
-              {
-                "id": 340,
-                "name": "WoW64 Support",
-                "parentid": 0
-              },
-              {
-                "id": 338,
-                "name": "XPS Viewer",
-                "parentid": 0
-              }
+            "isArray": true,
+            "values": [
+              "{\u0022id\u0022:33,\u0022name\u0022:\u0022Failover Clustering\u0022,\u0022parentid\u0022:0}",
+              "{\u0022id\u0022:6,\u0022name\u0022:\u0022File and iSCSI Services\u0022,\u0022parentid\u0022:481}",
+              "{\u0022id\u0022:481,\u0022name\u0022:\u0022File and Storage Services\u0022,\u0022parentid\u0022:0}",
+              "{\u0022id\u0022:255,\u0022name\u0022:\u0022File Server\u0022,\u0022parentid\u0022:6}",
+              "{\u0022id\u0022:57,\u0022name\u0022:\u0022Multipath I/O\u0022,\u0022parentid\u0022:0}",
+              "{\u0022id\u0022:418,\u0022name\u0022:\u0022.NET Framework 4.7\u0022,\u0022parentid\u0022:466}",
+              "{\u0022id\u0022:466,\u0022name\u0022:\u0022.NET Framework 4.7 Features\u0022,\u0022parentid\u0022:0}",
+              "{\u0022id\u0022:220,\u0022name\u0022:\u0022.NET Framework 3.5 (includes .NET 2.0 and 3.0)\u0022,\u0022parentid\u0022:475}",
+              "{\u0022id\u0022:475,\u0022name\u0022:\u0022.NET Framework 3.5 Features\u0022,\u0022parentid\u0022:0}",
+              "{\u0022id\u0022:420,\u0022name\u0022:\u0022WCF Services\u0022,\u0022parentid\u0022:466}",
+              "{\u0022id\u0022:425,\u0022name\u0022:\u0022TCP Port Sharing\u0022,\u0022parentid\u0022:420}",
+              "{\u0022id\u0022:412,\u0022name\u0022:\u0022Windows PowerShell 5.1\u0022,\u0022parentid\u0022:417}",
+              "{\u0022id\u0022:351,\u0022name\u0022:\u0022Windows PowerShell ISE\u0022,\u0022parentid\u0022:417}",
+              "{\u0022id\u0022:411,\u0022name\u0022:\u0022Windows PowerShell 2.0 Engine\u0022,\u0022parentid\u0022:417}",
+              "{\u0022id\u0022:417,\u0022name\u0022:\u0022Windows PowerShell\u0022,\u0022parentid\u0022:0}",
+              "{\u0022id\u0022:67,\u0022name\u0022:\u0022Remote Server Administration Tools\u0022,\u0022parentid\u0022:0}",
+              "{\u0022id\u0022:331,\u0022name\u0022:\u0022Active Directory module for Windows PowerShell\u0022,\u0022parentid\u0022:329}",
+              "{\u0022id\u0022:329,\u0022name\u0022:\u0022AD DS and AD LDS Tools\u0022,\u0022parentid\u0022:256}",
+              "{\u0022id\u0022:268,\u0022name\u0022:\u0022Failover Clustering Tools\u0022,\u0022parentid\u0022:265}",
+              "{\u0022id\u0022:484,\u0022name\u0022:\u0022Failover Cluster Management Tools\u0022,\u0022parentid\u0022:268}",
+              "{\u0022id\u0022:483,\u0022name\u0022:\u0022Failover Cluster Module for Windows PowerShell\u0022,\u0022parentid\u0022:268}",
+              "{\u0022id\u0022:265,\u0022name\u0022:\u0022Feature Administration Tools\u0022,\u0022parentid\u0022:67}",
+              "{\u0022id\u0022:256,\u0022name\u0022:\u0022Role Administration Tools\u0022,\u0022parentid\u0022:67}",
+              "{\u0022id\u0022:482,\u0022name\u0022:\u0022Storage Services\u0022,\u0022parentid\u0022:481}",
+              "{\u0022id\u0022:1043,\u0022name\u0022:\u0022System Data Archiver\u0022,\u0022parentid\u0022:0}",
+              "{\u0022id\u0022:44,\u0022name\u0022:\u0022Telnet Client\u0022,\u0022parentid\u0022:0}",
+              "{\u0022id\u0022:296,\u0022name\u0022:\u0022Windows Server Backup\u0022,\u0022parentid\u0022:0}",
+              "{\u0022id\u0022:340,\u0022name\u0022:\u0022WoW64 Support\u0022,\u0022parentid\u0022:0}",
+              "{\u0022id\u0022:338,\u0022name\u0022:\u0022XPS Viewer\u0022,\u0022parentid\u0022:0}"
             ]
           }
         },
@@ -1902,42 +2355,60 @@
           "name": "ecm_inv_scan.win.system.name",
           "value": {
             "type": "Text",
-            "value": "SALADVPSQLC1N2"
+            "isArray": false,
+            "values": [
+              "SALADVPSQLC1N2"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.system.netbios_hostname",
           "value": {
             "type": "Text",
-            "value": "SALADVPSQLC1N2"
+            "isArray": false,
+            "values": [
+              "SALADVPSQLC1N2"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.system.dns_hostname",
           "value": {
             "type": "Text",
-            "value": "saladvpsqlc1n2"
+            "isArray": false,
+            "values": [
+              "saladvpsqlc1n2"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.system.distinguished_name",
           "value": {
             "type": "Text",
-            "value": "CN=SALADVPSQLC1N2,CN=Computers,DC=salres,DC=com"
+            "isArray": false,
+            "values": [
+              "CN=SALADVPSQLC1N2,CN=Computers,DC=salres,DC=com"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.cmdb_info.host_id",
           "value": {
             "type": "Text",
-            "value": "H13306165"
+            "isArray": false,
+            "values": [
+              "H13306165"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.cmdb_info.customer",
           "value": {
             "type": "Text",
-            "value": "SALESIANER"
+            "isArray": false,
+            "values": [
+              "SALESIANER"
+            ]
           }
         }
       ]
@@ -1956,7 +2427,10 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "E4:43:4B:F4:2B:FA"
+                    "isArray": false,
+                    "values": [
+                      "E4:43:4B:F4:2B:FA"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -1969,7 +2443,10 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "E4-43-4B-F4-2B-FA"
+                    "isArray": false,
+                    "values": [
+                      "E4-43-4B-F4-2B-FA"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -1982,7 +2459,10 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "E4434BF42BFA"
+                    "isArray": false,
+                    "values": [
+                      "E4434BF42BFA"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -1995,7 +2475,10 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "10.10.200.98"
+                    "isArray": false,
+                    "values": [
+                      "10.10.200.98"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2008,7 +2491,10 @@
                   "name": "cmdb.interface.name",
                   "value": {
                     "type": "Text",
-                    "value": "HB"
+                    "isArray": false,
+                    "values": [
+                      "HB"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2032,51 +2518,67 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Network Adapter - HB"
+            "isArray": false,
+            "values": [
+              "Windows Network Adapter - HB"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.name",
           "value": {
             "type": "Text",
-            "value": "HB"
+            "isArray": false,
+            "values": [
+              "HB"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.description",
           "value": {
             "type": "Text",
-            "value": "Intel(R) Gigabit 4P X550/I350 rNDC"
+            "isArray": false,
+            "values": [
+              "Intel(R) Gigabit 4P X550/I350 rNDC"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.mac_address",
           "value": {
             "type": "Text",
-            "value": "E4:43:4B:F4:2B:FA"
+            "isArray": false,
+            "values": [
+              "E4:43:4B:F4:2B:FA"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.device_id",
           "value": {
             "type": "Text",
-            "value": "4"
+            "isArray": false,
+            "values": [
+              "4"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.ip",
           "value": {
             "type": "JSON",
-            "value": [
-              {
-                "address": "10.10.200.98",
-                "subnetmask": "255.255.255.240"
-              }
+            "isArray": true,
+            "values": [
+              "{\u0022address\u0022:\u002210.10.200.98\u0022,\u0022subnetmask\u0022:\u0022255.255.255.240\u0022}"
             ]
           }
         },
@@ -2084,7 +2586,8 @@
           "name": "ecm_inv_scan.win.network_adapter.dns_server",
           "value": {
             "type": "JSON",
-            "value": []
+            "isArray": true,
+            "values": []
           }
         }
       ]
@@ -2103,7 +2606,10 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "B4:96:91:8F:A4:D2"
+                    "isArray": false,
+                    "values": [
+                      "B4:96:91:8F:A4:D2"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2116,7 +2622,10 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "B4-96-91-8F-A4-D2"
+                    "isArray": false,
+                    "values": [
+                      "B4-96-91-8F-A4-D2"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2129,7 +2638,10 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "B496918FA4D2"
+                    "isArray": false,
+                    "values": [
+                      "B496918FA4D2"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2142,7 +2654,10 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "10.10.203.12"
+                    "isArray": false,
+                    "values": [
+                      "10.10.203.12"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2155,7 +2670,10 @@
                   "name": "cmdb.interface.name",
                   "value": {
                     "type": "Text",
-                    "value": "Prod-Team"
+                    "isArray": false,
+                    "values": [
+                      "Prod-Team"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2179,51 +2697,67 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Network Adapter - Prod-Team"
+            "isArray": false,
+            "values": [
+              "Windows Network Adapter - Prod-Team"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.name",
           "value": {
             "type": "Text",
-            "value": "Prod-Team"
+            "isArray": false,
+            "values": [
+              "Prod-Team"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.description",
           "value": {
             "type": "Text",
-            "value": "Microsoft Network Adapter Multiplexor Driver"
+            "isArray": false,
+            "values": [
+              "Microsoft Network Adapter Multiplexor Driver"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.mac_address",
           "value": {
             "type": "Text",
-            "value": "B4:96:91:8F:A4:D2"
+            "isArray": false,
+            "values": [
+              "B4:96:91:8F:A4:D2"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.device_id",
           "value": {
             "type": "Text",
-            "value": "16"
+            "isArray": false,
+            "values": [
+              "16"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.ip",
           "value": {
             "type": "JSON",
-            "value": [
-              {
-                "address": "10.10.203.12",
-                "subnetmask": "255.255.255.0"
-              }
+            "isArray": true,
+            "values": [
+              "{\u0022address\u0022:\u002210.10.203.12\u0022,\u0022subnetmask\u0022:\u0022255.255.255.0\u0022}"
             ]
           }
         },
@@ -2231,15 +2765,10 @@
           "name": "ecm_inv_scan.win.network_adapter.dns_server",
           "value": {
             "type": "JSON",
-            "value": [
-              {
-                "address": "10.10.203.5",
-                "order": 0
-              },
-              {
-                "address": "10.10.203.4",
-                "order": 1
-              }
+            "isArray": true,
+            "values": [
+              "{\u0022address\u0022:\u002210.10.203.5\u0022,\u0022order\u0022:0}",
+              "{\u0022address\u0022:\u002210.10.203.4\u0022,\u0022order\u0022:1}"
             ]
           }
         }
@@ -2259,7 +2788,10 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "02:6F:D7:4F:BA:0F"
+                    "isArray": false,
+                    "values": [
+                      "02:6F:D7:4F:BA:0F"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2272,7 +2804,10 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "02-6F-D7-4F-BA-0F"
+                    "isArray": false,
+                    "values": [
+                      "02-6F-D7-4F-BA-0F"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2285,7 +2820,10 @@
                   "name": "cmdb.interface.hwaddress",
                   "value": {
                     "type": "Text",
-                    "value": "026FD74FBA0F"
+                    "isArray": false,
+                    "values": [
+                      "026FD74FBA0F"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2298,7 +2836,10 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "169.254.1.213"
+                    "isArray": false,
+                    "values": [
+                      "169.254.1.213"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2311,7 +2852,10 @@
                   "name": "cmdb.interface.ip",
                   "value": {
                     "type": "Text",
-                    "value": "fe80::64ca:3a9d:1382:c837"
+                    "isArray": false,
+                    "values": [
+                      "fe80::64ca:3a9d:1382:c837"
+                    ]
                   }
                 },
                 "modifiers": {
@@ -2322,7 +2866,13 @@
                 "type": "OKPluginGenericJSONIngest.InboundIDMethodByAttribute, OKPluginGenericJSONIngest",
                 "attribute": {
                   "name": "cmdb.interface.name",
-                  "value": null
+                  "value": {
+                    "type": "Text",
+                    "isArray": false,
+                    "values": [
+                      null
+                    ]
+                  }
                 },
                 "modifiers": {
                   "caseInsensitive": true
@@ -2345,55 +2895,68 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Network Adapter - "
+            "isArray": false,
+            "values": [
+              "Windows Network Adapter - "
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.name",
           "value": {
             "type": "Text",
-            "value": ""
+            "isArray": false,
+            "values": [
+              ""
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.description",
           "value": {
             "type": "Text",
-            "value": "Microsoft Failover Cluster Virtual Adapter"
+            "isArray": false,
+            "values": [
+              "Microsoft Failover Cluster Virtual Adapter"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.mac_address",
           "value": {
             "type": "Text",
-            "value": "02:6F:D7:4F:BA:0F"
+            "isArray": false,
+            "values": [
+              "02:6F:D7:4F:BA:0F"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.device_id",
           "value": {
             "type": "Text",
-            "value": "17"
+            "isArray": false,
+            "values": [
+              "17"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.network_adapter.ip",
           "value": {
             "type": "JSON",
-            "value": [
-              {
-                "address": "169.254.1.213",
-                "subnetmask": "255.255.0.0"
-              },
-              {
-                "address": "fe80::64ca:3a9d:1382:c837",
-                "subnetmask": "64"
-              }
+            "isArray": true,
+            "values": [
+              "{\u0022address\u0022:\u0022169.254.1.213\u0022,\u0022subnetmask\u0022:\u0022255.255.0.0\u0022}",
+              "{\u0022address\u0022:\u0022fe80::64ca:3a9d:1382:c837\u0022,\u0022subnetmask\u0022:\u002264\u0022}"
             ]
           }
         },
@@ -2401,7 +2964,8 @@
           "name": "ecm_inv_scan.win.network_adapter.dns_server",
           "value": {
             "type": "JSON",
-            "value": []
+            "isArray": true,
+            "values": []
           }
         }
       ]
@@ -2427,54 +2991,78 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device"
+            "isArray": false,
+            "values": [
+              "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.name",
           "value": {
             "type": "Text",
-            "value": "HITACHI OPEN-V  Multi-Path Disk Device"
+            "isArray": false,
+            "values": [
+              "HITACHI OPEN-V  Multi-Path Disk Device"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.device_id",
           "value": {
             "type": "Text",
-            "value": "\\\\.\\PHYSICALDRIVE3"
+            "isArray": false,
+            "values": [
+              "\\\\.\\PHYSICALDRIVE3"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.interface",
           "value": {
             "type": "Text",
-            "value": "SCSI"
+            "isArray": false,
+            "values": [
+              "SCSI"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.serial_number",
           "value": {
             "type": "Text",
-            "value": "50453394"
+            "isArray": false,
+            "values": [
+              "50453394"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
           "value": {
             "type": "Text",
-            "value": "1.0"
+            "isArray": false,
+            "values": [
+              "1.0"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "isArray": false,
+            "values": [
+              "GB"
+            ]
           }
         }
       ]
@@ -2500,54 +3088,78 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device"
+            "isArray": false,
+            "values": [
+              "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.name",
           "value": {
             "type": "Text",
-            "value": "HITACHI OPEN-V  Multi-Path Disk Device"
+            "isArray": false,
+            "values": [
+              "HITACHI OPEN-V  Multi-Path Disk Device"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.device_id",
           "value": {
             "type": "Text",
-            "value": "\\\\.\\PHYSICALDRIVE1"
+            "isArray": false,
+            "values": [
+              "\\\\.\\PHYSICALDRIVE1"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.interface",
           "value": {
             "type": "Text",
-            "value": "SCSI"
+            "isArray": false,
+            "values": [
+              "SCSI"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.serial_number",
           "value": {
             "type": "Text",
-            "value": "307365"
+            "isArray": false,
+            "values": [
+              "307365"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
           "value": {
             "type": "Text",
-            "value": "2500.0"
+            "isArray": false,
+            "values": [
+              "2500.0"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "isArray": false,
+            "values": [
+              "GB"
+            ]
           }
         }
       ]
@@ -2573,54 +3185,78 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Storage Drive - H13524429 - DELL PERC H740P Mini SCSI Disk Device"
+            "isArray": false,
+            "values": [
+              "Windows Storage Drive - H13524429 - DELL PERC H740P Mini SCSI Disk Device"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.name",
           "value": {
             "type": "Text",
-            "value": "DELL PERC H740P Mini SCSI Disk Device"
+            "isArray": false,
+            "values": [
+              "DELL PERC H740P Mini SCSI Disk Device"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.device_id",
           "value": {
             "type": "Text",
-            "value": "\\\\.\\PHYSICALDRIVE0"
+            "isArray": false,
+            "values": [
+              "\\\\.\\PHYSICALDRIVE0"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.interface",
           "value": {
             "type": "Text",
-            "value": "SCSI"
+            "isArray": false,
+            "values": [
+              "SCSI"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.serial_number",
           "value": {
             "type": "Text",
-            "value": "00de454d4cd8da1127009afc52f0a7ce"
+            "isArray": false,
+            "values": [
+              "00de454d4cd8da1127009afc52f0a7ce"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
           "value": {
             "type": "Text",
-            "value": "1489.87"
+            "isArray": false,
+            "values": [
+              "1489.87"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "isArray": false,
+            "values": [
+              "GB"
+            ]
           }
         }
       ]
@@ -2646,54 +3282,78 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device"
+            "isArray": false,
+            "values": [
+              "Windows Storage Drive - H13524429 - HITACHI OPEN-V  Multi-Path Disk Device"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.name",
           "value": {
             "type": "Text",
-            "value": "HITACHI OPEN-V  Multi-Path Disk Device"
+            "isArray": false,
+            "values": [
+              "HITACHI OPEN-V  Multi-Path Disk Device"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.device_id",
           "value": {
             "type": "Text",
-            "value": "\\\\.\\PHYSICALDRIVE2"
+            "isArray": false,
+            "values": [
+              "\\\\.\\PHYSICALDRIVE2"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.interface",
           "value": {
             "type": "Text",
-            "value": "SCSI"
+            "isArray": false,
+            "values": [
+              "SCSI"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.serial_number",
           "value": {
             "type": "Text",
-            "value": "307365"
+            "isArray": false,
+            "values": [
+              "307365"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size",
           "value": {
             "type": "Text",
-            "value": "3999.99"
+            "isArray": false,
+            "values": [
+              "3999.99"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.storage_drive.total_disk_size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "isArray": false,
+            "values": [
+              "GB"
+            ]
           }
         }
       ]
@@ -2723,47 +3383,68 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Partition - H13524429 - E:"
+            "isArray": false,
+            "values": [
+              "Windows Partition - H13524429 - E:"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.name",
           "value": {
             "type": "Text",
-            "value": "E:"
+            "isArray": false,
+            "values": [
+              "E:"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.filesystem",
           "value": {
             "type": "Text",
-            "value": "NTFS"
+            "isArray": false,
+            "values": [
+              "NTFS"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size",
           "value": {
             "type": "Text",
-            "value": "2499.98"
+            "isArray": false,
+            "values": [
+              "2499.98"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "isArray": false,
+            "values": [
+              "GB"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.freespace",
           "value": {
             "type": "Text",
-            "value": "1483.98"
+            "isArray": false,
+            "values": [
+              "1483.98"
+            ]
           }
         }
       ]
@@ -2793,47 +3474,68 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Partition - H13524429 - C:"
+            "isArray": false,
+            "values": [
+              "Windows Partition - H13524429 - C:"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.name",
           "value": {
             "type": "Text",
-            "value": "C:"
+            "isArray": false,
+            "values": [
+              "C:"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.filesystem",
           "value": {
             "type": "Text",
-            "value": "NTFS"
+            "isArray": false,
+            "values": [
+              "NTFS"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size",
           "value": {
             "type": "Text",
-            "value": "204.15"
+            "isArray": false,
+            "values": [
+              "204.15"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "isArray": false,
+            "values": [
+              "GB"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.freespace",
           "value": {
             "type": "Text",
-            "value": "146.35"
+            "isArray": false,
+            "values": [
+              "146.35"
+            ]
           }
         }
       ]
@@ -2863,47 +3565,68 @@
           }
         ]
       },
+      "sameTempIDHandling": "DropAndWarn",
+      "sameTargetCIHandling": "Error",
+      "noFoundTargetCIHandling": "CreateNew",
       "attributes": [
         {
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Windows Partition - H13524429 - S:"
+            "isArray": false,
+            "values": [
+              "Windows Partition - H13524429 - S:"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.name",
           "value": {
             "type": "Text",
-            "value": "S:"
+            "isArray": false,
+            "values": [
+              "S:"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.filesystem",
           "value": {
             "type": "Text",
-            "value": "NTFS"
+            "isArray": false,
+            "values": [
+              "NTFS"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size",
           "value": {
             "type": "Text",
-            "value": "400.0"
+            "isArray": false,
+            "values": [
+              "400.0"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.size_unit",
           "value": {
             "type": "Text",
-            "value": "GB"
+            "isArray": false,
+            "values": [
+              "GB"
+            ]
           }
         },
         {
           "name": "ecm_inv_scan.win.partition.freespace",
           "value": {
             "type": "Text",
-            "value": "358.81"
+            "isArray": false,
+            "values": [
+              "358.81"
+            ]
           }
         }
       ]

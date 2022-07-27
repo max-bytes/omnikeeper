@@ -16,152 +16,188 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1jmplx01.mhx.at"
+            "isArray": false,
+            "values": [
+              "h1jmplx01.mhx.at"
+            ]
           }
         },
         {
           "name": "fqdn",
           "value": {
             "type": "Text",
-            "value": "h1jmplx01.mhx.at"
+            "isArray": false,
+            "values": [
+              "h1jmplx01.mhx.at"
+            ]
           }
         },
         {
           "name": "os_family",
           "value": {
             "type": "Text",
-            "value": "CentOS"
+            "isArray": false,
+            "values": [
+              "CentOS"
+            ]
           }
         },
         {
           "name": "architecture",
           "value": {
             "type": "Text",
-            "value": "x86_64"
+            "isArray": false,
+            "values": [
+              "x86_64"
+            ]
           }
         },
         {
           "name": "ansible.inventory.cmdline",
           "value": {
             "type": "JSON",
-            "value": {
-              "BOOT_IMAGE": "/vmlinuz-3.10.0-1062.18.1.el7.x86_64",
-              "LANG": "en_US.UTF-8",
-              "quiet": true,
-              "rd.lvm.lv": "vg_sys/lv_swap",
-              "rhgb": true,
-              "ro": true,
-              "root": "/dev/mapper/vg_sys-lv_root"
-            }
+            "isArray": false,
+            "values": [
+              "{\u0022BOOT_IMAGE\u0022:\u0022/vmlinuz-3.10.0-1062.18.1.el7.x86_64\u0022,\u0022LANG\u0022:\u0022en_US.UTF-8\u0022,\u0022quiet\u0022:true,\u0022rd.lvm.lv\u0022:\u0022vg_sys/lv_swap\u0022,\u0022rhgb\u0022:true,\u0022ro\u0022:true,\u0022root\u0022:\u0022/dev/mapper/vg_sys-lv_root\u0022}"
+            ]
           }
         },
         {
           "name": "ansible.inventory.last_scan_time",
           "value": {
             "type": "Text",
-            "value": "2020-04-21T07:51:39Z"
+            "isArray": false,
+            "values": [
+              "2020-04-21T07:51:39Z"
+            ]
           }
         },
         {
           "name": "default_ipv4",
           "value": {
             "type": "JSON",
-            "value": {
-              "address": "116.202.206.196",
-              "alias": "dmzpub0",
-              "broadcast": "116.202.206.207",
-              "gateway": "116.202.206.193",
-              "interface": "dmzpub0",
-              "macaddress": "7e:10:82:6d:db:6d",
-              "mtu": 1500,
-              "netmask": "255.255.255.240",
-              "network": "116.202.206.192",
-              "type": "ether"
-            }
+            "isArray": false,
+            "values": [
+              "{\u0022address\u0022:\u0022116.202.206.196\u0022,\u0022alias\u0022:\u0022dmzpub0\u0022,\u0022broadcast\u0022:\u0022116.202.206.207\u0022,\u0022gateway\u0022:\u0022116.202.206.193\u0022,\u0022interface\u0022:\u0022dmzpub0\u0022,\u0022macaddress\u0022:\u00227e:10:82:6d:db:6d\u0022,\u0022mtu\u0022:1500,\u0022netmask\u0022:\u0022255.255.255.240\u0022,\u0022network\u0022:\u0022116.202.206.192\u0022,\u0022type\u0022:\u0022ether\u0022}"
+            ]
           }
         },
         {
           "name": "hostname",
           "value": {
             "type": "Text",
-            "value": "h1jmplx01"
+            "isArray": false,
+            "values": [
+              "h1jmplx01"
+            ]
           }
         },
         {
           "name": "distribution",
           "value": {
             "type": "Text",
-            "value": "CentOS"
+            "isArray": false,
+            "values": [
+              "CentOS"
+            ]
           }
         },
         {
           "name": "distribution_file_variety",
           "value": {
             "type": "Text",
-            "value": "RedHat"
+            "isArray": false,
+            "values": [
+              "RedHat"
+            ]
           }
         },
         {
           "name": "distribution_major_version",
           "value": {
             "type": "Text",
-            "value": "7"
+            "isArray": false,
+            "values": [
+              "7"
+            ]
           }
         },
         {
           "name": "distribution_release",
           "value": {
             "type": "Text",
-            "value": "Core"
+            "isArray": false,
+            "values": [
+              "Core"
+            ]
           }
         },
         {
           "name": "distribution_version",
           "value": {
             "type": "Text",
-            "value": "7.7"
+            "isArray": false,
+            "values": [
+              "7.7"
+            ]
           }
         },
         {
           "name": "processor_vcpus",
           "value": {
             "type": "Integer",
-            "value": 2
+            "isArray": false,
+            "values": [
+              "2"
+            ]
           }
         },
         {
           "name": "processor_cores",
           "value": {
             "type": "Integer",
-            "value": 2
+            "isArray": false,
+            "values": [
+              "2"
+            ]
           }
         },
         {
           "name": "processor_count",
           "value": {
             "type": "Integer",
-            "value": 1
+            "isArray": false,
+            "values": [
+              "1"
+            ]
           }
         },
         {
           "name": "kernel",
           "value": {
             "type": "Text",
-            "value": "3.10.0-1062.18.1.el7.x86_64"
+            "isArray": false,
+            "values": [
+              "3.10.0-1062.18.1.el7.x86_64"
+            ]
           }
         },
         {
           "name": "memtotal_mb",
           "value": {
             "type": "Integer",
-            "value": 486
+            "isArray": false,
+            "values": [
+              "486"
+            ]
           }
         },
         {
           "name": "interfaces",
           "value": {
             "type": "Text",
-            "value": [
+            "isArray": true,
+            "values": [
               "lo",
               "dmzpub0"
             ]
@@ -171,16 +207,10 @@
           "name": "dns",
           "value": {
             "type": "JSON",
-            "value": {
-              "nameservers": [
-                "1.1.1.1",
-                "1.0.0.1"
-              ],
-              "search": [
-                "mhx.at",
-                "mhx.local"
-              ]
-            }
+            "isArray": false,
+            "values": [
+              "{\u0022nameservers\u0022:[\u00221.1.1.1\u0022,\u00221.0.0.1\u0022],\u0022search\u0022:[\u0022mhx.at\u0022,\u0022mhx.local\u0022]}"
+            ]
           }
         }
       ]
@@ -203,105 +233,150 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1jmplx01.mhx.at:/boot"
+            "isArray": false,
+            "values": [
+              "h1jmplx01.mhx.at:/boot"
+            ]
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "/dev/sda1"
+            "isArray": false,
+            "values": [
+              "/dev/sda1"
+            ]
           }
         },
         {
           "name": "mount",
           "value": {
             "type": "Text",
-            "value": "/boot"
+            "isArray": false,
+            "values": [
+              "/boot"
+            ]
           }
         },
         {
           "name": "block_available",
           "value": {
             "type": "Integer",
-            "value": 89390
+            "isArray": false,
+            "values": [
+              "89390"
+            ]
           }
         },
         {
           "name": "block_size",
           "value": {
             "type": "Integer",
-            "value": 4096
+            "isArray": false,
+            "values": [
+              "4096"
+            ]
           }
         },
         {
           "name": "block_total",
           "value": {
             "type": "Integer",
-            "value": 130217
+            "isArray": false,
+            "values": [
+              "130217"
+            ]
           }
         },
         {
           "name": "block_used",
           "value": {
             "type": "Integer",
-            "value": 40827
+            "isArray": false,
+            "values": [
+              "40827"
+            ]
           }
         },
         {
           "name": "fstype",
           "value": {
             "type": "Text",
-            "value": "xfs"
+            "isArray": false,
+            "values": [
+              "xfs"
+            ]
           }
         },
         {
           "name": "inode_available",
           "value": {
             "type": "Integer",
-            "value": 261812
+            "isArray": false,
+            "values": [
+              "261812"
+            ]
           }
         },
         {
           "name": "inode_total",
           "value": {
             "type": "Integer",
-            "value": 262144
+            "isArray": false,
+            "values": [
+              "262144"
+            ]
           }
         },
         {
           "name": "inode_used",
           "value": {
             "type": "Integer",
-            "value": 332
+            "isArray": false,
+            "values": [
+              "332"
+            ]
           }
         },
         {
           "name": "options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,attr2,inode64,noquota"
+            "isArray": false,
+            "values": [
+              "rw,relatime,attr2,inode64,noquota"
+            ]
           }
         },
         {
           "name": "size_available",
           "value": {
             "type": "Integer",
-            "value": 366141440
+            "isArray": false,
+            "values": [
+              "366141440"
+            ]
           }
         },
         {
           "name": "size_total",
           "value": {
             "type": "Integer",
-            "value": 533368832
+            "isArray": false,
+            "values": [
+              "533368832"
+            ]
           }
         },
         {
           "name": "uuid",
           "value": {
             "type": "Text",
-            "value": "7af4db46-3482-43a4-8875-91df0661675e"
+            "isArray": false,
+            "values": [
+              "7af4db46-3482-43a4-8875-91df0661675e"
+            ]
           }
         }
       ]
@@ -324,105 +399,150 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1jmplx01.mhx.at:/data"
+            "isArray": false,
+            "values": [
+              "h1jmplx01.mhx.at:/data"
+            ]
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_data"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_data-lv_data"
+            ]
           }
         },
         {
           "name": "mount",
           "value": {
             "type": "Text",
-            "value": "/data"
+            "isArray": false,
+            "values": [
+              "/data"
+            ]
           }
         },
         {
           "name": "block_available",
           "value": {
             "type": "Integer",
-            "value": 123520
+            "isArray": false,
+            "values": [
+              "123520"
+            ]
           }
         },
         {
           "name": "block_size",
           "value": {
             "type": "Integer",
-            "value": 4096
+            "isArray": false,
+            "values": [
+              "4096"
+            ]
           }
         },
         {
           "name": "block_total",
           "value": {
             "type": "Integer",
-            "value": 130217
+            "isArray": false,
+            "values": [
+              "130217"
+            ]
           }
         },
         {
           "name": "block_used",
           "value": {
             "type": "Integer",
-            "value": 6697
+            "isArray": false,
+            "values": [
+              "6697"
+            ]
           }
         },
         {
           "name": "fstype",
           "value": {
             "type": "Text",
-            "value": "xfs"
+            "isArray": false,
+            "values": [
+              "xfs"
+            ]
           }
         },
         {
           "name": "inode_available",
           "value": {
             "type": "Integer",
-            "value": 262124
+            "isArray": false,
+            "values": [
+              "262124"
+            ]
           }
         },
         {
           "name": "inode_total",
           "value": {
             "type": "Integer",
-            "value": 262144
+            "isArray": false,
+            "values": [
+              "262144"
+            ]
           }
         },
         {
           "name": "inode_used",
           "value": {
             "type": "Integer",
-            "value": 20
+            "isArray": false,
+            "values": [
+              "20"
+            ]
           }
         },
         {
           "name": "options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,attr2,inode64,noquota"
+            "isArray": false,
+            "values": [
+              "rw,relatime,attr2,inode64,noquota"
+            ]
           }
         },
         {
           "name": "size_available",
           "value": {
             "type": "Integer",
-            "value": 505937920
+            "isArray": false,
+            "values": [
+              "505937920"
+            ]
           }
         },
         {
           "name": "size_total",
           "value": {
             "type": "Integer",
-            "value": 533368832
+            "isArray": false,
+            "values": [
+              "533368832"
+            ]
           }
         },
         {
           "name": "uuid",
           "value": {
             "type": "Text",
-            "value": "ee632d3f-4de3-4181-963d-43be80ecca8f"
+            "isArray": false,
+            "values": [
+              "ee632d3f-4de3-4181-963d-43be80ecca8f"
+            ]
           }
         }
       ]
@@ -443,35 +563,50 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Network Interface dmzpub0@h1jmplx01.mhx.at"
+            "isArray": false,
+            "values": [
+              "Network Interface dmzpub0@h1jmplx01.mhx.at"
+            ]
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "dmzpub0"
+            "isArray": false,
+            "values": [
+              "dmzpub0"
+            ]
           }
         },
         {
           "name": "active",
           "value": {
             "type": "Text",
-            "value": "true"
+            "isArray": false,
+            "values": [
+              "true"
+            ]
           }
         },
         {
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "ether"
+            "isArray": false,
+            "values": [
+              "ether"
+            ]
           }
         },
         {
           "name": "macaddress",
           "value": {
             "type": "Text",
-            "value": "7e:10:82:6d:db:6d"
+            "isArray": false,
+            "values": [
+              "7e:10:82:6d:db:6d"
+            ]
           }
         }
       ]
@@ -492,33 +627,51 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Network Interface lo@h1jmplx01.mhx.at"
+            "isArray": false,
+            "values": [
+              "Network Interface lo@h1jmplx01.mhx.at"
+            ]
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "lo"
+            "isArray": false,
+            "values": [
+              "lo"
+            ]
           }
         },
         {
           "name": "active",
           "value": {
             "type": "Text",
-            "value": "true"
+            "isArray": false,
+            "values": [
+              "true"
+            ]
           }
         },
         {
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "loopback"
+            "isArray": false,
+            "values": [
+              "loopback"
+            ]
           }
         },
         {
           "name": "macaddress",
-          "value": null
+          "value": {
+            "type": "Text",
+            "isArray": false,
+            "values": [
+              ""
+            ]
+          }
         }
       ]
     },
@@ -538,152 +691,188 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1lscapet01.mhx.local"
+            "isArray": false,
+            "values": [
+              "h1lscapet01.mhx.local"
+            ]
           }
         },
         {
           "name": "fqdn",
           "value": {
             "type": "Text",
-            "value": "h1lscapet01.mhx.local"
+            "isArray": false,
+            "values": [
+              "h1lscapet01.mhx.local"
+            ]
           }
         },
         {
           "name": "os_family",
           "value": {
             "type": "Text",
-            "value": "CentOS"
+            "isArray": false,
+            "values": [
+              "CentOS"
+            ]
           }
         },
         {
           "name": "architecture",
           "value": {
             "type": "Text",
-            "value": "x86_64"
+            "isArray": false,
+            "values": [
+              "x86_64"
+            ]
           }
         },
         {
           "name": "ansible.inventory.cmdline",
           "value": {
             "type": "JSON",
-            "value": {
-              "BOOT_IMAGE": "/vmlinuz-3.10.0-1062.18.1.el7.x86_64",
-              "LANG": "en_US.UTF-8",
-              "quiet": true,
-              "rd.lvm.lv": "vg_sys/lv_swap",
-              "rhgb": true,
-              "ro": true,
-              "root": "/dev/mapper/vg_sys-lv_root"
-            }
+            "isArray": false,
+            "values": [
+              "{\u0022BOOT_IMAGE\u0022:\u0022/vmlinuz-3.10.0-1062.18.1.el7.x86_64\u0022,\u0022LANG\u0022:\u0022en_US.UTF-8\u0022,\u0022quiet\u0022:true,\u0022rd.lvm.lv\u0022:\u0022vg_sys/lv_swap\u0022,\u0022rhgb\u0022:true,\u0022ro\u0022:true,\u0022root\u0022:\u0022/dev/mapper/vg_sys-lv_root\u0022}"
+            ]
           }
         },
         {
           "name": "ansible.inventory.last_scan_time",
           "value": {
             "type": "Text",
-            "value": "2020-04-21T07:51:41Z"
+            "isArray": false,
+            "values": [
+              "2020-04-21T07:51:41Z"
+            ]
           }
         },
         {
           "name": "default_ipv4",
           "value": {
             "type": "JSON",
-            "value": {
-              "address": "10.131.1.13",
-              "alias": "eth0",
-              "broadcast": "10.131.1.255",
-              "gateway": "10.131.1.1",
-              "interface": "eth0",
-              "macaddress": "86:39:0c:f1:7f:31",
-              "mtu": 1500,
-              "netmask": "255.255.255.0",
-              "network": "10.131.1.0",
-              "type": "ether"
-            }
+            "isArray": false,
+            "values": [
+              "{\u0022address\u0022:\u002210.131.1.13\u0022,\u0022alias\u0022:\u0022eth0\u0022,\u0022broadcast\u0022:\u002210.131.1.255\u0022,\u0022gateway\u0022:\u002210.131.1.1\u0022,\u0022interface\u0022:\u0022eth0\u0022,\u0022macaddress\u0022:\u002286:39:0c:f1:7f:31\u0022,\u0022mtu\u0022:1500,\u0022netmask\u0022:\u0022255.255.255.0\u0022,\u0022network\u0022:\u002210.131.1.0\u0022,\u0022type\u0022:\u0022ether\u0022}"
+            ]
           }
         },
         {
           "name": "hostname",
           "value": {
             "type": "Text",
-            "value": "h1lscapet01"
+            "isArray": false,
+            "values": [
+              "h1lscapet01"
+            ]
           }
         },
         {
           "name": "distribution",
           "value": {
             "type": "Text",
-            "value": "CentOS"
+            "isArray": false,
+            "values": [
+              "CentOS"
+            ]
           }
         },
         {
           "name": "distribution_file_variety",
           "value": {
             "type": "Text",
-            "value": "RedHat"
+            "isArray": false,
+            "values": [
+              "RedHat"
+            ]
           }
         },
         {
           "name": "distribution_major_version",
           "value": {
             "type": "Text",
-            "value": "7"
+            "isArray": false,
+            "values": [
+              "7"
+            ]
           }
         },
         {
           "name": "distribution_release",
           "value": {
             "type": "Text",
-            "value": "Core"
+            "isArray": false,
+            "values": [
+              "Core"
+            ]
           }
         },
         {
           "name": "distribution_version",
           "value": {
             "type": "Text",
-            "value": "7.7"
+            "isArray": false,
+            "values": [
+              "7.7"
+            ]
           }
         },
         {
           "name": "processor_vcpus",
           "value": {
             "type": "Integer",
-            "value": 2
+            "isArray": false,
+            "values": [
+              "2"
+            ]
           }
         },
         {
           "name": "processor_cores",
           "value": {
             "type": "Integer",
-            "value": 2
+            "isArray": false,
+            "values": [
+              "2"
+            ]
           }
         },
         {
           "name": "processor_count",
           "value": {
             "type": "Integer",
-            "value": 1
+            "isArray": false,
+            "values": [
+              "1"
+            ]
           }
         },
         {
           "name": "kernel",
           "value": {
             "type": "Text",
-            "value": "3.10.0-1062.18.1.el7.x86_64"
+            "isArray": false,
+            "values": [
+              "3.10.0-1062.18.1.el7.x86_64"
+            ]
           }
         },
         {
           "name": "memtotal_mb",
           "value": {
             "type": "Integer",
-            "value": 1998
+            "isArray": false,
+            "values": [
+              "1998"
+            ]
           }
         },
         {
           "name": "interfaces",
           "value": {
             "type": "Text",
-            "value": [
+            "isArray": true,
+            "values": [
               "br-93f487bc4aeb"
             ]
           }
@@ -692,16 +881,10 @@
           "name": "dns",
           "value": {
             "type": "JSON",
-            "value": {
-              "nameservers": [
-                "1.1.1.1",
-                "1.0.0.1"
-              ],
-              "search": [
-                "mhx.at",
-                "mhx.local"
-              ]
-            }
+            "isArray": false,
+            "values": [
+              "{\u0022nameservers\u0022:[\u00221.1.1.1\u0022,\u00221.0.0.1\u0022],\u0022search\u0022:[\u0022mhx.at\u0022,\u0022mhx.local\u0022]}"
+            ]
           }
         }
       ]
@@ -724,105 +907,150 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1lscapet01.mhx.local:/var/lib/docker"
+            "isArray": false,
+            "values": [
+              "h1lscapet01.mhx.local:/var/lib/docker"
+            ]
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "/dev/mapper/vg_data-lv_docker"
+            "isArray": false,
+            "values": [
+              "/dev/mapper/vg_data-lv_docker"
+            ]
           }
         },
         {
           "name": "mount",
           "value": {
             "type": "Text",
-            "value": "/var/lib/docker"
+            "isArray": false,
+            "values": [
+              "/var/lib/docker"
+            ]
           }
         },
         {
           "name": "block_available",
           "value": {
             "type": "Integer",
-            "value": 1051938
+            "isArray": false,
+            "values": [
+              "1051938"
+            ]
           }
         },
         {
           "name": "block_size",
           "value": {
             "type": "Integer",
-            "value": 4096
+            "isArray": false,
+            "values": [
+              "4096"
+            ]
           }
         },
         {
           "name": "block_total",
           "value": {
             "type": "Integer",
-            "value": 2356736
+            "isArray": false,
+            "values": [
+              "2356736"
+            ]
           }
         },
         {
           "name": "block_used",
           "value": {
             "type": "Integer",
-            "value": 1304798
+            "isArray": false,
+            "values": [
+              "1304798"
+            ]
           }
         },
         {
           "name": "fstype",
           "value": {
             "type": "Text",
-            "value": "xfs"
+            "isArray": false,
+            "values": [
+              "xfs"
+            ]
           }
         },
         {
           "name": "inode_available",
           "value": {
             "type": "Integer",
-            "value": 4486119
+            "isArray": false,
+            "values": [
+              "4486119"
+            ]
           }
         },
         {
           "name": "inode_total",
           "value": {
             "type": "Integer",
-            "value": 4718592
+            "isArray": false,
+            "values": [
+              "4718592"
+            ]
           }
         },
         {
           "name": "inode_used",
           "value": {
             "type": "Integer",
-            "value": 232473
+            "isArray": false,
+            "values": [
+              "232473"
+            ]
           }
         },
         {
           "name": "options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,attr2,inode64,noquota"
+            "isArray": false,
+            "values": [
+              "rw,relatime,attr2,inode64,noquota"
+            ]
           }
         },
         {
           "name": "size_available",
           "value": {
             "type": "Integer",
-            "value": 4308738048
+            "isArray": false,
+            "values": [
+              "4308738048"
+            ]
           }
         },
         {
           "name": "size_total",
           "value": {
             "type": "Integer",
-            "value": 9653190656
+            "isArray": false,
+            "values": [
+              "9653190656"
+            ]
           }
         },
         {
           "name": "uuid",
           "value": {
             "type": "Text",
-            "value": "d221d65e-8ac7-4a6e-836f-4fac371e577c"
+            "isArray": false,
+            "values": [
+              "d221d65e-8ac7-4a6e-836f-4fac371e577c"
+            ]
           }
         }
       ]
@@ -845,105 +1073,150 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "h1lscapet01.mhx.local:/boot"
+            "isArray": false,
+            "values": [
+              "h1lscapet01.mhx.local:/boot"
+            ]
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "/dev/sda1"
+            "isArray": false,
+            "values": [
+              "/dev/sda1"
+            ]
           }
         },
         {
           "name": "mount",
           "value": {
             "type": "Text",
-            "value": "/boot"
+            "isArray": false,
+            "values": [
+              "/boot"
+            ]
           }
         },
         {
           "name": "block_available",
           "value": {
             "type": "Integer",
-            "value": 89390
+            "isArray": false,
+            "values": [
+              "89390"
+            ]
           }
         },
         {
           "name": "block_size",
           "value": {
             "type": "Integer",
-            "value": 4096
+            "isArray": false,
+            "values": [
+              "4096"
+            ]
           }
         },
         {
           "name": "block_total",
           "value": {
             "type": "Integer",
-            "value": 130217
+            "isArray": false,
+            "values": [
+              "130217"
+            ]
           }
         },
         {
           "name": "block_used",
           "value": {
             "type": "Integer",
-            "value": 40827
+            "isArray": false,
+            "values": [
+              "40827"
+            ]
           }
         },
         {
           "name": "fstype",
           "value": {
             "type": "Text",
-            "value": "xfs"
+            "isArray": false,
+            "values": [
+              "xfs"
+            ]
           }
         },
         {
           "name": "inode_available",
           "value": {
             "type": "Integer",
-            "value": 261812
+            "isArray": false,
+            "values": [
+              "261812"
+            ]
           }
         },
         {
           "name": "inode_total",
           "value": {
             "type": "Integer",
-            "value": 262144
+            "isArray": false,
+            "values": [
+              "262144"
+            ]
           }
         },
         {
           "name": "inode_used",
           "value": {
             "type": "Integer",
-            "value": 332
+            "isArray": false,
+            "values": [
+              "332"
+            ]
           }
         },
         {
           "name": "options",
           "value": {
             "type": "Text",
-            "value": "rw,relatime,attr2,inode64,noquota"
+            "isArray": false,
+            "values": [
+              "rw,relatime,attr2,inode64,noquota"
+            ]
           }
         },
         {
           "name": "size_available",
           "value": {
             "type": "Integer",
-            "value": 366141440
+            "isArray": false,
+            "values": [
+              "366141440"
+            ]
           }
         },
         {
           "name": "size_total",
           "value": {
             "type": "Integer",
-            "value": 533368832
+            "isArray": false,
+            "values": [
+              "533368832"
+            ]
           }
         },
         {
           "name": "uuid",
           "value": {
             "type": "Text",
-            "value": "7af4db46-3482-43a4-8875-91df0661675e"
+            "isArray": false,
+            "values": [
+              "7af4db46-3482-43a4-8875-91df0661675e"
+            ]
           }
         }
       ]
@@ -964,35 +1237,50 @@
           "name": "__name",
           "value": {
             "type": "Text",
-            "value": "Network Interface br-93f487bc4aeb@h1lscapet01.mhx.local"
+            "isArray": false,
+            "values": [
+              "Network Interface br-93f487bc4aeb@h1lscapet01.mhx.local"
+            ]
           }
         },
         {
           "name": "device",
           "value": {
             "type": "Text",
-            "value": "br-93f487bc4aeb"
+            "isArray": false,
+            "values": [
+              "br-93f487bc4aeb"
+            ]
           }
         },
         {
           "name": "active",
           "value": {
             "type": "Text",
-            "value": "true"
+            "isArray": false,
+            "values": [
+              "true"
+            ]
           }
         },
         {
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "bridge"
+            "isArray": false,
+            "values": [
+              "bridge"
+            ]
           }
         },
         {
           "name": "macaddress",
           "value": {
             "type": "Text",
-            "value": "02:42:b8:21:2d:22"
+            "isArray": false,
+            "values": [
+              "02:42:b8:21:2d:22"
+            ]
           }
         }
       ]
@@ -1011,17 +1299,9 @@
           "name": "yum.installed",
           "value": {
             "type": "JSON",
-            "value": [
-              {
-                "arch": "x86_64",
-                "envra": "1:NetworkManager-libnm-1.18.0-5.el7_7.2.x86_64",
-                "epoch": "1",
-                "name": "NetworkManager-libnm",
-                "release": "5.el7_7.2",
-                "repo": "installed",
-                "version": "1.18.0",
-                "yumstate": "installed"
-              }
+            "isArray": true,
+            "values": [
+              "{\u0022arch\u0022:\u0022x86_64\u0022,\u0022envra\u0022:\u00221:NetworkManager-libnm-1.18.0-5.el7_7.2.x86_64\u0022,\u0022epoch\u0022:\u00221\u0022,\u0022name\u0022:\u0022NetworkManager-libnm\u0022,\u0022release\u0022:\u00225.el7_7.2\u0022,\u0022repo\u0022:\u0022installed\u0022,\u0022version\u0022:\u00221.18.0\u0022,\u0022yumstate\u0022:\u0022installed\u0022}"
             ]
           }
         }
@@ -1041,23 +1321,12 @@
           "name": "yum.repos",
           "value": {
             "type": "JSON",
-            "value": [
-              {
-                "repoid": "base",
-                "state": "enabled"
-              },
-              {
-                "repoid": "epel",
-                "state": "enabled"
-              },
-              {
-                "repoid": "extras",
-                "state": "enabled"
-              },
-              {
-                "repoid": "updates",
-                "state": "enabled"
-              }
+            "isArray": true,
+            "values": [
+              "{\u0022repoid\u0022:\u0022base\u0022,\u0022state\u0022:\u0022enabled\u0022}",
+              "{\u0022repoid\u0022:\u0022epel\u0022,\u0022state\u0022:\u0022enabled\u0022}",
+              "{\u0022repoid\u0022:\u0022extras\u0022,\u0022state\u0022:\u0022enabled\u0022}",
+              "{\u0022repoid\u0022:\u0022updates\u0022,\u0022state\u0022:\u0022enabled\u0022}"
             ]
           }
         }
@@ -1077,7 +1346,8 @@
           "name": "yum.updates",
           "value": {
             "type": "JSON",
-            "value": []
+            "isArray": true,
+            "values": []
           }
         }
       ]

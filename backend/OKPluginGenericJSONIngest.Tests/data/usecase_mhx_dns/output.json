@@ -16,14 +16,20 @@
           "name": "id",
           "value": {
             "type": "Integer",
-            "value": 718656
+            "isArray": false,
+            "values": [
+              "718656"
+            ]
           }
         },
         {
           "name": "name",
           "value": {
             "type": "Text",
-            "value": "mhx-consulting.at"
+            "isArray": false,
+            "values": [
+              "mhx-consulting.at"
+            ]
           }
         }
       ]
@@ -44,14 +50,20 @@
           "name": "id",
           "value": {
             "type": "Integer",
-            "value": 742507
+            "isArray": false,
+            "values": [
+              "742507"
+            ]
           }
         },
         {
           "name": "name",
           "value": {
             "type": "Text",
-            "value": "mhx.at"
+            "isArray": false,
+            "values": [
+              "mhx.at"
+            ]
           }
         }
       ]
@@ -72,35 +84,50 @@
           "name": "id",
           "value": {
             "type": "Integer",
-            "value": 1569516122
+            "isArray": false,
+            "values": [
+              "1569516122"
+            ]
           }
         },
         {
           "name": "name",
           "value": {
             "type": "Text",
-            "value": "mhx-consulting.at"
+            "isArray": false,
+            "values": [
+              "mhx-consulting.at"
+            ]
           }
         },
         {
           "name": "ttl",
           "value": {
             "type": "Integer",
-            "value": 86400
+            "isArray": false,
+            "values": [
+              "86400"
+            ]
           }
         },
         {
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "NS"
+            "isArray": false,
+            "values": [
+              "NS"
+            ]
           }
         },
         {
           "name": "value",
           "value": {
             "type": "Text",
-            "value": "ns1.he.net"
+            "isArray": false,
+            "values": [
+              "ns1.he.net"
+            ]
           }
         }
       ]
@@ -121,35 +148,50 @@
           "name": "id",
           "value": {
             "type": "Integer",
-            "value": 1569516123
+            "isArray": false,
+            "values": [
+              "1569516123"
+            ]
           }
         },
         {
           "name": "name",
           "value": {
             "type": "Text",
-            "value": "mhx-consulting.at"
+            "isArray": false,
+            "values": [
+              "mhx-consulting.at"
+            ]
           }
         },
         {
           "name": "ttl",
           "value": {
             "type": "Integer",
-            "value": 86400
+            "isArray": false,
+            "values": [
+              "86400"
+            ]
           }
         },
         {
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "NS"
+            "isArray": false,
+            "values": [
+              "NS"
+            ]
           }
         },
         {
           "name": "value",
           "value": {
             "type": "Text",
-            "value": "ns2.he.net"
+            "isArray": false,
+            "values": [
+              "ns2.he.net"
+            ]
           }
         }
       ]
@@ -170,35 +212,50 @@
           "name": "id",
           "value": {
             "type": "Integer",
-            "value": 2569516148
+            "isArray": false,
+            "values": [
+              "2569516148"
+            ]
           }
         },
         {
           "name": "name",
           "value": {
             "type": "Text",
-            "value": "mhx.at"
+            "isArray": false,
+            "values": [
+              "mhx.at"
+            ]
           }
         },
         {
           "name": "ttl",
           "value": {
             "type": "Integer",
-            "value": 86400
+            "isArray": false,
+            "values": [
+              "86400"
+            ]
           }
         },
         {
           "name": "type",
           "value": {
             "type": "Text",
-            "value": "NS"
+            "isArray": false,
+            "values": [
+              "NS"
+            ]
           }
         },
         {
           "name": "value",
           "value": {
             "type": "Text",
-            "value": "ns-mhx1.he.net"
+            "isArray": false,
+            "values": [
+              "ns-mhx1.he.net"
+            ]
           }
         }
       ]

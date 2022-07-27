@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.DotNet.InternalAbstractions;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
+using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.IO;
@@ -34,12 +35,12 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                         IDMethod = new InboundIDMethodByData(new string[]{ "foo" }),
                         Attributes = new List<GenericInboundAttribute>
                         {
-                            new GenericInboundAttribute { Name = "textscalar", Value = new AttributeScalarValueText("value 1") },
-                            new GenericInboundAttribute { Name = "textarray", Value = AttributeArrayValueText.BuildFromString(new string[] {"value 1", "value 2" }) },
-                            new GenericInboundAttribute { Name = "jsonarray", Value = AttributeArrayValueJSON.BuildFromString(new string [] {
-                                @"{""foo"": ""bar"", ""blub"": ""bla""}",
-                                @"{ ""foo2"": ""bar2"", ""blub2"": ""bla2""}"
-                            }, false)},
+                            new GenericInboundAttribute { Name = "textscalar", Value = AttributeValueDTO.Build(new AttributeScalarValueText("value 1")) },
+                            new GenericInboundAttribute { Name = "textarray", Value = AttributeValueDTO.Build(AttributeArrayValueText.BuildFromString(new string[] {"value 1", "value 2" })) },
+                            new GenericInboundAttribute { Name = "jsonarray", Value = AttributeValueDTO.Build(AttributeArrayValueJSON.BuildFromString(new string [] {
+                                @"{""foo"":""bar"",""blub"":""bla""}",
+                                @"{""foo2"":""bar2"",""blub2"":""bla2""}"
+                            }, false))},
                         }
                     },
                 },

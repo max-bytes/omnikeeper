@@ -1,4 +1,5 @@
 ﻿using DevLab.JmesPath.Functions;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
@@ -33,7 +34,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
         public override JToken Execute(params JmesPathFunctionArgument[] args)
         {
             var name = args[0].Token.ToString();
-            var value = args[1].Token;
+            var values = args[1].Token;
             var type = AttributeValueType.Text.ToString();
             if (args.Length >= 3)
             {
@@ -44,7 +45,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
                 }
                 catch (Exception e)
                 {
-                    throw new Exception($"Cannot parse type \"{typeStr}\" into enum for attribute {name} with value {value}", e);
+                    throw new Exception($"Cannot parse type \"{typeStr}\" into enum for attribute {name} with values {values}", e);
                 }
             }
             // TODO: consider how to handle null values
@@ -52,7 +53,52 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             //{
             //    return JObject.FromObject(new { name, value, type });
             //}
-            return JObject.FromObject(new { name, value = new { value, type } });
+            object ConvertItem(JToken item)
+            {
+                switch (item.Type)
+                {
+                    case JTokenType.Object:
+                        return JsonConvert.SerializeObject(item);
+                    case JTokenType.Integer:
+                        return ((long)item).ToString();
+                    case JTokenType.Float:
+                        return ((float)item).ToString();
+                    case JTokenType.Boolean:
+                        return ((bool)item) ? "true" : "false";
+                    case JTokenType.String:
+                        return (string)item!;
+                    case JTokenType.Null:
+                        return ""; // TODO: correct?
+                    case JTokenType.None:
+                    case JTokenType.Date:
+                    case JTokenType.Raw:
+                    case JTokenType.Guid:
+                    case JTokenType.Uri:
+                    case JTokenType.TimeSpan:
+                    case JTokenType.Property:
+                    case JTokenType.Undefined:
+                    case JTokenType.Bytes:
+                    case JTokenType.Array:
+                    case JTokenType.Constructor:
+                    case JTokenType.Comment:
+                    default:
+                        throw new Exception("???");
+                }
+            }
+
+            // NOTE: we gracefully handle actual JSON objects as values, and transform them to strings
+            JToken finalValues;
+            bool isArray;
+            if (values is JArray ja)
+            {
+                finalValues = new JArray(ja.Select(item => ConvertItem(item)));
+                isArray = true;
+            } else
+            {
+                finalValues = new JArray(new object[] { ConvertItem(values) });
+                isArray = false;
+            }
+            return JObject.FromObject(new { name, value = new { values = finalValues, isArray, type } });
         }
     }
     public class RelationFunc : JmesPathFunction
