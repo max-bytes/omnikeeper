@@ -49,6 +49,8 @@ EOF
     GIT_SSH_COMMAND='ssh -i ~/id_rsa -o IdentitiesOnly=yes' git clone git@${git_host}:${git_user_id}/${git_repo_id}.git .
 fi
 
+# delete old lib, we recreate everything all the time
+rm -r * .*
 
 # create updated library
 echo "Generating client version ${version}"
