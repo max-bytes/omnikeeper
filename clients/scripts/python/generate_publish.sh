@@ -56,7 +56,7 @@ rm -r * # this does NOT delete .git
 echo "Generating client version ${version}"
 docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitools/openapi-generator-cli generate \
     -i /local/omnikeeper.json \
-    -g python \
+    -g python-experimental \
     -o /local/python \
     --global-property=verbose=true \
     --additional-properties=packageName=okclient,packageVersion=${version}
