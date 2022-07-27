@@ -59,13 +59,13 @@ namespace OKPluginGenericJSONIngest
 
     [JsonConverter(typeof(InboundIDMethodDiscriminatorConverter))]
     [SwaggerDiscriminator("type")]
-    [SwaggerSubType(typeof(InboundIDMethodByData))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest")]
-    [SwaggerSubType(typeof(InboundIDMethodByAttributeModifiers))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByAttributeModifiers, OKPluginGenericJSONIngest")]
-    [SwaggerSubType(typeof(InboundIDMethodByAttribute))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByAttribute, OKPluginGenericJSONIngest")]
-    [SwaggerSubType(typeof(InboundIDMethodByRelatedTempID))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByRelatedTempID, OKPluginGenericJSONIngest")]
-    [SwaggerSubType(typeof(InboundIDMethodByTemporaryCIID))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest")]
-    [SwaggerSubType(typeof(InboundIDMethodByByUnion))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByByUnion, OKPluginGenericJSONIngest")]
-    [SwaggerSubType(typeof(InboundIDMethodByIntersect))]//, DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByIntersect, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByData), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByAttributeModifiers), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByAttributeModifiers, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByAttribute), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByAttribute, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByRelatedTempID), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByRelatedTempID, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByTemporaryCIID), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByByUnion), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByByUnion, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByIntersect), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByIntersect, OKPluginGenericJSONIngest")]
     public abstract class AbstractInboundIDMethod
     {
         public abstract string type { get; }

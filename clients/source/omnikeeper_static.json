@@ -2903,7 +2903,15 @@
         },
         "additionalProperties": false,
         "discriminator": {
-          "propertyName": "type"
+          "propertyName": "type",
+          "mapping": {
+            "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest": "#/components/schemas/InboundIDMethodByData",
+            "OKPluginGenericJSONIngest.InboundIDMethodByAttribute, OKPluginGenericJSONIngest": "#/components/schemas/InboundIDMethodByAttribute",
+            "OKPluginGenericJSONIngest.InboundIDMethodByRelatedTempID, OKPluginGenericJSONIngest": "#/components/schemas/InboundIDMethodByRelatedTempID",
+            "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest": "#/components/schemas/InboundIDMethodByTemporaryCIID",
+            "OKPluginGenericJSONIngest.InboundIDMethodByByUnion, OKPluginGenericJSONIngest": "#/components/schemas/InboundIDMethodByByUnion",
+            "OKPluginGenericJSONIngest.InboundIDMethodByIntersect, OKPluginGenericJSONIngest": "#/components/schemas/InboundIDMethodByIntersect"
+          }
         }
       },
       "AddContextRequest": {
