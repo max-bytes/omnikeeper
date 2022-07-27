@@ -2897,8 +2897,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         },
         "additionalProperties": false,
@@ -3511,11 +3510,6 @@
           }
         ],
         "properties": {
-          "type": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
           "attribute": {
             "$ref": "#/components/schemas/GenericInboundAttribute"
           },
@@ -3542,11 +3536,6 @@
           }
         ],
         "properties": {
-          "type": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
           "inner": {
             "type": "array",
             "items": {
@@ -3587,11 +3576,6 @@
           }
         ],
         "properties": {
-          "type": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
           "attributes": {
             "type": "array",
             "items": {
@@ -3610,11 +3594,6 @@
           }
         ],
         "properties": {
-          "type": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
           "inner": {
             "type": "array",
             "items": {
@@ -3655,11 +3634,6 @@
           }
         ],
         "properties": {
-          "type": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
           "tempID": {
             "type": "string",
             "nullable": true
@@ -3682,11 +3656,6 @@
           }
         ],
         "properties": {
-          "type": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
           "tempID": {
             "type": "string",
             "nullable": true
