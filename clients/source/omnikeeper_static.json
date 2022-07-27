@@ -4,11 +4,6 @@
     "title": "Landscape omnikeeper REST API",
     "version": "v1"
   },
-  "servers": [
-    {
-      "url": "https://localhost:44378"
-    }
-  ],
   "paths": {
     "/api/v{version}/Ingest/AnsibleInventoryScan": {
       "post": {
