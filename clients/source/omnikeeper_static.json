@@ -2889,6 +2889,23 @@
   },
   "components": {
     "schemas": {
+      "AbstractInboundIDMethod": {
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "discriminator": {
+          "propertyName": "type"
+        }
+      },
       "AddContextRequest": {
         "type": "object",
         "properties": {
@@ -3480,6 +3497,11 @@
       },
       "InboundIDMethodByAttribute": {
         "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AbstractInboundIDMethod"
+          }
+        ],
         "properties": {
           "type": {
             "type": "string",
@@ -3506,6 +3528,11 @@
       },
       "InboundIDMethodByByUnion": {
         "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AbstractInboundIDMethod"
+          }
+        ],
         "properties": {
           "type": {
             "type": "string",
@@ -3546,6 +3573,11 @@
       },
       "InboundIDMethodByData": {
         "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AbstractInboundIDMethod"
+          }
+        ],
         "properties": {
           "type": {
             "type": "string",
@@ -3564,6 +3596,11 @@
       },
       "InboundIDMethodByIntersect": {
         "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AbstractInboundIDMethod"
+          }
+        ],
         "properties": {
           "type": {
             "type": "string",
@@ -3604,6 +3641,11 @@
       },
       "InboundIDMethodByRelatedTempID": {
         "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AbstractInboundIDMethod"
+          }
+        ],
         "properties": {
           "type": {
             "type": "string",
@@ -3626,6 +3668,11 @@
       },
       "InboundIDMethodByTemporaryCIID": {
         "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AbstractInboundIDMethod"
+          }
+        ],
         "properties": {
           "type": {
             "type": "string",
