@@ -149,7 +149,7 @@ namespace Omnikeeper.Startup
                                     pr.RegisterServices(serviceCollection);
                                     builder.Populate(serviceCollection);
 
-                                    Console.WriteLine($"Loaded OKPlugin {pr.Name}, Version {pr.Version}"); // TODO: better logging
+                                    Console.WriteLine($"Loaded OKPlugin {pr.Name}, Version {pr.Version.ToString(3)}"); // TODO: better logging
 
                                     isMainPluginAssembly = true;
                                 }
