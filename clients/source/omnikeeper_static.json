@@ -2896,11 +2896,9 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
-        "additionalProperties": false,
         "discriminator": {
           "propertyName": "type",
           "mapping": {
@@ -2917,22 +2915,18 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "speakingName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "description": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "configuration": {
             "$ref": "#/components/schemas/GridViewConfiguration"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "AnsibleInventoryScanDTO": {
         "required": [
@@ -2967,8 +2961,7 @@
               "type": "string"
             }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "AttributeValueDTO": {
         "type": "object",
@@ -2983,11 +2976,9 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "nullable": true
+            }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "AttributeValueType": {
         "enum": [
@@ -3008,8 +2999,7 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "value": {
             "$ref": "#/components/schemas/AttributeValueDTO"
@@ -3017,8 +3007,7 @@
           "changeable": {
             "type": "boolean"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "ChangeDataRequest": {
         "type": "object",
@@ -3027,32 +3016,26 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SparseRow"
-            },
-            "nullable": true
+            }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "Context": {
-        "type": "object",
-        "additionalProperties": false
+        "type": "object"
       },
       "EditContextRequest": {
         "type": "object",
         "properties": {
           "speakingName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "description": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "configuration": {
             "$ref": "#/components/schemas/GridViewConfiguration"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "EdmContainerElementKind": {
         "enum": [
@@ -3125,21 +3108,18 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "value": {
             "$ref": "#/components/schemas/AttributeValueDTO"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "GenericInboundCI": {
         "type": "object",
         "properties": {
           "tempID": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "idMethod": {
             "oneOf": [
@@ -3164,8 +3144,7 @@
               {
                 "$ref": "#/components/schemas/InboundIDMethodByIntersect"
               }
-            ],
-            "nullable": true
+            ]
           },
           "sameTempIDHandling": {
             "$ref": "#/components/schemas/SameTempIDHandling"
@@ -3180,11 +3159,9 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/GenericInboundAttribute"
-            },
-            "nullable": true
+            }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "GenericInboundData": {
         "type": "object",
@@ -3193,36 +3170,29 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/GenericInboundCI"
-            },
-            "nullable": true
+            }
           },
           "relations": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/GenericInboundRelation"
-            },
-            "nullable": true
+            }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "GenericInboundRelation": {
         "type": "object",
         "properties": {
           "from": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "predicate": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "to": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "GraphQLQuery": {
         "type": "object",
@@ -3242,15 +3212,13 @@
             },
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "GridViewColumn": {
         "type": "object",
         "properties": {
           "sourceAttributeName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "sourceAttributePath": {
             "type": "array",
@@ -3260,8 +3228,7 @@
             "nullable": true
           },
           "columnDescription": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "valueType": {
             "$ref": "#/components/schemas/AttributeValueType"
@@ -3270,8 +3237,7 @@
             "type": "string",
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "GridViewConfiguration": {
         "type": "object",
@@ -3280,33 +3246,27 @@
             "type": "boolean"
           },
           "writeLayer": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "readLayerset": {
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "nullable": true
+            }
           },
           "columns": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/GridViewColumn"
-            },
-            "nullable": true
+            }
           },
           "trait": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "IEdmDirectValueAnnotationsManager": {
-        "type": "object",
-        "additionalProperties": false
+        "type": "object"
       },
       "IEdmEntityContainer": {
         "type": "object",
@@ -3332,8 +3292,7 @@
             "nullable": true,
             "readOnly": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "IEdmEntityContainerElement": {
         "type": "object",
@@ -3349,8 +3308,7 @@
             "nullable": true,
             "readOnly": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "IEdmExpression": {
         "type": "object",
@@ -3358,8 +3316,7 @@
           "expressionKind": {
             "$ref": "#/components/schemas/EdmExpressionKind"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "IEdmModel": {
         "type": "object",
@@ -3402,8 +3359,7 @@
           "entityContainer": {
             "$ref": "#/components/schemas/IEdmEntityContainer"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "IEdmSchemaElement": {
         "type": "object",
@@ -3421,8 +3377,7 @@
             "nullable": true,
             "readOnly": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "IEdmTerm": {
         "type": "object",
@@ -3453,8 +3408,7 @@
             "nullable": true,
             "readOnly": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "IEdmType": {
         "type": "object",
@@ -3462,8 +3416,7 @@
           "typeKind": {
             "$ref": "#/components/schemas/EdmTypeKind"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "IEdmTypeReference": {
         "type": "object",
@@ -3475,12 +3428,10 @@
           "definition": {
             "$ref": "#/components/schemas/IEdmType"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "IEdmVocabularyAnnotatable": {
-        "type": "object",
-        "additionalProperties": false
+        "type": "object"
       },
       "IEdmVocabularyAnnotation": {
         "type": "object",
@@ -3499,8 +3450,7 @@
           "value": {
             "$ref": "#/components/schemas/IEdmExpression"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "InboundIDMethodByAttribute": {
         "type": "object",
@@ -3516,8 +3466,7 @@
           "modifiers": {
             "$ref": "#/components/schemas/InboundIDMethodByAttributeModifiers"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "InboundIDMethodByAttributeModifiers": {
         "type": "object",
@@ -3525,8 +3474,7 @@
           "caseInsensitive": {
             "type": "boolean"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "InboundIDMethodByByUnion": {
         "type": "object",
@@ -3562,11 +3510,9 @@
                   "$ref": "#/components/schemas/InboundIDMethodByIntersect"
                 }
               ]
-            },
-            "nullable": true
+            }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "InboundIDMethodByData": {
         "type": "object",
@@ -3580,11 +3526,9 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "nullable": true
+            }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "InboundIDMethodByIntersect": {
         "type": "object",
@@ -3620,11 +3564,9 @@
                   "$ref": "#/components/schemas/InboundIDMethodByIntersect"
                 }
               ]
-            },
-            "nullable": true
+            }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "InboundIDMethodByRelatedTempID": {
         "type": "object",
@@ -3635,18 +3577,15 @@
         ],
         "properties": {
           "tempID": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "outgoingRelation": {
             "type": "boolean"
           },
           "predicateID": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "InboundIDMethodByTemporaryCIID": {
         "type": "object",
@@ -3657,11 +3596,9 @@
         ],
         "properties": {
           "tempID": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "NoFoundTargetCIHandling": {
         "enum": [
@@ -3690,8 +3627,7 @@
             "type": "string",
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "ODataFunctionImportInfo": {
         "type": "object",
@@ -3712,8 +3648,7 @@
             "type": "string",
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "ODataServiceDocument": {
         "type": "object",
@@ -3742,8 +3677,7 @@
             },
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "ODataSingletonInfo": {
         "type": "object",
@@ -3764,8 +3698,7 @@
             "type": "string",
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "ODataTypeAnnotation": {
         "type": "object",
@@ -3775,8 +3708,7 @@
             "nullable": true,
             "readOnly": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "ProblemDetails": {
         "type": "object",
@@ -3834,11 +3766,9 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ChangeDataCell"
-            },
-            "nullable": true
+            }
           }
-        },
-        "additionalProperties": false
+        }
       }
     },
     "securitySchemes": {

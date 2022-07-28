@@ -187,6 +187,7 @@ namespace Omnikeeper.Startup
                     throw new InvalidOperationException("Unable to determine tag for endpoint.");
                 });
                 c.DocInclusionPredicate((name, api) => true);
+                c.SupportNonNullableReferenceTypes();
 
                 var filePath = Path.Combine(AppContext.BaseDirectory, "omnikeeper.xml");
                 c.IncludeXmlComments(filePath);
@@ -237,6 +238,7 @@ namespace Omnikeeper.Startup
 
                     return oid;
                 });
+                c.DocumentFilter<AdditionalParametersDocumentFilter>(); // see https://github.com/domaindrivendev/Swashbuckle.AspNetCore/issues/1502
             });
 
             // whether or not to show personally identifiable information in exceptions
@@ -412,6 +414,20 @@ namespace Omnikeeper.Startup
                 throw new Exception($"Duplicate operation ID \"{oid}\" encountered");
 
             usedOperationIds.Add(oid);
+        }
+    }
+
+    public class AdditionalParametersDocumentFilter : IDocumentFilter
+    {
+        public void Apply(OpenApiDocument openApiDoc, DocumentFilterContext context)
+        {
+            foreach (var schema in context.SchemaRepository.Schemas)
+            {
+                if (schema.Value.AdditionalProperties == null)
+                {
+                    schema.Value.AdditionalPropertiesAllowed = true;
+                }
+            }
         }
     }
 }

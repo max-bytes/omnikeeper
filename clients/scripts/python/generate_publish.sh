@@ -54,7 +54,7 @@ rm -r * # this does NOT delete .git
 
 # create updated library
 echo "Generating client version ${version}"
-docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitools/openapi-generator-cli generate \
+docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitools/openapi-generator-cli:v6.0.1 generate \
     -i /local/omnikeeper.json \
     -g python-experimental \
     -o /local/python \
