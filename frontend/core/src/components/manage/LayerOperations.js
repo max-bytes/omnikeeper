@@ -47,7 +47,7 @@ export default function LayerOperations(props) {
       setImportError(undefined);
       setImportSuccess(undefined);
       try {
-        await swaggerClient.apis.ImportExportLayer.ImportLayer({ 
+        await swaggerClient.apis.ImportExportLayer.ImportExportLayer_ImportLayer({ 
             version: 1, 
             overwriteLayerID: layerID
           }, {
@@ -165,7 +165,7 @@ function ExportLayer(props) {
     if (swaggerClient) {
       setExportingLayer(true);
       try {
-        await swaggerClient.apis.ImportExportLayer.ExportLayer({ version: 1, layerID: layerID, ciids: selectedCIIDs })
+        await swaggerClient.apis.ImportExportLayer.ImportExportLayer_ExportLayer({ version: 1, layerID: layerID, ciids: selectedCIIDs })
           .then(response => {
             const contentDisposition = response.headers["content-disposition"];
             const filename = contentDisposition.split('filename=')[1].split(';')[0]; // taken from https://stackoverflow.com/questions/40939380/how-to-get-file-name-from-content-disposition

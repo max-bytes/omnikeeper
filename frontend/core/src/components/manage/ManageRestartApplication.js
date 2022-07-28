@@ -10,7 +10,7 @@ export default function ManageRestartApplication() {
   if (loading) return "Loading...";
 
   const restartApplication = async () => {
-    await swaggerClient.apis.RestartApplication.Restart(
+    await swaggerClient.apis.RestartApplication.RestartApplication_Restart(
         { version: 1 }
     );
   };

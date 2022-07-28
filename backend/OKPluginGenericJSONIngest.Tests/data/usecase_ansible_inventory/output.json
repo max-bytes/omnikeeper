@@ -665,13 +665,7 @@
         },
         {
           "name": "macaddress",
-          "value": {
-            "type": "Text",
-            "isArray": false,
-            "values": [
-              ""
-            ]
-          }
+          "value": null
         }
       ]
     },

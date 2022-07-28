@@ -21,7 +21,7 @@ function AddNewContext(props) {
         try {
             setLoading(true);
             if (editMode) {
-                    const contextJson = await swaggerClient.apis.GridView.GetGridViewContext(
+                    const contextJson = await swaggerClient.apis.GridView.GridView_GetGridViewContext(
                             {
                                 version: apiVersion,
                                 name: contextName
@@ -65,7 +65,7 @@ function AddNewContext(props) {
                     try {
                         setLoading(true);
                         const addContext = editMode
-                            ? await swaggerClient.apis.GridView.EditContext(
+                            ? await swaggerClient.apis.GridView.GridView_EditContext(
                                 {
                                     version: apiVersion,
                                     name: contextName,
@@ -74,7 +74,7 @@ function AddNewContext(props) {
                                     requestBody: context,
                                 }
                             ).then((result) => result.body)
-                            : await swaggerClient.apis.GridView.AddContext(
+                            : await swaggerClient.apis.GridView.GridView_AddContext(
                                 {
                                     version: apiVersion,
                                 },

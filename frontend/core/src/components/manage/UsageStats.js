@@ -23,7 +23,7 @@ export default function UsageStats(props) {
     async function fetch() {
       if (swaggerClient) {
         setLoadingData(true);
-        await swaggerClient.apis.UsageStats.Fetch({
+        await swaggerClient.apis.UsageStats.UsageStats_Fetch({
           version: 1,
           from: selectedTimeRange[0].toISOString(),
           to: selectedTimeRange[1].toISOString()

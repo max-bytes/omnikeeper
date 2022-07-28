@@ -348,7 +348,7 @@ export function Context(props) {
         try {
             if (_.size(changes.sparseRows)) {
                 // actually do the changes
-                const changeResults = await swaggerClient.apis.GridView.ChangeData(
+                const changeResults = await swaggerClient.apis.GridView.GridView_ChangeData(
                         {
                             version: apiVersion,
                             context: contextName,
@@ -385,12 +385,12 @@ export function Context(props) {
         gridApi.showLoadingOverlay();
 
         try {
-            const schema = await swaggerClient.apis.GridView.GetSchema({
+            const schema = await swaggerClient.apis.GridView.GridView_GetSchema({
                     version: apiVersion,
                     context: contextName,
                 })
                 .then((result) => result.body);
-            const data = await swaggerClient.apis.GridView.GetData({
+            const data = await swaggerClient.apis.GridView.GridView_GetData({
                     version: apiVersion,
                     context: contextName,
                 })

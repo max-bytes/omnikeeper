@@ -2863,13 +2863,7 @@
               {
                 "attribute": {
                   "name": "cmdb.interface.name",
-                  "value": {
-                    "type": "Text",
-                    "isArray": false,
-                    "values": [
-                      ""
-                    ]
-                  }
+                  "value": null
                 },
                 "modifiers": {
                   "caseInsensitive": true

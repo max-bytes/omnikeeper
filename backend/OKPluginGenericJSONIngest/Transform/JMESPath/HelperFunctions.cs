@@ -48,16 +48,13 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
                     throw new Exception($"Cannot parse type \"{typeStr}\" into enum for attribute {name} with values {values}", e);
                 }
             }
-            // TODO: consider how to handle null values
-            //if (value is JValue jv && jv.Value == null)
-            //{
-            //    return JObject.FromObject(new { name, value, type });
-            //}
-            object ConvertItem(JToken item)
+
+            object? ConvertItem(JToken item)
             {
                 switch (item.Type)
                 {
                     case JTokenType.Object:
+                        // NOTE: we gracefully handle actual JSON objects as values, and transform them to strings
                         return JsonConvert.SerializeObject(item);
                     case JTokenType.Integer:
                         return ((long)item).ToString();
@@ -68,7 +65,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
                     case JTokenType.String:
                         return (string)item!;
                     case JTokenType.Null:
-                        return ""; // TODO: correct?
+                        return null; // TODO: correct?
                     case JTokenType.None:
                     case JTokenType.Date:
                     case JTokenType.Raw:
@@ -86,19 +83,27 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
                 }
             }
 
-            // NOTE: we gracefully handle actual JSON objects as values, and transform them to strings
-            JToken finalValues;
-            bool isArray;
+            // there's a difference between arrays and scalar values when dealing with null values
+            // if there's a scalar null value coming in, we set the whole value to null and later processes filter out the whole attribute
+            // if there's an array containing null values coming in, we only filter those out and still produce a non-null array, even when it's empty
             if (values is JArray ja)
             {
-                finalValues = new JArray(ja.Select(item => ConvertItem(item)));
-                isArray = true;
+                var finalValues = new JArray(ja.Select(item => ConvertItem(item)).Where(item => item != null));
+                var isArray = true;
+                return JObject.FromObject(new { name, value = new { values = finalValues, isArray, type } });
             } else
             {
-                finalValues = new JArray(new object[] { ConvertItem(values) });
-                isArray = false;
+                var isArray = false;
+                var item = ConvertItem(values);
+                if (item == null)
+                {
+                    return JObject.FromObject(new { name, value = JValue.CreateNull() });
+                } else
+                {
+                    var finalValues = new JArray(new object[] { item });
+                    return JObject.FromObject(new { name, value = new { values = finalValues, isArray, type } });
+                }
             }
-            return JObject.FromObject(new { name, value = new { values = finalValues, isArray, type } });
         }
     }
     public class RelationFunc : JmesPathFunction

@@ -150,7 +150,7 @@ export function Explorer(props) {
             gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
         }
         try {
-            const contexts = await swaggerClient.apis.OKPluginGenericJSONIngest.GetAllContexts({
+            const contexts = await swaggerClient.apis.OKPluginGenericJSONIngest.ManageContext_GetAllContexts({
                     version: props.apiVersion,
                 })
                 .then((result) => result.body);
