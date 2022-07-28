@@ -3,10 +3,10 @@
     {
       "tempID": "tempCIID\u003Ezone\u003Emhx-consulting.at",
       "idMethod": {
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "id"
-        ]
+        ],
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -37,10 +37,10 @@
     {
       "tempID": "tempCIID\u003Ezone\u003Emhx.at",
       "idMethod": {
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "id"
-        ]
+        ],
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -71,10 +71,10 @@
     {
       "tempID": "tempCIID\u003Erecord\u003E1569516122",
       "idMethod": {
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "id"
-        ]
+        ],
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -135,10 +135,10 @@
     {
       "tempID": "tempCIID\u003Erecord\u003E1569516123",
       "idMethod": {
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "id"
-        ]
+        ],
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -199,10 +199,10 @@
     {
       "tempID": "tempCIID\u003Erecord\u003E2569516148",
       "idMethod": {
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "id"
-        ]
+        ],
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",

@@ -69,7 +69,7 @@ namespace OKPluginGenericJSONIngest
     public abstract class AbstractInboundIDMethod
     {
         [JsonPropertyName("type")]
-        public string type { get; set; }
+        public string Type { get; set; }
     }
 
     public class InboundIDMethodByData : AbstractInboundIDMethod
@@ -91,6 +91,7 @@ namespace OKPluginGenericJSONIngest
         public InboundIDMethodByData(string[] attributes)
         {
             Attributes = attributes;
+            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
 
@@ -99,6 +100,7 @@ namespace OKPluginGenericJSONIngest
         [JsonPropertyName("caseInsensitive")]
         public bool CaseInsensitive { get; }
 
+        [JsonConstructor]
         public InboundIDMethodByAttributeModifiers(bool caseInsensitive)
         {
             CaseInsensitive = caseInsensitive;
@@ -113,10 +115,12 @@ namespace OKPluginGenericJSONIngest
         [JsonPropertyName("modifiers")]
         public InboundIDMethodByAttributeModifiers Modifiers { get; set; }
 
+        [JsonConstructor]
         public InboundIDMethodByAttribute(GenericInboundAttribute attribute, InboundIDMethodByAttributeModifiers modifiers)
         {
             Attribute = attribute;
             Modifiers = modifiers;
+            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
 
@@ -130,11 +134,13 @@ namespace OKPluginGenericJSONIngest
         [JsonPropertyName("predicateID")]
         public string PredicateID { get; set; }
 
+        [JsonConstructor]
         public InboundIDMethodByRelatedTempID(string tempID, bool outgoingRelation, string predicateID)
         {
             TempID = tempID;
             OutgoingRelation = outgoingRelation;
             PredicateID = predicateID;
+            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
 
@@ -144,9 +150,11 @@ namespace OKPluginGenericJSONIngest
         [JsonPropertyName("tempID")]
         public string TempID { get; set; }
 
+        [JsonConstructor]
         public InboundIDMethodByTemporaryCIID(string tempID)
         {
             TempID = tempID;
+            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
 
@@ -156,9 +164,11 @@ namespace OKPluginGenericJSONIngest
         [JsonPropertyName("inner")]
         public AbstractInboundIDMethod[] Inner { get; set; }
 
+        [JsonConstructor]
         public InboundIDMethodByByUnion(AbstractInboundIDMethod[] inner)
         {
             Inner = inner;
+            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
     public class InboundIDMethodByIntersect : AbstractInboundIDMethod
@@ -167,9 +177,11 @@ namespace OKPluginGenericJSONIngest
         [JsonPropertyName("inner")]
         public AbstractInboundIDMethod[] Inner { get; set; }
 
+        [JsonConstructor]
         public InboundIDMethodByIntersect(AbstractInboundIDMethod[] inner)
         {
             Inner = inner;
+            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
 

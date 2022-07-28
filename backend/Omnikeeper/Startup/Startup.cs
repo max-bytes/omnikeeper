@@ -173,7 +173,7 @@ namespace Omnikeeper.Startup
 
             services.AddSwaggerGen(c =>
             {
-                c.EnableAnnotations(enableAnnotationsForInheritance: true, enableAnnotationsForPolymorphism: true);
+                c.EnableAnnotations(enableAnnotationsForInheritance: false, enableAnnotationsForPolymorphism: true);
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Landscape omnikeeper REST API", Version = "v1" });
                 c.TagActionsBy(api =>
                 {
