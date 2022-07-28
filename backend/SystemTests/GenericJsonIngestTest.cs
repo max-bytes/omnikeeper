@@ -155,7 +155,7 @@ query {
                ""name"":""id"",
                ""value"":{
                   ""type"":""Text"",
-                  ""value"":""id_01""
+                  ""values"":[""id_01""]
                }
             }
          ]
@@ -173,7 +173,7 @@ query {
                ""name"":""id"",
                ""value"":{
                   ""type"":""Text"",
-                  ""value"":""id_02""
+                  ""values"":[""id_02""]
                }
             }
          ]
