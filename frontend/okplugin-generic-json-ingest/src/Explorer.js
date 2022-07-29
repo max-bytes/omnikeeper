@@ -171,7 +171,7 @@ export function Explorer(props) {
 
     async function removeContext(contextID) {
         try {
-            await swaggerClient.apis.OKPluginGenericJSONIngest.RemoveContext(
+            await swaggerClient.apis.OKPluginGenericJSONIngest.ManageContext_RemoveContext(
                     {
                         version: props.apiVersion,
                         id: contextID,
