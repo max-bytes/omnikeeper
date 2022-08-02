@@ -86,6 +86,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var userContext = await context.SetupUserContext()
                             .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                             .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                            .WithChangesetProxy(changesetModel, context.Path)
                             .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                         var layerset = userContext.GetLayerSet(context.Path);
@@ -99,7 +100,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         var input = context.GetArgument<UpsertInput>("input");
 
-                        var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                        var changeset = userContext.GetChangesetProxy(context.Path);
 
                         // check if entity actually exists at that CI, error if not
                         var existingEntity = await traitEntityModel.GetSingleByCIID(ciid, layerset, trans, timeThreshold);
@@ -110,7 +111,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         var et = await Upsert(ciid, input.AttributeValues, input.RelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
 
-                        userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+                        userContext.CommitAndStartNewTransactionIfLastMutation(mc => mc.BuildImmediate());
 
                         return et;
                     });
@@ -130,6 +131,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var userContext = await context.SetupUserContext()
                             .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                             .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                            .WithChangesetProxy(changesetModel, context.Path)
                             .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                         var layerset = userContext.GetLayerSet(context.Path);
@@ -170,11 +172,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             finalCIID = await ciModel.CreateCI(trans);
                         }
 
-                        var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                        var changeset = userContext.GetChangesetProxy(context.Path);
 
                         var et = await Upsert(finalCIID, insertInput.AttributeValues, insertInput.RelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
 
-                        userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+                        userContext.CommitAndStartNewTransactionIfLastMutation(mc => mc.BuildImmediate());
 
                         return et;
                     });
@@ -197,6 +199,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var userContext = await context.SetupUserContext()
                             .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                             .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                            .WithChangesetProxy(changesetModel, context.Path)
                             .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                         var layerset = userContext.GetLayerSet(context.Path);
@@ -208,10 +211,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
                             throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
 
-                        var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                        var changeset = userContext.GetChangesetProxy(context.Path);
                         var removed = await traitEntityModel.TryToDelete(ciid, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
-                        userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+                        userContext.CommitAndStartNewTransactionIfLastMutation(mc => mc.BuildImmediate());
 
                         return removed;
                     });
@@ -236,6 +239,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                                 .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                                .WithChangesetProxy(changesetModel, context.Path)
                                 .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                             var layerset = userContext.GetLayerSet(context.Path);
@@ -262,11 +266,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                     finalCIID = bestMatchingCIID;
                                 }
 
-                                var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                                var changeset = userContext.GetChangesetProxy(context.Path);
 
                                 var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
 
-                                userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+                                userContext.CommitAndStartNewTransactionIfLastMutation(mc => mc.BuildImmediate());
 
                                 return et;
                             });
@@ -290,6 +294,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 var userContext = await context.SetupUserContext()
                                     .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                                     .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                                    .WithChangesetProxy(changesetModel, context.Path)
                                     .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                                 var layerset = userContext.GetLayerSet(context.Path);
@@ -314,10 +319,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                     if (bestMatchingET == null)
                                         return false;
 
-                                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                                    var changeset = userContext.GetChangesetProxy(context.Path);
                                     var removed = await traitEntityModel.TryToDelete(bestMatchingCIID, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
-                                    userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+                                    userContext.CommitAndStartNewTransactionIfLastMutation(mc => mc.BuildImmediate());
 
                                     return removed;
                                 });
@@ -342,6 +347,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                                 .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                                .WithChangesetProxy(changesetModel, context.Path)
                                 .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                             var layerset = userContext.GetLayerSet(context.Path);
@@ -374,10 +380,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 finalCIID = bestMatchingCIID;
                             }
 
-                            var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                            var changeset = userContext.GetChangesetProxy(context.Path);
 
                             var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, changeset, traitEntityModel, layerset, writeLayerID);
-                            userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+                            userContext.CommitAndStartNewTransactionIfLastMutation(mc => mc.BuildImmediate());
                             return et;
                         });
 
@@ -398,6 +404,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                                 .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                                .WithChangesetProxy(changesetModel, context.Path)
                                 .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                             var layerset = userContext.GetLayerSet(context.Path);
@@ -430,10 +437,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                     finalCIID = bestMatchingCIID;
                             }
 
-                            var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                            var changeset = userContext.GetChangesetProxy(context.Path);
                             var removed = await traitEntityModel.TryToDelete(finalCIID, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
-                            userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+                            userContext.CommitAndStartNewTransactionIfLastMutation(mc => mc.BuildImmediate());
 
                             return removed;
                         });
@@ -457,6 +464,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                                 .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                                .WithChangesetProxy(changesetModel, context.Path)
                                 .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                             var layerset = userContext.GetLayerSet(context.Path);
@@ -468,13 +476,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
                                 throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
 
-                            var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                            var changeset = userContext.GetChangesetProxy(context.Path);
 
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDs = context.GetArgument<Guid[]>("relatedCIIDs")!;
 
                             var t = await traitEntityModel.SetRelations(tr, baseCIID, relatedCIIDs, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
-                            userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+                            userContext.CommitAndStartNewTransactionIfLastMutation(mc => mc.BuildImmediate());
                             return t.et;
                         });
 
@@ -493,6 +501,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                                 .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                                .WithChangesetProxy(changesetModel, context.Path)
                                 .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                             var layerset = userContext.GetLayerSet(context.Path);
@@ -504,13 +513,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
                                 throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
 
-                            var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                            var changeset = userContext.GetChangesetProxy(context.Path);
 
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDsToAdd = context.GetArgument<Guid[]>("relatedCIIDsToAdd")!;
 
                             var t = await traitEntityModel.AddRelations(tr, baseCIID, relatedCIIDsToAdd, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
-                            userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+                            userContext.CommitAndStartNewTransactionIfLastMutation(mc => mc.BuildImmediate());
                             return t.et;
                         });
 
@@ -529,6 +538,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var userContext = await context.SetupUserContext()
                                 .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
                                 .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                                .WithChangesetProxy(changesetModel, context.Path)
                                 .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                             var layerset = userContext.GetLayerSet(context.Path);
@@ -540,13 +550,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
                                 throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
 
-                            var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                            var changeset = userContext.GetChangesetProxy(context.Path);
 
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDsToRemove = context.GetArgument<Guid[]>("relatedCIIDsToRemove")!;
 
                             var t = await traitEntityModel.RemoveRelations(tr, baseCIID, relatedCIIDsToRemove, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
-                            userContext.CommitAndStartNewTransaction(mc => mc.BuildImmediate());
+                            userContext.CommitAndStartNewTransactionIfLastMutation(mc => mc.BuildImmediate());
                             return t.et;
                         });
                 }

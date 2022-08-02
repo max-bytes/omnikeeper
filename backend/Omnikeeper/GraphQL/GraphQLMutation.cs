@@ -74,6 +74,7 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
                         .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                        .WithChangesetProxy(changesetModel, context.Path)
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(readLayerIDs, trans), context.Path);
 
                     if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
@@ -89,7 +90,7 @@ namespace Omnikeeper.GraphQL
                     if (!ciBasedAuthorizationService.CanWriteToAllCIs(writeCIIDs, out var notAllowedCI))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to CI {notAllowedCI}");
 
-                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                    var changeset = userContext.GetChangesetProxy(context.Path);
 
                     // TODO: replace with bulk update
                     var affectedCIIDs = new HashSet<Guid>();
@@ -155,7 +156,7 @@ namespace Omnikeeper.GraphQL
                     if (!affectedCIIDs.IsEmpty())
                         affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.GetLayerSet(context.Path), true, AllAttributeSelection.Instance, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
 
-                    userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    userContext.CommitAndStartNewTransactionIfLastMutation(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return new MutateReturn(affectedCIs);
                 });
@@ -170,13 +171,14 @@ namespace Omnikeeper.GraphQL
 
                     var userContext = context.SetupUserContext()
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                        .WithChangesetProxy(changesetModel, context.Path);
 
                     if (!layerBasedAuthorizationService.CanUserWriteToAllLayers(userContext.User, createCIs.Select(ci => ci.LayerIDForName)))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', createCIs.Select(ci => ci.LayerIDForName))}");
                     // NOTE: a newly created CI cannot be checked with CIBasedAuthorizationService yet. That's why we don't do a .CanWriteToCI() check here
 
-                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.GetTimeThreshold(context.Path), changesetModel);
+                    var changeset = userContext.GetChangesetProxy(context.Path);
 
                     // TODO: other-layers-value handling
                     var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
@@ -190,7 +192,7 @@ namespace Omnikeeper.GraphQL
 
                         createdCIIDs.Add(ciid);
                     }
-                    userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    userContext.CommitAndStartNewTransactionIfLastMutation(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return new CreateCIsReturn(createdCIIDs);
                 });

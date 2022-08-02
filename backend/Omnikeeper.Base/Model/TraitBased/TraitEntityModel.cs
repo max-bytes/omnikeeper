@@ -195,7 +195,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             }
         }
 
-        public async Task<(EffectiveTrait et, bool changed)> SetRelations(TraitRelation tr, Guid thisCIID, Guid[] relatedCIIDs, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOriginV1, ChangesetProxy changesetProxy, IModelContext trans, MaskHandlingForRemovalApplyNoMask maskHandlingForRemoval)
+        public async Task<(EffectiveTrait et, bool changed)> SetRelations(TraitRelation tr, Guid thisCIID, Guid[] relatedCIIDs, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOriginV1, IChangesetProxy changesetProxy, IModelContext trans, MaskHandlingForRemovalApplyNoMask maskHandlingForRemoval)
         {
             var relevantRelations = new HashSet<(Guid thisCIID, string predicateID)>() { (thisCIID, tr.RelationTemplate.PredicateID) };
             var relations = new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>() { (thisCIID, predicateID: tr.RelationTemplate.PredicateID, relatedCIIDs) };
@@ -208,7 +208,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (dc, changed);
         }
 
-        public async Task<(EffectiveTrait et, bool changed)> AddRelations(TraitRelation tr, Guid thisCIID, Guid[] relatedCIIDsToAdd, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOriginV1, ChangesetProxy changesetProxy, IModelContext trans, MaskHandlingForRemovalApplyNoMask maskHandlingForRemoval)
+        public async Task<(EffectiveTrait et, bool changed)> AddRelations(TraitRelation tr, Guid thisCIID, Guid[] relatedCIIDsToAdd, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOriginV1, IChangesetProxy changesetProxy, IModelContext trans, MaskHandlingForRemovalApplyNoMask maskHandlingForRemoval)
         {
             var fragments = (tr.RelationTemplate.DirectionForward)
                 ? relatedCIIDsToAdd.Select(ciid => new BulkRelationDataSpecificScope.Fragment(thisCIID, ciid, tr.RelationTemplate.PredicateID, false))
@@ -223,7 +223,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (dc, changed);
         }
 
-        public async Task<(EffectiveTrait et, bool changed)> RemoveRelations(TraitRelation tr, Guid thisCIID, Guid[] relatedCIIDsToRemove, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOriginV1, ChangesetProxy changesetProxy, IModelContext trans, MaskHandlingForRemovalApplyNoMask maskHandlingForRemoval)
+        public async Task<(EffectiveTrait et, bool changed)> RemoveRelations(TraitRelation tr, Guid thisCIID, Guid[] relatedCIIDsToRemove, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOriginV1, IChangesetProxy changesetProxy, IModelContext trans, MaskHandlingForRemovalApplyNoMask maskHandlingForRemoval)
         {
             var toRemove = (tr.RelationTemplate.DirectionForward)
                 ? relatedCIIDsToRemove.Select(ciid => (thisCIID, ciid, tr.RelationTemplate.PredicateID))

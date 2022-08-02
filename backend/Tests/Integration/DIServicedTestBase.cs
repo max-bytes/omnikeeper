@@ -128,6 +128,7 @@ namespace Tests.Integration
             cibas.Setup(x => x.CanReadCI(It.IsAny<Guid>())).Returns(true);
             Guid? tmp;
             cibas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
+            cibas.Setup(x => x.CanWriteToAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
             builder.Register((sp) => cibas.Object).SingleInstance();
 
             // override quartz schedulers

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -18,6 +19,7 @@ namespace Omnikeeper.GraphQL
         {
             public TimeThreshold? timeThreshold;
             public LayerSet? layerSet;
+            public IChangesetProxy? changesetProxy;
 
             public IDictionary<string, ScopedContext>? subContexts;
         }
@@ -110,10 +112,37 @@ namespace Omnikeeper.GraphQL
             }
         }
 
+        public MultiMutationData? MultiMutationData
+        {
+            get
+            {
+                if (TryGetValue("MultiMutationData", out var t))
+                    return t as MultiMutationData;
+                return null;
+            }
+            set
+            {
+                this.AddOrUpdate("MultiMutationData", value);
+            }
+        }
+
+
+        public IChangesetProxy GetChangesetProxy(IEnumerable<object> contextPath)
+        {
+            var foundContext = FindScopedContext(contextPath.ToList(), 0, scopedContexts);
+            if (foundContext.changesetProxy == null)
+                throw new Exception("ChangesetProxy not set in current user context"); // throw exception, demand explicit setting
+            else
+                return foundContext.changesetProxy;
+        }
+
         internal OmnikeeperUserContext WithTransaction(Func<IModelContextBuilder, IModelContext> f)
         {
-            var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
-            Transaction = f(modelContextBuilder);
+            if (!ContainsKey("Transaction"))
+            {
+                var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
+                Transaction = f(modelContextBuilder);
+            }
             return this;
         }
 
@@ -139,11 +168,25 @@ namespace Omnikeeper.GraphQL
             return this;
         }
 
-        internal void CommitAndStartNewTransaction(Func<IModelContextBuilder, IModelContext> f)
+        internal OmnikeeperUserContext WithChangesetProxy(IChangesetModel changesetModel, IEnumerable<object> contextPath)
         {
-            Transaction.Commit();
-            var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
-            Transaction = f(modelContextBuilder);
+            var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, scopedContexts);
+            if (foundContext.changesetProxy == null)
+            {
+                var changesetProxy = new ChangesetProxy(User.InDatabase, GetTimeThreshold(contextPath), changesetModel);
+                foundContext.changesetProxy = changesetProxy;
+            }
+            return this;
+        }
+
+        internal void CommitAndStartNewTransactionIfLastMutation(Func<IModelContextBuilder, IModelContext> f)
+        {
+            if (MultiMutationData != null && MultiMutationData.IsLastMutation)
+            {
+                Transaction.Commit();
+                var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
+                Transaction = f(modelContextBuilder);
+            }
         }
 
         public void Dispose()
