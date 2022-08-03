@@ -99,6 +99,7 @@ export const queries = {
                         id
                         color
                     }
+                    dataCIID
                     timestamp
                     statistics {
                         numAttributeChanges

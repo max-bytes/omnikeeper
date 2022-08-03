@@ -12,6 +12,9 @@ import { useExplorerLayers } from "../../utils/layers";
 import { SyncOutlined } from '@ant-design/icons';
 import { ChangesetID } from "utils/uuidRenderers";
 import Text from "antd/lib/typography/Text";
+import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLink } from '@fortawesome/free-solid-svg-icons';
 
 const { RangePicker } = DatePicker;
 
@@ -63,6 +66,13 @@ export default function ChangesetList(props) {
         return <ChangesetID id={params.value} link={true} />;
     }
     
+    const changesetDataCellRenderer = function(params) {
+        const dataCIID = params.value;
+        if (dataCIID)
+            return <span><Link to={"/explorer/" + params.value}><FontAwesomeIcon icon={faLink}/> Data-CI</Link></span>;
+        return "";
+    }
+    
     const statisticsCellRenderer = function(params) {
         const numAttributeChanges = params.value.numAttributeChanges;
         const numRelationChanges = params.value.numRelationChanges;
@@ -79,7 +89,7 @@ export default function ChangesetList(props) {
             field: "timestamp",
             sortable: true,
             cellRenderer: "timestampCellRenderer",
-            width: 160,
+            width: 140,
         },
         {
             headerName: "Layer",
@@ -128,6 +138,13 @@ export default function ChangesetList(props) {
             filter: true,
             cellRenderer: "changesetIDCellRenderer",
         },
+        {
+            headerName: "Data-CI",
+            field: "dataCIID",
+            width: 90,
+            filter: true,
+            cellRenderer: "changesetDataCellRenderer",
+        },
     ];
 
     return <div style={styles.container}>
@@ -173,6 +190,7 @@ export default function ChangesetList(props) {
                                     timestampCellRenderer: timestampCellRenderer,
                                     layerCellRenderer: layerCellRenderer,
                                     changesetIDCellRenderer: changesetIDCellRenderer,
+                                    changesetDataCellRenderer: changesetDataCellRenderer
                                 }}
                                 rowData={dataChangesets.changesets}
                                 columnDefs={columnDefs}
