@@ -38,7 +38,7 @@ function TraitList(props) {
                     if (subTraitTuples.length === 1) {
                         const subTraitTuple = subTraitTuples[0];
                         return {
-                            title: subTraitTuple.trait.id,
+                            title: (parentTreeKey) ? '...' + treeKeyPrefix : treeKeyPrefix, //subTraitTuple.trait.id,
                             key: currentTreeKey,
                             children: [],
                             effectiveTrait: subTraitTuple.trait
@@ -84,7 +84,7 @@ function TraitList(props) {
                         if (!effectiveTrait)
                             return <EffectiveTraitSelectGroup key={key} title={title} />;
                         else
-                            return <EffectiveTraitSelectItem key={key} effectiveTrait={effectiveTrait} onChange={onChange} value={checked[effectiveTrait.id]?.toString()} />;
+                            return <EffectiveTraitSelectItem key={key} title={title} effectiveTrait={effectiveTrait} onChange={onChange} value={checked[effectiveTrait.id]?.toString()} />;
                     }}
                     />
             </Space>
@@ -104,7 +104,7 @@ function EffectiveTraitSelectGroup(props) {
 }
 
 function EffectiveTraitSelectItem(props) {
-    const {effectiveTrait, onChange, value} = props;
+    const {effectiveTrait, title, onChange, value} = props;
 
     const icon = (function(originType) {
         switch(originType) {
@@ -124,7 +124,7 @@ function EffectiveTraitSelectItem(props) {
             <FontAwesomeIcon icon={icon} style={{ marginRight: "0.5rem" }}/>
         </span>
         <span style={styles.traitsID}>
-            <bdi><TraitID id={effectiveTrait.id} link={true} /></bdi>
+            <bdi><TraitID id={effectiveTrait.id} title={title} link={true} /></bdi>
         </span>
         <Radio.Group buttonStyle="solid" size="small" style={{display: 'flex'}}
             onChange={(e) => onChange(effectiveTrait, e.target.value)} value={value}>

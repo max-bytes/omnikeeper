@@ -5,11 +5,13 @@ import { Link } from "react-router-dom";
 const { Text } = Typography;
 
 export default function TraitID(props) {
-    const {id, link} = props;
+    const {id, link, title} = props;
+
+    const inner = (title) ? title : id;
 
     if (link) {
-        return <Link to={"/traits/" + id}>{id}</Link>;
+        return <Link to={"/traits/" + id}>{inner}</Link>;
     } else {
-        return <Text>{id}</Text>;
+        return <Text>{inner}</Text>;
     }
 }
