@@ -4,10 +4,10 @@ using System.Text.RegularExpressions;
 
 namespace OKPluginInsightDiscoveryScanIngest
 {
-    [TraitEntity("__meta.config.insight_discovers_ingest_context", TraitOriginType.Plugin)]
+    [TraitEntity("__meta.config.insight_discovery_ingest_context", TraitOriginType.Plugin)]
     public class Context : TraitEntity
     {
-        [TraitAttribute("id", "insight_discovers_ingest_context.id")]
+        [TraitAttribute("id", "insight_discovery_ingest_context.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(ContextIDRegexString, ContextIDRegexOptions)]
         [TraitEntityID]
@@ -17,7 +17,7 @@ namespace OKPluginInsightDiscoveryScanIngest
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public string Name;
 
-        [TraitAttribute("genericJsonIngestContextID", "insight_discovers_ingest_context.generic_json_ingest_context_id")]
+        [TraitAttribute("genericJsonIngestContextID", "insight_discovery_ingest_context.generic_json_ingest_context_id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         public string GenericJsonIngestContextID;
 
