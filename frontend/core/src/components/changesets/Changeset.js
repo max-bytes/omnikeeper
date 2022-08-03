@@ -10,10 +10,11 @@ import { formatTimestamp } from "utils/datetime";
 import UserTypeIcon from './../UserTypeIcon';
 import Relation from "components/cis/Relation";
 import _ from 'lodash';
-import { ChangesetID } from "utils/uuidRenderers";
+import { ChangesetID, CIID } from "utils/uuidRenderers";
 import CountBadge from "components/CountBadge";
 import AutoSizedList from "utils/AutoSizedList";
 import CITitle from "utils/CITitle";
+import Text from "antd/lib/typography/Text";
 
 const { TabPane } = Tabs;
 
@@ -89,6 +90,7 @@ export default function Changeset(props) {
                 <Descriptions.Item label="Layer"><LayerIcon layer={data.changeset.layer} /> {data.changeset.layer.id}</Descriptions.Item>
                 <Descriptions.Item label="Origin-Type">{data.changeset.dataOrigin.type}</Descriptions.Item>
                 <Descriptions.Item label="Changeset-ID"><ChangesetID id={data.changeset.id} link={false} copyable={true} /></Descriptions.Item>
+                <Descriptions.Item label="Data-CIID">{(data.changeset.dataCIID) ? <CIID id={data.changeset.dataCIID} link={true} copyable={true} /> : <Text type="secondary">None</Text>}</Descriptions.Item>
             </Descriptions>
             <Tabs defaultActiveKey={defaultActiveTab} style={{paddingTop: "1rem", flexBasis: '65%'}}>
                 <TabPane 

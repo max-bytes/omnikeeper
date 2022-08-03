@@ -139,7 +139,7 @@ export const queries = {
                 dataOrigin {
                     type
                 }
-
+                dataCIID
                 ciAttributes {
                     ciid
                     ciName

@@ -70,7 +70,8 @@ export default function ChangesetList(props) {
         const dataCIID = params.value;
         if (dataCIID)
             return <span><Link to={"/explorer/" + params.value}><FontAwesomeIcon icon={faLink}/> Data-CI</Link></span>;
-        return "";
+        else
+            return <Text type="secondary">None</Text>;
     }
     
     const statisticsCellRenderer = function(params) {
