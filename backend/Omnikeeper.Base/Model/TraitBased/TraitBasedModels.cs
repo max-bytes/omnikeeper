@@ -85,4 +85,11 @@ namespace Omnikeeper.Base.Model.TraitBased
         {
         }
     }
+
+    public class ChangesetDataModel : GenericTraitEntityModel<ChangesetData, string>
+    {
+        public ChangesetDataModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        {
+        }
+    }
 }

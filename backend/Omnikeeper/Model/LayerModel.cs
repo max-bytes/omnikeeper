@@ -88,7 +88,7 @@ namespace Omnikeeper.Model
             this.innerModel = innerModel;
         }
 
-        public async Task<(LayerData layerData, bool changed)> UpsertLayerData(string id, string description, long color, string state, string clConfigID, string oiaReference, string[] generators, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(LayerData layerData, bool changed, Guid ciid)> UpsertLayerData(string id, string description, long color, string state, string clConfigID, string oiaReference, string[] generators, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             IDValidations.ValidateLayerIDThrow(id);
 

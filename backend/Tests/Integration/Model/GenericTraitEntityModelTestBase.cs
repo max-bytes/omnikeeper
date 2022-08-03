@@ -32,7 +32,7 @@ namespace Tests.Integration.Model
                 T entityOut;
                 using (var trans = ModelContextBuilder.BuildDeferred())
                 {
-                    (entityOut, _) = await model.InsertOrUpdate(entityIn,
+                    (entityOut, _, _) = await model.InsertOrUpdate(entityIn,
                         layerset, layer1,
                         new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                     trans.Commit();
@@ -70,7 +70,7 @@ namespace Tests.Integration.Model
                 T entityOut;
                 using (var trans = ModelContextBuilder.BuildDeferred())
                 {
-                    (entityOut, _) = await model.InsertOrUpdate(entityIn,
+                    (entityOut, _, _) = await model.InsertOrUpdate(entityIn,
                         layerset, layer1,
                         new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                     trans.Commit();
@@ -110,7 +110,7 @@ namespace Tests.Integration.Model
                 using (var trans = ModelContextBuilder.BuildDeferred())
                 {
                     bool changed;
-                    (entityOut, changed) = await model.InsertOrUpdate(entityIn,
+                    (entityOut, changed, _) = await model.InsertOrUpdate(entityIn,
                         layerset, layer1,
                         new DataOriginV1(DataOriginType.Manual), changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
@@ -212,7 +212,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changed = false;
-                (entity1, changed) = await model.InsertOrUpdate(creator1(),
+                (entity1, changed, _) = await model.InsertOrUpdate(creator1(),
                     layerset, layer1,
                     new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 Assert.IsNotNull(entity1);
@@ -278,7 +278,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changed = false;
-                (entity1, changed) = await model.InsertOrUpdate(creator1(),
+                (entity1, changed, _) = await model.InsertOrUpdate(creator1(),
                     layerset, layer2,
                     new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 Assert.IsNotNull(entity1);
@@ -296,7 +296,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changed = false;
-                (entity1Again, changed) = await model.InsertOrUpdate(creator1(),
+                (entity1Again, changed, _) = await model.InsertOrUpdate(creator1(),
                     layerset, layer1,
                     new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 Assert.IsNotNull(entity1);

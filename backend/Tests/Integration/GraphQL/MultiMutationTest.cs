@@ -46,7 +46,7 @@ namespace Tests.Integration.GraphQL
                             id
                         }
                     }
-                    B : mutateCIs(writeLayer: ""layer_1"", readLayers: [""layer_1""], insertAttributes: [
+                    B : mutateCIs(writeLayer: $write_layer, readLayers: $read_layers, insertAttributes: [
                     {
                         ci: $ciid,
                         name: ""foo2"",

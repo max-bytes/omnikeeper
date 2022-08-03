@@ -2,7 +2,6 @@
 using Autofac.Extensions.DependencyInjection;
 using GraphQL;
 using GraphQL.DataLoader;
-using GraphQL.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
@@ -47,6 +46,7 @@ namespace Tests.Integration.GraphQL.Base
                      opt.ExposeCode = true;
                      opt.ExposeCodes = true;
                  })
+                 .AddDocumentExecuter((sp) => new MyDocumentExecutor())
                  .AddGraphTypes(Assembly.GetAssembly(typeof(GraphQLSchema))!)
                  .AddSerializer<SpanJSONGraphQLSerializer>();
              });

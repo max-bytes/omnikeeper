@@ -36,4 +36,20 @@ namespace Omnikeeper.GraphQL.Types
             Field("ciids", x => x.CIIDs, type: typeof(ListGraphType<GuidGraphType>));
         }
     }
+
+    public class InsertChangesetDataReturn
+    {
+        public Guid ChangesetDataCIID { get; private set; }
+        public InsertChangesetDataReturn(Guid changesetDataCIID)
+        {
+            ChangesetDataCIID = changesetDataCIID;
+        }
+    }
+    public class InsertChangesetDataReturnType : ObjectGraphType<InsertChangesetDataReturn>
+    {
+        public InsertChangesetDataReturnType()
+        {
+            Field("changesetDataCIID", x => x.ChangesetDataCIID);
+        }
+    }
 }

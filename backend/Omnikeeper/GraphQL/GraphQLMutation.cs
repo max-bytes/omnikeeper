@@ -13,7 +13,6 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Model.Config;
-using Omnikeeper.Runners;
 using Quartz;
 using System;
 using System.Collections.Generic;
@@ -47,7 +46,7 @@ namespace Omnikeeper.GraphQL
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
             PredicateModel predicateModel, IChangesetModel changesetModel, GeneratorV1Model generatorModel,
             IOIAContextModel oiaContextModel, ODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel,
-            RecursiveTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
+            RecursiveTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel, ChangesetDataModel changesetDataModel,
             IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             IEnumerable<IPluginRegistration> plugins, IIndex<string, IScheduler> schedulers, CLBProcessedChangesetsCache clbProcessedChangesetsCache,
@@ -90,7 +89,7 @@ namespace Omnikeeper.GraphQL
                     if (!ciBasedAuthorizationService.CanWriteToAllCIs(writeCIIDs, out var notAllowedCI))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to CI {notAllowedCI}");
 
-                    var changeset = userContext.GetChangesetProxy(context.Path);
+                    var changeset = userContext.ChangesetProxy;
 
                     // TODO: replace with bulk update
                     var affectedCIIDs = new HashSet<Guid>();
@@ -178,8 +177,6 @@ namespace Omnikeeper.GraphQL
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', createCIs.Select(ci => ci.LayerIDForName))}");
                     // NOTE: a newly created CI cannot be checked with CIBasedAuthorizationService yet. That's why we don't do a .CanWriteToCI() check here
 
-                    var changeset = userContext.GetChangesetProxy(context.Path);
-
                     // TODO: other-layers-value handling
                     var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
 
@@ -188,13 +185,63 @@ namespace Omnikeeper.GraphQL
                     {
                         Guid ciid = await ciModel.CreateCI(userContext.Transaction);
 
-                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, otherLayersValueHandling);
+                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, userContext.ChangesetProxy, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, otherLayersValueHandling);
 
                         createdCIIDs.Add(ciid);
                     }
                     userContext.CommitAndStartNewTransactionIfLastMutation(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return new CreateCIsReturn(createdCIIDs);
+                });
+
+            FieldAsync<InsertChangesetDataReturnType>("insertChangesetData",
+                arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "layer" },
+                new QueryArgument<NonNullGraphType<ListGraphType<InsertChangesetDataAttributeInputType>>> { Name = "attributes" }
+                ),
+                resolve: async context =>
+                {
+                    var layerID = context.GetArgument<string>("layer")!;
+                    var insertAttributes = context.GetArgument("attributes", new List<InsertChangesetDataAttributeInput>())!;
+
+                    var userContext = await context.SetupUserContext()
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                        .WithChangesetProxy(changesetModel, context.Path)
+                        .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(new string[] { layerID }, trans), context.Path);
+
+                    if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, layerID))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {layerID}");
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', userContext.GetLayerSet(context.Path))}");
+
+                    var changesetProxy = userContext.ChangesetProxy;
+
+                    // TODO: other-layers-value handling
+                    var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
+                    // TODO: mask handling
+                    var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
+
+                    var dataOrigin = new DataOriginV1(DataOriginType.Manual);
+                    var correspondingChangeset = await changesetProxy.GetChangeset(layerID, dataOrigin, userContext.Transaction);
+
+                    // write changeset data
+                    var (dc, changed, ciid) = await changesetDataModel.InsertOrUpdate(new ChangesetData(correspondingChangeset.ID.ToString()), new LayerSet(layerID), layerID, dataOrigin, changesetProxy, userContext.Transaction, maskHandling);
+                    // add custom data
+                    var fragments = insertAttributes
+                        .Select(a => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, a.Name, AttributeValueHelper.BuildFromDTO(a.Value)))
+                        .ToList();
+                    var attributeNames = insertAttributes.Select(a => a.Name).ToHashSet();
+                    await attributeModel.BulkReplaceAttributes(
+                        new BulkCIAttributeDataCIAndAttributeNameScope(layerID,
+                        fragments,
+                        new HashSet<Guid>() { ciid },
+                        attributeNames
+                        ), changesetProxy, dataOrigin, userContext.Transaction, maskHandling, otherLayersValueHandling);
+
+                    userContext.CommitAndStartNewTransactionIfLastMutation(modelContextBuilder => modelContextBuilder.BuildImmediate());
+
+                    return new InsertChangesetDataReturn(ciid);
                 });
 
             this.layerModel = layerModel;

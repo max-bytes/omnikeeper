@@ -19,7 +19,6 @@ namespace Omnikeeper.GraphQL
         {
             public TimeThreshold? timeThreshold;
             public LayerSet? layerSet;
-            public IChangesetProxy? changesetProxy;
 
             public IDictionary<string, ScopedContext>? subContexts;
         }
@@ -112,6 +111,20 @@ namespace Omnikeeper.GraphQL
             }
         }
 
+        public IChangesetProxy ChangesetProxy
+        {
+            get
+            {
+                TryGetValue("ChangesetProxy", out var t);
+                if (t == null) throw new System.Exception("Expected ChangesetProxy to be set");
+                return (IChangesetProxy)t;
+            }
+            private set
+            {
+                this.AddOrUpdate("ChangesetProxy", value);
+            }
+        }
+
         public MultiMutationData? MultiMutationData
         {
             get
@@ -124,16 +137,6 @@ namespace Omnikeeper.GraphQL
             {
                 this.AddOrUpdate("MultiMutationData", value);
             }
-        }
-
-
-        public IChangesetProxy GetChangesetProxy(IEnumerable<object> contextPath)
-        {
-            var foundContext = FindScopedContext(contextPath.ToList(), 0, scopedContexts);
-            if (foundContext.changesetProxy == null)
-                throw new Exception("ChangesetProxy not set in current user context"); // throw exception, demand explicit setting
-            else
-                return foundContext.changesetProxy;
         }
 
         internal OmnikeeperUserContext WithTransaction(Func<IModelContextBuilder, IModelContext> f)
@@ -170,11 +173,14 @@ namespace Omnikeeper.GraphQL
 
         internal OmnikeeperUserContext WithChangesetProxy(IChangesetModel changesetModel, IEnumerable<object> contextPath)
         {
-            var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, scopedContexts);
-            if (foundContext.changesetProxy == null)
+            if (!ContainsKey("ChangesetProxy"))
             {
+                // NOTE: this is slightly incorrect, because we use the timeThreshold that is bound to the (current) contextPath
+                // later parts may use different time thresholds, but the changesetProxy will stay the same and will keep this first timeThreshold;
+                // but making the changesetProxy scoped (like TimeThreshold is) would not work either, because then it would not be able to
+                // properly handle multiple mutations per request
                 var changesetProxy = new ChangesetProxy(User.InDatabase, GetTimeThreshold(contextPath), changesetModel);
-                foundContext.changesetProxy = changesetProxy;
+                ChangesetProxy = changesetProxy;
             }
             return this;
         }

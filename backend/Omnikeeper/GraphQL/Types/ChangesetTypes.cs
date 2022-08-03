@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using System.Linq;
 
@@ -28,7 +29,7 @@ namespace Omnikeeper.GraphQL.Types
 
     public class ChangesetType : ObjectGraphType<Changeset>
     {
-        public ChangesetType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel)
+        public ChangesetType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel, IAttributeModel attributeModel, ICIModel ciModel, ChangesetDataModel changesetDataModel)
         {
             Field("id", x => x.ID);
             Field(x => x.Timestamp);
@@ -115,6 +116,35 @@ namespace Omnikeeper.GraphQL.Types
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var changesetID = context.Source!.ID;
                     return await relationModel.GetRelationsOfChangeset(changesetID, true, userContext.Transaction);
+                });
+
+            FieldAsync<GuidGraphType>("dataCIID",
+                resolve: async (context) =>
+                {
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var changesetID = context.Source!.ID;
+                    var layerID = context.Source!.LayerID;
+                    var layerset = new LayerSet(layerID);
+
+                    var (changesetData, ciid) = await changesetDataModel.GetSingleByDataID(changesetID.ToString(), layerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    if (ciid == default)
+                        return null;
+                    return ciid;
+                });
+
+            FieldAsync<MergedCIType>("data",
+                resolve: async (context) =>
+                {
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var changesetID = context.Source!.ID;
+                    var layerID = context.Source!.LayerID;
+                    var layerset = new LayerSet(layerID);
+
+                    // TODO: use data loader
+                    var (changesetData, ciid) = await changesetDataModel.GetSingleByDataID(changesetID.ToString(), layerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    if (ciid == default)
+                        return null;
+                    return await ciModel.GetMergedCI(ciid, layerset, AllAttributeSelection.Instance, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
                 });
         }
     }

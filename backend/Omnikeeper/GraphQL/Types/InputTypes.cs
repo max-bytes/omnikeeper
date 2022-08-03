@@ -94,4 +94,18 @@ namespace Omnikeeper.GraphQL.Types
             Field(x => x.PredicateID);
         }
     }
+
+    public class InsertChangesetDataAttributeInput
+    {
+        public string Name { get; private set; }
+        public AttributeValueDTO Value { get; private set; }
+    }
+    public class InsertChangesetDataAttributeInputType : InputObjectGraphType<InsertChangesetDataAttributeInput>
+    {
+        public InsertChangesetDataAttributeInputType()
+        {
+            Field(x => x.Name);
+            Field(x => x.Value, type: typeof(AttributeValueDTOInputType));
+        }
+    }
 }
