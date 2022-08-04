@@ -35,10 +35,10 @@ function TraitList(props) {
                 (subTraitTuples, treeKeyPrefix) => {
                     const currentTreeKey = [parentTreeKey, treeKeyPrefix].filter(x => x).join('.');
 
-                    if (subTraitTuples.length === 1) {
+                    if (subTraitTuples.length === 1 && subTraitTuples[0].treeKey.length == 1) {
                         const subTraitTuple = subTraitTuples[0];
                         return {
-                            title: (parentTreeKey) ? '...' + treeKeyPrefix : treeKeyPrefix, //subTraitTuple.trait.id,
+                            title: treeKeyPrefix,//subTraitTuple.trait.id,//
                             key: currentTreeKey,
                             children: [],
                             effectiveTrait: subTraitTuple.trait
