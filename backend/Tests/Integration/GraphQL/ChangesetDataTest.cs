@@ -147,5 +147,157 @@ namespace Tests.Integration.GraphQL
 
             AssertQuerySuccess(query2, expected2, user, inputs2);
         }
+
+        [Test]
+        public async Task TestTraitEntityChangesetData()
+        {
+            using var trans = ModelContextBuilder.BuildDeferred();
+            var ciid1 = await GetService<ICIModel>().CreateCI(trans);
+            var userInDatabase = await SetupDefaultUser();
+            var changesetProxy = await CreateChangesetProxy();
+            var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", trans);
+            var user = new AuthenticatedUser(userInDatabase,
+                new AuthRole[]
+                {
+                    new AuthRole("ar1", new string[] { 
+                        PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),
+                        PermissionUtils.GetLayerReadPermission(layerOkConfig), PermissionUtils.GetLayerWritePermission(layerOkConfig),
+                        PermissionUtils.GetManagementPermission()
+                    }),
+                });
+            trans.Commit();
+
+            await ReinitSchema();
+
+            string mutationCreateTrait = @"
+mutation {
+  manage_upsertRecursiveTrait(
+    trait: {
+      id: ""test_trait_a""
+      requiredAttributes: [
+        {
+          identifier: ""name""
+          template: {
+            name: ""test_trait_a.name""
+            type: TEXT
+            isID: false
+            isArray: false
+            valueConstraints: []
+          }
+        }
+      ]
+      optionalAttributes: []
+      optionalRelations: [],
+      requiredTraits: []
+    }
+  ) {
+    id
+  }
+}
+";
+            var expected1 = @"
+{
+    ""manage_upsertRecursiveTrait"":
+        {
+            ""id"": ""test_trait_a""
+        }
+}";
+            AssertQuerySuccess(mutationCreateTrait, expected1, user);
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            // insert some data + changeset data as trait entity
+            string query = @"
+                mutation($read_layers: [String]!, $write_layer: String!, $ciid: Guid!) {
+                    A : mutateCIs(writeLayer: $write_layer, readLayers: $read_layers, insertAttributes: [
+                    {
+                        ci: $ciid,
+                        name: ""foo"",
+                        value:
+                        {
+                            type: TEXT,
+                            isArray: false,
+                            values: [""bar1""]
+                        }
+                    }
+                    ]) {
+                        affectedCIs {
+                            id
+                        }
+                    }
+                    B : insertChangesetData_test_trait_a(layer: $write_layer, input: 
+                    {
+                        name: ""bar2""
+                    }) {
+                        latestChange {
+                            id
+                        }
+                    }
+                }";
+
+            var inputs = new Inputs(new Dictionary<string, object?>()
+                {
+                    { "ciid", ciid1 },
+                    { "read_layers", new string[] { "layer_1" } },
+                    { "write_layer", "layer_1" }
+                });
+
+            var expected = JsonDocument.Parse(@$"{{""affectedCIs"":[{{""id"":""{ciid1}""}}]}}");
+
+            var (queryResult, resultJson) = RunQuery(query, user, inputs);
+            var d = JsonDocument.Parse(resultJson);
+            var aResult = d.RootElement.GetProperty("data").GetProperty("A");
+            var elementComparer = new JsonElementComparer();
+            Assert.IsTrue(elementComparer.Equals(aResult, expected.RootElement));
+
+            // assert that only a single changeset was created
+            using var transI = ModelContextBuilder.BuildImmediate();
+            var numChangesets = await GetService<IChangesetModel>().GetNumberOfChangesets(layer1.ID, transI);
+            Assert.AreEqual(1, numChangesets);
+
+            // fetch changeset and its associated data
+            var changeset = await GetService<IChangesetModel>().GetLatestChangesetForLayer(layer1.ID, transI, TimeThreshold.BuildLatest());
+            Assert.IsNotNull(changeset);
+            string query2 = @"
+                query($layers: [String]!, $changeset_id: Guid!) {
+                    changeset(layers: $layers, id: $changeset_id) {
+                        data {
+                          traitEntity {
+                            test_trait_a {
+                              entity {
+                                name
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+            ";
+            var inputs2 = new Inputs(new Dictionary<string, object?>()
+                {
+                    { "changeset_id", changeset!.ID },
+                    { "layers", new string[] { "layer_1" } },
+                });
+
+
+            var expected2 = @$"{{
+                ""changeset"": {{
+                  ""data"": {{
+	                ""traitEntity"":
+	                  {{
+                        ""test_trait_a"": {{
+                          ""entity"": {{
+                            ""name"": ""bar2""
+                          }}
+                        }}
+	                  }}
+                  }}
+                }}
+            }}";
+
+            AssertQuerySuccess(query2, expected2, user, inputs2);
+        }
     }
 }

@@ -23,6 +23,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly IRelationModel relationModel;
         private readonly ICIIDModel ciidModel;
         private readonly IDataLoaderService dataLoaderService;
+        private readonly ChangesetDataModel changesetDataModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
         private readonly ILayerModel layerModel;
@@ -30,13 +31,14 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public TraitEntitiesMutationSchemaLoader(IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel, 
-            IDataLoaderService dataLoaderService,
+            IDataLoaderService dataLoaderService, ChangesetDataModel changesetDataModel,
             IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
             this.ciidModel = ciidModel;
             this.dataLoaderService = dataLoaderService;
+            this.changesetDataModel = changesetDataModel;
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.layerModel = layerModel;
@@ -434,6 +436,52 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             return removed;
                         });
                 }
+
+                // changeset data insert
+                tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateInsertChangesetDataAsTraitEntityMutationName(traitID), elementTypeContainer.ElementWrapper,
+                    arguments: new QueryArguments(
+                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "layer" },
+                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" }),
+                    resolve: async context =>
+                    {
+                        var layerID = context.GetArgument<string>("layer")!;
+                        var userContext = await context.SetupUserContext()
+                            .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                            .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                            .WithChangesetProxy(changesetModel, context.Path)
+                            .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(new string[] { layerID }, trans), context.Path);
+
+                        var layerset = userContext.GetLayerSet(context.Path);
+                        var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                        var trans = userContext.Transaction;
+                        var changesetProxy = userContext.ChangesetProxy;
+
+                        // TODO: mask handling
+                        var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
+
+                        if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, layerID))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {layerID}");
+                        if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
+                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+
+                        if (elementTypeContainer.IDInputType != null)
+                            throw new Exception("Inserting trait entity that has ID as changeset data not supported");
+
+                        var insertInput = context.GetArgument<UpsertInput>("input");
+
+                        var dataOrigin = new DataOriginV1(DataOriginType.Manual);
+                        var correspondingChangeset = await changesetProxy.GetChangeset(layerID, dataOrigin, userContext.Transaction);
+
+                        // insert changeset-data first
+                        var (dc, changed, ciid) = await changesetDataModel.InsertOrUpdate(new ChangesetData(correspondingChangeset.ID.ToString()), new LayerSet(layerID), layerID, dataOrigin, changesetProxy, userContext.Transaction, maskHandling);
+
+                        // insert trait entity afterwards, no CI-name
+                        var et = await Upsert(ciid, insertInput.AttributeValues, insertInput.RelationValues, null, trans, changesetProxy, traitEntityModel, layerset, layerID);
+
+                        userContext.CommitAndStartNewTransactionIfLastMutation(mc => mc.BuildImmediate());
+
+                        return et;
+                    });
 
                 // relation mutations
                 foreach (var tr in elementTypeContainer.Trait.OptionalRelations)

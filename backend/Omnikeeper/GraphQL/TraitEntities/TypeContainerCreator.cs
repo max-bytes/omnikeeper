@@ -10,7 +10,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
     public class ElementTypesContainer
     {
         public readonly ITrait Trait;
-        public readonly ElementType Element;
         public readonly ElementWrapperType ElementWrapper;
         public readonly TraitEntityRootType RootQueryType;
         public readonly IDInputType? IDInputType;
@@ -18,11 +17,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public readonly UpsertInputType UpdateInputType;
         public readonly FilterInputType? FilterInputType;
 
-        public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType,
+        public ElementTypesContainer(ITrait trait, ElementWrapperType elementWrapper, IDInputType? iDInputType,
             TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, UpsertInputType updateInputType, FilterInputType? filterInputType)
         {
             Trait = trait;
-            Element = element;
             ElementWrapper = elementWrapper;
             IDInputType = iDInputType;
             RootQueryType = rootQueryType;
@@ -94,7 +92,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     var upsertInputType = new UpsertInputType(at.Value, false);
                     var updateInputType = new UpsertInputType(at.Value, true);
 
-                    elementTypes.Add(new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType, updateInputType, filterInputType));
+                    elementTypes.Add(new ElementTypesContainer(at.Value, ttWrapper, idt, t, upsertInputType, updateInputType, filterInputType));
                 }
                 catch (Exception e)
                 {

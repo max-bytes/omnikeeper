@@ -44,6 +44,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public static string GenerateAddRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "addRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
         public static string GenerateRemoveRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "removeRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
         public static string GenerateInsertNewMutationName(string traitID) => "insertNew_" + SanitizeMutationName(traitID);
+        public static string GenerateInsertChangesetDataAsTraitEntityMutationName(string traitID) => "insertChangesetData_" + SanitizeMutationName(traitID);
         public static string GenerateUpdateByCIIDMutationName(string traitID) => "updateByCIID_" + SanitizeMutationName(traitID);
         public static string GenerateDeleteByCIIDMutationName(string traitID) => "deleteByCIID_" + SanitizeMutationName(traitID);
         public static string GenerateUpsertByDataIDMutationName(string traitID) => "upsertByDataID_" + SanitizeMutationName(traitID);
