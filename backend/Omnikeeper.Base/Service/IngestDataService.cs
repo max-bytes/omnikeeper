@@ -130,7 +130,12 @@ namespace Omnikeeper.Base.Service
                                 }
                                 break;
                             case NoFoundTargetCIHandling.Drop:
+                            case NoFoundTargetCIHandling.DropAndWarn:
                                 dropCandidateCIBecauseOfNoFoundTargetCI = true;
+                                if (cic.NoFoundTargetCIHandling == NoFoundTargetCIHandling.DropAndWarn)
+                                {
+                                    issueAccumulator.TryAdd("no_found_target_ci", cic.TempID, $"Candidate CI with temp-ID {cic.TempID}: found no matching target CI, dropping");
+                                }
                                 break;
                         }
                     }
@@ -251,6 +256,7 @@ namespace Omnikeeper.Base.Service
     {
         CreateNew, // default
         CreateNewAndWarn,
+        DropAndWarn,
         Drop
     }
 
