@@ -106,7 +106,7 @@ namespace OKPluginGenericJSONIngest.Load
                 InboundIDMethodByAttribute a => attributeF(a),
                 InboundIDMethodByRelatedTempID rt => CIIdentificationMethodByRelatedTempCIID.Build(tempCIIDMapping.GetValueOrDefault(rt.TempID), rt.OutgoingRelation, rt.PredicateID, searchLayers),
                 InboundIDMethodByTemporaryCIID t => CIIdentificationMethodByTempCIID.Build(tempCIIDMapping.GetValueOrDefault(t.TempID)),
-                InboundIDMethodByByUnion f => CIIdentificationMethodByUnion.Build(f.Inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempID, tempCIIDMapping, issueAccumulator)).ToArray()),
+                InboundIDMethodByUnion f => CIIdentificationMethodByUnion.Build(f.Inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempID, tempCIIDMapping, issueAccumulator)).ToArray()),
                 InboundIDMethodByIntersect a => CIIdentificationMethodByIntersect.Build(a.Inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempID, tempCIIDMapping, issueAccumulator)).ToArray()),
                 _ => throw new Exception($"unknown idMethod \"{idMethod.GetType()}\" for ci candidate \"{tempID}\" encountered")
             };

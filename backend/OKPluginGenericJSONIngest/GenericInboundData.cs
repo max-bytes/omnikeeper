@@ -64,7 +64,7 @@ namespace OKPluginGenericJSONIngest
     [SwaggerSubType(typeof(InboundIDMethodByAttribute), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByAttribute, OKPluginGenericJSONIngest")]
     [SwaggerSubType(typeof(InboundIDMethodByRelatedTempID), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByRelatedTempID, OKPluginGenericJSONIngest")]
     [SwaggerSubType(typeof(InboundIDMethodByTemporaryCIID), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest")]
-    [SwaggerSubType(typeof(InboundIDMethodByByUnion), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByByUnion, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByUnion), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByUnion, OKPluginGenericJSONIngest")]
     [SwaggerSubType(typeof(InboundIDMethodByIntersect), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByIntersect, OKPluginGenericJSONIngest")]
     public abstract class AbstractInboundIDMethod
     {
@@ -158,14 +158,14 @@ namespace OKPluginGenericJSONIngest
         }
     }
 
-    public class InboundIDMethodByByUnion : AbstractInboundIDMethod
+    public class InboundIDMethodByUnion : AbstractInboundIDMethod
     {
         //public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         [JsonPropertyName("inner")]
         public AbstractInboundIDMethod[] Inner { get; set; }
 
         [JsonConstructor]
-        public InboundIDMethodByByUnion(AbstractInboundIDMethod[] inner)
+        public InboundIDMethodByUnion(AbstractInboundIDMethod[] inner)
         {
             Inner = inner;
             Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());

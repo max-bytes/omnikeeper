@@ -44,7 +44,11 @@ namespace Omnikeeper.Base.Service
                 case CIIdentificationMethodByRelatedTempCIID rt:
                     {
                         if (!ciMappingContext.TryGetMappedTemp2FinalCIID(rt.RelatedTempCIID, out Guid relatedCIID))
-                            throw new Exception($"Could not find related temporary CIID {rt.RelatedTempCIID}");
+                        {
+                            return new List<Guid>() { };
+                            // TODO: we should actually check if the related CI was dropped because of a reason or if there's an actual error
+                            //throw new Exception($"Could not find related temporary CIID {rt.RelatedTempCIID}");
+                        }
 
                         var outgoing = !rt.OutgoingRelation; // NOTE: we invert the direction because we are coming from the related CI
                         var candidateCIIDs = await ciMappingContext.GetMergedCIIDsByRelation(relatedCIID, outgoing, rt.PredicateID, rt.SearchableLayers, trans);

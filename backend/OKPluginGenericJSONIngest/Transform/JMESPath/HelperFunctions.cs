@@ -203,7 +203,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             if (!(args[0].Token is JArray i))
                 throw new Exception("Invalid inner idMethods when constructing idMethodByUnion");
             var inner = i;
-            var type = SystemTextJSONSerializerMigrationHelper.GetTypeString(typeof(InboundIDMethodByByUnion));
+            var type = SystemTextJSONSerializerMigrationHelper.GetTypeString(typeof(InboundIDMethodByUnion));
             return JObject.FromObject(new { type, inner });
         }
     }
