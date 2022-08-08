@@ -18,7 +18,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         protected readonly IAttributeModel attributeModel;
         protected readonly IRelationModel relationModel;
         private readonly ITrait trait;
-        private readonly HashSet<string> relevantAttributesForTrait;
+        private readonly IReadOnlySet<string> relevantAttributesForTrait;
 
         public TraitEntityModel(ITrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
         {
@@ -28,7 +28,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             this.relationModel = relationModel;
             this.trait = trait;
 
-            relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Concat(trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet();
+            relevantAttributesForTrait = trait.GetRelevantAttributeNames();
         }
 
         private IOtherLayersValueHandling GetOtherLayersValueHandling(LayerSet readLayerSet, string writeLayerID)

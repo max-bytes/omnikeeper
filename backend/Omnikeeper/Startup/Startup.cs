@@ -1,7 +1,6 @@
 using Autofac;
 using FluentValidation.AspNetCore;
 using GraphQL;
-using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -291,6 +290,7 @@ namespace Omnikeeper.Startup
 
             app.UseCors("DefaultCORSPolicy");
 
+            app.UseHttpLogging();
 
             // make application properly consider headers (and populate httprequest object) when behind reverse proxy
             var forwardedHeaderOptions = new ForwardedHeadersOptions

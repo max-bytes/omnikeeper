@@ -183,7 +183,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<CIBasedAuthorizationService>().As<ICIBasedAuthorizationService>().SingleInstance();
             builder.RegisterType<DataPartitionService>().As<IDataPartitionService>().SingleInstance();
             builder.RegisterType<IngestDataService>().SingleInstance();
-            builder.RegisterType<ReactiveLogReceiver>().SingleInstance();
 
             builder.RegisterType<AuthRolePermissionChecker>().As<IAuthRolePermissionChecker>().SingleInstance();
             builder.RegisterType<CurrentUserAccessor>().As<ICurrentUserAccessor>().SingleInstance(); // TODO: remove, use ScopedLifetimeAccessor directly?
@@ -396,7 +395,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<EdmModelReloaderJob>().InstancePerLifetimeScope();
 
             // validators
-            builder.RegisterType<ValidatorTraits>().As<IValidator>().SingleInstance();
+            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IValidator>().AsImplementedInterfaces().SingleInstance();
 
             // TODO: remove
             builder.RegisterType<ReactiveTestCLB>().As<IComputeLayerBrain>().SingleInstance();

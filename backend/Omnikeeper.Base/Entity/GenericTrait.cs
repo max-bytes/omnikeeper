@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -13,6 +14,14 @@ namespace Omnikeeper.Base.Entity
         public IImmutableList<TraitAttribute> OptionalAttributes { get; }
 
         public IImmutableList<TraitRelation> OptionalRelations { get; }
+    }
+
+    public static class TraitExtensions
+    {
+        public static IReadOnlySet<string> GetRelevantAttributeNames(this ITrait trait)
+        {
+            return trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Concat(trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet();
+        }
     }
 
     /// <summary>

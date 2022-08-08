@@ -5,6 +5,23 @@ import { HubConnectionBuilder } from '@microsoft/signalr';
 import { Console } from 'console-feed'
 import env from "@beam-australia/react-env";
 
+const convertLogLevel2Method = (logLevel) => {
+  switch (logLevel) {
+    case 'Trace':
+    case 'Debug':
+      return 'debug';
+    case 'Information':
+      return 'info';
+    case 'Warning':
+      return 'warn';
+    case 'Critical':
+    case 'Error':
+      return 'error';
+    default:
+      return 'log';
+  }
+};
+
 export default function ShowVersion() {
   const [logs, setLogs] = useState([])
   
@@ -16,39 +33,20 @@ export default function ShowVersion() {
                 .withUrl(`${env('BACKEND_URL')}/api/signalr/logging`)
                 .build();
             try {
-                await hubConnect.start()
-
                 setLogs(logs => [...logs, {method: 'info', data: ['Starting logs...']}]);
 
-                hubConnect.stream("StreamLogs").subscribe({
-                  next: (line) => {
-
-                      const convertLogLevel2Method = (logLevel) => {
-                        switch (logLevel) {
-                          case 0:
-                          case 1:
-                          case 6:
-                            return 'debug';
-                          case 2:
-                            return 'info';
-                          case 3:
-                            return 'warn';
-                          case 4:
-                          case 5:
-                            return 'error';
-                          default:
-                            return 'log';
-                        }
-                      };
+                hubConnect
+                  .start()
+                  .then(() => {
+                    hubConnect.on('SendLogAsObject', (data) => {
                       const convertedLine = {
-                        method: convertLogLevel2Method(line.logLevel),
-                        data: [line.category, line.message]
+                        method: convertLogLevel2Method(data.level),
+                        data: [data.timestamp, data.sourceContext, data.message]
                       };
                       setLogs(logs => [...logs, convertedLine]);
-                  },
-                  error: (err) => { },
-                  complete: () => { }
-              });
+                    });
+                  })
+                  .catch(err => console.error(err));
             }
             catch (err) {
                 console.error(err);
