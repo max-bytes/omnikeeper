@@ -22,10 +22,10 @@ function TraitList(props) {
                 (subTraitTuples, treeKeyPrefix) => {
                     const currentTreeKey = [parentTreeKey, treeKeyPrefix].filter(x => x).join('.');
 
-                    if (subTraitTuples.length === 1) {
+                    if (subTraitTuples.length === 1 && subTraitTuples[0].treeKey.length == 1) {
                         const subTraitTuple = subTraitTuples[0];
                         return {
-                            title: subTraitTuple.trait.id,
+                            title: treeKeyPrefix,//subTraitTuple.trait.id,//
                             key: currentTreeKey,
                             children: [],
                             effectiveTrait: subTraitTuple.trait
@@ -74,7 +74,7 @@ function TraitList(props) {
                         if (!effectiveTrait)
                             return <EffectiveTraitSelectGroup key={key} title={title} />;
                         else
-                            return <EffectiveTraitSelectItem key={key} effectiveTrait={effectiveTrait} />;
+                            return <EffectiveTraitSelectItem key={key} title={title} effectiveTrait={effectiveTrait} />;
                     }}
                     />
             </Space>
@@ -94,7 +94,7 @@ function EffectiveTraitSelectGroup(props) {
 }
 
 function EffectiveTraitSelectItem(props) {
-    const {effectiveTrait} = props;
+    const {effectiveTrait, title} = props;
 
     const icon = (function(originType) {
         switch(originType) {
@@ -114,7 +114,7 @@ function EffectiveTraitSelectItem(props) {
             <FontAwesomeIcon icon={icon} style={{ marginRight: "0.5rem" }}/>
         </span>
         <span style={styles.traitsID}>
-            <bdi><TraitID id={effectiveTrait.id} link={true} /></bdi>
+            <bdi><TraitID id={effectiveTrait.id} title={title} link={true} /></bdi>
         </span>
     </div>;
 }
