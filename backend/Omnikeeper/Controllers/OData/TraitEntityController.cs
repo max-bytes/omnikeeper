@@ -187,15 +187,17 @@ namespace Omnikeeper.Controllers.OData
             if (traitRelation == null)
                 return BadRequest();
 
-            // TODO: use dataloader and batching
-            var baseTraitEntityModel = new TraitEntityModel(baseTrait, effectiveTraitModel, ciModel, attributeModel, relationModel);
-            var ets = await baseTraitEntityModel.GetByCIID(SpecificCIIDsSelection.Build(key), layerset, trans, timeThreshold);
-            var et = ets.FirstOrDefault().Value;
-
-            if (et == null)
+            // TODO: use dataloader
+            // NOTE: we don't need to get the full entity, the correct relation is enough
+            var rs = (traitRelation.RelationTemplate.DirectionForward) ?
+                RelationSelectionFrom.Build(new HashSet<string>() { traitRelation.RelationTemplate.PredicateID }, key) :
+                RelationSelectionTo.Build(new HashSet<string>() { traitRelation.RelationTemplate.PredicateID }, key);
+            var relations = await relationModel.GetMergedRelations(rs, layerset, trans, timeThreshold, MaskHandlingForRetrievalApplyMasks.Instance, GeneratedDataHandlingInclude.Instance);
+            if (relations == null)
                 return BadRequest();
-
-            var otherCIIDs = (traitRelation.RelationTemplate.DirectionForward) ? et.OutgoingTraitRelations[traitRelation.Identifier].Select(r => r.Relation.ToCIID) : et.IncomingTraitRelations[traitRelation.Identifier].Select(r => r.Relation.FromCIID);
+            var otherCIIDs = (traitRelation.RelationTemplate.DirectionForward) ?
+                relations.Select(r => r.Relation.ToCIID).ToHashSet() :
+                relations.Select(r => r.Relation.FromCIID).ToHashSet();
 
             var otherTraitEntityModel = new TraitEntityModel(otherTrait, effectiveTraitModel, ciModel, attributeModel, relationModel);
 
