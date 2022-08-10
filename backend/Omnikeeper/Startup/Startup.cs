@@ -368,10 +368,11 @@ namespace Omnikeeper.Startup
             app.UseSwagger(c =>
             {
                 c.RouteTemplate = "swagger/{documentName}/swagger.json";
-                c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
-                {
-                    swaggerDoc.Servers = new List<OpenApiServer> { new OpenApiServer { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}{Configuration["BaseURL"]}" } };
-                });
+                // TODO: still needed? breaks swagger behind (certain) revery proxies, if commented in
+                //c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
+                //{
+                //    swaggerDoc.Servers = new List<OpenApiServer> { new OpenApiServer { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}{Configuration["BaseURL"]}" } };
+                //});
             });
             app.UseSwaggerUI(c =>
             {
