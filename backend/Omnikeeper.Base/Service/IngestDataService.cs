@@ -95,10 +95,11 @@ namespace Omnikeeper.Base.Service
                                     {
                                         if (ciCandidatesToInsert.ContainsKey(foundCIIDs[i]))
                                         {
+                                            var toRemove = foundCIIDs[i];
                                             foundCIIDs.RemoveAt(i);
                                             if (cic.SameTargetCIHandling == SameTargetCIHandling.EvadeAndWarn)
                                             {
-                                                issueAccumulator.TryAdd("same_target_ci", cic.TempID, $"Candidate CI with temp-ID {cic.TempID}: evading to other CI, because candidate CI with temp-ID {ciCandidatesToInsert[foundCIIDs[i]].tempID} already targets the CI with ID {foundCIIDs[i]}");
+                                                issueAccumulator.TryAdd("same_target_ci", cic.TempID, $"Candidate CI with temp-ID {cic.TempID}: evading to other CI, because candidate CI with temp-ID {ciCandidatesToInsert[toRemove].tempID} already targets the CI with ID {toRemove}");
                                             }
                                         }
                                     }
