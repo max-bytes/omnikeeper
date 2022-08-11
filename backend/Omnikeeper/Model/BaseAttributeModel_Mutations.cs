@@ -113,7 +113,8 @@ namespace Omnikeeper.Model
                         var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(t.value);
                         // NOTE: we have to translate CLR enum to postgres enum manually
                         var type = trans.DBConnection.TypeMapper.DefaultNameTranslator.TranslateTypeName(t.value.Type.ToString());
-                        return $"('{t.newAttributeID}'::uuid, '{type}'::attributevaluetype, '{valueText}', '\\x{Convert.ToHexString(valueBinary)}'::bytea, '\\x{Convert.ToHexString(valueControl)}'::bytea, '{changeset.ID}'::uuid, '{t.existingAttributeID!}'::uuid)";
+                        var escapedValueText = valueText.Replace("\'", "\'\'"); // NOTE: need to escape single quotes in value
+                        return $"('{t.newAttributeID}'::uuid, '{type}'::attributevaluetype, '{escapedValueText}', '\\x{Convert.ToHexString(valueBinary)}'::bytea, '\\x{Convert.ToHexString(valueControl)}'::bytea, '{changeset.ID}'::uuid, '{t.existingAttributeID!}'::uuid)";
                     });
             if (cteValues.Any())
             {
