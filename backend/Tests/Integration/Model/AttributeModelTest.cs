@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using Moq;
+using NaughtyStrings;
 using Npgsql;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
@@ -329,6 +329,32 @@ namespace Tests.Integration.Model
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a1").Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a4").Count());
         }
+
+
+        [Test]
+        public async Task TestBulkRequestWithNaughtyStringInputs()
+        {
+            using var trans1 = ModelContextBuilder.BuildDeferred();
+            var ciid1 = await GetService<ICIModel>().CreateCI(trans1);
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans1);
+
+            var layerset1 = new LayerSet(new string[] { layer1.ID });
+
+            var changeset1 = await CreateChangesetProxy();
+            var fragments1 = TheNaughtyStrings.All.Select((s, i) => new BulkCIAttributeDataLayerScope.Fragment($"prefix1.a{i}", new AttributeScalarValueText(s), ciid1));
+            await GetService<IAttributeModel>().BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(layer1.ID, fragments1), 
+                changeset1, new DataOriginV1(DataOriginType.Manual), trans1, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+            trans1.Commit();
+
+
+            using var trans2 = ModelContextBuilder.BuildDeferred();
+            var changeset2 = await CreateChangesetProxy();
+            var fragments2 = TheNaughtyStrings.All.Select((s, i) => new BulkCIAttributeDataLayerScope.Fragment($"prefix1.a{i}", new AttributeScalarValueText(s + "updated"), ciid1));
+            await GetService<IAttributeModel>().BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(layer1.ID, fragments2), 
+                changeset2, new DataOriginV1(DataOriginType.Manual), trans2, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+            trans2.Commit();
+        }
+
 
 
         [Test]
