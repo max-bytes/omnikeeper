@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.OData.Formatter.Value;
 using Microsoft.AspNetCore.OData.Query;
@@ -24,6 +25,7 @@ using System.Threading.Tasks;
 namespace Omnikeeper.Controllers.OData
 {
     [ApiExplorerSettings(IgnoreApi = true)] // NOTE: swashbuckle has troubles creating unique operationIDs for this controller, so we skip it (for now)
+    [Authorize(AuthenticationSchemes = "ODataBasicAuthentication")]
     public class TraitEntityController : ODataController
     {
         private readonly ITraitsProvider traitsProvider;

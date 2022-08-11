@@ -39,18 +39,23 @@ namespace Omnikeeper.Base.Entity
             systemTextJsonSerializer = new SystemTextJSONSerializer<T>(serializerOptions);
         }
 
+        public virtual T Deserialize(string s)
+        {
+            return systemTextJsonSerializer.Deserialize(s);
+        }
+
         public object DeserializeFromAttributeValue(IAttributeValue attribute)
         {
             if (attribute is AttributeScalarValueJSON @as)
             {
-                return systemTextJsonSerializer.Deserialize(@as.ValueStr);
+                return Deserialize(@as.ValueStr);
             }
             else if (attribute is AttributeArrayValueJSON aa)
             {
                 var ret = new T[aa.Length];
                 for (int i = 0; i < aa.Values.Length; i++)
                 {
-                    ret[i] = systemTextJsonSerializer.Deserialize(aa.Values[i].ValueStr);
+                    ret[i] = Deserialize(aa.Values[i].ValueStr);
                 }
                 return ret;
             }
@@ -60,22 +65,29 @@ namespace Omnikeeper.Base.Entity
             }
         }
 
+        public virtual string SerializeToString(object? t)
+        {
+            if (t == null || t is not T tt)
+                throw new Exception("Could not cast for serialization");
+            return systemTextJsonSerializer.SerializeToString(tt);
+        }
+
         public IAttributeValue SerializeToAttributeValue(object o, bool isArray)
         {
             if (isArray)
             {
-                var a = (T[])o;
+                var a = (Array)o;
                 var serialized = new string[a.Length];
                 for (int i = 0; i < a.Length; i++)
                 {
-                    var e = systemTextJsonSerializer.SerializeToString(a[i]);
+                    var e = SerializeToString(a.GetValue(i));
                     serialized[i] = e;
                 }
                 return AttributeArrayValueJSON.BuildFromString(serialized, false);
             }
             else
             {
-                var jo = systemTextJsonSerializer.SerializeToString((T)o);
+                var jo = SerializeToString(o);
                 return AttributeScalarValueJSON.BuildFromString(jo, false);
             }
         }

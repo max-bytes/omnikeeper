@@ -28,8 +28,6 @@ namespace Omnikeeper.Base.Utils
         {
             var baseType = typeof(T);
 
-            // TODO: proper assembly configuration, not go through ALL assemblies
-            //var types = AppDomain.CurrentDomain.GetAssemblies()
             var types = searchAssemblies
                 .SelectMany(s =>
                 {
@@ -43,11 +41,15 @@ namespace Omnikeeper.Base.Utils
                     }
                 });
 
-            //var types = Assembly.GetExecutingAssembly().GetTypes();
-
             validTypeNames = types
                 .Where(p => baseType.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract)
                 .ToDictionary(t => SystemTextJSONSerializerMigrationHelper.GetTypeString(t), t => t);
+            this.jsonPropertyName = jsonPropertyName;
+        }
+
+        public TypeDiscriminatorConverter(string jsonPropertyName, IDictionary<string, Type> validTypeNames)
+        {
+            this.validTypeNames = validTypeNames;
             this.jsonPropertyName = jsonPropertyName;
         }
 

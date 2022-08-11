@@ -3,6 +3,7 @@ using FluentValidation.AspNetCore;
 using GraphQL;
 using GraphQL.Server.Ui.Playground;
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -161,7 +162,8 @@ namespace Omnikeeper.Startup
                     }
                 };
                 options.Validate();
-            });
+            })
+            .AddScheme<AuthenticationSchemeOptions, Controllers.OData.BasicAuthenticationHandler>("ODataBasicAuthentication", null);
 
             services.AddAuthorization(options =>
             {

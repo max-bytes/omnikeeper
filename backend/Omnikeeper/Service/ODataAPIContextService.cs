@@ -16,17 +16,29 @@ namespace Omnikeeper.Service
             var (context, _) = await model.GetSingleByDataID(contextID, metaConfiguration.ConfigLayerset, trans, timeThreshold);
             return context.CConfig switch
             {
-                ODataAPIContext.ConfigV3 v3 => new LayerSet(v3.ReadLayerset),
+                ODataAPIContext.ConfigV4 v4 => new LayerSet(v4.ReadLayerset),
                 _ => throw new Exception("Invalid OData API context config"),
             };
         }
+
+        public static async Task<ODataAPIContext.IContextAuth> GetAuthConfigFromContext(ODataAPIContextModel model, IMetaConfigurationModel metaConfigurationModel, string contextID, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+            var (context, _) = await model.GetSingleByDataID(contextID, metaConfiguration.ConfigLayerset, trans, timeThreshold);
+            return context.CConfig switch
+            {
+                ODataAPIContext.ConfigV4 v4 => v4.ContextAuth,
+                _ => throw new Exception("Invalid OData API context config"),
+            };
+        }
+
         public static async Task<string> GetWriteLayerIDFromContext(ODataAPIContextModel model, IMetaConfigurationModel metaConfigurationModel, string contextID, IModelContext trans, TimeThreshold timeThreshold)
         {
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
             var (context, _) = await model.GetSingleByDataID(contextID, metaConfiguration.ConfigLayerset, trans, timeThreshold);
             return context.CConfig switch
             {
-                ODataAPIContext.ConfigV3 v3 => v3.WriteLayerID,
+                ODataAPIContext.ConfigV4 v4 => v4.WriteLayerID,
                 _ => throw new Exception("Invalid OData API context config"),
             };
         }
