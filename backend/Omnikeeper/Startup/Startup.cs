@@ -163,7 +163,7 @@ namespace Omnikeeper.Startup
                 };
                 options.Validate();
             })
-            .AddScheme<AuthenticationSchemeOptions, Controllers.OData.BasicAuthenticationHandler>("ODataBasicAuthentication", null);
+            .AddScheme<AuthenticationSchemeOptions, Controllers.OData.ODataAuthenticationHandler>("ODataBasicAuthentication", null);
 
             services.AddAuthorization(options =>
             {
