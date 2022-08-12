@@ -235,7 +235,7 @@ namespace Omnikeeper.GraphQL
                   if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, id))
                       throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify layer");
 
-                  var numDeletedAttributes = await baseAttributeRevisionistModel.DeleteAllAttributes(id, userContext.Transaction);
+                  var numDeletedAttributes = await baseAttributeRevisionistModel.DeleteAllAttributes(AllCIIDsSelection.Instance, id, userContext.Transaction);
                   var numDeletedRelations = await baseRelationRevisionistModel.DeleteAllRelations(id, userContext.Transaction);
                   userContext.CommitAndStartNewTransactionIfLastMutation(modelContextBuilder => modelContextBuilder.BuildImmediate());
                   return true;

@@ -3,22 +3,70 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model
 {
     public class BaseAttributeRevisionistModel : IBaseAttributeRevisionistModel
     {
-        public async Task<int> DeleteAllAttributes(string layerID, IModelContext trans)
+        public async Task<int> DeleteAllAttributes(ICIIDSelection ciidSelection, string layerID, IModelContext trans)
         {
-            using var commandLatest = new NpgsqlCommand(@"delete from attribute_latest a where a.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
+
+            string CIIDSelection2WhereClause(ICIIDSelection selection)
+            {
+                return selection switch
+                {
+                    AllCIIDsSelection _ => "1=1",
+                    SpecificCIIDsSelection _ => "(a.ci_id = ANY(@ciids))",
+                    AllCIIDsExceptSelection _ => "(NOT a.ci_id = ANY(@ciids))",
+                    NoCIIDsSelection _ => "1=0",
+                    _ => throw new NotImplementedException()
+                };
+            }
+            IEnumerable<NpgsqlParameter> CIIDSelection2Parameters(ICIIDSelection selection)
+            {
+                switch (selection)
+                {
+                    case AllCIIDsSelection _:
+                        break;
+                    case NoCIIDsSelection _:
+                        break;
+                    case SpecificCIIDsSelection n:
+                        yield return new NpgsqlParameter("ciids", n.CIIDs.ToArray());
+                        break;
+                    case AllCIIDsExceptSelection n:
+                        yield return new NpgsqlParameter("ciids", n.ExceptCIIDs.ToArray());
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                };
+            }
+            bool ShouldRunPrepare(ICIIDSelection selection)
+            {
+                return selection switch
+                {
+                    AllCIIDsSelection _ => true,
+                    SpecificCIIDsSelection _ => false,
+                    AllCIIDsExceptSelection _ => false,
+                    NoCIIDsSelection _ => true,
+                    _ => throw new NotImplementedException()
+                };
+            }
+
+            using var commandLatest = new NpgsqlCommand(@$"delete from attribute_latest a where a.layer_id = @layer_id and {CIIDSelection2WhereClause(ciidSelection)}", trans.DBConnection, trans.DBTransaction);
             commandLatest.Parameters.AddWithValue("layer_id", layerID);
-            commandLatest.Prepare();
+            foreach (var p in CIIDSelection2Parameters(ciidSelection)) commandLatest.Parameters.Add(p);
+            if (ShouldRunPrepare(ciidSelection))
+                commandLatest.Prepare();
             await commandLatest.ExecuteNonQueryAsync();
 
-            using var commandHistoric = new NpgsqlCommand(@"delete from attribute a where a.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
+            using var commandHistoric = new NpgsqlCommand(@$"delete from attribute a where a.layer_id = @layer_id and {CIIDSelection2WhereClause(ciidSelection)}", trans.DBConnection, trans.DBTransaction);
             commandHistoric.Parameters.AddWithValue("layer_id", layerID);
-            commandHistoric.Prepare();
+            foreach (var p in CIIDSelection2Parameters(ciidSelection)) commandHistoric.Parameters.Add(p);
+            if (ShouldRunPrepare(ciidSelection))
+                commandHistoric.Prepare();
             var numDeleted = await commandHistoric.ExecuteNonQueryAsync();
 
             return numDeleted;

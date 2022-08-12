@@ -31,7 +31,7 @@ namespace Omnikeeper.Base.Model
 
     public interface IBaseAttributeRevisionistModel
     {
-        Task<int> DeleteAllAttributes(string layerID, IModelContext trans);
+        Task<int> DeleteAllAttributes(ICIIDSelection ciidSelection, string layerID, IModelContext trans);
         Task<int> DeleteOutdatedAttributesOlderThan(string[] layerIDs, IModelContext trans, DateTimeOffset threshold, TimeThreshold atTime);
     }
 }

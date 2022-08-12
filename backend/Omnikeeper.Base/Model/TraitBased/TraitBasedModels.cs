@@ -1,6 +1,13 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Generator;
+using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
@@ -90,6 +97,27 @@ namespace Omnikeeper.Base.Model.TraitBased
     {
         public ChangesetDataModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
         {
+        }
+
+        public async Task<Guid> InsertOrUpdateWithAdditionalAttributes(IChangesetProxy changesetProxy, string layerID, IEnumerable<(string name, IAttributeValue value)> additionalAttributes, DataOriginV1 dataOrigin, IModelContext trans)
+        {
+            var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
+            var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
+
+            var correspondingChangeset = await changesetProxy.GetChangeset(layerID, dataOrigin, trans);
+            // write changeset data
+            var (dc, changed, ciid) = await InsertOrUpdate(new ChangesetData(correspondingChangeset.ID.ToString()), new LayerSet(layerID), layerID, dataOrigin, changesetProxy, trans, maskHandling);
+            // add custom data
+            var fragments = additionalAttributes.Select(a => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, a.name, a.value));
+            var attributeNames = additionalAttributes.Select(a => a.name).ToHashSet();
+            await attributeModel.BulkReplaceAttributes(
+                new BulkCIAttributeDataCIAndAttributeNameScope(layerID,
+                fragments,
+                new HashSet<Guid>() { ciid },
+                attributeNames
+                ), changesetProxy, dataOrigin, trans, maskHandling, otherLayersValueHandling);
+
+            return ciid;
         }
     }
 }

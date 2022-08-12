@@ -217,27 +217,9 @@ namespace Omnikeeper.GraphQL
 
                     var changesetProxy = userContext.ChangesetProxy;
 
-                    // TODO: other-layers-value handling
-                    var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
-                    // TODO: mask handling
-                    var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
-
                     var dataOrigin = new DataOriginV1(DataOriginType.Manual);
-                    var correspondingChangeset = await changesetProxy.GetChangeset(layerID, dataOrigin, userContext.Transaction);
 
-                    // write changeset data
-                    var (dc, changed, ciid) = await changesetDataModel.InsertOrUpdate(new ChangesetData(correspondingChangeset.ID.ToString()), new LayerSet(layerID), layerID, dataOrigin, changesetProxy, userContext.Transaction, maskHandling);
-                    // add custom data
-                    var fragments = insertAttributes
-                        .Select(a => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, a.Name, AttributeValueHelper.BuildFromDTO(a.Value)))
-                        .ToList();
-                    var attributeNames = insertAttributes.Select(a => a.Name).ToHashSet();
-                    await attributeModel.BulkReplaceAttributes(
-                        new BulkCIAttributeDataCIAndAttributeNameScope(layerID,
-                        fragments,
-                        new HashSet<Guid>() { ciid },
-                        attributeNames
-                        ), changesetProxy, dataOrigin, userContext.Transaction, maskHandling, otherLayersValueHandling);
+                    var ciid = await changesetDataModel.InsertOrUpdateWithAdditionalAttributes(changesetProxy, layerID, insertAttributes.Select(a => (name: a.Name, value: AttributeValueHelper.BuildFromDTO(a.Value))), dataOrigin, userContext.Transaction);
 
                     userContext.CommitAndStartNewTransactionIfLastMutation(modelContextBuilder => modelContextBuilder.BuildImmediate());
 

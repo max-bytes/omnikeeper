@@ -135,7 +135,7 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await GetService<IBaseAttributeRevisionistModel>().DeleteAllAttributes(layer1.ID, trans);
+                await GetService<IBaseAttributeRevisionistModel>().DeleteAllAttributes(AllCIIDsSelection.Instance, layer1.ID, trans);
                 trans.Commit();
             }
 

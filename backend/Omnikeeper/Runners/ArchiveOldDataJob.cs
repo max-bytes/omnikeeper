@@ -22,6 +22,7 @@ namespace Omnikeeper.Runners
         private readonly IArchiveOutdatedIssuesService archiveOutdatedIssuesService;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
+        private readonly IArchiveOutdatedChangesetDataService archiveOutdatedChangesetDataService;
         private readonly IChangesetModel changesetModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
@@ -29,7 +30,7 @@ namespace Omnikeeper.Runners
         private readonly IModelContextBuilder modelContextBuilder;
 
         public ArchiveOldDataJob(ILogger<ArchiveOldDataJob> logger, IExternalIDMapPersister externalIDMapPersister, IArchiveOutdatedIssuesService archiveOutdatedIssuesService,
-            IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
+            IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel, IArchiveOutdatedChangesetDataService archiveOutdatedChangesetDataService,
             IChangesetModel changesetModel, IMetaConfigurationModel metaConfigurationModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder)
         {
             this.logger = logger;
@@ -37,6 +38,7 @@ namespace Omnikeeper.Runners
             this.archiveOutdatedIssuesService = archiveOutdatedIssuesService;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
+            this.archiveOutdatedChangesetDataService = archiveOutdatedChangesetDataService;
             this.changesetModel = changesetModel;
             this.metaConfigurationModel = metaConfigurationModel;
             this.baseConfigurationModel = baseConfigurationModel;
@@ -85,6 +87,15 @@ namespace Omnikeeper.Runners
                     trans.Commit();
                     logger.LogDebug($"Done deleting outdated attributes and relations");
                 }
+
+                // archive changeset-data CIs that serve no purpose
+                logger.LogDebug($"Deleting outdated changeset-data CIs");
+                using (var trans = modelContextBuilder.BuildDeferred())
+                {
+                    await archiveOutdatedChangesetDataService.Archive(logger, trans);
+                    trans.Commit();
+                }
+                logger.LogDebug($"Done deleting outdated changeset-data CIs");
 
                 // archive empty changesets
                 // NOTE: several procedures exist that can delete attributes/relations, but do not check if the associated changeset becomes empty
