@@ -43,7 +43,7 @@ namespace Omnikeeper.Base.Model
 
         }
 
-        Task<Changeset> CreateChangeset(long userID, string layerID, DataOriginV1 dataOrigin, IModelContext trans, DateTimeOffset? timestamp = null);
+        Task<Changeset> CreateChangeset(long userID, string layerID, DataOriginV1 dataOrigin, IModelContext trans, TimeThreshold timeThreshold);
         Task<Changeset?> GetChangeset(Guid id, IModelContext trans);
         Task<IReadOnlyList<Changeset>> GetChangesets(ISet<Guid> ids, IModelContext trans);
         Task<IReadOnlySet<Guid>> GetCIIDsAffectedByChangeset(Guid changesetID, IModelContext trans);

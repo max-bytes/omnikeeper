@@ -123,6 +123,18 @@ namespace Omnikeeper.GraphQL
             return loader.LoadAsync(ids);
         }
 
+        public IDataLoaderResult<UserInDatabase> SetupAndLoadUser(long userID, IUserInDatabaseModel userInDatabaseModel, TimeThreshold timeThreshold, IModelContext trans)
+        {
+            var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader<long, UserInDatabase>($"GetUser_{timeThreshold}",
+                async (IEnumerable<long> userIDs) =>
+                {
+                    var combinedUserIDs = userIDs.ToHashSet();
+                    var ret = (await userInDatabaseModel.GetUsers(combinedUserIDs, trans, timeThreshold)).ToDictionary(u => u.ID);
+                    return ret;
+                });
+            return loader.LoadAsync(userID);
+        }
+
         public IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader<ICIIDSelection, IDictionary<Guid, string>>($"GetMergedCINames_{layerSet}_{timeThreshold}",

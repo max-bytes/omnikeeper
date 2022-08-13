@@ -8,7 +8,7 @@ namespace Omnikeeper.Base.Entity
         Human, Robot, Unknown
     }
 
-    public class UserInDatabase
+    public record class UserInDatabase
     {
         public long ID { get; private set; }
         public Guid UUID { get; private set; }

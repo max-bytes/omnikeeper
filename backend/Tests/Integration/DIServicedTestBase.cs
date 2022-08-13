@@ -68,11 +68,13 @@ namespace Tests.Integration
             return user;
         }
 
-        protected async Task<ChangesetProxy> CreateChangesetProxy() => await CreateChangesetProxy(TimeThreshold.BuildLatest());
-        protected async Task<ChangesetProxy> CreateChangesetProxy(TimeThreshold timeThreshold)
+        protected async Task<ChangesetProxy> CreateChangesetProxy() => CreateChangesetProxy(await SetupDefaultUser(), TimeThreshold.BuildLatest());
+        protected async Task<ChangesetProxy> CreateChangesetProxy(TimeThreshold timeThreshold) => CreateChangesetProxy(await SetupDefaultUser(), timeThreshold);
+        protected ChangesetProxy CreateChangesetProxy(UserInDatabase user) => CreateChangesetProxy(user, TimeThreshold.BuildLatest());
+        protected ChangesetProxy CreateChangesetProxy(UserInDatabase user, TimeThreshold timeThreshold)
         {
             var changesetModel = ServiceProvider.GetRequiredService<IChangesetModel>();
-            return new ChangesetProxy(await SetupDefaultUser(), timeThreshold, changesetModel);
+            return new ChangesetProxy(user, timeThreshold, changesetModel);
         }
 
         protected IServiceProvider ServiceProvider => serviceProvider!;

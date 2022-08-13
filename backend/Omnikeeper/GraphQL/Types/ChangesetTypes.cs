@@ -29,11 +29,17 @@ namespace Omnikeeper.GraphQL.Types
 
     public class ChangesetType : ObjectGraphType<Changeset>
     {
-        public ChangesetType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel, IAttributeModel attributeModel, ICIModel ciModel, ChangesetDataModel changesetDataModel)
+        public ChangesetType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel, IUserInDatabaseModel userInDatabaseModel, ICIModel ciModel, ChangesetDataModel changesetDataModel)
         {
             Field("id", x => x.ID);
             Field(x => x.Timestamp);
-            Field(x => x.User, type: typeof(UserInDatabaseType));
+            Field(x => x.UserID);
+            Field<UserInDatabaseType>("user", resolve: (context) =>
+            {
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                return dataLoaderService.SetupAndLoadUser(context.Source!.UserID, userInDatabaseModel, timeThreshold, userContext.Transaction);
+            });
             Field(x => x.LayerID);
             Field(x => x.DataOrigin, type: typeof(DataOriginGQL));
             Field<LayerDataType>("layer",

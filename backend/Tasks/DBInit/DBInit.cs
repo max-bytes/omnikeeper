@@ -41,7 +41,7 @@ namespace Tasks.DBInit
             var effectiveTraitModel = new EffectiveTraitModel(relationModel);
             var predicateModel = new PredicateModel(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var userModel = new UserInDatabaseModel();
-            var changesetModel = new ChangesetModel(userModel);
+            var changesetModel = new ChangesetModel();
             var layerModel = new LayerModel();
             var layerDataModel = new LayerDataModel(layerModel, metaConfigurationModel, new InnerLayerDataModel(effectiveTraitModel, ciModel, attributeModel, relationModel));
             var traitModel = new RecursiveTraitModel(effectiveTraitModel, ciModel, attributeModel, relationModel);

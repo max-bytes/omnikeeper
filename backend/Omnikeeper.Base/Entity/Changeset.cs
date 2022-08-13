@@ -11,12 +11,12 @@ namespace Omnikeeper.Base.Entity
         public DateTimeOffset Timestamp { get; private set; }
         public string LayerID { get; private set; }
         public DataOriginV1 DataOrigin { get; }
-        public UserInDatabase User { get; private set; }
+        public long UserID { get; private set; }
 
-        public Changeset(Guid id, UserInDatabase user, string layerID, DataOriginV1 dataOrigin, DateTimeOffset timestamp)
+        public Changeset(Guid id, long userID, string layerID, DataOriginV1 dataOrigin, DateTimeOffset timestamp)
         {
             ID = id;
-            User = user;
+            UserID = userID;
             LayerID = layerID;
             DataOrigin = dataOrigin;
             Timestamp = timestamp;

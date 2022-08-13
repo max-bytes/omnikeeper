@@ -146,6 +146,48 @@ namespace Tests.Integration.Model
             }
         }
 
+        [Test]
+        public async Task UserOfChangesetTest()
+        {
+            using var trans1 = ModelContextBuilder.BuildDeferred();
+            var ciid1 = await GetService<ICIModel>().CreateCI(trans1);
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans1);
+            var layerset = new LayerSet(new string[] { layer1.ID });
+            trans1.Commit();
+
+            var userModel = GetService<IUserInDatabaseModel>();
+            var user1 = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate(), "user1", Guid.NewGuid(), UserType.Robot);
+            var user2 = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate(), "user2", Guid.NewGuid(), UserType.Human);
+
+            using var trans2 = ModelContextBuilder.BuildDeferred();
+            var changesetProxy1 = CreateChangesetProxy(user1);
+            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changesetProxy1, new DataOriginV1(DataOriginType.Manual), trans2, OtherLayersValueHandlingForceWrite.Instance);
+            var changeset1 = await changesetProxy1.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), trans2);
+            trans2.Commit();
+
+            using var trans3 = ModelContextBuilder.BuildDeferred();
+            var changesetProxy2 = CreateChangesetProxy(user2);
+            await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changesetProxy2, new DataOriginV1(DataOriginType.Manual), trans3, OtherLayersValueHandlingForceWrite.Instance);
+            var changeset2 = await changesetProxy2.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), trans3);
+            trans3.Commit();
+
+            using var trans4 = ModelContextBuilder.BuildImmediate();
+            var c1 = await GetService<IChangesetModel>().GetChangeset(changeset1.ID, trans4);
+            if (c1 == null)
+            {
+                Assert.Fail();
+                return;
+            }
+            Assert.AreEqual(user1.ID, c1.UserID);
+            var c2 = await GetService<IChangesetModel>().GetChangeset(changeset2.ID, trans4);
+            if (c2 == null)
+            {
+                Assert.Fail();
+                return;
+            }
+            Assert.AreEqual(user2.ID, c2.UserID);
+        }
+
 
         [Test]
         [Obsolete]

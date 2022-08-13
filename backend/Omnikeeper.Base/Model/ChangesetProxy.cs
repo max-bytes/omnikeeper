@@ -23,7 +23,7 @@ namespace Omnikeeper.Base.Model
             }
             else
             {
-                var newChangeset = await Model.CreateChangeset(User.ID, layerID, dataOrigin, trans, TimeThreshold.Time);
+                var newChangeset = await Model.CreateChangeset(User.ID, layerID, dataOrigin, trans, TimeThreshold);
                 ActiveChangesets.Add(key, newChangeset);
                 return newChangeset;
             }

@@ -46,6 +46,7 @@ namespace Omnikeeper.GraphQL
         private readonly ValidatorContextV1Model validatorContextModel;
         private readonly RecursiveTraitModel recursiveDataTraitModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
+        private readonly IUserInDatabaseModel userInDatabaseModel;
         private readonly IBaseAttributeModel baseAttributeModel;
         private readonly IScheduler localScheduler;
         private readonly IScheduler distributedScheduler;
@@ -58,6 +59,7 @@ namespace Omnikeeper.GraphQL
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GeneratorV1Model generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, ODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel, CLConfigV1Model clConfigModel,
             RecursiveTraitModel recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
+            IUserInDatabaseModel userInDatabaseModel,
             IEnumerable<IPluginRegistration> plugins, IBaseAttributeModel baseAttributeModel, IIndex<string, IScheduler> schedulers,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, IDataLoaderService dataLoaderService, ValidatorContextV1Model validatorContextModel)
         {
@@ -80,6 +82,7 @@ namespace Omnikeeper.GraphQL
             this.clConfigModel = clConfigModel;
             this.recursiveDataTraitModel = recursiveDataTraitModel;
             this.managementAuthorizationService = managementAuthorizationService;
+            this.userInDatabaseModel = userInDatabaseModel;
             this.baseAttributeModel = baseAttributeModel;
             this.localScheduler = schedulers["localScheduler"];
             this.distributedScheduler = schedulers["distributedScheduler"];

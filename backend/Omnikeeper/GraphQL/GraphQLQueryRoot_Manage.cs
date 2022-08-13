@@ -280,6 +280,19 @@ namespace Omnikeeper.GraphQL
                     var plugins = context.RequestServices!.GetServices<IPluginRegistration>();
                     return plugins;
                 });
+
+            FieldAsync<ListGraphType<UserInDatabaseType>>("manage_users",
+                resolve: async context =>
+                {
+                    var userContext = context.SetupUserContext()
+                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+
+                    CheckManagementPermissionThrow(userContext, "read users");
+
+                    var users = await userInDatabaseModel.GetUsers(null, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    return users;
+                });
         }
     }
 }
