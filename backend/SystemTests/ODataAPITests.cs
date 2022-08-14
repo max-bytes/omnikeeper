@@ -41,7 +41,7 @@ namespace SystemTests
                 Query = @"
                     mutation {
 	                    manage_upsertODataAPIContext(
-		                    odataAPIContext: { id: ""testcontext"", config: """"""{ ""$type"":""Omnikeeper.Base.Entity.ODataAPIContext\u002BConfigV3, Omnikeeper.Base"", ""WriteLayerID"":""layer_1"", ""ReadLayerset"":[""layer_1""]}""""""}
+		                    odataAPIContext: { id: ""testcontext"", config: """"""{ ""$type"":""ConfigV4"", ""WriteLayerID"":""layer_1"", ""ReadLayerset"":[""layer_1""], ""ContextAuth"":{""type"":""ContextAuthNone""}}""""""}
                     ) {
 		                    id
 	                    }
