@@ -1,8 +1,7 @@
 ﻿using GraphQL.Types;
-using GraphQL.Utilities;
-using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Model;
 using System;
@@ -11,10 +10,20 @@ namespace Omnikeeper.GraphQL.Types
 {
     public class LayerDataType : ObjectGraphType<LayerData>
     {
-        public LayerDataType()
+        public LayerDataType(CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel, ILayerBasedAuthorizationService lbas)
         {
             Field("description", x => x.Description);
             Field("clConfigID", x => x.CLConfigID);
+            FieldAsync<CLConfigType>("clConfig",
+            resolve: async (context) =>
+            {
+                var userContext = context.GetUserContext();
+                var clConfigID = context.Source.CLConfigID;
+
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                var (clConfig, _) = await clConfigModel.GetSingleByDataID(clConfigID, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                return clConfig;
+            });
             Field("onlineInboundAdapterName", x => x.OIAReference);
             Field("id", x => x.LayerID);
             Field("color", x => x.Color);
@@ -23,17 +32,14 @@ namespace Omnikeeper.GraphQL.Types
             Field<BooleanGraphType>("writable",
             resolve: (context) =>
             {
-                var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var lbas = context.RequestServices!.GetRequiredService<ILayerBasedAuthorizationService>();
+                var userContext = context.GetUserContext();
                 var isWritable = lbas.CanUserWriteToLayer(userContext.User, context.Source!.LayerID);
                 return isWritable;
             });
             FieldAsync<BooleanGraphType>("isMetaConfigurationLayer",
             resolve: async (context) =>
             {
-                var metaConfigurationModel = context.RequestServices!.GetRequiredService<IMetaConfigurationModel>();
-
-                var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                var userContext = context.GetUserContext();
 
                 return await metaConfigurationModel.IsLayerPartOfMetaConfiguration(context.Source!.LayerID, userContext.Transaction);
             });
