@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using GraphQL;
+using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
@@ -23,31 +24,42 @@ namespace Omnikeeper.GraphQL
             public IDictionary<string, ScopedContext>? subContexts;
         }
 
-        private readonly ScopedContext scopedContexts = new ScopedContext();
+        private readonly ScopedContext rootScopedContext = new ScopedContext();
 
-        private ScopedContext FindScopedContext(IList<object> contextPath, int skipFirstN, ScopedContext currentScopedContext)
+        private IEnumerable<ScopedContext> FindScopedContexts(IList<object> contextPath, int skipFirstN, ScopedContext currentScopedContext)
         {
             if (skipFirstN >= contextPath.Count)
-                return currentScopedContext;
+            {
+                yield return currentScopedContext;
+                yield break;
+            }
 
             if (currentScopedContext.subContexts == null)
-                return currentScopedContext;
+            {
+                yield return currentScopedContext;
+                yield break;
+            }
 
             var t = contextPath[skipFirstN];
             if (t is string tt)
             {
                 if (currentScopedContext.subContexts.TryGetValue(tt, out var subScopedContext))
-                    return FindScopedContext(contextPath, skipFirstN + 1, subScopedContext);
-                else
-                    return currentScopedContext;
+                {
+                    var sub = FindScopedContexts(contextPath, skipFirstN + 1, subScopedContext);
+                    foreach (var s in sub)
+                        yield return s;
+                }
             }
             else
             {
-                return FindScopedContext(contextPath, skipFirstN + 1, currentScopedContext);
+                var sub = FindScopedContexts(contextPath, skipFirstN + 1, currentScopedContext);
+                foreach (var s in sub)
+                    yield return s;
             }
+            yield return currentScopedContext;
         }
 
-        private ScopedContext FindOrCreateScopedContext(IList<object> contextPath, int skipFirstN, ScopedContext currentScopedContext)
+        private ScopedContext FindOrCreateScopedContext(IReadOnlyList<object> contextPath, int skipFirstN, ScopedContext currentScopedContext)
         {
             if (skipFirstN >= contextPath.Count)
                 return currentScopedContext;
@@ -81,20 +93,24 @@ namespace Omnikeeper.GraphQL
 
         public TimeThreshold GetTimeThreshold(IEnumerable<object> contextPath)
         {
-            var foundContext = FindScopedContext(contextPath.ToList(), 0, scopedContexts);
-            if (!foundContext.timeThreshold.HasValue)
-                throw new Exception("TimeThreshold not set in current user context"); // throw exception, demand explicit setting
-            else
-                return foundContext.timeThreshold.Value;
+            var foundContexts = FindScopedContexts(contextPath.ToList(), 0, rootScopedContext);
+            foreach(var fc in foundContexts)
+            {
+                if (fc.timeThreshold.HasValue)
+                    return fc.timeThreshold.Value;
+            }
+            throw new Exception("TimeThreshold not set in current user context"); // throw exception, demand explicit setting
         }
 
         public LayerSet GetLayerSet(IEnumerable<object> contextPath)
         {
-            var foundContext = FindScopedContext(contextPath.ToList(), 0, scopedContexts);
-            if (foundContext.layerSet == null)
-                throw new Exception("LayerSet not set in current user context"); // throw exception, demand explicit setting
-            else
-                return foundContext.layerSet;
+            var foundContexts = FindScopedContexts(contextPath.ToList(), 0, rootScopedContext);
+            foreach (var fc in foundContexts)
+            {
+                if (fc.layerSet != null)
+                    return fc.layerSet;
+            }
+            throw new Exception("LayerSet not set in current user context"); // throw exception, demand explicit setting
         }
 
         public IModelContext Transaction
@@ -116,26 +132,13 @@ namespace Omnikeeper.GraphQL
             get
             {
                 TryGetValue("ChangesetProxy", out var t);
-                if (t == null) throw new System.Exception("Expected ChangesetProxy to be set");
+                if (t == null)
+                    throw new System.Exception("Expected ChangesetProxy to be set");
                 return (IChangesetProxy)t;
             }
             private set
             {
                 this.AddOrUpdate("ChangesetProxy", value);
-            }
-        }
-
-        public MultiMutationData? MultiMutationData
-        {
-            get
-            {
-                if (TryGetValue("MultiMutationData", out var t))
-                    return t as MultiMutationData;
-                return null;
-            }
-            set
-            {
-                this.AddOrUpdate("MultiMutationData", value);
             }
         }
 
@@ -151,14 +154,14 @@ namespace Omnikeeper.GraphQL
 
         internal OmnikeeperUserContext WithTimeThreshold(TimeThreshold ts, IEnumerable<object> contextPath)
         {
-            var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, scopedContexts);
+            var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, rootScopedContext);
             foundContext.timeThreshold = ts;
             return this;
         }
 
         internal async Task<OmnikeeperUserContext> WithLayersetAsync(Func<IModelContext, Task<LayerSet>> f, IEnumerable<object> contextPath)
         {
-            var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, scopedContexts);
+            var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, rootScopedContext);
             var ls = await f(Transaction);
             foundContext.layerSet = ls;
             return this;
@@ -166,28 +169,41 @@ namespace Omnikeeper.GraphQL
 
         internal OmnikeeperUserContext WithLayerset(LayerSet ls, IEnumerable<object> contextPath)
         {
-            var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, scopedContexts);
+            var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, rootScopedContext);
             foundContext.layerSet = ls;
             return this;
         }
 
-        internal OmnikeeperUserContext WithChangesetProxy(IChangesetModel changesetModel, IEnumerable<object> contextPath)
+        internal OmnikeeperUserContext WithChangesetProxy(IChangesetModel changesetModel, TimeThreshold timeThreshold)
         {
-            if (!ContainsKey("ChangesetProxy"))
-            {
-                // NOTE: this is slightly incorrect, because we use the timeThreshold that is bound to the (current) contextPath
-                // later parts may use different time thresholds, but the changesetProxy will stay the same and will keep this first timeThreshold;
-                // but making the changesetProxy scoped (like TimeThreshold is) would not work either, because then it would not be able to
-                // properly handle multiple mutations per request
-                var changesetProxy = new ChangesetProxy(User.InDatabase, GetTimeThreshold(contextPath), changesetModel);
-                ChangesetProxy = changesetProxy;
-            }
+            var changesetProxy = new ChangesetProxy(User.InDatabase, timeThreshold, changesetModel);
+            ChangesetProxy = changesetProxy;
             return this;
         }
 
-        internal void CommitAndStartNewTransactionIfLastMutation(Func<IModelContextBuilder, IModelContext> f)
+        internal void CommitAndStartNewTransactionIfLastMutation(IResolveFieldContext rfc, Func<IModelContextBuilder, IModelContext> f)
         {
-            if (MultiMutationData != null && MultiMutationData.IsLastMutation)
+            if (rfc.Document.Definitions[0] is not GraphQLParser.AST.GraphQLOperationDefinition operationDefinition)
+                throw new Exception();
+            if (operationDefinition.Operation != GraphQLParser.AST.OperationType.Mutation)
+                throw new Exception();
+
+            var numMutations = operationDefinition.SelectionSet.Selections.Count;
+            var currentAlias = rfc.FieldAst.Alias;
+
+            // find out if we are in the last mutation by checking the AST and comparing our current alias to the list of aliases
+            bool isLastMutation;
+            if (numMutations <= 1 || currentAlias == null)
+            {
+                isLastMutation = true;
+            } else
+            {
+                var currentMutationName = currentAlias.Name;
+                var currentMutationIndex = operationDefinition.SelectionSet.Selections.FindIndex(s => (s as GraphQLParser.AST.GraphQLField)!.Alias!.Name == currentMutationName);
+                isLastMutation = currentMutationIndex == numMutations - 1;
+            }
+
+            if (isLastMutation)
             {
                 Transaction.Commit();
                 var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();

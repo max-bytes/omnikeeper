@@ -1,10 +1,13 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
+using GraphQL.Execution;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -98,6 +101,7 @@ namespace Omnikeeper.Controllers
                 options.ValidationRules = DocumentValidator.CoreRules.Concat(_validationRules).ToList();
                 options.RequestServices = HttpContext.RequestServices;
                 options.Listeners.Add(dataLoaderDocumentListener);
+                options.Listeners.Add(new MyDocumentExecutionListener());
             });
 
             var json = _serializer.Serialize(result);
@@ -109,6 +113,42 @@ namespace Omnikeeper.Controllers
             }
 
             return ret;
+        }
+    }
+
+    public class MyDocumentExecutionListener : IDocumentExecutionListener
+    {
+        public Task AfterExecutionAsync(IExecutionContext context)
+        {
+            // NO-OP
+            return Task.CompletedTask;
+        }
+
+        public Task AfterValidationAsync(IExecutionContext context, IValidationResult validationResult)
+        {
+            // NO-OP
+            return Task.CompletedTask;
+        }
+
+        public Task BeforeExecutionAsync(IExecutionContext context)
+        {
+            var uc = (context.UserContext as OmnikeeperUserContext)!;
+            var timeThreshold = TimeThreshold.BuildLatest();
+            uc.WithTimeThreshold(timeThreshold, new List<object>());
+            switch (context.Operation.Operation)
+            {
+                case GraphQLParser.AST.OperationType.Query:
+                    uc.WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    break;
+                case GraphQLParser.AST.OperationType.Mutation:
+                    uc.WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                        .WithChangesetProxy(context.RequestServices!.GetRequiredService<IChangesetModel>(), timeThreshold);
+                    break;
+                case GraphQLParser.AST.OperationType.Subscription:
+                    throw new Exception("Unsupported");
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -8,6 +8,7 @@ using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Controllers;
 using Omnikeeper.GraphQL;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -107,6 +108,7 @@ namespace Tests.Integration.GraphQL.Base
                 options.ValidationRules = null;
                 options.RequestServices = ServiceProvider;
                 options.Listeners.Add(dataLoaderDocumentListener);
+                options.Listeners.Add(new MyDocumentExecutionListener());
             }).GetAwaiter().GetResult();
 
             var serializer = GetService<IGraphQLTextSerializer>();

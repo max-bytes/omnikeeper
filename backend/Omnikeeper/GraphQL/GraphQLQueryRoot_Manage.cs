@@ -38,9 +38,7 @@ namespace Omnikeeper.GraphQL
             Field<ListGraphType<LayerDataType>>("manage_layers",
                 resolve: context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+                    var userContext = context.GetUserContext();
 
                     CheckManagementPermissionThrow(userContext);
 
@@ -53,9 +51,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "layerID" }),
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+                    var userContext = context.GetUserContext();
 
                     var layerID = context.GetArgument<string>("layerID")!;
 
@@ -85,8 +81,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<OIAContextType>>("manage_oiacontexts",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    var userContext = context.GetUserContext();
 
                     CheckManagementPermissionThrow(userContext);
 
@@ -98,9 +93,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<ODataAPIContextType>>("manage_odataapicontexts",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+                    var userContext = context.GetUserContext();
 
                     CheckManagementPermissionThrow(userContext);
 
@@ -114,9 +107,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<StringGraphType>("manage_baseConfiguration",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+                    var userContext = context.GetUserContext();
 
                     CheckManagementPermissionThrow(userContext);
 
@@ -130,9 +121,7 @@ namespace Omnikeeper.GraphQL
                 arguments: new QueryArguments(),
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+                    var userContext = context.GetUserContext();
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read predicates");
@@ -145,9 +134,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<RecursiveTraitType>>("manage_recursiveTraits",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+                    var userContext = context.GetUserContext();
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read traits");
@@ -161,9 +148,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<GeneratorType>>("manage_generators",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+                    var userContext = context.GetUserContext();
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read generators");
@@ -175,9 +160,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<AuthRoleType>>("manage_authRoles",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+                    var userContext = context.GetUserContext();
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read auth roles");
@@ -189,9 +172,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<CLConfigType>>("manage_clConfigs",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+                    var userContext = context.GetUserContext();
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read CL configs");
@@ -204,9 +185,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<ValidatorContextType>>("manage_validatorContexts",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path);
+                    var userContext = context.GetUserContext();
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read validator contexts configs");
@@ -218,8 +197,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<StringGraphType>>("manage_availablePermissions",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    var userContext = context.GetUserContext();
 
                     CheckManagementPermissionThrow(userContext);
 
@@ -253,8 +231,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<RunningJobType>>("manage_runningJobs",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    var userContext = context.GetUserContext();
 
                     CheckManagementPermissionThrow(userContext);
 
@@ -284,9 +261,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<UserInDatabaseType>>("manage_users",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    var userContext = context.GetUserContext();
 
                     CheckManagementPermissionThrow(userContext, "read users");
 

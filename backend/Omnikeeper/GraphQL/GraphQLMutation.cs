@@ -70,10 +70,7 @@ namespace Omnikeeper.GraphQL
                     var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>())!;
                     var removeRelations = context.GetArgument("RemoveRelations", new List<RemoveRelationInput>())!;
 
-                    var userContext = await context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                        .WithChangesetProxy(changesetModel, context.Path)
+                    var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(readLayerIDs, trans), context.Path);
 
                     if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
@@ -155,7 +152,7 @@ namespace Omnikeeper.GraphQL
                     if (!affectedCIIDs.IsEmpty())
                         affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.GetLayerSet(context.Path), true, AllAttributeSelection.Instance, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
 
-                    userContext.CommitAndStartNewTransactionIfLastMutation(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return new MutateReturn(affectedCIs);
                 });
@@ -168,10 +165,7 @@ namespace Omnikeeper.GraphQL
                 {
                     var createCIs = context.GetArgument("cis", new List<CreateCIInput>())!;
 
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                        .WithChangesetProxy(changesetModel, context.Path);
+                    var userContext = context.GetUserContext();
 
                     if (!layerBasedAuthorizationService.CanUserWriteToAllLayers(userContext.User, createCIs.Select(ci => ci.LayerIDForName)))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', createCIs.Select(ci => ci.LayerIDForName))}");
@@ -189,7 +183,7 @@ namespace Omnikeeper.GraphQL
 
                         createdCIIDs.Add(ciid);
                     }
-                    userContext.CommitAndStartNewTransactionIfLastMutation(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return new CreateCIsReturn(createdCIIDs);
                 });
@@ -204,10 +198,7 @@ namespace Omnikeeper.GraphQL
                     var layerID = context.GetArgument<string>("layer")!;
                     var insertAttributes = context.GetArgument("attributes", new List<InsertChangesetDataAttributeInput>())!;
 
-                    var userContext = await context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                        .WithChangesetProxy(changesetModel, context.Path)
+                    var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(new string[] { layerID }, trans), context.Path);
 
                     if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, layerID))
@@ -221,7 +212,7 @@ namespace Omnikeeper.GraphQL
 
                     var ciid = await changesetDataModel.InsertOrUpdateWithAdditionalAttributes(changesetProxy, layerID, insertAttributes.Select(a => (name: a.Name, value: AttributeValueHelper.BuildFromDTO(a.Value))), dataOrigin, userContext.Transaction);
 
-                    userContext.CommitAndStartNewTransactionIfLastMutation(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return new InsertChangesetDataReturn(ciid);
                 });

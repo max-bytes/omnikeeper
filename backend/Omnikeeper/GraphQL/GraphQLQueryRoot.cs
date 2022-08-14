@@ -101,8 +101,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<GuidGraphType>>("ciids",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    var userContext = context.GetUserContext();
 
                     var ciids = await ciidModel.GetCIIDs(userContext.Transaction);
                     // reduce CIs to those that are allowed
@@ -124,8 +123,7 @@ namespace Omnikeeper.GraphQL
                     var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
                     var layerStrings = context.GetArgument<string[]>("layers")!;
 
-                    var userContext = await context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                    var userContext = await context.GetUserContext()
                         .WithTimeThreshold((ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest(), context.Path)
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
@@ -248,9 +246,7 @@ namespace Omnikeeper.GraphQL
                     ),
                 resolve: async context =>
                 {
-                    var userContext = context
-                        .SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    var userContext = context.GetUserContext();
 
                     var leftLayers = await layerModel.BuildLayerSet(context.GetArgument<string[]>($"leftLayers")!, userContext.Transaction);
                     var rightLayers = await layerModel.BuildLayerSet(context.GetArgument<string[]>($"rightLayers")!, userContext.Transaction);
@@ -323,8 +319,7 @@ namespace Omnikeeper.GraphQL
                     ),
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                    var userContext = context.GetUserContext()
                         .WithTimeThreshold(context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()), context.Path);
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
@@ -339,8 +334,7 @@ namespace Omnikeeper.GraphQL
                     ),
                 resolve: context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                    var userContext = context.GetUserContext()
                         .WithTimeThreshold(context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()), context.Path);
 
                     return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
@@ -359,9 +353,7 @@ namespace Omnikeeper.GraphQL
                 {
                     var layerStrings = context.GetArgument<string[]>("layers")!;
 
-                    var userContext = await context.SetupUserContext()
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                    var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                     if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
@@ -385,9 +377,7 @@ namespace Omnikeeper.GraphQL
                 {
                     var layerStrings = context.GetArgument<string[]>("layers")!;
 
-                    var userContext = await context.SetupUserContext()
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                    var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                     if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
@@ -411,9 +401,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }),
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    var userContext = context.GetUserContext();
 
                     var id = context.GetArgument<string>("id")!;
 
@@ -424,9 +412,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<TraitType>>("activeTraits",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    var userContext = context.GetUserContext();
 
                     var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
                     return traits.Values.OrderBy(t => t.ID);
@@ -443,9 +429,7 @@ namespace Omnikeeper.GraphQL
                     var traitID = context.GetArgument<string>("traitID")!;
                     var ciids = context.GetArgument<Guid[]?>("ciids", null);
 
-                    var userContext = await context.SetupUserContext()
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                    var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                     if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
@@ -477,9 +461,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<StatisticsType>("statistics",
                 resolve: async context =>
                 {
-                    var userContext = context.SetupUserContext()
-                        .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    var userContext = context.GetUserContext();
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
 
@@ -505,9 +487,7 @@ namespace Omnikeeper.GraphQL
             {
                 var layerStrings = context.GetArgument<string[]>("layers")!;
 
-                var userContext = await context.SetupUserContext()
-                    .WithTimeThreshold(TimeThreshold.BuildLatest(), context.Path)
-                    .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                var userContext = await context.GetUserContext()
                     .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
                 if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
