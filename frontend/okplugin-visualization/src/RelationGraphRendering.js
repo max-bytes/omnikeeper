@@ -5,9 +5,7 @@ import { SyncOutlined } from '@ant-design/icons';
 import { useLazyQuery } from "@apollo/client";
 import _ from 'lodash';
 import cytoscape from 'cytoscape';
-// import dagre from 'cytoscape-dagre';
 import fcose from 'cytoscape-fcose';
-import layoutUtilities from 'cytoscape-layout-utilities';
 import { calculateNodeWidth, calculateNodeHeight } from './cytoscape_utils';
 import gql from 'graphql-tag';
 import SingleCISelect from "components/SingleCISelect";
@@ -54,7 +52,6 @@ export default function RelationGraphRendering(props) {
     
     // TODO: should be remountable
     useEffect(() => {
-        cytoscape.use( layoutUtilities );
         cytoscape.use( fcose );
     }, []);
 

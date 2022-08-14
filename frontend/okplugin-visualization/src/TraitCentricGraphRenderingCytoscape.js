@@ -10,7 +10,6 @@ import TraitList from "./TraitList.js";
 import _ from 'lodash';
 import cytoscape from 'cytoscape';
 import fcose from 'cytoscape-fcose';
-import layoutUtilities from 'cytoscape-layout-utilities';
 import { calculateNodeWidth, calculateNodeHeight } from './cytoscape_utils';
 
 export default function TraitCentricGraphRenderingCytoscape(props) {
@@ -34,10 +33,8 @@ export default function TraitCentricGraphRenderingCytoscape(props) {
         idealEdgeLength: edge => 300,
       };
     
-    // TODO: should be remountable
     useEffect(() => {
-        cytoscape.use( layoutUtilities );
-        cytoscape.use( fcose );
+        cytoscape.use(fcose);
     }, []);
 
     useEffect(() => {
