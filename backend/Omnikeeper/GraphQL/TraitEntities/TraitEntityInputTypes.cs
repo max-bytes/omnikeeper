@@ -150,13 +150,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
     public static class FilterInputExtensions
     {
         // NOTE: resulting CIIDs do NOT necessarily fulfill any trait requirements, systems using this method need to perform these checks if needed
-        public static IDataLoaderResult<ICIIDSelection> Apply(this FilterInput filter, IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel, IDataLoaderService dataLoaderService,
+        public static IDataLoaderResult<ICIIDSelection> Apply(this FilterInput filter, ICIIDSelection ciSelection, IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel, IDataLoaderService dataLoaderService,
             LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
         {
             IDataLoaderResult<ICIIDSelection> matchingCIIDs;
             if (!filter.RelationFilters.IsEmpty() && !filter.AttributeFilters.IsEmpty())
             {
-                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService)
+                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(ciSelection, relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService)
                 .Then(async matchingCIIDs =>
                     await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(matchingCIIDs, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
                 );
@@ -164,12 +164,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
             else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
             {
                 matchingCIIDs = new SimpleDataLoader<ICIIDSelection>(async token =>
-                    await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
+                    await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(ciSelection, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
                 );
             }
             else if (filter.AttributeFilters.IsEmpty() && !filter.RelationFilters.IsEmpty())
             {
-                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService);
+                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(ciSelection, relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService);
             }
             else
             {

@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL.TraitEntities
 {
@@ -59,7 +60,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             {
                 this.Field("filtered", new ListGraphType(wrapperElementGraphType),
                     arguments: new QueryArguments(
-                        new QueryArgument(filterGraphType) { Name = "filter" }
+                        new QueryArgument(new NonNullGraphType(filterGraphType)) { Name = "filter" }
                     ),
                     resolve: context =>
                     {
@@ -71,7 +72,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         // use filter to reduce list of potential cis
                         var filter = context.GetArgument<FilterInput>("filter");
 
-                        var matchingCIIDs = filter.Apply(attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
+                        var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
 
                         return matchingCIIDs.Then(async matchingCIIDs =>
                         {
@@ -95,7 +96,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         // use filter to reduce list of potential cis
                         var filter = context.GetArgument<FilterInput>("filter");
 
-                        var matchingCIIDs = filter.Apply(attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
+                        var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
 
                         return matchingCIIDs.Then(async matchingCIIDs =>
                         {
@@ -231,9 +232,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
     {
         public ElementType() { }
 
-        public delegate bool ElementWrapperTypeLookup(string key, [MaybeNullWhen(false)] out ElementWrapperType ew);
-        public void Init(ITrait underlyingTrait, RelatedCIType relatedCIType, ElementWrapperTypeLookup elementWrapperTypeLookup, IDataLoaderService dataLoaderService,
-            IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, ICIModel ciModel, IAttributeModel attributeModel, ILogger logger)
+        public delegate bool ElementTypeContainerLookup(string key, [MaybeNullWhen(false)] out ElementTypesContainer etc);
+        public void Init(ITrait underlyingTrait, RelatedCIType relatedCIType, ElementTypeContainerLookup elementTypesContainerLookup,
+            IRelationModel relationModel, ICIIDModel ciidModel,
+            IDataLoaderService dataLoaderService, IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, ICIModel ciModel, IAttributeModel attributeModel, ILogger logger)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityGraphTypeName(underlyingTrait);
 
@@ -280,12 +282,17 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 foreach (var traitIDHint in traitHints)
                 {
-                    if (elementWrapperTypeLookup(traitIDHint, out var elementWrapperType))
+                    if (elementTypesContainerLookup(traitIDHint, out var elementTypesContainer))
                     {
+                        var queryArguments = new List<QueryArgument>();
+                        if (elementTypesContainer.FilterInput != null)
+                            queryArguments.Add(new QueryArgument(elementTypesContainer.FilterInput) { Name = "filter" });
+
                         AddField(new FieldType()
                         {
                             Name = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldWithTraitHintName(r, traitIDHint),
-                            ResolvedType = new ListGraphType(elementWrapperType),
+                            ResolvedType = new ListGraphType(elementTypesContainer.ElementWrapper),
+                            Arguments = new QueryArguments(queryArguments),
                             Resolver = new FuncFieldResolver<object>(async context =>
                             {
                                 if (context.Source is not EffectiveTrait o)
@@ -297,10 +304,18 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
                                 var trans = userContext.Transaction;
 
+                                var filter = context.GetArgument<FilterInput?>("filter", null);
+
                                 var trs = (directionForward) ? o.OutgoingTraitRelations : o.IncomingTraitRelations;
                                 if (trs.TryGetValue(r.Identifier, out var tr))
                                 {
                                     var otherCIIDs = (directionForward ? tr.Select(r => r.Relation.ToCIID) : tr.Select(r => r.Relation.FromCIID)).ToHashSet();
+
+                                    IDataLoaderResult<ICIIDSelection> matchingOtherCIIDsDL;
+                                    if (filter != null)
+                                        matchingOtherCIIDsDL = filter.Apply(SpecificCIIDsSelection.Build(otherCIIDs), attributeModel, relationModel, ciidModel, dataLoaderService, layerSet, trans, timeThreshold);
+                                    else
+                                        matchingOtherCIIDsDL = new SimpleDataLoader<ICIIDSelection>(rfc => Task.FromResult(SpecificCIIDsSelection.Build(otherCIIDs)));
 
                                     var trait = await traitsProvider.GetActiveTrait(traitIDHint, trans, timeThreshold);
                                     if (trait == null)
@@ -311,19 +326,21 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                         trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet()
                                     );
 
-                                    return dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(otherCIIDs), attributeSelection, ciModel, attributeModel, layerSet, timeThreshold, trans)
-                                        .Then(cis =>
-                                        {
-                                            var ret = new List<IDataLoaderResult<EffectiveTrait?>>();
-                                            foreach (var ci in cis)
+                                    return matchingOtherCIIDsDL.Then(matchingOtherCIIDs =>
+                                    {
+                                        return dataLoaderService.SetupAndLoadMergedCIs(matchingOtherCIIDs, attributeSelection, ciModel, attributeModel, layerSet, timeThreshold, trans)
+                                            .Then(cis =>
                                             {
-                                                var et = dataLoaderService.SetupAndLoadEffectiveTraits(ci, NamedTraitsSelection.Build(traitIDHint), effectiveTraitModel, traitsProvider, layerSet, timeThreshold, trans)
-                                                    .Then(ets => ets.FirstOrDefault());
-                                                ret.Add(et);
-                                            }
-                                            return ret.ToResultOfList().Then(items => items.Where(item => item != null));
-                                        });
-
+                                                var ret = new List<IDataLoaderResult<EffectiveTrait?>>();
+                                                foreach (var ci in cis)
+                                                {
+                                                    var et = dataLoaderService.SetupAndLoadEffectiveTraits(ci, NamedTraitsSelection.Build(traitIDHint), effectiveTraitModel, traitsProvider, layerSet, timeThreshold, trans)
+                                                        .Then(ets => ets.FirstOrDefault());
+                                                    ret.Add(et);
+                                                }
+                                                return ret.ToResultOfList().Then(items => items.Where(item => item != null));
+                                            });
+                                    });
                                 }
                                 else return ImmutableList<EffectiveTrait>.Empty;
                             })

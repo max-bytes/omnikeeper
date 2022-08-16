@@ -13,7 +13,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 var traitID = elementTypeContainer.Trait.ID;
 
                 var fieldName = TraitEntityTypesNameGenerator.GenerateTraitIDFieldName(traitID);
-                var t = elementTypeContainer.RootQueryType;
+                var t = elementTypeContainer.RootQuery;
                 tet.Field(fieldName, t, resolve: context => t);
             }
 

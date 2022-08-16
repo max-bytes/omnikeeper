@@ -75,7 +75,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     arguments: new QueryArguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" },
+                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" },
                         new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "ciid" },
                         new QueryArgument<StringGraphType> { Name = "ciName" }),
                     resolve: async context =>
@@ -117,7 +117,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     arguments: new QueryArguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" },
+                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" },
                         new QueryArgument<StringGraphType> { Name = "ciName" }),
                     resolve: async context =>
                     {
@@ -141,7 +141,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                         // check if the trait entity has an ID, and if so, check that there is no existing entity with that ID
                         Guid finalCIID;
-                        if (elementTypeContainer.IDInputType != null)
+                        if (elementTypeContainer.IDInput != null)
                         {
                             var idAttributeTuples = insertInput.AttributeValues.Where(t => t.traitAttribute.AttributeTemplate.IsID.GetValueOrDefault(false)).Select(t => (t.traitAttribute.AttributeTemplate.Name, t.value)).ToArray();
                             var currentCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
@@ -207,14 +207,14 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         return removed;
                     });
 
-                if (elementTypeContainer.FilterInputType != null)
+                if (elementTypeContainer.FilterInput != null)
                 {
                     tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateUpsertSingleByFilterMutationName(traitID), elementTypeContainer.ElementWrapper,
                         arguments: new QueryArguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                            new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" },
-                            new QueryArgument(elementTypeContainer.FilterInputType) { Name = "filter" },
+                            new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" },
+                            new QueryArgument(elementTypeContainer.FilterInput) { Name = "filter" },
                             new QueryArgument<StringGraphType> { Name = "ciName" }),
                         resolve: async context =>
                         {
@@ -236,7 +236,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
                                 throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
 
-                            var matchingCIIDs = filter.Apply(attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
+                            var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
                             return matchingCIIDs.Then(async matchingCIIDs =>
                             {
                                 var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
@@ -264,7 +264,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         arguments: new QueryArguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                            new QueryArgument(elementTypeContainer.FilterInputType) { Name = "filter" }
+                            new QueryArgument(elementTypeContainer.FilterInput) { Name = "filter" }
                         ),
                         description: @"Note on the return value: only returns true if the trait entity was present 
                                 (and found through the filter) first, and it is not present anymore after the deletion at that CIID.",
@@ -286,7 +286,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
                                     throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
 
-                                var matchingCIIDs = filter.Apply(attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
+                                var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
                                 return matchingCIIDs.Then(async matchingCIIDs =>
                                 {
                                     var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
@@ -308,14 +308,14 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             });
                 }
 
-                if (elementTypeContainer.IDInputType != null) // only add *byDataID-mutations for trait entities that have an ID
+                if (elementTypeContainer.IDInput != null) // only add *byDataID-mutations for trait entities that have an ID
                 {
                     var upsertByDataIDMutationName = TraitEntityTypesNameGenerator.GenerateUpsertByDataIDMutationName(traitID);
                     tet.FieldAsync(upsertByDataIDMutationName, elementTypeContainer.ElementWrapper,
                         arguments: new QueryArguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                            new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" },
+                            new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" },
                             new QueryArgument<StringGraphType> { Name = "ciName" }),
                         resolve: async context =>
                         {
@@ -366,7 +366,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         arguments: new QueryArguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                            new QueryArgument(new NonNullGraphType(elementTypeContainer.IDInputType)) { Name = "id" }
+                            new QueryArgument(new NonNullGraphType(elementTypeContainer.IDInput)) { Name = "id" }
                         ),
                         description: @"Note on the return value: only returns true if the trait entity was present 
                             (and found through its ID) first, and it is not present anymore after the deletion at that CIID.",
@@ -420,7 +420,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateInsertChangesetDataAsTraitEntityMutationName(traitID), elementTypeContainer.ElementWrapper,
                     arguments: new QueryArguments(
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "layer" },
-                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInputType)) { Name = "input" }),
+                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" }),
                     resolve: async context =>
                     {
                         var layerID = context.GetArgument<string>("layer")!;
@@ -440,7 +440,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
                             throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
 
-                        if (elementTypeContainer.IDInputType != null)
+                        if (elementTypeContainer.IDInput != null)
                             throw new Exception("Inserting trait entity that has ID as changeset data not supported");
 
                         var insertInput = context.GetArgument<UpsertInput>("input");

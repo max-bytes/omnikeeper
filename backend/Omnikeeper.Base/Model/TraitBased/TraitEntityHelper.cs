@@ -133,11 +133,12 @@ namespace Omnikeeper.Base.Model.TraitBased
             return foundCIIDs;
         }
 
-        public static IDataLoaderResult<ICIIDSelection> GetMatchingCIIDsByRelationFilters(IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<RelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
+        public static IDataLoaderResult<ICIIDSelection> GetMatchingCIIDsByRelationFilters(ICIIDSelection ciSelection, IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<RelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
 
+            // TODO: not very good for performance, escpecially when a ciSelection != All is applied
             var relationsDL = dataLoaderService.SetupAndLoadRelation(RelationSelectionWithPredicate.Build(filters.Select(t => t.PredicateID)), relationModel, layerSet, timeThreshold, trans);
 
             return relationsDL.Then(async relations =>
@@ -148,7 +149,9 @@ namespace Omnikeeper.Base.Model.TraitBased
                 foreach (var filter in filters)
                 {
                     var candidateRelations = relationsLookup[filter.PredicateID];
-                    var ciidGroupedRelations = (filter.DirectionForward) ? candidateRelations.GroupBy(r => r.Relation.FromCIID) : candidateRelations.GroupBy(r => r.Relation.ToCIID);
+                    var ciidGroupedRelations = (filter.DirectionForward) ? 
+                        candidateRelations.Where(r => ciSelection.Contains(r.Relation.FromCIID)).GroupBy(r => r.Relation.FromCIID) : 
+                        candidateRelations.Where(r => ciSelection.Contains(r.Relation.ToCIID)).GroupBy(r => r.Relation.ToCIID);
 
                     // TODO: performance improvement: after the first filter, we should reduce the input list
 
