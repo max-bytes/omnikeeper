@@ -17,7 +17,7 @@ export function calculateNodeWidth(node) {
     // User-defined padding
     const padding = 20
 
-    return ctx.measureText(lines[max_line]).width + padding;
+    return Math.max(350, ctx.measureText(lines[max_line]).width + padding);
 }
 
 export function calculateNodeHeight(node) {

@@ -90,7 +90,7 @@ function Layers(props) {
     return <>
         <div style={{paddingBottom: '5px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end'}}>
           <Button size='small' onClick={() => toggleLayerVisibilityAll(data.layers)}>
-            <FontAwesomeIcon icon={((true) ? faEye : faEyeSlash)} fixedWidth style={{ padding: "2px"}} />
+            <FontAwesomeIcon icon={((true) ? faEye : faEyeSlash)} fixedWidth style={{ padding: "2px"}} size="xs" />
           </Button>
         </div>
         <Flipper flipKey={layers.map(a => a.id + ";" + a.visible).join(' ')}>
@@ -114,13 +114,13 @@ function Layers(props) {
                 {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} fixedWidth />)}
                 &nbsp;&nbsp;
                 <Button size='small' disabled={!previousLayer} onClick={() => changeLayerSortOrder(layer.id, previousLayer.id, 1, data.layers)}>
-                  <FontAwesomeIcon icon={faArrowAltCircleUp} fixedWidth style={{ padding: "2px"}} />
+                  <FontAwesomeIcon icon={faArrowAltCircleUp} fixedWidth style={{ padding: "2px"}} size="xs" />
                 </Button>
                 <Button size='small' disabled={!nextLayer} onClick={() => changeLayerSortOrder(layer.id, nextLayer.id, -1, data.layers)}>
-                  <FontAwesomeIcon icon={faArrowAltCircleDown} fixedWidth style={{ padding: "2px"}} />
+                  <FontAwesomeIcon icon={faArrowAltCircleDown} fixedWidth style={{ padding: "2px"}} size="xs" />
                 </Button>
                 <Button size='small' onClick={() => toggleLayerVisibility(layer.id, data.layers)} style={{ marginLeft: "0.5rem" }}>
-                  <FontAwesomeIcon icon={((layer.visible) ? faEye : faEyeSlash)} fixedWidth style={{ padding: "2px"}} />
+                  <FontAwesomeIcon icon={((layer.visible) ? faEye : faEyeSlash)} fixedWidth style={{ padding: "2px"}} size="xs" />
                 </Button>
               </div>
             </Flipped>)
