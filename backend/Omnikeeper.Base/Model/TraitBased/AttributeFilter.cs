@@ -7,10 +7,9 @@ namespace Omnikeeper.Base.Model.TraitBased
     public class AttributeFilter
     {
         public readonly string attributeName;
-        // TODO: support non-text filters
-        public readonly AttributeScalarTextFilter filter;
+        public readonly IAttributeFilter filter;
 
-        public AttributeFilter(string attributeName, AttributeScalarTextFilter filter)
+        public AttributeFilter(string attributeName, IAttributeFilter filter)
         {
             this.attributeName = attributeName;
             this.filter = filter;
@@ -42,7 +41,12 @@ namespace Omnikeeper.Base.Model.TraitBased
         }
     }
 
-    public class AttributeScalarTextFilter
+    public interface IAttributeFilter
+    {
+
+    }
+
+    public class AttributeScalarTextFilter : IAttributeFilter
     {
         public TextFilterRegexInput? Regex;
         public string? Exact;
@@ -53,11 +57,30 @@ namespace Omnikeeper.Base.Model.TraitBased
         public static AttributeScalarTextFilter Build(TextFilterRegexInput? regexObj, string? exact, bool? isSet)
         {
             if (regexObj == null && exact == null && isSet == null)
-                throw new Exception("At least one filter option needs to be set for AttributeTextFilter");
+                throw new Exception("At least one filter option needs to be set for AttributeScalarTextFilter");
             return new AttributeScalarTextFilter()
             {
                 Exact = exact,
                 Regex = regexObj,
+                IsSet = isSet
+            };
+        }
+    }
+
+    public class AttributeScalarBooleanFilter : IAttributeFilter
+    {
+        public bool? IsTrue;
+        public bool? IsSet;
+
+        private AttributeScalarBooleanFilter() { }
+
+        public static AttributeScalarBooleanFilter Build(bool? isTrue, bool? isSet)
+        {
+            if (isTrue == null && isSet == null)
+                throw new Exception("At least one filter option needs to be set for AttributeScalarBooleanFilter");
+            return new AttributeScalarBooleanFilter()
+            {
+                IsTrue = isTrue,
                 IsSet = isSet
             };
         }

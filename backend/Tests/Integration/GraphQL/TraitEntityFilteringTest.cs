@@ -217,7 +217,170 @@ mutation($name: String!, $id: String!) {
         }
 
 
+        [Test]
+        public async Task TestBooleanFiltering()
+        {
+            var userInDatabase = await SetupDefaultUser();
+            var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", ModelContextBuilder.BuildImmediate());
+            var user = new AuthenticatedUser(userInDatabase,
+                new AuthRole[]
+                {
+                    new AuthRole("ar1", new string[] {
+                        PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),
+                        PermissionUtils.GetLayerReadPermission(layerOkConfig), PermissionUtils.GetLayerWritePermission(layerOkConfig),
+                        PermissionUtils.GetManagementPermission()
+                    }),
+                });
 
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            string mutationCreateTrait = @"
+mutation {
+  manage_upsertRecursiveTrait(
+    trait: {
+      id: ""test_trait_a""
+      requiredAttributes: [
+        {
+          identifier: ""id""
+          template: {
+            name: ""test_trait_a.id""
+            type: TEXT
+            isID: true
+            isArray: false
+            valueConstraints: [
+                """"""{""$type"":""Omnikeeper.Base.Entity.CIAttributeValueConstraintTextLength, Omnikeeper.Base"",""Minimum"":1,""Maximum"":null}""""""
+            ]
+          }
+        }
+      ]
+      optionalAttributes: [
+        {
+          identifier: ""flag""
+          template: {
+            name: ""test_trait_a.flag""
+            type: BOOLEAN
+            isID: false
+            isArray: false
+            valueConstraints: []
+          }
+        }]
+      optionalRelations: [],
+      requiredTraits: []
+    }
+  ) {
+    id
+  }
+}
+";
+            var expected1 = @"
+{
+    ""manage_upsertRecursiveTrait"":
+        {
+            ""id"": ""test_trait_a""
+        }
+}";
+            AssertQuerySuccess(mutationCreateTrait, expected1, user);
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            var mutationInsert = @"
+mutation($flag: Boolean, $id: String!) {
+  insertNew_test_trait_a(
+    layers: [""layer_1""]
+    writeLayer: ""layer_1""
+    ciName: $id
+    input: { id: $id, flag: $flag }
+  ) {
+                entity { id }
+  }
+        }
+";
+
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_1" }, { "flag", true } }));
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_2" }, { "flag", false } }));
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_3" }, { "flag", null } }));
+
+            // there must not be an entity
+            var queryTestTraitA = @"
+{
+  traitEntities(layers: [""layer_1""]) {
+    test_trait_a {
+                all {
+                    entity {
+                        id
+                        flag
+                    }
+                }
+            }
+        }
+    }
+";
+            var expected4 = @"
+{
+  ""traitEntities"": {
+	  ""test_trait_a"": {
+	    ""all"": [
+          {
+            ""entity"": {
+              ""id"": ""entity_1"",
+              ""flag"": true
+            }
+          },
+          {
+            ""entity"": {
+              ""id"": ""entity_2"",
+              ""flag"": false
+            }
+          },
+          {
+            ""entity"": {
+              ""id"": ""entity_3"",
+              ""flag"": null
+            }
+          }
+        ]
+	  }
+  }
+}
+";
+            AssertQuerySuccess(queryTestTraitA, expected4, user);
+
+
+            var queryFiltered = @"
+{
+  traitEntities(layers: [""layer_1""]) {
+    test_trait_a {
+                filtered(filter: {flag: {isTrue: true}}) {
+                    entity {
+                        id
+                        flag
+                    }
+                }
+            }
+        }
+    }
+";
+            var expected5 = @"
+{
+  ""traitEntities"": {
+	  ""test_trait_a"": {
+	    ""filtered"": [
+          {
+            ""entity"": {
+              ""id"": ""entity_1"",
+              ""flag"": true
+            }
+          }
+        ]
+	  }
+  }
+}
+";
+            AssertQuerySuccess(queryFiltered, expected5, user);
+        }
 
 
         [Test]

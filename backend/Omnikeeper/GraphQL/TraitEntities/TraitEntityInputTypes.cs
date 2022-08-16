@@ -101,6 +101,23 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
+    public class AttributeBooleanFilterInputType : InputObjectGraphType<AttributeScalarBooleanFilter>
+    {
+        public AttributeBooleanFilterInputType()
+        {
+            Field("isTrue", x => x.IsTrue, nullable: true);
+            Field("isSet", x => x.IsSet, nullable: true);
+        }
+
+        public override object ParseDictionary(IDictionary<string, object?> value)
+        {
+            var isTrue = value.TryGetValue("isTrue", out var it) ? (bool?)it : null;
+            var isSet = value.TryGetValue("isSet", out var i) ? (bool?)i : null;
+
+            return AttributeScalarBooleanFilter.Build(isTrue, isSet);
+        }
+    }
+
     public class RelationFilterInputType : InputObjectGraphType<InnerRelationFilter>
     {
         public RelationFilterInputType()
@@ -176,19 +193,47 @@ namespace Omnikeeper.GraphQL.TraitEntities
             {
                 var attributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta);
 
-                // TODO: support for non-text types
-                if (ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text) == AttributeValueType.Text)
+                var attributeValueType = ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
+                if (!ta.AttributeTemplate.IsArray.GetValueOrDefault(false))
+                {
+                    switch (attributeValueType)
+                    {
+                        case AttributeValueType.Text:
+                        case AttributeValueType.MultilineText:
+                            AddField(new FieldType()
+                            {
+                                Type = typeof(AttributeTextFilterInputType),
+                                Name = attributeFieldName,
+                            });
+                            FieldName2AttributeNameMap.Add(attributeFieldName, ta.AttributeTemplate.Name);
+                            break;
+                        case AttributeValueType.Boolean:
+                            AddField(new FieldType()
+                            {
+                                Type = typeof(AttributeBooleanFilterInputType),
+                                Name = attributeFieldName,
+                            });
+                            FieldName2AttributeNameMap.Add(attributeFieldName, ta.AttributeTemplate.Name);
+                            break;
+                        // TODO: support for non-text types
+                        case AttributeValueType.Integer:
+                            break;
+                        case AttributeValueType.JSON:
+                            break;
+                        case AttributeValueType.YAML:
+                            break;
+                        case AttributeValueType.Image:
+                            break;
+                        case AttributeValueType.Mask:
+                            break;
+                        case AttributeValueType.Double:
+                            break;
+                        case AttributeValueType.DateTimeWithOffset:
+                            break;
+                    }
+                } else
                 {
                     // TODO: support for array types
-                    if (!ta.AttributeTemplate.IsArray.GetValueOrDefault(false))
-                    {
-                        AddField(new FieldType()
-                        {
-                            Type = typeof(AttributeTextFilterInputType),
-                            Name = attributeFieldName,
-                        });
-                        FieldName2AttributeNameMap.Add(attributeFieldName, ta.AttributeTemplate.Name);
-                    }
                 }
             }
 
@@ -217,9 +262,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 if (FieldName2AttributeNameMap.TryGetValue(inputFieldName, out var attributeName))
                 {
-                    if (kv.Value is not AttributeScalarTextFilter f)
+                    if (kv.Value is IAttributeFilter f)
+                        attributeFilters.Add(new AttributeFilter(attributeName, f));
+                    else
                         throw new Exception($"Unknown attribute filter for attribute {inputFieldName} detected");
-                    attributeFilters.Add(new AttributeFilter(attributeName, f));
                 }
                 else if (FieldName2TraitRelationMap.TryGetValue(inputFieldName, out var relation))
                 {

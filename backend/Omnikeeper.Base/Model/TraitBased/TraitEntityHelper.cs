@@ -200,44 +200,79 @@ namespace Omnikeeper.Base.Model.TraitBased
                 var attributes = await attributeModel.GetMergedAttributes(ciSelection, attributeSelection, layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
 
                 // NOTE: we reduce the ciSelection with each filter, and in the end, return the resulting ciSelection
-                if (taFilter.filter.IsSet.HasValue && !taFilter.filter.IsSet.Value)
+                if (taFilter.filter is AttributeScalarTextFilter tf)
                 {
-                    ciSelection = ciSelection.Except(SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet()));
-                }
-                else
-                {
-                    var filtered = attributes.Where(a =>
+                    if (tf.IsSet.HasValue && !tf.IsSet.Value)
                     {
-                        // check for existance
-                        // NOTE: we expect this method to only be called when the CI contains an attribute with name `filter.attributeName`
-                        // hence, if the IsSet filter is set to "false", we know this filter cannot match
-                        if (taFilter.filter.IsSet.HasValue && !taFilter.filter.IsSet.Value)
-                            return false;
-
-                        var attribute = a.Value[taFilter.attributeName];
-                        var attributeValue = attribute.Attribute.Value;
-                        // type check
-                        if (attributeValue.Type != AttributeValueType.Text && attributeValue.Type != AttributeValueType.MultilineText)
-                            return false;
-                        if (attributeValue.IsArray)
-                            return false;
-
-                        var v = attributeValue.Value2String();
-
-                        if (taFilter.filter.Exact != null)
+                        ciSelection = ciSelection.Except(SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet()));
+                    }
+                    else
+                    {
+                        var filtered = attributes.Where(a =>
                         {
-                            if (v != taFilter.filter.Exact)
+                            // check for existance
+                            // NOTE: we expect this method to only be called when the CI contains an attribute with name `filter.attributeName`
+                            // hence, if the IsSet filter is set to "false", we know this filter cannot match
+                            if (tf.IsSet.HasValue && !tf.IsSet.Value)
                                 return false;
-                        }
-                        if (taFilter.filter.Regex != null)
-                        {
-                            if (!taFilter.filter.Regex.IsMatch(v))
-                                return false;
-                        }
-                        return true;
-                    }).Select(kv => kv.Key).ToHashSet();
 
-                    ciSelection = SpecificCIIDsSelection.Build(filtered);
+                            var attribute = a.Value[taFilter.attributeName];
+                            var attributeValue = attribute.Attribute.Value;
+                            // type check
+                            if (attributeValue.Type != AttributeValueType.Text && attributeValue.Type != AttributeValueType.MultilineText)
+                                return false;
+                            if (attributeValue.IsArray)
+                                return false;
+
+                            var v = attributeValue.Value2String();
+
+                            if (tf.Exact != null)
+                            {
+                                if (v != tf.Exact)
+                                    return false;
+                            }
+                            if (tf.Regex != null)
+                            {
+                                if (!tf.Regex.IsMatch(v))
+                                    return false;
+                            }
+                            return true;
+                        }).Select(kv => kv.Key).ToHashSet();
+
+                        ciSelection = SpecificCIIDsSelection.Build(filtered);
+                    }
+                } else if (taFilter.filter is AttributeScalarBooleanFilter bf)
+                {
+                    if (bf.IsSet.HasValue && !bf.IsSet.Value)
+                    {
+                        ciSelection = ciSelection.Except(SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet()));
+                    }
+                    else
+                    {
+                        var filtered = attributes.Where(a =>
+                        {
+                            // check for existance
+                            // NOTE: we expect this method to only be called when the CI contains an attribute with name `filter.attributeName`
+                            // hence, if the IsSet filter is set to "false", we know this filter cannot match
+                            if (bf.IsSet.HasValue && !bf.IsSet.Value)
+                                return false;
+
+                            var attribute = a.Value[taFilter.attributeName];
+                            var attributeValue = attribute.Attribute.Value;
+                            // type check
+                            if (attributeValue is not AttributeScalarValueBoolean v)
+                                return false;
+
+                            if (bf.IsTrue != null)
+                            {
+                                if (v.Value != bf.IsTrue)
+                                    return false;
+                            }
+                            return true;
+                        }).Select(kv => kv.Key).ToHashSet();
+
+                        ciSelection = SpecificCIIDsSelection.Build(filtered);
+                    }
                 }
             }
 
