@@ -136,7 +136,7 @@ namespace Tests.Integration.Model
             Assert.AreEqual(2, rt3.Count());
             rt3.Should().BeEquivalentTo(new Dictionary<ID, T>() { { entity1ID, entity1 }, { entity2ID, entity2 } }, options => options.WithoutStrictOrdering().ComparingByMembers<JsonElement>());
 
-            // delete using non existant CIID
+            // delete using non existant ID
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var result = await model.TryToDelete(nonExistantID, layerset, layer1,

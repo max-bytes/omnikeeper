@@ -40,57 +40,59 @@ namespace Omnikeeper.Runners
         {
             try
             {
-                // create a lifetime scope per invocation (similar to a HTTP request lifetime)
-                await using (var scope = parentLifetimeScope.BeginLifetimeScope(Autofac.Core.Lifetime.MatchingScopeLifetimeTags.RequestLifetimeScopeTag, builder =>
-                {
-                    builder.RegisterType<CurrentAuthorizedMarkedForDeletionUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
-                }))
-                {
-                    scopedLifetimeAccessor.SetLifetimeScope(scope);
+                var t = new StopTimer();
+                logger.LogTrace("Start");
 
-                    try
+                // try to delete marked layers
+                var toDeleteLayers = await layerDataModel.GetLayerData(AnchorStateFilter.MarkedForDeletion, modelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+                if (!toDeleteLayers.IsEmpty())
+                {
+                    // create a lifetime scope per invocation (similar to a HTTP request lifetime)
+                    await using (var scope = parentLifetimeScope.BeginLifetimeScope(Autofac.Core.Lifetime.MatchingScopeLifetimeTags.RequestLifetimeScopeTag, builder =>
                     {
-                        using var transUpsertUser = modelContextBuilder.BuildDeferred();
-                        var currentUserService = scope.Resolve<ICurrentUserService>();
-                        var user = await currentUserService.GetCurrentUser(transUpsertUser);
-                        transUpsertUser.Commit();
+                        builder.RegisterType<CurrentAuthorizedMarkedForDeletionUserService>().As<ICurrentUserService>().InstancePerLifetimeScope();
+                    }))
+                    {
+                        scopedLifetimeAccessor.SetLifetimeScope(scope);
 
-                        var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-
-                        var t = new StopTimer();
-                        logger.LogTrace("Start");
-
-                        // try to delete marked layers
-                        var toDeleteLayers = await layerDataModel.GetLayerData(AnchorStateFilter.MarkedForDeletion, modelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-                        foreach (var d in toDeleteLayers)
+                        try
                         {
-                            using var trans = modelContextBuilder.BuildDeferred();
-                            var wasDeleted = await layerModel.TryToDelete(d.LayerID, trans);
-                            if (wasDeleted)
-                            {
-                                logger.LogInformation($"Deleted layer {d.LayerID}");
+                            using var transUpsertUser = modelContextBuilder.BuildDeferred();
+                            var currentUserService = scope.Resolve<ICurrentUserService>();
+                            var user = await currentUserService.GetCurrentUser(transUpsertUser);
+                            transUpsertUser.Commit();
 
-                                // optionally try to delete layer-data as well
-                                try
+                            var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                            foreach (var d in toDeleteLayers)
+                            {
+                                using var trans = modelContextBuilder.BuildDeferred();
+                                var wasDeleted = await layerModel.TryToDelete(d.LayerID, trans);
+                                if (wasDeleted)
                                 {
-                                    await layerDataModel.TryToDelete(d.LayerID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
-                                }
-                                catch (Exception) { }
+                                    logger.LogInformation($"Deleted layer {d.LayerID}");
 
-                                trans.Commit();
-                            }
-                            else
-                            {
-                                logger.LogDebug($"Could not delete layer {d.LayerID}");
+                                    // optionally try to delete layer-data as well
+                                    try
+                                    {
+                                        await layerDataModel.TryToDelete(d.LayerID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
+                                    }
+                                    catch (Exception) { }
+
+                                    trans.Commit();
+                                }
+                                else
+                                {
+                                    logger.LogDebug($"Could not delete layer {d.LayerID}");
+                                }
                             }
                         }
-
-                        t.Stop((ts, elapsedTime) => logger.LogTrace($"Finished in {elapsedTime}"));
+                        finally
+                        {
+                            scopedLifetimeAccessor.ResetLifetimeScope();
+                        }
                     }
-                    finally
-                    {
-                        scopedLifetimeAccessor.ResetLifetimeScope();
-                    }
+                    t.Stop((ts, elapsedTime) => logger.LogTrace($"Finished in {elapsedTime}"));
                 }
             }
             catch (Exception e)
