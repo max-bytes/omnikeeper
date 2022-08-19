@@ -23,7 +23,7 @@
     "console-feed": "^3.1.10",
     "downloadjs": "^1.4.7",
     "env-cmd": "^10.1.0",
-    "graphiql": "^1.8.7",
+    "graphiql": "^1.11.5",
     "graphql": "^15.6.1",
     "graphql-ws": "^5.7.0",
     "keycloak-js": "^18.0.0",
