@@ -29,7 +29,6 @@ import Breadcrumbs from "utils/Breadcrumbs";
 import GraphQLPlayground from "components/GraphQLPlayground";
 import Dashboard from "components/dashboard/Dashboard";
 import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
-import SubMenu from "antd/lib/menu/SubMenu";
 import { useLocalStorage } from 'utils/useLocalStorage';
 const { Header, Content } = Layout;
 
@@ -213,10 +212,12 @@ function App() {
   }
 
   return (
-    <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakProviderInitOptions} autoRefreshToken={true}
-      onTokens={tokenSetter}  LoadingComponent={<>Loading...</>}>
-        <ApolloWrapper component={BR} />
-    </ReactKeycloakProvider>
+      <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakProviderInitOptions} autoRefreshToken={true}
+        onTokens={tokenSetter}  LoadingComponent={<>Loading...</>}>
+        <React.StrictMode>
+          <ApolloWrapper component={BR} />
+        </React.StrictMode>
+      </ReactKeycloakProvider>
   );
 }
 
