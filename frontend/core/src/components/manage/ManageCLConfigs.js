@@ -23,7 +23,7 @@ export default function ManageCLConfigs(props) {
   const [remove] = useMutation(mutations.REMOVE_CL_CONFIG);
 
   const columnDefs = [
-    { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
+    { headerName: "ID", field: "id", editable: (params) => params.data.isNew, sort: "asc" },
     { headerName: "CLBrain Reference", field: "clBrainReference" },
     { headerName: "CLBrain Config", field: "clBrainConfig", flex: 1, cellEditor: "JSONCellEditor", 
       suppressKeyboardEvent: params => { // disable enter key, so editing is properly possible
@@ -37,10 +37,6 @@ export default function ManageCLConfigs(props) {
     <h2>Compute Layer Configurations</h2>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
-      onGridReady={(params) => {
-        var defaultSortModel = [ {colId: "id", sort: "asc"} ];
-        params.api.setSortModel(defaultSortModel);
-      }}
       saveRow={async row => {
         const config = {
           id: row.id, 

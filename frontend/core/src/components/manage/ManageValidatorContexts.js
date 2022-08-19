@@ -23,7 +23,7 @@ export default function ManageValidatorContexts(props) {
   const [remove] = useMutation(mutations.REMOVE_VALIDATOR_CONTEXT);
 
   const columnDefs = [
-    { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
+    { headerName: "ID", field: "id", editable: (params) => params.data.isNew, sort: "asc" },
     { headerName: "Validator Reference", field: "validatorReference" },
     { headerName: "Config", field: "config", flex: 1, cellEditor: "JSONCellEditor", 
       suppressKeyboardEvent: params => { // disable enter key, so editing is properly possible
@@ -37,10 +37,6 @@ export default function ManageValidatorContexts(props) {
     <h2>Validator Contexts</h2>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
-      onGridReady={(params) => {
-        var defaultSortModel = [ {colId: "id", sort: "asc"} ];
-        params.api.setSortModel(defaultSortModel);
-      }}
       saveRow={async row => {
         const context = {
           id: row.id, 

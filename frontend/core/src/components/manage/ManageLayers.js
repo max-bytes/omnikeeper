@@ -24,7 +24,7 @@ export default function ManageLayers(props) {
   const apolloClient = useApolloClient();
 
   const columnDefs = [
-    { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
+    { headerName: "ID", field: "id", editable: (params) => params.data.isNew, sort: "asc" },
     { headerName: "Description", field: "description" },
     { headerName: "Color", field: "color", width: 70, cellEditor: 'ARGBColorCellEditor', cellRenderer: 'layerColorCellRenderer' },
     { headerName: "Compute Layer Config ID", field: "clConfigID" },
@@ -52,10 +52,6 @@ export default function ManageLayers(props) {
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} 
       columnDefs={columnDefs} onRefresh={refetch} disableAddRow={true}
-      onGridReady={(params) => {
-          var defaultSortModel = [ {colId: "id", sort: "asc"} ];
-          params.api.setSortModel(defaultSortModel);
-      }}
       saveRow={async row => {
           return upsertLayer({variables: { layer: { id: row.id, description: row.description, state: row.state, clConfigID: row.clConfigID, onlineInboundAdapterName: row.onlineInboundAdapterName, color: row.color, generators: row.generators ?? [] }}})
             .then(r => { apolloClient.resetStore(); return r; })

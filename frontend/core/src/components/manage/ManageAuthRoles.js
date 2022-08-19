@@ -23,7 +23,7 @@ export default function ManageAuthRoles(props) {
   const [remove] = useMutation(mutations.REMOVE_AUTH_ROLE);
 
   const columnDefs = [
-    { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
+    { headerName: "ID", field: "id", editable: (params) => params.data.isNew, sort: "asc" },
     { headerName: "Permissions", field: "permissions", cellEditor: 'authRolePermissionsCellEditor', flex: 1,
       cellRenderer: (params) => {
         if (params.value)
@@ -37,10 +37,6 @@ export default function ManageAuthRoles(props) {
     <h2>Auth Roles</h2>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
-      onGridReady={(params) => {
-        var defaultSortModel = [ {colId: "id", sort: "asc"} ];
-        params.api.setSortModel(defaultSortModel);
-      }}
       saveRow={async row => {
         const authRole = {
           id: row.id, 

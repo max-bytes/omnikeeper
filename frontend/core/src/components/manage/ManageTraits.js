@@ -39,7 +39,7 @@ export default function ManageTraits() {
   const apolloClient = useApolloClient();
 
   const columnDefs = [
-    { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
+    { headerName: "ID", field: "id", editable: (params) => params.data.isNew, sort: "asc" },
     { headerName: "Required Attributes", field: "requiredAttributes" },
     { headerName: "Optional Attributes", field: "optionalAttributes" },
     { headerName: "Optional Relations", field: "optionalRelations" },
@@ -50,10 +50,6 @@ export default function ManageTraits() {
     <h2>Traits</h2>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
-      onGridReady={(params) => {
-        var defaultSortModel = [ {colId: "id", sort: "asc"} ];
-        params.api.setSortModel(defaultSortModel);
-      }}
       saveRow={async row => {
         const trait = {
           id: row.id, 
