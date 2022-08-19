@@ -26,12 +26,11 @@ function GridView(props) {
                 const locPath = location.pathname.split("/");
                 const locPathLast = locPath[locPath.length-1];
                 const selectedKey = locPathLast === "create-context" ? "create-context" : "explorer";
-                return  (
-                    <Menu mode="horizontal" selectedKeys={selectedKey} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
-                        <Menu.Item key="explorer" ><Link to={`${url}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
-                        <Menu.Item key="create-context" ><Link to={`${url}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
-                    </Menu>
-                )
+                const items = [
+                    { key: "explorer", label: <Link to={`${url}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link>},
+                    { key: "create-context", label: <Link to={`${url}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link>},
+                ];
+                return <Menu mode="horizontal" selectedKeys={selectedKey} style={{display: 'flex', justifyContent: 'center', margin: "auto"}} items={items} />;
             }}
         />
         <Switch>

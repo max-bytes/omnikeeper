@@ -93,34 +93,31 @@ function App() {
                 <UserBar />
               </div>
               <Route
-                render={({ location }) =>  (
-                  <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{justifyContent: 'flex-end'}}>
-                    <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Explore CIs</Link></Menu.Item>
-                    <Menu.Item key="changesets"><Link to="/changesets"><FontAwesomeIcon icon={faList} style={{ marginRight: "0.5rem" }}/> Changesets</Link></Menu.Item>
-                    <Menu.Item key="issues"><Link to="/issues"><FontAwesomeIcon icon={faExclamationTriangle} style={{ marginRight: "0.5rem" }}/> Issues</Link></Menu.Item>
-                    <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
-                    <SubMenu key="tools" title={<span><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/>Tools</span>}>
-                      <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
-                      <Menu.Item key="grid-view"><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
-                      <Menu.Item key="graphql-playground"><Link to="/graphql-playground"><FontAwesomeIcon icon={faPlayCircle} style={{ marginRight: "0.5rem" }}/> GraphQL Playground</Link></Menu.Item>
-                      {
-                        frontendPlugins.flatMap(plugin => {
-                            if (plugin.components.menuComponents)
-                            {
-                              const items = plugin.components.menuComponents.map(mc =>
-                                <Menu.Item key={mc.url}><Link to={`${mc.url}`}><FontAwesomeIcon icon={mc.icon} style={{ marginRight: "0.5rem" }}/> {mc.title}</Link></Menu.Item>
-                              ); 
-                              return items;
-                            }
-                            else
-                                return [];
-                        })
-                      }
-                    </SubMenu>
-                    <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faCog} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
-                    
-                  </Menu>
-                )}
+                render={({ location }) => {
+                    const pluginItems = frontendPlugins.flatMap(plugin => {
+                        if (plugin.components.menuComponents)
+                          return plugin.components.menuComponents.map(mc => {
+                            return { key: mc.url, label: <Link to={`${mc.url}`}><FontAwesomeIcon icon={mc.icon} style={{ marginRight: "0.5rem" }}/> {mc.title}</Link> };
+                          });
+                        else
+                          return [];
+                    });
+                    const items = [
+                      { key: "explorer", label: <Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Explore CIs</Link> },
+                      { key: "changesets", label: <Link to="/changesets"><FontAwesomeIcon icon={faList} style={{ marginRight: "0.5rem" }}/> Changesets</Link> },
+                      { key: "issues", label: <Link to="/issues"><FontAwesomeIcon icon={faExclamationTriangle} style={{ marginRight: "0.5rem" }}/> Issues</Link> },
+                      { key: "createCI", label:<Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link>  },
+                      { key: "tools", label: <span><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/>Tools</span>, children: [
+                        { key: "diffing", label: <Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link> },
+                        { key: "grid-view", label: <Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link> },
+                        { key: "graphql-playground", label: <Link to="/graphql-playground"><FontAwesomeIcon icon={faPlayCircle} style={{ marginRight: "0.5rem" }}/> GraphQL Playground</Link> },
+                        ...pluginItems
+                      ] },
+                      { key: "manage", label: <Link to="/manage"><FontAwesomeIcon icon={faCog} style={{ marginRight: "0.5rem" }}/> Manage</Link> },
+                    ];
+  
+                    return <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{justifyContent: 'flex-end'}} items={items} />;
+                }}
               />
             </Header>
               
