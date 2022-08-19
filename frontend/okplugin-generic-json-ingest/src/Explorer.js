@@ -91,7 +91,7 @@ export function Explorer(props) {
             </Header>
             <Content>
                 <AgGridCopyCutPaste
-                    stopEditingWhenGridLosesFocus={true}
+                    stopEditingWhenCellsLoseFocus={true}
                     onGridReady={onGridReady}
                     rowData={rowData}
                     columnDefs={columnDefs}

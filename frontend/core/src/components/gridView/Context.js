@@ -106,7 +106,7 @@ export function Context(props) {
                             multilineTextCellEditor: MultilineTextCellEditor,
                             integerCellEditor: IntegerCellEditor
                         }}
-                        stopEditingWhenGridLosesFocus={true}
+                        stopEditingWhenCellsLoseFocus={true}
                         onGridReady={onGridReady}
                         rowData={rowData}
                         columnDefs={columnDefs}
