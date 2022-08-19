@@ -495,6 +495,8 @@ namespace Omnikeeper.GraphQL
 
                 return new TraitEntities.TraitEntities();
             });
+
+            Field<MyUserType>("myUser", resolve: context => new MyUser());
         }
 
         private void CreatePlugin(IEnumerable<IPluginRegistration> plugins)

@@ -12,5 +12,8 @@ namespace Omnikeeper.Base.Service
         bool CanUserWriteToLayer(AuthenticatedUser user, Layer layer);
         bool CanUserWriteToLayer(AuthenticatedUser user, string layerID);
         bool CanUserWriteToAllLayers(AuthenticatedUser user, IEnumerable<string> layerIDs);
+
+        IEnumerable<LayerData> FilterReadableLayers(AuthenticatedUser user, IEnumerable<LayerData> layers);
+        IEnumerable<LayerData> FilterWritableLayers(AuthenticatedUser user, IEnumerable<LayerData> layers);
     }
 }

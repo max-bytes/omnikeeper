@@ -4,6 +4,7 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Utils;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Omnikeeper.Service
 {
@@ -28,6 +29,19 @@ namespace Omnikeeper.Service
 
         public bool CanUserWriteToAllLayers(AuthenticatedUser user, IEnumerable<string> layerIDs) =>
             debugAllowAll || CanWriteToLayers(user.AuthRoles, layerIDs);
+
+        public IEnumerable<LayerData> FilterReadableLayers(AuthenticatedUser user, IEnumerable<LayerData> layers)
+        {
+            foreach (var layer in layers)
+                if (user.AuthRoles.Any(ar => authRolePermissionChecker.DoesAuthRoleGivePermission(ar, PermissionUtils.GetLayerReadPermission(layer.LayerID))))
+                    yield return layer;
+        }
+        public IEnumerable<LayerData> FilterWritableLayers(AuthenticatedUser user, IEnumerable<LayerData> layers)
+        {
+            foreach (var layer in layers)
+                if (user.AuthRoles.Any(ar => authRolePermissionChecker.DoesAuthRoleGivePermission(ar, PermissionUtils.GetLayerWritePermission(layer.LayerID))))
+                    yield return layer;
+        }
 
         private bool CanReadFromLayers(AuthRole[] authRoles, IEnumerable<string> layerIDs)
         {
