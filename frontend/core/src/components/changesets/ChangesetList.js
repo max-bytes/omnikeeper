@@ -91,6 +91,7 @@ export default function ChangesetList(props) {
             sortable: true,
             cellRenderer: "timestampCellRenderer",
             width: 140,
+            sort: "desc"
         },
         {
             headerName: "Layer",
@@ -99,6 +100,14 @@ export default function ChangesetList(props) {
             cellRenderer: "layerCellRenderer",
             resizable: true,
             flex: 2,
+            comparator: (valueA, valueB, nodeA, nodeB, isInverted) => {
+                const va = valueA.id;
+                const vb = valueB.id;
+                if (!va) return -1;
+                if (!vb) return 1;
+                const r = va.localeCompare(vb);
+                return r;
+            },
             filter: true,
             filterParams: {
                 valueGetter: (params) => {
@@ -113,6 +122,8 @@ export default function ChangesetList(props) {
             comparator: (valueA, valueB, nodeA, nodeB, isInverted) => {
                 const va = valueA.displayName;
                 const vb = valueB.displayName;
+                if (!va) return -1;
+                if (!vb) return 1;
                 const r = va.localeCompare(vb);
                 return r;
             },
