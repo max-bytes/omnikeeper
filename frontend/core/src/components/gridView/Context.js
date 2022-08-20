@@ -102,7 +102,7 @@ export function Context(props) {
             <Content>
                 <div style={{height:'100%'}} className={"ag-theme-balham"}>
                     <AgGridReact
-                        frameworkComponents={{
+                        components={{
                             multilineTextCellEditor: MultilineTextCellEditor,
                             integerCellEditor: IntegerCellEditor
                         }}
@@ -118,8 +118,8 @@ export function Context(props) {
                         suppressRowClickSelection={true}
                         onCellValueChanged={updateCellValue}
                         suppressFieldDotNotation={true}
-                        getRowNodeId={function (data) {
-                            return data.ciid;
+                        getRowId={function (params) {
+                            return params.data.ciid;
                         }}
                         overlayLoadingTemplate={
                             '<span class="ag-overlay-loading-center">Loading...</span>'

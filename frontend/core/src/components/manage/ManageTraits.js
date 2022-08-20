@@ -40,10 +40,10 @@ export default function ManageTraits() {
 
   const columnDefs = [
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew, sort: "asc" },
-    { headerName: "Required Attributes", field: "requiredAttributes" },
-    { headerName: "Optional Attributes", field: "optionalAttributes" },
-    { headerName: "Optional Relations", field: "optionalRelations" },
-    { headerName: "Required Traits", field: "requiredTraits" },
+    { headerName: "Required Attributes", field: "requiredAttributes", flex: 1 },
+    { headerName: "Optional Attributes", field: "optionalAttributes", flex: 1 },
+    { headerName: "Optional Relations", field: "optionalRelations", flex: 1 },
+    { headerName: "Required Traits", field: "requiredTraits", flex: 1 },
   ];
 
   return <>

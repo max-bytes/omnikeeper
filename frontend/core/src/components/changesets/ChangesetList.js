@@ -196,7 +196,7 @@ export default function ChangesetList(props) {
                     {dataChangesets?.changesets && 
                         <div style={{height:'100%'}} className={"ag-theme-balham"}>
                             <AgGridReact
-                                frameworkComponents={{
+                                components={{
                                     statisticsCellRenderer: statisticsCellRenderer,
                                     userCellRenderer: userCellRenderer,
                                     timestampCellRenderer: timestampCellRenderer,
@@ -207,8 +207,8 @@ export default function ChangesetList(props) {
                                 rowData={dataChangesets.changesets}
                                 columnDefs={columnDefs}
                                 animateRows={true}
-                                getRowNodeId={function (data) {
-                                    return data.id;
+                                getRowId={function (params) {
+                                    return params.data.id;
                                 }}
                             />
                         </div>

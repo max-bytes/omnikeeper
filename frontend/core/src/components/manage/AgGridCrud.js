@@ -183,7 +183,7 @@ export default function AgGridCrud(props) {
 
     <div className="ag-theme-balham" style={{ flexGrow: 1, width: '100%' }}>
       <AgGridReact
-        frameworkComponents={{
+        components={{
           errorModalCellRenderer: ErrorModalCellRenderer, rowStateCellRenderer: RowStateCellRenderer,
           layerColorCellRenderer: LayerColorCellRenderer, deleteRowCellRenderer: DeleteRowCellRenderer,
           linkCellRenderer: LinkCellRenderer,
@@ -192,11 +192,10 @@ export default function AgGridCrud(props) {
         columnDefs={finalColumnDefs}
         defaultColDef={defaultColDef}
         rowData={rowData}
-        immutableData
         enableCellTextSelection={true}
         ensureDomOrder={true}
-        getRowNodeId={data => {
-            if (isFrontendRowNodeOnly(data)) return data.frontend_id; else return getRowNodeId(data);
+        getRowId={params => {
+            if (isFrontendRowNodeOnly(params.data)) return params.data.frontend_id; else return getRowNodeId(params.data);
         }} 
         onGridReady={onGridReady} />
     </div>

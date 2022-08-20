@@ -96,13 +96,13 @@ export function Explorer(props) {
                     rowData={rowData}
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
-                    frameworkComponents={{
+                    components={{
                         editRemoveButtonCellRenderer: EditRemoveButtonCellRenderer,
                     }}
                     animateRows={true}
                     rowSelection="multiple"
-                    getRowNodeId={function (data) {
-                        return data.id;
+                    getRowId={function (params) {
+                        return params.data.id;
                     }}
                     overlayLoadingTemplate={
                         '<span class="ag-overlay-loading-center">Loading...</span>'

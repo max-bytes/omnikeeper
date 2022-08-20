@@ -105,7 +105,7 @@ export default function IssueList(props) {
                 </div>
                 <div style={{height:'100%'}} className={"ag-theme-balham"}>
                     <AgGridReact
-                        frameworkComponents={{
+                        components={{
                             affectedCIsCellRenderer: affectedCIsCellRenderer,
                             timestampCellRenderer: timestampCellRenderer,
                         }}
@@ -118,8 +118,8 @@ export default function IssueList(props) {
                         }}
                         animateRows={true}
                         enableCellTextSelection={true}
-                        getRowNodeId={function (data) {
-                            return `${data.id}-${data.context}-${data.type}`;
+                        getRowId={function (params) {
+                            return `${params.data.id}-${params.data.context}-${params.data.type}`;
                         }}
                         onModelUpdated={(params) => setRowCount(params.api.getDisplayedRowCount())}
                     />
