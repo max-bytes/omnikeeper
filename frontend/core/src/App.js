@@ -30,6 +30,7 @@ import GraphQLPlayground from "components/GraphQLPlayground";
 import Dashboard from "components/dashboard/Dashboard";
 import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
 import { useLocalStorage } from 'utils/useLocalStorage';
+import { useAGGridEnterprise } from 'utils/useAGGridEnterprise';
 const { Header, Content } = Layout;
 
 const keycloak = new Keycloak({
@@ -67,6 +68,9 @@ function App() {
 
     const frontendPluginsManager = useFrontendPluginsManager();
     const frontendPlugins = frontendPluginsManager.allFrontendPlugins;
+
+    // NOTE: loads ag-grid license, which, if set, enables enterprise features
+    useAGGridEnterprise();
     
     return <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
       <LayerSettingsContextProvider>
