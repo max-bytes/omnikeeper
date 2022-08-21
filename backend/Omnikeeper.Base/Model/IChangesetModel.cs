@@ -47,8 +47,8 @@ namespace Omnikeeper.Base.Model
         Task<Changeset?> GetChangeset(Guid id, IModelContext trans);
         Task<IReadOnlyList<Changeset>> GetChangesets(ISet<Guid> ids, IModelContext trans);
         Task<IReadOnlySet<Guid>> GetCIIDsAffectedByChangeset(Guid changesetID, IModelContext trans);
-        Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null);
-        Task<Changeset?> GetLatestChangesetForLayer(string layerID, IModelContext trans, TimeThreshold timeThreshold);
+        Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, string[] layers, IChangesetSelection cs, IModelContext trans, int? limit = null);
+        Task<Changeset?> GetLatestChangeset(ICIIDSelection ciSelection, IAttributeSelection attributeSelection, IReadOnlySet<string>? predicateIDs, string[] layers, IModelContext trans, TimeThreshold timeThreshold);
 
         [Obsolete("Archiving full-changesets-only is not necessary anymore, consider writing a simpler method that just removes outdated attributes/relations")]
         Task<int> ArchiveUnusedChangesetsOlderThan(DateTimeOffset threshold, IModelContext trans);

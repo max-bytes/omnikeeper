@@ -6,6 +6,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,49 +30,73 @@ namespace Tests.Integration.Model
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans2);
             var layerset = new LayerSet(new string[] { layer1.ID });
-            var changeset1 = await CreateChangesetProxy();
-            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2, OtherLayersValueHandlingForceWrite.Instance);
+            var changesetProxy1 = await CreateChangesetProxy();
+            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changesetProxy1, new DataOriginV1(DataOriginType.Manual), trans2, OtherLayersValueHandlingForceWrite.Instance);
             trans2.Commit();
 
             Thread.Sleep(500);
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
-            var changeset2 = await CreateChangesetProxy();
-            await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3, OtherLayersValueHandlingForceWrite.Instance);
+            var changesetProxy2 = await CreateChangesetProxy();
+            await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changesetProxy2, new DataOriginV1(DataOriginType.Manual), trans3, OtherLayersValueHandlingForceWrite.Instance);
             trans3.Commit();
 
             var t2 = DateTimeOffset.Now;
 
             using var trans4 = ModelContextBuilder.BuildDeferred();
-            var changeset3 = await CreateChangesetProxy();
-            await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans4, OtherLayersValueHandlingForceWrite.Instance);
+            var changesetProxy3 = await CreateChangesetProxy();
+            await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changesetProxy3, new DataOriginV1(DataOriginType.Manual), trans4, OtherLayersValueHandlingForceWrite.Instance);
             trans4.Commit();
 
             var t3 = DateTimeOffset.Now;
 
             using var transI = ModelContextBuilder.BuildImmediate();
-            var changesets = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t2, layerset, new ChangesetSelectionAllCIs(), transI);
+            var changesets = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t2, layerset.LayerIDs, new ChangesetSelectionAllCIs(), transI);
             Assert.AreEqual(2, changesets.Count());
 
-            var changesets2 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t3, layerset, ChangesetSelectionSpecificCIs.Build(ciid3), transI);
+            var changesets2 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t3, layerset.LayerIDs, ChangesetSelectionSpecificCIs.Build(ciid3), transI);
             Assert.AreEqual(2, changesets2.Count());
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changesetProxy3, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
             var t4 = DateTimeOffset.Now;
 
-            var changesets3 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t4, layerset, new ChangesetSelectionAllCIs(), transI);
+            var changesets3 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t4, layerset.LayerIDs, new ChangesetSelectionAllCIs(), transI);
             Assert.AreEqual(3, changesets3.Count());
-            var changesets4 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t4, layerset, new ChangesetSelectionAllCIs(), transI, 2);
+            var changesets4 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t4, layerset.LayerIDs, new ChangesetSelectionAllCIs(), transI, 2);
             Assert.AreEqual(2, changesets4.Count());
-            var changesets5 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t4, layerset, ChangesetSelectionSpecificCIs.Build(ciid2), transI, 1);
+            var changesets5 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t4, layerset.LayerIDs, ChangesetSelectionSpecificCIs.Build(ciid2), transI, 1);
             Assert.AreEqual(1, changesets5.Count());
 
             var changesets6 = await GetService<IChangesetModel>().GetChangesets(changesets4.Select(c => c.ID).ToHashSet(), transI);
             Assert.AreEqual(2, changesets6.Count());
+
+            // test latest
+            var c1 = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("a3"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
+            Assert.AreEqual(await changesetProxy3.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI), c1);
+
+            // another insert
+            var changesetProxy4 = await CreateChangesetProxy();
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL2"), ciid3, layer1.ID, changesetProxy4, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                trans.Commit();
+            }
+
+            // test latest again
+            var c2 = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("a3"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
+            Assert.AreEqual(await changesetProxy4.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI), c2);
+
+            // test latest yet again, but with specific CIIDs
+            var c3 = await GetService<IChangesetModel>().GetLatestChangeset(SpecificCIIDsSelection.Build(ciid2), NamedAttributesSelection.Build("a3"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
+            Assert.AreEqual(await changesetProxy3.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI), c3);
+
+            // get empty latest changeset
+            var c4 = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("unused"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
+            Assert.IsNull(c4);
         }
 
 
@@ -90,7 +115,6 @@ namespace Tests.Integration.Model
 
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans2);
-            var layerset = new LayerSet(new string[] { layer1.ID });
             var changeset1 = await CreateChangesetProxy();
             await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2, OtherLayersValueHandlingForceWrite.Instance);
             trans2.Commit();
@@ -107,10 +131,10 @@ namespace Tests.Integration.Model
             var t3 = DateTimeOffset.Now;
 
             using var transI = ModelContextBuilder.BuildImmediate();
-            var changesets1 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t2, layerset, ChangesetSelectionSpecificCIs.Build(ciid1), transI);
+            var changesets1 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t2, new string[] { layer1.ID }, ChangesetSelectionSpecificCIs.Build(ciid1), transI);
             Assert.AreEqual(1, changesets1.Count());
 
-            var changesets2 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t3, layerset, ChangesetSelectionSpecificCIs.Build(ciid1), transI);
+            var changesets2 = await GetService<IChangesetModel>().GetChangesetsInTimespan(t1, t3, new string[] { layer1.ID }, ChangesetSelectionSpecificCIs.Build(ciid1), transI);
             Assert.AreEqual(2, changesets2.Count());
         }
 

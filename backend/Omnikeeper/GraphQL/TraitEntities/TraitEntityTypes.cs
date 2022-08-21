@@ -37,12 +37,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
     public class TraitEntityRootType : ObjectGraphType
     {
         public TraitEntityRootType(ITrait at, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ICIIDModel ciidModel, IAttributeModel attributeModel, IRelationModel relationModel,
-            IDataLoaderService dataLoaderService,
+            IChangesetModel changesetModel, IDataLoaderService dataLoaderService,
             ElementWrapperType wrapperElementGraphType, FilterInputType? filterGraphType, IDInputType? idGraphType)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityRootGraphTypeName(at);
 
-            var traitEntityModel = new TraitEntityModel(at, effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var traitEntityModel = new TraitEntityModel(at, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
 
             this.FieldAsync("all", new ListGraphType(wrapperElementGraphType), resolve: async context =>
             {
@@ -162,8 +162,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
     {
         public readonly ITrait UnderlyingTrait;
 
-        public ElementWrapperType(ITrait underlyingTrait, ElementType elementGraphType, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService,
-            ICIModel ciModel, IChangesetModel changesetModel, IAttributeModel attributeModel)
+        public ElementWrapperType(ITrait underlyingTrait, ElementType elementGraphType, ITraitsProvider traitsProvider, IDataLoaderService dataLoaderService, TraitEntityModel traitEntityModel,
+            ICIModel ciModel, IAttributeModel attributeModel)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityWrapperGraphTypeName(underlyingTrait);
 
@@ -200,27 +200,19 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 var et = context.Source;
                 return et;
             });
-            this.Field<ChangesetType>("latestChange", resolve: (context) =>
+            this.FieldAsync<ChangesetType>("latestChange", resolve: async (context) =>
             {
-                // TODO: this does not really work as a user would expect:
-                // for example, when an optional attribute gets removed from a trait entity, it does not affect the "latestChange" timestamp returned from here
-                // because this implementation only checks the timestamps of changesets that contribute to the CURRENTLY existing trait entity
-                // what we must actually do is go through the trait's underlying attributes and relations and for each, getting the latest change.
                 var et = context.Source!;
 
                 if (et == null)
                     return null;
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                var layerset = userContext.GetLayerSet(context.Path);
+                var timeThreshold = userContext.GetTimeThreshold(context.Path);
                 var trans = userContext.Transaction;
 
-                var relevantChangesets = et.GetRelevantChangesetIDs();
-
-                return dataLoaderService.SetupAndLoadChangesets(relevantChangesets, changesetModel, trans)
-                .Then(changesets =>
-                {
-                    return changesets.Aggregate((a, b) => a.Timestamp > b.Timestamp ? a : b);
-                });
+                return await traitEntityModel.GetLatestRelevantChangeset(SpecificCIIDsSelection.Build(et.CIID), layerset, trans, timeThreshold);
             });
 
 
@@ -230,8 +222,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class ElementType : ObjectGraphType<EffectiveTrait>
     {
-        public ElementType() { }
-
         public delegate bool ElementTypeContainerLookup(string key, [MaybeNullWhen(false)] out ElementTypesContainer etc);
         public void Init(ITrait underlyingTrait, RelatedCIType relatedCIType, ElementTypeContainerLookup elementTypesContainerLookup,
             IRelationModel relationModel, ICIIDModel ciidModel,

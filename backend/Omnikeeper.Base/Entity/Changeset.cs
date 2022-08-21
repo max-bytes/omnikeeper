@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Omnikeeper.Base.Entity
 {
-    public class Changeset
+    public record class Changeset
     {
         public Guid ID { get; private set; }
         public DateTimeOffset Timestamp { get; private set; }

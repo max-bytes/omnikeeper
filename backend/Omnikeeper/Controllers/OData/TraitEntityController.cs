@@ -35,11 +35,12 @@ namespace Omnikeeper.Controllers.OData
         private readonly ICIModel ciModel;
         private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
+        private readonly IChangesetModel changesetModel;
         private readonly ODataAPIContextModel oDataAPIContextModel;
         private readonly ILogger<TraitEntityController> logger;
 
         public TraitEntityController(ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
-            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
+            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel,
             ODataAPIContextModel oDataAPIContextModel, ILogger<TraitEntityController> logger)
         {
             this.traitsProvider = traitsProvider;
@@ -49,6 +50,7 @@ namespace Omnikeeper.Controllers.OData
             this.ciModel = ciModel;
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
+            this.changesetModel = changesetModel;
             this.oDataAPIContextModel = oDataAPIContextModel;
             this.logger = logger;
         }
@@ -79,7 +81,7 @@ namespace Omnikeeper.Controllers.OData
             if (trait == null)
                 return BadRequest();
 
-            var traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
 
             try
             {
@@ -127,7 +129,7 @@ namespace Omnikeeper.Controllers.OData
             if (trait == null)
                 return BadRequest();
 
-            var traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
 
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, metaConfigurationModel, context, trans, timeThreshold);
 
@@ -201,7 +203,7 @@ namespace Omnikeeper.Controllers.OData
                 relations.Select(r => r.Relation.ToCIID).ToHashSet() :
                 relations.Select(r => r.Relation.FromCIID).ToHashSet();
 
-            var otherTraitEntityModel = new TraitEntityModel(otherTrait, effectiveTraitModel, ciModel, attributeModel, relationModel);
+            var otherTraitEntityModel = new TraitEntityModel(otherTrait, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
 
             // TODO: use dataloader
             var otherEts = await otherTraitEntityModel.GetByCIID(SpecificCIIDsSelection.Build(otherCIIDs.ToHashSet()), layerset, trans, timeThreshold);

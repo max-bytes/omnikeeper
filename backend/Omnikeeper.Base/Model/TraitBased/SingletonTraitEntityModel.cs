@@ -10,7 +10,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 {
     public class SingletonTraitEntityModel<T> : GenericTraitEntityModel<T> where T : TraitEntity, new()
     {
-        public SingletonTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public SingletonTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
         public async Task<(Guid, T)> TryToGet(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)

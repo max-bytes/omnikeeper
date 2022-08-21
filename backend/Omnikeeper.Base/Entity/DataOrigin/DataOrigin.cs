@@ -11,7 +11,7 @@ namespace Omnikeeper.Base.Entity.DataOrigin
     }
 
     //[ProtoContract(SkipConstructor = true)]
-    public class DataOriginV1
+    public record class DataOriginV1
     {
         public DataOriginV1(DataOriginType type)
         {

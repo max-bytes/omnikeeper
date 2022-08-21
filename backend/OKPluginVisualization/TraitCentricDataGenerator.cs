@@ -17,16 +17,18 @@ namespace OKPluginVisualization
     {
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
+        private readonly IChangesetModel changesetModel;
         private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
         private readonly IBaseRelationModel baseRelationModel;
         private readonly ILayerDataModel layerDataModel;
 
-        public TraitCentricDataGenerator(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel,
+        public TraitCentricDataGenerator(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IChangesetModel changesetModel,
             IAttributeModel attributeModel, IRelationModel relationModel, IBaseRelationModel baseRelationModel, ILayerDataModel layerDataModel)
         {
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
+            this.changesetModel = changesetModel;
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
             this.baseRelationModel = baseRelationModel;
@@ -59,7 +61,7 @@ namespace OKPluginVisualization
             var layerIDsByCIID = new Dictionary<Guid, ISet<string>>();
             foreach (var trait in traits)
             {
-                var traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
+                var traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
                 var tes = await traitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerSet, trans, timeThreshold);
                 foreach (var te in tes)
                 {

@@ -24,25 +24,21 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly ICIIDModel ciidModel;
         private readonly IDataLoaderService dataLoaderService;
         private readonly ChangesetDataModel changesetDataModel;
-        private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
         private readonly ILayerModel layerModel;
-        private readonly IChangesetModel changesetModel;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public TraitEntitiesMutationSchemaLoader(IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel, 
             IDataLoaderService dataLoaderService, ChangesetDataModel changesetDataModel,
-            IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel, ILayerBasedAuthorizationService layerBasedAuthorizationService)
+            ICIModel ciModel, ILayerModel layerModel, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
             this.ciidModel = ciidModel;
             this.dataLoaderService = dataLoaderService;
             this.changesetDataModel = changesetDataModel;
-            this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.layerModel = layerModel;
-            this.changesetModel = changesetModel;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
         }
 
@@ -68,8 +64,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
             foreach (var elementTypeContainer in typeContainer.ElementTypes)
             {
                 var traitID = elementTypeContainer.Trait.ID;
-
-                var traitEntityModel = new TraitEntityModel(elementTypeContainer.Trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
 
                 tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateUpdateByCIIDMutationName(traitID), elementTypeContainer.ElementWrapper,
                     arguments: new QueryArguments(
@@ -100,13 +94,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var input = context.GetArgument<UpsertInput>("input");
 
                         // check if entity actually exists at that CI, error if not
-                        var existingEntity = await traitEntityModel.GetSingleByCIID(ciid, layerset, trans, timeThreshold);
+                        var existingEntity = await elementTypeContainer.TraitEntityModel.GetSingleByCIID(ciid, layerset, trans, timeThreshold);
                         if (existingEntity == null)
                         {
                             throw new Exception($"Cannot update entity at CI with ID {ciid}: entity does not exist at that CI");
                         }
 
-                        var et = await Upsert(ciid, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, traitEntityModel, layerset, writeLayerID);
+                        var et = await Upsert(ciid, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, elementTypeContainer.TraitEntityModel, layerset, writeLayerID);
 
                         userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
 
@@ -151,7 +145,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                                 // check if any of the found CIIDs actually fulfill the trait, only throw exception if so
                                 // if not, keep going and use the found CIID for the new trait entity
-                                var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(currentCIIDs, traitEntityModel, layerset, trans, timeThreshold);
+                                var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(currentCIIDs, elementTypeContainer.TraitEntityModel, layerset, trans, timeThreshold);
 
                                 if (bestMatchingET != null)
                                     throw new Exception($"A trait entity with that data ID already exists; CIID: {bestMatchingCIID})");
@@ -166,7 +160,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             finalCIID = await ciModel.CreateCI(trans);
                         }
 
-                        var et = await Upsert(finalCIID, insertInput.AttributeValues, insertInput.RelationValues, ciName, trans, userContext.ChangesetProxy, traitEntityModel, layerset, writeLayerID);
+                        var et = await Upsert(finalCIID, insertInput.AttributeValues, insertInput.RelationValues, ciName, trans, userContext.ChangesetProxy, elementTypeContainer.TraitEntityModel, layerset, writeLayerID);
 
                         userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
 
@@ -200,7 +194,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
                             throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
 
-                        var removed = await traitEntityModel.TryToDelete(ciid, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                        var removed = await elementTypeContainer.TraitEntityModel.TryToDelete(ciid, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                         userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
 
@@ -247,11 +241,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 {
                                     // if the matchingCIIDs contains any CIs that have the trait, we need to use this preferably, not just the first CIID (which might NOT have the trait)
                                     // only if there are no CIs that fulfill the trait, we can use the first one ordered by CIID only
-                                    var (bestMatchingCIID, _) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, traitEntityModel, layerset, trans, timeThreshold);
+                                    var (bestMatchingCIID, _) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, elementTypeContainer.TraitEntityModel, layerset, trans, timeThreshold);
                                     finalCIID = bestMatchingCIID;
                                 }
 
-                                var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, traitEntityModel, layerset, writeLayerID);
+                                var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, elementTypeContainer.TraitEntityModel, layerset, writeLayerID);
 
                                 userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
 
@@ -295,11 +289,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                                     // if the ciids contains any CIs that have the trait, we need to use this, not just the first CIID (which might NOT have the trait)
                                     // otherwise, return
-                                    var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, traitEntityModel, layerset, trans, timeThreshold);
+                                    var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, elementTypeContainer.TraitEntityModel, layerset, trans, timeThreshold);
                                     if (bestMatchingET == null)
                                         return false;
 
-                                    var removed = await traitEntityModel.TryToDelete(bestMatchingCIID, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                                    var removed = await elementTypeContainer.TraitEntityModel.TryToDelete(bestMatchingCIID, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                                     userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
 
@@ -352,11 +346,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 finalCIID = await ciModel.CreateCI(trans);
                             else
                             {
-                                var (bestMatchingCIID, _) = await TraitEntityHelper.GetSingleBestMatchingCI(currentCIIDs, traitEntityModel, layerset, trans, timeThreshold);
+                                var (bestMatchingCIID, _) = await TraitEntityHelper.GetSingleBestMatchingCI(currentCIIDs, elementTypeContainer.TraitEntityModel, layerset, trans, timeThreshold);
                                 finalCIID = bestMatchingCIID;
                             }
 
-                            var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, traitEntityModel, layerset, writeLayerID);
+                            var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, elementTypeContainer.TraitEntityModel, layerset, writeLayerID);
                             userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
                             return et;
                         });
@@ -400,7 +394,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             {
                                 // if the foundCIIDs contains any CIs that have the trait, we need to use this, not just the first CIID (which might NOT have the trait)
                                 // if there are no CIs that fulfill the trait, we return as there is nothing to delete
-                                var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(foundCIIDs, traitEntityModel, layerset, trans, timeThreshold);
+                                var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(foundCIIDs, elementTypeContainer.TraitEntityModel, layerset, trans, timeThreshold);
 
                                 if (bestMatchingET == null)
                                     return false;
@@ -408,7 +402,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                     finalCIID = bestMatchingCIID;
                             }
 
-                            var removed = await traitEntityModel.TryToDelete(finalCIID, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var removed = await elementTypeContainer.TraitEntityModel.TryToDelete(finalCIID, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                             userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
 
@@ -452,7 +446,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var (dc, changed, ciid) = await changesetDataModel.InsertOrUpdate(new ChangesetData(correspondingChangeset.ID.ToString()), new LayerSet(layerID), layerID, dataOrigin, changesetProxy, userContext.Transaction, maskHandling);
 
                         // insert trait entity afterwards, no CI-name
-                        var et = await Upsert(ciid, insertInput.AttributeValues, insertInput.RelationValues, null, trans, changesetProxy, traitEntityModel, layerset, layerID);
+                        var et = await Upsert(ciid, insertInput.AttributeValues, insertInput.RelationValues, null, trans, changesetProxy, elementTypeContainer.TraitEntityModel, layerset, layerID);
 
                         userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
 
@@ -489,7 +483,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDs = context.GetArgument<Guid[]>("relatedCIIDs")!;
 
-                            var t = await traitEntityModel.SetRelations(tr, baseCIID, relatedCIIDs, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var t = await elementTypeContainer.TraitEntityModel.SetRelations(tr, baseCIID, relatedCIIDs, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                             userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
                             return t.et;
                         });
@@ -521,7 +515,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDsToAdd = context.GetArgument<Guid[]>("relatedCIIDsToAdd")!;
 
-                            var t = await traitEntityModel.AddRelations(tr, baseCIID, relatedCIIDsToAdd, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var t = await elementTypeContainer.TraitEntityModel.AddRelations(tr, baseCIID, relatedCIIDsToAdd, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                             userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
                             return t.et;
                         });
@@ -553,7 +547,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDsToRemove = context.GetArgument<Guid[]>("relatedCIIDsToRemove")!;
 
-                            var t = await traitEntityModel.RemoveRelations(tr, baseCIID, relatedCIIDsToRemove, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var t = await elementTypeContainer.TraitEntityModel.RemoveRelations(tr, baseCIID, relatedCIIDsToRemove, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                             userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
                             return t.et;
                         });

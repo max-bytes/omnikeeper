@@ -8,7 +8,8 @@ namespace Omnikeeper.GridView
 {
     public class GridViewContextModel : GenericTraitEntityModel<GridViewContext, string>
     {
-        public GridViewContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public GridViewContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) 
+            : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
 

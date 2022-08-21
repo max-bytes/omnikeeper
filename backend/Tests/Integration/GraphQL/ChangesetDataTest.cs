@@ -85,7 +85,7 @@ namespace Tests.Integration.GraphQL
             Assert.AreEqual(1, numChangesets);
 
             // fetch changeset and its associated data
-            var changeset = await GetService<IChangesetModel>().GetLatestChangesetForLayer("layer_1", transI, TimeThreshold.BuildLatest());
+            var changeset = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, null, new string[] { "layer_1" }, transI, TimeThreshold.BuildLatest());
             Assert.IsNotNull(changeset);
             string query2 = @"
                 query($layers: [String]!, $changeset_id: Guid!) {
@@ -244,13 +244,14 @@ mutation {
                     { "write_layer", "layer_1" }
                 });
 
-            var expected = JsonDocument.Parse(@$"{{""affectedCIs"":[{{""id"":""{ciid1}""}}]}}");
 
             var (queryResult, resultJson) = RunQuery(query, user, inputs);
             var d = JsonDocument.Parse(resultJson);
             var aResult = d.RootElement.GetProperty("data").GetProperty("A");
+            var bResult = d.RootElement.GetProperty("data").GetProperty("B");
             var elementComparer = new JsonElementComparer();
-            Assert.IsTrue(elementComparer.Equals(aResult, expected.RootElement));
+            var expectedA = JsonDocument.Parse(@$"{{""affectedCIs"":[{{""id"":""{ciid1}""}}]}}");
+            Assert.IsTrue(elementComparer.Equals(aResult, expectedA.RootElement));
 
             // assert that only a single changeset was created
             using var transI = ModelContextBuilder.BuildImmediate();
@@ -258,8 +259,13 @@ mutation {
             Assert.AreEqual(1, numChangesets);
 
             // fetch changeset and its associated data
-            var changeset = await GetService<IChangesetModel>().GetLatestChangesetForLayer(layer1.ID, transI, TimeThreshold.BuildLatest());
+            var changeset = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, null, new string[] { layer1.ID }, transI, TimeThreshold.BuildLatest());
             Assert.IsNotNull(changeset);
+
+            // check that latestChange of mutation corresponds to the changeset
+            var expectedB = JsonDocument.Parse(@$"{{""latestChange"":{{""id"":""{changeset!.ID}""}}}}");
+            Assert.IsTrue(elementComparer.Equals(bResult, expectedB.RootElement));
+
             string query2 = @"
                 query($layers: [String]!, $changeset_id: Guid!) {
                     changeset(layers: $layers, id: $changeset_id) {

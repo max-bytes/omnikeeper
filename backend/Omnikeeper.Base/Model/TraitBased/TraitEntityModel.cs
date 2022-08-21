@@ -17,18 +17,22 @@ namespace Omnikeeper.Base.Model.TraitBased
         protected readonly ICIModel ciModel;
         protected readonly IAttributeModel attributeModel;
         protected readonly IRelationModel relationModel;
+        private readonly IChangesetModel changesetModel;
         private readonly ITrait trait;
         private readonly IReadOnlySet<string> relevantAttributesForTrait;
+        private readonly IReadOnlySet<string> relevantPredicatesForTrait;
 
-        public TraitEntityModel(ITrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
+        public TraitEntityModel(ITrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel)
         {
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
+            this.changesetModel = changesetModel;
             this.trait = trait;
 
             relevantAttributesForTrait = trait.GetRelevantAttributeNames();
+            relevantPredicatesForTrait = trait.GetRelevantPredicateIDs();
         }
 
         private IOtherLayersValueHandling GetOtherLayersValueHandling(LayerSet readLayerSet, string writeLayerID)
@@ -51,6 +55,13 @@ namespace Omnikeeper.Base.Model.TraitBased
             var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold);
             var cisWithTrait = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, timeThreshold);
             return cisWithTrait;
+        }
+
+        // returns the latest relevant changeset that affects/contributes to any of the trait entities (filtered by ciSelection) at that time
+        // NOTE: this is NOT intelligent enough to not return changesets that have no practical effect because their changes are hidden by data in upper layers
+        public async Task<Changeset?> GetLatestRelevantChangeset(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            return await changesetModel.GetLatestChangeset(ciSelection, NamedAttributesSelection.Build(relevantAttributesForTrait), relevantPredicatesForTrait, layerSet.LayerIDs, trans, timeThreshold);
         }
 
         /*

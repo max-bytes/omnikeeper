@@ -22,6 +22,10 @@ namespace Omnikeeper.Base.Entity
         {
             return trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Concat(trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet();
         }
+        public static IReadOnlySet<string> GetRelevantPredicateIDs(this ITrait trait)
+        {
+            return trait.OptionalRelations.Select(r => r.RelationTemplate.PredicateID).ToHashSet();
+        }
     }
 
     /// <summary>

@@ -11,8 +11,8 @@ namespace Omnikeeper.Base.Model.Config
 {
     public class BaseConfigurationModel : SingletonTraitEntityModel<BaseConfigurationV2>, IBaseConfigurationModel
     {
-        public BaseConfigurationModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
-            : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public BaseConfigurationModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel)
+            : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
 

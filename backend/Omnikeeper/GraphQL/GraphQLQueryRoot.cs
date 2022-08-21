@@ -393,7 +393,7 @@ namespace Omnikeeper.GraphQL
 
                     // NOTE: we can't filter the changesets using CIBasedAuthorizationService because changesets are not bound to CIs
 
-                    return await changesetModel.GetChangesetsInTimespan(from, to, userContext.GetLayerSet(context.Path), selection, userContext.Transaction, limit);
+                    return await changesetModel.GetChangesetsInTimespan(from, to, userContext.GetLayerSet(context.Path).LayerIDs, selection, userContext.Transaction, limit);
                 });
 
             FieldAsync<TraitType>("activeTrait",

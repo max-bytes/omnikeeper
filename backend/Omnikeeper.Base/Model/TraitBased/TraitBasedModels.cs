@@ -13,8 +13,8 @@ namespace Omnikeeper.Base.Model.TraitBased
 {
     public class RecursiveTraitModel : GenericTraitEntityModel<RecursiveTrait, string>
     {
-        public RecursiveTraitModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
-            : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public RecursiveTraitModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel)
+            : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
 
@@ -53,49 +53,49 @@ namespace Omnikeeper.Base.Model.TraitBased
 
     public class InnerLayerDataModel : GenericTraitEntityModel<LayerData, string>
     {
-        public InnerLayerDataModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public InnerLayerDataModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
     }
 
     public class PredicateModel : GenericTraitEntityModel<Predicate, string>
     {
-        public PredicateModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public PredicateModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
     }
 
     public class GeneratorV1Model : GenericTraitEntityModel<GeneratorV1, string>
     {
-        public GeneratorV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public GeneratorV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
     }
 
     public class CLConfigV1Model : GenericTraitEntityModel<CLConfigV1, string>
     {
-        public CLConfigV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public CLConfigV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
     }
 
     public class ValidatorContextV1Model : GenericTraitEntityModel<ValidatorContextV1, string>
     {
-        public ValidatorContextV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public ValidatorContextV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
     }
 
     public class AuthRoleModel : GenericTraitEntityModel<AuthRole, string>
     {
-        public AuthRoleModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public AuthRoleModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
     }
 
     public class ChangesetDataModel : GenericTraitEntityModel<ChangesetData, string>
     {
-        public ChangesetDataModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public ChangesetDataModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
 

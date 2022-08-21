@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using System;
 using System.Collections.Generic;
 
@@ -17,9 +18,10 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public readonly UpsertInputType UpsertInput;
         public readonly UpsertInputType UpdateInput;
         public readonly FilterInputType? FilterInput;
+        public readonly TraitEntityModel TraitEntityModel;
 
         public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType,
-            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, UpsertInputType updateInputType, FilterInputType? filterInputType)
+            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, UpsertInputType updateInputType, FilterInputType? filterInputType, TraitEntityModel traitEntityModel)
         {
             Trait = trait;
             Element = element;
@@ -29,6 +31,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             UpsertInput = upsertInputType;
             UpdateInput = updateInputType;
             FilterInput = filterInputType;
+            TraitEntityModel = traitEntityModel;
         }
     }
 
@@ -81,15 +84,17 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 try
                 {
+                    var traitEntityModel = new TraitEntityModel(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
+
                     var tt = new ElementType();
-                    var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, ciModel, changesetModel, attributeModel);
+                    var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, traitEntityModel, ciModel, attributeModel);
                     var filterInputType = FilterInputType.Build(at.Value);
                     var idt = IDInputType.Build(at.Value);
-                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, ciidModel, attributeModel, relationModel, dataLoaderService, ttWrapper, filterInputType, idt);
+                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, ciidModel, attributeModel, relationModel, changesetModel, dataLoaderService, ttWrapper, filterInputType, idt);
                     var upsertInputType = new UpsertInputType(at.Value, false);
                     var updateInputType = new UpsertInputType(at.Value, true);
 
-                    var container = new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType, updateInputType, filterInputType);
+                    var container = new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType, updateInputType, filterInputType, traitEntityModel);
                     elementTypesContainerDictionary.Add(at.Key, container);
 
                 }

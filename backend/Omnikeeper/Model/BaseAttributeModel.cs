@@ -24,18 +24,6 @@ namespace Omnikeeper.Model
             this.ciidModel = ciidModel;
         }
 
-        private string CIIDSelection2WhereClause(ICIIDSelection selection)
-        {
-            return selection switch
-            {
-                AllCIIDsSelection _ => "1=1",
-                SpecificCIIDsSelection _ => "t.ci_id is not null",
-                AllCIIDsExceptSelection _ => "t.ci_id is null",
-                NoCIIDsSelection _ => "1=0",
-                _ => throw new NotImplementedException("")
-            };
-        }
-
         private string AttributeSelection2WhereClause(IAttributeSelection selection, ref int parameterIndex)
         {
             return selection switch
@@ -59,6 +47,18 @@ namespace Omnikeeper.Model
                     break;
                 default:
                     throw new NotImplementedException("");
+            };
+        }
+
+        private string CIIDSelection2WhereClause(ICIIDSelection selection)
+        {
+            return selection switch
+            {
+                AllCIIDsSelection _ => "1=1",
+                SpecificCIIDsSelection _ => "t.ci_id is not null",
+                AllCIIDsExceptSelection _ => "t.ci_id is null",
+                NoCIIDsSelection _ => "1=0",
+                _ => throw new NotImplementedException("")
             };
         }
 

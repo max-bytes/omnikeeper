@@ -88,15 +88,9 @@ namespace Omnikeeper.Model
         public async Task<DateTimeOffset?> GetLatestChangeToActiveDataTraits(IModelContext trans, TimeThreshold timeThreshold)
         {
             // check data traits changes through their changesets
-            // TODO: this does not properly detect changes that only remove a trait
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-            var relevantChangesetIDs = await dataTraitModel.GetRelevantChangesetIDsForAll(metaConfiguration.ConfigLayerset, trans, timeThreshold);
-            if (relevantChangesetIDs.IsEmpty())
-                return null;
-            var relevantChangesets = await changesetModel.GetChangesets(relevantChangesetIDs, trans);
-            if (relevantChangesets.IsEmpty())
-                return null;
-            return relevantChangesets.Select(c => c.Timestamp).Max();
+            var latestChangeset = await dataTraitModel.GetLatestRelevantChangeset(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, timeThreshold);
+            return latestChangeset?.Timestamp;
         }
 
         public async Task<ITrait?> GetActiveTrait(string traitID, IModelContext trans, TimeThreshold timeThreshold)

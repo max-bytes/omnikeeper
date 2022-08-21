@@ -18,8 +18,8 @@ namespace Omnikeeper.Base.Model.TraitBased
     {
         private readonly GenericTraitEntityIDAttributeInfos<T, ID> idAttributeInfos;
 
-        public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
-            : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel)
+            : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
             idAttributeInfos = GenericTraitEntityHelper.ExtractIDAttributeInfos<T, ID>();
         }
@@ -225,7 +225,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         protected readonly TraitEntityModel traitEntityModel;
 
-        public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel)
+        public GenericTraitEntityModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel)
         {
             this.ciModel = ciModel;
             this.attributeModel = attributeModel;
@@ -233,7 +233,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             (_, attributeFieldInfos, relationFieldInfos) = GenericTraitEntityHelper.ExtractFieldInfos<T>();
 
-            traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel);
+            traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
         }
 
         public async Task<(T entity, Guid ciid)> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
@@ -251,12 +251,10 @@ namespace Omnikeeper.Base.Model.TraitBased
             return ets.ToDictionary(kv => kv.Key, kv => GenericTraitEntityHelper.EffectiveTrait2Object<T>(kv.Value, attributeFieldInfos, relationFieldInfos));
         }
 
-        // returns all relevant changesets that affect/contribute to all trait entities at that time
-        public async Task<ISet<Guid>> GetRelevantChangesetIDsForAll(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        // returns the latest relevant changeset that affects/contributes to any of the trait entities (filtered by ciSelection) at that time
+        public async Task<Changeset?> GetLatestRelevantChangeset(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ets = await traitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerSet, trans, timeThreshold);
-            var changesetIDs = ets.SelectMany(et => et.Value.GetRelevantChangesetIDs()).ToHashSet();
-            return changesetIDs;
+            return await traitEntityModel.GetLatestRelevantChangeset(ciSelection, layerSet, trans, timeThreshold);
         }
 
         public async Task<bool> TryToDelete(Guid ciid, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)

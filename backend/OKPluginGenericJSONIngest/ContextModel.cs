@@ -10,7 +10,7 @@ namespace OKPluginGenericJSONIngest
 {
     public class ContextModel : GenericTraitEntityModel<Context, string>
     {
-        public ContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel)
+        public ContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
         {
         }
         public class ExtractConfigSerializer : AttributeJSONSerializer<IExtractConfig>

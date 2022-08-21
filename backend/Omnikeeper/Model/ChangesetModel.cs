@@ -97,7 +97,7 @@ namespace Omnikeeper.Model
 
         // returns all changesets in the time range
         // sorted by timestamp
-        public async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null)
+        public async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, string[] layers, IChangesetSelection cs, IModelContext trans, int? limit = null)
         {
             return cs switch
             {
@@ -110,19 +110,19 @@ namespace Omnikeeper.Model
 
         // returns all changesets affecting these CI, both via attributes OR relations
         // sorted by timestamp
-        private async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, Guid[] ciids, IModelContext trans, int? limit = null)
+        private async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, string[] layers, Guid[] ciids, IModelContext trans, int? limit = null)
         {
             var queryAttributes = @"SELECT distinct c.id, c.user_id, c.layer_id, c.origin_type, c.timestamp FROM changeset c 
                 INNER JOIN attribute a ON a.changeset_id = c.id 
                 INNER JOIN ci ci ON a.ci_id = ci.id
-                WHERE c.timestamp >= @from AND c.timestamp <= @to AND a.layer_id = ANY(@layer_ids)";
+                WHERE c.timestamp >= @from AND c.timestamp <= @to AND a.layer_id = ANY(@layer_ids)"; // TODO: why do we need to join CI table?
             queryAttributes += " AND ci.id = ANY(@ciids)";
 
             var irdClause = "r.from_ci_id = ci.id OR r.to_ci_id = ci.id";
             var queryRelations = $@"SELECT distinct c.id, c.user_id, c.layer_id, c.origin_type, c.timestamp FROM changeset c 
                 INNER JOIN relation r ON r.changeset_id = c.id 
                 INNER JOIN ci ci ON ({irdClause})
-                WHERE c.timestamp >= @from AND c.timestamp <= @to AND r.layer_id = ANY(@layer_ids)";
+                WHERE c.timestamp >= @from AND c.timestamp <= @to AND r.layer_id = ANY(@layer_ids)"; // TODO: why do we need to join CI table?
             queryRelations += " AND ci.id = ANY(@ciids)";
 
             var query = @$" {queryAttributes} UNION {queryRelations} ORDER BY 5 DESC";
@@ -133,7 +133,7 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("from", from.ToUniversalTime());
             command.Parameters.AddWithValue("to", to.ToUniversalTime());
             command.Parameters.AddWithValue("ciids", ciids);
-            command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
+            command.Parameters.AddWithValue("layer_ids", layers);
             if (limit.HasValue)
                 command.Parameters.AddWithValue("limit", limit.Value);
             command.Prepare();
@@ -154,7 +154,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        private async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IModelContext trans, int? limit = null)
+        private async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, string[] layers, IModelContext trans, int? limit = null)
         {
             var query = @"SELECT distinct c.id, c.user_id, c.layer_id, c.origin_type, c.timestamp FROM changeset c 
                 WHERE c.timestamp >= @from AND c.timestamp <= @to
@@ -166,7 +166,7 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("from", from.ToUniversalTime());
             command.Parameters.AddWithValue("to", to.ToUniversalTime());
-            command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
+            command.Parameters.AddWithValue("layer_ids", layers);
             if (limit.HasValue)
                 command.Parameters.AddWithValue("limit", limit.Value);
             command.Prepare();
@@ -187,27 +187,145 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<Changeset?> GetLatestChangesetForLayer(string layerID, IModelContext trans, TimeThreshold timeThreshold)
+        private static string CIIDSelection2WhereClauseAttributes(ICIIDSelection selection)
         {
-            using var command = new NpgsqlCommand(@"SELECT c.id, c.timestamp, c.user_id, c.origin_type FROM changeset c
-                WHERE c.layer_id = @layer_id AND c.timestamp <= @threshold
+            return selection switch
+            {
+                AllCIIDsSelection _ => "1=1",
+                SpecificCIIDsSelection _ => "a.ci_id = ANY(@ciids)",
+                AllCIIDsExceptSelection _ => "a.ci_id != ANY(@ciids)",
+                NoCIIDsSelection _ => "1=0",
+                _ => throw new NotImplementedException("")
+            };
+        }
+        private static string CIIDSelection2WhereClauseRelations(ICIIDSelection selection)
+        {
+            return selection switch
+            {
+                AllCIIDsSelection _ => "1=1",
+                SpecificCIIDsSelection _ => "(r.from_ci_id = ANY(@ciids) OR r.to_ci_id = ANY(@ciids))",
+                AllCIIDsExceptSelection _ => "(r.from_ci_id != ANY(@ciids) AND r.to_ci_id != ANY(@ciids))",
+                NoCIIDsSelection _ => "1=0",
+                _ => throw new NotImplementedException("")
+            };
+        }
+        private static IEnumerable<NpgsqlParameter> CIIDSelection2Parameters(ICIIDSelection selection)
+        {
+            switch (selection)
+            {
+                case AllCIIDsSelection:
+                    break;
+                case SpecificCIIDsSelection s:
+                    yield return new NpgsqlParameter("ciids", s.CIIDs.ToArray());
+                    break;
+                case AllCIIDsExceptSelection e:
+                    yield return new NpgsqlParameter("ciids", e.ExceptCIIDs.ToArray());
+                    break;
+                case NoCIIDsSelection:
+                    break;
+                default:
+                    throw new NotImplementedException("");
+            };
+        }
+
+        private static string AttributeSelection2WhereClause(IAttributeSelection selection)
+        {
+            return selection switch
+            {
+                AllAttributeSelection _ => "1=1",
+                NoAttributesSelection _ => "1=0",
+                NamedAttributesSelection _ => $"a.name = ANY(@attribute_names)",
+                _ => throw new NotImplementedException("")
+            };
+        }
+        private static IEnumerable<NpgsqlParameter> AttributeSelection2Parameters(IAttributeSelection selection)
+        {
+            switch (selection)
+            {
+                case AllAttributeSelection _:
+                    break;
+                case NoAttributesSelection _:
+                    break;
+                case NamedAttributesSelection n:
+                    yield return new NpgsqlParameter("attribute_names", n.AttributeNames.ToArray());
+                    break;
+                default:
+                    throw new NotImplementedException("");
+            };
+        }
+
+        // NOTE: this does NOT take into account that changes happening in lower layers may not have any effect on the merged CIs
+        // that means that the returned changeset may not have any practical effect in the chosen layers, because the changes it did are actually hidden by layers above
+        // and hence it may not be the one that caused the last effective change
+        public async Task<Changeset?> GetLatestChangeset(ICIIDSelection ciSelection, IAttributeSelection attributeSelection, IReadOnlySet<string>? predicateIDs, string[] layers, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            Changeset? latestAttributeChangeset = null;
+            Changeset? latestRelationChangeset = null;
+
+            // TODO: possible to merge into one query?
+
+            using var commandAttributes = new NpgsqlCommand($@"SELECT c.id, c.timestamp, c.user_id, c.origin_type, c.layer_id FROM changeset c
+                INNER JOIN attribute a ON a.changeset_id = c.id AND {AttributeSelection2WhereClause(attributeSelection)} AND {CIIDSelection2WhereClauseAttributes(ciSelection)}
+                WHERE c.timestamp <= @threshold AND c.layer_id = ANY(@layer_ids)
                 ORDER BY c.timestamp DESC
                 LIMIT 1", trans.DBConnection, trans.DBTransaction);
+            commandAttributes.Parameters.AddWithValue("threshold", timeThreshold.Time.ToUniversalTime());
+            commandAttributes.Parameters.AddWithValue("layer_ids", layers);
+            foreach (var p in CIIDSelection2Parameters(ciSelection))
+                commandAttributes.Parameters.Add(p);
+            foreach (var p in AttributeSelection2Parameters(attributeSelection))
+                commandAttributes.Parameters.Add(p);
+            using (var drAttributes = await commandAttributes.ExecuteReaderAsync())
+            {
+                if (await drAttributes.ReadAsync())
+                {
+                    var id = drAttributes.GetGuid(0);
+                    var timestamp = drAttributes.GetDateTime(1);
+                    var userID = drAttributes.GetInt64(2);
+                    var dataOriginType = drAttributes.GetFieldValue<DataOriginType>(3);
+                    var layerID = drAttributes.GetString(4);
+                    var origin = new DataOriginV1(dataOriginType);
+                    latestAttributeChangeset = new Changeset(id, userID, layerID, origin, timestamp);
+                }
+            }
+            commandAttributes.Dispose();
 
-            command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("threshold", timeThreshold.Time.ToUniversalTime());
-            command.Prepare();
-            using var dr = await command.ExecuteReaderAsync();
+            using var commandRelations = new NpgsqlCommand($@"SELECT c.id, c.timestamp, c.user_id, c.origin_type, c.layer_id FROM changeset c
+                INNER JOIN relation r ON r.changeset_id = c.id AND {((predicateIDs != null) ? "r.predicate_id = ANY(@predicate_ids)" : "1=1")} AND {CIIDSelection2WhereClauseRelations(ciSelection)}
+                WHERE c.timestamp <= @threshold AND c.layer_id = ANY(@layer_ids)
+                ORDER BY c.timestamp DESC
+                LIMIT 1", trans.DBConnection, trans.DBTransaction);
+            commandRelations.Parameters.AddWithValue("threshold", timeThreshold.Time.ToUniversalTime());
+            if (predicateIDs != null)
+                commandRelations.Parameters.AddWithValue("predicate_ids", predicateIDs.ToArray());
+            commandRelations.Parameters.AddWithValue("layer_ids", layers);
+            foreach (var p in CIIDSelection2Parameters(ciSelection))
+                commandRelations.Parameters.Add(p);
+            using var drRelations = await commandRelations.ExecuteReaderAsync();
+            if (await drRelations.ReadAsync())
+            {
+                var id = drRelations.GetGuid(0);
+                var timestamp = drRelations.GetDateTime(1);
+                var userID = drRelations.GetInt64(2);
+                var dataOriginType = drRelations.GetFieldValue<DataOriginType>(3);
+                var layerID = drRelations.GetString(4);
+                var origin = new DataOriginV1(dataOriginType);
+                latestRelationChangeset = new Changeset(id, userID, layerID, origin, timestamp);
+            }
 
-            if (!await dr.ReadAsync())
+            if (latestAttributeChangeset == null && latestRelationChangeset == null)
                 return null;
-
-            var id = dr.GetGuid(0);
-            var timestamp = dr.GetDateTime(1);
-            var userID = dr.GetInt64(2);
-            var dataOriginType = dr.GetFieldValue<DataOriginType>(3);
-            var origin = new DataOriginV1(dataOriginType);
-            return new Changeset(id, userID, layerID, origin, timestamp);
+            else if (latestAttributeChangeset != null && latestRelationChangeset == null)
+                return latestAttributeChangeset;
+            else if (latestAttributeChangeset == null && latestRelationChangeset != null)
+                return latestRelationChangeset;
+            else
+            {
+                if (latestAttributeChangeset!.Timestamp > latestRelationChangeset!.Timestamp)
+                    return latestAttributeChangeset;
+                else
+                    return latestRelationChangeset;
+            }
         }
 
         public async Task<int> DeleteEmptyChangesets(int limit, IModelContext trans)
