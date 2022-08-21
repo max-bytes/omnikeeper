@@ -4,8 +4,7 @@ import { SyncOutlined } from '@ant-design/icons';
 import { useLazyQuery } from "@apollo/client";
 import _ from 'lodash';
 import cytoscape from 'cytoscape';
-import fcose from 'cytoscape-fcose';
-import { calculateNodeWidth, calculateNodeHeight } from './cytoscape_utils';
+import dagre from 'cytoscape-dagre';
 import gql from 'graphql-tag';
 import { toHtml, icon } from "@fortawesome/fontawesome-svg-core";
 import { faCogs, faUser, faTableCells } from "@fortawesome/free-solid-svg-icons";
@@ -36,22 +35,23 @@ export default function ReadWriteGraphRendering(props) {
     var [cy, setCY] = useState(null);
 
     const baseLayoutOptions = {
-        name: 'fcose',
-        quality: "proof",
-        animate: true,
-        animationEasing: 'ease-out-cubic',
-        nodeDimensionsIncludeLabels: true,
-        uniformNodeDimensions: false,
-        packComponents: true,
-        idealEdgeLength: edge => 300,
-        nodeRepulsion: node => 1,
-      };
+            name: 'dagre',
+            animate: true,
+            animationEasing: 'ease-out-cubic',
+            nodeDimensionsIncludeLabels: true,
+            uniformNodeDimensions: false,
+            packComponents: true,
+            idealEdgeLength: edge => 300,
+            nodeRepulsion: node => 1,
+            rankDir: 'LR',
+            rankSep: 200
+          };
 
     const [layoutOptions, setLayoutOptions] = useState(baseLayoutOptions);
 
     // TODO: should be remountable
     useEffect(() => {
-        cytoscape.use( fcose );
+        cytoscape.use( dagre );
     }, []);
 
     useEffect(() => {
@@ -71,11 +71,13 @@ export default function ReadWriteGraphRendering(props) {
                     selector: 'edge',
                     style: {
                         'target-arrow-shape': 'triangle',
-                        'curve-style': 'bezier',
-                        'label': 'data(label)',
+                        'curve-style': 'taxi',
+                        'taxi-direction': 'horizontal',
+                        'source-label': 'data(label)',
+                        'source-text-offset': '100px',
                         'text-background-color': '#fff',
                         'text-background-opacity': '0.8',
-                        'text-wrap': 'wrap',
+                        'text-halign': 'left'
                     }
                 },
                 {
@@ -84,10 +86,12 @@ export default function ReadWriteGraphRendering(props) {
                         'text-halign': 'center',
                         'text-valign': 'center',
                         'border-width': '3px',
-                        'width': calculateNodeWidth,
-                        'height': calculateNodeHeight,
-                        'border-color': (node) => node.data('color'),
-                        'background-color': '#F9F9F9'
+                        'width': '60px',
+                        'height': '60px',
+                        'text-margin-y': '10px',
+                        'background-color': (node) => node.data('color'),
+                        'border-color': '#333333',
+                        'text-valign': 'bottom',
                     }
                 },
                 {
@@ -120,6 +124,7 @@ export default function ReadWriteGraphRendering(props) {
                         'background-position-y': '50%',
                         'background-offset-x': '-50%',
                         'background-offset-y': '-50%',
+                        'text-margin-y': '10px',
                     }
                 }
             ],
@@ -221,7 +226,7 @@ function data2elements(authRoles, layers, odataContexts) {
         };
     });
 
-    const layerAlignmentConstraints = [_.map(layers, layer => createLayerNodeID(layer.id))];
+    const layerAlignmentConstraints = [];//[_.map(layers, layer => createLayerNodeID(layer.id))];
 
     const authRoleNodes = _.map(authRoles, authRole => {
         return {
@@ -234,7 +239,8 @@ function data2elements(authRoles, layers, odataContexts) {
     });
 
     const authRole2layerEdgesRead = _.flatten(_.map(authRoles, authRole => {
-        return _.map(authRole.grantsReadAccessForLayers, l => {
+        const filteredReadLayers = _.filter(authRole.grantsReadAccessForLayers, readLayer => !_.some(authRole.grantsWriteAccessForLayers, writeLayer => writeLayer.id == readLayer.id));
+        return _.map(filteredReadLayers, l => {
             return {
                 data: {
                     id: `edge_${createLayerNodeID(l.id)}->can_be_read_from->${createAuthRoleNodeID(authRole)}`,
