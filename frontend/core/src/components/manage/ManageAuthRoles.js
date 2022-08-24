@@ -24,7 +24,7 @@ export default function ManageAuthRoles(props) {
 
   const columnDefs = [
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew, sort: "asc" },
-    { headerName: "Permissions", field: "permissions", cellEditor: 'authRolePermissionsCellEditor', flex: 1,
+    { headerName: "Permissions", field: "permissions", cellEditor: 'authRolePermissionsCellEditor', cellEditorPopup: true, flex: 1,
       cellRenderer: (params) => {
         if (params.value)
           return params.value.join(', ');

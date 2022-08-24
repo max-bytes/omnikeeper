@@ -19,8 +19,7 @@ export default forwardRef((props, ref) => {
                 if (color.rgb)
                     return rgbaObject2argbInt(color.rgb);
                 else return props.value ?? -1;
-            },
-            isPopup: () => true
+            }
         };
     });
 

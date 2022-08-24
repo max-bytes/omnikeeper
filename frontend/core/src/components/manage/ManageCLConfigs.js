@@ -25,7 +25,7 @@ export default function ManageCLConfigs(props) {
   const columnDefs = [
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew, sort: "asc" },
     { headerName: "CLBrain Reference", field: "clBrainReference" },
-    { headerName: "CLBrain Config", field: "clBrainConfig", flex: 1, cellEditor: "JSONCellEditor", 
+    { headerName: "CLBrain Config", field: "clBrainConfig", flex: 1, cellEditor: "JSONCellEditor", cellEditorPopup: true,
       suppressKeyboardEvent: params => { // disable enter key, so editing is properly possible
         const gridShouldDoNothing = params.editing && (params.event.key === 'Enter');
         return gridShouldDoNothing;

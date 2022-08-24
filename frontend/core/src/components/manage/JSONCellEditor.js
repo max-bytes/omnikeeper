@@ -12,8 +12,7 @@ export default forwardRef((props, ref) => {
         return {
             getValue: () => {
                 return value;
-            },
-            isPopup: () => true
+            }
         };
     });
 

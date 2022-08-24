@@ -26,7 +26,7 @@ export default function ManageLayers(props) {
   const columnDefs = [
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew, sort: "asc" },
     { headerName: "Description", field: "description" },
-    { headerName: "Color", field: "color", width: 70, cellEditor: 'ARGBColorCellEditor', cellRenderer: 'layerColorCellRenderer' },
+    { headerName: "Color", field: "color", width: 70, cellEditor: 'ARGBColorCellEditor', cellEditorPopup: true, cellRenderer: 'layerColorCellRenderer' },
     { headerName: "Compute Layer Config ID", field: "clConfigID" },
     { headerName: "Online Inbound Adapter", field: "onlineInboundAdapterName" },
     { headerName: "Generators", field: "generators", 

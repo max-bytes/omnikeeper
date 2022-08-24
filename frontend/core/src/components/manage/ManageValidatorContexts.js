@@ -25,7 +25,7 @@ export default function ManageValidatorContexts(props) {
   const columnDefs = [
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew, sort: "asc" },
     { headerName: "Validator Reference", field: "validatorReference" },
-    { headerName: "Config", field: "config", flex: 1, cellEditor: "JSONCellEditor", 
+    { headerName: "Config", field: "config", flex: 1, cellEditor: "JSONCellEditor", cellEditorPopup: true,
       suppressKeyboardEvent: params => { // disable enter key, so editing is properly possible
         const gridShouldDoNothing = params.editing && (params.event.key === 'Enter');
         return gridShouldDoNothing;

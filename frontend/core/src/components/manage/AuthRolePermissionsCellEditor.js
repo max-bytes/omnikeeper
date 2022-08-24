@@ -13,8 +13,7 @@ export default forwardRef((props, ref) => {
         return {
             getValue: () => {
                 return selectedPermissions;
-            },
-            isPopup: () => true
+            }
         };
     });
 
