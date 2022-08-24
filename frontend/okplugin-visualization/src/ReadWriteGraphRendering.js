@@ -7,6 +7,7 @@ import cytoscape from 'cytoscape';
 import dagre from 'cytoscape-dagre';
 import gql from 'graphql-tag';
 import { toHtml, icon } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCogs, faUser, faTableCells } from "@fortawesome/free-solid-svg-icons";
 import Paragraph from "antd/lib/typography/Paragraph";
 
@@ -141,6 +142,16 @@ export default function ReadWriteGraphRendering(props) {
             <div style={styles.filterColumnEntry}>
                 <Paragraph>
                     Note: management permission required
+                </Paragraph>
+            </div>
+            <div style={styles.filterColumnEntry}>
+                <Paragraph>
+                    Legend: 
+                    <ul style={{"listStyle": "none"}}>
+                        <li><FontAwesomeIcon fixedWidth icon={faCogs}/> Compute Layer</li>
+                        <li><FontAwesomeIcon fixedWidth icon={faUser}/> Auth-Role</li>
+                        <li><FontAwesomeIcon fixedWidth icon={faTableCells}/> OData Context</li>
+                    </ul>
                 </Paragraph>
             </div>
             <div style={styles.filterColumnEntry}>
