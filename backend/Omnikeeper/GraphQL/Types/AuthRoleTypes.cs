@@ -1,10 +1,10 @@
 ﻿using GraphQL.DataLoader;
 using GraphQL.Types;
+using Omnikeeper.Authz;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Utils;
 using System.Linq;
 
 namespace Omnikeeper.GraphQL.Types

@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Omnikeeper.Utils
+namespace Omnikeeper.Authz
 {
     public interface IAuthRolePermissionChecker
     {

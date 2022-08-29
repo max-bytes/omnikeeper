@@ -40,6 +40,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
 using Omnikeeper.Base.Authz;
+using Omnikeeper.Authz;
 
 namespace Omnikeeper.Startup
 {

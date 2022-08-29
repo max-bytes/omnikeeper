@@ -2,11 +2,10 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Utils;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Omnikeeper.Service
+namespace Omnikeeper.Authz
 {
     public class LayerBasedAuthorizationService : ILayerBasedAuthorizationService
     {
@@ -64,7 +63,7 @@ namespace Omnikeeper.Service
         }
         private bool CanWriteToLayers(AuthRole[] authRoles, IEnumerable<string> layerIDs)
         {
-                var toCheckLayerIDs = new List<string>(layerIDs);
+            var toCheckLayerIDs = new List<string>(layerIDs);
             for (int i = toCheckLayerIDs.Count - 1; i >= 0; i--)
             {
                 var layerID = toCheckLayerIDs[i];

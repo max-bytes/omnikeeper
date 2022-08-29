@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using Omnikeeper.Base.Authz;
 
-namespace Omnikeeper.Service
+namespace Omnikeeper.Authz
 {
     public class CIBasedAuthorizationService : ICIBasedAuthorizationService
     {

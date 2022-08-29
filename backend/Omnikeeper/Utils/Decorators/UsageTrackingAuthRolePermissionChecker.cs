@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Omnikeeper.Authz;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
 
