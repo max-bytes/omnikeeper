@@ -18,7 +18,6 @@ namespace Omnikeeper.Authz
             this.authRolePermissionChecker = authRolePermissionChecker;
         }
 
-        public bool CanUserReadFromLayer(AuthenticatedUser user, Layer layer) => CanUserReadFromLayer(user, layer.ID);
         public bool CanUserReadFromLayer(AuthenticatedUser user, string layerID) => debugAllowAll || CanReadFromLayers(user.AuthRoles, new string[] { layerID });
         public bool CanUserReadFromAllLayers(AuthenticatedUser user, IEnumerable<string> layerIDs) =>
             debugAllowAll || CanReadFromLayers(user.AuthRoles, layerIDs);

@@ -1,5 +1,7 @@
 ﻿using GraphQL;
 using GraphQL.Types;
+using Omnikeeper.Authz;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Generator;
@@ -213,8 +215,8 @@ namespace Omnikeeper.GraphQL
                   var id = context.GetArgument<string>("id")!;
 
                   CheckManagementPermissionThrow(userContext, "manage layer");
-                  if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, id))
-                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify layer");
+                  if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TruncateLayer, userContext.User, id, id) is AuthzFilterResultDeny d)
+                      throw new ExecutionError(d.Reason);
 
                   var numDeletedAttributes = await baseAttributeRevisionistModel.DeleteAllAttributes(AllCIIDsSelection.Instance, id, userContext.Transaction);
                   var numDeletedRelations = await baseRelationRevisionistModel.DeleteAllRelations(id, userContext.Transaction);

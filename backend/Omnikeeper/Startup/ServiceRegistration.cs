@@ -196,6 +196,10 @@ namespace Omnikeeper.Startup
             builder.RegisterType<ArchiveOutdatedIssuesService>().As<IArchiveOutdatedIssuesService>().SingleInstance();
             builder.RegisterType<ArchiveOutdatedChangesetDataService>().As<IArchiveOutdatedChangesetDataService>().SingleInstance();
             builder.RegisterType<CalculateUnprocessedChangesetsService>().As<ICalculateUnprocessedChangesetsService>().SingleInstance();
+
+            // authz
+            builder.RegisterType<AuthzFilterManager>().As<IAuthzFilterManager>().SingleInstance();
+            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IAuthzFilter>().AsImplementedInterfaces().SingleInstance();
         }
 
         public static void RegisterLogging(ContainerBuilder builder)

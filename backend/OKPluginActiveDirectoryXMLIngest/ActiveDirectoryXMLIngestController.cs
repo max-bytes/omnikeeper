@@ -30,13 +30,13 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ILayerModel layerModel;
         private readonly ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly ILayerBasedAuthorizationService authorizationService;
+        private readonly IAuthzFilterManager authzFilterManager;
         private readonly ILogger<ActiveDirectoryXMLIngestController> logger;
         private readonly IIssuePersister issuePersister;
         private readonly IChangesetModel changesetModel;
 
         public ActiveDirectoryXMLIngestController(IngestDataService ingestDataService, ICurrentUserAccessor currentUserService, ILayerModel layerModel, ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService,
-            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger,
+            IModelContextBuilder modelContextBuilder, IAuthzFilterManager authzFilterManager, ILogger<ActiveDirectoryXMLIngestController> logger,
             IIssuePersister issuePersister, IChangesetModel changesetModel)
         {
             this.ingestDataService = ingestDataService;
@@ -44,7 +44,7 @@ namespace Omnikeeper.Controllers.Ingest
             this.layerModel = layerModel;
             this.ingestActiveDirectoryXMLService = ingestActiveDirectoryXMLService;
             this.modelContextBuilder = modelContextBuilder;
-            this.authorizationService = authorizationService;
+            this.authzFilterManager = authzFilterManager;
             this.logger = logger;
             this.issuePersister = issuePersister;
             this.changesetModel = changesetModel;
@@ -62,8 +62,8 @@ namespace Omnikeeper.Controllers.Ingest
 
             // authorization
             var user = await currentUserService.GetCurrentUser(mc);
-            if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
-                return Forbid();
+            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, searchLayerIDs, writeLayer.ID) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
             // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
             // TODO: think about this!
 

@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Authz;
+using Omnikeeper.Authz;
 
 namespace Omnikeeper.GridView.Commands
 {
@@ -56,6 +57,7 @@ namespace Omnikeeper.GridView.Commands
             private readonly IEffectiveTraitModel effectiveTraitModel;
             private readonly ITraitsProvider traitsProvider;
             private readonly IModelContextBuilder modelContextBuilder;
+            private readonly IAuthzFilterManager authzFilterManager;
             private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly IMetaConfigurationModel metaConfigurationModel;
@@ -63,6 +65,7 @@ namespace Omnikeeper.GridView.Commands
             public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
                 IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, GridViewContextModel gridViewContextModel,
                 IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
+                IAuthzFilterManager authzFilterManager,
                 ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService,
                 IMetaConfigurationModel metaConfigurationModel)
             {
@@ -75,6 +78,7 @@ namespace Omnikeeper.GridView.Commands
                 this.effectiveTraitModel = effectiveTraitModel;
                 this.traitsProvider = traitsProvider;
                 this.modelContextBuilder = modelContextBuilder;
+                this.authzFilterManager = authzFilterManager;
                 this.layerBasedAuthorizationService = layerBasedAuthorizationService;
                 this.ciBasedAuthorizationService = ciBasedAuthorizationService;
                 this.metaConfigurationModel = metaConfigurationModel;
@@ -102,10 +106,8 @@ namespace Omnikeeper.GridView.Commands
                 if (context == default) return (null, new Exception($"Could not find context with ID {request.Context}"));
                 var config = context.entity.Configuration;
 
-                if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, config.WriteLayer))
-                    return (null, new Exception($"User \"{user.Username}\" does not have permission to write to layer ID {config.WriteLayer}"));
-                if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, config.ReadLayerset))
-                    return (null, new Exception($"User \"{user.Username}\" does not have permission to read from at least one of the following layers: {string.Join(", ", config.ReadLayerset)}"));
+                if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, config.ReadLayerset, config.WriteLayer) is AuthzFilterResultDeny d)
+                    return (null, new Exception(d.Reason));
 
                 foreach (var row in request.Changes.SparseRows)
                 {
@@ -141,6 +143,7 @@ namespace Omnikeeper.GridView.Commands
                         {
                             writeLayer = configItem.WriteLayer;
                         }
+                        // TODO: proper check for write permissions
 
                         //var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
 

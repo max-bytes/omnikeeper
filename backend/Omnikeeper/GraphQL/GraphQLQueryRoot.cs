@@ -22,6 +22,7 @@ using System.Globalization;
 using System.Linq;
 using Omnikeeper.Base.Authz;
 using static Omnikeeper.Base.Model.IChangesetModel;
+using Omnikeeper.Authz;
 
 namespace Omnikeeper.GraphQL
 {
@@ -48,6 +49,7 @@ namespace Omnikeeper.GraphQL
         private readonly RecursiveTraitModel recursiveDataTraitModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly IUserInDatabaseModel userInDatabaseModel;
+        private readonly IAuthzFilterManager authzFilterManager;
         private readonly IBaseAttributeModel baseAttributeModel;
         private readonly IScheduler localScheduler;
         private readonly IScheduler distributedScheduler;
@@ -60,7 +62,7 @@ namespace Omnikeeper.GraphQL
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GeneratorV1Model generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, ODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel, CLConfigV1Model clConfigModel,
             RecursiveTraitModel recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
-            IUserInDatabaseModel userInDatabaseModel,
+            IUserInDatabaseModel userInDatabaseModel, IAuthzFilterManager authzFilterManager,
             IEnumerable<IPluginRegistration> plugins, IBaseAttributeModel baseAttributeModel, IIndex<string, IScheduler> schedulers,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, IDataLoaderService dataLoaderService, ValidatorContextV1Model validatorContextModel)
         {
@@ -84,6 +86,7 @@ namespace Omnikeeper.GraphQL
             this.recursiveDataTraitModel = recursiveDataTraitModel;
             this.managementAuthorizationService = managementAuthorizationService;
             this.userInDatabaseModel = userInDatabaseModel;
+            this.authzFilterManager = authzFilterManager;
             this.baseAttributeModel = baseAttributeModel;
             this.localScheduler = schedulers["localScheduler"];
             this.distributedScheduler = schedulers["distributedScheduler"];
@@ -134,8 +137,8 @@ namespace Omnikeeper.GraphQL
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
                     var layerSet = userContext.GetLayerSet(context.Path);
 
-                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerSet))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
+                    if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, userContext.User, layerSet) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
 
                     // use ciids list to reduce the CIIDSelection
                     var searchString = context.GetArgument<string>("searchString", "")!;
@@ -251,10 +254,9 @@ namespace Omnikeeper.GraphQL
 
                     var leftLayers = await layerModel.BuildLayerSet(context.GetArgument<string[]>($"leftLayers")!, userContext.Transaction);
                     var rightLayers = await layerModel.BuildLayerSet(context.GetArgument<string[]>($"rightLayers")!, userContext.Transaction);
-                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, leftLayers))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', leftLayers.LayerIDs)}");
-                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, rightLayers))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', rightLayers.LayerIDs)}");
+
+                    if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, userContext.User, leftLayers.Concat(rightLayers).ToHashSet()) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
 
                     var leftTimeThresholdDTO = context.GetArgument<DateTimeOffset?>($"leftTimeThreshold");
                     var leftTimeThreshold = (!leftTimeThresholdDTO.HasValue) ? TimeThreshold.BuildLatest() : TimeThreshold.BuildAtTime(leftTimeThresholdDTO.Value);
@@ -357,8 +359,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
-                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
+                    if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, userContext.User, userContext.GetLayerSet(context.Path)) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
 
                     var id = context.GetArgument<Guid>("id");
 
@@ -381,8 +383,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
-                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
+                    if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, userContext.User, userContext.GetLayerSet(context.Path)) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
 
                     var from = context.GetArgument<DateTimeOffset>("from");
                     var to = context.GetArgument<DateTimeOffset>("to");
@@ -433,8 +435,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
-                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
+                    if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, userContext.User, userContext.GetLayerSet(context.Path)) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
 
                     ICIIDSelection ciidSelection = AllCIIDsSelection.Instance;
                     if (ciids != null)
@@ -491,8 +493,8 @@ namespace Omnikeeper.GraphQL
                 var userContext = await context.GetUserContext()
                     .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
-                if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
-                    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
+                if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, userContext.User, userContext.GetLayerSet(context.Path)) is AuthzFilterResultDeny d)
+                    throw new ExecutionError(d.Reason);
 
                 return new TraitEntities.TraitEntities();
             });

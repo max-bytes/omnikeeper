@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Authz;
+using Omnikeeper.Authz;
 
 namespace Omnikeeper.GraphQL.TraitEntities
 {
@@ -24,12 +25,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly ICIIDModel ciidModel;
         private readonly IDataLoaderService dataLoaderService;
         private readonly ChangesetDataModel changesetDataModel;
+        private readonly IAuthzFilterManager authzFilterManager;
         private readonly ICIModel ciModel;
         private readonly ILayerModel layerModel;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public TraitEntitiesMutationSchemaLoader(IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel, 
-            IDataLoaderService dataLoaderService, ChangesetDataModel changesetDataModel,
+            IDataLoaderService dataLoaderService, ChangesetDataModel changesetDataModel, IAuthzFilterManager authzFilterManager,
             ICIModel ciModel, ILayerModel layerModel, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.attributeModel = attributeModel;
@@ -37,6 +39,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             this.ciidModel = ciidModel;
             this.dataLoaderService = dataLoaderService;
             this.changesetDataModel = changesetDataModel;
+            this.authzFilterManager = authzFilterManager;
             this.ciModel = ciModel;
             this.layerModel = layerModel;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
@@ -86,10 +89,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
 
-                        if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
-                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                        if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
-                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+                        if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TraitEntities_Update, userContext.User, layerset, writeLayerID) is AuthzFilterResultDeny d)
+                            throw new ExecutionError(d.Reason);
 
                         var input = context.GetArgument<UpsertInput>("input");
 
@@ -126,10 +127,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
 
-                        if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
-                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                        if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
-                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+                        if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TraitEntities_InsertNew, userContext.User, layerset, writeLayerID) is AuthzFilterResultDeny d)
+                            throw new ExecutionError(d.Reason);
 
                         var insertInput = context.GetArgument<UpsertInput>("input");
 
@@ -189,10 +188,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
 
-                        if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
-                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                        if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
-                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+                        if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TraitEntities_Delete, userContext.User, layerset, writeLayerID) is AuthzFilterResultDeny d)
+                            throw new ExecutionError(d.Reason);
 
                         var removed = await elementTypeContainer.TraitEntityModel.TryToDelete(ciid, layerset, writeLayerID, new DataOriginV1(DataOriginType.Manual), userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
@@ -225,10 +222,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+                            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TraitEntities_Upsert, userContext.User, layerset, writeLayerID) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
 
                             var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
                             return matchingCIIDs.Then(async matchingCIIDs =>
@@ -275,10 +270,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
                                 var trans = userContext.Transaction;
 
-                                if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
-                                    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                                if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
-                                    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+                                if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TraitEntities_Delete, userContext.User, layerset, writeLayerID) is AuthzFilterResultDeny d)
+                                    throw new ExecutionError(d.Reason);
 
                                 var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
                                 return matchingCIIDs.Then(async matchingCIIDs =>
@@ -324,10 +317,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+                            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TraitEntities_Upsert, userContext.User, layerset, writeLayerID) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
 
                             var input = context.GetArgument<UpsertInput>("input");
 
@@ -376,10 +367,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+                            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TraitEntities_Delete, userContext.User, layerset, writeLayerID) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
 
                             var id = context.GetArgument<IDInput>("id");
 
@@ -429,10 +418,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         // TODO: mask handling
                         var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
 
-                        if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, layerID))
-                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {layerID}");
-                        if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
-                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+                        if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TraitEntities_InsertChangesetData, userContext.User, layerset, layerID) is AuthzFilterResultDeny d)
+                            throw new ExecutionError(d.Reason);
 
                         if (elementTypeContainer.IDInput != null)
                             throw new Exception("Inserting trait entity that has ID as changeset data not supported");
@@ -475,10 +462,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+                            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TraitEntities_SetRelations, userContext.User, layerset, writeLayerID) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
 
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDs = context.GetArgument<Guid[]>("relatedCIIDs")!;
@@ -507,10 +492,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+                            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TraitEntities_AddRelations, userContext.User, layerset, writeLayerID) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
 
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDsToAdd = context.GetArgument<Guid[]>("relatedCIIDsToAdd")!;
@@ -539,10 +522,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, layerset))
-                                throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerset)}");
+                            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TraitEntities_RemoveRelations, userContext.User, layerset, writeLayerID) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
 
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDsToRemove = context.GetArgument<Guid[]>("relatedCIIDsToRemove")!;

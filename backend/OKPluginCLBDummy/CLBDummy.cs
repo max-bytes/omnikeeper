@@ -34,14 +34,14 @@ namespace OKPluginCLBDummy
             return parsedConfig.SourceLayerset.ToHashSet();
         }
 
-        public override async Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, 
+        public override Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, 
             JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger, IIssueAccumulator issueAccumulator)
         {
             logger.LogDebug("Start dummy CLB");
 
             logger.LogDebug("End dummy CLB");
 
-            return true;
+            return Task.FromResult(true);
         }
     }
 }

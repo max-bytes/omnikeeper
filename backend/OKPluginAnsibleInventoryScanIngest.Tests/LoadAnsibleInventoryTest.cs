@@ -75,14 +75,14 @@ namespace Tests.Ingest
             var user = new AuthenticatedUser(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, mc), new AuthRole[] { new AuthRole("ar1", new string[] { PermissionUtils.GetLayerWritePermission(layer1) }) });
             mockCurrentUserService.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
-            var mockAuthorizationService = new Mock<ILayerBasedAuthorizationService>();
-            mockAuthorizationService.Setup(_ => _.CanUserWriteToLayer(user, layer1)).Returns(true);
+            var mockAuthzFilterManager = new Mock<IAuthzFilterManager>();
+            mockAuthzFilterManager.Setup(x => x.ApplyPreFilterForMutation(It.IsAny<MutationOperation>(), It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<string>>(), It.IsAny<IEnumerable<string>>())).ReturnsAsync(AuthzFilterResultPermit.Instance);
 
             var insertLayer = layer1;
             var hosts = new string[] { "h1jmplx01.mhx.at", "h1lscapet01.mhx.local" };
             var layerSet = await layerModel.BuildLayerSet(new string[] { layer1.ID }, mc);
 
-            var controller = new AnsibleInventoryScanIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, modelContextBuilder, changesetModel, issuePersister.Object, mockAuthorizationService.Object, NullLogger<AnsibleInventoryScanIngestController>.Instance);
+            var controller = new AnsibleInventoryScanIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, modelContextBuilder, changesetModel, issuePersister.Object, mockAuthzFilterManager.Object, NullLogger<AnsibleInventoryScanIngestController>.Instance);
 
             var response = await PerformIngest(controller, hosts, insertLayer, layerSet);
             Assert.IsTrue(response is OkResult);

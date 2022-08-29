@@ -5,7 +5,6 @@ namespace Omnikeeper.Base.Authz
 {
     public interface ILayerBasedAuthorizationService
     {
-        bool CanUserReadFromLayer(AuthenticatedUser user, Layer layer);
         bool CanUserReadFromLayer(AuthenticatedUser user, string layerID);
         bool CanUserReadFromAllLayers(AuthenticatedUser user, IEnumerable<string> layerIDs);
 

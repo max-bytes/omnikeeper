@@ -120,6 +120,7 @@ namespace Tests.Integration
             var lbas = new Mock<ILayerBasedAuthorizationService>();
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<string>())).Returns(true);
+            lbas.Setup(x => x.CanUserWriteToAllLayers(It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
             lbas.Setup(e => e.CanUserReadFromAllLayers(It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
             builder.Register((sp) => lbas.Object).SingleInstance();
 

@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Authz;
+using Omnikeeper.Authz;
 
 namespace Omnikeeper.Controllers
 {
@@ -29,16 +30,18 @@ namespace Omnikeeper.Controllers
         private readonly ICurrentUserAccessor currentUserService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
+        private readonly IAuthzFilterManager authzFilterManager;
         private readonly IModelContextBuilder modelContextBuilder;
 
         public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserAccessor currentUserService, ILayerBasedAuthorizationService layerBasedAuthorizationService,
-            IModelContextBuilder modelContextBuilder, IChangesetModel changesetModel, ICIBasedAuthorizationService ciBasedAuthorizationService)
+            IModelContextBuilder modelContextBuilder, IChangesetModel changesetModel, ICIBasedAuthorizationService ciBasedAuthorizationService, IAuthzFilterManager authzFilterManager)
         {
             this.attributeModel = attributeModel;
             this.changesetModel = changesetModel;
             this.currentUserService = currentUserService;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
+            this.authzFilterManager = authzFilterManager;
             this.modelContextBuilder = modelContextBuilder;
         }
 
@@ -51,8 +54,9 @@ namespace Omnikeeper.Controllers
 
             using var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
-            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
-                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
+
+            if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, layerIDs) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
             if (!ciBasedAuthorizationService.CanReadCI(ciid))
                 return Forbid($"User \"{user.Username}\" does not have permission to read CI {ciid}");
 
@@ -96,8 +100,10 @@ namespace Omnikeeper.Controllers
                 return BadRequest("Encountered file with invalid content-type. Only images are allowed");
             using var trans = modelContextBuilder.BuildDeferred();
             var user = await currentUserService.GetCurrentUser(trans);
-            if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, layerID))
-                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
+
+            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, layerID, layerID) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
+
             if (!ciBasedAuthorizationService.CanWriteToCI(ciid))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to CI {ciid}");
 

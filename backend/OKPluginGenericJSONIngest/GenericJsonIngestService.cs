@@ -21,21 +21,21 @@ namespace OKPluginGenericJSONIngest
         private readonly ContextModel contextModel;
         private readonly ILayerModel layerModel;
         private readonly ICurrentUserAccessor currentUserAccessor;
-        private readonly ILayerBasedAuthorizationService authorizationService;
         private readonly IngestDataService ingestDataService;
+        private readonly IAuthzFilterManager authzFilterManager;
         private readonly IChangesetModel changesetModel;
         private readonly IIssuePersister issuePersister;
 
         public GenericJsonIngestService(IMetaConfigurationModel metaConfigurationModel, ContextModel contextModel, 
-            ILayerModel layerModel, ICurrentUserAccessor currentUserAccessor, ILayerBasedAuthorizationService authorizationService, IngestDataService ingestDataService,
-            IChangesetModel changesetModel, IIssuePersister issuePersister)
+            ILayerModel layerModel, ICurrentUserAccessor currentUserAccessor, IngestDataService ingestDataService,
+            IAuthzFilterManager authzFilterManager, IChangesetModel changesetModel, IIssuePersister issuePersister)
         {
             this.metaConfigurationModel = metaConfigurationModel;
             this.contextModel = contextModel;
             this.layerModel = layerModel;
             this.currentUserAccessor = currentUserAccessor;
-            this.authorizationService = authorizationService;
             this.ingestDataService = ingestDataService;
+            this.authzFilterManager = authzFilterManager;
             this.changesetModel = changesetModel;
             this.issuePersister = issuePersister;
         }
@@ -64,15 +64,9 @@ namespace OKPluginGenericJSONIngest
 
             var user = await currentUserAccessor.GetCurrentUser(mc);
 
-            // authorization
-            if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
-            {
-                throw new UnauthorizedAccessException($"User {user.Username} cannot write to layer {writeLayer.ID}");
-            }
-            if (!authorizationService.CanUserReadFromAllLayers(user, searchLayers))
-            {
-                throw new UnauthorizedAccessException($"User {user.Username} cannot read from at least one of the layers: {string.Join(",", searchLayers.LayerIDs)}");
-            }
+            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, searchLayers, writeLayer.ID) is AuthzFilterResultDeny d)
+                throw new UnauthorizedAccessException(d.Reason);
+
             // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
             // TODO: think about this!
 
@@ -153,14 +147,9 @@ namespace OKPluginGenericJSONIngest
             var user = await currentUserAccessor.GetCurrentUser(mc);
 
             // authorization
-            if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
-            {
-                throw new UnauthorizedAccessException($"User {user.Username} cannot write to layer {writeLayer.ID}");
-            }
-            if (!authorizationService.CanUserReadFromAllLayers(user, searchLayers))
-            {
-                throw new UnauthorizedAccessException($"User {user.Username} cannot read from at least one of the layers: {string.Join(",", searchLayers.LayerIDs)}");
-            }
+            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, searchLayers, writeLayer.ID) is AuthzFilterResultDeny d)
+                throw new UnauthorizedAccessException(d.Reason);
+
             // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
             // TODO: think about this!
 

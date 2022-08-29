@@ -23,16 +23,16 @@ namespace OKPluginVisualization
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ITraitsProvider traitsProvider;
         private readonly ICurrentUserAccessor currentUserAccessor;
-        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+        private readonly IAuthzFilterManager authzFilterManager;
         private readonly TraitCentricDataGenerator traitCentricDataGenerator;
 
         public CytoscapeController(IModelContextBuilder modelContextBuilder, ITraitsProvider traitsProvider, ICurrentUserAccessor currentUserAccessor,
-            ILayerBasedAuthorizationService layerBasedAuthorizationService, TraitCentricDataGenerator traitCentricDataGenerator)
+            IAuthzFilterManager authzFilterManager, TraitCentricDataGenerator traitCentricDataGenerator)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.traitsProvider = traitsProvider;
             this.currentUserAccessor = currentUserAccessor;
-            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+            this.authzFilterManager = authzFilterManager;
             this.traitCentricDataGenerator = traitCentricDataGenerator;
         }
 
@@ -46,8 +46,9 @@ namespace OKPluginVisualization
             var timeThreshold = TimeThreshold.BuildLatest();
 
             var user = await currentUserAccessor.GetCurrentUser(trans);
-            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
-                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
+
+            if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, layerIDs) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
 
             var layerSet = new LayerSet(layerIDs);
 

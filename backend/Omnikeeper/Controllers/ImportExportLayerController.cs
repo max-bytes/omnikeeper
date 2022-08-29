@@ -18,6 +18,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Authz;
+using Omnikeeper.Authz;
 
 namespace Omnikeeper.Controllers
 {
@@ -34,25 +35,23 @@ namespace Omnikeeper.Controllers
         private readonly ICurrentUserAccessor currentUserService;
         private readonly ICIModel ciModel;
         private readonly IBaseRelationModel baseRelationModel;
-        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+        private readonly IAuthzFilterManager authzFilterManager;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly ILayerStatisticsModel layerStatisticsModel;
         private readonly IRelationModel relationModel;
 
-        public ImportExportLayerController(IBaseAttributeModel baseAttributeModel, IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, ICIModel ciModel, IBaseRelationModel baseRelationModel,
-            ILayerBasedAuthorizationService layerBasedAuthorizationService, IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerModel layerModel, ILayerStatisticsModel layerStatisticsModel, IRelationModel relationModel)
+        public ImportExportLayerController(IBaseAttributeModel baseAttributeModel, IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, ICIModel ciModel, IBaseRelationModel baseRelationModel, IAuthzFilterManager authzFilterManager,
+            IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerModel layerModel, IRelationModel relationModel)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.changesetModel = changesetModel;
             this.baseAttributeModel = baseAttributeModel;
-            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.currentUserService = currentUserService;
             this.ciModel = ciModel;
             this.baseRelationModel = baseRelationModel;
+            this.authzFilterManager = authzFilterManager;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerModel = layerModel;
-            this.layerStatisticsModel = layerStatisticsModel;
             this.relationModel = relationModel;
             this.attributeModel = attributeModel;
         }
@@ -85,8 +84,8 @@ namespace Omnikeeper.Controllers
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            if (!layerBasedAuthorizationService.CanUserReadFromLayer(user, layerID))
-                return Forbid($"User \"{user.Username}\" does not have permission to read from layer with ID {layerID}");
+            if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, layerID) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
@@ -172,10 +171,8 @@ namespace Omnikeeper.Controllers
                         return BadRequest($"Cannot write to layer with ID {data.LayerID}: layer does not exist");
                     }
                     // authorization
-                    if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, writeLayer))
-                    {
-                        return Forbid();
-                    }
+                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, writeLayer.ID, writeLayer.ID) is AuthzFilterResultDeny d)
+                        return Forbid(d.Reason);
 
                     // layer import works as follows:
                     // timestamp, changeset, user, data-origin, state, attribute- and relation-id is different

@@ -31,11 +31,11 @@ namespace OKPluginAnsibleInventoryScanIngest
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly IChangesetModel changesetModel;
         private readonly IIssuePersister issuePersister;
-        private readonly ILayerBasedAuthorizationService authorizationService;
+        private readonly IAuthzFilterManager authzFilterManager;
 
         public AnsibleInventoryScanIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserAccessor currentUserService,
             IModelContextBuilder modelContextBuilder, IChangesetModel changesetModel, IIssuePersister issuePersister,
-            ILayerBasedAuthorizationService authorizationService, ILogger<AnsibleInventoryScanIngestController> logger)
+            IAuthzFilterManager authzFilterManager, ILogger<AnsibleInventoryScanIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
             this.layerModel = layerModel;
@@ -44,7 +44,7 @@ namespace OKPluginAnsibleInventoryScanIngest
             this.modelContextBuilder = modelContextBuilder;
             this.changesetModel = changesetModel;
             this.issuePersister = issuePersister;
-            this.authorizationService = authorizationService;
+            this.authzFilterManager = authzFilterManager;
         }
 
         [HttpPost("")]
@@ -63,10 +63,8 @@ namespace OKPluginAnsibleInventoryScanIngest
                 }
 
                 // authorization
-                if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
-                {
-                    return Forbid();
-                }
+                if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, searchLayerIDs, writeLayer.ID) is AuthzFilterResultDeny d)
+                    return Forbid(d.Reason);
                 // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
                 // TODO: think about this!
 

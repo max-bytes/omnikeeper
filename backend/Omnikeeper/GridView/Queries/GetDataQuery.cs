@@ -17,6 +17,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Authz;
+using Omnikeeper.Authz;
 
 namespace Omnikeeper.GridView.Queries
 {
@@ -49,13 +50,13 @@ namespace Omnikeeper.GridView.Queries
             private readonly ITraitsProvider traitsProvider;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IMetaConfigurationModel metaConfigurationModel;
-            private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+            private readonly IAuthzFilterManager authzFilterManager;
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly ICurrentUserAccessor currentUserService;
 
             public GetDataQueryHandler(GridViewContextModel gridViewContextModel, IEffectiveTraitModel effectiveTraitModel, IRelationModel relationModel, ICIModel ciModel,
                 ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
-                ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserAccessor currentUserService)
+                ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserAccessor currentUserService, IAuthzFilterManager authzFilterManager)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.effectiveTraitModel = effectiveTraitModel;
@@ -64,9 +65,9 @@ namespace Omnikeeper.GridView.Queries
                 this.traitsProvider = traitsProvider;
                 this.modelContextBuilder = modelContextBuilder;
                 this.metaConfigurationModel = metaConfigurationModel;
-                this.layerBasedAuthorizationService = layerBasedAuthorizationService;
                 this.ciBasedAuthorizationService = ciBasedAuthorizationService;
                 this.currentUserService = currentUserService;
+                this.authzFilterManager = authzFilterManager;
             }
 
             public async Task<(GetDataResponse?, Exception?)> Handle(Query request, CancellationToken cancellationToken)
@@ -84,8 +85,8 @@ namespace Omnikeeper.GridView.Queries
                 if (context == default) return (null, new Exception($"Could not find context with ID {request.Context}"));
                 var config = context.entity.Configuration;
 
-                if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, config.ReadLayerset))
-                    return (null, new Exception($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', config.ReadLayerset)}"));
+                if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, config.ReadLayerset) is AuthzFilterResultDeny d)
+                    return (null, new Exception(d.Reason));
 
                 var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, atTime);
 

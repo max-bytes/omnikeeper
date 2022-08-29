@@ -18,6 +18,7 @@ using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Omnikeeper.Authz;
 
 namespace Omnikeeper.GraphQL
 {
@@ -39,9 +40,9 @@ namespace Omnikeeper.GraphQL
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
         private readonly CLBProcessedChangesetsCache clbProcessedChangesetsCache;
+        private readonly IAuthzFilterManager authzFilterManager;
         private readonly ValidatorProcessedChangesetsCache validatorProcessedChangesetsCache;
         private readonly IScheduler localScheduler;
-        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
             PredicateModel predicateModel, GeneratorV1Model generatorModel,
@@ -50,7 +51,7 @@ namespace Omnikeeper.GraphQL
             IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             IEnumerable<IPluginRegistration> plugins, IIndex<string, IScheduler> schedulers, CLBProcessedChangesetsCache clbProcessedChangesetsCache,
-            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, ILayerDataModel layerDataModel, ValidatorContextV1Model validatorContextModel, ValidatorProcessedChangesetsCache validatorProcessedChangesetsCache)
+            IAuthzFilterManager authzFilterManager, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerDataModel layerDataModel, ValidatorContextV1Model validatorContextModel, ValidatorProcessedChangesetsCache validatorProcessedChangesetsCache)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -73,10 +74,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(readLayerIDs, trans), context.Path);
 
-                    if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, writeLayerID))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {writeLayerID}");
-                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', readLayerIDs)}");
+                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, userContext.User, readLayerIDs, writeLayerID) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
 
                     var writeCIIDs = insertAttributes.Select(a => a.CI)
                     .Concat(removeAttributes.Select(a => a.CI))
@@ -167,8 +166,10 @@ namespace Omnikeeper.GraphQL
 
                     var userContext = context.GetUserContext();
 
-                    if (!layerBasedAuthorizationService.CanUserWriteToAllLayers(userContext.User, createCIs.Select(ci => ci.LayerIDForName)))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', createCIs.Select(ci => ci.LayerIDForName))}");
+
+                    var layers = createCIs.Select(ci => ci.LayerIDForName);
+                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.CreateCIs, userContext.User, layers, layers) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
                     // NOTE: a newly created CI cannot be checked with CIBasedAuthorizationService yet. That's why we don't do a .CanWriteToCI() check here
 
                     // TODO: other-layers-value handling
@@ -201,10 +202,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(new string[] { layerID }, trans), context.Path);
 
-                    if (!layerBasedAuthorizationService.CanUserWriteToLayer(userContext.User, layerID))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to the layerID: {layerID}");
-                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.GetLayerSet(context.Path)))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', userContext.GetLayerSet(context.Path))}");
+                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.InsertChangesetData, userContext.User, userContext.GetLayerSet(context.Path), layerID) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
 
                     var changesetProxy = userContext.ChangesetProxy;
 
@@ -231,7 +230,7 @@ namespace Omnikeeper.GraphQL
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
             this.clbProcessedChangesetsCache = clbProcessedChangesetsCache;
-            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+            this.authzFilterManager = authzFilterManager;
             this.layerDataModel = layerDataModel;
             this.validatorContextModel = validatorContextModel;
             this.validatorProcessedChangesetsCache = validatorProcessedChangesetsCache;
