@@ -29,6 +29,8 @@ namespace Omnikeeper.Base.Model
             }
         }
 
+        public IEnumerable<Changeset> GetAllActiveChangesets() => ActiveChangesets.Values;
+
         public ChangesetProxy(UserInDatabase user, TimeThreshold timeThreshold, IChangesetModel model)
         {
             User = user;
