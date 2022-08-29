@@ -213,7 +213,7 @@ namespace Omnikeeper.GridView.Commands
                     return (null, new Exception($"Consistency validation for CI with id={cisWithoutTrait.FirstOrDefault()} failed. CI doesn't have the configured trait {activeTrait.ID}!"));
                 }
 
-                if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.TraitEntities_RemoveRelations, user, changesetProxy) is string reasonPost)
+                if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy) is string reasonPost)
                     return (null, new Exception(reasonPost));
 
                 trans.Commit();
