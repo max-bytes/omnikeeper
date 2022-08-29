@@ -1,5 +1,6 @@
 ﻿using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -22,6 +23,8 @@ namespace Omnikeeper.Authz
                 return Task.FromResult<IAuthzFilterResult>(new AuthzFilterResultDeny($"User \"{user.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', writeLayerIDs)}"));
             return Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
         }
+
+        public Task<IAuthzFilterResult> PostFilterForMutation(MutationOperation operation, AuthenticatedUser user, IChangesetProxy changesetProxy) => Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
 
         public Task<IAuthzFilterResult> PreFilterForQuery(QueryOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs)
         {

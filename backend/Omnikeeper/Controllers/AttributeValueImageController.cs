@@ -28,18 +28,16 @@ namespace Omnikeeper.Controllers
         private readonly IAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly ICurrentUserAccessor currentUserService;
-        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IAuthzFilterManager authzFilterManager;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserAccessor currentUserService, ILayerBasedAuthorizationService layerBasedAuthorizationService,
+        public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserAccessor currentUserService,
             IModelContextBuilder modelContextBuilder, IChangesetModel changesetModel, ICIBasedAuthorizationService ciBasedAuthorizationService, IAuthzFilterManager authzFilterManager)
         {
             this.attributeModel = attributeModel;
             this.changesetModel = changesetModel;
             this.currentUserService = currentUserService;
-            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.authzFilterManager = authzFilterManager;
             this.modelContextBuilder = modelContextBuilder;
@@ -55,8 +53,8 @@ namespace Omnikeeper.Controllers
             using var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, layerIDs) is AuthzFilterResultDeny d)
-                return Forbid(d.Reason);
+            if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, layerIDs) is string reason)
+                return Forbid(reason);
             if (!ciBasedAuthorizationService.CanReadCI(ciid))
                 return Forbid($"User \"{user.Username}\" does not have permission to read CI {ciid}");
 
@@ -101,8 +99,8 @@ namespace Omnikeeper.Controllers
             using var trans = modelContextBuilder.BuildDeferred();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, layerID, layerID) is AuthzFilterResultDeny d)
-                return Forbid(d.Reason);
+            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, layerID, layerID) is string reason)
+                return Forbid(reason);
 
             if (!ciBasedAuthorizationService.CanWriteToCI(ciid))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to CI {ciid}");
@@ -134,6 +132,10 @@ namespace Omnikeeper.Controllers
 
             var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+
+            if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy) is string reasonPost)
+                return Forbid(reasonPost);
+
             trans.Commit();
             return Ok();
         }

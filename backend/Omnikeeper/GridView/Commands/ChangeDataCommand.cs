@@ -58,15 +58,13 @@ namespace Omnikeeper.GridView.Commands
             private readonly ITraitsProvider traitsProvider;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IAuthzFilterManager authzFilterManager;
-            private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly IMetaConfigurationModel metaConfigurationModel;
 
             public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
                 IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, GridViewContextModel gridViewContextModel,
                 IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
-                IAuthzFilterManager authzFilterManager,
-                ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService,
+                IAuthzFilterManager authzFilterManager, ICIBasedAuthorizationService ciBasedAuthorizationService,
                 IMetaConfigurationModel metaConfigurationModel)
             {
                 this.ciModel = ciModel;
@@ -79,7 +77,6 @@ namespace Omnikeeper.GridView.Commands
                 this.traitsProvider = traitsProvider;
                 this.modelContextBuilder = modelContextBuilder;
                 this.authzFilterManager = authzFilterManager;
-                this.layerBasedAuthorizationService = layerBasedAuthorizationService;
                 this.ciBasedAuthorizationService = ciBasedAuthorizationService;
                 this.metaConfigurationModel = metaConfigurationModel;
             }
@@ -106,8 +103,8 @@ namespace Omnikeeper.GridView.Commands
                 if (context == default) return (null, new Exception($"Could not find context with ID {request.Context}"));
                 var config = context.entity.Configuration;
 
-                if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, config.ReadLayerset, config.WriteLayer) is AuthzFilterResultDeny d)
-                    return (null, new Exception(d.Reason));
+                if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, config.ReadLayerset, config.WriteLayer) is string reason)
+                    return (null, new Exception(reason));
 
                 foreach (var row in request.Changes.SparseRows)
                 {
@@ -215,6 +212,9 @@ namespace Omnikeeper.GridView.Commands
                     trans.Rollback();
                     return (null, new Exception($"Consistency validation for CI with id={cisWithoutTrait.FirstOrDefault()} failed. CI doesn't have the configured trait {activeTrait.ID}!"));
                 }
+
+                if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.TraitEntities_RemoveRelations, user, changesetProxy) is string reasonPost)
+                    return (null, new Exception(reasonPost));
 
                 trans.Commit();
                 return (await BuildChangeResponse(mergedCIs, config), null);

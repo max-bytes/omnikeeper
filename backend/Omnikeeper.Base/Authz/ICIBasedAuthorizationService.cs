@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Omnikeeper.Base.Authz
 {
+    // TODO: remove completely, authz like this cannot work
     public interface ICIBasedAuthorizationService
     {
         bool CanReadCI(Guid ciid);

@@ -76,7 +76,7 @@ namespace Tests.Ingest
             mockCurrentUserService.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
             var mockAuthzFilterManager = new Mock<IAuthzFilterManager>();
-            mockAuthzFilterManager.Setup(x => x.ApplyPreFilterForMutation(It.IsAny<MutationOperation>(), It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<string>>(), It.IsAny<IEnumerable<string>>())).ReturnsAsync(AuthzFilterResultPermit.Instance);
+            mockAuthzFilterManager.Setup(x => x.ApplyPreFilterForMutation(It.IsAny<MutationOperation>(), It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<string>>(), It.IsAny<IEnumerable<string>>())).ReturnsAsync((string?)null);
 
             var insertLayer = layer1;
             var hosts = new string[] { "h1jmplx01.mhx.at", "h1lscapet01.mhx.local" };
