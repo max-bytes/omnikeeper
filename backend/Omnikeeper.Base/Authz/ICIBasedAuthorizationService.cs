@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Omnikeeper.Base.Service
+namespace Omnikeeper.Base.Authz
 {
     public interface ICIBasedAuthorizationService
     {

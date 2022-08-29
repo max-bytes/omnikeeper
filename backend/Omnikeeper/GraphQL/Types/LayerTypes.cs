@@ -2,7 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
-using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Model;
 using System;
 

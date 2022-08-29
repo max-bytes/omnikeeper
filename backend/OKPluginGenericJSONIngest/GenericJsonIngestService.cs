@@ -11,6 +11,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Authz;
 
 namespace OKPluginGenericJSONIngest
 {

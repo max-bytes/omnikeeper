@@ -15,6 +15,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Authz;
 
 namespace Omnikeeper.Controllers.Ingest
 {

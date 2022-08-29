@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
+using Omnikeeper.Base.Authz;
 using static Omnikeeper.Base.Model.IChangesetModel;
 
 namespace Omnikeeper.GraphQL

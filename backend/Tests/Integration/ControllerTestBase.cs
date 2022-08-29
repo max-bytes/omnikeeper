@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Service;
 using System;
+using Omnikeeper.Base.Authz;
 using System.Collections.Generic;
 
 namespace Tests.Integration.Controller

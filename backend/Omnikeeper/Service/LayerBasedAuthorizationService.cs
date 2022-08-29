@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Utils;
 using System.Collections.Generic;

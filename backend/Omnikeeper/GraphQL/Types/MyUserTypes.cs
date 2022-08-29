@@ -2,7 +2,7 @@
 using GraphQL.Types;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Authz;
 
 namespace Omnikeeper.GraphQL.Types
 {

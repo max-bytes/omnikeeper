@@ -10,6 +10,7 @@ using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Model.Config;
@@ -24,7 +25,6 @@ namespace Omnikeeper.GraphQL
     {
         private readonly ILayerModel layerModel;
         private readonly PredicateModel predicateModel;
-        private readonly IChangesetModel changesetModel;
         private readonly GeneratorV1Model generatorModel;
         private readonly IOIAContextModel oiaContextModel;
         private readonly ODataAPIContextModel odataAPIContextModel;
@@ -44,7 +44,7 @@ namespace Omnikeeper.GraphQL
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
-            PredicateModel predicateModel, IChangesetModel changesetModel, GeneratorV1Model generatorModel,
+            PredicateModel predicateModel, GeneratorV1Model generatorModel,
             IOIAContextModel oiaContextModel, ODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel,
             RecursiveTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel, ChangesetDataModel changesetDataModel,
             IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
@@ -219,7 +219,6 @@ namespace Omnikeeper.GraphQL
 
             this.layerModel = layerModel;
             this.predicateModel = predicateModel;
-            this.changesetModel = changesetModel;
             this.generatorModel = generatorModel;
             this.oiaContextModel = oiaContextModel;
             this.odataAPIContextModel = odataAPIContextModel;
@@ -232,11 +231,11 @@ namespace Omnikeeper.GraphQL
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
             this.clbProcessedChangesetsCache = clbProcessedChangesetsCache;
-            this.localScheduler = schedulers["localScheduler"];
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.layerDataModel = layerDataModel;
             this.validatorContextModel = validatorContextModel;
             this.validatorProcessedChangesetsCache = validatorProcessedChangesetsCache;
+            localScheduler = schedulers["localScheduler"];
 
             CreateManage();
             CreatePlugin(plugins);

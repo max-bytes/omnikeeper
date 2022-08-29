@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Utils;
+using Omnikeeper.Base.Authz;
 
 namespace Omnikeeper.Service
 {

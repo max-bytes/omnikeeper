@@ -17,6 +17,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Authz;
 
 namespace Omnikeeper.Controllers
 {

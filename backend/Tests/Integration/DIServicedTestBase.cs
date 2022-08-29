@@ -21,6 +21,7 @@ using Omnikeeper.Startup;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Authz;
 
 namespace Tests.Integration
 {

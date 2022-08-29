@@ -16,6 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration;
+using Omnikeeper.Base.Authz;
 
 namespace Tests.Ingest
 {

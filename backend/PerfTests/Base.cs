@@ -15,6 +15,7 @@ using Omnikeeper.Service;
 using Omnikeeper.Startup;
 using System;
 using Tests.Integration;
+using Omnikeeper.Base.Authz;
 
 namespace PerfTests
 {
