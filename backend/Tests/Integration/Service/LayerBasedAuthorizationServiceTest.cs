@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
+using Omnikeeper.Authz;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Service;
-using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
 
