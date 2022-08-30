@@ -16,6 +16,11 @@ namespace Omnikeeper.Base.Utils
 
         public static string GetManagementPermission() => $"ok.management";
 
+        public static bool HasSuperUserAuthRole(AuthenticatedUser user)
+        {
+            return user.AuthRoles.Any(ar => ar.ID == "__ok_superuser");
+        }
+
         public static async Task<AuthRole> GetSuperUserAuthRole(ILayerModel layerModel, IModelContext trans)
         {
             var permissions = await GetAllAvailablePermissions(layerModel, trans);

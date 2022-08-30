@@ -84,8 +84,8 @@ namespace Omnikeeper.Controllers
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, layerID) is string reason)
-                return Forbid(reason);
+            if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, layerID, trans) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
@@ -171,8 +171,8 @@ namespace Omnikeeper.Controllers
                         return BadRequest($"Cannot write to layer with ID {data.LayerID}: layer does not exist");
                     }
                     // authorization
-                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, writeLayer.ID, writeLayer.ID) is string reason)
-                        return Forbid(reason);
+                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, writeLayer.ID, writeLayer.ID, trans) is AuthzFilterResultDeny d)
+                        return Forbid(d.Reason);
 
                     // layer import works as follows:
                     // timestamp, changeset, user, data-origin, state, attribute- and relation-id is different
@@ -192,8 +192,8 @@ namespace Omnikeeper.Controllers
                     var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID, t.Mask));
                     await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, maskHandling, otherLayersValueHandling);
 
-                    if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy) is string reasonPost)
-                        return Forbid(reasonPost);
+                    if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy, trans) is AuthzFilterResultDeny dPost)
+                        return Forbid(dPost.Reason);
                 }
 
                 trans.Commit();

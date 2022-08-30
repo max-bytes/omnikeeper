@@ -18,7 +18,6 @@ using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Omnikeeper.Authz;
 
 namespace Omnikeeper.GraphQL
 {
@@ -74,8 +73,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(readLayerIDs, trans), context.Path);
 
-                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, userContext.User, readLayerIDs, writeLayerID) is string reason)
-                        throw new ExecutionError(reason);
+                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, userContext.User, readLayerIDs, writeLayerID, userContext.Transaction) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
 
                     var writeCIIDs = insertAttributes.Select(a => a.CI)
                     .Concat(removeAttributes.Select(a => a.CI))
@@ -151,8 +150,8 @@ namespace Omnikeeper.GraphQL
                     if (!affectedCIIDs.IsEmpty())
                         affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.GetLayerSet(context.Path), true, AllAttributeSelection.Instance, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
 
-                    if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, userContext.User, userContext.ChangesetProxy) is string reasonPost)
-                        throw new ExecutionError(reasonPost);
+                    if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, userContext.User, userContext.ChangesetProxy, userContext.Transaction) is AuthzFilterResultDeny dPost)
+                        throw new ExecutionError(dPost.Reason);
 
                     userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -171,8 +170,8 @@ namespace Omnikeeper.GraphQL
 
 
                     var layers = createCIs.Select(ci => ci.LayerIDForName);
-                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.CreateCIs, userContext.User, layers, layers) is string reason)
-                        throw new ExecutionError(reason);
+                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.CreateCIs, userContext.User, layers, layers, userContext.Transaction) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
 
                     // TODO: other-layers-value handling
                     var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
@@ -187,8 +186,8 @@ namespace Omnikeeper.GraphQL
                         createdCIIDs.Add(ciid);
                     }
 
-                    if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.CreateCIs, userContext.User, userContext.ChangesetProxy) is string reasonPost)
-                        throw new ExecutionError(reasonPost);
+                    if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.CreateCIs, userContext.User, userContext.ChangesetProxy, userContext.Transaction) is AuthzFilterResultDeny dPost)
+                        throw new ExecutionError(dPost.Reason);
 
                     userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -208,8 +207,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(new string[] { layerID }, trans), context.Path);
 
-                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.InsertChangesetData, userContext.User, userContext.GetLayerSet(context.Path), layerID) is string reason)
-                        throw new ExecutionError(reason);
+                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.InsertChangesetData, userContext.User, userContext.GetLayerSet(context.Path), layerID, userContext.Transaction) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
 
                     var changesetProxy = userContext.ChangesetProxy;
 
@@ -217,8 +216,8 @@ namespace Omnikeeper.GraphQL
 
                     var ciid = await changesetDataModel.InsertOrUpdateWithAdditionalAttributes(changesetProxy, layerID, insertAttributes.Select(a => (name: a.Name, value: AttributeValueHelper.BuildFromDTO(a.Value))), dataOrigin, userContext.Transaction);
 
-                    if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.InsertChangesetData, userContext.User, userContext.ChangesetProxy) is string reasonPost)
-                        throw new ExecutionError(reasonPost);
+                    if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.InsertChangesetData, userContext.User, userContext.ChangesetProxy, userContext.Transaction) is AuthzFilterResultDeny dPost)
+                        throw new ExecutionError(dPost.Reason);
 
                     userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 

@@ -1,6 +1,8 @@
 ﻿using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,44 +10,57 @@ namespace Omnikeeper.Authz
 {
     public class AuthzFilterManager : IAuthzFilterManager
     {
-        private readonly IEnumerable<IAuthzFilter> filters;
+        private readonly IEnumerable<IAuthzFilterForMutation> filtersMutation;
+        private readonly IEnumerable<IAuthzFilterForQuery> filtersQuery;
 
-        public AuthzFilterManager(IEnumerable<IAuthzFilter> filters)
+        public AuthzFilterManager(IEnumerable<IAuthzFilterForMutation> filtersMutation, IEnumerable<IAuthzFilterForQuery> filtersQuery)
         {
-            this.filters = filters;
+            this.filtersMutation = filtersMutation;
+            this.filtersQuery = filtersQuery;
         }
 
-        public async Task<string?> ApplyPreFilterForMutation(MutationOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs)
+        public async Task<IAuthzFilterResult> ApplyPreFilterForMutation(MutationOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans)
         {
-            foreach (var filter in filters)
+            // NOTE: we do not run any authz filters if the user is a super user
+            // otherwise, a filter would be able to forbid the super user to do any action, which we don't want
+            if (PermissionUtils.HasSuperUserAuthRole(user))
+                return AuthzFilterResultPermit.Instance;
+
+            foreach (var filter in filtersMutation)
             {
-                var r = await filter.PreFilterForMutation(operation, user, readLayerIDs, writeLayerIDs);
+                var r = await filter.PreFilterForMutation(operation, user, readLayerIDs, writeLayerIDs, trans);
                 if (r is AuthzFilterResultDeny d)
-                    return d.Reason;
+                    return d;
             }
-            return null;
+            return AuthzFilterResultPermit.Instance;
         }
 
-        public async Task<string?> ApplyPostFilterForMutation(MutationOperation operation, AuthenticatedUser user, IChangesetProxy changesetProxy)
+        public async Task<IAuthzFilterResult> ApplyPostFilterForMutation(MutationOperation operation, AuthenticatedUser user, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            foreach (var filter in filters)
+            if (PermissionUtils.HasSuperUserAuthRole(user))
+                return AuthzFilterResultPermit.Instance;
+
+            foreach (var filter in filtersMutation)
             {
-                var r = await filter.PostFilterForMutation(operation, user, changesetProxy);
+                var r = await filter.PostFilterForMutation(operation, user, changesetProxy, trans);
                 if (r is AuthzFilterResultDeny d)
-                    return d.Reason;
+                    return d;
             }
-            return null;
+            return AuthzFilterResultPermit.Instance;
         }
 
-        public async Task<string?> ApplyPreFilterForQuery(QueryOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs)
+        public async Task<IAuthzFilterResult> ApplyPreFilterForQuery(QueryOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IModelContext trans)
         {
-            foreach (var filter in filters)
+            if (PermissionUtils.HasSuperUserAuthRole(user))
+                return AuthzFilterResultPermit.Instance;
+
+            foreach (var filter in filtersQuery)
             {
-                var r = await filter.PreFilterForQuery(operation, user, readLayerIDs);
+                var r = await filter.PreFilterForQuery(operation, user, readLayerIDs, trans);
                 if (r is AuthzFilterResultDeny d)
-                    return d.Reason;
+                    return d;
             }
-            return null;
+            return AuthzFilterResultPermit.Instance;
         }
     }
 }

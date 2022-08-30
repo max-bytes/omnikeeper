@@ -53,8 +53,8 @@ namespace Omnikeeper.Controllers
             using var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, layerIDs) is string reason)
-                return Forbid(reason);
+            if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, layerIDs, trans) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
             if (!ciBasedAuthorizationService.CanReadCI(ciid))
                 return Forbid($"User \"{user.Username}\" does not have permission to read CI {ciid}");
 
@@ -99,8 +99,8 @@ namespace Omnikeeper.Controllers
             using var trans = modelContextBuilder.BuildDeferred();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, layerID, layerID) is string reason)
-                return Forbid(reason);
+            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, layerID, layerID, trans) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
 
             if (!ciBasedAuthorizationService.CanWriteToCI(ciid))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to CI {ciid}");
@@ -133,8 +133,8 @@ namespace Omnikeeper.Controllers
             var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
 
-            if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy) is string reasonPost)
-                return Forbid(reasonPost);
+            if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy, trans) is AuthzFilterResultDeny dPost)
+                return Forbid(dPost.Reason);
 
             trans.Commit();
             return Ok();

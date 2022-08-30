@@ -103,8 +103,8 @@ namespace Omnikeeper.GridView.Commands
                 if (context == default) return (null, new Exception($"Could not find context with ID {request.Context}"));
                 var config = context.entity.Configuration;
 
-                if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, config.ReadLayerset, config.WriteLayer) is string reason)
-                    return (null, new Exception(reason));
+                if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, config.ReadLayerset, config.WriteLayer, trans) is AuthzFilterResultDeny d)
+                    return (null, new Exception(d.Reason));
 
                 foreach (var row in request.Changes.SparseRows)
                 {
@@ -213,8 +213,8 @@ namespace Omnikeeper.GridView.Commands
                     return (null, new Exception($"Consistency validation for CI with id={cisWithoutTrait.FirstOrDefault()} failed. CI doesn't have the configured trait {activeTrait.ID}!"));
                 }
 
-                if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy) is string reasonPost)
-                    return (null, new Exception(reasonPost));
+                if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy, trans) is AuthzFilterResultDeny dPost)
+                    return (null, new Exception(dPost.Reason));
 
                 trans.Commit();
                 return (await BuildChangeResponse(mergedCIs, config), null);

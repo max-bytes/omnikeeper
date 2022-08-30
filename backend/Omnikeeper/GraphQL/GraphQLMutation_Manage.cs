@@ -215,14 +215,14 @@ namespace Omnikeeper.GraphQL
                   var id = context.GetArgument<string>("id")!;
 
                   CheckManagementPermissionThrow(userContext, "manage layer");
-                  if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TruncateLayer, userContext.User, id, id) is string reason)
-                      throw new ExecutionError(reason);
+                  if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.TruncateLayer, userContext.User, id, id, userContext.Transaction) is AuthzFilterResultDeny d)
+                      throw new ExecutionError(d.Reason);
 
                   var numDeletedAttributes = await baseAttributeRevisionistModel.DeleteAllAttributes(AllCIIDsSelection.Instance, id, userContext.Transaction);
                   var numDeletedRelations = await baseRelationRevisionistModel.DeleteAllRelations(id, userContext.Transaction);
 
-                  if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.TruncateLayer, userContext.User, userContext.ChangesetProxy) is string reasonPost)
-                      throw new ExecutionError(reasonPost);
+                  if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.TruncateLayer, userContext.User, userContext.ChangesetProxy, userContext.Transaction) is AuthzFilterResultDeny dPost)
+                      throw new ExecutionError(dPost.Reason);
 
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
                   return true;

@@ -1,16 +1,20 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils.ModelContext;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Authz
 {
-    public interface IAuthzFilter
+    public interface IAuthzFilterForMutation
     {
-        Task<IAuthzFilterResult> PreFilterForMutation(MutationOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs);
-        Task<IAuthzFilterResult> PostFilterForMutation(MutationOperation operation, AuthenticatedUser user, IChangesetProxy changesetProxy);
+        Task<IAuthzFilterResult> PreFilterForMutation(MutationOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans);
+        Task<IAuthzFilterResult> PostFilterForMutation(MutationOperation operation, AuthenticatedUser user, IChangesetProxy changesetProxy, IModelContext trans);
+    }
 
-        Task<IAuthzFilterResult> PreFilterForQuery(QueryOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs);
+    public interface IAuthzFilterForQuery
+    {
+        Task<IAuthzFilterResult> PreFilterForQuery(QueryOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IModelContext trans);
     }
 
     public interface IAuthzFilterResult

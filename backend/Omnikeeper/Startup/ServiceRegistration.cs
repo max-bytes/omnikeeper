@@ -199,7 +199,8 @@ namespace Omnikeeper.Startup
 
             // authz
             builder.RegisterType<AuthzFilterManager>().As<IAuthzFilterManager>().SingleInstance();
-            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IAuthzFilter>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IAuthzFilterForMutation>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IAuthzFilterForQuery>().AsImplementedInterfaces().SingleInstance();
         }
 
         public static void RegisterLogging(ContainerBuilder builder)
