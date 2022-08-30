@@ -32,7 +32,7 @@ namespace Omnikeeper.Authz
             return AuthzFilterResultPermit.Instance;
         }
 
-        public async Task<IAuthzFilterResult> ApplyPreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans)
+        public async Task<IAuthzFilterResult> ApplyPreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, string writeLayerID, IModelContext trans)
         {
             // NOTE: we do not run any authz filters if the user is a super user
             // otherwise, a filter would be able to forbid the super user to do any action, which we don't want
@@ -41,7 +41,7 @@ namespace Omnikeeper.Authz
 
             foreach (var filter in filtersMutation)
             {
-                var r = await filter.PreFilterForMutation(context, user, readLayerIDs, writeLayerIDs, trans);
+                var r = await filter.PreFilterForMutation(context, user, readLayerIDs, writeLayerID, trans);
                 if (r is AuthzFilterResultDeny d)
                     return d;
             }

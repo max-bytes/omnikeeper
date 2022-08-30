@@ -170,8 +170,10 @@ namespace Omnikeeper.GraphQL
 
 
                     var layers = createCIs.Select(ci => ci.LayerIDForName);
-                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreCreateContextForCIs(), userContext.User, layers, layers, userContext.Transaction) is AuthzFilterResultDeny d)
-                        throw new ExecutionError(d.Reason);
+                    // TODO: this is not ideal; we should split up writes to multiple layers better
+                    foreach (var layer in layers)
+                        if (await authzFilterManager.ApplyPreFilterForMutation(new PreCreateContextForCIs(), userContext.User, layer, layer, userContext.Transaction) is AuthzFilterResultDeny d)
+                            throw new ExecutionError(d.Reason);
 
                     // TODO: other-layers-value handling
                     var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;

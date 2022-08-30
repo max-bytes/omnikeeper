@@ -8,7 +8,7 @@ namespace Omnikeeper.Base.Authz
 {
     public interface IAuthzFilterManager
     {
-        Task<IAuthzFilterResult> ApplyPreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans);
+        Task<IAuthzFilterResult> ApplyPreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, string writeLayerID, IModelContext trans);
         Task<IAuthzFilterResult> ApplyPostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, Changeset? changeset, IModelContext trans);
 
         Task<IAuthzFilterResult> ApplyFilterForQuery(IQueryOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IModelContext trans);
@@ -16,13 +16,9 @@ namespace Omnikeeper.Base.Authz
 
     public static class AuthzFilterManagerExtensions
     {
-        public static async Task<IAuthzFilterResult> ApplyPreFilterForMutation(this IAuthzFilterManager manager, IPreMutationOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, string writeLayerID, IModelContext trans)
-        {
-            return await manager.ApplyPreFilterForMutation(context, user, readLayerIDs, new string[] { writeLayerID }, trans);
-        }
         public static async Task<IAuthzFilterResult> ApplyPreFilterForMutation(this IAuthzFilterManager manager, IPreMutationOperationContext context, AuthenticatedUser user, string readLayerID, string writeLayerID, IModelContext trans)
         {
-            return await manager.ApplyPreFilterForMutation(context, user, new string[] { readLayerID }, new string[] { writeLayerID }, trans);
+            return await manager.ApplyPreFilterForMutation(context, user, new string[] { readLayerID }, writeLayerID, trans);
         }
 
         public static async Task<IAuthzFilterResult> ApplyFilterForQuery(this IAuthzFilterManager manager, IQueryOperationContext context, AuthenticatedUser user, string readLayerID, IModelContext trans)

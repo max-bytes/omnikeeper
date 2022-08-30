@@ -15,13 +15,13 @@ namespace Omnikeeper.Authz
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
         }
 
-        public Task<IAuthzFilterResult> PreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans)
+        public Task<IAuthzFilterResult> PreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, string writeLayerID, IModelContext trans)
         {
             switch (context)
             {
                 case IPreMutationOperationContextForCIs _:
                 case PreMutationOperationContextForTraitEntities _:
-                    return PreFilterForMutation(user, readLayerIDs, writeLayerIDs);
+                    return PreFilterForMutation(user, readLayerIDs, writeLayerID);
                 default:
                     throw new System.Exception("Unexpected filter context");
             }
@@ -30,12 +30,12 @@ namespace Omnikeeper.Authz
         public Task<IAuthzFilterResult> PostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, Changeset? changeset, IModelContext trans) 
             => Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
 
-        private Task<IAuthzFilterResult> PreFilterForMutation(AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs)
+        private Task<IAuthzFilterResult> PreFilterForMutation(AuthenticatedUser user, IEnumerable<string> readLayerIDs, string writeLayerID)
         {
             if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, readLayerIDs))
                 return Task.FromResult<IAuthzFilterResult>(new AuthzFilterResultDeny($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', readLayerIDs)}"));
-            if (!layerBasedAuthorizationService.CanUserWriteToAllLayers(user, writeLayerIDs))
-                return Task.FromResult<IAuthzFilterResult>(new AuthzFilterResultDeny($"User \"{user.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', writeLayerIDs)}"));
+            if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, writeLayerID))
+                return Task.FromResult<IAuthzFilterResult>(new AuthzFilterResultDeny($"User \"{user.Username}\" does not have permission to write to layerID: {writeLayerID}"));
             return Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
         }
 
