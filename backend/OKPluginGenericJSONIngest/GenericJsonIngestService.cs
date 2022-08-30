@@ -119,7 +119,7 @@ namespace OKPluginGenericJSONIngest
             using var transIngest = modelContextBuilder.BuildDeferred();
             var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
 
-            if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy, transIngest) is AuthzFilterResultDeny dPost)
+            if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy.GetActiveChangeset(writeLayer.ID), transIngest) is AuthzFilterResultDeny dPost)
                 throw new UnauthorizedAccessException(dPost.Reason);
 
             transIngest.Commit();
@@ -172,7 +172,7 @@ namespace OKPluginGenericJSONIngest
             using var transIngest = modelContextBuilder.BuildDeferred();
             var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
 
-            if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy, transIngest) is AuthzFilterResultDeny dPost)
+            if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy.GetActiveChangeset(writeLayerID), transIngest) is AuthzFilterResultDeny dPost)
                 throw new UnauthorizedAccessException(dPost.Reason);
 
             transIngest.Commit();

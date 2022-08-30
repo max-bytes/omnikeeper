@@ -192,7 +192,7 @@ namespace Omnikeeper.Controllers
                     var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID, t.Mask));
                     await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, trans, maskHandling, otherLayersValueHandling);
 
-                    if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy, trans) is AuthzFilterResultDeny dPost)
+                    if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy.GetActiveChangeset(writeLayer.ID), trans) is AuthzFilterResultDeny dPost)
                         return Forbid(dPost.Reason);
                 }
 

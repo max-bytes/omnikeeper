@@ -211,7 +211,9 @@ namespace Omnikeeper.GridView.Commands
                     return (null, new Exception($"Consistency validation for CI with id={cisWithoutTrait.FirstOrDefault()} failed. CI doesn't have the configured trait {activeTrait.ID}!"));
                 }
 
-                if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy, trans) is AuthzFilterResultDeny dPost)
+                // TODO: this is totally wrong and misunderstands that changes to multiple layers must be split into multiple changesets
+                var wl = config.WriteLayer;
+                if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy.GetActiveChangeset(wl), trans) is AuthzFilterResultDeny dPost)
                     return (null, new Exception(dPost.Reason));
 
                 trans.Commit();

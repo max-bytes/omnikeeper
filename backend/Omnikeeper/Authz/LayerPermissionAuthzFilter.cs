@@ -18,11 +18,11 @@ namespace Omnikeeper.Authz
 
         public Task<IAuthzFilterResult> PreFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans)
             => PreFilterForMutation(user, readLayerIDs, writeLayerIDs);
-        public Task<IAuthzFilterResult> PostFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, IChangesetProxy changesetProxy, IModelContext trans) => Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
+        public Task<IAuthzFilterResult> PostFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, Changeset? changeset, IModelContext trans) => Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
 
         public Task<IAuthzFilterResult> PreFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans)
             => PreFilterForMutation(user, readLayerIDs, writeLayerIDs);
-        public Task<IAuthzFilterResult> PostFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, Changeset changeset, IModelContext trans) => Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
+        public Task<IAuthzFilterResult> PostFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, Changeset? changeset, IModelContext trans) => Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
 
         private Task<IAuthzFilterResult> PreFilterForMutation(AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs)
         {
