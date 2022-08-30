@@ -235,13 +235,13 @@ namespace Omnikeeper.Base.Model.TraitBased
             traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
         }
 
-        public async Task<(T entity, Guid ciid)> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<T?> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var et = await traitEntityModel.GetSingleByCIID(ciid, layerSet, trans, timeThreshold);
             if (et == null)
-                return default;
+                return null;
             var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, attributeFieldInfos, relationFieldInfos);
-            return (dc, ciid);
+            return dc;
         }
 
         public async Task<IDictionary<Guid, T>> GetByCIID(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)

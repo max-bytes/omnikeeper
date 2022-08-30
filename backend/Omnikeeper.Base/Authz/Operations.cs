@@ -29,20 +29,20 @@ namespace Omnikeeper.Base.Authz
     public abstract record class PreMutationOperationContextForTraitEntities(ITrait Trait) : IPreMutationOperationContext;
     public abstract record class PostMutationOperationContextForTraitEntities(ITrait Trait) : IPostMutationOperationContext;
 
-    public record class PreUpdateContextForTraitEntities(ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
-    public record class PostUpdateContextForTraitEntities(ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
+    public record class PreUpdateContextForTraitEntities(Guid CIID, ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
+    public record class PostUpdateContextForTraitEntities(Guid CIID, ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
     public record class PreInsertNewContextForTraitEntities(ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
     public record class PostInsertNewContextForTraitEntities(ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
     public record class PreDeleteContextForTraitEntities(Guid CIID, ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
     public record class PostDeleteContextForTraitEntities(Guid CIID, ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
-    public record class PreUpsertContextForTraitEntities(ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
-    public record class PostUpsertContextForTraitEntities(ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
+    public record class PreUpsertContextForTraitEntities(Guid CIID, ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
+    public record class PostUpsertContextForTraitEntities(Guid CIID, ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
     public record class PreInsertChangesetDataContextForTraitEntities(ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
     public record class PostInsertChangesetDataContextForTraitEntities(ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
-    public record class PreSetRelationsContextForTraitEntities(ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
-    public record class PostSetRelationsContextForTraitEntities(ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
-    public record class PreAddRelationsContextForTraitEntities(ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
-    public record class PostAddRelationsContextForTraitEntities(ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
-    public record class PreRemoveRelationsContextForTraitEntities(ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
-    public record class PostRemoveRelationsContextForTraitEntities(ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
+    public record class PreSetRelationsContextForTraitEntities(Guid CIID, ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
+    public record class PostSetRelationsContextForTraitEntities(Guid CIID, ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
+    public record class PreAddRelationsContextForTraitEntities(Guid CIID, ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
+    public record class PostAddRelationsContextForTraitEntities(Guid CIID, ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
+    public record class PreRemoveRelationsContextForTraitEntities(Guid CIID, ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
+    public record class PostRemoveRelationsContextForTraitEntities(Guid CIID, ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
 }

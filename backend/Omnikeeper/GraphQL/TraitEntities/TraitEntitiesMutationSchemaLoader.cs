@@ -87,9 +87,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
 
-                        if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpdateContextForTraitEntities(elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
-                            throw new ExecutionError(d.Reason);
-
                         var input = context.GetArgument<UpsertInput>("input");
 
                         // check if entity actually exists at that CI, error if not
@@ -99,9 +96,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             throw new Exception($"Cannot update entity at CI with ID {ciid}: entity does not exist at that CI");
                         }
 
+                        if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpdateContextForTraitEntities(ciid, elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
+                            throw new ExecutionError(d.Reason);
+
                         var et = await Upsert(ciid, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, elementTypeContainer.TraitEntityModel, layerset, writeLayerID);
 
-                        if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpdateContextForTraitEntities(elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
+                        if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpdateContextForTraitEntities(ciid, elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
                             throw new ExecutionError(dPost.Reason);
 
                         userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
@@ -229,9 +229,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
-                                throw new ExecutionError(d.Reason);
-
                             var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
                             return matchingCIIDs.Then(async matchingCIIDs =>
                             {
@@ -247,9 +244,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                     finalCIID = bestMatchingCIID;
                                 }
 
+                                if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(finalCIID, elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
+                                    throw new ExecutionError(d.Reason);
+
                                 var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, elementTypeContainer.TraitEntityModel, layerset, writeLayerID);
 
-                                if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
+                                if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(finalCIID, elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
                                     throw new ExecutionError(dPost.Reason);
 
                                 userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
@@ -330,9 +330,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
-                                throw new ExecutionError(d.Reason);
-
                             var input = context.GetArgument<UpsertInput>("input");
 
                             var idAttributeTuples = input.AttributeValues.Where(t => t.traitAttribute.AttributeTemplate.IsID.GetValueOrDefault(false)).Select(t => (t.traitAttribute.AttributeTemplate.Name, t.value)).ToArray();
@@ -354,9 +351,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 finalCIID = bestMatchingCIID;
                             }
 
+                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(finalCIID, elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
+
                             var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, elementTypeContainer.TraitEntityModel, layerset, writeLayerID);
 
-                            if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
+                            if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(finalCIID, elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
                                 throw new ExecutionError(dPost.Reason);
 
                             userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
@@ -484,15 +484,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreSetRelationsContextForTraitEntities(elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
-                                throw new ExecutionError(d.Reason);
-
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDs = context.GetArgument<Guid[]>("relatedCIIDs")!;
 
+                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreSetRelationsContextForTraitEntities(baseCIID, elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
+
                             var t = await elementTypeContainer.TraitEntityModel.SetRelations(tr, baseCIID, relatedCIIDs, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
-                            if (await authzFilterManager.ApplyPostFilterForMutation(new PostSetRelationsContextForTraitEntities(elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
+                            if (await authzFilterManager.ApplyPostFilterForMutation(new PostSetRelationsContextForTraitEntities(baseCIID, elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
                                 throw new ExecutionError(dPost.Reason);
 
                             userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
@@ -518,15 +518,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreAddRelationsContextForTraitEntities(elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
-                                throw new ExecutionError(d.Reason);
-
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDsToAdd = context.GetArgument<Guid[]>("relatedCIIDsToAdd")!;
 
+                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreAddRelationsContextForTraitEntities(baseCIID, elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
+
                             var t = await elementTypeContainer.TraitEntityModel.AddRelations(tr, baseCIID, relatedCIIDsToAdd, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
-                            if (await authzFilterManager.ApplyPostFilterForMutation(new PostAddRelationsContextForTraitEntities(elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
+                            if (await authzFilterManager.ApplyPostFilterForMutation(new PostAddRelationsContextForTraitEntities(baseCIID, elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
                                 throw new ExecutionError(dPost.Reason);
 
                             userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
@@ -552,15 +552,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreRemoveRelationsContextForTraitEntities(elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
-                                throw new ExecutionError(d.Reason);
-
                             var baseCIID = context.GetArgument<Guid>("baseCIID")!;
                             var relatedCIIDsToRemove = context.GetArgument<Guid[]>("relatedCIIDsToRemove")!;
 
+                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreRemoveRelationsContextForTraitEntities(baseCIID, elementTypeContainer.Trait), userContext.User, layerset, writeLayerID, trans, timeThreshold) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
+
                             var t = await elementTypeContainer.TraitEntityModel.RemoveRelations(tr, baseCIID, relatedCIIDsToRemove, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
-                            if (await authzFilterManager.ApplyPostFilterForMutation(new PostRemoveRelationsContextForTraitEntities(elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
+                            if (await authzFilterManager.ApplyPostFilterForMutation(new PostRemoveRelationsContextForTraitEntities(baseCIID, elementTypeContainer.Trait), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), trans) is AuthzFilterResultDeny dPost)
                                 throw new ExecutionError(dPost.Reason);
 
                             userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
