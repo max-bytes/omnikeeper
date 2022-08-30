@@ -64,7 +64,7 @@ namespace OKPluginGenericJSONIngest
 
             var user = await currentUserAccessor.GetCurrentUser(mc);
 
-            if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, searchLayers, writeLayer.ID, mc) is AuthzFilterResultDeny d)
+            if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, searchLayers, writeLayer.ID, mc, timeThreshold) is AuthzFilterResultDeny d)
                 throw new UnauthorizedAccessException(d.Reason);
 
             // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
@@ -151,7 +151,7 @@ namespace OKPluginGenericJSONIngest
             var user = await currentUserAccessor.GetCurrentUser(mc);
 
             // authorization
-            if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, searchLayers, writeLayer.ID, mc) is AuthzFilterResultDeny d)
+            if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, searchLayers, writeLayer.ID, mc, timeThreshold) is AuthzFilterResultDeny d)
                 throw new UnauthorizedAccessException(d.Reason);
 
             // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs

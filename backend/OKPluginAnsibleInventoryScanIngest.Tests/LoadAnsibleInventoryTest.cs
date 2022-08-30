@@ -77,7 +77,7 @@ namespace Tests.Ingest
 
             var mockAuthzFilterManager = new Mock<IAuthzFilterManager>();
             mockAuthzFilterManager.Setup(x => 
-                    x.ApplyPreFilterForMutation(It.IsAny<IPreMutationOperationContext>(), It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<string>>(), It.IsAny<string>(), It.IsAny<IModelContext>()))
+                    x.ApplyPreFilterForMutation(It.IsAny<IPreMutationOperationContext>(), It.IsAny<AuthenticatedUser>(), It.IsAny<LayerSet>(), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
                 .ReturnsAsync(AuthzFilterResultPermit.Instance);
             mockAuthzFilterManager.Setup(x =>
                     x.ApplyPostFilterForMutation(It.IsAny<IPostMutationOperationContext>(), It.IsAny<AuthenticatedUser>(), It.IsAny<Changeset?>(), It.IsAny<IModelContext>()))

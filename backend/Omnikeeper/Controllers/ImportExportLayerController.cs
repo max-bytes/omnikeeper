@@ -83,11 +83,10 @@ namespace Omnikeeper.Controllers
 
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
-
-            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerID, trans) is AuthzFilterResultDeny d)
-                return Forbid(d.Reason);
-
             var timeThreshold = TimeThreshold.BuildLatest();
+
+            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerID, trans, timeThreshold) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
 
             ICIIDSelection ciidSelection = AllCIIDsSelection.Instance;
             if (ciids != null && ciids.Length > 0)
@@ -171,7 +170,7 @@ namespace Omnikeeper.Controllers
                         return BadRequest($"Cannot write to layer with ID {data.LayerID}: layer does not exist");
                     }
                     // authorization
-                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, writeLayer.ID, writeLayer.ID, trans) is AuthzFilterResultDeny d)
+                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, writeLayer.ID, writeLayer.ID, trans, timeThreshold) is AuthzFilterResultDeny d)
                         return Forbid(d.Reason);
 
                     // layer import works as follows:

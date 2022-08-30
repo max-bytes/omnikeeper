@@ -52,14 +52,14 @@ namespace Omnikeeper.Controllers
 
             using var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
+            var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
+            var layerset = new LayerSet(layerIDs);
 
-            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerIDs, trans) is AuthzFilterResultDeny d)
+            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerset, trans, timeThreshold) is AuthzFilterResultDeny d)
                 return Forbid(d.Reason);
             if (!ciBasedAuthorizationService.CanReadCI(ciid))
                 return Forbid($"User \"{user.Username}\" does not have permission to read CI {ciid}");
 
-            var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
-            var layerset = new LayerSet(layerIDs);
             var a = await attributeModel.GetFullBinaryMergedAttribute(attributeName, ciid, layerset, trans, timeThreshold);
             if (a == null)
                 return NotFound($"Could not find attribute \"{attributeName}\" in CI {ciid}");
@@ -98,8 +98,9 @@ namespace Omnikeeper.Controllers
                 return BadRequest("Encountered file with invalid content-type. Only images are allowed");
             using var trans = modelContextBuilder.BuildDeferred();
             var user = await currentUserService.GetCurrentUser(trans);
+            var timeThreshold = TimeThreshold.BuildLatest();
 
-            if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, layerID, layerID, trans) is AuthzFilterResultDeny d)
+            if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, layerID, layerID, trans, timeThreshold) is AuthzFilterResultDeny d)
                 return Forbid(d.Reason);
 
             if (!ciBasedAuthorizationService.CanWriteToCI(ciid))
@@ -130,7 +131,7 @@ namespace Omnikeeper.Controllers
                 av = new AttributeScalarValueImage(proxies[0]);
             }
 
-            var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.Manual));
             await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, trans, OtherLayersValueHandlingForceWrite.Instance);
 
             if (await authzFilterManager.ApplyPostFilterForMutation(new PostMutateContextForCIs(), user, changesetProxy.GetActiveChangeset(layerID), trans) is AuthzFilterResultDeny dPost)

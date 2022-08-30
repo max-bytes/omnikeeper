@@ -137,7 +137,7 @@ namespace Omnikeeper.GraphQL
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
                     var layerSet = userContext.GetLayerSet(context.Path);
 
-                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, layerSet, userContext.Transaction) is AuthzFilterResultDeny d)
+                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, layerSet, userContext.Transaction, timeThreshold) is AuthzFilterResultDeny d)
                         throw new ExecutionError(d.Reason);
 
                     // use ciids list to reduce the CIIDSelection
@@ -255,13 +255,15 @@ namespace Omnikeeper.GraphQL
                     var leftLayers = await layerModel.BuildLayerSet(context.GetArgument<string[]>($"leftLayers")!, userContext.Transaction);
                     var rightLayers = await layerModel.BuildLayerSet(context.GetArgument<string[]>($"rightLayers")!, userContext.Transaction);
 
-                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, leftLayers.Concat(rightLayers).ToHashSet(), userContext.Transaction) is AuthzFilterResultDeny d)
-                        throw new ExecutionError(d.Reason);
-
                     var leftTimeThresholdDTO = context.GetArgument<DateTimeOffset?>($"leftTimeThreshold");
                     var leftTimeThreshold = (!leftTimeThresholdDTO.HasValue) ? TimeThreshold.BuildLatest() : TimeThreshold.BuildAtTime(leftTimeThresholdDTO.Value);
                     var rightTimeThresholdDTO = context.GetArgument<DateTimeOffset?>($"rightTimeThreshold");
                     var rightTimeThreshold = (!rightTimeThresholdDTO.HasValue) ? TimeThreshold.BuildLatest() : TimeThreshold.BuildAtTime(rightTimeThresholdDTO.Value);
+
+                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, leftLayers, userContext.Transaction, leftTimeThreshold) is AuthzFilterResultDeny dLeft)
+                        throw new ExecutionError(dLeft.Reason);
+                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, rightLayers, userContext.Transaction, rightTimeThreshold) is AuthzFilterResultDeny dRight)
+                        throw new ExecutionError(dRight.Reason);
 
                     var leftCIIDs = context.GetArgument<Guid[]?>($"leftCIIDs", null);
                     var rightCIIDs = context.GetArgument<Guid[]?>($"rightCIIDs", null);
@@ -359,7 +361,7 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
-                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, userContext.GetLayerSet(context.Path), userContext.Transaction) is AuthzFilterResultDeny d)
+                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, userContext.GetLayerSet(context.Path), userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
                         throw new ExecutionError(d.Reason);
 
                     var id = context.GetArgument<Guid>("id");
@@ -383,7 +385,7 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
-                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, userContext.GetLayerSet(context.Path), userContext.Transaction) is AuthzFilterResultDeny d)
+                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, userContext.GetLayerSet(context.Path), userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
                         throw new ExecutionError(d.Reason);
 
                     var from = context.GetArgument<DateTimeOffset>("from");
@@ -435,7 +437,7 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
-                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, userContext.GetLayerSet(context.Path), userContext.Transaction) is AuthzFilterResultDeny d)
+                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, userContext.GetLayerSet(context.Path), userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
                         throw new ExecutionError(d.Reason);
 
                     ICIIDSelection ciidSelection = AllCIIDsSelection.Instance;
@@ -493,7 +495,7 @@ namespace Omnikeeper.GraphQL
                 var userContext = await context.GetUserContext()
                     .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
 
-                if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, userContext.GetLayerSet(context.Path), userContext.Transaction) is AuthzFilterResultDeny d)
+                if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, userContext.GetLayerSet(context.Path), userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
                     throw new ExecutionError(d.Reason);
 
                 return new TraitEntities.TraitEntities();

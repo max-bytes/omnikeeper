@@ -56,6 +56,7 @@ namespace OKPluginAnsibleInventoryScanIngest
                 var searchLayers = new LayerSet(searchLayerIDs);
                 var writeLayer = await layerModel.GetLayer(writeLayerID, mc);
                 var user = await currentUserService.GetCurrentUser(mc);
+                var timeThreshold = TimeThreshold.BuildLatest();
 
                 if (writeLayer == null)
                 {
@@ -63,7 +64,7 @@ namespace OKPluginAnsibleInventoryScanIngest
                 }
 
                 // authorization
-                if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, searchLayerIDs, writeLayer.ID, mc) is AuthzFilterResultDeny d)
+                if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, searchLayers, writeLayer.ID, mc, timeThreshold) is AuthzFilterResultDeny d)
                     return Forbid(d.Reason);
                 // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
                 // TODO: think about this!
@@ -92,7 +93,7 @@ namespace OKPluginAnsibleInventoryScanIngest
                 var preparer = new Preparer();
                 var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, issueAccumulator);
 
-                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.InboundIngest));
+                var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.InboundIngest));
 
                 using var transIngest = modelContextBuilder.BuildDeferred();
                 var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);

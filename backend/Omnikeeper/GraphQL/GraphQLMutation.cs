@@ -73,7 +73,7 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(readLayerIDs, trans), context.Path);
 
-                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), userContext.User, readLayerIDs, writeLayerID, userContext.Transaction) is AuthzFilterResultDeny d)
+                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), userContext.User, userContext.GetLayerSet(context.Path), writeLayerID, userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
                         throw new ExecutionError(d.Reason);
 
                     var writeCIIDs = insertAttributes.Select(a => a.CI)
@@ -172,7 +172,7 @@ namespace Omnikeeper.GraphQL
                     var layers = createCIs.Select(ci => ci.LayerIDForName);
                     // TODO: this is not ideal; we should split up writes to multiple layers better
                     foreach (var layer in layers)
-                        if (await authzFilterManager.ApplyPreFilterForMutation(new PreCreateContextForCIs(), userContext.User, layer, layer, userContext.Transaction) is AuthzFilterResultDeny d)
+                        if (await authzFilterManager.ApplyPreFilterForMutation(new PreCreateContextForCIs(), userContext.User, layer, layer, userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
                             throw new ExecutionError(d.Reason);
 
                     // TODO: other-layers-value handling
@@ -211,7 +211,7 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(new string[] { layerID }, trans), context.Path);
 
-                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreInsertChangesetDataContextForCIs(), userContext.User, userContext.GetLayerSet(context.Path), layerID, userContext.Transaction) is AuthzFilterResultDeny d)
+                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreInsertChangesetDataContextForCIs(), userContext.User, userContext.GetLayerSet(context.Path), layerID, userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
                         throw new ExecutionError(d.Reason);
 
                     var changesetProxy = userContext.ChangesetProxy;

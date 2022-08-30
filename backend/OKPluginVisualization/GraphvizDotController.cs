@@ -50,10 +50,10 @@ namespace OKPluginVisualization
 
             var user = await currentUserAccessor.GetCurrentUser(trans);
 
-            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerIDs, trans) is AuthzFilterResultDeny d)
-                return Forbid(d.Reason);
-
             var layerSet = new LayerSet(layerIDs);
+
+            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerSet, trans, timeThreshold) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
 
             IEnumerable<ITrait> traits;
             if (traitIDsRegex != null && !traitIDsRegex.IsEmpty())
@@ -78,12 +78,12 @@ namespace OKPluginVisualization
             using var trans = modelContextBuilder.BuildImmediate();
 
             var user = await currentUserAccessor.GetCurrentUser(trans);
-
-            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerIDs, trans) is AuthzFilterResultDeny d)
-                return Forbid(d.Reason);
-
             var layerSet = new LayerSet(layerIDs);
             var timeThreshold = TimeThreshold.BuildLatest();
+
+            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerSet, trans, timeThreshold) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
+
 
             var ret = await layerCentricUsageGenerator.Generate(layerSet, from, to, trans, timeThreshold);
 

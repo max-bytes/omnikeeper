@@ -84,8 +84,9 @@ namespace Omnikeeper.GridView.Queries
                 var context = await gridViewContextModel.GetSingleByDataID(request.Context, metaConfiguration.ConfigLayerset, trans, atTime);
                 if (context == default) return (null, new Exception($"Could not find context with ID {request.Context}"));
                 var config = context.entity.Configuration;
+                var readLayerset = new LayerSet(config.ReadLayerset);
 
-                if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, config.ReadLayerset, trans) is AuthzFilterResultDeny d)
+                if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, readLayerset, trans, atTime) is AuthzFilterResultDeny d)
                     return (null, new Exception(d.Reason));
 
                 var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, atTime);
@@ -100,8 +101,8 @@ namespace Omnikeeper.GridView.Queries
                     .Concat(config.Columns.Where(c => c.SourceAttributePath == null).Select(c => c.SourceAttributeName))
                     .ToHashSet();
                 var attributeSelection = NamedAttributesSelection.Build(relevantAttributes);
-                var mergedCIs = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, new LayerSet(config.ReadLayerset), false, attributeSelection, trans, atTime);
-                var mergedCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, new LayerSet(config.ReadLayerset), trans, atTime);
+                var mergedCIs = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, readLayerset, false, attributeSelection, trans, atTime);
+                var mergedCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, readLayerset, trans, atTime);
 
                 // filter readable CIs based on authorization
                 var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(mergedCIsWithTrait, (t) => t.ID);

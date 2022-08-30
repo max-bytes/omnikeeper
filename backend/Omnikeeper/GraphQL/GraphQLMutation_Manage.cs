@@ -215,7 +215,7 @@ namespace Omnikeeper.GraphQL
                   var id = context.GetArgument<string>("id")!;
 
                   CheckManagementPermissionThrow(userContext, "manage layer");
-                  if (await authzFilterManager.ApplyPreFilterForMutation(new PreTruncateLayerContextForCIs(), userContext.User, id, id, userContext.Transaction) is AuthzFilterResultDeny d)
+                  if (await authzFilterManager.ApplyPreFilterForMutation(new PreTruncateLayerContextForCIs(), userContext.User, id, id, userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
                       throw new ExecutionError(d.Reason);
 
                   var numDeletedAttributes = await baseAttributeRevisionistModel.DeleteAllAttributes(AllCIIDsSelection.Instance, id, userContext.Transaction);

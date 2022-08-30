@@ -103,7 +103,9 @@ namespace Omnikeeper.GridView.Commands
                 if (context == default) return (null, new Exception($"Could not find context with ID {request.Context}"));
                 var config = context.entity.Configuration;
 
-                if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, config.ReadLayerset, config.WriteLayer, trans) is AuthzFilterResultDeny d)
+                var readLayerset = new LayerSet(config.ReadLayerset);
+
+                if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, readLayerset, config.WriteLayer, trans, timeThreshold) is AuthzFilterResultDeny d)
                     return (null, new Exception(d.Reason));
 
                 foreach (var row in request.Changes.SparseRows)
@@ -201,9 +203,9 @@ namespace Omnikeeper.GridView.Commands
 
                 var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid).ToHashSet());
                 // TODO: only fetch relevant attributes
-                var mergedCIs = await ciModel.GetMergedCIs(cisList, new LayerSet(config.ReadLayerset.ToArray()), true, AllAttributeSelection.Instance, trans, timeThreshold);
+                var mergedCIs = await ciModel.GetMergedCIs(cisList, readLayerset, true, AllAttributeSelection.Instance, trans, timeThreshold);
 
-                var cisWithTrait = effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, new LayerSet(config.ReadLayerset.ToArray()), trans, timeThreshold);
+                var cisWithTrait = effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, readLayerset, trans, timeThreshold);
                 if (cisWithTrait.Count() < mergedCIs.Count())
                 {
                     var cisWithoutTrait = mergedCIs.Select(ci => ci.ID).ToHashSet().Except(cisWithTrait.Select(ci => ci.ID));

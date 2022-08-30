@@ -60,14 +60,15 @@ namespace Omnikeeper.Controllers.Ingest
             if (writeLayer == null)
                 return BadRequest("Invalid write layer ID configured");
 
+            var searchLayers = new LayerSet(searchLayerIDs);
+            var timeThreshold = TimeThreshold.BuildLatest();
+
             // authorization
             var user = await currentUserService.GetCurrentUser(mc);
-            if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, searchLayerIDs, writeLayer.ID, mc) is AuthzFilterResultDeny d)
+            if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, searchLayers, writeLayer.ID, mc, timeThreshold) is AuthzFilterResultDeny d)
                 return Forbid(d.Reason);
             // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
             // TODO: think about this!
-
-            var searchLayers = new LayerSet(searchLayerIDs);
 
             try
             {
@@ -78,7 +79,7 @@ namespace Omnikeeper.Controllers.Ingest
                 var (ciCandidates, relationCandidates) = ingestActiveDirectoryXMLService.Files2IngestCandidates(fileStreams, searchLayers, logger);
                 var ingestData = new IngestData(ciCandidates, relationCandidates);
                 var issueAccumulator = new IssueAccumulator("DataIngest", $"ActiveDirectoryXMLIngest_{writeLayerID}");
-                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.InboundIngest));
+                var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.InboundIngest));
 
                 using var transIngest = modelContextBuilder.BuildDeferred();
                 var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);

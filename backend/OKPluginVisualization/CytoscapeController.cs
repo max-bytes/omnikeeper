@@ -47,10 +47,10 @@ namespace OKPluginVisualization
 
             var user = await currentUserAccessor.GetCurrentUser(trans);
 
-            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerIDs, trans) is AuthzFilterResultDeny d)
-                return Forbid(d.Reason);
-
             var layerSet = new LayerSet(layerIDs);
+
+            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerSet, trans, timeThreshold) is AuthzFilterResultDeny d)
+                return Forbid(d.Reason);
 
             IEnumerable<ITrait> traits;
             if (traitIDsRegex != null && !traitIDsRegex.IsEmpty())
