@@ -64,7 +64,7 @@ namespace OKPluginGenericJSONIngest
 
             var user = await currentUserAccessor.GetCurrentUser(mc);
 
-            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, searchLayers, writeLayer.ID, mc) is AuthzFilterResultDeny d)
+            if (await authzFilterManager.ApplyPreFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, searchLayers, writeLayer.ID, mc) is AuthzFilterResultDeny d)
                 throw new UnauthorizedAccessException(d.Reason);
 
             // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
@@ -119,7 +119,7 @@ namespace OKPluginGenericJSONIngest
             using var transIngest = modelContextBuilder.BuildDeferred();
             var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
 
-            if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy, transIngest) is AuthzFilterResultDeny dPost)
+            if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy, transIngest) is AuthzFilterResultDeny dPost)
                 throw new UnauthorizedAccessException(dPost.Reason);
 
             transIngest.Commit();
@@ -151,7 +151,7 @@ namespace OKPluginGenericJSONIngest
             var user = await currentUserAccessor.GetCurrentUser(mc);
 
             // authorization
-            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, searchLayers, writeLayer.ID, mc) is AuthzFilterResultDeny d)
+            if (await authzFilterManager.ApplyPreFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, searchLayers, writeLayer.ID, mc) is AuthzFilterResultDeny d)
                 throw new UnauthorizedAccessException(d.Reason);
 
             // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
@@ -172,7 +172,7 @@ namespace OKPluginGenericJSONIngest
             using var transIngest = modelContextBuilder.BuildDeferred();
             var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
 
-            if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy, transIngest) is AuthzFilterResultDeny dPost)
+            if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy, transIngest) is AuthzFilterResultDeny dPost)
                 throw new UnauthorizedAccessException(dPost.Reason);
 
             transIngest.Commit();

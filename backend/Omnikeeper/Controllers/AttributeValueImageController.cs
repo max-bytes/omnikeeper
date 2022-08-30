@@ -99,7 +99,7 @@ namespace Omnikeeper.Controllers
             using var trans = modelContextBuilder.BuildDeferred();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, layerID, layerID, trans) is AuthzFilterResultDeny d)
+            if (await authzFilterManager.ApplyPreFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, layerID, layerID, trans) is AuthzFilterResultDeny d)
                 return Forbid(d.Reason);
 
             if (!ciBasedAuthorizationService.CanWriteToCI(ciid))
@@ -133,7 +133,7 @@ namespace Omnikeeper.Controllers
             var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
 
-            if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy, trans) is AuthzFilterResultDeny dPost)
+            if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy, trans) is AuthzFilterResultDeny dPost)
                 return Forbid(dPost.Reason);
 
             trans.Commit();

@@ -62,7 +62,7 @@ namespace Omnikeeper.Controllers.Ingest
 
             // authorization
             var user = await currentUserService.GetCurrentUser(mc);
-            if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, searchLayerIDs, writeLayer.ID, mc) is AuthzFilterResultDeny d)
+            if (await authzFilterManager.ApplyPreFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, searchLayerIDs, writeLayer.ID, mc) is AuthzFilterResultDeny d)
                 return Forbid(d.Reason);
             // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
             // TODO: think about this!
@@ -83,7 +83,7 @@ namespace Omnikeeper.Controllers.Ingest
                 using var transIngest = modelContextBuilder.BuildDeferred();
                 var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
 
-                if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy, transIngest) is AuthzFilterResultDeny dPost)
+                if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy, transIngest) is AuthzFilterResultDeny dPost)
                     return Forbid(dPost.Reason);
 
                 transIngest.Commit();

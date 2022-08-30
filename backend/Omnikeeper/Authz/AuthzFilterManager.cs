@@ -19,7 +19,7 @@ namespace Omnikeeper.Authz
             this.filtersQuery = filtersQuery;
         }
 
-        public async Task<IAuthzFilterResult> ApplyPreFilterForMutation(MutationOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans)
+        public async Task<IAuthzFilterResult> ApplyPreFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans)
         {
             // NOTE: we do not run any authz filters if the user is a super user
             // otherwise, a filter would be able to forbid the super user to do any action, which we don't want
@@ -28,26 +28,59 @@ namespace Omnikeeper.Authz
 
             foreach (var filter in filtersMutation)
             {
-                var r = await filter.PreFilterForMutation(operation, user, readLayerIDs, writeLayerIDs, trans);
+                var r = await filter.PreFilterForMutationCIs(operation, user, readLayerIDs, writeLayerIDs, trans);
                 if (r is AuthzFilterResultDeny d)
                     return d;
             }
             return AuthzFilterResultPermit.Instance;
         }
 
-        public async Task<IAuthzFilterResult> ApplyPostFilterForMutation(MutationOperation operation, AuthenticatedUser user, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<IAuthzFilterResult> ApplyPostFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, IChangesetProxy changesetProxy, IModelContext trans)
         {
             if (PermissionUtils.HasSuperUserAuthRole(user))
                 return AuthzFilterResultPermit.Instance;
 
             foreach (var filter in filtersMutation)
             {
-                var r = await filter.PostFilterForMutation(operation, user, changesetProxy, trans);
+                var r = await filter.PostFilterForMutationCIs(operation, user, changesetProxy, trans);
                 if (r is AuthzFilterResultDeny d)
                     return d;
             }
             return AuthzFilterResultPermit.Instance;
         }
+
+
+
+        public async Task<IAuthzFilterResult> ApplyPreFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans)
+        {
+            // NOTE: we do not run any authz filters if the user is a super user
+            // otherwise, a filter would be able to forbid the super user to do any action, which we don't want
+            if (PermissionUtils.HasSuperUserAuthRole(user))
+                return AuthzFilterResultPermit.Instance;
+
+            foreach (var filter in filtersMutation)
+            {
+                var r = await filter.PreFilterForMutationTraitEntities(operation, trait, user, readLayerIDs, writeLayerIDs, trans);
+                if (r is AuthzFilterResultDeny d)
+                    return d;
+            }
+            return AuthzFilterResultPermit.Instance;
+        }
+
+        public async Task<IAuthzFilterResult> ApplyPostFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, IChangesetProxy changesetProxy, IModelContext trans)
+        {
+            if (PermissionUtils.HasSuperUserAuthRole(user))
+                return AuthzFilterResultPermit.Instance;
+
+            foreach (var filter in filtersMutation)
+            {
+                var r = await filter.PostFilterForMutationTraitEntities(operation, trait, user, changesetProxy, trans);
+                if (r is AuthzFilterResultDeny d)
+                    return d;
+            }
+            return AuthzFilterResultPermit.Instance;
+        }
+
 
         public async Task<IAuthzFilterResult> ApplyPreFilterForQuery(QueryOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IModelContext trans)
         {

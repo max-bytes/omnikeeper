@@ -171,7 +171,7 @@ namespace Omnikeeper.Controllers
                         return BadRequest($"Cannot write to layer with ID {data.LayerID}: layer does not exist");
                     }
                     // authorization
-                    if (await authzFilterManager.ApplyPreFilterForMutation(MutationOperation.MutateCIs, user, writeLayer.ID, writeLayer.ID, trans) is AuthzFilterResultDeny d)
+                    if (await authzFilterManager.ApplyPreFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, writeLayer.ID, writeLayer.ID, trans) is AuthzFilterResultDeny d)
                         return Forbid(d.Reason);
 
                     // layer import works as follows:
@@ -192,7 +192,7 @@ namespace Omnikeeper.Controllers
                     var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID, t.Mask));
                     await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, maskHandling, otherLayersValueHandling);
 
-                    if (await authzFilterManager.ApplyPostFilterForMutation(MutationOperation.MutateCIs, user, changesetProxy, trans) is AuthzFilterResultDeny dPost)
+                    if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy, trans) is AuthzFilterResultDeny dPost)
                         return Forbid(dPost.Reason);
                 }
 
