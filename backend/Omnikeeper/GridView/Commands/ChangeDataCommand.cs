@@ -103,7 +103,7 @@ namespace Omnikeeper.GridView.Commands
                 if (context == default) return (null, new Exception($"Could not find context with ID {request.Context}"));
                 var config = context.entity.Configuration;
 
-                if (await authzFilterManager.ApplyPreFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, config.ReadLayerset, config.WriteLayer, trans) is AuthzFilterResultDeny d)
+                if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, config.ReadLayerset, config.WriteLayer, trans) is AuthzFilterResultDeny d)
                     return (null, new Exception(d.Reason));
 
                 foreach (var row in request.Changes.SparseRows)
@@ -213,7 +213,7 @@ namespace Omnikeeper.GridView.Commands
 
                 // TODO: this is totally wrong and misunderstands that changes to multiple layers must be split into multiple changesets
                 var wl = config.WriteLayer;
-                if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy.GetActiveChangeset(wl), trans) is AuthzFilterResultDeny dPost)
+                if (await authzFilterManager.ApplyPostFilterForMutation(new PostMutateContextForCIs(), user, changesetProxy.GetActiveChangeset(wl), trans) is AuthzFilterResultDeny dPost)
                     return (null, new Exception(dPost.Reason));
 
                 trans.Commit();

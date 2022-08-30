@@ -1,6 +1,5 @@
 ﻿using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -16,13 +15,20 @@ namespace Omnikeeper.Authz
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
         }
 
-        public Task<IAuthzFilterResult> PreFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans)
-            => PreFilterForMutation(user, readLayerIDs, writeLayerIDs);
-        public Task<IAuthzFilterResult> PostFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, Changeset? changeset, IModelContext trans) => Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
+        public Task<IAuthzFilterResult> PreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans)
+        {
+            switch (context)
+            {
+                case IPreMutationOperationContextForCIs _:
+                case PreMutationOperationContextForTraitEntities _:
+                    return PreFilterForMutation(user, readLayerIDs, writeLayerIDs);
+                default:
+                    throw new System.Exception("Unexpected filter context");
+            }
+        }
 
-        public Task<IAuthzFilterResult> PreFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans)
-            => PreFilterForMutation(user, readLayerIDs, writeLayerIDs);
-        public Task<IAuthzFilterResult> PostFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, Changeset? changeset, IModelContext trans) => Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
+        public Task<IAuthzFilterResult> PostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, Changeset? changeset, IModelContext trans) 
+            => Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
 
         private Task<IAuthzFilterResult> PreFilterForMutation(AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs)
         {
@@ -33,7 +39,7 @@ namespace Omnikeeper.Authz
             return Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
         }
 
-        public Task<IAuthzFilterResult> PreFilterForQuery(QueryOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IModelContext trans)
+        public Task<IAuthzFilterResult> FilterForQuery(IQueryOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IModelContext trans)
         {
             if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, readLayerIDs))
                 return Task.FromResult<IAuthzFilterResult>(new AuthzFilterResultDeny($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', readLayerIDs)}"));

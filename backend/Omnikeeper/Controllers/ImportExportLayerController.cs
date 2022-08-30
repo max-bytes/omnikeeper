@@ -84,7 +84,7 @@ namespace Omnikeeper.Controllers
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, layerID, trans) is AuthzFilterResultDeny d)
+            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerID, trans) is AuthzFilterResultDeny d)
                 return Forbid(d.Reason);
 
             var timeThreshold = TimeThreshold.BuildLatest();
@@ -171,7 +171,7 @@ namespace Omnikeeper.Controllers
                         return BadRequest($"Cannot write to layer with ID {data.LayerID}: layer does not exist");
                     }
                     // authorization
-                    if (await authzFilterManager.ApplyPreFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, writeLayer.ID, writeLayer.ID, trans) is AuthzFilterResultDeny d)
+                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, writeLayer.ID, writeLayer.ID, trans) is AuthzFilterResultDeny d)
                         return Forbid(d.Reason);
 
                     // layer import works as follows:
@@ -192,7 +192,7 @@ namespace Omnikeeper.Controllers
                     var relationFragments = data.Relations.Select(t => new BulkRelationDataLayerScope.Fragment(t.FromCIID, t.ToCIID, t.PredicateID, t.Mask));
                     await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, trans, maskHandling, otherLayersValueHandling);
 
-                    if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy.GetActiveChangeset(writeLayer.ID), trans) is AuthzFilterResultDeny dPost)
+                    if (await authzFilterManager.ApplyPostFilterForMutation(new PostMutateContextForCIs(), user, changesetProxy.GetActiveChangeset(writeLayer.ID), trans) is AuthzFilterResultDeny dPost)
                         return Forbid(dPost.Reason);
                 }
 

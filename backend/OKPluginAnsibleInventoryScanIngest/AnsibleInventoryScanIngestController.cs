@@ -63,7 +63,7 @@ namespace OKPluginAnsibleInventoryScanIngest
                 }
 
                 // authorization
-                if (await authzFilterManager.ApplyPreFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, searchLayerIDs, writeLayer.ID, mc) is AuthzFilterResultDeny d)
+                if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, searchLayerIDs, writeLayer.ID, mc) is AuthzFilterResultDeny d)
                     return Forbid(d.Reason);
                 // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
                 // TODO: think about this!
@@ -97,7 +97,7 @@ namespace OKPluginAnsibleInventoryScanIngest
                 using var transIngest = modelContextBuilder.BuildDeferred();
                 var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
 
-                if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy.GetActiveChangeset(writeLayerID), mc) is AuthzFilterResultDeny dPost)
+                if (await authzFilterManager.ApplyPostFilterForMutation(new PostMutateContextForCIs(), user, changesetProxy.GetActiveChangeset(writeLayerID), mc) is AuthzFilterResultDeny dPost)
                     return Forbid(dPost.Reason);
 
                 transIngest.Commit();

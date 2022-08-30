@@ -85,7 +85,7 @@ namespace Omnikeeper.GridView.Queries
                 if (context == default) return (null, new Exception($"Could not find context with ID {request.Context}"));
                 var config = context.entity.Configuration;
 
-                if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, config.ReadLayerset, trans) is AuthzFilterResultDeny d)
+                if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, config.ReadLayerset, trans) is AuthzFilterResultDeny d)
                     return (null, new Exception(d.Reason));
 
                 var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, atTime);

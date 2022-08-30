@@ -47,7 +47,7 @@ namespace OKPluginVisualization
 
             var user = await currentUserAccessor.GetCurrentUser(trans);
 
-            if (await authzFilterManager.ApplyPreFilterForQuery(QueryOperation.Query, user, layerIDs, trans) is AuthzFilterResultDeny d)
+            if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerIDs, trans) is AuthzFilterResultDeny d)
                 return Forbid(d.Reason);
 
             var layerSet = new LayerSet(layerIDs);

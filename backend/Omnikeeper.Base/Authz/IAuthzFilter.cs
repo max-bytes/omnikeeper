@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,15 +7,13 @@ namespace Omnikeeper.Base.Authz
 {
     public interface IAuthzFilterForMutation
     {
-        Task<IAuthzFilterResult> PreFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans);
-        Task<IAuthzFilterResult> PostFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, Changeset? changeset, IModelContext trans);
-        Task<IAuthzFilterResult> PreFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans);
-        Task<IAuthzFilterResult> PostFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, Changeset? changeset, IModelContext trans);
+        Task<IAuthzFilterResult> PreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans);
+        Task<IAuthzFilterResult> PostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, Changeset? changeset, IModelContext trans);
     }
 
     public interface IAuthzFilterForQuery
     {
-        Task<IAuthzFilterResult> PreFilterForQuery(QueryOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IModelContext trans);
+        Task<IAuthzFilterResult> FilterForQuery(IQueryOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IModelContext trans);
     }
 
     public interface IAuthzFilterResult

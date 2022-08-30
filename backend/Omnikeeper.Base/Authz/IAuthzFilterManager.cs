@@ -8,37 +8,26 @@ namespace Omnikeeper.Base.Authz
 {
     public interface IAuthzFilterManager
     {
-        Task<IAuthzFilterResult> ApplyPreFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans);
-        Task<IAuthzFilterResult> ApplyPostFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, Changeset? changeset, IModelContext trans);
+        Task<IAuthzFilterResult> ApplyPreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans);
+        Task<IAuthzFilterResult> ApplyPostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, Changeset? changeset, IModelContext trans);
 
-        Task<IAuthzFilterResult> ApplyPreFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans);
-        Task<IAuthzFilterResult> ApplyPostFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, Changeset? changeset, IModelContext trans);
-
-        Task<IAuthzFilterResult> ApplyPreFilterForQuery(QueryOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IModelContext trans);
+        Task<IAuthzFilterResult> ApplyFilterForQuery(IQueryOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IModelContext trans);
     }
 
     public static class AuthzFilterManagerExtensions
     {
-        public static async Task<IAuthzFilterResult> ApplyPreFilterForMutationCIs(this IAuthzFilterManager manager, MutationOperationCIs operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, string writeLayerID, IModelContext trans)
+        public static async Task<IAuthzFilterResult> ApplyPreFilterForMutation(this IAuthzFilterManager manager, IPreMutationOperationContext context, AuthenticatedUser user, IEnumerable<string> readLayerIDs, string writeLayerID, IModelContext trans)
         {
-            return await manager.ApplyPreFilterForMutationCIs(operation, user, readLayerIDs, new string[] { writeLayerID }, trans);
+            return await manager.ApplyPreFilterForMutation(context, user, readLayerIDs, new string[] { writeLayerID }, trans);
         }
-        public static async Task<IAuthzFilterResult> ApplyPreFilterForMutationCIs(this IAuthzFilterManager manager, MutationOperationCIs operation, AuthenticatedUser user, string readLayerID, string writeLayerID, IModelContext trans)
+        public static async Task<IAuthzFilterResult> ApplyPreFilterForMutation(this IAuthzFilterManager manager, IPreMutationOperationContext context, AuthenticatedUser user, string readLayerID, string writeLayerID, IModelContext trans)
         {
-            return await manager.ApplyPreFilterForMutationCIs(operation, user, new string[] { readLayerID }, new string[] { writeLayerID }, trans);
-        }
-        public static async Task<IAuthzFilterResult> ApplyPreFilterForMutationTraitEntities(this IAuthzFilterManager manager, MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, IEnumerable<string> readLayerIDs, string writeLayerID, IModelContext trans)
-        {
-            return await manager.ApplyPreFilterForMutationTraitEntities(operation, trait, user, readLayerIDs, new string[] { writeLayerID }, trans);
-        }
-        public static async Task<IAuthzFilterResult> ApplyPreFilterForMutationTraitEntities(this IAuthzFilterManager manager, MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, string readLayerID, string writeLayerID, IModelContext trans)
-        {
-            return await manager.ApplyPreFilterForMutationTraitEntities(operation, trait, user, new string[] { readLayerID }, new string[] { writeLayerID }, trans);
+            return await manager.ApplyPreFilterForMutation(context, user, new string[] { readLayerID }, new string[] { writeLayerID }, trans);
         }
 
-        public static async Task<IAuthzFilterResult> ApplyPreFilterForQuery(this IAuthzFilterManager manager, QueryOperation operation, AuthenticatedUser user, string readLayerID, IModelContext trans)
+        public static async Task<IAuthzFilterResult> ApplyFilterForQuery(this IAuthzFilterManager manager, IQueryOperationContext context, AuthenticatedUser user, string readLayerID, IModelContext trans)
         {
-            return await manager.ApplyPreFilterForQuery(operation, user, new string[] { readLayerID }, trans);
+            return await manager.ApplyFilterForQuery(context, user, new string[] { readLayerID }, trans);
         }
     }
 }
