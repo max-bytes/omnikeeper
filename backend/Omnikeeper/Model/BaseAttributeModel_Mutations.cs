@@ -2,7 +2,6 @@
 using NpgsqlTypes;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -22,12 +21,12 @@ namespace Omnikeeper.Model
         public async Task<(bool changed, Guid changesetID)> BulkUpdate(
             IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
             IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes,
-            string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)
+            string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             if (inserts.IsEmpty() && removes.IsEmpty())
                 return (false, default);
 
-            Changeset changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
+            Changeset changeset = await changesetProxy.GetChangeset(layerID, trans);
 
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 

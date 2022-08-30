@@ -10,6 +10,6 @@ namespace Omnikeeper.Base.Model.Config
     public interface IBaseConfigurationModel
     {
         Task<BaseConfigurationV2> GetConfigOrDefault(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
-        Task<BaseConfigurationV2> SetConfig(BaseConfigurationV2 config, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans);
+        Task<BaseConfigurationV2> SetConfig(BaseConfigurationV2 config, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans);
     }
 }

@@ -88,7 +88,7 @@ namespace Omnikeeper.Model
             this.innerModel = innerModel;
         }
 
-        public async Task<(LayerData layerData, bool changed, Guid ciid)> UpsertLayerData(string id, string description, long color, string state, string clConfigID, string oiaReference, string[] generators, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(LayerData layerData, bool changed, Guid ciid)> UpsertLayerData(string id, string description, long color, string state, string clConfigID, string oiaReference, string[] generators, IChangesetProxy changesetProxy, IModelContext trans)
         {
             IDValidations.ValidateLayerIDThrow(id);
 
@@ -104,14 +104,14 @@ namespace Omnikeeper.Model
             // upsert layer data
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
             var ld = new LayerData(id, description, color, clConfigID, generators, oiaReference, state);
-            var t = await innerModel.InsertOrUpdate(ld, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, dataOrigin, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            var t = await innerModel.InsertOrUpdate(ld, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return t;
         }
 
-        public async Task<bool> TryToDelete(string id, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<bool> TryToDelete(string id, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-            return await innerModel.TryToDelete(id, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, dataOrigin, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            return await innerModel.TryToDelete(id, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
         }
 
         public async Task<IDictionary<string, LayerData>> GetLayerData(IModelContext trans, TimeThreshold timeThreshold)

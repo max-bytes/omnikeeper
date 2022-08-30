@@ -132,7 +132,7 @@ namespace PerfTests
                 return identity;
             }).ToList();
 
-            var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+            var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
 
             using var mc = modelContextBuilder.BuildDeferred();
             var cis = ciids.Select(identity =>
@@ -172,7 +172,7 @@ namespace PerfTests
 
                 var data = new BulkCIAttributeDataLayerScope(layer!.ID, fragments);
 
-                await attributeModel.BulkReplaceAttributes(data, changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.BulkReplaceAttributes(data, changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
             }
 
             mc.Commit();

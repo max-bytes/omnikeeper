@@ -1,6 +1,7 @@
 ﻿using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -174,9 +175,9 @@ namespace Omnikeeper.GraphQL
             return this;
         }
 
-        internal OmnikeeperUserContext WithChangesetProxy(IChangesetModel changesetModel, TimeThreshold timeThreshold)
+        internal OmnikeeperUserContext WithChangesetProxy(IChangesetModel changesetModel, TimeThreshold timeThreshold, DataOriginV1 dataOrigin)
         {
-            var changesetProxy = new ChangesetProxy(User.InDatabase, timeThreshold, changesetModel);
+            var changesetProxy = new ChangesetProxy(User.InDatabase, timeThreshold, changesetModel, dataOrigin);
             ChangesetProxy = changesetProxy;
             return this;
         }

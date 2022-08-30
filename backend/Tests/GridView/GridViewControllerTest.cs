@@ -64,16 +64,16 @@ namespace Tests.Integration.Controller
                 ciid1 = await ciModel.CreateCI(trans);
                 ciid2 = await ciModel.CreateCI(trans);
                 ciid3 = await ciModel.CreateCI(trans);
-                var changeset = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), changesetModel);
+                var changeset = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
                 var layer1 = await layerModel.CreateLayerIfNotExists("l1", trans);
                 var layer2 = await layerModel.CreateLayerIfNotExists("l2", trans);
                 var layerOKConfig = await layerModel.CreateLayerIfNotExists("__okconfig", trans);
                 layerID1 = layer1.layer.ID;
                 layerID2 = layer2.layer.ID;
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID2, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layerID1, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
 
                 trans.Commit();
             }

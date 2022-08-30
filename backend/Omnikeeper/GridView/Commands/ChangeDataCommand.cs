@@ -95,7 +95,7 @@ namespace Omnikeeper.GridView.Commands
 
                 var timeThreshold = TimeThreshold.BuildLatest();
                 var user = await currentUserService.GetCurrentUser(trans);
-                var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
+                var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.Manual));
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
 
@@ -160,7 +160,6 @@ namespace Omnikeeper.GridView.Commands
                                         row.Ciid,
                                         writeLayer,
                                         changesetProxy,
-                                        new DataOriginV1(DataOriginType.Manual),
                                         trans,
                                         MaskHandlingForRemovalApplyNoMask.Instance);
                                 }
@@ -184,7 +183,6 @@ namespace Omnikeeper.GridView.Commands
                                     row.Ciid,
                                     writeLayer,
                                     changesetProxy,
-                                    new DataOriginV1(DataOriginType.Manual),
                                     trans,
                                     OtherLayersValueHandlingForceWrite.Instance);
                             }

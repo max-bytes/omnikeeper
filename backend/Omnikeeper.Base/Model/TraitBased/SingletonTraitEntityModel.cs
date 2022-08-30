@@ -24,7 +24,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             return (f.Key, f.Value);
         }
 
-        public async Task<(T dc, bool changed)> InsertOrUpdate(T t, string? ciName, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        public async Task<(T dc, bool changed)> InsertOrUpdate(T t, string? ciName, LayerSet layerSet, string writeLayer, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             var foundT = await TryToGet(layerSet, changesetProxy.TimeThreshold, trans);
 
@@ -34,7 +34,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var attributeFragments = Entities2Fragments(tuples);
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(tuples);
             // TODO: we should specify the actually relevant trait relations (through their predicateIDs, not ALL relations)
-            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, null, null, ciName, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, null, null, ciName, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
 
             var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, attributeFieldInfos, relationFieldInfos);
 

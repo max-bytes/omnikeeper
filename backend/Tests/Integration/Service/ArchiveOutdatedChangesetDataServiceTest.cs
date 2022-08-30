@@ -33,12 +33,12 @@ namespace Tests.Integration.Service
             {
                 var changeset1 = await CreateChangesetProxy();
 
-                await GetService<IAttributeModel>().InsertAttribute("foo", new AttributeScalarValueText("bar1"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("foo", new AttributeScalarValueText("bar1"), ciid1, layer1.ID, changeset1, trans, OtherLayersValueHandlingForceWrite.Instance);
 
                 await GetService<ChangesetDataModel>().InsertOrUpdateWithAdditionalAttributes(changeset1, layer1.ID, new List<(string, IAttributeValue value)>()
                 {
                     ("cd1", new AttributeScalarValueText("cd1_value"))
-                }, new DataOriginV1(DataOriginType.Manual), trans);
+                }, trans);
 
                 trans.Commit();
             }
@@ -46,12 +46,12 @@ namespace Tests.Integration.Service
             {
                 var changeset1 = await CreateChangesetProxy();
 
-                await GetService<IAttributeModel>().InsertAttribute("foo", new AttributeScalarValueText("bar2"), ciid2, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("foo", new AttributeScalarValueText("bar2"), ciid2, layer1.ID, changeset1, trans, OtherLayersValueHandlingForceWrite.Instance);
 
                 await GetService<ChangesetDataModel>().InsertOrUpdateWithAdditionalAttributes(changeset1, layer1.ID, new List<(string, IAttributeValue value)>()
                 {
                     ("cd2", new AttributeScalarValueText("cd2_value"))
-                }, new DataOriginV1(DataOriginType.Manual), trans);
+                }, trans);
 
                 trans.Commit();
             }
@@ -59,12 +59,12 @@ namespace Tests.Integration.Service
             {
                 var changeset1 = await CreateChangesetProxy();
 
-                await GetService<IAttributeModel>().InsertAttribute("foo", new AttributeScalarValueText("bar3"), ciid1, layer2.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("foo", new AttributeScalarValueText("bar3"), ciid1, layer2.ID, changeset1, trans, OtherLayersValueHandlingForceWrite.Instance);
 
                 await GetService<ChangesetDataModel>().InsertOrUpdateWithAdditionalAttributes(changeset1, layer2.ID, new List<(string, IAttributeValue value)>()
                 {
                     ("cd3", new AttributeScalarValueText("cd3_value"))
-                }, new DataOriginV1(DataOriginType.Manual), trans);
+                }, trans);
 
                 trans.Commit();
             }

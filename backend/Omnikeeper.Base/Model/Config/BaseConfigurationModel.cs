@@ -35,9 +35,9 @@ namespace Omnikeeper.Base.Model.Config
             }
         }
 
-        public async Task<BaseConfigurationV2> SetConfig(BaseConfigurationV2 config, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<BaseConfigurationV2> SetConfig(BaseConfigurationV2 config, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            var (dc, _) = await InsertOrUpdate(config, "Base-Config", layerSet, writeLayerID, dataOrigin, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            var (dc, _) = await InsertOrUpdate(config, "Base-Config", layerSet, writeLayerID, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
             return dc;
         }

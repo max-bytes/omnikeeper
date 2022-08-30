@@ -34,9 +34,9 @@ namespace Tests.Integration.Model
                 var changeset = changesetBuilder();
                 var configV3Attribute = new ConfigSerializerV3().SerializeToAttributeValue(new ODataAPIContext.ConfigV3("wl1", new string[] { "rl1", "rl2" }), false);
                 var ciid = await GetService<ICIModel>().CreateCI(trans);
-                await GetService<IAttributeModel>().InsertAttribute("odata_context.id", new AttributeScalarValueText("id1"), ciid, layer1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await GetService<IAttributeModel>().InsertAttribute("odata_context.config", configV3Attribute, ciid, layer1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await GetService<IAttributeModel>().InsertAttribute("__name", new AttributeScalarValueText("OData-Context - id1"), ciid, layer1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("odata_context.id", new AttributeScalarValueText("id1"), ciid, layer1, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("odata_context.config", configV3Attribute, ciid, layer1, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("__name", new AttributeScalarValueText("OData-Context - id1"), ciid, layer1, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -59,7 +59,7 @@ namespace Tests.Integration.Model
                 {
                     await model.InsertOrUpdate(new ODataAPIContext("id1", new ODataAPIContext.ConfigV3("wl1", new string[] { "rl1", "rl2" })),
                     layerset, layer1,
-                    new DataOriginV1(DataOriginType.Manual), changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                    changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 });
             }
         }

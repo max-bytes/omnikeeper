@@ -103,7 +103,7 @@ namespace Omnikeeper.GraphQL
                         {
                             var nonGenericAttributeValue = AttributeValueHelper.BuildFromDTO(attribute.Value);
 
-                            var changed = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, otherLayersValueHandling);
+                            var changed = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, writeLayerID, changeset, userContext.Transaction, otherLayersValueHandling);
                             if (changed)
                                 affectedCIIDs.Add(ciIdentity);
                         }
@@ -118,7 +118,7 @@ namespace Omnikeeper.GraphQL
                         foreach (var attribute in attributeGroup)
                         {
                             // TODO: mask handling
-                            var changed = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, maskHandlingForRemoval);
+                            var changed = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, writeLayerID, changeset, userContext.Transaction, maskHandlingForRemoval);
                             if (changed)
                                 affectedCIIDs.Add(ciIdentity);
                         }
@@ -126,7 +126,7 @@ namespace Omnikeeper.GraphQL
 
                     foreach (var insertRelation in insertRelations)
                     {
-                        var changed = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.Mask, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, otherLayersValueHandling);
+                        var changed = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.Mask, writeLayerID, changeset, userContext.Transaction, otherLayersValueHandling);
                         if (changed)
                         {
                             affectedCIIDs.Add(insertRelation.FromCIID);
@@ -136,7 +136,7 @@ namespace Omnikeeper.GraphQL
 
                     foreach (var removeRelation in removeRelations)
                     {
-                        var changed = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, writeLayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, maskHandlingForRemoval);
+                        var changed = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, writeLayerID, changeset, userContext.Transaction, maskHandlingForRemoval);
                         if (changed)
                         {
                             affectedCIIDs.Add(removeRelation.FromCIID);
@@ -181,7 +181,7 @@ namespace Omnikeeper.GraphQL
                     {
                         Guid ciid = await ciModel.CreateCI(userContext.Transaction);
 
-                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, userContext.ChangesetProxy, new DataOriginV1(DataOriginType.Manual), userContext.Transaction, otherLayersValueHandling);
+                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, userContext.ChangesetProxy, userContext.Transaction, otherLayersValueHandling);
 
                         createdCIIDs.Add(ciid);
                     }
@@ -212,9 +212,7 @@ namespace Omnikeeper.GraphQL
 
                     var changesetProxy = userContext.ChangesetProxy;
 
-                    var dataOrigin = new DataOriginV1(DataOriginType.Manual);
-
-                    var ciid = await changesetDataModel.InsertOrUpdateWithAdditionalAttributes(changesetProxy, layerID, insertAttributes.Select(a => (name: a.Name, value: AttributeValueHelper.BuildFromDTO(a.Value))), dataOrigin, userContext.Transaction);
+                    var ciid = await changesetDataModel.InsertOrUpdateWithAdditionalAttributes(changesetProxy, layerID, insertAttributes.Select(a => (name: a.Name, value: AttributeValueHelper.BuildFromDTO(a.Value))), userContext.Transaction);
 
                     if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.InsertChangesetData, userContext.User, userContext.ChangesetProxy, userContext.Transaction) is AuthzFilterResultDeny dPost)
                         throw new ExecutionError(dPost.Reason);

@@ -23,13 +23,13 @@ namespace Tests.Integration.Model
 
             var (layer, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("test_layer", trans);
 
-            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
 
             var ch2 = await CreateChangesetProxy();
 
-            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
-            await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID1, false, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID1, false, layer.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
 
 
             // active relation test
@@ -56,16 +56,16 @@ namespace Tests.Integration.Model
 
             var (layer, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("test_layer", trans);
 
-            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-            await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID1, false, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID1, false, layer.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
 
             var ch2 = await CreateChangesetProxy();
 
-            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
             var ch3 = await CreateChangesetProxy();
 
-            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid3, predicateID1, layer.ID, ch3, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid3, predicateID1, layer.ID, ch3, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
             var layerChangesetsHistory = await GetService<ILayerStatisticsModel>().GetLayerChangesetsHistory(layer.ID, trans);
 

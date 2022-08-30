@@ -67,7 +67,7 @@ namespace Tests
             List<Layer> layers;
             using (var mc = modelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
 
                 // okconfig layer
                 layerModel.CreateLayerIfNotExists("__okconfig", mc).GetAwaiter().GetResult();
@@ -83,7 +83,7 @@ namespace Tests
                 foreach (var rt in rts)
                     await traitModel.InsertOrUpdate(rt,
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                        new DataOriginV1(DataOriginType.Manual), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance);
+                        changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance);
                 mc.Commit();
             }
 
@@ -102,7 +102,7 @@ namespace Tests
             {
                 var dataTransaction = fg.Key;
                 using var mc = modelContextBuilder.BuildDeferred();
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
 
                 var fragmentsInLayers = fg.GroupBy(t => t.layer.ID, t => t.Item2);
 
@@ -121,7 +121,7 @@ namespace Tests
                         finalFragments = filtered.Values;
                     }
 
-                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(fl.Key, finalFragments), changeset, new DataOriginV1(DataOriginType.Manual), mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(fl.Key, finalFragments), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 }
                 mc.Commit();
             }

@@ -60,12 +60,12 @@ namespace Tasks.DBInit
 
             using (var trans = modelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
                 foreach (var rt in DefaultTraits.Get())
                 {
                     await traitModel.InsertOrUpdate(rt,
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                        new DataOriginV1(DataOriginType.Manual), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance);
+                        changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance);
                 }
                 trans.Commit();
             }
@@ -137,21 +137,21 @@ namespace Tasks.DBInit
             string activeDirectoryLayerID;
             using (var trans = modelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
                 var configWriteLayer = await layerModel.CreateLayerIfNotExists("Config", trans);
-                await layerDataModel.UpsertLayerData("Config", "", Color.Blue.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
+                await layerDataModel.UpsertLayerData("Config", "", Color.Blue.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], changeset, trans);
                 var (cmdbLayer, _) = await layerModel.CreateLayerIfNotExists("CMDB", trans);
-                await layerDataModel.UpsertLayerData("CMDB", "", Color.Blue.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
+                await layerDataModel.UpsertLayerData("CMDB", "", Color.Blue.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], changeset, trans);
                 cmdbLayerID = cmdbLayer.ID;
                 await layerModel.CreateLayerIfNotExists("Inventory Scan", trans);
-                await layerDataModel.UpsertLayerData("Inventory Scan", "", Color.Violet.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
+                await layerDataModel.UpsertLayerData("Inventory Scan", "", Color.Violet.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], changeset, trans);
                 var (monitoringDefinitionsLayer, _) = await layerModel.CreateLayerIfNotExists("Monitoring Definitions", trans);
-                await layerDataModel.UpsertLayerData("Monitoring Definitions", "", Color.Orange.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
+                await layerDataModel.UpsertLayerData("Monitoring Definitions", "", Color.Orange.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], changeset, trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
                 await layerModel.CreateLayerIfNotExists("Monitoring", trans);
-                await layerDataModel.UpsertLayerData("Monitoring", "", ColorTranslator.FromHtml("#FFE6CC").ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
+                await layerDataModel.UpsertLayerData("Monitoring", "", ColorTranslator.FromHtml("#FFE6CC").ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], changeset, trans);
                 var (automationLayer, _) = await layerModel.CreateLayerIfNotExists("Active Directory", trans);
-                await layerDataModel.UpsertLayerData("Active Directory", "", Color.Cyan.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], new DataOriginV1(DataOriginType.Manual), changeset, trans);
+                await layerDataModel.UpsertLayerData("Active Directory", "", Color.Cyan.ToArgb(), AnchorState.Active.ToString(), "", "", new string[0], changeset, trans);
                 activeDirectoryLayerID = automationLayer.ID;
                 trans.Commit();
             }
@@ -162,7 +162,7 @@ namespace Tasks.DBInit
             using (var trans = modelContextBuilder.BuildDeferred())
             {
                 var index = 0;
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
 
                 await ciModel.BulkCreateCIs(applicationCIIDs, trans);
                 await ciModel.BulkCreateCIs(hostCIIDs, trans);
@@ -172,8 +172,8 @@ namespace Tasks.DBInit
                 {
                     fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText($"Application_{index}"), ciid));
                     fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("application_name", new AttributeScalarValueText($"Application_{index}"), ciid));
-                    //await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                    //await attributeModel.InsertAttribute("application_name", new AttributeScalarValueText($"Application_{index}"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    //await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, trans);
+                    //await attributeModel.InsertAttribute("application_name", new AttributeScalarValueText($"Application_{index}"), ciid, cmdbLayerID, changeset, trans);
                     index++;
                 }
                 index = 0;
@@ -182,29 +182,29 @@ namespace Tasks.DBInit
                     var ciType = new string[] { "Host Linux", "Host Windows" }.GetRandom(random);
                     fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText($"{ciType}_{index}"), ciid));
                     fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid));
-                    //await attributeModel.InsertCINameAttribute($"{ciType}_{index}", ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                    //await attributeModel.InsertAttribute("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                    //await attributeModel.InsertAttribute("system", new AttributeScalarValueText($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    //await attributeModel.InsertCINameAttribute($"{ciType}_{index}", ciid, cmdbLayerID, changeset, trans);
+                    //await attributeModel.InsertAttribute("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid, cmdbLayerID, changeset, trans);
+                    //await attributeModel.InsertAttribute("system", new AttributeScalarValueText($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), ciid, cmdbLayerID, changeset, trans);
 
                     if (ciType.Equals("Host Linux"))
                     {
                         linuxHostCIIds.Add(ciid);
                         fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("system", new AttributeScalarValueText($"Linux"), ciid));
                         fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("os_family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Redhat", 3), ("Gentoo", 1))), ciid));
-                        //await attributeModel.InsertAttribute("os.family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Redhat", 3), ("Gentoo", 1))), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                        //await attributeModel.InsertAttribute("os.family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Redhat", 3), ("Gentoo", 1))), ciid, cmdbLayerID, changeset, trans);
                     }
                     else
                     {
                         windowsHostCIIds.Add(ciid);
                         fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("system", new AttributeScalarValueText($"Windows"), ciid));
                         fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("os_family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows 7", 10), ("Windows XP", 3), ("Windows 10", 20))), ciid));
-                        //await attributeModel.InsertAttribute("os.family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows 7", 10), ("Windows XP", 3), ("Windows 10", 20))), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                        //await attributeModel.InsertAttribute("os.family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows 7", 10), ("Windows XP", 3), ("Windows 10", 20))), ciid, cmdbLayerID, changeset, trans);
                     }
 
                     index++;
                 }
 
-                await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(cmdbLayerID, fragments), changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(cmdbLayerID, fragments), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
 
                 trans.Commit();
             }
@@ -212,12 +212,12 @@ namespace Tasks.DBInit
             // create predicates
             using (var trans = modelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
                 foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
                 {
                     await predicateModel.InsertOrUpdate(new Predicate(predicate.ID, predicate.WordingFrom, predicate.WordingTo),
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                        new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                        changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 }
 
                 trans.Commit();
@@ -230,11 +230,11 @@ namespace Tasks.DBInit
                 for (int i = 0; i < numAttributeChanges; i++)
                 {
                     using var trans = modelContextBuilder.BuildDeferred();
-                    var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                    var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
                     var nameValue = RandomUtility.GetRandom(random, possibleAttributes);
                     var name = nameValue.name;
                     var value = nameValue.value();
-                    await attributeModel.InsertAttribute(name, value, ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                    await attributeModel.InsertAttribute(name, value, ciid, cmdbLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                     // TODO: attribute removals
                     trans.Commit();
                 }
@@ -244,10 +244,10 @@ namespace Tasks.DBInit
             for (var i = 0; i < numRunsOnRelations; i++)
             {
                 using var trans = modelContextBuilder.BuildDeferred();
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
                 var ciid1 = applicationCIIDs.GetRandom(random);
                 var ciid2 = hostCIIDs.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
-                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, false, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, false, cmdbLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -259,22 +259,22 @@ namespace Tasks.DBInit
             Guid ciNaemon02;
             using (var trans = modelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
                 ciNaemon01 = await ciModel.CreateCI(trans);
                 ciNaemon02 = await ciModel.CreateCI(trans);
-                await attributeModel.InsertCINameAttribute("Naemon Instance 01", ciNaemon01, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await attributeModel.InsertCINameAttribute("Naemon Instance 02", ciNaemon02, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await attributeModel.InsertAttribute("naemon.instance_name", new AttributeScalarValueText("Naemon Instance 01"), ciNaemon01, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await attributeModel.InsertAttribute("naemon.instance_name", new AttributeScalarValueText("Naemon Instance 02"), ciNaemon02, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.InsertCINameAttribute("Naemon Instance 01", ciNaemon01, cmdbLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.InsertCINameAttribute("Naemon Instance 02", ciNaemon02, cmdbLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.InsertAttribute("naemon.instance_name", new AttributeScalarValueText("Naemon Instance 01"), ciNaemon01, monitoringDefinitionsLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.InsertAttribute("naemon.instance_name", new AttributeScalarValueText("Naemon Instance 02"), ciNaemon02, monitoringDefinitionsLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
 
                 ciMonModuleHost = await ciModel.CreateCI(trans);
                 ciMonModuleHostWindows = await ciModel.CreateCI(trans);
                 ciMonModuleHostLinux = await ciModel.CreateCI(trans);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", ciMonModuleHost, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", ciMonModuleHost, monitoringDefinitionsLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                 await attributeModel.InsertAttribute("naemon.config_template",
                     new AttributeScalarValueText(@"[{
   ""type"": ""host"",
@@ -283,7 +283,7 @@ namespace Tasks.DBInit
                     ""executable"": ""check_ping"",
     ""parameters"": ""-H {{ target.attributes.hostname }} -w {{ target.attributes.naemon.variables.host.warning_threshold ?? ""3000.0,80 % "" }} -c 5000.0,100% -p 5""
   }
-            }]", true), ciMonModuleHost, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+            }]", true), ciMonModuleHost, monitoringDefinitionsLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                 await attributeModel.InsertAttribute("naemon.config_template",
                     new AttributeScalarValueText(
 @"{{~ for related_ci in target.relations.back.runs_on ~}}
@@ -298,7 +298,7 @@ namespace Tasks.DBInit
 }]
 {{~ end ~}}
 "
-                    , true), ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                    , true), ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                 await attributeModel.InsertAttribute("naemon.config_template",
                     new AttributeScalarValueText(
 @"{{~ for related_ci in target.relations.back.runs_on ~}}
@@ -313,7 +313,7 @@ namespace Tasks.DBInit
 }]
 {{~ end ~}}
             "
-                        , true), ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                        , true), ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -328,8 +328,8 @@ namespace Tasks.DBInit
                     {
                         fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module", false));
                         fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", false));
-                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
+                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                     }
                 }
                 if (!linuxHostCIIds.IsEmpty())
@@ -339,12 +339,12 @@ namespace Tasks.DBInit
                     {
                         fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module", false));
                         fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", false));
-                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
+                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                     }
                 }
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(cmdbLayerID, fragments), changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
+                await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(cmdbLayerID, fragments), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 

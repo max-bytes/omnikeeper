@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -142,7 +143,7 @@ namespace Omnikeeper.Controllers
                     break;
                 case GraphQLParser.AST.OperationType.Mutation:
                     uc.WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
-                        .WithChangesetProxy(context.RequestServices!.GetRequiredService<IChangesetModel>(), timeThreshold);
+                        .WithChangesetProxy(context.RequestServices!.GetRequiredService<IChangesetModel>(), timeThreshold, new DataOriginV1(DataOriginType.Manual));
                     break;
                 case GraphQLParser.AST.OperationType.Subscription:
                     throw new Exception("Unsupported");

@@ -1,6 +1,5 @@
 ﻿using Autofac;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -54,10 +53,10 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetRelations(rl, layerIDs, trans, atTime, generatedDataHandling);
         }
 
-        public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts, IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid existingRelationID, Guid newRelationID, bool mask)> removes, string layerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts, IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid existingRelationID, Guid newRelationID, bool mask)> removes, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             TrackRelationPredicateUsage(inserts.Select(i => i.predicateID).Concat(removes.Select(r => r.predicateID)).Distinct(), new string[] { layerID }, UsageStatsOperation.Write);
-            return await model.BulkUpdate(inserts, removes, layerID, dataOrigin, changesetProxy, trans);
+            return await model.BulkUpdate(inserts, removes, layerID, changesetProxy, trans);
         }
 
         public async Task<IReadOnlyList<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)

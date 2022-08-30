@@ -67,14 +67,16 @@ namespace Omnikeeper.Authz
             return AuthzFilterResultPermit.Instance;
         }
 
-        public async Task<IAuthzFilterResult> ApplyPostFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<IAuthzFilterResult> ApplyPostFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, Changeset? changeset, IModelContext trans)
         {
+            if (changeset == null) // no changeset -> no change -> permit
+                return AuthzFilterResultPermit.Instance;
             if (PermissionUtils.HasSuperUserAuthRole(user))
                 return AuthzFilterResultPermit.Instance;
 
             foreach (var filter in filtersMutation)
             {
-                var r = await filter.PostFilterForMutationTraitEntities(operation, trait, user, changesetProxy, trans);
+                var r = await filter.PostFilterForMutationTraitEntities(operation, trait, user, changeset, trans);
                 if (r is AuthzFilterResultDeny d)
                     return d;
             }

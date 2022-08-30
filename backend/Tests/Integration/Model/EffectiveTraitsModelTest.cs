@@ -96,17 +96,17 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text41"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layer1.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid1, layer1.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid1, layer1.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text41"), ciid1, layer1.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
 
-                await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layer1.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid2, layer1.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
 
-                await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layer1.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid3, layer1.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid3, layer1.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
 
                 trans.Commit();
             }

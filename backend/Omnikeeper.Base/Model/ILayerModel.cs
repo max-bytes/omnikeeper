@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -25,8 +24,8 @@ namespace Omnikeeper.Base.Model
 
         Task<IDictionary<string, LayerData>> GetLayerData(IModelContext trans, TimeThreshold timeThreshold);
 
-        Task<(LayerData layerData, bool changed, Guid ciid)> UpsertLayerData(string id, string description, long color, string state, string clConfigID, string oiaReference, string[] generators, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans);
-        Task<bool> TryToDelete(string id, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans);
+        Task<(LayerData layerData, bool changed, Guid ciid)> UpsertLayerData(string id, string description, long color, string state, string clConfigID, string oiaReference, string[] generators, IChangesetProxy changesetProxy, IModelContext trans);
+        Task<bool> TryToDelete(string id, IChangesetProxy changesetProxy, IModelContext trans);
     }
 
     public static class LayerDataModelExtensions

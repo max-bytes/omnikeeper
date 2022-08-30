@@ -40,8 +40,8 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p1", false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
-                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p2", false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p1", false, layerID1, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p2", false, layerID1, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
@@ -53,13 +53,13 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, "p1", layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, "p1", layerID1, changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p1", false, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "p1", false, layerID1, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 

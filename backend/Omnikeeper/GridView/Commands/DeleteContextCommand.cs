@@ -47,7 +47,7 @@ namespace Omnikeeper.GridView.Commands
                 var timeThreshold = TimeThreshold.BuildLatest();
                 using var trans = modelContextBuilder.BuildDeferred();
                 var user = await currentUserService.GetCurrentUser(trans);
-                var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
+                var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual));
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
                 if (!managementAuthorizationService.CanModifyManagement(user, metaConfiguration, out var message))
@@ -57,7 +57,7 @@ namespace Omnikeeper.GridView.Commands
                 {
                     var isSuccess = await gridViewContextModel.TryToDelete(request.ID,
                         new Base.Entity.LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
-                        new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                        changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                     if (isSuccess)
                     {

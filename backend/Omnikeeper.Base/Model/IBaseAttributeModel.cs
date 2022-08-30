@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -14,7 +13,7 @@ namespace Omnikeeper.Base.Model
         Task<(bool changed, Guid changesetID)> BulkUpdate(
             IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts,
             IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes,
-            string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans);
+            string layerID, IChangesetProxy changesetProxy, IModelContext trans);
     }
 
     public interface IBaseAttributeModel : IBaseAttributeMutationModel

@@ -78,7 +78,7 @@ namespace Omnikeeper.Controllers.Ingest
                 var (ciCandidates, relationCandidates) = ingestActiveDirectoryXMLService.Files2IngestCandidates(fileStreams, searchLayers, logger);
                 var ingestData = new IngestData(ciCandidates, relationCandidates);
                 var issueAccumulator = new IssueAccumulator("DataIngest", $"ActiveDirectoryXMLIngest_{writeLayerID}");
-                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.InboundIngest));
 
                 using var transIngest = modelContextBuilder.BuildDeferred();
                 var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
@@ -89,7 +89,7 @@ namespace Omnikeeper.Controllers.Ingest
                 transIngest.Commit();
 
                 using var transUpdateIssues = modelContextBuilder.BuildDeferred();
-                await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
+                await issuePersister.Persist(issueAccumulator, transUpdateIssues, changesetProxy);
                 transUpdateIssues.Commit();
 
                 logger.LogInformation($"Active Directory XML Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");

@@ -44,8 +44,8 @@ namespace Tests.Integration.Model
             var e2 = new TestEntity1("id2", null);
             using (var trans = ModelContextBuilder.BuildDeferred()) {
                 var changeset = await CreateChangesetProxy();
-                await em.InsertOrUpdate(e1, layerset12, layer2.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
-                await em.InsertOrUpdate(e2, layerset12, layer2.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await em.InsertOrUpdate(e1, layerset12, layer2.ID, changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await em.InsertOrUpdate(e2, layerset12, layer2.ID, changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
             var r1 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset12, transI, TimeThreshold.BuildLatest());
@@ -60,7 +60,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await em.InsertOrUpdate(e1U, layerset12, layer1.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
+                await em.InsertOrUpdate(e1U, layerset12, layer1.ID, changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the update
@@ -83,7 +83,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await em.InsertOrUpdate(e1UU, layerset12, layer1.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
+                await em.InsertOrUpdate(e1UU, layerset12, layer1.ID, changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the update again, masking the underlying attribute of entity e1
@@ -98,7 +98,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await em.TryToDelete(e2.ID, layerset12, layer1.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
+                await em.TryToDelete(e2.ID, layerset12, layer1.ID, changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the deletion
@@ -121,7 +121,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await em.InsertOrUpdate(e3, layerset12, layer1.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
+                await em.InsertOrUpdate(e3, layerset12, layer1.ID, changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the addition
@@ -198,8 +198,8 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await em.InsertOrUpdate(e1, layerset12, layer2.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
-                await em.InsertOrUpdate(e2, layerset12, layer2.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await em.InsertOrUpdate(e1, layerset12, layer2.ID, changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                await em.InsertOrUpdate(e2, layerset12, layer2.ID, changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                 trans.Commit();
             }
             var r1 = await em.GetByDataID(AllCIIDsSelection.Instance, layerset12, transI, TimeThreshold.BuildLatest());
@@ -214,7 +214,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await em.InsertOrUpdate(e1U, layerset12, layer1.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
+                await em.InsertOrUpdate(e1U, layerset12, layer1.ID, changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the update
@@ -236,7 +236,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await em.TryToDelete(e2.ID, layerset12, layer1.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
+                await em.TryToDelete(e2.ID, layerset12, layer1.ID, changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the deletion
@@ -259,7 +259,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await CreateChangesetProxy();
-                await em.InsertOrUpdate(e1UU, layerset12, layer1.ID, new DataOriginV1(DataOriginType.Manual), changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
+                await em.InsertOrUpdate(e1UU, layerset12, layer1.ID, changeset, trans, MaskHandlingForRemovalApplyMaskIfNecessary.Build(layerset12, layer1.ID));
                 trans.Commit();
             }
             // reading from both layers in order l1,l2 should reflect the update

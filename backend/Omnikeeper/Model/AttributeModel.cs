@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -135,7 +134,7 @@ namespace Omnikeeper.Model
             return (actualInserts, outdatedAttributes);
         }
 
-        public async Task<int> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans,
+        public async Task<int> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, IModelContext trans,
             IMaskHandlingForRemoval maskHandling, IOtherLayersValueHandling otherLayersValueHandling)
         {
             var readTS = changeset.TimeThreshold;
@@ -218,7 +217,7 @@ namespace Omnikeeper.Model
             }
 
             // perform updates in bulk
-            await baseModel.BulkUpdate(inserts, actualRemoves, data.LayerID, origin, changeset, trans);
+            await baseModel.BulkUpdate(inserts, actualRemoves, data.LayerID, changeset, trans);
 
             return inserts.Count + actualRemoves.Count;
         }

@@ -31,21 +31,21 @@ namespace Tests.Integration.Model
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans2);
             var layerset = new LayerSet(new string[] { layer1.ID });
             var changesetProxy1 = await CreateChangesetProxy();
-            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changesetProxy1, new DataOriginV1(DataOriginType.Manual), trans2, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changesetProxy1, trans2, OtherLayersValueHandlingForceWrite.Instance);
             trans2.Commit();
 
             Thread.Sleep(500);
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
             var changesetProxy2 = await CreateChangesetProxy();
-            await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changesetProxy2, new DataOriginV1(DataOriginType.Manual), trans3, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changesetProxy2, trans3, OtherLayersValueHandlingForceWrite.Instance);
             trans3.Commit();
 
             var t2 = DateTimeOffset.Now;
 
             using var trans4 = ModelContextBuilder.BuildDeferred();
             var changesetProxy3 = await CreateChangesetProxy();
-            await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changesetProxy3, new DataOriginV1(DataOriginType.Manual), trans4, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changesetProxy3, trans4, OtherLayersValueHandlingForceWrite.Instance);
             trans4.Commit();
 
             var t3 = DateTimeOffset.Now;
@@ -59,7 +59,7 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changesetProxy3, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changesetProxy3, trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
             var t4 = DateTimeOffset.Now;
@@ -76,23 +76,23 @@ namespace Tests.Integration.Model
 
             // test latest
             var c1 = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("a3"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
-            Assert.AreEqual(await changesetProxy3.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI), c1);
+            Assert.AreEqual(await changesetProxy3.GetChangeset(layer1.ID, transI), c1);
 
             // another insert
             var changesetProxy4 = await CreateChangesetProxy();
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL2"), ciid3, layer1.ID, changesetProxy4, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+                await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL2"), ciid3, layer1.ID, changesetProxy4, trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
             // test latest again
             var c2 = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("a3"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
-            Assert.AreEqual(await changesetProxy4.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI), c2);
+            Assert.AreEqual(await changesetProxy4.GetChangeset(layer1.ID, transI), c2);
 
             // test latest yet again, but with specific CIIDs
             var c3 = await GetService<IChangesetModel>().GetLatestChangeset(SpecificCIIDsSelection.Build(ciid2), NamedAttributesSelection.Build("a3"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
-            Assert.AreEqual(await changesetProxy3.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI), c3);
+            Assert.AreEqual(await changesetProxy3.GetChangeset(layer1.ID, transI), c3);
 
             // get empty latest changeset
             var c4 = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("unused"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
@@ -116,7 +116,7 @@ namespace Tests.Integration.Model
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans2);
             var changeset1 = await CreateChangesetProxy();
-            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer1.ID, changeset1, trans2, OtherLayersValueHandlingForceWrite.Instance);
             trans2.Commit();
 
             Thread.Sleep(500);
@@ -124,7 +124,7 @@ namespace Tests.Integration.Model
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
             var changeset2 = await CreateChangesetProxy();
-            await GetService<IRelationModel>().InsertRelation(ciid2, ciid1, predicateID2, false, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IRelationModel>().InsertRelation(ciid2, ciid1, predicateID2, false, layer1.ID, changeset2, trans3, OtherLayersValueHandlingForceWrite.Instance);
             trans3.Commit();
 
             Thread.Sleep(500);
@@ -148,7 +148,7 @@ namespace Tests.Integration.Model
             var (layer2, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l2", trans1);
             var layerset1 = new LayerSet(new string[] { layer1.ID });
             var changeset1 = await CreateChangesetProxy(TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(100)));
-            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans1, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset1, trans1, OtherLayersValueHandlingForceWrite.Instance);
             trans1.Commit();
 
             using (var trans = ModelContextBuilder.BuildDeferred())
@@ -185,14 +185,14 @@ namespace Tests.Integration.Model
 
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var changesetProxy1 = CreateChangesetProxy(user1);
-            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changesetProxy1, new DataOriginV1(DataOriginType.Manual), trans2, OtherLayersValueHandlingForceWrite.Instance);
-            var changeset1 = await changesetProxy1.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), trans2);
+            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changesetProxy1, trans2, OtherLayersValueHandlingForceWrite.Instance);
+            var changeset1 = await changesetProxy1.GetChangeset(layer1.ID, trans2);
             trans2.Commit();
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
             var changesetProxy2 = CreateChangesetProxy(user2);
-            await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changesetProxy2, new DataOriginV1(DataOriginType.Manual), trans3, OtherLayersValueHandlingForceWrite.Instance);
-            var changeset2 = await changesetProxy2.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), trans3);
+            await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changesetProxy2, trans3, OtherLayersValueHandlingForceWrite.Instance);
+            var changeset2 = await changesetProxy2.GetChangeset(layer1.ID, trans3);
             trans3.Commit();
 
             using var trans4 = ModelContextBuilder.BuildImmediate();
@@ -227,7 +227,7 @@ namespace Tests.Integration.Model
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans2);
             var layerset1 = new LayerSet(new string[] { layer1.ID });
             var changeset1 = await CreateChangesetProxy(TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(100)));
-            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, predicateID1, false, layer1.ID, changeset1, trans2, OtherLayersValueHandlingForceWrite.Instance);
             trans2.Commit();
 
             using var transI = ModelContextBuilder.BuildImmediate();
@@ -236,8 +236,8 @@ namespace Tests.Integration.Model
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
             var changeset2 = await CreateChangesetProxy(TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(150)));
-            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3, OtherLayersValueHandlingForceWrite.Instance);
-            await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("bar"), ciid1, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset2, trans3, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("bar"), ciid1, layer1.ID, changeset2, trans3, OtherLayersValueHandlingForceWrite.Instance);
             trans3.Commit();
 
             Assert.AreEqual(0, await GetService<IChangesetModel>().ArchiveUnusedChangesetsOlderThan(DateTimeOffset.FromUnixTimeSeconds(50), transI));
@@ -250,7 +250,7 @@ namespace Tests.Integration.Model
             // delete relation again
             using var trans4 = ModelContextBuilder.BuildDeferred();
             var changeset3 = await CreateChangesetProxy(TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(200)));
-            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans4, MaskHandlingForRemovalApplyNoMask.Instance);
+            await GetService<IRelationModel>().RemoveRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset3, trans4, MaskHandlingForRemovalApplyNoMask.Instance);
             trans4.Commit();
 
             // changeset1 is now old "enough", and can be deleted
@@ -259,7 +259,7 @@ namespace Tests.Integration.Model
             // overwrite attribute a1
             using var trans5 = ModelContextBuilder.BuildDeferred();
             var changeset4 = await CreateChangesetProxy(TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(200)));
-            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("new foo"), ciid1, layer1.ID, changeset4, new DataOriginV1(DataOriginType.Manual), trans5, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("new foo"), ciid1, layer1.ID, changeset4, trans5, OtherLayersValueHandlingForceWrite.Instance);
             trans5.Commit();
 
             // changeset2 is now old "enough", but still cannot be deleted because one of its attributes (a2) is the latest
@@ -269,7 +269,7 @@ namespace Tests.Integration.Model
             // delete attribute a2
             using var trans6 = ModelContextBuilder.BuildDeferred();
             var changeset5 = await CreateChangesetProxy(TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(250)));
-            await GetService<IAttributeModel>().RemoveAttribute("a2", ciid1, layer1.ID, changeset5, new DataOriginV1(DataOriginType.Manual), trans6, MaskHandlingForRemovalApplyNoMask.Instance);
+            await GetService<IAttributeModel>().RemoveAttribute("a2", ciid1, layer1.ID, changeset5, trans6, MaskHandlingForRemovalApplyNoMask.Instance);
             trans6.Commit();
 
             // changeset2 is now old "enough", and can be deleted
@@ -279,11 +279,11 @@ namespace Tests.Integration.Model
             // other changeset can be deleted, if threshold is large enough
             Assert.AreEqual(2, await GetService<IChangesetModel>().ArchiveUnusedChangesetsOlderThan(DateTimeOffset.FromUnixTimeSeconds(9999), transI));
 
-            Assert.IsNull(await GetService<IChangesetModel>().GetChangeset((await changeset1.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI)).ID, transI));
-            Assert.IsNull(await GetService<IChangesetModel>().GetChangeset((await changeset2.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI)).ID, transI));
-            Assert.IsNull(await GetService<IChangesetModel>().GetChangeset((await changeset3.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI)).ID, transI));
-            Assert.IsNotNull(await GetService<IChangesetModel>().GetChangeset((await changeset4.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI)).ID, transI));
-            Assert.IsNull(await GetService<IChangesetModel>().GetChangeset((await changeset5.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI)).ID, transI));
+            Assert.IsNull(await GetService<IChangesetModel>().GetChangeset((await changeset1.GetChangeset(layer1.ID, transI)).ID, transI));
+            Assert.IsNull(await GetService<IChangesetModel>().GetChangeset((await changeset2.GetChangeset(layer1.ID, transI)).ID, transI));
+            Assert.IsNull(await GetService<IChangesetModel>().GetChangeset((await changeset3.GetChangeset(layer1.ID, transI)).ID, transI));
+            Assert.IsNotNull(await GetService<IChangesetModel>().GetChangeset((await changeset4.GetChangeset(layer1.ID, transI)).ID, transI));
+            Assert.IsNull(await GetService<IChangesetModel>().GetChangeset((await changeset5.GetChangeset(layer1.ID, transI)).ID, transI));
         }
     }
 }

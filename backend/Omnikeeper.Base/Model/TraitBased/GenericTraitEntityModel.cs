@@ -1,6 +1,5 @@
 ﻿using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -122,7 +121,7 @@ namespace Omnikeeper.Base.Model.TraitBased
          * NOTE: relevantCISelection is only an upper bound on the relevant CIs; only CIs in this selection that ALSO fulfill the trait are considered
          * NOTE: does not offer any special handling for naming CIs; if you need to write __name attributes, add the attribute to the trait
          */
-        public async Task<bool> BulkReplace(ICIIDSelection relevantCISelection, IDictionary<ID, T> t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        public async Task<bool> BulkReplace(ICIIDSelection relevantCISelection, IDictionary<ID, T> t, LayerSet layerSet, string writeLayer, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             if (t.IsEmpty() && relevantCISelection is NoCIIDsSelection)
                 return false;
@@ -167,12 +166,12 @@ namespace Omnikeeper.Base.Model.TraitBased
             var relevantCIIDs = newCIDictionary.Values.Union(idMatchedCIDictionary.Values).Union(outdated.Keys).ToImmutableHashSet();
             var attributeFragments = Entities2Fragments(entities);
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(entities);
-            var changed = await traitEntityModel.BulkReplace(relevantCIIDs, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            var changed = await traitEntityModel.BulkReplace(relevantCIIDs, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
 
             return changed;
         }
 
-        public async Task<(T dc, bool changed, Guid ciid)> InsertOrUpdate(T t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        public async Task<(T dc, bool changed, Guid ciid)> InsertOrUpdate(T t, LayerSet layerSet, string writeLayer, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             // NOTE: we do a CIID lookup based on the ID attributes and their values, but we DON'T require that the found CI must already be a trait entity
             var id = idAttributeInfos.ExtractIDFromEntity(t);
@@ -195,14 +194,14 @@ namespace Omnikeeper.Base.Model.TraitBased
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(tuples);
             string? ciName = null;
             // TODO: we should specify the actually relevant trait relations (through their predicateIDs, not ALL relations)
-            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, null, null, ciName, layerSet, writeLayer, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, null, null, ciName, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
 
             var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, attributeFieldInfos, relationFieldInfos);
 
             return (dc, changed, ciid);
         }
 
-        public async Task<bool> TryToDelete(ID id, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        public async Task<bool> TryToDelete(ID id, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             // TODO: we should actually not fetch a single, but instead ALL that match that ID and delete them
             // only then, the end result is that no CI matching the trait with that ID exists anymore, otherwise it's not guaranteed and deleting fails because there's still a matching ci afterwards
@@ -212,7 +211,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 return false; // no dc with this ID exists
             }
 
-            return await traitEntityModel.TryToDelete(t.ciid, layerSet, writeLayerID, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            return await traitEntityModel.TryToDelete(t.ciid, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
         }
     }
 
@@ -257,9 +256,9 @@ namespace Omnikeeper.Base.Model.TraitBased
             return await traitEntityModel.GetLatestRelevantChangeset(ciSelection, layerSet, trans, timeThreshold);
         }
 
-        public async Task<bool> TryToDelete(Guid ciid, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        public async Task<bool> TryToDelete(Guid ciid, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            return await traitEntityModel.TryToDelete(ciid, layerSet, writeLayerID, dataOrigin, changesetProxy, trans, maskHandlingForRemoval);
+            return await traitEntityModel.TryToDelete(ciid, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
         }
 
         protected IList<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> Entities2Fragments(IEnumerable<(T t, Guid ciid)> entities)

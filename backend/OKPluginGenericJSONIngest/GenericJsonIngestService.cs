@@ -114,7 +114,7 @@ namespace OKPluginGenericJSONIngest
 
             logger.LogInformation($"Performing ingest...");
 
-            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.InboundIngest));
 
             using var transIngest = modelContextBuilder.BuildDeferred();
             var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
@@ -125,7 +125,7 @@ namespace OKPluginGenericJSONIngest
             transIngest.Commit();
 
             using var transUpdateIssues = modelContextBuilder.BuildDeferred();
-            await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
+            await issuePersister.Persist(issueAccumulator, transUpdateIssues, changesetProxy);
             transUpdateIssues.Commit();
 
             t.Stop((ts, elapsedTime) => logger.LogInformation($"Ingest successful, done in {elapsedTime}; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations"));
@@ -166,7 +166,7 @@ namespace OKPluginGenericJSONIngest
 
             logger.LogInformation($"Performing ingest...");
 
-            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.InboundIngest));
 
 
             using var transIngest = modelContextBuilder.BuildDeferred();
@@ -178,7 +178,7 @@ namespace OKPluginGenericJSONIngest
             transIngest.Commit();
 
             using var transUpdateIssues = modelContextBuilder.BuildDeferred();
-            await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
+            await issuePersister.Persist(issueAccumulator, transUpdateIssues, changesetProxy);
             transUpdateIssues.Commit();
 
             t.Stop((ts, elapsedTime) => logger.LogInformation($"Ingest successful, done in {elapsedTime}; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations"));

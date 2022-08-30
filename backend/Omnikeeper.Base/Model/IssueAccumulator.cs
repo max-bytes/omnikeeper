@@ -1,5 +1,4 @@
-﻿using Omnikeeper.Base.Entity.DataOrigin;
-using Omnikeeper.Base.Entity.Issue;
+﻿using Omnikeeper.Base.Entity.Issue;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -40,7 +39,7 @@ namespace Omnikeeper.Base.Model
 
     public interface IIssuePersister
     {
-        Task<bool> Persist(IIssueAccumulator from, IModelContext trans, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy);
+        Task<bool> Persist(IIssueAccumulator from, IModelContext trans, IChangesetProxy changesetProxy);
     }
 
     public class IssuePersister : IIssuePersister
@@ -56,7 +55,7 @@ namespace Omnikeeper.Base.Model
             this.metaConfigurationModel = metaConfigurationModel;
         }
 
-        public async Task<bool> Persist(IIssueAccumulator from, IModelContext trans, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy)
+        public async Task<bool> Persist(IIssueAccumulator from, IModelContext trans, IChangesetProxy changesetProxy)
         {
             var config = await metaConfigurationModel.GetConfigOrDefault(trans);
             var traitAttributeFilter = new AttributeFilter[]
@@ -66,7 +65,7 @@ namespace Omnikeeper.Base.Model
             };
 
             var relevantCISelection = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, traitAttributeFilter, config.IssueLayerset, trans, changesetProxy.TimeThreshold);
-            var r = await model.BulkReplace(relevantCISelection, from.Issues, config.IssueLayerset, config.IssueWriteLayer, dataOrigin, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+            var r = await model.BulkReplace(relevantCISelection, from.Issues, config.IssueLayerset, config.IssueWriteLayer, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return r;
         }
     }

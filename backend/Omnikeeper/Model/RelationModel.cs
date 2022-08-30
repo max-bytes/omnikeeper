@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -67,24 +66,24 @@ namespace Omnikeeper.Model
             return await baseModel.GetRelationsOfChangeset(changesetID, getRemoved, trans);
         }
 
-        public async Task<bool> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, bool mask, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IOtherLayersValueHandling otherLayersValueHandling)
+        public async Task<bool> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, bool mask, string layerID, IChangesetProxy changesetProxy, IModelContext trans, IOtherLayersValueHandling otherLayersValueHandling)
         {
             var scope = new BulkRelationDataSpecificScope(layerID, new BulkRelationDataSpecificScope.Fragment[] {
                 new BulkRelationDataSpecificScope.Fragment(fromCIID, toCIID, predicateID, mask)
             }, Array.Empty<(Guid from, Guid to, string predicateID)>());
             var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance; // NOTE: we can keep this fixed here, because it does not affect inserts
 
-            var r = await BulkReplaceRelations(scope, changesetProxy, origin, trans, maskHandling, otherLayersValueHandling);
+            var r = await BulkReplaceRelations(scope, changesetProxy, trans, maskHandling, otherLayersValueHandling);
             return r > 0;
         }
 
-        public async Task<bool> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling)
+        public async Task<bool> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
             var scope = new BulkRelationDataSpecificScope(layerID, Array.Empty<BulkRelationDataSpecificScope.Fragment>(),
                 new List<(Guid from, Guid to, string predicateID)> { (fromCIID, toCIID, predicateID) });
             var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance; // NOTE: we can keep this fixed here, because it does not affect removals
 
-            var r = await BulkReplaceRelations(scope, changesetProxy, origin, trans, maskHandling, otherLayersValueHandling);
+            var r = await BulkReplaceRelations(scope, changesetProxy, trans, maskHandling, otherLayersValueHandling);
             return r > 0;
         }
 
@@ -176,7 +175,7 @@ namespace Omnikeeper.Model
         }
 
 
-        public async Task<int> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans, IMaskHandlingForRemoval maskHandling, IOtherLayersValueHandling otherLayersValueHandling)
+        public async Task<int> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandling, IOtherLayersValueHandling otherLayersValueHandling)
         {
             var (actualInserts, outdatedRelations) = await PrepareForBulkUpdate(data, trans, changesetProxy.TimeThreshold);
 
@@ -255,7 +254,7 @@ namespace Omnikeeper.Model
 
 
             // perform actual updates in bulk
-            await baseModel.BulkUpdate(actualInserts, removes, data.LayerID, origin, changesetProxy, trans);
+            await baseModel.BulkUpdate(actualInserts, removes, data.LayerID, changesetProxy, trans);
 
             return actualInserts.Count + removes.Count;
 

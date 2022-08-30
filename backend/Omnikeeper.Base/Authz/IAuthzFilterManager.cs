@@ -12,7 +12,7 @@ namespace Omnikeeper.Base.Authz
         Task<IAuthzFilterResult> ApplyPostFilterForMutationCIs(MutationOperationCIs operation, AuthenticatedUser user, IChangesetProxy changesetProxy, IModelContext trans);
 
         Task<IAuthzFilterResult> ApplyPreFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IEnumerable<string> writeLayerIDs, IModelContext trans);
-        Task<IAuthzFilterResult> ApplyPostFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, IChangesetProxy changesetProxy, IModelContext trans);
+        Task<IAuthzFilterResult> ApplyPostFilterForMutationTraitEntities(MutationOperationTraitEntities operation, ITrait trait, AuthenticatedUser user, Changeset? changeset, IModelContext trans);
 
         Task<IAuthzFilterResult> ApplyPreFilterForQuery(QueryOperation operation, AuthenticatedUser user, IEnumerable<string> readLayerIDs, IModelContext trans);
     }

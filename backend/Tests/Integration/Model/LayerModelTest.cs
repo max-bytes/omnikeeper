@@ -50,7 +50,7 @@ namespace Tests.Integration.Model
             var ciid = await GetService<ICIModel>().CreateCI(trans);
             var changeset = await CreateChangesetProxy();
 
-            await GetService<IAttributeModel>().InsertAttribute("attribute", new AttributeScalarValueText("foo"), ciid, layerC.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IAttributeModel>().InsertAttribute("attribute", new AttributeScalarValueText("foo"), ciid, layerC.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
 
             Assert.AreEqual(true, await GetService<ILayerModel>().TryToDelete(layerA.ID, trans));
             Assert.AreEqual(true, await GetService<ILayerModel>().TryToDelete(layerB.ID, trans));

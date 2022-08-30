@@ -55,7 +55,7 @@ namespace Omnikeeper.GraphQL
                     var generators = upsertLayer.Generators.Where(g => !string.IsNullOrEmpty(g)).ToArray();
                     var (updatedLayer, _, _) = await layerDataModel.UpsertLayerData(
                         upsertLayer.ID, upsertLayer.Description, upsertLayer.Color, upsertLayer.State.ToString(), clConfigID, oiaReference, generators,
-                        new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), userContext.ChangesetProxy, userContext.Transaction
+                        userContext.ChangesetProxy, userContext.Transaction
                         );
 
                     userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
@@ -173,7 +173,7 @@ namespace Omnikeeper.GraphQL
 
                         var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                         var (created, _, _) = await odataAPIContextModel.InsertOrUpdate(odataContext, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                            new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
+                            userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                         userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                         return created;
@@ -198,7 +198,7 @@ namespace Omnikeeper.GraphQL
 
                   var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                   var deleted = await odataAPIContextModel.TryToDelete(id, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
+                      userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
                   return deleted;
               });
@@ -247,7 +247,7 @@ namespace Omnikeeper.GraphQL
                     {
                         var config = BaseConfigurationV2.Serializer.Deserialize(configStr);
 
-                        var created = await baseConfigurationModel.SetConfig(config, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                        var created = await baseConfigurationModel.SetConfig(config, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                             userContext.ChangesetProxy, userContext.Transaction);
                         userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -274,7 +274,7 @@ namespace Omnikeeper.GraphQL
 
                   var @new = new Predicate(predicate.ID, predicate.WordingFrom, predicate.WordingTo);
 
-                  var newPredicate = await predicateModel.InsertOrUpdate(@new, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                  var newPredicate = await predicateModel.InsertOrUpdate(@new, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -296,7 +296,7 @@ namespace Omnikeeper.GraphQL
                   CheckModifyManagementThrow(userContext, metaConfiguration, "remove predicates");
 
                   var deleted = await predicateModel.TryToDelete(predicateID, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
+                      userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                   return deleted;
@@ -324,7 +324,6 @@ namespace Omnikeeper.GraphQL
                   var newTrait = await recursiveDataTraitModel.InsertOrUpdate(
                       @new,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -351,7 +350,7 @@ namespace Omnikeeper.GraphQL
                   CheckModifyManagementThrow(userContext, metaConfiguration, "modify traits");
 
                   var deleted = await recursiveDataTraitModel.TryToDelete(traitID, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
+                      userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                   // trigger job to reload GraphQL schema
@@ -381,7 +380,6 @@ namespace Omnikeeper.GraphQL
                   var newGenerator = await generatorModel.InsertOrUpdate(
                       changed,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -401,7 +399,7 @@ namespace Omnikeeper.GraphQL
                   CheckModifyManagementThrow(userContext, metaConfiguration, "modify generators");
 
                   var deleted = await generatorModel.TryToDelete(generatorID, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
+                      userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                   return deleted;
@@ -424,7 +422,6 @@ namespace Omnikeeper.GraphQL
 
                   var updated = await authRoleModel.InsertOrUpdate(@new,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -446,7 +443,7 @@ namespace Omnikeeper.GraphQL
 
                   var deleted = await authRoleModel.TryToDelete(authRoleID,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
+                      userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                   return deleted;
@@ -471,7 +468,6 @@ namespace Omnikeeper.GraphQL
 
                   var newCLConfig = await clConfigModel.InsertOrUpdate(updated,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -496,7 +492,7 @@ namespace Omnikeeper.GraphQL
 
                   var deleted = await clConfigModel.TryToDelete(id,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
+                      userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                   // delete last cache entries that affect this clConfig
@@ -524,7 +520,6 @@ namespace Omnikeeper.GraphQL
 
                   var newContext = await validatorContextModel.InsertOrUpdate(updated,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -549,7 +544,7 @@ namespace Omnikeeper.GraphQL
 
                   var deleted = await validatorContextModel.TryToDelete(id,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
+                      userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                   // delete last cache entries that affect this context

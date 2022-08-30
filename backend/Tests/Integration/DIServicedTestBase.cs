@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Authz;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration
 {
@@ -75,7 +76,7 @@ namespace Tests.Integration
         protected ChangesetProxy CreateChangesetProxy(UserInDatabase user, TimeThreshold timeThreshold)
         {
             var changesetModel = ServiceProvider.GetRequiredService<IChangesetModel>();
-            return new ChangesetProxy(user, timeThreshold, changesetModel);
+            return new ChangesetProxy(user, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.Manual));
         }
 
         protected IServiceProvider ServiceProvider => serviceProvider!;

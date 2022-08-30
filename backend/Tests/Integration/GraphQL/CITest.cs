@@ -29,7 +29,7 @@ namespace Tests.Integration.GraphQL
                     new AuthRole("ar1", new string[] { PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1) }),
                     new AuthRole("ar2", new string[] { PermissionUtils.GetLayerReadPermission(layer2), PermissionUtils.GetLayerWritePermission(layer2) }),
                 });
-            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueInteger(3), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueInteger(3), ciid1, layer1.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
             trans.Commit();
 
             await ReinitSchema();

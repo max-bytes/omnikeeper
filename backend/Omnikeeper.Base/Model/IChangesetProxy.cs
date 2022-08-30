@@ -9,8 +9,9 @@ namespace Omnikeeper.Base.Model
 {
     public interface IChangesetProxy
     {
-        Task<Changeset> GetChangeset(string layerID, DataOriginV1 dataOrigin, IModelContext trans);
+        Task<Changeset> GetChangeset(string layerID, IModelContext trans);
         IEnumerable<Changeset> GetAllActiveChangesets();
+        Changeset? GetActiveChangeset(string layerID);
         TimeThreshold TimeThreshold { get; }
         UserInDatabase User { get; }
     }

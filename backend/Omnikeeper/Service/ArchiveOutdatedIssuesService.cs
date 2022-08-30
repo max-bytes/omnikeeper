@@ -79,14 +79,14 @@ namespace Omnikeeper.Service
                             var user = await currentUserService.GetCurrentUser(transUpsertUser);
                             transUpsertUser.Commit();
 
-                            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
+                            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.Manual));
 
                             using (var transD = modelContextBuilder.BuildDeferred())
                             {
                                 var removed = 0;
                                 foreach (var ciid in toRemove)
                                 {
-                                    var success = await model.TryToDelete(ciid, metaConfig.IssueLayerset, metaConfig.IssueWriteLayer, new DataOriginV1(DataOriginType.Manual), changesetProxy, transD, MaskHandlingForRemovalApplyNoMask.Instance);
+                                    var success = await model.TryToDelete(ciid, metaConfig.IssueLayerset, metaConfig.IssueWriteLayer, changesetProxy, transD, MaskHandlingForRemovalApplyNoMask.Instance);
                                     if (success) removed++;
                                 }
                                 transD.Commit();

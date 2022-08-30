@@ -99,14 +99,14 @@ namespace Omnikeeper.Base.Model.TraitBased
         {
         }
 
-        public async Task<Guid> InsertOrUpdateWithAdditionalAttributes(IChangesetProxy changesetProxy, string layerID, IEnumerable<(string name, IAttributeValue value)> additionalAttributes, DataOriginV1 dataOrigin, IModelContext trans)
+        public async Task<Guid> InsertOrUpdateWithAdditionalAttributes(IChangesetProxy changesetProxy, string layerID, IEnumerable<(string name, IAttributeValue value)> additionalAttributes, IModelContext trans)
         {
             var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
             var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
 
-            var correspondingChangeset = await changesetProxy.GetChangeset(layerID, dataOrigin, trans);
+            var correspondingChangeset = await changesetProxy.GetChangeset(layerID, trans);
             // write changeset data
-            var (dc, changed, ciid) = await InsertOrUpdate(new ChangesetData(correspondingChangeset.ID.ToString()), new LayerSet(layerID), layerID, dataOrigin, changesetProxy, trans, maskHandling);
+            var (dc, changed, ciid) = await InsertOrUpdate(new ChangesetData(correspondingChangeset.ID.ToString()), new LayerSet(layerID), layerID, changesetProxy, trans, maskHandling);
             // add custom data
             var fragments = additionalAttributes.Select(a => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, a.name, a.value));
             var attributeNames = additionalAttributes.Select(a => a.name).ToHashSet();
@@ -115,7 +115,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 fragments,
                 new HashSet<Guid>() { ciid },
                 attributeNames
-                ), changesetProxy, dataOrigin, trans, maskHandling, otherLayersValueHandling);
+                ), changesetProxy, trans, maskHandling, otherLayersValueHandling);
 
             return ciid;
         }

@@ -1,6 +1,5 @@
 ﻿using Autofac;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -73,10 +72,10 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
         }
 
-        public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes, string layerID, DataOriginV1 origin, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(bool changed, Guid changesetID)> BulkUpdate(IList<(Guid ciid, string fullName, IAttributeValue value, Guid? existingAttributeID, Guid newAttributeID)> inserts, IList<(Guid ciid, string name, IAttributeValue value, Guid attributeID, Guid newAttributeID)> removes, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             TrackAttributeUsages(inserts.Select(i => i.fullName).Concat(removes.Select(i => i.name)).Distinct(), new string[] { layerID }, UsageStatsOperation.Write);
-            return await model.BulkUpdate(inserts, removes, layerID, origin, changesetProxy, trans);
+            return await model.BulkUpdate(inserts, removes, layerID, changesetProxy, trans);
         }
     }
 }

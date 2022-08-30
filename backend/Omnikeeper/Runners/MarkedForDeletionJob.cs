@@ -62,7 +62,7 @@ namespace Omnikeeper.Runners
                             var user = await currentUserService.GetCurrentUser(transUpsertUser);
                             transUpsertUser.Commit();
 
-                            var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+                            var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
 
                             foreach (var d in toDeleteLayers)
                             {
@@ -75,7 +75,7 @@ namespace Omnikeeper.Runners
                                     // optionally try to delete layer-data as well
                                     try
                                     {
-                                        await layerDataModel.TryToDelete(d.LayerID, new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
+                                        await layerDataModel.TryToDelete(d.LayerID, changesetProxy, trans);
                                     }
                                     catch (Exception) { }
 

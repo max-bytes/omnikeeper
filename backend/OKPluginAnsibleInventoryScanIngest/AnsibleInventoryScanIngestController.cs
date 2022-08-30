@@ -92,7 +92,7 @@ namespace OKPluginAnsibleInventoryScanIngest
                 var preparer = new Preparer();
                 var ingestData = preparer.GenericInboundData2IngestData(genericInboundData, searchLayers, issueAccumulator);
 
-                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.InboundIngest));
 
                 using var transIngest = modelContextBuilder.BuildDeferred();
                 var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
@@ -103,7 +103,7 @@ namespace OKPluginAnsibleInventoryScanIngest
                 transIngest.Commit();
 
                 using var transUpdateIssues = modelContextBuilder.BuildDeferred();
-                await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.InboundIngest), changesetProxy);
+                await issuePersister.Persist(issueAccumulator, transUpdateIssues, changesetProxy);
                 transUpdateIssues.Commit();
 
                 logger.LogInformation($"Ansible Ingest successful; affected {numAffectedAttributes} attributes, {numAffectedRelations} relations");

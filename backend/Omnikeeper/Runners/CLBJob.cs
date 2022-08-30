@@ -223,7 +223,7 @@ namespace Omnikeeper.Runners
                     var user = await currentUserService.GetCurrentUser(transUpsertUser);
                     transUpsertUser.Commit();
 
-                    var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
+                    var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.ComputeLayer));
 
                     var issueAccumulator = new IssueAccumulator("ComputeLayerBrain", $"{clConfig_ID}@{layerID}");
 
@@ -243,7 +243,7 @@ namespace Omnikeeper.Runners
 
                     using var transUpdateIssues = modelContextBuilder.BuildDeferred();
                     clLogger.LogInformation($"Run produced {issueAccumulator.Issues.Count} issues in total");
-                    await issuePersister.Persist(issueAccumulator, transUpdateIssues, new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy);
+                    await issuePersister.Persist(issueAccumulator, transUpdateIssues, changesetProxy);
                     transUpdateIssues.Commit();
 
                     t.Stop((ts, elapsedTime) => clLogger.LogInformation($"Done in {elapsedTime}; result: {(successful ? "success" : "failure")}"));

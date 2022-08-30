@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -19,7 +18,7 @@ namespace Omnikeeper.Base.Model
         Task<(bool changed, Guid changesetID)> BulkUpdate(
             IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid? existingRelationID, Guid newRelationID, bool mask)> inserts,
             IList<(Guid fromCIID, Guid toCIID, string predicateID, Guid existingRelationID, Guid newRelationID, bool mask)> removes,
-            string layerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans);
+            string layerID, IChangesetProxy changesetProxy, IModelContext trans);
     }
 
     public interface IBaseRelationRevisionistModel

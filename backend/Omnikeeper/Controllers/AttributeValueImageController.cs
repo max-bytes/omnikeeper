@@ -130,8 +130,8 @@ namespace Omnikeeper.Controllers
                 av = new AttributeScalarValueImage(proxies[0]);
             }
 
-            var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-            await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans, OtherLayersValueHandlingForceWrite.Instance);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
+            await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, trans, OtherLayersValueHandlingForceWrite.Instance);
 
             if (await authzFilterManager.ApplyPostFilterForMutationCIs(MutationOperationCIs.MutateCIs, user, changesetProxy, trans) is AuthzFilterResultDeny dPost)
                 return Forbid(dPost.Reason);
