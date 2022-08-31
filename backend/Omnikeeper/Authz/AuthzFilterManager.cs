@@ -27,10 +27,12 @@ namespace Omnikeeper.Authz
             {
                 var r = await filter.FilterForQuery(context, user, readLayerIDs, trans, timeThreshold);
                 if (r is AuthzFilterResultDeny d)
-                    return d;
+                    return WrapDeniedResult(d, filter);
             }
             return AuthzFilterResultPermit.Instance;
         }
+
+        private AuthzFilterResultDeny WrapDeniedResult(AuthzFilterResultDeny inner, IAuthzFilter filter) => new AuthzFilterResultDeny($"Filter {filter.GetType().Name} denied operation. Reason: {inner.Reason}");
 
         public async Task<IAuthzFilterResult> ApplyPreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, LayerSet readLayerIDs, string writeLayerID, IModelContext trans, TimeThreshold timeThreshold)
         {
@@ -43,7 +45,7 @@ namespace Omnikeeper.Authz
             {
                 var r = await filter.PreFilterForMutation(context, user, readLayerIDs, writeLayerID, trans, timeThreshold);
                 if (r is AuthzFilterResultDeny d)
-                    return d;
+                    return WrapDeniedResult(d, filter);
             }
             return AuthzFilterResultPermit.Instance;
         }
@@ -57,7 +59,7 @@ namespace Omnikeeper.Authz
             {
                 var r = await filter.PostFilterForMutation(context, user, readLayers, changeset, trans, timeThreshold);
                 if (r is AuthzFilterResultDeny d)
-                    return d;
+                    return WrapDeniedResult(d, filter);
             }
             return AuthzFilterResultPermit.Instance;
         }
