@@ -1,6 +1,6 @@
 ﻿using GraphQL;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.Base.GraphQL
 {
     public static class UserContextExtensions
     {

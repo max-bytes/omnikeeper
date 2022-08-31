@@ -5,6 +5,7 @@ using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Authz;
 using Omnikeeper.Model;
 using System;
+using Omnikeeper.Base.GraphQL;
 
 namespace Omnikeeper.GraphQL.Types
 {

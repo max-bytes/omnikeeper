@@ -1,8 +1,8 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Types;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
@@ -13,8 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Authz;
-using Omnikeeper.Authz;
 
 namespace Omnikeeper.GraphQL.TraitEntities
 {

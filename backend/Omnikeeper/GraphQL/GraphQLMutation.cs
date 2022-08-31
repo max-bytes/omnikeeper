@@ -18,6 +18,7 @@ using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Omnikeeper.Base.GraphQL;
 
 namespace Omnikeeper.GraphQL
 {

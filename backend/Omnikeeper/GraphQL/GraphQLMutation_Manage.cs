@@ -5,6 +5,7 @@ using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Generator;
+using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;

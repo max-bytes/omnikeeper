@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
-using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -11,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.GraphQL
+namespace Omnikeeper.Base.GraphQL
 {
     public class OmnikeeperUserContext : Dictionary<string, object?>, IOmnikeeperUserContext, IDisposable
     {
@@ -144,7 +143,7 @@ namespace Omnikeeper.GraphQL
             }
         }
 
-        internal OmnikeeperUserContext WithTransaction(Func<IModelContextBuilder, IModelContext> f)
+        public OmnikeeperUserContext WithTransaction(Func<IModelContextBuilder, IModelContext> f)
         {
             if (!ContainsKey("Transaction"))
             {
@@ -154,14 +153,14 @@ namespace Omnikeeper.GraphQL
             return this;
         }
 
-        internal OmnikeeperUserContext WithTimeThreshold(TimeThreshold ts, IEnumerable<object> contextPath)
+        public OmnikeeperUserContext WithTimeThreshold(TimeThreshold ts, IEnumerable<object> contextPath)
         {
             var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, rootScopedContext);
             foundContext.timeThreshold = ts;
             return this;
         }
 
-        internal async Task<OmnikeeperUserContext> WithLayersetAsync(Func<IModelContext, Task<LayerSet>> f, IEnumerable<object> contextPath)
+        public async Task<OmnikeeperUserContext> WithLayersetAsync(Func<IModelContext, Task<LayerSet>> f, IEnumerable<object> contextPath)
         {
             var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, rootScopedContext);
             var ls = await f(Transaction);
@@ -169,21 +168,21 @@ namespace Omnikeeper.GraphQL
             return this;
         }
 
-        internal OmnikeeperUserContext WithLayerset(LayerSet ls, IEnumerable<object> contextPath)
+        public OmnikeeperUserContext WithLayerset(LayerSet ls, IEnumerable<object> contextPath)
         {
             var foundContext = FindOrCreateScopedContext(contextPath.ToList(), 0, rootScopedContext);
             foundContext.layerSet = ls;
             return this;
         }
 
-        internal OmnikeeperUserContext WithChangesetProxy(IChangesetModel changesetModel, TimeThreshold timeThreshold, DataOriginV1 dataOrigin)
+        public OmnikeeperUserContext WithChangesetProxy(IChangesetModel changesetModel, TimeThreshold timeThreshold, DataOriginV1 dataOrigin)
         {
             var changesetProxy = new ChangesetProxy(User.InDatabase, timeThreshold, changesetModel, dataOrigin);
             ChangesetProxy = changesetProxy;
             return this;
         }
 
-        internal void CommitAndStartNewTransactionIfLastMutation(IResolveFieldContext rfc, Func<IModelContextBuilder, IModelContext> f)
+        public void CommitAndStartNewTransactionIfLastMutation(IResolveFieldContext rfc, Func<IModelContextBuilder, IModelContext> f)
         {
             if (rfc.Document.Definitions[0] is not GraphQLParser.AST.GraphQLOperationDefinition operationDefinition)
                 throw new Exception();
