@@ -48,14 +48,14 @@ namespace Omnikeeper.Authz
             return AuthzFilterResultPermit.Instance;
         }
 
-        public async Task<IAuthzFilterResult> ApplyPostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, Changeset? changeset, IModelContext trans)
+        public async Task<IAuthzFilterResult> ApplyPostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, LayerSet readLayers, Changeset? changeset, IModelContext trans, TimeThreshold timeThreshold)
         {
             if (PermissionUtils.HasSuperUserAuthRole(user))
                 return AuthzFilterResultPermit.Instance;
 
             foreach (var filter in filtersMutation)
             {
-                var r = await filter.PostFilterForMutation(context, user, changeset, trans);
+                var r = await filter.PostFilterForMutation(context, user, readLayers, changeset, trans, timeThreshold);
                 if (r is AuthzFilterResultDeny d)
                     return d;
             }

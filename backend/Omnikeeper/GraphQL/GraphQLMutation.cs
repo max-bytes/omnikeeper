@@ -73,7 +73,7 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(readLayerIDs, trans), context.Path);
 
-                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), userContext.User, userContext.GetLayerSet(context.Path), writeLayerID, userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
+                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
                         throw new ExecutionError(d.Reason);
 
                     var writeCIIDs = insertAttributes.Select(a => a.CI)
@@ -150,7 +150,7 @@ namespace Omnikeeper.GraphQL
                     if (!affectedCIIDs.IsEmpty())
                         affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.GetLayerSet(context.Path), true, AllAttributeSelection.Instance, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
 
-                    if (await authzFilterManager.ApplyPostFilterForMutation(new PostMutateContextForCIs(), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), userContext.Transaction) is AuthzFilterResultDeny dPost)
+                    if (await authzFilterManager.ApplyPostFilterForMutation(new PostMutateContextForCIs(), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                         throw new ExecutionError(dPost.Reason);
 
                     userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
@@ -190,7 +190,7 @@ namespace Omnikeeper.GraphQL
 
                     // TODO: this is not ideal; we should split up writes to multiple layers better
                     foreach(var layer in layers)
-                        if (await authzFilterManager.ApplyPostFilterForMutation(new PostCreateContextForCIs(), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(layer), userContext.Transaction) is AuthzFilterResultDeny dPost)
+                        if (await authzFilterManager.ApplyPostFilterForMutation(new PostCreateContextForCIs(), layer, userContext, context.Path) is AuthzFilterResultDeny dPost)
                             throw new ExecutionError(dPost.Reason);
 
                     userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
@@ -211,14 +211,14 @@ namespace Omnikeeper.GraphQL
                     var userContext = await context.GetUserContext()
                         .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(new string[] { layerID }, trans), context.Path);
 
-                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreInsertChangesetDataContextForCIs(), userContext.User, userContext.GetLayerSet(context.Path), layerID, userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
+                    if (await authzFilterManager.ApplyPreFilterForMutation(new PreInsertChangesetDataContextForCIs(), layerID, userContext, context.Path) is AuthzFilterResultDeny d)
                         throw new ExecutionError(d.Reason);
 
                     var changesetProxy = userContext.ChangesetProxy;
 
                     var ciid = await changesetDataModel.InsertOrUpdateWithAdditionalAttributes(changesetProxy, layerID, insertAttributes.Select(a => (name: a.Name, value: AttributeValueHelper.BuildFromDTO(a.Value))), userContext.Transaction);
 
-                    if (await authzFilterManager.ApplyPostFilterForMutation(new PostInsertChangesetDataContextForCIs(), userContext.User, userContext.ChangesetProxy.GetActiveChangeset(layerID), userContext.Transaction) is AuthzFilterResultDeny dPost)
+                    if (await authzFilterManager.ApplyPostFilterForMutation(new PostInsertChangesetDataContextForCIs(), layerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                         throw new ExecutionError(dPost.Reason);
 
                     userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());

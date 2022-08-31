@@ -80,7 +80,7 @@ namespace Tests.Ingest
                     x.ApplyPreFilterForMutation(It.IsAny<IPreMutationOperationContext>(), It.IsAny<AuthenticatedUser>(), It.IsAny<LayerSet>(), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
                 .ReturnsAsync(AuthzFilterResultPermit.Instance);
             mockAuthzFilterManager.Setup(x =>
-                    x.ApplyPostFilterForMutation(It.IsAny<IPostMutationOperationContext>(), It.IsAny<AuthenticatedUser>(), It.IsAny<Changeset?>(), It.IsAny<IModelContext>()))
+                    x.ApplyPostFilterForMutation(It.IsAny<IPostMutationOperationContext>(), It.IsAny<AuthenticatedUser>(), It.IsAny<LayerSet>(), It.IsAny<Changeset?>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
                 .ReturnsAsync(AuthzFilterResultPermit.Instance);
 
             var insertLayer = layer1;

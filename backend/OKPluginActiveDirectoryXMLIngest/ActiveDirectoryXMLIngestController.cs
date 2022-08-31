@@ -84,7 +84,7 @@ namespace Omnikeeper.Controllers.Ingest
                 using var transIngest = modelContextBuilder.BuildDeferred();
                 var (numAffectedAttributes, numAffectedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, changesetProxy, issueAccumulator, transIngest);
 
-                if (await authzFilterManager.ApplyPostFilterForMutation(new PostMutateContextForCIs(), user, changesetProxy.GetActiveChangeset(writeLayerID), transIngest) is AuthzFilterResultDeny dPost)
+                if (await authzFilterManager.ApplyPostFilterForMutation(new PostMutateContextForCIs(), user, searchLayers, changesetProxy.GetActiveChangeset(writeLayerID), transIngest, timeThreshold) is AuthzFilterResultDeny dPost)
                     return Forbid(dPost.Reason);
 
                 transIngest.Commit();

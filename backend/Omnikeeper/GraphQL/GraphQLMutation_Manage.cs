@@ -221,7 +221,7 @@ namespace Omnikeeper.GraphQL
                   var numDeletedAttributes = await baseAttributeRevisionistModel.DeleteAllAttributes(AllCIIDsSelection.Instance, id, userContext.Transaction);
                   var numDeletedRelations = await baseRelationRevisionistModel.DeleteAllRelations(id, userContext.Transaction);
 
-                  if (await authzFilterManager.ApplyPostFilterForMutation(new PostTruncateLayerContextForCIs(), userContext.User, null, userContext.Transaction) is AuthzFilterResultDeny dPost)
+                  if (await authzFilterManager.ApplyPostFilterForMutation(new PostTruncateLayerContextForCIs(), userContext.User, id, null, userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny dPost)
                       throw new ExecutionError(dPost.Reason);
 
                   userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());

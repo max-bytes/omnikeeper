@@ -32,7 +32,7 @@ namespace Omnikeeper.Base.Authz
     public record class PreUpdateContextForTraitEntities(Guid CIID, ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
     public record class PostUpdateContextForTraitEntities(Guid CIID, ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
     public record class PreInsertNewContextForTraitEntities(ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
-    public record class PostInsertNewContextForTraitEntities(ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
+    public record class PostInsertNewContextForTraitEntities(Guid CIID, ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
     public record class PreDeleteContextForTraitEntities(Guid CIID, ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);
     public record class PostDeleteContextForTraitEntities(Guid CIID, ITrait Trait) : PostMutationOperationContextForTraitEntities(Trait);
     public record class PreUpsertContextForTraitEntities(Guid CIID, ITrait Trait) : PreMutationOperationContextForTraitEntities(Trait);

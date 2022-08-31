@@ -215,7 +215,7 @@ namespace Omnikeeper.GridView.Commands
 
                 // TODO: this is totally wrong and misunderstands that changes to multiple layers must be split into multiple changesets
                 var wl = config.WriteLayer;
-                if (await authzFilterManager.ApplyPostFilterForMutation(new PostMutateContextForCIs(), user, changesetProxy.GetActiveChangeset(wl), trans) is AuthzFilterResultDeny dPost)
+                if (await authzFilterManager.ApplyPostFilterForMutation(new PostMutateContextForCIs(), user, readLayerset, changesetProxy.GetActiveChangeset(wl), trans, timeThreshold) is AuthzFilterResultDeny dPost)
                     return (null, new Exception(dPost.Reason));
 
                 trans.Commit();

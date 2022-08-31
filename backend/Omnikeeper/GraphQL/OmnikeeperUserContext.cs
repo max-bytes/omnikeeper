@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL
 {
-    public class OmnikeeperUserContext : Dictionary<string, object?>, IDisposable
+    public class OmnikeeperUserContext : Dictionary<string, object?>, IOmnikeeperUserContext, IDisposable
     {
         public AuthenticatedUser User { get; private set; }
         public IServiceProvider ServiceProvider { get; }
@@ -122,7 +123,7 @@ namespace Omnikeeper.GraphQL
                 if (t == null) throw new System.Exception("Expected transaction to be set");
                 return (IModelContext)t;
             }
-            set
+            private set
             {
                 this.AddOrUpdate("Transaction", value);
             }

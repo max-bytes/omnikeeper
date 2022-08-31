@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -10,7 +11,7 @@ namespace Omnikeeper.Base.Authz
     public interface IAuthzFilterManager
     {
         Task<IAuthzFilterResult> ApplyPreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, LayerSet readLayerIDs, string writeLayerID, IModelContext trans, TimeThreshold timeThreshold);
-        Task<IAuthzFilterResult> ApplyPostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, Changeset? changeset, IModelContext trans);
+        Task<IAuthzFilterResult> ApplyPostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, LayerSet readLayers, Changeset? changeset, IModelContext trans, TimeThreshold timeThreshold);
 
         Task<IAuthzFilterResult> ApplyFilterForQuery(IQueryOperationContext context, AuthenticatedUser user, LayerSet readLayerIDs, IModelContext trans, TimeThreshold timeThreshold);
     }
@@ -22,9 +23,24 @@ namespace Omnikeeper.Base.Authz
             return await manager.ApplyPreFilterForMutation(context, user, new LayerSet(readLayerID), writeLayerID, trans, timeThreshold);
         }
 
+        public static async Task<IAuthzFilterResult> ApplyPostFilterForMutation(this IAuthzFilterManager manager, IPostMutationOperationContext context, AuthenticatedUser user, string readLayerID, Changeset? changeset, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            return await manager.ApplyPostFilterForMutation(context, user, new LayerSet(readLayerID), changeset, trans, timeThreshold);
+        }
+
         public static async Task<IAuthzFilterResult> ApplyFilterForQuery(this IAuthzFilterManager manager, IQueryOperationContext context, AuthenticatedUser user, string readLayerID, IModelContext trans, TimeThreshold timeThreshold)
         {
             return await manager.ApplyFilterForQuery(context, user, new LayerSet(readLayerID), trans, timeThreshold);
+        }
+
+        // nicer methods for graphql usecases
+        public static async Task<IAuthzFilterResult> ApplyPreFilterForMutation(this IAuthzFilterManager manager, IPreMutationOperationContext context, string writeLayerID, IOmnikeeperUserContext userContext, IEnumerable<object> path)
+        {
+            return await manager.ApplyPreFilterForMutation(context, userContext.User, userContext.GetLayerSet(path), writeLayerID, userContext.Transaction, userContext.GetTimeThreshold(path));
+        }
+        public static async Task<IAuthzFilterResult> ApplyPostFilterForMutation(this IAuthzFilterManager manager, IPostMutationOperationContext context, string writeLayerID, IOmnikeeperUserContext userContext, IEnumerable<object> path)
+        {
+            return await manager.ApplyPostFilterForMutation(context, userContext.User, userContext.GetLayerSet(path), userContext.ChangesetProxy.GetActiveChangeset(writeLayerID), userContext.Transaction, userContext.GetTimeThreshold(path));
         }
     }
 }
