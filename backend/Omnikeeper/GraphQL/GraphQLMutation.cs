@@ -190,7 +190,7 @@ namespace Omnikeeper.GraphQL
 
                     // TODO: this is not ideal; we should split up writes to multiple layers better
                     foreach(var layer in layers)
-                        if (await authzFilterManager.ApplyPostFilterForMutation(new PostCreateContextForCIs(), layer, userContext, context.Path) is AuthzFilterResultDeny dPost)
+                        if (await authzFilterManager.ApplyPostFilterForMutation(new PostCreateContextForCIs(), userContext.User, layer, userContext.ChangesetProxy.GetActiveChangeset(layer), userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny dPost)
                             throw new ExecutionError(dPost.Reason);
 
                     userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
