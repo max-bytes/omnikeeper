@@ -34,6 +34,8 @@ namespace Omnikeeper.GraphQL
             this.errorInfoProvider = errorInfoProvider;
         }
 
+        public bool IsNativelyAsync => true;
+
         public T? Deserialize<T>(string? value)
         {
             var t = JsonSerializer.Generic.Utf16.Deserialize<T, Resolver<char>>(value);

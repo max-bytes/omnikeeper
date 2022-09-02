@@ -39,11 +39,11 @@ namespace Tests.Integration.GraphQL.Base
 
             var serviceCollection = new ServiceCollection();
 
-            global::GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(serviceCollection, c =>
-             {
+            serviceCollection.AddGraphQL(c =>
+            {
                  c.AddErrorInfoProvider(opt =>
                  {
-                     opt.ExposeExceptionStackTrace = true;
+                     opt.ExposeExceptionDetails = true;
                      opt.ExposeData = true;
                      opt.ExposeCode = true;
                      opt.ExposeCodes = true;
@@ -51,7 +51,7 @@ namespace Tests.Integration.GraphQL.Base
                  .AddDocumentExecuter((sp) => new MyDocumentExecutor())
                  .AddGraphTypes(Assembly.GetAssembly(typeof(GraphQLSchema))!)
                  .AddSerializer<SpanJSONGraphQLSerializer>();
-             });
+            });
 
             builder.Populate(serviceCollection);
         }

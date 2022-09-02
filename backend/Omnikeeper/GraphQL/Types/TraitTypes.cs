@@ -24,7 +24,7 @@ namespace Omnikeeper.GraphQL.Types
         {
             Field("id", x => x.ID);
             Field(x => x.Origin, type: typeof(TraitOriginV1Type));
-            Field("ancestorTraits", x => x.AncestorTraits);
+            Field("ancestorTraits", x => x.AncestorTraits, type: typeof(ListGraphType<StringGraphType>));
 
             Field("requiredAttributes", x => x.RequiredAttributes, type: typeof(ListGraphType<TraitAttributeType>));
             Field("optionalAttributes", x => x.OptionalAttributes, type: typeof(ListGraphType<TraitAttributeType>));

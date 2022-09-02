@@ -2,7 +2,6 @@
 using GraphQL.DataLoader;
 using GraphQL.Execution;
 using GraphQL.Validation;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,7 +52,7 @@ namespace Omnikeeper.Controllers
 
         [HttpPost]
         [Route("/graphql")]
-        [Authorize]
+        [Microsoft.AspNetCore.Authorization.Authorize]
         [UseSpanJson]
         public async Task<IActionResult> Index([FromBody] Omnikeeper.Base.Entity.GraphQLQuery query)
         {
@@ -73,7 +72,7 @@ namespace Omnikeeper.Controllers
         // NOTE: be aware of https://github.com/dotnet/aspnetcore/issues/37360
         [HttpGet]
         [Route("/graphql")]
-        [Authorize]
+        [Microsoft.AspNetCore.Authorization.Authorize]
         [UseSpanJson]
         public async Task<IActionResult> Get([FromQuery] Omnikeeper.Base.Entity.GraphQLQuery q)
         {

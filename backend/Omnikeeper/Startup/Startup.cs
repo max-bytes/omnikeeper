@@ -1,11 +1,9 @@
 using Autofac;
 using FluentValidation.AspNetCore;
 using GraphQL;
-using GraphQL.Server.Ui.Playground;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -113,11 +111,11 @@ namespace Omnikeeper.Startup
                 });
 
 
-            global::GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(services, c =>
+            services.AddGraphQL(c =>
             {
                 c.AddErrorInfoProvider(opt =>
                 {
-                    opt.ExposeExceptionStackTrace = true;
+                    opt.ExposeExceptionDetails = true;
                     opt.ExposeData = true;
                 })
                 .AddGraphTypes()
@@ -343,7 +341,7 @@ namespace Omnikeeper.Startup
 
             if (env.IsDevelopment() || env.IsStaging())
             {
-                app.UseGraphQLPlayground(new PlaygroundOptions() { GraphQLEndPoint = "/graphql-debug" });
+                app.UseGraphQLPlayground("/graphql-debug");
             }
 
             if (env.IsDevelopment())
@@ -362,7 +360,7 @@ namespace Omnikeeper.Startup
                 var cv = endpoints.MapControllers();
                 // add AllowAnonymous Attribute when debugAllowAll is true
                 if (Configuration.GetSection("Authentication").GetValue("debugAllowAll", false))
-                    cv.WithMetadata(new AllowAnonymousAttribute());
+                    cv.WithMetadata(new Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute());
 
                 endpoints.MapHub<SignalRHubLogging>("/api/signalr/logging");
             });
