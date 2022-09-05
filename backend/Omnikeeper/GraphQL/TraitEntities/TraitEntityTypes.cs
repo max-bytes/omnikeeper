@@ -29,7 +29,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             // NOTE: because graphql types MUST define at least one field, we define a placeholder field whose single purpose is to simply exist and fulfill the requirement
             // when there are no traits
-            Field<StringGraphType>("placeholder", resolve: ctx => "placeholder");
+            Field<StringGraphType>("placeholder").Resolve(ctx => "placeholder");
         }
     }
 
@@ -44,25 +44,26 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
             var traitEntityModel = new TraitEntityModel(at, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
 
-            this.FieldAsync("all", new ListGraphType(wrapperElementGraphType), resolve: async context =>
-            {
-                var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var layerset = userContext.GetLayerSet(context.Path);
-                var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                var trans = userContext.Transaction;
+            Field("all", new ListGraphType(wrapperElementGraphType))
+                .ResolveAsync(async context =>
+                {
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var layerset = userContext.GetLayerSet(context.Path);
+                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                    var trans = userContext.Transaction;
 
-                // TODO: use dataloader
-                var ets = await traitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerset, trans, timeThreshold);
-                return ets.Select(kv => kv.Value);
-            });
+                    // TODO: use dataloader
+                    var ets = await traitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerset, trans, timeThreshold);
+                    return ets.Select(kv => kv.Value);
+                });
 
             if (filterGraphType != null)
             {
-                this.Field("filtered", new ListGraphType(wrapperElementGraphType),
-                    arguments: new QueryArguments(
+                Field("filtered", new ListGraphType(wrapperElementGraphType))
+                    .Arguments(
                         new QueryArgument(new NonNullGraphType(filterGraphType)) { Name = "filter" }
-                    ),
-                    resolve: context =>
+                    )
+                    .Resolve(context =>
                     {
                         var userContext = (context.UserContext as OmnikeeperUserContext)!;
                         var layerset = userContext.GetLayerSet(context.Path);
@@ -82,11 +83,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             return ets.Select(kv => kv.Value);
                         });
                     });
-                this.Field("filteredSingle", wrapperElementGraphType,
-                    arguments: new QueryArguments(
+                Field("filteredSingle", wrapperElementGraphType)
+                    .Arguments(
                         new QueryArgument(filterGraphType) { Name = "filter" }
-                    ),
-                    resolve: context =>
+                    )
+                    .Resolve(context =>
                     {
                         var userContext = (context.UserContext as OmnikeeperUserContext)!;
                         var layerset = userContext.GetLayerSet(context.Path);
@@ -111,11 +112,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     });
             }
 
-            this.FieldAsync("byCIID", wrapperElementGraphType,
-                arguments: new QueryArguments(
+            Field("byCIID", wrapperElementGraphType)
+                .Arguments(
                     new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "ciid" }
-                ),
-                resolve: async context =>
+                )
+                .ResolveAsync(async context =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerset = userContext.GetLayerSet(context.Path);
@@ -130,11 +131,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
             if (idGraphType != null)
             {
-                this.FieldAsync("byDataID", wrapperElementGraphType,
-                    arguments: new QueryArguments(
+                Field("byDataID", wrapperElementGraphType)
+                    .Arguments(
                         new QueryArgument(new NonNullGraphType(idGraphType)) { Name = "id" }
-                    ),
-                    resolve: async context =>
+                    )
+                    .ResolveAsync(async context =>
                     {
                         var userContext = (context.UserContext as OmnikeeperUserContext)!;
                         var layerset = userContext.GetLayerSet(context.Path);
@@ -167,54 +168,57 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityWrapperGraphTypeName(underlyingTrait);
 
-            this.Field<GuidGraphType>("ciid", resolve: context =>
-            {
-                var et = context.Source;
-                return et?.CIID;
-            });
-            this.FieldAsync<MergedCIType>("ci", resolve: async context =>
-            {
-                var et = context.Source;
+            Field<GuidGraphType>("ciid")
+                .Resolve(context =>
+                {
+                    var et = context.Source;
+                    return et?.CIID;
+                });
+            Field<MergedCIType>("ci")
+                .ResolveAsync(async context =>
+                {
+                    var et = context.Source;
 
-                if (et == null)
-                    return null;
+                    if (et == null)
+                        return null;
 
-                var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var layerset = userContext.GetLayerSet(context.Path);
-                var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                var trans = userContext.Transaction;
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var layerset = userContext.GetLayerSet(context.Path);
+                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                    var trans = userContext.Transaction;
 
-                IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, trans, timeThreshold);
+                    IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, trans, timeThreshold);
 
-                var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(et.CIID), forwardAS, ciModel, attributeModel, layerset, timeThreshold, trans)
-                    .Then(cis =>
-                    {
-                        // NOTE: we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
-                        return cis.FirstOrDefault() ?? new MergedCI(et.CIID, null, layerset, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty);
-                    });
+                    var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(et.CIID), forwardAS, ciModel, attributeModel, layerset, timeThreshold, trans)
+                        .Then(cis =>
+                        {
+                            // NOTE: we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
+                            return cis.FirstOrDefault() ?? new MergedCI(et.CIID, null, layerset, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty);
+                        });
 
-                return finalCI;
-            });
-            this.Field("entity", elementGraphType, resolve: context =>
-            {
-                var et = context.Source;
-                return et;
-            });
-            this.FieldAsync<ChangesetType>("latestChange", resolve: async (context) =>
-            {
-                var et = context.Source!;
+                    return finalCI;
+                });
+            Field("entity", elementGraphType)
+                .Resolve(context =>
+                {
+                    var et = context.Source;
+                    return et;
+                });
+            Field<ChangesetType>("latestChange")
+                .ResolveAsync(async (context) =>
+                {
+                    var et = context.Source!;
 
-                if (et == null)
-                    return null;
+                    if (et == null)
+                        return null;
 
-                var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var layerset = userContext.GetLayerSet(context.Path);
-                var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                var trans = userContext.Transaction;
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var layerset = userContext.GetLayerSet(context.Path);
+                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                    var trans = userContext.Transaction;
 
-                return await traitEntityModel.GetLatestRelevantChangeset(SpecificCIIDsSelection.Build(et.CIID), layerset, trans, timeThreshold);
-            });
-
+                    return await traitEntityModel.GetLatestRelevantChangeset(SpecificCIIDsSelection.Build(et.CIID), layerset, trans, timeThreshold);
+                });
 
             this.UnderlyingTrait = underlyingTrait;
         }
@@ -372,37 +376,40 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             Name = "RelatedCIType";
 
-            Field<GuidGraphType>("relatedCIID", resolve: context =>
-            {
-                var (relation, outgoing) = context.Source;
-                if (outgoing)
-                    return relation?.Relation.ToCIID;
-                else
-                    return relation?.Relation.FromCIID;
-            });
-            Field<MergedRelationType>("relation", resolve: context => context.Source.relation);
-            this.FieldAsync<MergedCIType>("relatedCI", resolve: async context =>
-            {
-                var (relation, outgoing) = context.Source;
+            Field<GuidGraphType>("relatedCIID")
+                .Resolve(context =>
+                {
+                    var (relation, outgoing) = context.Source;
+                    if (outgoing)
+                        return relation?.Relation.ToCIID;
+                    else
+                        return relation?.Relation.FromCIID;
+                });
+            Field<MergedRelationType>("relation")
+                .Resolve(context => context.Source.relation);
+            Field<MergedCIType>("relatedCI")
+                .ResolveAsync(async context =>
+                {
+                    var (relation, outgoing) = context.Source;
 
-                var otherCIID = (outgoing) ? relation.Relation.ToCIID : relation.Relation.FromCIID;
+                    var otherCIID = (outgoing) ? relation.Relation.ToCIID : relation.Relation.FromCIID;
 
-                var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var layerset = userContext.GetLayerSet(context.Path);
-                var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                var trans = userContext.Transaction;
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var layerset = userContext.GetLayerSet(context.Path);
+                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                    var trans = userContext.Transaction;
 
-                IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, trans, timeThreshold);
+                    IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, trans, timeThreshold);
 
-                var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(otherCIID), forwardAS, ciModel, attributeModel, layerset, timeThreshold, trans)
-                    .Then(cis =>
-                    {
-                        // NOTE: we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
-                        return cis.FirstOrDefault() ?? new MergedCI(otherCIID, null, layerset, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty);
-                    });
+                    var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(otherCIID), forwardAS, ciModel, attributeModel, layerset, timeThreshold, trans)
+                        .Then(cis =>
+                        {
+                            // NOTE: we kind of know that the CI must exist, we return an empty MergedCI object if the CI query returns null
+                            return cis.FirstOrDefault() ?? new MergedCI(otherCIID, null, layerset, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty);
+                        });
 
-                return finalCI;
-            });
+                    return finalCI;
+                });
         }
     }
 
@@ -419,14 +426,16 @@ namespace Omnikeeper.GraphQL.TraitEntities
             // when there are no types
             if (typesContainers.IsEmpty())
             {
-                Field<StringGraphType>("placeholder", resolve: ctx => "placeholder");
+                Field<StringGraphType>("placeholder")
+                .Resolve(ctx => "placeholder");
             }
 
             foreach (var typeContainer in typesContainers)
             {
                 var traitID = typeContainer.Trait.ID;
                 var fieldName = TraitEntityTypesNameGenerator.GenerateTraitIDFieldName(traitID);
-                this.Field(fieldName, typeContainer.ElementWrapper, resolve: context =>
+                Field(fieldName, typeContainer.ElementWrapper)
+                .Resolve(context =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 

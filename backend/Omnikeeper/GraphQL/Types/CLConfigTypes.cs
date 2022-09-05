@@ -20,8 +20,8 @@ namespace Omnikeeper.GraphQL.Types
             Field("id", x => x.ID);
             Field("clBrainReference", x => x.CLBrainReference);
             Field("clBrainConfig", x => x.CLBrainConfig.RootElement.ToString());
-            Field<ListGraphType<LayerDataType>>("dependentLayers",
-            resolve: (context) =>
+            Field<ListGraphType<LayerDataType>>("dependentLayers")
+            .Resolve((context) =>
             {
                 var userContext = context.GetUserContext();
                 var clBrainReference = context.Source.CLBrainReference;

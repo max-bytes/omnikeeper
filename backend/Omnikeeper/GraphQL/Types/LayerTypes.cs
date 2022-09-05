@@ -15,8 +15,8 @@ namespace Omnikeeper.GraphQL.Types
         {
             Field("description", x => x.Description);
             Field("clConfigID", x => x.CLConfigID);
-            FieldAsync<CLConfigType>("clConfig",
-            resolve: async (context) =>
+            Field<CLConfigType>("clConfig")
+            .ResolveAsync(async (context) =>
             {
                 var userContext = context.GetUserContext();
                 var clConfigID = context.Source.CLConfigID;
@@ -30,15 +30,15 @@ namespace Omnikeeper.GraphQL.Types
             Field("color", x => x.Color);
             Field("generators", x => x.Generators);
             Field("state", x => Enum.Parse<AnchorState>(x.State), type: typeof(AnchorStateType));
-            Field<BooleanGraphType>("writable",
-            resolve: (context) =>
+            Field<BooleanGraphType>("writable")
+            .Resolve((context) =>
             {
                 var userContext = context.GetUserContext();
                 var isWritable = lbas.CanUserWriteToLayer(userContext.User, context.Source!.LayerID);
                 return isWritable;
             });
-            FieldAsync<BooleanGraphType>("isMetaConfigurationLayer",
-            resolve: async (context) =>
+            Field<BooleanGraphType>("isMetaConfigurationLayer")
+            .ResolveAsync(async (context) =>
             {
                 var userContext = context.GetUserContext();
 

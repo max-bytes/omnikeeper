@@ -18,15 +18,15 @@ namespace Omnikeeper.GraphQL.Types
     {
         public MyPermissionsType(ILayerBasedAuthorizationService layerBasedAuthorizationService, ILayerDataModel layerDataModel, IDataLoaderService dataLoaderService)
         {
-            Field<ListGraphType<LayerDataType>>("readableLayers",
-                resolve: context =>
+            Field<ListGraphType<LayerDataType>>("readableLayers")
+                .Resolve(context =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
                         .Then(layers => layerBasedAuthorizationService.FilterReadableLayers(userContext.User, layers.Values));
                 });
-            Field<ListGraphType<LayerDataType>>("writableLayers",
-                resolve: context =>
+            Field<ListGraphType<LayerDataType>>("writableLayers")
+                .Resolve(context =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)

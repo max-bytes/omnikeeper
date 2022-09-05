@@ -14,11 +14,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 var fieldName = TraitEntityTypesNameGenerator.GenerateTraitIDFieldName(traitID);
                 var t = elementTypeContainer.RootQuery;
-                tet.Field(fieldName, t, resolve: context => t);
+                tet.Field(fieldName, t).Resolve(context => t);
             }
 
             var w = typeContainer.MergedCI2TraitEntityWrapper;
-            mergedCIType.Field("traitEntity", w, resolve: context => w);
+            mergedCIType.Field("traitEntity", w).Resolve(context => w);
         }
     }
 

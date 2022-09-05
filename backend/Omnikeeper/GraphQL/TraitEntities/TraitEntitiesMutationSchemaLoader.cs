@@ -64,14 +64,14 @@ namespace Omnikeeper.GraphQL.TraitEntities
             {
                 var traitID = elementTypeContainer.Trait.ID;
 
-                tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateUpdateByCIIDMutationName(traitID), elementTypeContainer.ElementWrapper,
-                    arguments: new QueryArguments(
+                tet.Field(TraitEntityTypesNameGenerator.GenerateUpdateByCIIDMutationName(traitID), elementTypeContainer.ElementWrapper)
+                    .Arguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                         new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" },
                         new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "ciid" },
-                        new QueryArgument<StringGraphType> { Name = "ciName" }),
-                    resolve: async context =>
+                        new QueryArgument<StringGraphType> { Name = "ciName" })
+                    .ResolveAsync(async context =>
                     {
                         var layerStrings = context.GetArgument<string[]>("layers")!;
                         var writeLayerID = context.GetArgument<string>("writeLayer")!;
@@ -107,13 +107,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         return et;
                     });
 
-                tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateInsertNewMutationName(traitID), elementTypeContainer.ElementWrapper,
-                    arguments: new QueryArguments(
+                tet.Field(TraitEntityTypesNameGenerator.GenerateInsertNewMutationName(traitID), elementTypeContainer.ElementWrapper)
+                    .Arguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                         new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" },
-                        new QueryArgument<StringGraphType> { Name = "ciName" }),
-                    resolve: async context =>
+                        new QueryArgument<StringGraphType> { Name = "ciName" })
+                    .ResolveAsync(async context =>
                     {
                         var layerStrings = context.GetArgument<string[]>("layers")!;
                         var writeLayerID = context.GetArgument<string>("writeLayer")!;
@@ -169,15 +169,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     });
 
                 var deleteByCIIDMutationName = TraitEntityTypesNameGenerator.GenerateDeleteByCIIDMutationName(traitID);
-                tet.FieldAsync(deleteByCIIDMutationName, new BooleanGraphType(),
-                    arguments: new QueryArguments(
+                tet.Field(deleteByCIIDMutationName, new BooleanGraphType())
+                    .Arguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                         new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "ciid" }
-                    ),
-                    description: @"Note on the return value: unlike deleteByDataID*, deleteByCIID* return true whether or not there was a trait entity at the
-                        specified CIID or not. There is no check beforehand if the trait entity exists.",
-                    resolve: async context =>
+                    )
+                    .Description(@"Note on the return value: unlike deleteByDataID*, deleteByCIID* return true whether or not there was a trait entity at the
+                        specified CIID or not. There is no check beforehand if the trait entity exists.")
+                    .ResolveAsync(async context =>
                     {
                         var layerStrings = context.GetArgument<string[]>("layers")!;
                         var writeLayerID = context.GetArgument<string>("writeLayer")!;
@@ -205,14 +205,14 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                 if (elementTypeContainer.FilterInput != null)
                 {
-                    tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateUpsertSingleByFilterMutationName(traitID), elementTypeContainer.ElementWrapper,
-                        arguments: new QueryArguments(
+                    tet.Field(TraitEntityTypesNameGenerator.GenerateUpsertSingleByFilterMutationName(traitID), elementTypeContainer.ElementWrapper)
+                        .Arguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                             new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" },
                             new QueryArgument(elementTypeContainer.FilterInput) { Name = "filter" },
-                            new QueryArgument<StringGraphType> { Name = "ciName" }),
-                        resolve: async context =>
+                            new QueryArgument<StringGraphType> { Name = "ciName" })
+                        .ResolveAsync(async context =>
                         {
                             var layerStrings = context.GetArgument<string[]>("layers")!;
                             var writeLayerID = context.GetArgument<string>("writeLayer")!;
@@ -257,15 +257,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         });
 
 
-                    tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateDeleteSingleByFilterMutationName(traitID), new BooleanGraphType(),
-                        arguments: new QueryArguments(
+                    tet.Field(TraitEntityTypesNameGenerator.GenerateDeleteSingleByFilterMutationName(traitID), new BooleanGraphType())
+                        .Arguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                             new QueryArgument(elementTypeContainer.FilterInput) { Name = "filter" }
-                        ),
-                        description: @"Note on the return value: only returns true if the trait entity was present 
-                                (and found through the filter) first, and it is not present anymore after the deletion at that CIID.",
-                            resolve: async context =>
+                        )
+                        .Description(@"Note on the return value: only returns true if the trait entity was present 
+                                (and found through the filter) first, and it is not present anymore after the deletion at that CIID.")
+                        .ResolveAsync(async context =>
                             {
                                 var layerStrings = context.GetArgument<string[]>("layers")!;
                                 var writeLayerID = context.GetArgument<string>("writeLayer")!;
@@ -309,13 +309,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 if (elementTypeContainer.IDInput != null) // only add *byDataID-mutations for trait entities that have an ID
                 {
                     var upsertByDataIDMutationName = TraitEntityTypesNameGenerator.GenerateUpsertByDataIDMutationName(traitID);
-                    tet.FieldAsync(upsertByDataIDMutationName, elementTypeContainer.ElementWrapper,
-                        arguments: new QueryArguments(
+                    tet.Field(upsertByDataIDMutationName, elementTypeContainer.ElementWrapper)
+                        .Arguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                             new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" },
-                            new QueryArgument<StringGraphType> { Name = "ciName" }),
-                        resolve: async context =>
+                            new QueryArgument<StringGraphType> { Name = "ciName" })
+                        .ResolveAsync(async context =>
                         {
                             var layerStrings = context.GetArgument<string[]>("layers")!;
                             var writeLayerID = context.GetArgument<string>("writeLayer")!;
@@ -362,15 +362,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         });
 
                     var deleteByDataIDMutationName = TraitEntityTypesNameGenerator.GenerateDeleteByDataIDMutationName(traitID);
-                    tet.FieldAsync(deleteByDataIDMutationName, new BooleanGraphType(),
-                        arguments: new QueryArguments(
+                    tet.Field(deleteByDataIDMutationName, new BooleanGraphType())
+                        .Arguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                             new QueryArgument(new NonNullGraphType(elementTypeContainer.IDInput)) { Name = "id" }
-                        ),
-                        description: @"Note on the return value: only returns true if the trait entity was present 
-                            (and found through its ID) first, and it is not present anymore after the deletion at that CIID.",
-                        resolve: async context =>
+                        )
+                        .Description(@"Note on the return value: only returns true if the trait entity was present 
+                            (and found through its ID) first, and it is not present anymore after the deletion at that CIID.")
+                        .ResolveAsync(async context =>
                         {
                             var layerStrings = context.GetArgument<string[]>("layers")!;
                             var writeLayerID = context.GetArgument<string>("writeLayer")!;
@@ -418,11 +418,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 }
 
                 // changeset data insert
-                tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateInsertChangesetDataAsTraitEntityMutationName(traitID), elementTypeContainer.ElementWrapper,
-                    arguments: new QueryArguments(
+                tet.Field(TraitEntityTypesNameGenerator.GenerateInsertChangesetDataAsTraitEntityMutationName(traitID), elementTypeContainer.ElementWrapper)
+                    .Arguments(
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "layer" },
-                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" }),
-                    resolve: async context =>
+                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" })
+                    .ResolveAsync(async context =>
                     {
                         var writeLayerID = context.GetArgument<string>("layer")!;
                         var userContext = await context.GetUserContext()
@@ -464,13 +464,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 foreach (var tr in elementTypeContainer.Trait.OptionalRelations)
                 {
                     // set complete relations set
-                    tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateSetRelationsByCIIDMutationName(traitID, tr), elementTypeContainer.ElementWrapper,
-                        arguments: new QueryArguments(
+                    tet.Field(TraitEntityTypesNameGenerator.GenerateSetRelationsByCIIDMutationName(traitID, tr), elementTypeContainer.ElementWrapper)
+                        .Arguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                             new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "baseCIID" },
-                            new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>> { Name = "relatedCIIDs" }),
-                        resolve: async context =>
+                            new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>> { Name = "relatedCIIDs" })
+                        .ResolveAsync(async context =>
                         {
                             var layerStrings = context.GetArgument<string[]>("layers")!;
                             var writeLayerID = context.GetArgument<string>("writeLayer")!;
@@ -498,13 +498,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         });
 
                     // add related CIs to relations set
-                    tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateAddRelationsByCIIDMutationName(traitID, tr), elementTypeContainer.ElementWrapper,
-                        arguments: new QueryArguments(
+                    tet.Field(TraitEntityTypesNameGenerator.GenerateAddRelationsByCIIDMutationName(traitID, tr), elementTypeContainer.ElementWrapper)
+                        .Arguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                             new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "baseCIID" },
-                            new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>> { Name = "relatedCIIDsToAdd" }),
-                        resolve: async context =>
+                            new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>> { Name = "relatedCIIDsToAdd" })
+                        .ResolveAsync(async context =>
                         {
                             var layerStrings = context.GetArgument<string[]>("layers")!;
                             var writeLayerID = context.GetArgument<string>("writeLayer")!;
@@ -532,13 +532,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         });
 
                     // remove related CIs from relations set
-                    tet.FieldAsync(TraitEntityTypesNameGenerator.GenerateRemoveRelationsByCIIDMutationName(traitID, tr), elementTypeContainer.ElementWrapper,
-                        arguments: new QueryArguments(
+                    tet.Field(TraitEntityTypesNameGenerator.GenerateRemoveRelationsByCIIDMutationName(traitID, tr), elementTypeContainer.ElementWrapper)
+                        .Arguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                             new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "baseCIID" },
-                            new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>> { Name = "relatedCIIDsToRemove" }),
-                        resolve: async context =>
+                            new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>> { Name = "relatedCIIDsToRemove" })
+                        .ResolveAsync(async context =>
                         {
                             var layerStrings = context.GetArgument<string[]>("layers")!;
                             var writeLayerID = context.GetArgument<string>("writeLayer")!;

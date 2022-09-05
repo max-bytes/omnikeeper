@@ -35,11 +35,11 @@ namespace Omnikeeper.GraphQL
 
         public void CreateManage()
         {
-            FieldAsync<LayerDataType>("manage_upsertLayerData",
-                arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<UpsertLayerInputDataType>> { Name = "layer" }
-                ),
-                resolve: async context =>
+            Field<LayerDataType>("manage_upsertLayerData")
+                .Arguments(
+                    new QueryArgument<NonNullGraphType<UpsertLayerInputDataType>> { Name = "layer" }
+                )
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -64,11 +64,11 @@ namespace Omnikeeper.GraphQL
                     return updatedLayer;
                 });
 
-            FieldAsync<LayerDataType>("manage_createLayer",
-                arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
-                ),
-                resolve: async context =>
+            Field<LayerDataType>("manage_createLayer")
+                .Arguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
+                )
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -87,11 +87,11 @@ namespace Omnikeeper.GraphQL
                 });
 
 
-            FieldAsync<OIAContextType>("manage_createOIAContext",
-                arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<CreateOIAContextInputType>> { Name = "oiaContext" }
-                ),
-                resolve: async context =>
+            Field<OIAContextType>("manage_createOIAContext")
+                .Arguments(
+                    new QueryArgument<NonNullGraphType<CreateOIAContextInputType>> { Name = "oiaContext" }
+                )
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -112,11 +112,11 @@ namespace Omnikeeper.GraphQL
                         throw new ExecutionError($"Could not parse configuration", e);
                     }
                 });
-            FieldAsync<OIAContextType>("manage_updateOIAContext",
-              arguments: new QueryArguments(
+            Field<OIAContextType>("manage_updateOIAContext")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<UpdateOIAContextInputType>> { Name = "oiaContext" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -137,11 +137,11 @@ namespace Omnikeeper.GraphQL
                       throw new ExecutionError($"Could not parse configuration", e);
                   }
               });
-            FieldAsync<BooleanGraphType>("manage_deleteOIAContext",
-              arguments: new QueryArguments(
+            Field<BooleanGraphType>("manage_deleteOIAContext")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<LongGraphType>> { Name = "oiaID" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -155,11 +155,11 @@ namespace Omnikeeper.GraphQL
               });
 
 
-            FieldAsync<ODataAPIContextType>("manage_upsertODataAPIContext",
-                arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<UpsertODataAPIContextInputType>> { Name = "odataAPIContext" }
-                ),
-                resolve: async context =>
+            Field<ODataAPIContextType>("manage_upsertODataAPIContext")
+                .Arguments(
+                    new QueryArgument<NonNullGraphType<UpsertODataAPIContextInputType>> { Name = "odataAPIContext" }
+                )
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -185,11 +185,11 @@ namespace Omnikeeper.GraphQL
                     }
                 });
 
-            FieldAsync<BooleanGraphType>("manage_deleteODataAPIContext",
-              arguments: new QueryArguments(
+            Field<BooleanGraphType>("manage_deleteODataAPIContext")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -205,11 +205,11 @@ namespace Omnikeeper.GraphQL
               });
 
 
-            FieldAsync<BooleanGraphType>("manage_truncateLayer",
-              arguments: new QueryArguments(
+            Field<BooleanGraphType>("manage_truncateLayer")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -229,11 +229,11 @@ namespace Omnikeeper.GraphQL
                   return true;
               });
 
-            FieldAsync<StringGraphType>("manage_setBaseConfiguration",
-                arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "baseConfiguration" }
-                ),
-                resolve: async context =>
+            Field<StringGraphType>("manage_setBaseConfiguration")
+                .Arguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "baseConfiguration" }
+                )
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -260,11 +260,11 @@ namespace Omnikeeper.GraphQL
                     }
                 });
 
-            FieldAsync<PredicateType>("manage_upsertPredicate",
-              arguments: new QueryArguments(
+            Field<PredicateType>("manage_upsertPredicate")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<UpsertPredicateInputType>> { Name = "predicate" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -283,11 +283,11 @@ namespace Omnikeeper.GraphQL
               });
 
 
-            FieldAsync<BooleanGraphType>("manage_removePredicate",
-              arguments: new QueryArguments(
+            Field<BooleanGraphType>("manage_removePredicate")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "predicateID" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -303,11 +303,11 @@ namespace Omnikeeper.GraphQL
                   return deleted;
               });
 
-            FieldAsync<RecursiveTraitType>("manage_upsertRecursiveTrait",
-              arguments: new QueryArguments(
+            Field<RecursiveTraitType>("manage_upsertRecursiveTrait")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<UpsertRecursiveTraitInputType>> { Name = "trait" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -337,11 +337,11 @@ namespace Omnikeeper.GraphQL
                   return newTrait.dc;
               });
 
-            FieldAsync<BooleanGraphType>("manage_removeRecursiveTrait",
-              arguments: new QueryArguments(
+            Field<BooleanGraphType>("manage_removeRecursiveTrait")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -363,11 +363,11 @@ namespace Omnikeeper.GraphQL
                   return deleted;
               });
 
-            FieldAsync<GeneratorType>("manage_upsertGenerator",
-              arguments: new QueryArguments(
+            Field<GeneratorType>("manage_upsertGenerator")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<UpsertGeneratorInputType>> { Name = "generator" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -386,11 +386,11 @@ namespace Omnikeeper.GraphQL
 
                   return newGenerator.dc;
               });
-            FieldAsync<BooleanGraphType>("manage_removeGenerator",
-              arguments: new QueryArguments(
+            Field<BooleanGraphType>("manage_removeGenerator")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -406,11 +406,11 @@ namespace Omnikeeper.GraphQL
                   return deleted;
               });
 
-            FieldAsync<AuthRoleType>("manage_upsertAuthRole",
-              arguments: new QueryArguments(
+            Field<AuthRoleType>("manage_upsertAuthRole")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<UpsertAuthRoleInputType>> { Name = "authRole" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -429,11 +429,11 @@ namespace Omnikeeper.GraphQL
                   return updated.dc;
               });
 
-            FieldAsync<BooleanGraphType>("manage_removeAuthRole",
-              arguments: new QueryArguments(
+            Field<BooleanGraphType>("manage_removeAuthRole")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -450,11 +450,11 @@ namespace Omnikeeper.GraphQL
                   return deleted;
               });
 
-            FieldAsync<CLConfigType>("manage_upsertCLConfig",
-              arguments: new QueryArguments(
+            Field<CLConfigType>("manage_upsertCLConfig")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<UpsertCLConfigInputType>> { Name = "config" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -478,11 +478,11 @@ namespace Omnikeeper.GraphQL
                   return newCLConfig.dc;
               });
 
-            FieldAsync<BooleanGraphType>("manage_removeCLConfig",
-              arguments: new QueryArguments(
+            Field<BooleanGraphType>("manage_removeCLConfig")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -502,11 +502,11 @@ namespace Omnikeeper.GraphQL
                   return deleted;
               });
 
-            FieldAsync<ValidatorContextType>("manage_upsertValidatorContext",
-              arguments: new QueryArguments(
+            Field<ValidatorContextType>("manage_upsertValidatorContext")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<UpsertValidatorContextInputType>> { Name = "context" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 
@@ -530,11 +530,11 @@ namespace Omnikeeper.GraphQL
                   return newContext.dc;
               });
 
-            FieldAsync<BooleanGraphType>("manage_removeValidatorContext",
-              arguments: new QueryArguments(
+            Field<BooleanGraphType>("manage_removeValidatorContext")
+              .Arguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
-              ),
-              resolve: async context =>
+              )
+              .ResolveAsync(async context =>
               {
                   var userContext = context.GetUserContext();
 

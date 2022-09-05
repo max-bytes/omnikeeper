@@ -366,8 +366,8 @@ namespace Omnikeeper.Service
         public CIRelationsComparisonType(IDataLoaderService dataLoaderService, IAttributeModel attributeModel, ICIIDModel ciidModel)
         {
             Field("leftCIID", x => x.leftCIID);
-            Field<StringGraphType>("leftCIName",
-                resolve: (context) =>
+            Field<StringGraphType>("leftCIName")
+                .Resolve((context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerset = userContext.GetLayerSet(context.Path);
@@ -377,8 +377,8 @@ namespace Omnikeeper.Service
                         .Then(rr => rr.GetOrWithClass(ciid, null));
                 });
             Field("rightCIID", x => x.rightCIID);
-            Field<StringGraphType>("rightCIName",
-                resolve: (context) =>
+            Field<StringGraphType>("rightCIName")
+                .Resolve((context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerset = userContext.GetLayerSet(context.Path);
@@ -473,8 +473,8 @@ namespace Omnikeeper.Service
         public DiffingResultType(IDataLoaderService dataLoaderService, DiffingCIService diffingCIService, ICIModel ciModel, IRelationModel relationModel, IEffectiveTraitModel effectiveTraitModel,
             ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService)
         {
-            FieldAsync<ListGraphType<CIAttributesComparisonType>>("cis",
-                resolve: async (context) =>
+            Field<ListGraphType<CIAttributesComparisonType>>("cis")
+                .ResolveAsync(async (context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var d = context.Source!;
@@ -521,19 +521,19 @@ namespace Omnikeeper.Service
                     diffingCIService.DiffRelations(leftRelations, rightRelations, outgoing, d.showEqual);
             }
 
-            FieldAsync<ListGraphType<CIRelationsComparisonType>>("outgoingRelations",
-                resolve: async (context) =>
+            Field<ListGraphType<CIRelationsComparisonType>>("outgoingRelations")
+                .ResolveAsync(async (context) =>
                 {
                     return await ResolveRelationComparisons(context, true, context.Source!);
                 });
-            FieldAsync<ListGraphType<CIRelationsComparisonType>>("incomingRelations",
-                resolve: async (context) =>
+            Field<ListGraphType<CIRelationsComparisonType>>("incomingRelations")
+                .ResolveAsync(async (context) =>
                 {
                     return await ResolveRelationComparisons(context, false, context.Source!);
                 });
 
-            FieldAsync<ListGraphType<CIEffectiveTraitsComparisonType>>("effectiveTraits",
-                resolve: async (context) =>
+            Field<ListGraphType<CIEffectiveTraitsComparisonType>>("effectiveTraits")
+                .ResolveAsync(async (context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var d = context.Source!;

@@ -20,8 +20,8 @@ namespace Omnikeeper.GraphQL.Types
             Field(x => x.ChangesetID);
             Field(x => x.Mask);
 
-            Field<StringGraphType>("fromCIName",
-                resolve: (context) =>
+            Field<StringGraphType>("fromCIName")
+                .Resolve((context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerset = userContext.GetLayerSet(context.Path);
@@ -30,8 +30,8 @@ namespace Omnikeeper.GraphQL.Types
                     return dataLoaderService.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), attributeModel, ciidModel, layerset, timeThreshold, userContext.Transaction)
                         .Then(rr => rr.GetOrWithClass(ciid, null));
                 });
-            Field<StringGraphType>("toCIName",
-                resolve: (context) =>
+            Field<StringGraphType>("toCIName")
+                .Resolve((context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerset = userContext.GetLayerSet(context.Path);
@@ -40,8 +40,8 @@ namespace Omnikeeper.GraphQL.Types
                     return dataLoaderService.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), attributeModel, ciidModel, layerset, timeThreshold, userContext.Transaction)
                         .Then(rr => rr.GetOrWithClass(ciid, null));
                 });
-            FieldAsync<MergedCIType>("toCI",
-            resolve: async (context) =>
+            Field<MergedCIType>("toCI")
+            .ResolveAsync(async (context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
@@ -56,8 +56,8 @@ namespace Omnikeeper.GraphQL.Types
                         return t.FirstOrDefault() ?? new MergedCI(context.Source!.ToCIID, null, layerSet, timeThreshold, ImmutableDictionary<string, MergedCIAttribute>.Empty);
                     });
             });
-            FieldAsync<MergedCIType>("fromCI",
-            resolve: async (context) =>
+            Field<MergedCIType>("fromCI")
+            .ResolveAsync(async (context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
@@ -82,8 +82,8 @@ namespace Omnikeeper.GraphQL.Types
             Field(x => x.LayerStackIDs);
             Field(x => x.Relation, type: typeof(RelationType));
 
-            Field<ListGraphType<LayerDataType>>("layerStack",
-            resolve: (context) =>
+            Field<ListGraphType<LayerDataType>>("layerStack")
+            .Resolve((context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source!.LayerStackIDs;

@@ -33,8 +33,8 @@ namespace Omnikeeper.GraphQL
 
         private void CreateManage()
         {
-            Field<ListGraphType<LayerDataType>>("manage_layers",
-                resolve: context =>
+            Field<ListGraphType<LayerDataType>>("manage_layers")
+                .Resolve(context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -44,10 +44,10 @@ namespace Omnikeeper.GraphQL
                         .Then(layersDict => layersDict.Values);
                 });
 
-            FieldAsync<LayerStatisticsType>("manage_layerStatistics",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "layerID" }),
-                resolve: async context =>
+            Field<LayerStatisticsType>("manage_layerStatistics")
+                .Arguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "layerID" })
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -76,8 +76,8 @@ namespace Omnikeeper.GraphQL
                         latestChange?.Timestamp);
                 });
 
-            FieldAsync<ListGraphType<OIAContextType>>("manage_oiacontexts",
-                resolve: async context =>
+            Field<ListGraphType<OIAContextType>>("manage_oiacontexts")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -88,8 +88,8 @@ namespace Omnikeeper.GraphQL
                     return configs;
                 });
 
-            FieldAsync<ListGraphType<ODataAPIContextType>>("manage_odataapicontexts",
-                resolve: async context =>
+            Field<ListGraphType<ODataAPIContextType>>("manage_odataapicontexts")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -102,8 +102,8 @@ namespace Omnikeeper.GraphQL
                     return configs.Values;
                 });
 
-            FieldAsync<StringGraphType>("manage_baseConfiguration",
-                resolve: async context =>
+            Field<StringGraphType>("manage_baseConfiguration")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -115,9 +115,8 @@ namespace Omnikeeper.GraphQL
                     return BaseConfigurationV2.Serializer.SerializeToString(cfg);
                 });
 
-            FieldAsync<ListGraphType<PredicateType>>("manage_predicates",
-                arguments: new QueryArguments(),
-                resolve: async context =>
+            Field<ListGraphType<PredicateType>>("manage_predicates")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -129,8 +128,8 @@ namespace Omnikeeper.GraphQL
                     return predicates.Values;
                 });
 
-            FieldAsync<ListGraphType<RecursiveTraitType>>("manage_recursiveTraits",
-                resolve: async context =>
+            Field<ListGraphType<RecursiveTraitType>>("manage_recursiveTraits")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -143,8 +142,8 @@ namespace Omnikeeper.GraphQL
                 });
 
 
-            FieldAsync<ListGraphType<GeneratorType>>("manage_generators",
-                resolve: async context =>
+            Field<ListGraphType<GeneratorType>>("manage_generators")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -155,8 +154,8 @@ namespace Omnikeeper.GraphQL
                     return generators.Values;
                 });
 
-            FieldAsync<ListGraphType<AuthRoleType>>("manage_authRoles",
-                resolve: async context =>
+            Field<ListGraphType<AuthRoleType>>("manage_authRoles")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -167,8 +166,8 @@ namespace Omnikeeper.GraphQL
                     return authRoles.Values;
                 });
 
-            FieldAsync<ListGraphType<CLConfigType>>("manage_clConfigs",
-                resolve: async context =>
+            Field<ListGraphType<CLConfigType>>("manage_clConfigs")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -180,8 +179,8 @@ namespace Omnikeeper.GraphQL
                 });
 
 
-            FieldAsync<ListGraphType<ValidatorContextType>>("manage_validatorContexts",
-                resolve: async context =>
+            Field<ListGraphType<ValidatorContextType>>("manage_validatorContexts")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -192,8 +191,8 @@ namespace Omnikeeper.GraphQL
                     return contexts.Values;
                 });
 
-            FieldAsync<ListGraphType<StringGraphType>>("manage_availablePermissions",
-                resolve: async context =>
+            Field<ListGraphType<StringGraphType>>("manage_availablePermissions")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -203,8 +202,8 @@ namespace Omnikeeper.GraphQL
                     return allPermissions;
                 });
 
-            FieldAsync<ListGraphType<StringGraphType>>("manage_debugCurrentUser",
-                resolve: async context =>
+            Field<ListGraphType<StringGraphType>>("manage_debugCurrentUser")
+                .Resolve(context =>
                 {
                     var userContext = context.GetUserContext();
                     if (userContext.User is not AuthenticatedHttpUser ahu)
@@ -216,16 +215,16 @@ namespace Omnikeeper.GraphQL
                     ;
                 });
 
-            Field<VersionType>("manage_version",
-                resolve: context =>
+            Field<VersionType>("manage_version")
+                .Resolve(context =>
                 {
                     var loadedPlugins = context.RequestServices!.GetServices<IPluginRegistration>();
                     var coreVersion = VersionService.GetVersion();
                     return new VersionDTO(coreVersion, loadedPlugins);
                 });
 
-            FieldAsync<ListGraphType<RunningJobType>>("manage_runningJobs",
-                resolve: async context =>
+            Field<ListGraphType<RunningJobType>>("manage_runningJobs")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -247,15 +246,15 @@ namespace Omnikeeper.GraphQL
                     return ret;
                 });
 
-            Field<ListGraphType<PluginRegistrationType>>("manage_plugins",
-                resolve: context =>
+            Field<ListGraphType<PluginRegistrationType>>("manage_plugins")
+                .Resolve(context =>
                 {
                     var plugins = context.RequestServices!.GetServices<IPluginRegistration>();
                     return plugins;
                 });
 
-            FieldAsync<ListGraphType<UserInDatabaseType>>("manage_users",
-                resolve: async context =>
+            Field<ListGraphType<UserInDatabaseType>>("manage_users")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 

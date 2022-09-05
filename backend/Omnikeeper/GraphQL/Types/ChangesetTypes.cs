@@ -34,7 +34,8 @@ namespace Omnikeeper.GraphQL.Types
             Field("id", x => x.ID);
             Field(x => x.Timestamp);
             Field(x => x.UserID);
-            Field<UserInDatabaseType>("user", resolve: (context) =>
+            Field<UserInDatabaseType>("user")
+                .Resolve(context =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
@@ -42,8 +43,8 @@ namespace Omnikeeper.GraphQL.Types
             });
             Field(x => x.LayerID);
             Field(x => x.DataOrigin, type: typeof(DataOriginGQL));
-            Field<LayerDataType>("layer",
-                resolve: (context) =>
+            Field<LayerDataType>("layer")
+                .Resolve(context =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerID = context.Source!.LayerID;
@@ -52,8 +53,8 @@ namespace Omnikeeper.GraphQL.Types
                     return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, timeThreshold, userContext.Transaction)
                         .Then(layers => layers.GetOrWithClass(layerID, null));
                 });
-            FieldAsync<ChangesetStatisticsType>("statistics",
-                resolve: async (context) =>
+            Field<ChangesetStatisticsType>("statistics")
+                .ResolveAsync(async context =>
                 {
                     // TODO: use dataloader
                     var statisticsModel = context.RequestServices!.GetRequiredService<IChangesetStatisticsModel>();
@@ -61,29 +62,29 @@ namespace Omnikeeper.GraphQL.Types
                     var changesetID = context.Source!.ID;
                     return await statisticsModel.GetStatistics(changesetID, userContext.Transaction);
                 });
-            var attributes = FieldAsync<ListGraphType<CIAttributeType>>("attributes",
-                resolve: async (context) =>
+            var attributes = Field<ListGraphType<CIAttributeType>>("attributes")
+                .ResolveAsync(async context =>
                 {
                     // TODO: use dataloader
                     var attributeModel = context.RequestServices!.GetRequiredService<IBaseAttributeModel>();
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var changesetID = context.Source!.ID;
                     return await attributeModel.GetAttributesOfChangeset(changesetID, false, userContext.Transaction);
-                });
-            attributes.DeprecationReason = "Superseded by ciAttributes";
-            var removedAttributes = FieldAsync<ListGraphType<CIAttributeType>>("removedAttributes",
-                resolve: async (context) =>
+                })
+                .DeprecationReason("Superseded by ciAttributes");
+            var removedAttributes = Field<ListGraphType<CIAttributeType>>("removedAttributes")
+                .ResolveAsync(async context =>
                 {
                     // TODO: use dataloader
                     var attributeModel = context.RequestServices!.GetRequiredService<IBaseAttributeModel>();
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var changesetID = context.Source!.ID;
                     return await attributeModel.GetAttributesOfChangeset(changesetID, true, userContext.Transaction);
-                });
-            removedAttributes.DeprecationReason = "Superseded by removedCIAttributes";
+                })
+                .DeprecationReason("Superseded by removedCIAttributes");
 
-            FieldAsync<ListGraphType<ChangesetCIAttributesType>>("ciAttributes",
-                resolve: async (context) =>
+            Field<ListGraphType<ChangesetCIAttributesType>>("ciAttributes")
+                .ResolveAsync(async (context) =>
                 {
                     // TODO: use dataloader
                     var attributeModel = context.RequestServices!.GetRequiredService<IBaseAttributeModel>();
@@ -93,8 +94,8 @@ namespace Omnikeeper.GraphQL.Types
                     var grouped = attributes.GroupBy(a => a.CIID);
                     return grouped.Select(g => new ChangesetCIAttributes(g.Key, g));
                 });
-            FieldAsync<ListGraphType<ChangesetCIAttributesType>>("removedCIAttributes",
-                resolve: async (context) =>
+            Field<ListGraphType<ChangesetCIAttributesType>>("removedCIAttributes")
+                .ResolveAsync(async (context) =>
                 {
                     // TODO: use dataloader
                     var attributeModel = context.RequestServices!.GetRequiredService<IBaseAttributeModel>();
@@ -105,8 +106,8 @@ namespace Omnikeeper.GraphQL.Types
                     return grouped.Select(g => new ChangesetCIAttributes(g.Key, g));
                 });
 
-            FieldAsync<ListGraphType<RelationType>>("relations",
-                resolve: async (context) =>
+            Field<ListGraphType<RelationType>>("relations")
+                .ResolveAsync(async (context) =>
                 {
                     // TODO: use dataloader
                     var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
@@ -114,8 +115,8 @@ namespace Omnikeeper.GraphQL.Types
                     var changesetID = context.Source!.ID;
                     return await relationModel.GetRelationsOfChangeset(changesetID, false, userContext.Transaction);
                 });
-            FieldAsync<ListGraphType<RelationType>>("removedRelations",
-                resolve: async (context) =>
+            Field<ListGraphType<RelationType>>("removedRelations")
+                .ResolveAsync(async (context) =>
                 {
                     // TODO: use dataloader
                     var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
@@ -124,8 +125,8 @@ namespace Omnikeeper.GraphQL.Types
                     return await relationModel.GetRelationsOfChangeset(changesetID, true, userContext.Transaction);
                 });
 
-            FieldAsync<GuidGraphType>("dataCIID",
-                resolve: async (context) =>
+            Field<GuidGraphType>("dataCIID")
+                .ResolveAsync(async (context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var changesetID = context.Source!.ID;
@@ -138,8 +139,8 @@ namespace Omnikeeper.GraphQL.Types
                     return ciid;
                 });
 
-            FieldAsync<MergedCIType>("data",
-                resolve: async (context) =>
+            Field<MergedCIType>("data")
+                .ResolveAsync(async (context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var changesetID = context.Source!.ID;
@@ -170,8 +171,8 @@ namespace Omnikeeper.GraphQL.Types
         public ChangesetCIAttributesType(IDataLoaderService dataLoaderService, IAttributeModel attributeModel, ICIIDModel ciidModel)
         {
             Field("ciid", x => x.CIID);
-            Field<StringGraphType>("ciName",
-                resolve: (context) =>
+            Field<StringGraphType>("ciName")
+                .Resolve((context) =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerset = userContext.GetLayerSet(context.Path);

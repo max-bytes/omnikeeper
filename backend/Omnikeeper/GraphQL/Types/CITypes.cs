@@ -29,9 +29,9 @@ namespace Omnikeeper.GraphQL.Types
             Field("name", x => x.CIName, nullable: true);
             Field("layerhash", x => x.Layers.LayerHash);
             Field(x => x.AtTime, type: typeof(TimeThresholdType));
-            Field<ListGraphType<MergedCIAttributeType>>("mergedAttributes",
-                arguments: new QueryArguments(new QueryArgument<ListGraphType<StringGraphType>> { Name = "attributeNames" }),
-                resolve: context =>
+            Field<ListGraphType<MergedCIAttributeType>>("mergedAttributes")
+                .Arguments(new QueryArgument<ListGraphType<StringGraphType>> { Name = "attributeNames" })
+                .Resolve(context =>
                 {
                     var mergedAttributes = context.Source!.MergedAttributes.Values;
 
@@ -44,9 +44,9 @@ namespace Omnikeeper.GraphQL.Types
                 }
             );
 
-            Field<ListGraphType<MergedRelationType>>("outgoingMergedRelations",
-            arguments: new QueryArguments(new QueryArgument<StringGraphType> { Name = "requiredPredicateID" }),
-            resolve: (context) =>
+            Field<ListGraphType<MergedRelationType>>("outgoingMergedRelations")
+            .Arguments(new QueryArgument<StringGraphType> { Name = "requiredPredicateID" })
+            .Resolve((context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var CIIdentity = context.Source!.ID;
@@ -59,9 +59,9 @@ namespace Omnikeeper.GraphQL.Types
                 var loaded = dataLoaderService.SetupAndLoadRelation(relationSelection, relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return loaded;
             });
-            Field<ListGraphType<MergedRelationType>>("incomingMergedRelations",
-            arguments: new QueryArguments(new QueryArgument<StringGraphType> { Name = "requiredPredicateID" }),
-            resolve: (context) =>
+            Field<ListGraphType<MergedRelationType>>("incomingMergedRelations")
+            .Arguments(new QueryArgument<StringGraphType> { Name = "requiredPredicateID" })
+            .Resolve((context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var CIIdentity = context.Source!.ID;
@@ -75,9 +75,9 @@ namespace Omnikeeper.GraphQL.Types
                 return loaded;
             });
 
-            Field<ListGraphType<EffectiveTraitType>>("effectiveTraits",
-            arguments: new QueryArguments(new QueryArgument<ListGraphType<StringGraphType>> { Name = "traitIDs" }),
-            resolve: (context) =>
+            Field<ListGraphType<EffectiveTraitType>>("effectiveTraits")
+            .Arguments(new QueryArgument<ListGraphType<StringGraphType>> { Name = "traitIDs" })
+            .Resolve((context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var ci = context.Source!;
@@ -212,8 +212,8 @@ namespace Omnikeeper.GraphQL.Types
             Field(x => x.LayerStackIDs);
             Field(x => x.Attribute, type: typeof(CIAttributeType));
 
-            Field<ListGraphType<LayerDataType>>("layerStack",
-            resolve: (context) =>
+            Field<ListGraphType<LayerDataType>>("layerStack")
+            .Resolve((context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source!.LayerStackIDs;

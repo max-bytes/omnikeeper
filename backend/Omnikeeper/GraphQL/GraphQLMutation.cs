@@ -53,16 +53,16 @@ namespace Omnikeeper.GraphQL
             IEnumerable<IPluginRegistration> plugins, IIndex<string, IScheduler> schedulers, CLBProcessedChangesetsCache clbProcessedChangesetsCache,
             IAuthzFilterManager authzFilterManager, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerDataModel layerDataModel, ValidatorContextV1Model validatorContextModel, ValidatorProcessedChangesetsCache validatorProcessedChangesetsCache)
         {
-            FieldAsync<MutateReturnType>("mutateCIs",
-                arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "readLayers" },
-                new QueryArgument<ListGraphType<InsertCIAttributeInputType>> { Name = "InsertAttributes" },
-                new QueryArgument<ListGraphType<RemoveCIAttributeInputType>> { Name = "RemoveAttributes" },
-                new QueryArgument<ListGraphType<InsertRelationInputType>> { Name = "InsertRelations" },
-                new QueryArgument<ListGraphType<RemoveRelationInputType>> { Name = "RemoveRelations" }
-                ),
-                resolve: async context =>
+            Field<MutateReturnType>("mutateCIs")
+                .Arguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "readLayers" },
+                    new QueryArgument<ListGraphType<InsertCIAttributeInputType>> { Name = "InsertAttributes" },
+                    new QueryArgument<ListGraphType<RemoveCIAttributeInputType>> { Name = "RemoveAttributes" },
+                    new QueryArgument<ListGraphType<InsertRelationInputType>> { Name = "InsertRelations" },
+                    new QueryArgument<ListGraphType<RemoveRelationInputType>> { Name = "RemoveRelations" }
+                )
+                .ResolveAsync(async context =>
                 {
                     var writeLayerID = context.GetArgument<string>("writeLayer")!;
                     var readLayerIDs = context.GetArgument<string[]>("readLayers")!;
@@ -159,11 +159,11 @@ namespace Omnikeeper.GraphQL
                     return new MutateReturn(affectedCIs);
                 });
 
-            FieldAsync<CreateCIsReturnType>("createCIs",
-                arguments: new QueryArguments(
-                new QueryArgument<ListGraphType<CreateCIInputType>> { Name = "cis" }
-                ),
-                resolve: async context =>
+            Field<CreateCIsReturnType>("createCIs")
+                .Arguments(
+                    new QueryArgument<ListGraphType<CreateCIInputType>> { Name = "cis" }
+                )
+                .ResolveAsync(async context =>
                 {
                     var createCIs = context.GetArgument("cis", new List<CreateCIInput>())!;
 
@@ -199,12 +199,12 @@ namespace Omnikeeper.GraphQL
                     return new CreateCIsReturn(createdCIIDs);
                 });
 
-            FieldAsync<InsertChangesetDataReturnType>("insertChangesetData",
-                arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "layer" },
-                new QueryArgument<NonNullGraphType<ListGraphType<InsertChangesetDataAttributeInputType>>> { Name = "attributes" }
-                ),
-                resolve: async context =>
+            Field<InsertChangesetDataReturnType>("insertChangesetData")
+                .Arguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "layer" },
+                    new QueryArgument<NonNullGraphType<ListGraphType<InsertChangesetDataAttributeInputType>>> { Name = "attributes" }
+                )
+                .ResolveAsync(async context =>
                 {
                     var layerID = context.GetArgument<string>("layer")!;
                     var insertAttributes = context.GetArgument("attributes", new List<InsertChangesetDataAttributeInput>())!;

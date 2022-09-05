@@ -2,6 +2,7 @@
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Types;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
@@ -20,9 +21,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
-using Omnikeeper.Base.Authz;
 using static Omnikeeper.Base.Model.IChangesetModel;
-using Omnikeeper.Authz;
 
 namespace Omnikeeper.GraphQL
 {
@@ -102,8 +101,8 @@ namespace Omnikeeper.GraphQL
 
         private void CreateMain()
         {
-            FieldAsync<ListGraphType<GuidGraphType>>("ciids",
-                resolve: async context =>
+            Field<ListGraphType<GuidGraphType>>("ciids")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -113,16 +112,16 @@ namespace Omnikeeper.GraphQL
                     return ciids;
                 });
 
-            FieldAsync<ListGraphType<MergedCIType>>("cis",
-                arguments: new QueryArguments(
+            Field<ListGraphType<MergedCIType>>("cis")
+                .Arguments(
                     new QueryArgument<ListGraphType<GuidGraphType>> { Name = "ciids" },
                     new QueryArgument<StringGraphType> { Name = "searchString" },
                     new QueryArgument<ListGraphType<StringGraphType>> { Name = "withEffectiveTraits" },
                     new QueryArgument<ListGraphType<StringGraphType>> { Name = "withoutEffectiveTraits" },
                     new QueryArgument<BooleanGraphType> { Name = "sortByCIName" },
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
-                    new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
-                resolve: async context =>
+                    new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" })
+                .ResolveAsync(async context =>
                 {
                     var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
                     var layerStrings = context.GetArgument<string[]>("layers")!;
@@ -235,8 +234,8 @@ namespace Omnikeeper.GraphQL
                     return cisFilteredByTraits;
                 });
 
-            FieldAsync<DiffingResultType>("ciDiffing",
-                arguments: new QueryArguments(
+            Field<DiffingResultType>("ciDiffing")
+                .Arguments(
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "leftLayers" },
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "rightLayers" },
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "leftTimeThreshold" },
@@ -247,8 +246,8 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<ListGraphType<StringGraphType>> { Name = "rightAttributes" },
                     new QueryArgument<BooleanGraphType> { Name = "showEqual" },
                     new QueryArgument<BooleanGraphType> { Name = "allowCrossCIDiffing" }
-                    ),
-                resolve: async context =>
+                    )
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -318,11 +317,11 @@ namespace Omnikeeper.GraphQL
                     return new DiffingResult(leftCIIDSelection, rightCIIDSelection, leftAttributeSelection, rightAttributeSelection, leftLayers, rightLayers, leftTimeThreshold, rightTimeThreshold, showEqual, crossCIDiffingSettings);
                 });
 
-            FieldAsync<ListGraphType<PredicateType>>("predicates",
-                arguments: new QueryArguments(
+            Field<ListGraphType<PredicateType>>("predicates")
+                .Arguments(
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }
-                    ),
-                resolve: async context =>
+                    )
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext()
                         .WithTimeThreshold(context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()), context.Path);
@@ -333,11 +332,11 @@ namespace Omnikeeper.GraphQL
                     return predicates.Values;
                 });
 
-            Field<ListGraphType<LayerDataType>>("layers",
-                arguments: new QueryArguments(
+            Field<ListGraphType<LayerDataType>>("layers")
+                .Arguments(
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }
-                    ),
-                resolve: context =>
+                    )
+                .Resolve(context =>
                 {
                     var userContext = context.GetUserContext()
                         .WithTimeThreshold(context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()), context.Path);
@@ -350,11 +349,11 @@ namespace Omnikeeper.GraphQL
                         });
                 });
 
-            FieldAsync<ChangesetType>("changeset",
-                arguments: new QueryArguments(
+            Field<ChangesetType>("changeset")
+                .Arguments(
                     new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "id" },
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
-                resolve: async context =>
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" })
+                .ResolveAsync(async context =>
                 {
                     var layerStrings = context.GetArgument<string[]>("layers")!;
 
@@ -371,14 +370,14 @@ namespace Omnikeeper.GraphQL
                     return changeset;
                 });
 
-            FieldAsync<ListGraphType<ChangesetType>>("changesets",
-                arguments: new QueryArguments(
+            Field<ListGraphType<ChangesetType>>("changesets")
+                .Arguments(
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                     new QueryArgument<NonNullGraphType<DateTimeOffsetGraphType>> { Name = "from" },
                     new QueryArgument<NonNullGraphType<DateTimeOffsetGraphType>> { Name = "to" },
                     new QueryArgument<ListGraphType<GuidGraphType>> { Name = "ciids" },
-                    new QueryArgument<IntGraphType> { Name = "limit" }),
-                resolve: async context =>
+                    new QueryArgument<IntGraphType> { Name = "limit" })
+                .ResolveAsync(async context =>
                 {
                     var layerStrings = context.GetArgument<string[]>("layers")!;
 
@@ -401,10 +400,10 @@ namespace Omnikeeper.GraphQL
                     return await changesetModel.GetChangesetsInTimespan(from, to, userContext.GetLayerSet(context.Path).LayerIDs, selection, userContext.Transaction, limit);
                 });
 
-            FieldAsync<TraitType>("activeTrait",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }),
-                resolve: async context =>
+            Field<TraitType>("activeTrait")
+                .Arguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" })
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -414,8 +413,8 @@ namespace Omnikeeper.GraphQL
                     return trait;
                 });
 
-            FieldAsync<ListGraphType<TraitType>>("activeTraits",
-                resolve: async context =>
+            Field<ListGraphType<TraitType>>("activeTraits")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -423,12 +422,12 @@ namespace Omnikeeper.GraphQL
                     return traits.Values.OrderBy(t => t.ID);
                 });
 
-            FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraitsForTrait",
-                arguments: new QueryArguments(
+            Field<ListGraphType<EffectiveTraitType>>("effectiveTraitsForTrait")
+                .Arguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "traitID" },
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
-                    new QueryArgument<ListGraphType<GuidGraphType>> { Name = "ciids" }),
-                resolve: async context =>
+                    new QueryArgument<ListGraphType<GuidGraphType>> { Name = "ciids" })
+                .ResolveAsync(async context =>
                 {
                     var layerStrings = context.GetArgument<string[]>("layers")!;
                     var traitID = context.GetArgument<string>("traitID")!;
@@ -463,8 +462,8 @@ namespace Omnikeeper.GraphQL
                 });
 
 
-            FieldAsync<StatisticsType>("statistics",
-                resolve: async context =>
+            Field<StatisticsType>("statistics")
+                .ResolveAsync(async context =>
                 {
                     var userContext = context.GetUserContext();
 
@@ -485,10 +484,10 @@ namespace Omnikeeper.GraphQL
                     return new Statistics(numCIIDs, numActiveAttributes, numActiveRelations, numChangesets, numAttributeChanges, numRelationChanges, layers.Count(), traits.Count(), predicates.Count(), generators.Count());
                 });
 
-            FieldAsync<TraitEntitiesType>("traitEntities",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
-                resolve: async context =>
+            Field<TraitEntitiesType>("traitEntities")
+                .Arguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" })
+                .ResolveAsync(async context =>
             {
                 var layerStrings = context.GetArgument<string[]>("layers")!;
 
@@ -501,7 +500,8 @@ namespace Omnikeeper.GraphQL
                 return new TraitEntities.TraitEntities();
             });
 
-            Field<MyUserType>("myUser", resolve: context => new MyUser());
+            Field<MyUserType>("myUser")
+                .Resolve(context => new MyUser());
         }
 
         private void CreatePlugin(IEnumerable<IPluginRegistration> plugins)
