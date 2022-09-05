@@ -15,7 +15,7 @@ namespace Omnikeeper.Authz
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
         }
 
-        public Task<IAuthzFilterResult> PreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, LayerSet readLayers, string writeLayerID, IModelContext trans, TimeThreshold timeThreshold)
+        public Task<IAuthzFilterResult> PreFilterForMutation(IPreMutationOperationContext context, IAuthenticatedUser user, LayerSet readLayers, string writeLayerID, IModelContext trans, TimeThreshold timeThreshold)
         {
             switch (context)
             {
@@ -31,10 +31,10 @@ namespace Omnikeeper.Authz
             }
         }
 
-        public Task<IAuthzFilterResult> PostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, LayerSet readLayers, Changeset? changeset, IModelContext trans, TimeThreshold timeThreshold)
+        public Task<IAuthzFilterResult> PostFilterForMutation(IPostMutationOperationContext context, IAuthenticatedUser user, LayerSet readLayers, Changeset? changeset, IModelContext trans, TimeThreshold timeThreshold)
             => Task.FromResult<IAuthzFilterResult>(AuthzFilterResultPermit.Instance);
 
-        public Task<IAuthzFilterResult> FilterForQuery(IQueryOperationContext context, AuthenticatedUser user, LayerSet readLayers, IModelContext trans, TimeThreshold timeThreshold)
+        public Task<IAuthzFilterResult> FilterForQuery(IQueryOperationContext context, IAuthenticatedUser user, LayerSet readLayers, IModelContext trans, TimeThreshold timeThreshold)
         {
             if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, readLayers))
                 return Task.FromResult<IAuthzFilterResult>(new AuthzFilterResultDeny($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', readLayers)}"));

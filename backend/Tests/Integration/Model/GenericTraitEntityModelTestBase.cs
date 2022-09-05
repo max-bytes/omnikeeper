@@ -374,12 +374,7 @@ namespace Tests.Integration.Model
             var userInDatabase = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             var (layer1, _) = await ServiceProvider.GetRequiredService<ILayerModel>().CreateLayerIfNotExists("testlayer1", ModelContextBuilder.BuildImmediate());
             var (layer2, _) = await ServiceProvider.GetRequiredService<ILayerModel>().CreateLayerIfNotExists("testlayer2", ModelContextBuilder.BuildImmediate());
-            var user = new AuthenticatedUser(userInDatabase,
-                new AuthRole[] { new AuthRole("ar1", new string[] {
-                    PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),
-                    PermissionUtils.GetLayerReadPermission(layer2), PermissionUtils.GetLayerWritePermission(layer2),
-                })
-            });
+            var user = new AuthenticatedInternalUser(userInDatabase);
             currentUserServiceMock.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
             //var effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();

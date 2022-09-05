@@ -59,7 +59,7 @@ namespace Tests.Integration.GraphQL.Base
         public void AssertQuerySuccess(
             string query,
             string expected,
-            AuthenticatedUser user,
+            IAuthenticatedUser user,
             Inputs? inputs = null)
         {
             // wrap expectedResult in data object
@@ -81,7 +81,7 @@ namespace Tests.Integration.GraphQL.Base
 
         public void AssertQueryHasErrors(
             string query,
-            AuthenticatedUser user,
+            IAuthenticatedUser user,
             Inputs? inputs = null)
         {
             var (runResult, _) = RunQuery(query, user, inputs);
@@ -90,7 +90,7 @@ namespace Tests.Integration.GraphQL.Base
             Assert.Greater(runResult.Errors!.Count, 0);
         }
 
-        public (ExecutionResult result, string json) RunQuery(string query, AuthenticatedUser user, Inputs? inputs = null)
+        public (ExecutionResult result, string json) RunQuery(string query, IAuthenticatedUser user, Inputs? inputs = null)
         {
             var schema = GetService<GraphQLSchemaHolder>().GetSchema();
             var dataLoaderDocumentListener = GetService<DataLoaderDocumentListener>();

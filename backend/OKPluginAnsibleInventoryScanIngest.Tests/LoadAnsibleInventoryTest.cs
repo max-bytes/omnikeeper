@@ -72,15 +72,15 @@ namespace Tests.Ingest
 
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserAccessor>();
-            var user = new AuthenticatedUser(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, mc), new AuthRole[] { new AuthRole("ar1", new string[] { PermissionUtils.GetLayerWritePermission(layer1) }) });
+            var user = new AuthenticatedInternalUser(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, mc));
             mockCurrentUserService.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
             var mockAuthzFilterManager = new Mock<IAuthzFilterManager>();
             mockAuthzFilterManager.Setup(x => 
-                    x.ApplyPreFilterForMutation(It.IsAny<IPreMutationOperationContext>(), It.IsAny<AuthenticatedUser>(), It.IsAny<LayerSet>(), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
+                    x.ApplyPreFilterForMutation(It.IsAny<IPreMutationOperationContext>(), It.IsAny<IAuthenticatedUser>(), It.IsAny<LayerSet>(), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
                 .ReturnsAsync(AuthzFilterResultPermit.Instance);
             mockAuthzFilterManager.Setup(x =>
-                    x.ApplyPostFilterForMutation(It.IsAny<IPostMutationOperationContext>(), It.IsAny<AuthenticatedUser>(), It.IsAny<LayerSet>(), It.IsAny<Changeset?>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
+                    x.ApplyPostFilterForMutation(It.IsAny<IPostMutationOperationContext>(), It.IsAny<IAuthenticatedUser>(), It.IsAny<LayerSet>(), It.IsAny<Changeset?>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
                 .ReturnsAsync(AuthzFilterResultPermit.Instance);
 
             var insertLayer = layer1;

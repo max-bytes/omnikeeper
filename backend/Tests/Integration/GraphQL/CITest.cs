@@ -23,12 +23,7 @@ namespace Tests.Integration.GraphQL
             var changeset = await CreateChangesetProxy();
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", trans);
             var (layer2, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_2", trans);
-            var user = new AuthenticatedUser(userInDatabase,
-                new AuthRole[]
-                {
-                    new AuthRole("ar1", new string[] { PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1) }),
-                    new AuthRole("ar2", new string[] { PermissionUtils.GetLayerReadPermission(layer2), PermissionUtils.GetLayerWritePermission(layer2) }),
-                });
+            var user = new AuthenticatedInternalUser(userInDatabase);
             await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueInteger(3), ciid1, layer1.ID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
             trans.Commit();
 

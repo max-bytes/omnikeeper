@@ -1,16 +1,13 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Types;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Service;
 using Quartz.Impl;
@@ -209,15 +206,13 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<StringGraphType>>("manage_debugCurrentUser",
                 resolve: async context =>
                 {
-                    var httpContextAccessor = context.RequestServices!.GetRequiredService<IHttpContextAccessor>();
-                    var currentAuthenticatedUserService = context.RequestServices!.GetRequiredService<ICurrentUserAccessor>();
-                    var claims = httpContextAccessor.HttpContext.User.Claims.Select(c => (c.Type, c.Value));
+                    var userContext = context.GetUserContext();
+                    if (userContext.User is not AuthenticatedHttpUser ahu)
+                        throw new Exception("Invalid user");
 
-                    var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
-                    var user = await currentAuthenticatedUserService.GetCurrentUser(modelContextBuilder.BuildImmediate());
-                    return claims.Select(kv => $"{kv.Type}: {kv.Value}")
-                        .Concat($"Permissions: {string.Join(", ", user.AuthRoles.SelectMany(ar => ar.Permissions).ToHashSet())}")
-                        .Concat($"User-Type: {user.InDatabase.UserType}")
+                    return ahu.HttpUser.Claims.Select(kv => $"{kv.Type}: {kv.Value}")
+                        .Concat($"Permissions: {string.Join(", ", ahu.AuthRoles.SelectMany(ar => ar.Permissions).ToHashSet())}")
+                        .Concat($"User-Type: {ahu.InDatabase.UserType}")
                     ;
                 });
 

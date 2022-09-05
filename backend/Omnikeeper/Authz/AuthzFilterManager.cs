@@ -18,7 +18,7 @@ namespace Omnikeeper.Authz
             this.filtersQuery = filtersQuery;
         }
 
-        public async Task<IAuthzFilterResult> ApplyFilterForQuery(IQueryOperationContext context, AuthenticatedUser user, LayerSet readLayerIDs, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IAuthzFilterResult> ApplyFilterForQuery(IQueryOperationContext context, IAuthenticatedUser user, LayerSet readLayerIDs, IModelContext trans, TimeThreshold timeThreshold)
         {
             if (PermissionUtils.HasSuperUserAuthRole(user))
                 return AuthzFilterResultPermit.Instance;
@@ -34,7 +34,7 @@ namespace Omnikeeper.Authz
 
         private AuthzFilterResultDeny WrapDeniedResult(AuthzFilterResultDeny inner, IAuthzFilter filter) => new AuthzFilterResultDeny($"Filter {filter.GetType().Name} denied operation. Reason: {inner.Reason}");
 
-        public async Task<IAuthzFilterResult> ApplyPreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, LayerSet readLayerIDs, string writeLayerID, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IAuthzFilterResult> ApplyPreFilterForMutation(IPreMutationOperationContext context, IAuthenticatedUser user, LayerSet readLayerIDs, string writeLayerID, IModelContext trans, TimeThreshold timeThreshold)
         {
             // NOTE: we do not run any authz filters if the user is a super user
             // otherwise, a filter would be able to forbid the super user to do any action, which we don't want
@@ -50,7 +50,7 @@ namespace Omnikeeper.Authz
             return AuthzFilterResultPermit.Instance;
         }
 
-        public async Task<IAuthzFilterResult> ApplyPostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, LayerSet readLayers, Changeset? changeset, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IAuthzFilterResult> ApplyPostFilterForMutation(IPostMutationOperationContext context, IAuthenticatedUser user, LayerSet readLayers, Changeset? changeset, IModelContext trans, TimeThreshold timeThreshold)
         {
             if (PermissionUtils.HasSuperUserAuthRole(user))
                 return AuthzFilterResultPermit.Instance;

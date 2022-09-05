@@ -1,10 +1,13 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Moq;
 using NUnit.Framework;
 using Omnikeeper.Authz;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace Tests.Integration.Service
 {
@@ -20,7 +23,7 @@ namespace Tests.Integration.Service
             var lbas = new LayerBasedAuthorizationService(configuration, new AuthRolePermissionChecker());
 
             var userInDatabase1 = new UserInDatabase(1L, Guid.NewGuid(), "user1", "User1", UserType.Robot, DateTimeOffset.UtcNow);
-            var user1 = new AuthenticatedUser(userInDatabase1, new AuthRole[] {
+            var user1 = new AuthenticatedHttpUser(userInDatabase1, new AuthRole[] {
                 new AuthRole("ar1", new string[] {
                     PermissionUtils.GetLayerReadPermission("layer1"),
                     PermissionUtils.GetLayerWritePermission("layer3"),
@@ -30,7 +33,7 @@ namespace Tests.Integration.Service
                     PermissionUtils.GetLayerReadPermission("layer3"),
                     PermissionUtils.GetLayerWritePermission("layer1"),
                 })
-            });
+            }, HttpUserUtils.CreateAnonymousHttpUser(new List<Claim>()));
 
             Assert.IsTrue(lbas.CanUserReadFromAllLayers(user1, new string[] { "layer1" }));
             Assert.IsTrue(lbas.CanUserReadFromAllLayers(user1, new string[] { "layer2" }));

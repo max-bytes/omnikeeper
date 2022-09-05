@@ -18,15 +18,7 @@ namespace Tests.Integration.GraphQL
             var userInDatabase = await SetupDefaultUser();
             var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", ModelContextBuilder.BuildImmediate());
-            var user = new AuthenticatedUser(userInDatabase,
-                new AuthRole[]
-                {
-                    new AuthRole("ar1", new string[] {
-                        PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),
-                        PermissionUtils.GetLayerReadPermission(layerOkConfig), PermissionUtils.GetLayerWritePermission(layerOkConfig),
-                        PermissionUtils.GetManagementPermission()
-                    }),
-                });
+            var user = new AuthenticatedInternalUser(userInDatabase);
 
             // force rebuild graphql schema
             await ReinitSchema();
@@ -223,15 +215,7 @@ mutation($name: String!, $id: String!) {
             var userInDatabase = await SetupDefaultUser();
             var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", ModelContextBuilder.BuildImmediate());
-            var user = new AuthenticatedUser(userInDatabase,
-                new AuthRole[]
-                {
-                    new AuthRole("ar1", new string[] {
-                        PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),
-                        PermissionUtils.GetLayerReadPermission(layerOkConfig), PermissionUtils.GetLayerWritePermission(layerOkConfig),
-                        PermissionUtils.GetManagementPermission()
-                    }),
-                });
+            var user = new AuthenticatedInternalUser(userInDatabase);
 
             // force rebuild graphql schema
             await ReinitSchema();
@@ -389,15 +373,7 @@ mutation($flag: Boolean, $id: String!) {
             var userInDatabase = await SetupDefaultUser();
             var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", ModelContextBuilder.BuildImmediate());
-            var user = new AuthenticatedUser(userInDatabase,
-                new AuthRole[]
-                {
-                    new AuthRole("ar1", new string[] {
-                        PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),
-                        PermissionUtils.GetLayerReadPermission(layerOkConfig), PermissionUtils.GetLayerWritePermission(layerOkConfig),
-                        PermissionUtils.GetManagementPermission()
-                    }),
-                });
+            var user = new AuthenticatedInternalUser(userInDatabase);
 
             // force rebuild graphql schema
             await ReinitSchema();
@@ -600,15 +576,7 @@ mutation($name: String!, $id: String!, $optional: String) {
             var userInDatabase = await SetupDefaultUser();
             var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", ModelContextBuilder.BuildImmediate());
-            var user = new AuthenticatedUser(userInDatabase,
-                new AuthRole[]
-                {
-                    new AuthRole("ar1", new string[] {
-                        PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),
-                        PermissionUtils.GetLayerReadPermission(layerOkConfig), PermissionUtils.GetLayerWritePermission(layerOkConfig),
-                        PermissionUtils.GetManagementPermission()
-                    }),
-                });
+            var user = new AuthenticatedInternalUser(userInDatabase);
 
             var relatedCIID1 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());
             var relatedCIID2 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());

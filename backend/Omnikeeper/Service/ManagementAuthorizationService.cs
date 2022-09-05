@@ -21,20 +21,27 @@ namespace Omnikeeper.Service
             this.authRolePermissionChecker = authRolePermissionChecker;
         }
 
-        public bool HasManagementPermission(AuthenticatedUser user)
+        public bool HasManagementPermission(IAuthenticatedUser user)
         {
             if (debugAllowAll)
                 return true;
 
-            foreach (var ar in user.AuthRoles)
+            if (user is AuthenticatedInternalUser)
+                return true;
+            else if (user is not AuthenticatedHttpUser ahu)
+                throw new System.Exception("Invalid user");
+            else
             {
-                if (authRolePermissionChecker.DoesAuthRoleGivePermission(ar, PermissionUtils.GetManagementPermission()))
-                    return true;
+                foreach (var ar in ahu.AuthRoles)
+                {
+                    if (authRolePermissionChecker.DoesAuthRoleGivePermission(ar, PermissionUtils.GetManagementPermission()))
+                        return true;
+                }
+                return false;
             }
-            return false;
         }
 
-        public bool CanReadManagement(AuthenticatedUser user, MetaConfiguration metaConfiguration, out string message)
+        public bool CanReadManagement(IAuthenticatedUser user, MetaConfiguration metaConfiguration, out string message)
         {
             if (!HasManagementPermission(user))
             {
@@ -52,7 +59,7 @@ namespace Omnikeeper.Service
             return true;
         }
 
-        public bool CanModifyManagement(AuthenticatedUser user, MetaConfiguration metaConfiguration, out string message)
+        public bool CanModifyManagement(IAuthenticatedUser user, MetaConfiguration metaConfiguration, out string message)
         {
             if (!HasManagementPermission(user))
             {

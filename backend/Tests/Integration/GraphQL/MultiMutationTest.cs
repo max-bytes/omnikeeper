@@ -19,11 +19,7 @@ namespace Tests.Integration.GraphQL
             var userInDatabase = await SetupDefaultUser();
             var changeset = await CreateChangesetProxy();
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", trans);
-            var user = new AuthenticatedUser(userInDatabase,
-                new AuthRole[]
-                {
-                    new AuthRole("ar1", new string[] { PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1) }),
-                });
+            var user = new AuthenticatedInternalUser(userInDatabase);
             trans.Commit();
 
             await ReinitSchema();

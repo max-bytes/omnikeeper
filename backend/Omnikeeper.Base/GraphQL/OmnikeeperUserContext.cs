@@ -14,7 +14,7 @@ namespace Omnikeeper.Base.GraphQL
 {
     public class OmnikeeperUserContext : Dictionary<string, object?>, IOmnikeeperUserContext, IDisposable
     {
-        public AuthenticatedUser User { get; private set; }
+        public IAuthenticatedUser User { get; private set; }
         public IServiceProvider ServiceProvider { get; }
 
         private class ScopedContext
@@ -86,7 +86,7 @@ namespace Omnikeeper.Base.GraphQL
         }
 
 
-        public OmnikeeperUserContext(AuthenticatedUser user, IServiceProvider sp)
+        public OmnikeeperUserContext(IAuthenticatedUser user, IServiceProvider sp)
         {
             User = user;
             ServiceProvider = sp;

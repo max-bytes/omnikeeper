@@ -21,9 +21,9 @@ namespace Tests.Integration.Controller
 
             // mock authorization
             var lbas = new Mock<ILayerBasedAuthorizationService>();
-            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
-            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<string>())).Returns(true);
-            lbas.Setup(x => x.CanUserReadFromAllLayers(It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
+            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<IAuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
+            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<IAuthenticatedUser>(), It.IsAny<string>())).Returns(true);
+            lbas.Setup(x => x.CanUserReadFromAllLayers(It.IsAny<IAuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
             builder.Register((sp) => lbas.Object).InstancePerLifetimeScope();
             var cbas = new Mock<ICIBasedAuthorizationService>();
             cbas.Setup(x => x.CanReadCI(It.IsAny<Guid>())).Returns(true);
@@ -39,8 +39,8 @@ namespace Tests.Integration.Controller
 
             var mas = new Mock<IManagementAuthorizationService>();
             string outMsg;
-            mas.Setup(x => x.CanModifyManagement(It.IsAny<AuthenticatedUser>(), It.IsAny<MetaConfiguration>(), out outMsg)).Returns(true);
-            mas.Setup(x => x.CanReadManagement(It.IsAny<AuthenticatedUser>(), It.IsAny<MetaConfiguration>(), out outMsg)).Returns(true);
+            mas.Setup(x => x.CanModifyManagement(It.IsAny<IAuthenticatedUser>(), It.IsAny<MetaConfiguration>(), out outMsg)).Returns(true);
+            mas.Setup(x => x.CanReadManagement(It.IsAny<IAuthenticatedUser>(), It.IsAny<MetaConfiguration>(), out outMsg)).Returns(true);
             builder.Register((sp) => mas.Object).InstancePerLifetimeScope();
         }
     }

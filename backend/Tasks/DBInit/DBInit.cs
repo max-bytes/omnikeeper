@@ -46,7 +46,7 @@ namespace Tasks.DBInit
             var layerDataModel = new LayerDataModel(layerModel, metaConfigurationModel, new InnerLayerDataModel(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel));
             var traitModel = new RecursiveTraitModel(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
             var lbas = new Mock<ILayerBasedAuthorizationService>();
-            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
+            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<IAuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
             var modelContextBuilder = new ModelContextBuilder(conn, NullLogger<IModelContext>.Instance);
 
             var random = new Random(3);
@@ -54,7 +54,7 @@ namespace Tasks.DBInit
 
             var mc = modelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, mc, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
-            var authenticatedUser = new AuthenticatedUser(user, Array.Empty<AuthRole>());
+            var authenticatedUser = new AuthenticatedInternalUser(user);
 
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
 

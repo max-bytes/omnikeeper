@@ -114,15 +114,15 @@ namespace Tests.Integration
             // override authorization
             var mas = new Mock<IManagementAuthorizationService>();
             string? tmpStr;
-            mas.Setup(x => x.CanModifyManagement(It.IsAny<AuthenticatedUser>(), It.IsAny<MetaConfiguration>(), out tmpStr)).Returns(true);
-            mas.Setup(x => x.HasManagementPermission(It.IsAny<AuthenticatedUser>())).Returns(true);
+            mas.Setup(x => x.CanModifyManagement(It.IsAny<IAuthenticatedUser>(), It.IsAny<MetaConfiguration>(), out tmpStr)).Returns(true);
+            mas.Setup(x => x.HasManagementPermission(It.IsAny<IAuthenticatedUser>())).Returns(true);
             builder.Register((sp) => mas.Object).SingleInstance();
 
             var lbas = new Mock<ILayerBasedAuthorizationService>();
-            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
-            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<string>())).Returns(true);
-            lbas.Setup(x => x.CanUserWriteToAllLayers(It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
-            lbas.Setup(e => e.CanUserReadFromAllLayers(It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
+            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<IAuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
+            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<IAuthenticatedUser>(), It.IsAny<string>())).Returns(true);
+            lbas.Setup(x => x.CanUserWriteToAllLayers(It.IsAny<IAuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
+            lbas.Setup(e => e.CanUserReadFromAllLayers(It.IsAny<IAuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
             builder.Register((sp) => lbas.Object).SingleInstance();
 
             var cibas = new Mock<ICIBasedAuthorizationService>();

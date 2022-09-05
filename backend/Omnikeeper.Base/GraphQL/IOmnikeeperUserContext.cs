@@ -14,7 +14,7 @@ namespace Omnikeeper.Base.GraphQL
 
         IModelContext Transaction { get; }
         IChangesetProxy ChangesetProxy { get; }
-        AuthenticatedUser User { get; }
+        IAuthenticatedUser User { get; }
         IServiceProvider ServiceProvider { get; }
     }
 }

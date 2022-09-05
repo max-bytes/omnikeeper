@@ -9,13 +9,13 @@ namespace Omnikeeper.Base.Authz
 
     public interface IAuthzFilterForMutation : IAuthzFilter
     {
-        Task<IAuthzFilterResult> PreFilterForMutation(IPreMutationOperationContext context, AuthenticatedUser user, LayerSet readLayers, string writeLayerID, IModelContext trans, TimeThreshold timeThreshold);
-        Task<IAuthzFilterResult> PostFilterForMutation(IPostMutationOperationContext context, AuthenticatedUser user, LayerSet readLayers, Changeset? changeset, IModelContext trans, TimeThreshold timeThreshold);
+        Task<IAuthzFilterResult> PreFilterForMutation(IPreMutationOperationContext context, IAuthenticatedUser user, LayerSet readLayers, string writeLayerID, IModelContext trans, TimeThreshold timeThreshold);
+        Task<IAuthzFilterResult> PostFilterForMutation(IPostMutationOperationContext context, IAuthenticatedUser user, LayerSet readLayers, Changeset? changeset, IModelContext trans, TimeThreshold timeThreshold);
     }
 
     public interface IAuthzFilterForQuery : IAuthzFilter
     {
-        Task<IAuthzFilterResult> FilterForQuery(IQueryOperationContext context, AuthenticatedUser user, LayerSet readLayers, IModelContext trans, TimeThreshold timeThreshold);
+        Task<IAuthzFilterResult> FilterForQuery(IQueryOperationContext context, IAuthenticatedUser user, LayerSet readLayers, IModelContext trans, TimeThreshold timeThreshold);
     }
 
     public interface IAuthzFilterResult

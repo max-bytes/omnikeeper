@@ -5,8 +5,8 @@ namespace Omnikeeper.Base.Service
 {
     public interface IManagementAuthorizationService
     {
-        bool HasManagementPermission(AuthenticatedUser user);
-        bool CanReadManagement(AuthenticatedUser user, MetaConfiguration metaConfiguration, out string message);
-        bool CanModifyManagement(AuthenticatedUser user, MetaConfiguration metaConfiguration, out string message);
+        bool HasManagementPermission(IAuthenticatedUser user);
+        bool CanReadManagement(IAuthenticatedUser user, MetaConfiguration metaConfiguration, out string message);
+        bool CanModifyManagement(IAuthenticatedUser user, MetaConfiguration metaConfiguration, out string message);
     }
 }

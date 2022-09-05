@@ -20,11 +20,7 @@ namespace Tests.Integration.GraphQL
             var userInDatabase = await SetupDefaultUser();
             var changesetProxy = await CreateChangesetProxy();
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", trans);
-            var user = new AuthenticatedUser(userInDatabase,
-                new AuthRole[]
-                {
-                    new AuthRole("ar1", new string[] { PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1) }),
-                });
+            var user = new AuthenticatedInternalUser(userInDatabase);
             trans.Commit();
 
             await ReinitSchema();
@@ -157,15 +153,7 @@ namespace Tests.Integration.GraphQL
             var changesetProxy = await CreateChangesetProxy();
             var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
             var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", trans);
-            var user = new AuthenticatedUser(userInDatabase,
-                new AuthRole[]
-                {
-                    new AuthRole("ar1", new string[] { 
-                        PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),
-                        PermissionUtils.GetLayerReadPermission(layerOkConfig), PermissionUtils.GetLayerWritePermission(layerOkConfig),
-                        PermissionUtils.GetManagementPermission()
-                    }),
-                });
+            var user = new AuthenticatedInternalUser(userInDatabase);
             trans.Commit();
 
             await ReinitSchema();

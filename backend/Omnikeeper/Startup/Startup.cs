@@ -20,6 +20,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.GraphQL;
 using Omnikeeper.Service;
