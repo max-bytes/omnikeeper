@@ -154,7 +154,7 @@ namespace Omnikeeper.GraphQL
                     if (await authzFilterManager.ApplyPostFilterForMutation(new PostMutateContextForCIs(), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                         throw new ExecutionError(dPost.Reason);
 
-                    userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return new MutateReturn(affectedCIs);
                 });
@@ -194,7 +194,7 @@ namespace Omnikeeper.GraphQL
                         if (await authzFilterManager.ApplyPostFilterForMutation(new PostCreateContextForCIs(), userContext.User, layer, userContext.ChangesetProxy.GetActiveChangeset(layer), userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny dPost)
                             throw new ExecutionError(dPost.Reason);
 
-                    userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return new CreateCIsReturn(createdCIIDs);
                 });
@@ -222,7 +222,7 @@ namespace Omnikeeper.GraphQL
                     if (await authzFilterManager.ApplyPostFilterForMutation(new PostInsertChangesetDataContextForCIs(), layerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                         throw new ExecutionError(dPost.Reason);
 
-                    userContext.CommitAndStartNewTransactionIfLastMutation(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
+                    userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return new InsertChangesetDataReturn(ciid);
                 });

@@ -144,6 +144,75 @@ namespace Tests.Integration.GraphQL
             AssertQuerySuccess(query2, expected2, user, inputs2);
         }
 
+
+        [Test]
+        public async Task TestBailOnErrorData()
+        {
+            using var trans = ModelContextBuilder.BuildDeferred();
+            var ciid1 = await GetService<ICIModel>().CreateCI(trans);
+            var userInDatabase = await SetupDefaultUser();
+            var changesetProxy = await CreateChangesetProxy();
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", trans);
+            var user = new AuthenticatedInternalUser(userInDatabase);
+            trans.Commit();
+
+            await ReinitSchema();
+
+            // multi-mutation where the first mutation fails (due to invalid input type)
+            string query = @"
+                mutation($read_layers: [String]!, $write_layer: String!, $ciid: Guid!) {
+                    A : mutateCIs(writeLayer: $write_layer, readLayers: $read_layers, insertAttributes: [
+                    {
+                        ci: $ciid,
+                        name: ""foo"",
+                        value:
+                        {
+                            type: INTEGER,
+                            isArray: false,
+                            values: [""invalid integer""]
+                        }
+                    }
+                    ]) {
+                        affectedCIs {
+                            id
+                        }
+                    }
+                    B : insertChangesetData(layer: $write_layer, attributes: [
+                    {
+                        name: ""foo2"",
+                        value:
+                        {
+                            type: TEXT,
+                            isArray: false,
+                            values: [""bar2""]
+                        }
+                    }
+                    ]) {
+                        changesetDataCIID
+                    }
+                }";
+
+            var inputs = new Inputs(new Dictionary<string, object?>()
+                {
+                    { "ciid", ciid1 },
+                    { "read_layers", new string[] { "layer_1" } },
+                    { "write_layer", "layer_1" }
+                });
+
+            var expected = JsonDocument.Parse(@$"{{""affectedCIs"":[{{""id"":""{ciid1}""}}]}}");
+
+            var (queryResult, resultJson) = RunQuery(query, user, inputs);
+            var d = JsonDocument.Parse(resultJson);
+            Assert.IsFalse(d.RootElement.TryGetProperty("data", out var _));
+            Assert.AreEqual(1, d.RootElement.GetProperty("errors").GetArrayLength());
+
+            // assert that no changeset was created
+            using var transI = ModelContextBuilder.BuildImmediate();
+            var numChangesets = await GetService<IChangesetModel>().GetNumberOfChangesets(transI);
+            Assert.AreEqual(0, numChangesets);
+        }
+
+
         [Test]
         public async Task TestTraitEntityChangesetData()
         {

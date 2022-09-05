@@ -182,7 +182,7 @@ namespace Omnikeeper.Base.GraphQL
             return this;
         }
 
-        public void CommitAndStartNewTransactionIfLastMutation(IResolveFieldContext rfc, Func<IModelContextBuilder, IModelContext> f)
+        public void CommitAndStartNewTransactionIfLastMutationAndNoErrors(IResolveFieldContext rfc, Func<IModelContextBuilder, IModelContext> f)
         {
             if (rfc.Document.Definitions[0] is not GraphQLParser.AST.GraphQLOperationDefinition operationDefinition)
                 throw new Exception();
@@ -206,9 +206,12 @@ namespace Omnikeeper.Base.GraphQL
 
             if (isLastMutation)
             {
-                Transaction.Commit();
-                var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
-                Transaction = f(modelContextBuilder);
+                if (rfc.Errors.IsEmpty())
+                { // only if this and all previous mutations did not produce any errors, we actually commit
+                    Transaction.Commit();
+                    var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
+                    Transaction = f(modelContextBuilder);
+                }
             }
         }
 

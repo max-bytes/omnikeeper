@@ -102,7 +102,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpdateContextForTraitEntities(ciid, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                             throw new ExecutionError(dPost.Reason);
 
-                        userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
+                        userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
 
                         return et;
                     });
@@ -163,7 +163,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (await authzFilterManager.ApplyPostFilterForMutation(new PostInsertNewContextForTraitEntities(finalCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                             throw new ExecutionError(dPost.Reason);
 
-                        userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
+                        userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
 
                         return et;
                     });
@@ -198,7 +198,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (await authzFilterManager.ApplyPostFilterForMutation(new PostDeleteContextForTraitEntities(ciid, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                             throw new ExecutionError(dPost.Reason);
 
-                        userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
+                        userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
 
                         return removed;
                     });
@@ -250,7 +250,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(finalCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                                     throw new ExecutionError(dPost.Reason);
 
-                                userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
+                                userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
 
                                 return et;
                             });
@@ -299,7 +299,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                     if (await authzFilterManager.ApplyPostFilterForMutation(new PostDeleteContextForTraitEntities(bestMatchingCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                                         throw new ExecutionError(dPost.Reason);
 
-                                    userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
+                                    userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
 
                                     return removed;
                                 });
@@ -357,7 +357,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(finalCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                                 throw new ExecutionError(dPost.Reason);
 
-                            userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
+                            userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
                             return et;
                         });
 
@@ -411,7 +411,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (await authzFilterManager.ApplyPostFilterForMutation(new PostDeleteContextForTraitEntities(finalCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                                 throw new ExecutionError(dPost.Reason);
 
-                            userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
+                            userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
 
                             return removed;
                         });
@@ -455,7 +455,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (await authzFilterManager.ApplyPostFilterForMutation(new PostInsertChangesetDataContextForTraitEntities(elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                             throw new ExecutionError(dPost.Reason);
 
-                        userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
+                        userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
 
                         return et;
                     });
@@ -493,7 +493,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (await authzFilterManager.ApplyPostFilterForMutation(new PostSetRelationsContextForTraitEntities(baseCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                                 throw new ExecutionError(dPost.Reason);
 
-                            userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
+                            userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
                             return t.et;
                         });
 
@@ -527,7 +527,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (await authzFilterManager.ApplyPostFilterForMutation(new PostAddRelationsContextForTraitEntities(baseCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                                 throw new ExecutionError(dPost.Reason);
 
-                            userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
+                            userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
                             return t.et;
                         });
 
@@ -561,7 +561,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (await authzFilterManager.ApplyPostFilterForMutation(new PostRemoveRelationsContextForTraitEntities(baseCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                                 throw new ExecutionError(dPost.Reason);
 
-                            userContext.CommitAndStartNewTransactionIfLastMutation(context, mc => mc.BuildImmediate());
+                            userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
                             return t.et;
                         });
                 }
