@@ -33,7 +33,7 @@ jobs:
       - name: upload GetMergedAttributes benchmark results
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: GetMergedAttributes Benchmark
+          name: Benchmark
           tool: 'benchmarkdotnet'
           output-file-path: backend/BenchmarkDotNet.Artifacts/results/PerfTests.GetMergedAttributesTest-report-full-compressed.json
           github-token: ${{ secrets.BENCHMARK_RESULTS_DEPLOY_TOKEN }}
@@ -47,7 +47,7 @@ jobs:
       - name: upload BulkReplaceAttributes benchmark results
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: BulkReplaceAttributes Benchmark
+          name: Benchmark
           tool: 'benchmarkdotnet'
           output-file-path: backend/BenchmarkDotNet.Artifacts/results/PerfTests.BulkReplaceAttributesTest-report-full-compressed.json
           github-token: ${{ secrets.BENCHMARK_RESULTS_DEPLOY_TOKEN }}
