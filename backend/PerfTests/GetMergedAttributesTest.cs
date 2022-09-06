@@ -41,24 +41,12 @@ namespace PerfTests
         //[Params("Text")]
         public string? AttributeValueType { get; set; }
 
-        [Params(false)]
-        public bool EnablePerRequestModelCaching { get; set; }
-
-        [Params(true)]
-        public bool UseLatestTable { get; set; }
-
-        [Params(true)]
-        public bool PreSetupData { get; set; }
-
         [GlobalSetup(Target = nameof(GetMergedAttributes))]
         public async Task Setup()
         {
-            Setup(EnablePerRequestModelCaching, PreSetupData);
+            Setup(false, true);
 
-            if (PreSetupData)
-            {
-                await SetupData();
-            }
+            await SetupData();
 
             var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
@@ -76,8 +64,6 @@ namespace PerfTests
         [Benchmark]
         public async Task GetMergedAttributes()
         {
-            BaseAttributeModel._USE_LATEST_TABLE = UseLatestTable;
-
             var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
             using var mc = modelContextBuilder.BuildImmediate();
 
@@ -103,8 +89,6 @@ namespace PerfTests
         public async Task RunDebuggable()
         {
             CIIDSelection = "specific";
-            EnablePerRequestModelCaching = false;
-            UseLatestTable = true;
             AttributeCITuple = AttributeCITuples.First();
             await Setup();
             await GetMergedAttributes();

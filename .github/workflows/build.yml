@@ -161,6 +161,14 @@ jobs:
         with:
           name: omnikeeper-swagger-json
           path: omnikeeper.json
+  run-perf-tests:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: "Invoke perf-tests workflow"
+      uses: benc-uk/workflow-dispatch@v1
+      with:
+        workflow: run-perf-tests
+        token: ${{ secrets.PAT }}
   publish-client-libraries:
     runs-on: ubuntu-20.04
     needs: build-swagger-definition
