@@ -1,4 +1,8 @@
 ﻿# run tests from commandline
 ~~~bash 
-dotnet run --project ./PerfTests -c Release -- --job short --runtimes netcoreapp31 --filter * --exporters json
+dotnet run --project ./PerfTests -c Release -- --job short --runtimes net6.0 --filter * --exporters json --strategy Monitoring --iterationCount 50
+~~~
+
+~~~bash
+dotnet run --project ./PerfTests -c Release -- --job short --runtimes net6.0 --filter PerfTests.GetMergedAttributesTest.GetMergedAttributes --exporters json --strategy Monitoring --iterationCount 50
 ~~~

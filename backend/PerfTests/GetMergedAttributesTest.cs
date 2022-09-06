@@ -33,13 +33,17 @@ namespace PerfTests
             (1000, 10000, 4, 50),
         };
 
-        [Params("all", "specific", "allExcept")]
+        //[Params("all", "specific", "allExcept")]
+        [Params("all")]
         public string? CIIDSelection { get; set; }
+
+        [Params("Text", "TextArray", "Integer", "IntegerArray", "JSON", "JSONArray")]
+        public string? AttributeValueType { get; set; }
 
         [Params(false)]
         public bool EnablePerRequestModelCaching { get; set; }
 
-        [Params(false, true)]
+        [Params(true)]
         public bool UseLatestTable { get; set; }
 
         [Params(true)]
@@ -166,7 +170,17 @@ namespace PerfTests
                             found = true;
                         }
                     }
-                    var value = new AttributeScalarValueText("V" + RandomUtility.GenerateRandomString(8, random));
+
+                    var value = AttributeValueType switch
+                    {
+                        "Text" => (IAttributeValue)new AttributeScalarValueText("V" + RandomUtility.GenerateRandomString(8, random)),
+                        "Integer" => new AttributeScalarValueInteger(random.NextInt64()),
+                        "JSON" => jsonScalarValue,
+                        "TextArray" => AttributeArrayValueText.BuildFromString(Enumerable.Range(0, 5).Select(i => "V" + RandomUtility.GenerateRandomString(8, random)).ToArray(), false),
+                        "IntegerArray" => AttributeArrayValueInteger.Build(Enumerable.Range(0, 5).Select(i => random.NextInt64()).ToArray()),
+                        "JSONArray" => jsonArrayValue,
+                        _ => throw new NotImplementedException(),
+                    };
                     return new BulkCIAttributeDataLayerScope.Fragment(name, value, ciid);
                 });
 
@@ -177,5 +191,100 @@ namespace PerfTests
 
             mc.Commit();
         }
+
+        private static readonly AttributeScalarValueJSON jsonScalarValue = (AttributeScalarValueJSON.BuildFromString(EXAMPLE_JSON, true) as AttributeScalarValueJSON)!;
+        private static readonly AttributeArrayValueJSON jsonArrayValue = (AttributeScalarValueJSON.BuildFromString(EXAMPLE_ARRAY_JSON, true) as AttributeArrayValueJSON)!;
+
+        private const string EXAMPLE_JSON = @"
+          {
+            ""_id"": ""6317085e16d25bd4dce7fbcb"",
+            ""index"": 0,
+            ""guid"": ""bedd1859-0e1b-483f-a92f-b7adcee1110a"",
+            ""isActive"": false,
+            ""balance"": ""$3,032.66"",
+            ""picture"": ""http://placehold.it/32x32"",
+            ""age"": 40,
+            ""eyeColor"": ""blue"",
+            ""name"": ""Pearlie Rhodes"",
+            ""gender"": ""female"",
+            ""company"": ""OULU"",
+            ""email"": ""pearlierhodes@oulu.com"",
+            ""phone"": ""+1 (812) 477-2626"",
+            ""address"": ""767 Lake Place, Eagletown, District Of Columbia, 4753"",
+            ""about"": ""Irure magna occaecat excepteur magna consectetur voluptate qui eu quis ad sit adipisicing. Dolor labore quis mollit aliqua sit adipisicing labore adipisicing. Dolor esse commodo cupidatat amet incididunt ex eiusmod sit laborum id anim est exercitation nisi. Pariatur eu occaecat eu cillum tempor. Consectetur voluptate ex officia commodo deserunt esse sint mollit adipisicing dolor ea est.\r\n"",
+            ""registered"": ""2017-02-14T11:38:13 -01:00"",
+            ""latitude"": 61.973359,
+            ""longitude"": 122.721462,
+            ""tags"": [
+              ""amet"",
+              ""qui"",
+              ""ut"",
+              ""laborum"",
+              ""qui"",
+              ""eu"",
+              ""in""
+            ],
+            ""friends"": [
+              {
+                ""id"": 0,
+                ""name"": ""Gilbert Humphrey""
+              },
+              {
+            ""id"": 1,
+                ""name"": ""Holland Aguirre""
+              },
+              {
+            ""id"": 2,
+                ""name"": ""Taylor Stein""
+              }
+            ]
+            }
+        ";
+
+        private const string EXAMPLE_ARRAY_JSON = @"[
+          {
+            ""_id"": ""6317085e16d25bd4dce7fbcb"",
+            ""index"": 0,
+            ""guid"": ""bedd1859-0e1b-483f-a92f-b7adcee1110a"",
+            ""isActive"": false,
+            ""balance"": ""$3,032.66"",
+            ""picture"": ""http://placehold.it/32x32"",
+            ""age"": 40,
+            ""eyeColor"": ""blue"",
+            ""name"": ""Pearlie Rhodes"",
+            ""gender"": ""female"",
+            ""company"": ""OULU"",
+            ""email"": ""pearlierhodes@oulu.com"",
+            ""phone"": ""+1 (812) 477-2626"",
+            ""address"": ""767 Lake Place, Eagletown, District Of Columbia, 4753"",
+            ""about"": ""Irure magna occaecat excepteur magna consectetur voluptate qui eu quis ad sit adipisicing. Dolor labore quis mollit aliqua sit adipisicing labore adipisicing. Dolor esse commodo cupidatat amet incididunt ex eiusmod sit laborum id anim est exercitation nisi. Pariatur eu occaecat eu cillum tempor. Consectetur voluptate ex officia commodo deserunt esse sint mollit adipisicing dolor ea est.\r\n"",
+            ""registered"": ""2017-02-14T11:38:13 -01:00"",
+            ""latitude"": 61.973359,
+            ""longitude"": 122.721462,
+            ""tags"": [
+              ""amet"",
+              ""qui"",
+              ""ut"",
+              ""laborum"",
+              ""qui"",
+              ""eu"",
+              ""in""
+            ],
+            ""friends"": [
+              {
+                ""id"": 0,
+                ""name"": ""Gilbert Humphrey""
+              },
+              {
+            ""id"": 1,
+                ""name"": ""Holland Aguirre""
+              },
+              {
+            ""id"": 2,
+                ""name"": ""Taylor Stein""
+              }
+            ]
+            }
+        ]";
     }
 }

@@ -53,8 +53,8 @@ namespace PerfTests
         public bool EnablePerRequestModelCaching { get; set; }
 
         [ParamsSource(nameof(RequiredTraitIDList))]
-        public string[]? RequiredTraitIDs { get; set; }
-        public IEnumerable<string[]> RequiredTraitIDList => new string[][] { new string[] { "host_linux" } };
+        public string? RequiredTraitID { get; set; }
+        public IEnumerable<string> RequiredTraitIDList => new string[] { "host_linux" };
 
         [Params(false)]
         public bool SpecificCIs { get; set; }
@@ -85,7 +85,7 @@ namespace PerfTests
             var random = new Random(3);
             selectedCIIDs = SpecificCIIDsSelection.Build(allCIIDs.Where(ciid => random.Next(0, 2 + 1) == 0).ToHashSet());
 
-            requiredTraits = (await traitsProvider.GetActiveTraitsByIDs(RequiredTraitIDs!, mc, time)).Values.ToArray();
+            requiredTraits = (await traitsProvider.GetActiveTraitsByIDs(new string[] { RequiredTraitID! }, mc, time)).Values.ToArray();
         }
 
         [Test]
