@@ -16,6 +16,7 @@ using Tests.Integration;
 namespace PerfTests
 {
     [Explicit]
+    [IterationCount(10)]
     public class BulkReplaceAttributesTest : Base
     {
         [ParamsSource(nameof(AttributeCITuples))]

@@ -29,7 +29,7 @@ jobs:
           ConnectionStrings__DatabaseConnection: Server=localhost;Port=5432;User Id=postgres;Password=postgres;Database=omnikeeper_tests;Pooling=false
         run: |
           cd backend
-          dotnet run --project ./PerfTests -c Release -- --job short --runtimes net6.0 --filter PerfTests.GetMergedAttributesTest.GetMergedAttributes --exporters json --strategy Monitoring --iterationCount 50
+          dotnet run --project ./PerfTests -c Release -- --job short --runtimes net6.0 --filter * --exporters json --strategy Monitoring
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:

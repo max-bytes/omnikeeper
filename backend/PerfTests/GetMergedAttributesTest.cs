@@ -19,6 +19,7 @@ using Tests.Integration;
 namespace PerfTests
 {
     [Explicit]
+    [IterationCount(50)]
     public class GetMergedAttributesTest : Base
     {
         private IAttributeModel? attributeModel;
