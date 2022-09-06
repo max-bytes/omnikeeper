@@ -33,12 +33,12 @@ jobs:
         run: |
           cd backend
           # dotnet nuget update source "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
-          dotnet run --project ./PerfTests -c Release -- --job short --runtimes netcoreapp31 --filter *SearchForMergedCIsByTraits* --exporters json
+          dotnet run --project ./PerfTests -c Release -- --job short --runtimes net6.0 --filter PerfTests.GetMergedAttributesTest.GetMergedAttributes --exporters json --strategy Monitoring --iterationCount 50
       - name: Store benchmark result
         uses: Happypig375/github-action-benchmark@v1
         with:
             tool: 'benchmarkdotnet'
-            output-file-path: backend/BenchmarkDotNet.Artifacts/results/PerfTests.SearchForMergedCIsByTraitsTest-report-full-compressed.json
+            output-file-path: backend/BenchmarkDotNet.Artifacts/results/PerfTests.GetMergedAttributesTest-report-full-compressed.json
             gh-pages-branch: master # TODO: related issue: https://github.com/rhysd/github-action-benchmark/issues/51
             benchmark-data-dir-path: docs/benchmarks
 
