@@ -48,7 +48,7 @@ jobs:
       #      fail-on-alert: true
     
       - name: Store benchmark result
-        uses: rhysd/github-action-benchmark@v1
+        uses: benchmark-action/github-action-benchmark@v1
         with:
           name: Benchmark.Net Benchmark
           tool: 'benchmarkdotnet'
