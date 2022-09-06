@@ -39,11 +39,15 @@ jobs:
           github-token: ${{ secrets.BENCHMARK_RESULTS_DEPLOY_TOKEN }}
           gh-pages-branch: main
           auto-push: true
-          benchmark-data-dir-path: ./GetMergedAttributes
+          benchmark-data-dir-path: .
           alert-threshold: '150%'
           comment-on-alert: true
           fail-on-alert: true
           gh-repository: 'github.com/max-bytes/omnikeeper-benchmarks'
+      - name: Remove File # HACK: otherwise, second call fails
+        uses: JesseTG/rm@v1.0.3
+        with:
+          path: ./benchmark-data-repository
       - name: upload BulkReplaceAttributes benchmark results
         uses: benchmark-action/github-action-benchmark@v1
         with:
@@ -53,7 +57,7 @@ jobs:
           github-token: ${{ secrets.BENCHMARK_RESULTS_DEPLOY_TOKEN }}
           gh-pages-branch: main
           auto-push: true
-          benchmark-data-dir-path: ./BulkReplaceAttributes
+          benchmark-data-dir-path: .
           alert-threshold: '150%'
           comment-on-alert: true
           fail-on-alert: true
