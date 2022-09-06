@@ -29,13 +29,28 @@ jobs:
           ConnectionStrings__DatabaseConnection: Server=localhost;Port=5432;User Id=postgres;Password=postgres;Database=omnikeeper_tests;Pooling=false
         run: |
           cd backend
-          dotnet run --project ./PerfTests -c Release -- --job short --runtimes net6.0 --filter * --exporters json --strategy Monitoring
-      - name: Store benchmark result
+          dotnet run --project ./PerfTests -c Release -- --job short --runtimes net6.0 --filter '*' --exporters json --strategy Monitoring
+      - name: GetMergedAttributes Benchmark
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: Benchmark.Net Benchmark
+          name: GetMergedAttributes Benchmark
           tool: 'benchmarkdotnet'
           output-file-path: backend/BenchmarkDotNet.Artifacts/results/PerfTests.GetMergedAttributesTest-report-full-compressed.json
+          github-token: ${{ secrets.BENCHMARK_RESULTS_DEPLOY_TOKEN }}
+          gh-pages-branch: main
+          auto-push: true
+          benchmark-data-dir-path: .
+          # Show alert with commit comment on detecting possible performance regression
+          alert-threshold: '150%'
+          comment-on-alert: true
+          fail-on-alert: true
+          gh-repository: 'github.com/max-bytes/omnikeeper-benchmarks'
+      - name: BulkReplaceAttributes Benchmark
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: BulkReplaceAttributes Benchmark
+          tool: 'benchmarkdotnet'
+          output-file-path: backend/BenchmarkDotNet.Artifacts/results/PerfTests.BulkReplaceAttributesTest-report-full-compressed.json
           github-token: ${{ secrets.BENCHMARK_RESULTS_DEPLOY_TOKEN }}
           gh-pages-branch: main
           auto-push: true
