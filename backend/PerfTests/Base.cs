@@ -21,7 +21,7 @@ namespace PerfTests
 {
     public class Base
     {
-        private NpgsqlConnection? conn;
+        //private NpgsqlConnection? conn;
         private AutofacServiceProvider? serviceProvider;
 
         public virtual void Setup(bool enablePerRequestModelCaching, bool setupDBSchema)
@@ -31,8 +31,8 @@ namespace PerfTests
                 DBSetup.Setup();
             }
 
-            var dbcb = new DBConnectionBuilder();
-            conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
+            //var dbcb = new DBConnectionBuilder();
+            //conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
 
             var services = InitServices(enablePerRequestModelCaching);
             serviceProvider = new AutofacServiceProvider(services.Build());
@@ -40,8 +40,8 @@ namespace PerfTests
 
         public virtual void TearDown()
         {
-            if (conn != null)
-                conn.Close();
+            //if (conn != null)
+            //    conn.Close();
             if (serviceProvider != null)
                 serviceProvider.Dispose();
         }
