@@ -37,7 +37,8 @@ namespace PerfTests
         [Params("all")]
         public string? CIIDSelection { get; set; }
 
-        [Params("Text", "TextArray", "Integer", "IntegerArray", "JSON", "JSONArray")]
+        //[Params("Text", "TextArray", "Integer", "IntegerArray", "JSON", "JSONArray")]
+        [Params("Text")]
         public string? AttributeValueType { get; set; }
 
         [Params(false)]

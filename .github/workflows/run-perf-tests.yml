@@ -34,16 +34,29 @@ jobs:
           cd backend
           # dotnet nuget update source "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
           dotnet run --project ./PerfTests -c Release -- --job short --runtimes net6.0 --filter PerfTests.GetMergedAttributesTest.GetMergedAttributes --exporters json --strategy Monitoring --iterationCount 50
+      #- name: Store benchmark result
+      #  uses: rhysd/github-action-benchmark@v1
+      #  with:
+      #      tool: 'benchmarkdotnet'
+      #      output-file-path: backend/BenchmarkDotNet.Artifacts/results/PerfTests.GetMergedAttributesTest-report-full-compressed.json
+      #      gh-pages-branch: master # TODO: related issue: https://github.com/rhysd/github-action-benchmark/issues/51
+      #      github-token: ${{ secrets.GITHUB_TOKEN }}
+      #      auto-push: true
+      #      benchmark-data-dir-path: docs/benchmarks
+      #      alert-threshold: '150%'
+      #      comment-on-alert: true
+      #      fail-on-alert: true
+    
       - name: Store benchmark result
         uses: rhysd/github-action-benchmark@v1
         with:
-            tool: 'benchmarkdotnet'
-            output-file-path: backend/BenchmarkDotNet.Artifacts/results/PerfTests.GetMergedAttributesTest-report-full-compressed.json
-            gh-pages-branch: master # TODO: related issue: https://github.com/rhysd/github-action-benchmark/issues/51
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            auto-push: true
-            benchmark-data-dir-path: docs/benchmarks
-            alert-threshold: '150%'
-            comment-on-alert: true
-            fail-on-alert: true
-
+          name: Benchmark.Net Benchmark
+          tool: 'benchmarkdotnet'
+          output-file-path: BenchmarkDotNet.Artifacts/results/PerfTests.GetMergedAttributesTest-report-full-compressed.json
+          github-token: ${{ secrets.BENCHMARK_RESULTS_DEPLOY_TOKEN }}
+          auto-push: true
+          # Show alert with commit comment on detecting possible performance regression
+          alert-threshold: '150%'
+          comment-on-alert: true
+          fail-on-alert: true
+          gh-repository: 'github.com/max-bytes/omnikeeper-benchmarks'
