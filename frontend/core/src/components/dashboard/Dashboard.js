@@ -16,7 +16,6 @@ export default function Dashboard(props) {
     const relationChanges = statistics?.relationChanges ?? 0;
     const changesets = statistics?.changesets ?? 0;
     const traits = statistics?.traits ?? 0;
-    const predicates = statistics?.predicates ?? 0;
     const generators = statistics?.generators ?? 0;
 
     const StatisticsCard = (props) => {
@@ -70,11 +69,6 @@ export default function Dashboard(props) {
                 </Col>
                 <Col span={5}>
                     <StatisticsCard number={traits} name="Traits" />
-                </Col>
-            </Row>
-            <Row gutter={48} justify="center" align="top">
-                <Col span={5}>
-                    <StatisticsCard number={predicates} name="Predicates" />
                 </Col>
                 <Col span={5}>
                     <StatisticsCard number={generators} name="Generators" />
