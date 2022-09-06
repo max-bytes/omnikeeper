@@ -30,7 +30,7 @@ jobs:
         run: |
           cd backend
           dotnet run --project ./PerfTests -c Release -- --job short --runtimes net6.0 --filter '*' --exporters json --strategy Monitoring
-      - name: GetMergedAttributes Benchmark
+      - name: upload GetMergedAttributes benchmark results
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: GetMergedAttributes Benchmark
@@ -39,13 +39,12 @@ jobs:
           github-token: ${{ secrets.BENCHMARK_RESULTS_DEPLOY_TOKEN }}
           gh-pages-branch: main
           auto-push: true
-          benchmark-data-dir-path: .
-          # Show alert with commit comment on detecting possible performance regression
+          benchmark-data-dir-path: ./GetMergedAttributes
           alert-threshold: '150%'
           comment-on-alert: true
           fail-on-alert: true
           gh-repository: 'github.com/max-bytes/omnikeeper-benchmarks'
-      - name: BulkReplaceAttributes Benchmark
+      - name: upload BulkReplaceAttributes benchmark results
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: BulkReplaceAttributes Benchmark
@@ -54,8 +53,7 @@ jobs:
           github-token: ${{ secrets.BENCHMARK_RESULTS_DEPLOY_TOKEN }}
           gh-pages-branch: main
           auto-push: true
-          benchmark-data-dir-path: .
-          # Show alert with commit comment on detecting possible performance regression
+          benchmark-data-dir-path: ./BulkReplaceAttributes
           alert-threshold: '150%'
           comment-on-alert: true
           fail-on-alert: true
