@@ -206,33 +206,22 @@ namespace Omnikeeper.Base.AttributeValues
 
         public static IAttributeValue Unmarshal(string valueText, byte[] valueBinary, byte[] valueControl, AttributeValueType type, bool fullBinary)
         {
-            if (valueControl.Length == 0)
+            try
             {
-                throw new Exception("Version 0x01 not supported any longer");
+                return UnmarshalV2(valueText, valueBinary, valueControl, type, fullBinary);
             }
-            else
-            { // non-V1
-                try
-                {
-                    return UnmarshalNonV1(valueText, valueBinary, valueControl, type, fullBinary);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception("Could not parse attribute value", e);
-                }
+            catch (Exception e)
+            {
+                throw new Exception("Could not parse attribute value", e);
             }
         }
 
-        private static IAttributeValue UnmarshalNonV1(string valueText, byte[] valueBinary, byte[] valueControl, AttributeValueType type, bool fullBinary)
+        private static IAttributeValue UnmarshalV2(string valueText, byte[] valueBinary, byte[] valueControl, AttributeValueType type, bool fullBinary)
         {
             var version = valueControl[0];
             var isArray = valueControl[1] == 0x02;
 
-            if (version == 0x01)
-            {
-                throw new Exception("Did not expect attribute value to be stored in version 0x01");
-            }
-            else if (version == 0x02)
+            if (version == 0x02)
             {
                 switch (type)
                 {
@@ -326,12 +315,8 @@ namespace Omnikeeper.Base.AttributeValues
         public static (string text, byte[] binary, byte[] control) Marshal(IAttributeValue value)
         {
             byte version = 0x02;
-            if (version == 0x01)
-            { // V1
-                throw new Exception("Version 0x01 not supported any longer");
-            }
-            else if (version == 0x02)
-            { // V2
+            if (version == 0x02)
+            {
                 return MarshalV2(value);
             }
             else

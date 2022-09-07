@@ -141,7 +141,7 @@ namespace Omnikeeper.Model
             {
                 command = new NpgsqlCommand($@"
                     {ciidSelection2CTEClause}
-                    select id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute_latest a
+                    select id, name, a.ci_id, type, value_text, value_binary, value_json, value_integer, value_double, value_boolean, value_timestamptz, value_control, changeset_id, layer_id FROM attribute_latest a
                     {CIIDSelection2JoinClause(selection)}
                     where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY({SetParameter(ref parameterIndex)})
                     and ({AttributeSelection2WhereClause(attributeSelection, ref parameterIndex)})", trans.DBConnection, trans.DBTransaction);
@@ -155,8 +155,8 @@ namespace Omnikeeper.Model
 
                 command = new NpgsqlCommand($@"
                     {ciidSelection2CTEClause}
-                    select id, name, ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id from (
-                        select distinct on(a.ci_id, name, layer_id) removed, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
+                    select id, name, ci_id, type, value_text, value_binary, value_json, value_integer, value_double, value_boolean, value_timestamptz, value_control, changeset_id, layer_id from (
+                        select distinct on(a.ci_id, name, layer_id) removed, id, name, a.ci_id, type, value_text, value_binary, value_json, value_integer, value_double, value_boolean, value_timestamptz, value_control, changeset_id, layer_id FROM attribute a
                         {CIIDSelection2JoinClause(selection)}
                         where ({CIIDSelection2WhereClause(selection)}) and timestamp <= {SetParameter(ref parameterIndex)} and layer_id = ANY({SetParameter(ref parameterIndex)}) and partition_index >= {SetParameter(ref parameterIndex)}
                         and ({AttributeSelection2WhereClause(attributeSelection, ref parameterIndex)})
@@ -185,10 +185,10 @@ namespace Omnikeeper.Model
                 var type = dr.GetFieldValue<AttributeValueType>(3);
                 var valueText = dr.GetString(4);
                 var valueBinary = dr.GetFieldValue<byte[]>(5);
-                var valueControl = dr.GetFieldValue<byte[]>(6);
+                var valueControl = dr.GetFieldValue<byte[]>(11);
                 var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
-                var changesetID = dr.GetGuid(7);
-                var layerID = dr.GetString(8);
+                var changesetID = dr.GetGuid(12);
+                var layerID = dr.GetString(13);
 
                 var att = new CIAttribute(id, name, CIID, av, changesetID);
                 yield return (att, layerID);

@@ -1,0 +1,30 @@
+﻿ALTER TABLE public.attribute_latest ADD COLUMN value_json JSONB NULL;
+ALTER TABLE public.attribute_latest ADD COLUMN value_integer bigint NULL;
+ALTER TABLE public.attribute_latest ADD COLUMN value_double double precision NULL;
+ALTER TABLE public.attribute_latest ADD COLUMN value_boolean boolean NULL;
+ALTER TABLE public.attribute_latest ADD COLUMN value_timestamptz timestamptz NULL;
+
+ALTER TABLE public.attribute_latest ADD COLUMN value_text_array text[] NULL;
+ALTER TABLE public.attribute_latest ADD COLUMN value_integer_array bigint[] NULL;
+ALTER TABLE public.attribute_latest ADD COLUMN value_double_array double precision[] NULL;
+ALTER TABLE public.attribute_latest ADD COLUMN value_boolean_array boolean[] NULL;
+ALTER TABLE public.attribute_latest ADD COLUMN value_timestamptz_array timestamptz[] NULL;
+
+
+ALTER TABLE public.attribute ADD COLUMN value_json JSONB NULL;
+ALTER TABLE public.attribute ADD COLUMN value_integer bigint NULL;
+ALTER TABLE public.attribute ADD COLUMN value_double double precision NULL;
+ALTER TABLE public.attribute ADD COLUMN value_boolean boolean NULL;
+ALTER TABLE public.attribute ADD COLUMN value_timestamptz timestamptz NULL;
+
+ALTER TABLE public.attribute ADD COLUMN value_text_array text[] NULL;
+ALTER TABLE public.attribute ADD COLUMN value_integer_array bigint[] NULL;
+ALTER TABLE public.attribute ADD COLUMN value_double_array double precision[] NULL;
+ALTER TABLE public.attribute ADD COLUMN value_boolean_array boolean[] NULL;
+ALTER TABLE public.attribute ADD COLUMN value_timestamptz_array timestamptz[] NULL;
+
+
+ALTER TABLE public.attribute_latest ALTER COLUMN value_text DROP NOT NULL;
+ALTER TABLE public.attribute_latest ALTER COLUMN value_binary DROP NOT NULL;
+ALTER TABLE public.attribute ALTER COLUMN value_text DROP NOT NULL;
+ALTER TABLE public.attribute ALTER COLUMN value_binary DROP NOT NULL;
