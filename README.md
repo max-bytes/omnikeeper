@@ -39,6 +39,10 @@ omnikeeper is a general-purpose and highly flexible data store solution and appl
 
 For a fully functional, self-contained and docker-powered omnikeeper stack that is ready to use, visit https://github.com/max-bytes/omnikeeper-stack
 
+### Benchmarks
+
+Visit <https://max-bytes.github.io/omnikeeper-benchmarks/>
+
 ## Contributing
 
 First off, thanks for taking the time to contribute! Contributions are what makes the open-source community such an amazing place to learn, inspire, and create. Any contributions you make will benefit everybody else and are **greatly appreciated**.
