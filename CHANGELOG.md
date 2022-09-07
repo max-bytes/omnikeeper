@@ -6,6 +6,85 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [21.17.7] - 2022-09-07
+
+### Added
+
+- technical frontend:
+  - proper (html) titles to all pages
+  - management UI for viewing running jobs
+  - re-create trait-centric graph rendering with Cytoscape
+  - visualization frontend for relations
+  - visualization of read-write graph
+- issues, including:
+  - technical frontend/UI
+  - ingests produce issues
+  - internal traits
+  - archiving of outdated issues
+- validators, including:
+  - technical frontend/UI for validator contexts
+  - validators producing issues
+- authz filters, including:
+  - interfaces
+  - implementation and usage throughout all outward-facing APIs
+  - moved layer based authz into new filter-based concept
+- GraphQL API:
+  - trait entity filtering for non-set attributes
+  - trait entities:  more complete handling for upserting trait relations
+  - exactOtherCIID relation filter for trait entities
+  - upsertSingleByFilter for trait entities
+  - traitEntities: deleteSingleByFilter
+  - filteredSingle trait entities API
+  - fields for reading permitted layers from auth-role
+  - support for filtering of trait-hinted trait relations
+  - trait entity filtering for boolean attributes
+  - API for fetching all readable and writable layers
+- configuration option for defining AuthorityForFrontend
+- support for trait hints for relations in code-based traits
+- ingest:
+  - RawJsonIngest endpoint that ingests pre-prepared JSON structures
+- attribute value type boolean
+- attribute value type for datetime
+- support for multi-mutation-single-request
+- support for changeset data
+- support for basic authentication for odata contexts
+- updated and implemented perf-tests, integrated into CI/CD pipeline
+
+### Changed
+
+- performance improvements to latest tables via indices
+- improvements to how old changesets are removed
+- technical frontend:
+  - moved manage menu item to the right
+  - updated react-virtuoso
+  - improvements for effective trait view
+  - split layer statistics loading from operations in layer management view
+  - upgraded react to 18.2.0
+  - upgraded apollo client to 3.6.9
+  - upgraded antd to 4.22.4
+  - upgraded react-router-dom to 5.3.3
+  - upgraded graphiql to 1.11.5
+  - upgraded ag-grid to 27.3.0
+- (breaking) Reworked CLB plugin interface to include IssueAccumulator
+- upgraded npgsql to 6.x
+- removed requirement that a layer must be empty before import
+- made plugin loading retry to enable loading of plugins with dependencies on other plugins
+- performance improvement for removing attributes: using CTEs
+- performance improvement for updating attributes: using CTEs
+- performance improvement for CIID lookup by IDs for generic trait entities
+- performance improvements for GenericTraitEntities
+- moved plugin OKPluginCLBNaemonVariableResolution into its own repository
+- improved swashbuckle docs generation
+- switched CLBs to local scheduler
+- (breaking): various REST API changes
+- performance improvement for odata navigation fetching
+
+### Bugfix
+
+- fixed issue in EdmModel creation when trait hint refers to non-existant trait
+
+## gap in changelog housekeeping
+
 ## [18.1.0] - 2022-06-02
 
 ### Changed
