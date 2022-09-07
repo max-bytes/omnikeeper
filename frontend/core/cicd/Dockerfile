@@ -1,5 +1,5 @@
 # Build the app
-FROM node:13.12.0-alpine AS build
+FROM node:14.20.0-alpine AS build
 
 ARG version
 ARG npm_repo_key
