@@ -95,7 +95,7 @@ namespace Omnikeeper.Runners
                 job.JobDataMap.Add("clConfig_CLBrainReference", clConfig.CLBrainReference);
                 job.JobDataMap.Add("layerID", layerData.LayerID);
 
-                ITrigger trigger = TriggerBuilder.Create().WithIdentity(triggerKey).StartNow().Build();
+                ITrigger trigger = TriggerBuilder.Create().WithIdentity(triggerKey).WithPriority(10).StartNow().Build();
                 await scheduler.ScheduleJob(job, trigger);
             }
         }

@@ -59,18 +59,18 @@ namespace Omnikeeper.Startup
                 bool deleteOnly = false; // TODO: only set to true for debugging purposes
 
                 // schedule internal recurring jobs
-                await ScheduleJob<MarkedForDeletionJob>(distributedScheduler, JKMarkedForDeletion, config.MarkedForDeletionRunnerInterval, logger, deleteOnly);
-                await ScheduleJob<ExternalIDManagerJob>(distributedScheduler, JKExternalIDManager, config.ExternalIDManagerRunnerInterval, logger, deleteOnly);
-                await ScheduleJob<ArchiveOldDataJob>(distributedScheduler, JKArchiveOldData, config.ArchiveOldDataRunnerInterval, logger, deleteOnly);
+                await ScheduleJob<MarkedForDeletionJob>(distributedScheduler, JKMarkedForDeletion, config.MarkedForDeletionRunnerInterval, logger, deleteOnly, 0);
+                await ScheduleJob<ExternalIDManagerJob>(distributedScheduler, JKExternalIDManager, config.ExternalIDManagerRunnerInterval, logger, deleteOnly, 0);
+                await ScheduleJob<ArchiveOldDataJob>(distributedScheduler, JKArchiveOldData, config.ArchiveOldDataRunnerInterval, logger, deleteOnly, 0);
 
                 if (configuration.GetValue("RunComputeLayers", false))
                 {
-                    await ScheduleJob<CLBJob>(localScheduler, JKCLB, config.CLBRunnerInterval, logger, deleteOnly);
-                    await ScheduleJob<ValidatorJob>(localScheduler, JKValidator, config.CLBRunnerInterval, logger, deleteOnly); // TODO: add own settings
+                    await ScheduleJob<CLBJob>(localScheduler, JKCLB, config.CLBRunnerInterval, logger, deleteOnly, 10);
+                    await ScheduleJob<ValidatorJob>(localScheduler, JKValidator, config.CLBRunnerInterval, logger, deleteOnly, -10); // TODO: add own settings
                 }
-                await ScheduleJob<UsageDataWriterJob>(localScheduler, JKUsageDataWriter, "0 * * * * ?", logger, deleteOnly);
-                await ScheduleJob<GraphQLSchemaReloaderJob>(localScheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly);
-                await ScheduleJob<EdmModelReloaderJob>(localScheduler, JKEdmModelReloader, "0 * * * * ?", logger, deleteOnly);
+                await ScheduleJob<UsageDataWriterJob>(localScheduler, JKUsageDataWriter, "0 * * * * ?", logger, deleteOnly, -20);
+                await ScheduleJob<GraphQLSchemaReloaderJob>(localScheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly, 20);
+                await ScheduleJob<EdmModelReloaderJob>(localScheduler, JKEdmModelReloader, "0 * * * * ?", logger, deleteOnly, 20);
 
                 await distributedScheduler.Start();
                 await localScheduler.Start();
@@ -87,7 +87,7 @@ namespace Omnikeeper.Startup
             }
         }
 
-        private async Task ScheduleJob<J>(IScheduler scheduler, JobKey jobKey, string cronSchedule, ILogger logger, bool deleteOnly) where J : IJob
+        private async Task ScheduleJob<J>(IScheduler scheduler, JobKey jobKey, string cronSchedule, ILogger logger, bool deleteOnly, int priority) where J : IJob
         {
             IJobDetail job = JobBuilder.Create<J>().WithIdentity(jobKey).Build();
 
@@ -103,6 +103,7 @@ namespace Omnikeeper.Startup
             {
                 ITrigger trigger = TriggerBuilder.Create()
                     .WithIdentity($"trigger_for_job_{jobKey.Name}", jobKey.Group)
+                    .WithPriority(priority)
                     .StartNow()
                     .WithCronSchedule(cronSchedule)
                     .Build();

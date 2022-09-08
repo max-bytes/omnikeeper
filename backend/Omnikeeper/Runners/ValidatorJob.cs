@@ -79,7 +79,7 @@ namespace Omnikeeper.Runners
                 job.JobDataMap.Add("context_Config", context.Config.RootElement.GetRawText()); // HACK: we pass the config by string, because Quartz likes those more than objects
                 job.JobDataMap.Add("context_ValidatorReference", context.ValidatorReference);
 
-                ITrigger trigger = TriggerBuilder.Create().WithIdentity(triggerKey).StartNow().Build();
+                ITrigger trigger = TriggerBuilder.Create().WithIdentity(triggerKey).WithPriority(-10).StartNow().Build();
                 await scheduler.ScheduleJob(job, trigger);
             }
         }
