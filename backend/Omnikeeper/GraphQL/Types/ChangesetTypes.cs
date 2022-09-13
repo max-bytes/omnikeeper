@@ -133,6 +133,7 @@ namespace Omnikeeper.GraphQL.Types
                     var layerID = context.Source!.LayerID;
                     var layerset = new LayerSet(layerID);
 
+                    // TODO: use data loader
                     var (changesetData, ciid) = await changesetDataModel.GetSingleByDataID(changesetID.ToString(), layerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
                     if (ciid == default)
                         return null;
