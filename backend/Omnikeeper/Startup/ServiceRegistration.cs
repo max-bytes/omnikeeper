@@ -86,94 +86,113 @@ namespace Omnikeeper.Startup
             {
                 file.Delete();
             }
-            foreach (var file in Directory.GetFiles(pluginFolder, "*.nupkg", SearchOption.AllDirectories))
+            var files = Directory.GetFiles(pluginFolder, "*.nupkg", SearchOption.AllDirectories);
+            var orderedFiles = files.OrderBy(f => f).ToList(); // order, to be consistent
+
+            var mainAssemblies = new List<Assembly>();
+
+            // load plugins
+            // NOTE: we load plugins in a double loop to be able to load plugins with dependencies on other plugins. Eventually, all plugins will be loaded
+            var stopLoadingOuter = true;
+            do
             {
-                using var fs = File.OpenRead(file);
-                using var archive = new ZipArchive(fs);
-                var zipArchiveEntries = archive.Entries
-                    .Where(e => e.Name.EndsWith(".dll")).ToList();
-
-                var entriesWithTargetFramework = zipArchiveEntries
-                    .Select(e => new
-                    {
-                        TargetFramework = NuGetFramework.Parse(e.FullName.Split('/')[1]),
-                        Entry = e
-                    }).ToList();
-
-                var matchingEntries = entriesWithTargetFramework
-                    .Where(e => e.TargetFramework.Version.Major > 0 &&
-                                e.TargetFramework.Version <= nuGetFramework.Version).ToList();
-
-                var orderedEntries = matchingEntries
-                    .OrderBy(e => e.TargetFramework.GetShortFolderName()).ToList();
-
-                if (orderedEntries.Any())
+                stopLoadingOuter = true;
+                for (var indexOuter = orderedFiles.Count - 1; indexOuter >= 0; indexOuter--)
                 {
-                    var dllEntries = orderedEntries
-                        .GroupBy(e => e.TargetFramework.GetShortFolderName())
-                        .Last()
-                        .Select(e => e.Entry)
-                        .ToList();
-
-                    var pluginAssemblies = new List<string>();
-                    PluginLoadContext loadContext = new PluginLoadContext();
-
-                    // load plugins
-                    // NOTE: we load plugins in a double loop to be able to load plugins with dependencies on other plugins. Eventually, all plugins will be loaded
-                    var stopLoading = true;
-                    do
+                    var nupkgFile = orderedFiles[indexOuter];
+                    try
                     {
-                        stopLoading = true;
-                        for(var index = dllEntries.Count - 1;index >= 0;index--)
+                        var t = TryLoadNupkgFile(nupkgFile, nuGetFramework, extractedFolder);
+                        if (t.HasValue)
                         {
-                            var e = dllEntries[index];
-                            var finalDLLFile = Path.Combine(extractedFolder, e.Name);
-                            e.ExtractToFile(finalDLLFile, overwrite: true);
+                            var (sc, pr, assembly) = t.Value;
+                            builder.Populate(sc);
 
-                            Assembly? assembly;
-                            bool isMainPluginAssembly = false;
-                            try
-                            {
-                                loadContext.AddResolverFromPath(finalDLLFile);
-                                assembly = loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(finalDLLFile)));
+                            Console.WriteLine($"Loaded OKPlugin {pr.Name}, Version {pr.Version.ToString(3)}"); // TODO: better logging
 
-                                // we use a temporary container to extract the plugin registration, which then does the actual registration
-                                var tmpBuilder = new ContainerBuilder();
-                                tmpBuilder.RegisterAssemblyTypes(assembly).Where(t => t.IsAssignableTo<IPluginRegistration>()).AsImplementedInterfaces().SingleInstance();
-                                using var tmpContainer = tmpBuilder.Build();
-                                var x = tmpContainer.ComponentRegistry.Registrations;
-                                if (tmpContainer.TryResolve<IPluginRegistration>(out var pr))
-                                {
-                                    // register plugin itself and its own services
-                                    builder.RegisterInstance(pr);
-                                    var serviceCollection = new ServiceCollection();
-                                    pr.RegisterServices(serviceCollection);
-                                    builder.Populate(serviceCollection);
-
-                                    Console.WriteLine($"Loaded OKPlugin {pr.Name}, Version {pr.Version.ToString(3)}"); // TODO: better logging
-
-                                    isMainPluginAssembly = true;
-                                }
-                                else
-                                {
-                                    Console.WriteLine($"Encountered OKPlugin without IPluginRegistration, skipping! Assembly: {assembly.FullName}"); // TODO: better logging
-                                }
-
-                                dllEntries.RemoveAt(index);
-                                stopLoading = false; // whenever we were able to load another dll, we repeat the outer loop and try to load more, to 
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Could not load assembly at location {finalDLLFile}: {ex.Message}"); // TODO: better error handling
-                                continue;
-                            }
-
-                            if (isMainPluginAssembly)
-                                yield return assembly; // we only return those assemblies that contain an IPluginRegistration
+                            mainAssemblies.Add(assembly);
                         }
-                    } while (!dllEntries.IsEmpty() && !stopLoading);
+                        else
+                        {
+                            Console.WriteLine($"Encountered nupkg file ({nupkgFile}) that does not seem to be a proper OKPlugin, skipping"); // TODO: better logging
+                        }
+
+                        orderedFiles.RemoveAt(indexOuter);
+                        stopLoadingOuter = false; // whenever we were able to load another plugin, we repeat the outer loop and try to load more
+                    } catch (Exception e)
+                    {
+                        Console.WriteLine($"Could not load OKPlugin {nupkgFile}: {e.Message}"); // TODO: better error handling
+                        continue;
+                    }
+                }
+            } while (!orderedFiles.IsEmpty() && !stopLoadingOuter);
+
+            return mainAssemblies;
+        }
+
+        private static (ServiceCollection sc, IPluginRegistration pr, Assembly assembly)? TryLoadNupkgFile(string nupkgFile, NuGetFramework nuGetFramework, string extractedFolder)
+        {
+            (ServiceCollection sc, IPluginRegistration pr, Assembly assembly)? ret = null;
+
+            using var fs = File.OpenRead(nupkgFile);
+            using var archive = new ZipArchive(fs);
+            var relevantZipArchiveEntries = archive.Entries
+                .Where(e => e.Name.EndsWith(".dll"))
+                .Select(e => new
+                {
+                    TargetFramework = NuGetFramework.Parse(e.FullName.Split('/')[1]),
+                    Entry = e
+                })
+                .Where(e => e.TargetFramework.Version.Major > 0 && e.TargetFramework.Version <= nuGetFramework.Version)
+                .OrderBy(e => e.TargetFramework.GetShortFolderName());
+
+            if (relevantZipArchiveEntries.Any())
+            {
+                var flattenedEntries = relevantZipArchiveEntries
+                    .GroupBy(e => e.TargetFramework.GetShortFolderName())
+                    .Last()
+                    .Select(e => e.Entry)
+                    .ToList();
+
+                var pluginAssemblies = new List<string>();
+                var loadContext = new PluginLoadContext();
+
+                // load dlls
+                foreach (var e in flattenedEntries)
+                {
+                    var finalDLLFile = Path.Combine(extractedFolder, e.Name);
+                    try
+                    {
+                        e.ExtractToFile(finalDLLFile, overwrite: true);
+                    }
+                    catch (IOException)
+                    {
+                        // ignore, we may have already extracted this DLL
+                    }
+                    loadContext.AddResolverFromPath(finalDLLFile);
+                    var assembly = loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(finalDLLFile)));
+
+                    // we use a temporary container to extract the plugin registration, which then does the actual registration
+                    var tmpBuilder = new ContainerBuilder();
+                    tmpBuilder.RegisterAssemblyTypes(assembly).Where(t => t.IsAssignableTo<IPluginRegistration>()).AsImplementedInterfaces().SingleInstance();
+                    using var tmpContainer = tmpBuilder.Build();
+                    var x = tmpContainer.ComponentRegistry.Registrations;
+                    if (tmpContainer.TryResolve<IPluginRegistration>(out var pr))
+                    {
+                        // register plugin itself and its own services
+                        var serviceCollection = new ServiceCollection();
+                        pr.RegisterServices(serviceCollection);
+                        serviceCollection.AddSingleton(typeof(IPluginRegistration), pr);
+                        ret = (serviceCollection, pr, assembly);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Encountered DLL without IPluginRegistration, skipping! Assembly: {assembly.FullName}"); // TODO: better logging
+                    }
                 }
             }
+
+            return ret;
         }
 
         public static void RegisterServices(ContainerBuilder builder)
