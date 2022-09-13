@@ -100,6 +100,8 @@ namespace Omnikeeper.Base.Model.TraitBased
                     {
                         entityFieldValue = attribute.Attribute.Value.ToGenericObject();
                     }
+                    // TODO: depending on context, we might need to throw an exception if the attribute value is null (ToGenericObject() returns null) and the target trait field is not-null
+                    // otherwise, the (good) default value that is set in default constructor gets overwritten by null
                     taFieldInfo.Accessor.Set(ret, entityFieldValue);
                 }
                 else
