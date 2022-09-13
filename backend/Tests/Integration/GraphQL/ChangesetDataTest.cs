@@ -81,7 +81,7 @@ namespace Tests.Integration.GraphQL
             Assert.AreEqual(1, numChangesets);
 
             // fetch changeset and its associated data
-            var changeset = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, null, new string[] { "layer_1" }, transI, TimeThreshold.BuildLatest());
+            var changeset = await GetService<IChangesetModel>().GetLatestChangesetOverall(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, new string[] { "layer_1" }, transI, TimeThreshold.BuildLatest());
             Assert.IsNotNull(changeset);
             string query2 = @"
                 query($layers: [String]!, $changeset_id: Guid!) {
@@ -316,7 +316,7 @@ mutation {
             Assert.AreEqual(1, numChangesets);
 
             // fetch changeset and its associated data
-            var changeset = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, null, new string[] { layer1.ID }, transI, TimeThreshold.BuildLatest());
+            var changeset = await GetService<IChangesetModel>().GetLatestChangesetOverall(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, new string[] { layer1.ID }, transI, TimeThreshold.BuildLatest());
             Assert.IsNotNull(changeset);
 
             // check that latestChange of mutation corresponds to the changeset

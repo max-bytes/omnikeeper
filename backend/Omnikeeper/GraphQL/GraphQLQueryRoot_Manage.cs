@@ -64,7 +64,7 @@ namespace Omnikeeper.GraphQL
                     var numActiveRelations = await layerStatisticsModel.GetActiveRelations(layerData.LayerID, userContext.Transaction);
                     var numRelationChangesHistory = await layerStatisticsModel.GetRelationChangesHistory(layerData.LayerID, userContext.Transaction);
                     var numLayerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layerData.LayerID, userContext.Transaction);
-                    var latestChange = await changesetModel.GetLatestChangeset(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, null, new string[] { layerData.LayerID }, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    var latestChange = await changesetModel.GetLatestChangesetOverall(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, new string[] { layerData.LayerID }, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
 
                     return new LayerStatistics(
                         layerData,

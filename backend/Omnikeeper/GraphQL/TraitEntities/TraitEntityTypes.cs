@@ -205,7 +205,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     return et;
                 });
             Field<ChangesetType>("latestChange")
-                .ResolveAsync(async (context) =>
+                .Resolve(context =>
                 {
                     var et = context.Source!;
 
@@ -217,7 +217,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
                     var trans = userContext.Transaction;
 
-                    return await traitEntityModel.GetLatestRelevantChangeset(SpecificCIIDsSelection.Build(et.CIID), layerset, trans, timeThreshold);
+                    return dataLoaderService.SetupAndLoadLatestRelevantChangesetOfTraitEntityPerCI(SpecificCIIDsSelection.Build(et.CIID), traitEntityModel, layerset, timeThreshold, trans)
+                        .Then(r =>
+                        {
+                            if (r.TryGetValue(et.CIID, out var res))
+                                return res;
+                            return null;
+                        });
                 });
 
             this.UnderlyingTrait = underlyingTrait;

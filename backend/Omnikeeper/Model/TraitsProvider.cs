@@ -73,11 +73,21 @@ namespace Omnikeeper.Model
                 }
             }
 
-            var flattened = RecursiveTraitService.FlattenRecursiveTraits(ret, errorF);
-
             var finalTraits = new Dictionary<string, ITrait>();
-            foreach (var kv in flattened)
-                finalTraits.Add(kv.Key, kv.Value);
+
+            try
+            {
+                var flattened = RecursiveTraitService.FlattenRecursiveTraits(ret, errorF);
+                foreach (var kv in flattened)
+                    finalTraits.Add(kv.Key, kv.Value);
+            }
+            catch (Exception e)
+            {
+                var errorStr = $"Could not flatten recursive traits: {e.Message}";
+                errorF(errorStr);
+                logger.LogError(e, errorStr);
+            }
+
             var traitEmpty = new TraitEmpty();
             if (!finalTraits.TryAdd(traitEmpty.ID, traitEmpty)) // mix in empty trait
                 errorF($"Could not add trait with ID {traitEmpty.ID}. A trait with that ID was already added.");
@@ -89,7 +99,7 @@ namespace Omnikeeper.Model
         {
             // check data traits changes through their changesets
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-            var latestChangeset = await dataTraitModel.GetLatestRelevantChangeset(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, timeThreshold);
+            var latestChangeset = await dataTraitModel.GetLatestRelevantChangesetOverall(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, timeThreshold);
             return latestChangeset?.Timestamp;
         }
 

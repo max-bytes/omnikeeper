@@ -75,7 +75,7 @@ namespace Tests.Integration.Model
             Assert.AreEqual(2, changesets6.Count());
 
             // test latest
-            var c1 = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("a3"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
+            var c1 = await GetService<IChangesetModel>().GetLatestChangesetOverall(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("a3"), PredicateSelectionAll.Instance, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
             Assert.AreEqual(await changesetProxy3.GetChangeset(layer1.ID, transI), c1);
 
             // another insert
@@ -87,15 +87,15 @@ namespace Tests.Integration.Model
             }
 
             // test latest again
-            var c2 = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("a3"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
+            var c2 = await GetService<IChangesetModel>().GetLatestChangesetOverall(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("a3"), PredicateSelectionAll.Instance, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
             Assert.AreEqual(await changesetProxy4.GetChangeset(layer1.ID, transI), c2);
 
             // test latest yet again, but with specific CIIDs
-            var c3 = await GetService<IChangesetModel>().GetLatestChangeset(SpecificCIIDsSelection.Build(ciid2), NamedAttributesSelection.Build("a3"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
+            var c3 = await GetService<IChangesetModel>().GetLatestChangesetOverall(SpecificCIIDsSelection.Build(ciid2), NamedAttributesSelection.Build("a3"), PredicateSelectionAll.Instance, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
             Assert.AreEqual(await changesetProxy3.GetChangeset(layer1.ID, transI), c3);
 
             // get empty latest changeset
-            var c4 = await GetService<IChangesetModel>().GetLatestChangeset(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("unused"), null, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
+            var c4 = await GetService<IChangesetModel>().GetLatestChangesetOverall(AllCIIDsSelection.Instance, NamedAttributesSelection.Build("unused"), PredicateSelectionAll.Instance, new LayerSet(layer1.ID).LayerIDs, transI, TimeThreshold.BuildLatest());
             Assert.IsNull(c4);
         }
 

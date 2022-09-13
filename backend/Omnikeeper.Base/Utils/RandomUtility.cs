@@ -14,6 +14,25 @@ namespace Omnikeeper.Base.Utils
             return possibilities[indices[index]].item;
         }
 
+        // NOTE: only suitable for taking small numbers from larger collections, very slow otherwise
+        public static IEnumerable<T> TakeRandom<T>(IList<T> collection, int take, Random random)
+        {
+            if (take > collection.Count)
+                throw new Exception("Cannot take more than is there");
+            var takenIndices = new HashSet<int>();
+            for(var i = 0;i < take;i++)
+            {
+                int tryIndex;
+                do
+                {
+                    tryIndex = random.Next(0, collection.Count);
+                } while (takenIndices.Contains(tryIndex));
+
+                takenIndices.Add(tryIndex);
+                yield return collection[tryIndex];
+            }
+        }
+
         public static string GenerateRandomString(int length, Random random, string allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
         {
             if (length < 0) throw new ArgumentOutOfRangeException("length", "length cannot be less than zero.");

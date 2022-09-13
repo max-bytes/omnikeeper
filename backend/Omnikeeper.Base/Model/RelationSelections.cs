@@ -12,6 +12,7 @@ namespace Omnikeeper.Base.Model
     public sealed class RelationSelectionFrom : IRelationSelection, IEquatable<RelationSelectionFrom>
     {
         public IReadOnlySet<Guid> FromCIIDs { get; }
+        // TODO: switch to using PredicateSelection
         public IReadOnlySet<string>? PredicateIDs { get; } // NOTE: null means all
 
         private RelationSelectionFrom(IReadOnlySet<Guid> fromCIIDs, IReadOnlySet<string>? predicateIDs)

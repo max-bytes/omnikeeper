@@ -209,6 +209,28 @@ namespace Omnikeeper.Model
                 _ => throw new NotImplementedException("")
             };
         }
+        private static string CIIDSelection2WhereClauseRelationsTo(ICIIDSelection selection)
+        {
+            return selection switch
+            {
+                AllCIIDsSelection _ => "1=1",
+                SpecificCIIDsSelection _ => "(r.to_ci_id = ANY(@ciids))",
+                AllCIIDsExceptSelection _ => "(r.to_ci_id != ANY(@ciids))",
+                NoCIIDsSelection _ => "1=0",
+                _ => throw new NotImplementedException("")
+            };
+        }
+        private static string CIIDSelection2WhereClauseRelationsFrom(ICIIDSelection selection)
+        {
+            return selection switch
+            {
+                AllCIIDsSelection _ => "1=1",
+                SpecificCIIDsSelection _ => "(r.from_ci_id = ANY(@ciids))",
+                AllCIIDsExceptSelection _ => "(r.from_ci_id != ANY(@ciids))",
+                NoCIIDsSelection _ => "1=0",
+                _ => throw new NotImplementedException("")
+            };
+        }
         private static IEnumerable<NpgsqlParameter> CIIDSelection2Parameters(ICIIDSelection selection)
         {
             switch (selection)
@@ -253,11 +275,88 @@ namespace Omnikeeper.Model
                     throw new NotImplementedException("");
             };
         }
+        private static string PredicateSelection2WhereClause(IPredicateSelection selection)
+        {
+            return selection switch
+            {
+                PredicateSelectionAll _ => "1=1",
+                PredicateSelectionNone _ => "1=0",
+                PredicateSelectionSpecific _ => $"r.predicate_id = ANY(@predicate_ids)",
+                _ => throw new NotImplementedException("")
+            };
+        }
+        private static IEnumerable<NpgsqlParameter> PredicateSelection2Parameters(IPredicateSelection selection)
+        {
+            switch (selection)
+            {
+                case PredicateSelectionAll _:
+                    break;
+                case PredicateSelectionNone _:
+                    break;
+                case PredicateSelectionSpecific n:
+                    yield return new NpgsqlParameter("predicate_ids", n.PredicateIDs.ToArray());
+                    break;
+                default:
+                    throw new NotImplementedException("");
+            };
+        }
+
+        // TODO: test
+        public async Task<IDictionary<Guid, Changeset>> GetLatestChangesetPerCI(ICIIDSelection ciSelection, IAttributeSelection attributeSelection, IPredicateSelection predicateSelection, string[] layers, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            var latestChangesets = new Dictionary<Guid, Changeset>();
+
+            using var command = new NpgsqlCommand($@"
+                SELECT DISTINCT
+                 i.ci_id as ci_id,
+                 first_value(i.id) OVER win AS changeset_id,
+                 first_value(i.timestamp) OVER win AS timestamp,
+                 first_value(i.user_id) OVER win AS user_id,
+                 first_value(i.origin_type) OVER win AS origin_type,
+                 first_value(i.layer_id) OVER win AS layer_id
+                FROM
+                 (select c.timestamp, c.id, a.ci_id, c.user_id, c.origin_type, c.layer_id from changeset c
+	                INNER JOIN attribute a ON a.changeset_id = c.id AND {AttributeSelection2WhereClause(attributeSelection)} AND {CIIDSelection2WhereClauseAttributes(ciSelection)}
+	                WHERE c.timestamp <= @threshold AND c.layer_id = ANY(@layer_ids)
+                 union select c.timestamp, c.id, r.from_ci_id as ci_id, c.user_id, c.origin_type, c.layer_id from changeset c
+	                INNER JOIN relation r ON r.changeset_id = c.id AND {PredicateSelection2WhereClause(predicateSelection)} AND {CIIDSelection2WhereClauseRelationsFrom(ciSelection)}
+	                WHERE c.timestamp <= @threshold AND c.layer_id = ANY(@layer_ids)
+                 union select c.timestamp, c.id, r.to_ci_id as ci_id, c.user_id, c.origin_type, c.layer_id from changeset c
+	                INNER JOIN relation r ON r.changeset_id = c.id AND {PredicateSelection2WhereClause(predicateSelection)} AND {CIIDSelection2WhereClauseRelationsTo(ciSelection)}
+	                WHERE c.timestamp <= @threshold AND c.layer_id = ANY(@layer_ids)
+                 ) i
+                WINDOW win AS (PARTITION BY i.ci_id ORDER BY i.timestamp DESC)", trans.DBConnection, trans.DBTransaction);
+            command.Parameters.AddWithValue("threshold", timeThreshold.Time.ToUniversalTime());
+            command.Parameters.AddWithValue("layer_ids", layers);
+            foreach (var p in CIIDSelection2Parameters(ciSelection))
+                command.Parameters.Add(p);
+            foreach (var p in AttributeSelection2Parameters(attributeSelection))
+                command.Parameters.Add(p);
+            foreach (var p in PredicateSelection2Parameters(predicateSelection))
+                command.Parameters.Add(p);
+            using (var dr = await command.ExecuteReaderAsync())
+            {
+                while (await dr.ReadAsync())
+                {
+                    var ciid = dr.GetGuid(0);
+                    var changesetID = dr.GetGuid(1);
+                    var timestamp = dr.GetDateTime(2);
+                    var userID = dr.GetInt64(3);
+                    var dataOriginType = dr.GetFieldValue<DataOriginType>(4);
+                    var layerID = dr.GetString(5);
+                    var origin = new DataOriginV1(dataOriginType);
+                    latestChangesets[ciid] = new Changeset(changesetID, userID, layerID, origin, timestamp);
+                }
+            }
+            command.Dispose();
+
+            return latestChangesets;
+        }
 
         // NOTE: this does NOT take into account that changes happening in lower layers may not have any effect on the merged CIs
         // that means that the returned changeset may not have any practical effect in the chosen layers, because the changes it did are actually hidden by layers above
         // and hence it may not be the one that caused the last effective change
-        public async Task<Changeset?> GetLatestChangeset(ICIIDSelection ciSelection, IAttributeSelection attributeSelection, IReadOnlySet<string>? predicateIDs, string[] layers, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<Changeset?> GetLatestChangesetOverall(ICIIDSelection ciSelection, IAttributeSelection attributeSelection, IPredicateSelection predicateSelection, string[] layers, IModelContext trans, TimeThreshold timeThreshold)
         {
             Changeset? latestAttributeChangeset = null;
             Changeset? latestRelationChangeset = null;
@@ -291,15 +390,15 @@ namespace Omnikeeper.Model
             commandAttributes.Dispose();
 
             using var commandRelations = new NpgsqlCommand($@"SELECT c.id, c.timestamp, c.user_id, c.origin_type, c.layer_id FROM changeset c
-                INNER JOIN relation r ON r.changeset_id = c.id AND {((predicateIDs != null) ? "r.predicate_id = ANY(@predicate_ids)" : "1=1")} AND {CIIDSelection2WhereClauseRelations(ciSelection)}
+                INNER JOIN relation r ON r.changeset_id = c.id AND {PredicateSelection2WhereClause(predicateSelection)} AND {CIIDSelection2WhereClauseRelations(ciSelection)}
                 WHERE c.timestamp <= @threshold AND c.layer_id = ANY(@layer_ids)
                 ORDER BY c.timestamp DESC
                 LIMIT 1", trans.DBConnection, trans.DBTransaction);
             commandRelations.Parameters.AddWithValue("threshold", timeThreshold.Time.ToUniversalTime());
-            if (predicateIDs != null)
-                commandRelations.Parameters.AddWithValue("predicate_ids", predicateIDs.ToArray());
             commandRelations.Parameters.AddWithValue("layer_ids", layers);
             foreach (var p in CIIDSelection2Parameters(ciSelection))
+                commandRelations.Parameters.Add(p);
+            foreach (var p in PredicateSelection2Parameters(predicateSelection))
                 commandRelations.Parameters.Add(p);
             using var drRelations = await commandRelations.ExecuteReaderAsync();
             if (await drRelations.ReadAsync())

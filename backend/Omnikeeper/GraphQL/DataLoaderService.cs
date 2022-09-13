@@ -3,6 +3,7 @@ using GraphQL.DataLoader;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -252,5 +253,48 @@ namespace Omnikeeper.GraphQL
                 });
             return loader;
         }
+
+        public IDataLoaderResult<IDictionary<Guid, Changeset>> SetupAndLoadLatestRelevantChangesetPerCI(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, IPredicateSelection predicateSelection, IChangesetModel changesetModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        {
+            var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader<ICIIDSelection, IDictionary<Guid, Changeset>>($"GetLatestRelevantChangesetPerCI_{layerSet}_{timeThreshold}_{attributeSelection}_{predicateSelection}",
+                async (IEnumerable<ICIIDSelection> ciidSelections) =>
+                {
+                    var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
+
+                    var combined = await changesetModel.GetLatestChangesetPerCI(combinedCIIDSelection, attributeSelection, predicateSelection, layerSet.LayerIDs, trans, timeThreshold);
+
+                    var ret = new Dictionary<ICIIDSelection, IDictionary<Guid, Changeset>>(); // NOTE: seems weird, cant lookup be created better?
+                    foreach (var s in ciidSelections)
+                    {
+                        var selected = s.FilterDictionary2Dictionary(combined);
+
+                        ret.Add(s, selected);
+                    }
+                    return ret;
+                });
+            return loader.LoadAsync(ciidSelection);
+        }
+        public IDataLoaderResult<IDictionary<Guid, Changeset>> SetupAndLoadLatestRelevantChangesetOfTraitEntityPerCI(ICIIDSelection ciidSelection, TraitEntityModel traitEntityModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        {
+            var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader<ICIIDSelection, IDictionary<Guid, Changeset>>($"GetLatestRelevantChangesetOfTraitEntityPerCI_{traitEntityModel.TraitID}_{layerSet}_{timeThreshold}",
+                async (IEnumerable<ICIIDSelection> ciidSelections) =>
+                {
+                    var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
+
+                    var combined = await traitEntityModel.GetLatestRelevantChangesetPerCI(combinedCIIDSelection, layerSet, trans, timeThreshold);
+
+                    var ret = new Dictionary<ICIIDSelection, IDictionary<Guid, Changeset>>(); // NOTE: seems weird, cant lookup be created better?
+                    foreach (var s in ciidSelections)
+                    {
+                        var selected = s.FilterDictionary2Dictionary(combined);
+
+                        ret.Add(s, selected);
+                    }
+                    return ret;
+                });
+            return loader.LoadAsync(ciidSelection);
+        }
+
+        
     }
 }

@@ -17,13 +17,10 @@ namespace PerfProfiling
 
     public class Profile : GetMergedAttributesTest
     {
-        bool SETUP_DATA = false;
         public async Task Run()
         {
             CIIDSelection = "specific";
-            UseLatestTable = true;
             AttributeCITuple = AttributeCITuples.First();
-            PreSetupData = SETUP_DATA;
 
             await Setup();
 

@@ -19,7 +19,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         private readonly IChangesetModel changesetModel;
         private readonly ITrait trait;
         private readonly IReadOnlySet<string> relevantAttributesForTrait;
-        private readonly IReadOnlySet<string> relevantPredicatesForTrait;
+        private readonly IPredicateSelection relevantPredicatesForTrait;
 
         public TraitEntityModel(ITrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel)
         {
@@ -31,8 +31,10 @@ namespace Omnikeeper.Base.Model.TraitBased
             this.trait = trait;
 
             relevantAttributesForTrait = trait.GetRelevantAttributeNames();
-            relevantPredicatesForTrait = trait.GetRelevantPredicateIDs();
+            relevantPredicatesForTrait = PredicateSelectionSpecific.Build(trait.GetRelevantPredicateIDs());
         }
+
+        public string TraitID => trait.ID;
 
         private IOtherLayersValueHandling GetOtherLayersValueHandling(LayerSet readLayerSet, string writeLayerID)
         {
@@ -58,9 +60,16 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         // returns the latest relevant changeset that affects/contributes to any of the trait entities (filtered by ciSelection) at that time
         // NOTE: this is NOT intelligent enough to not return changesets that have no practical effect because their changes are hidden by data in upper layers
-        public async Task<Changeset?> GetLatestRelevantChangeset(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<Changeset?> GetLatestRelevantChangesetOverall(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            return await changesetModel.GetLatestChangeset(ciSelection, NamedAttributesSelection.Build(relevantAttributesForTrait), relevantPredicatesForTrait, layerSet.LayerIDs, trans, timeThreshold);
+            return await changesetModel.GetLatestChangesetOverall(ciSelection, NamedAttributesSelection.Build(relevantAttributesForTrait), relevantPredicatesForTrait, layerSet.LayerIDs, trans, timeThreshold);
+        }
+
+        // returns the latest relevant changeset PER CI that affects/contributes the trait entity (filtered by ciSelection) at that time
+        // NOTE: this is NOT intelligent enough to not return changesets that have no practical effect because their changes are hidden by data in upper layers
+        public async Task<IDictionary<Guid, Changeset>> GetLatestRelevantChangesetPerCI(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            return await changesetModel.GetLatestChangesetPerCI(ciSelection, NamedAttributesSelection.Build(relevantAttributesForTrait), relevantPredicatesForTrait, layerSet.LayerIDs, trans, timeThreshold);
         }
 
         /*

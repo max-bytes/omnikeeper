@@ -36,7 +36,7 @@ namespace Omnikeeper.Service
                 }
                 else
                 { // we have not processed any changesets for this layer
-                    var latest = await changesetModel.GetLatestChangeset(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, null, new string[] { dependentLayerID }, trans, timeThreshold);
+                    var latest = await changesetModel.GetLatestChangesetOverall(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, new string[] { dependentLayerID }, trans, timeThreshold);
                     if (latest != null)
                     { // there is at least one changeset for this layer
                         unprocessedChangesets.Add(dependentLayerID, null);
