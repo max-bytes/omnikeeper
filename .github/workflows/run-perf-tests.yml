@@ -44,7 +44,7 @@ jobs:
           comment-on-alert: true
           fail-on-alert: true
           gh-repository: 'github.com/max-bytes/omnikeeper-benchmarks'
-      - name: Remove File # HACK: otherwise, second call fails
+      - name: Remove File # HACK: otherwise, next call fails
         uses: JesseTG/rm@v1.0.3
         with:
           path: ./benchmark-data-repository
@@ -54,6 +54,24 @@ jobs:
           name: Benchmark
           tool: 'benchmarkdotnet'
           output-file-path: backend/BenchmarkDotNet.Artifacts/results/PerfTests.BulkReplaceAttributesTest-report-full-compressed.json
+          github-token: ${{ secrets.BENCHMARK_RESULTS_DEPLOY_TOKEN }}
+          gh-pages-branch: main
+          auto-push: true
+          benchmark-data-dir-path: .
+          alert-threshold: '150%'
+          comment-on-alert: true
+          fail-on-alert: true
+          gh-repository: 'github.com/max-bytes/omnikeeper-benchmarks'
+      - name: Remove File # HACK: otherwise, next call fails
+        uses: JesseTG/rm@v1.0.3
+        with:
+          path: ./benchmark-data-repository
+      - name: upload GetTraitEntitiesByCIIDTest benchmark results
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Benchmark
+          tool: 'benchmarkdotnet'
+          output-file-path: backend/BenchmarkDotNet.Artifacts/results/PerfTests.GetTraitEntitiesByCIIDTest-report-full-compressed.json
           github-token: ${{ secrets.BENCHMARK_RESULTS_DEPLOY_TOKEN }}
           gh-pages-branch: main
           auto-push: true
