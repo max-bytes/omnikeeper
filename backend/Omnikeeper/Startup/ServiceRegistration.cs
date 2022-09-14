@@ -409,10 +409,10 @@ namespace Omnikeeper.Startup
             // jobs
             builder.RegisterType<CLBJob>().InstancePerLifetimeScope();
             builder.RegisterType<CLBSingleJob>().InstancePerLifetimeScope();
-            builder.RegisterType<CLBProcessedChangesetsCache>().SingleInstance();
+            builder.RegisterType<CLBProcessingCache>().SingleInstance();
             builder.RegisterType<ValidatorJob>().InstancePerLifetimeScope();
             builder.RegisterType<ValidatorSingleJob>().InstancePerLifetimeScope();
-            builder.RegisterType<ValidatorProcessedChangesetsCache>().SingleInstance();
+            builder.RegisterType<ValidatorProcessingCache>().SingleInstance();
             builder.RegisterType<ArchiveOldDataJob>().InstancePerLifetimeScope();
             builder.RegisterType<ExternalIDManagerJob>().InstancePerLifetimeScope();
             builder.RegisterType<MarkedForDeletionJob>().InstancePerLifetimeScope();

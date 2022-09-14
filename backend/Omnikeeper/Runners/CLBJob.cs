@@ -40,31 +40,41 @@ namespace Omnikeeper.Runners
             {
                 baseLogger.LogTrace("Start");
 
+                var timeThreshold = TimeThreshold.BuildLatest();
                 var trans = modelContextBuilder.BuildImmediate();
-                var activeLayers = await layerDataModel.GetLayerData(AnchorStateFilter.ActiveAndDeprecated, trans, TimeThreshold.BuildLatest());
+                var activeLayers = await layerDataModel.GetLayerData(AnchorStateFilter.ActiveAndDeprecated, trans, timeThreshold);
                 var layersWithCLBs = activeLayers.Where(l => l.CLConfigID != "");
 
                 if (!layersWithCLBs.IsEmpty())
                 {
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-                    var clConfigs = await clConfigModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+                    var clConfigs = await clConfigModel.GetByCIID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, timeThreshold);
+                    var clConfigLookup = clConfigs.ToLookup(kv => kv.Value.ID, c => (ciid: c.Key, config: c.Value));
+                    var latestChangesToCLConfigs = await clConfigModel.GetLatestRelevantChangesetPerTraitEntity(AllCIIDsSelection.Instance, false, true, metaConfiguration.ConfigLayerset, trans, timeThreshold);
 
                     foreach (var l in layersWithCLBs)
                     {
                         // find clConfig for layer
-                        if (!clConfigs.TryGetValue(l.CLConfigID, out var clConfig))
+                        var foundCLConfigs = clConfigLookup[l.CLConfigID];
+                        if (foundCLConfigs.IsEmpty())
                         {
                             baseLogger.LogError($"Could not find cl config with ID {l.CLConfigID}");
+                        } else if (foundCLConfigs.Count() > 1)
+                        {
+                            baseLogger.LogError($"Found more than 1 cl config with ID {l.CLConfigID}");
                         }
                         else
                         {
+                            var clConfig = foundCLConfigs.First();
                             try
                             {
-                                await TriggerCLB(clConfig, l);
+                                if (!latestChangesToCLConfigs.TryGetValue(clConfig.ciid, out var latestChange))
+                                    throw new Exception($"Could not find latest change for CL config {clConfig.config.ID} on layer {l.LayerID}");
+                                await TriggerCLB(clConfig.config, latestChange.Timestamp, l);
                             } 
                             catch (Exception ex)
                             {
-                                baseLogger.LogError(ex, $"Could not schedule single CLB Job {clConfig.ID} on layer {l.LayerID}");
+                                baseLogger.LogError(ex, $"Could not schedule single CLB Job {clConfig.config.ID} on layer {l.LayerID}");
                             }
                         }
                     }
@@ -78,7 +88,7 @@ namespace Omnikeeper.Runners
             }
         }
 
-        private async Task TriggerCLB(CLConfigV1 clConfig, LayerData layerData)
+        private async Task TriggerCLB(CLConfigV1 clConfig, DateTimeOffset configActuality, LayerData layerData)
         {
             var jobKey = new JobKey($"{clConfig.ID}@{layerData.LayerID}", "clb");
             var triggerKey = new TriggerKey($"trigger@{clConfig.ID}@{layerData.LayerID}", "clb");
@@ -94,6 +104,7 @@ namespace Omnikeeper.Runners
                 job.JobDataMap.Add("clConfig_CLBrainConfig", clConfig.CLBrainConfig.RootElement.GetRawText()); // HACK: we pass the config by string, because Quartz likes those more than objects
                 job.JobDataMap.Add("clConfig_CLBrainReference", clConfig.CLBrainReference);
                 job.JobDataMap.Add("layerID", layerData.LayerID);
+                job.JobDataMap.Add("config_ActualityMS", configActuality.ToUnixTimeMilliseconds());
 
                 ITrigger trigger = TriggerBuilder.Create().WithIdentity(triggerKey).WithPriority(10).StartNow().Build();
                 await scheduler.ScheduleJob(job, trigger);
@@ -116,14 +127,14 @@ namespace Omnikeeper.Runners
         private readonly ILogger<CLBSingleJob> genericLogger;
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly CLBProcessedChangesetsCache clbProcessedChangesetsCache;
+        private readonly CLBProcessingCache clbProcessedChangesetsCache;
         private readonly IIssuePersister issuePersister;
         private readonly ICalculateUnprocessedChangesetsService calculateUnprocessedChangesetsService;
         private readonly ILoggerFactory loggerFactory;
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
 
         public CLBSingleJob(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, ILifetimeScope lifetimeScope, IChangesetModel changesetModel, ILogger<CLBSingleJob> genericLogger,
-            ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, ILoggerFactory loggerFactory, CLBProcessedChangesetsCache clbProcessedChangesetsCache,
+            ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, ILoggerFactory loggerFactory, CLBProcessingCache clbProcessedChangesetsCache,
              IIssuePersister issuePersister, ICalculateUnprocessedChangesetsService calculateUnprocessedChangesetsService)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
@@ -163,10 +174,20 @@ namespace Omnikeeper.Runners
             }
 
             var layerID = d.GetString("layerID");
-
             if (layerID == null)
             {
                 genericLogger.LogError("Error passing layerID through JobDataMap");
+                return;
+            }
+
+            DateTimeOffset configActuality;
+            try
+            {
+                configActuality = DateTimeOffset.FromUnixTimeMilliseconds(d.GetLong("config_ActualityMS"));
+            }
+            catch (Exception)
+            {
+                genericLogger.LogError("Error passing config_ActualityMS through JobDataMap");
                 return;
             }
 
@@ -186,13 +207,21 @@ namespace Omnikeeper.Runners
             var dependentLayerIDs = clb.GetDependentLayerIDs(layerID, clBrainConfig, clLogger);
 
             // calculate unprocessed changesets
-            var processedChangesets = clbProcessedChangesetsCache.TryGetValue(clConfig_ID, layerID);
+            var (processedChangesets, processedConfigActuality) = clbProcessedChangesetsCache.TryGetValue(clConfig_ID, layerID);
             using var trans = modelContextBuilder.BuildImmediate();
             var (unprocessedChangesets, latestSeenChangesets) = await calculateUnprocessedChangesetsService.CalculateUnprocessedChangesets(processedChangesets, dependentLayerIDs, timeThreshold, trans);
             if (unprocessedChangesets.All(kv => kv.Value != null && kv.Value.IsEmpty()))
             {
-                clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID} because no unprocessed changesets exist for dependent layers");
-                return; // <- all dependent layers have not changed since last run, we can skip
+                var cannotSkipBecauseOfUpdatedConfig = processedConfigActuality != null && processedConfigActuality < configActuality;
+                if (cannotSkipBecauseOfUpdatedConfig)
+                {
+                    clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because CL config was updated");
+                }
+                else
+                {
+                    clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID} because no unprocessed changesets exist for dependent layers");
+                    return; // <- all dependent layers have not changed since last run, we can skip
+                }
             }
             else
             {
@@ -233,7 +262,7 @@ namespace Omnikeeper.Runners
 
                     if (successful)
                     {
-                        clbProcessedChangesetsCache.UpdateCache(clConfig_ID, layerID, latestSeenChangesets);
+                        clbProcessedChangesetsCache.UpdateCache(clConfig_ID, layerID, latestSeenChangesets, configActuality);
                     }
 
                     if (!successful)

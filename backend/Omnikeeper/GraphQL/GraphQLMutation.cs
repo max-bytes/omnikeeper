@@ -39,9 +39,7 @@ namespace Omnikeeper.GraphQL
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
-        private readonly CLBProcessedChangesetsCache clbProcessedChangesetsCache;
         private readonly IAuthzFilterManager authzFilterManager;
-        private readonly ValidatorProcessedChangesetsCache validatorProcessedChangesetsCache;
         private readonly IScheduler localScheduler;
 
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
@@ -50,8 +48,8 @@ namespace Omnikeeper.GraphQL
             RecursiveTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel, ChangesetDataModel changesetDataModel,
             IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
-            IEnumerable<IPluginRegistration> plugins, IIndex<string, IScheduler> schedulers, CLBProcessedChangesetsCache clbProcessedChangesetsCache,
-            IAuthzFilterManager authzFilterManager, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerDataModel layerDataModel, ValidatorContextV1Model validatorContextModel, ValidatorProcessedChangesetsCache validatorProcessedChangesetsCache)
+            IEnumerable<IPluginRegistration> plugins, IIndex<string, IScheduler> schedulers,
+            IAuthzFilterManager authzFilterManager, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerDataModel layerDataModel, ValidatorContextV1Model validatorContextModel)
         {
             Field<MutateReturnType>("mutateCIs")
                 .Arguments(
@@ -240,11 +238,9 @@ namespace Omnikeeper.GraphQL
             this.metaConfigurationModel = metaConfigurationModel;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
-            this.clbProcessedChangesetsCache = clbProcessedChangesetsCache;
             this.authzFilterManager = authzFilterManager;
             this.layerDataModel = layerDataModel;
             this.validatorContextModel = validatorContextModel;
-            this.validatorProcessedChangesetsCache = validatorProcessedChangesetsCache;
             localScheduler = schedulers["localScheduler"];
 
             CreateManage();

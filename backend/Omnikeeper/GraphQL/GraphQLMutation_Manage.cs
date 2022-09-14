@@ -472,9 +472,6 @@ namespace Omnikeeper.GraphQL
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  // delete cache entries that affect this clConfig
-                  clbProcessedChangesetsCache.DeleteFromCache(clConfig.ID);
-
                   return newCLConfig.dc;
               });
 
@@ -495,9 +492,6 @@ namespace Omnikeeper.GraphQL
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
-
-                  // delete last cache entries that affect this clConfig
-                  clbProcessedChangesetsCache.DeleteFromCache(id);
 
                   return deleted;
               });
@@ -524,9 +518,6 @@ namespace Omnikeeper.GraphQL
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  // delete cache entries that affect this validator context
-                  validatorProcessedChangesetsCache.DeleteFromCache(contextInput.ID);
-
                   return newContext.dc;
               });
 
@@ -547,9 +538,6 @@ namespace Omnikeeper.GraphQL
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
-
-                  // delete last cache entries that affect this context
-                  validatorProcessedChangesetsCache.DeleteFromCache(id);
 
                   return deleted;
               });

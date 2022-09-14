@@ -40,18 +40,22 @@ namespace Omnikeeper.Runners
                 baseLogger.LogTrace("Start");
 
                 var trans = modelContextBuilder.BuildImmediate();
+                var timeThreshold = TimeThreshold.BuildLatest();
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-                var validationContexts = await validatorContextModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+                var validationContexts = await validatorContextModel.GetByCIID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, timeThreshold);
+                var latestChangesToValidationContexts = await validatorContextModel.GetLatestRelevantChangesetPerTraitEntity(AllCIIDsSelection.Instance, false, true, metaConfiguration.ConfigLayerset, trans, timeThreshold);
 
                 foreach (var kv in validationContexts)
                 {
                     try
                     {
-                        await TriggerValidation(kv.Value);
+                        if (!latestChangesToValidationContexts.TryGetValue(kv.Key, out var latestChange))
+                            throw new Exception($"Could not find latest change for validation context {kv.Value.ID}");
+                        await TriggerValidation(kv.Value, latestChange.Timestamp);
                     } 
                     catch (Exception ex)
                     {
-                        baseLogger.LogError(ex, $"Could not schedule single Validator Job {kv.Key}");
+                        baseLogger.LogError(ex, $"Could not schedule single Validator Job {kv.Value.ID}");
                     }
                 }
 
@@ -63,7 +67,7 @@ namespace Omnikeeper.Runners
             }
         }
 
-        private async Task TriggerValidation(ValidatorContextV1 context)
+        private async Task TriggerValidation(ValidatorContextV1 context, DateTimeOffset contextActuality)
         {
             var jobKey = new JobKey($"job@{context.ID}", "validator");
             var triggerKey = new TriggerKey($"trigger@{context.ID}", "validator");
@@ -78,6 +82,7 @@ namespace Omnikeeper.Runners
                 job.JobDataMap.Add("context_ID", context.ID);
                 job.JobDataMap.Add("context_Config", context.Config.RootElement.GetRawText()); // HACK: we pass the config by string, because Quartz likes those more than objects
                 job.JobDataMap.Add("context_ValidatorReference", context.ValidatorReference);
+                job.JobDataMap.Add("context_ActualityMS", contextActuality.ToUnixTimeMilliseconds());
 
                 ITrigger trigger = TriggerBuilder.Create().WithIdentity(triggerKey).WithPriority(-10).StartNow().Build();
                 await scheduler.ScheduleJob(job, trigger);
@@ -99,14 +104,14 @@ namespace Omnikeeper.Runners
         private readonly ILogger<ValidatorSingleJob> genericLogger;
         private readonly ScopedLifetimeAccessor scopedLifetimeAccessor;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly ValidatorProcessedChangesetsCache processedChangesetsCache;
+        private readonly ValidatorProcessingCache processingCache;
         private readonly IIssuePersister issuePersister;
         private readonly ICalculateUnprocessedChangesetsService calculateUnprocessedChangesetsService;
         private readonly ILoggerFactory loggerFactory;
         private readonly IDictionary<string, IValidator> existingValidators;
 
         public ValidatorSingleJob(IEnumerable<IValidator> existingValidators, ILifetimeScope lifetimeScope, IChangesetModel changesetModel, ILogger<ValidatorSingleJob> genericLogger,
-            ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, ILoggerFactory loggerFactory, ValidatorProcessedChangesetsCache processedChangesetsCache,
+            ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, ILoggerFactory loggerFactory, ValidatorProcessingCache processingCache,
              IIssuePersister issuePersister, ICalculateUnprocessedChangesetsService calculateUnprocessedChangesetsService)
         {
             this.existingValidators = existingValidators.ToDictionary(l => l.Name);
@@ -116,7 +121,7 @@ namespace Omnikeeper.Runners
             this.scopedLifetimeAccessor = scopedLifetimeAccessor;
             this.modelContextBuilder = modelContextBuilder;
             this.loggerFactory = loggerFactory;
-            this.processedChangesetsCache = processedChangesetsCache;
+            this.processingCache = processingCache;
             this.issuePersister = issuePersister;
             this.calculateUnprocessedChangesetsService = calculateUnprocessedChangesetsService;
         }
@@ -144,6 +149,16 @@ namespace Omnikeeper.Runners
                 genericLogger.LogError("Error passing context_ValidatorReference through JobDataMap");
                 return;
             }
+            DateTimeOffset contextActuality;
+            try
+            {
+                var context_ActualityMS = d.GetLong("context_ActualityMS");
+                contextActuality = DateTimeOffset.FromUnixTimeMilliseconds(context_ActualityMS);
+            } catch (Exception)
+            {
+                genericLogger.LogError("Error passing context_LatestChangeMS through JobDataMap");
+                return;
+            }
 
             var clLogger = loggerFactory.CreateLogger($"Validator_{context_ID}");
 
@@ -163,13 +178,20 @@ namespace Omnikeeper.Runners
                 throw new Exception("Validator must have a non-empty set of dependent layer IDs");
 
             // calculate unprocessed changesets
-            var processedChangesets = processedChangesetsCache.TryGetValue(context_ID);
+            var (processedChangesets, processedContextActuality) = processingCache.TryGetProcessedChangesets(context_ID);
             using var trans = modelContextBuilder.BuildImmediate();
             var (unprocessedChangesets, latestSeenChangesets) = await calculateUnprocessedChangesetsService.CalculateUnprocessedChangesets(processedChangesets, dependentLayerIDs, timeThreshold, trans);
             if (unprocessedChangesets.All(kv => kv.Value != null && kv.Value.IsEmpty()))
             {
-                clLogger.LogDebug($"Skipping run of validator {context_ID} because no unprocessed changesets exist for dependent layers");
-                return; // <- all dependent layers have not changed since last run, we can skip
+                var cannotSkipBecauseOfUpdatedContext = processedContextActuality != null && processedContextActuality < contextActuality;
+                if (cannotSkipBecauseOfUpdatedContext)
+                {
+                    clLogger.LogDebug($"Cannot skip run of validator {context_ID} because context was updated");
+                } else
+                {
+                    clLogger.LogDebug($"Skipping run of validator {context_ID} because no unprocessed changesets exist for dependent layers");
+                    return; // <- all dependent layers have not changed since last run, we can skip
+                }
             }
             else
             {
@@ -209,7 +231,7 @@ namespace Omnikeeper.Runners
 
                     if (successful)
                     {
-                        processedChangesetsCache.UpdateCache(context_ID, latestSeenChangesets);
+                        processingCache.UpdateProcessedChangesets(context_ID, latestSeenChangesets, contextActuality);
                     }
 
                     if (!successful)
