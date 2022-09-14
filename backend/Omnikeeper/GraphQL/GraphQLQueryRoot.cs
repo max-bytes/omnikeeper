@@ -217,7 +217,7 @@ namespace Omnikeeper.GraphQL
                         workCIs = workCIs.Where(ci => nonEmptyCIIDs.Contains(ci.ID));
                     }
 
-                    var cisFilteredByTraits = effectiveTraitModel.FilterMergedCIsByTraits(workCIs, requiredTraitsCopy, requiredNonTraitsCopy, layerSet, userContext.Transaction, timeThreshold);
+                    var cisFilteredByTraits = effectiveTraitModel.FilterMergedCIsByTraits(workCIs, requiredTraitsCopy, requiredNonTraitsCopy, layerSet);
 
                     // reduce CIs to those that are allowed
                     if (!preAuthzCheckedCIs)

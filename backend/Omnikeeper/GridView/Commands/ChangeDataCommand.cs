@@ -205,7 +205,7 @@ namespace Omnikeeper.GridView.Commands
                 // TODO: only fetch relevant attributes
                 var mergedCIs = await ciModel.GetMergedCIs(cisList, readLayerset, true, AllAttributeSelection.Instance, trans, timeThreshold);
 
-                var cisWithTrait = effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, readLayerset, trans, timeThreshold);
+                var cisWithTrait = effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, readLayerset);
                 if (cisWithTrait.Count() < mergedCIs.Count())
                 {
                     var cisWithoutTrait = mergedCIs.Select(ci => ci.ID).ToHashSet().Except(cisWithTrait.Select(ci => ci.ID));

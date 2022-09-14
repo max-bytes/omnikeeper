@@ -99,7 +99,7 @@ namespace Omnikeeper.Model
         {
             // check data traits changes through their changesets
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-            var latestChangeset = await dataTraitModel.GetLatestRelevantChangesetOverall(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, timeThreshold);
+            var latestChangeset = await dataTraitModel.GetLatestRelevantChangesetOverallHeuristic(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, trans, timeThreshold);
             return latestChangeset?.Timestamp;
         }
 

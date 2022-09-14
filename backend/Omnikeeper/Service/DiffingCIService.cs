@@ -554,13 +554,13 @@ namespace Omnikeeper.Service
 
                     foreach (var trait in leftTraits)
                     {
-                        var leftCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(leftCIs, trait, d.leftLayers, userContext.Transaction, d.leftTimeThreshold);
+                        var leftCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(leftCIs, trait, d.leftLayers);
                         foreach (var ci in leftCIsWithTrait)
                             left.AddOrUpdate(ci.ID, () => (new HashSet<string>() { trait.ID }, ci.CIName), (current) => { current.traitIDs.Add(trait.ID); return current; });
                     }
                     foreach (var trait in rightTraits)
                     {
-                        var rightCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(rightCIs, trait, d.rightLayers, userContext.Transaction, d.rightTimeThreshold);
+                        var rightCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(rightCIs, trait, d.rightLayers);
                         foreach (var ci in rightCIsWithTrait)
                             right.AddOrUpdate(ci.ID, () => (new HashSet<string>() { trait.ID }, ci.CIName), (current) => { current.traitIDs.Add(trait.ID); return current; });
                     }

@@ -251,10 +251,14 @@ namespace Omnikeeper.Base.Model.TraitBased
         }
 
         // returns the latest relevant changeset that affects/contributes to any of the trait entities (filtered by ciSelection) at that time
-        // TODO: remove, once PerTraitEntity is better developed
-        public async Task<Changeset?> GetLatestRelevantChangesetOverall(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<Changeset?> GetLatestRelevantChangesetOverallHeuristic(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            return await traitEntityModel.GetLatestRelevantChangesetOverall(ciSelection, layerSet, trans, timeThreshold);
+            return await traitEntityModel.GetLatestRelevantChangesetOverallHeuristic(ciSelection, layerSet, trans, timeThreshold);
+        }
+
+        public async Task<IDictionary<Guid, Changeset>> GetLatestRelevantChangesetPerTraitEntity(ICIIDSelection ciSelection, bool includeRemovedTraitEntities, bool filterOutNonTraitEntityCIs, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            return await traitEntityModel.GetLatestRelevantChangesetPerTraitEntity(ciSelection, includeRemovedTraitEntities, filterOutNonTraitEntityCIs, layerSet, trans, timeThreshold);
         }
 
         public async Task<bool> TryToDelete(Guid ciid, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)

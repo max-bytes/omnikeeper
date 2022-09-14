@@ -102,7 +102,7 @@ namespace Omnikeeper.GridView.Queries
                     .ToHashSet();
                 var attributeSelection = NamedAttributesSelection.Build(relevantAttributes);
                 var mergedCIs = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, readLayerset, false, attributeSelection, trans, atTime);
-                var mergedCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, readLayerset, trans, atTime);
+                var mergedCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, readLayerset);
 
                 // filter readable CIs based on authorization
                 var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(mergedCIsWithTrait, (t) => t.ID);

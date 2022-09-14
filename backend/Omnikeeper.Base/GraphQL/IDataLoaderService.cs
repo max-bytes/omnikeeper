@@ -18,7 +18,7 @@ namespace Omnikeeper.Base.GraphQL
         IDataLoaderResult<IEnumerable<MergedCI>> SetupAndLoadMergedCIs(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, ICIModel ciModel, IAttributeModel attributeModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IDictionary<Guid, string>> SetupAndLoadCINames(ICIIDSelection ciidSelection, IAttributeModel attributeModel, ICIIDModel ciidModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IDictionary<Guid, Changeset>> SetupAndLoadLatestRelevantChangesetPerCI(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, IPredicateSelection predicateSelection, IChangesetModel changesetModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
-        IDataLoaderResult<IDictionary<Guid, Changeset>> SetupAndLoadLatestRelevantChangesetPerTraitEntity(ICIIDSelection ciidSelection, TraitEntityModel traitEntityModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
+        IDataLoaderResult<IDictionary<Guid, Changeset>> SetupAndLoadLatestRelevantChangesetPerTraitEntity(ICIIDSelection ciidSelection, bool includingRemovedTraitEntities, bool filterOutNonTraitEntityCIs, TraitEntityModel traitEntityModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IDictionary<string, LayerData>> SetupAndLoadAllLayers(ILayerDataModel layerDataModel, TimeThreshold timeThreshold, IModelContext trans);
         IDataLoaderResult<IEnumerable<MergedRelation>> SetupAndLoadRelation(IRelationSelection rs, IRelationModel relationModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
     }

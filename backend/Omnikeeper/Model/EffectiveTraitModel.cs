@@ -24,7 +24,7 @@ namespace Omnikeeper.Model
         /// traitSOP is a sum of products of trait requirements
         /// see https://en.wikipedia.org/wiki/Disjunctive_normal_form
         /// </summary>
-        public IEnumerable<MergedCI> FilterCIsWithTraitSOP(IEnumerable<MergedCI> cis, (ITrait trait, bool negated)[][] traitSOP, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public IEnumerable<MergedCI> FilterCIsWithTraitSOP(IEnumerable<MergedCI> cis, (ITrait trait, bool negated)[][] traitSOP, LayerSet layers)
         {
             // return the full list if the traitSOP is empty
             if (traitSOP.IsEmpty())

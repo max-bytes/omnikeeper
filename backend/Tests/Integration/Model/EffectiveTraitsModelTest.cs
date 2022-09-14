@@ -43,11 +43,11 @@ namespace Tests.Integration.Model
             Assert.AreEqual(2, et3.Count());
             Assert.IsTrue(et3.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
 
-            var cis1 = traitModel.FilterCIsWithTrait(cis, testTrait1, layerset, trans, timeThreshold);
+            var cis1 = traitModel.FilterCIsWithTrait(cis, testTrait1, layerset);
             Assert.AreEqual(3, cis1.Count());
             cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithStrictOrdering());
 
-            var cis2 = traitModel.FilterCIsWithTrait(cis, testTrait2, layerset, trans, timeThreshold);
+            var cis2 = traitModel.FilterCIsWithTrait(cis, testTrait2, layerset);
             Assert.AreEqual(2, cis2.Count());
             cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
         }

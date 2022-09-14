@@ -60,22 +60,42 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         // returns the latest relevant changeset that affects/contributes to any of the trait entities (filtered by ciSelection) at that time
         // NOTE: this is NOT intelligent enough to not return changesets that have no practical effect because their changes are hidden by data in upper layers
-        public async Task<Changeset?> GetLatestRelevantChangesetOverall(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        // NOTE: this is NOT intelligent enough to not return changesets that have no practical effect because their changes affect no actual trait entity, but contain changes to CIs
+        // where an attribute/relation that (by coincidence) has the same name as one of the trait attributes/relations changed; that's why it has the *Heuristic suffix
+        public async Task<Changeset?> GetLatestRelevantChangesetOverallHeuristic(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             return await changesetModel.GetLatestChangesetOverall(ciSelection, NamedAttributesSelection.Build(relevantAttributesForTrait), relevantPredicatesForTrait, layerSet.LayerIDs, trans, timeThreshold);
         }
 
         // returns the latest relevant changeset PER CI that affects/contributes the trait entity (filtered by ciSelection) at that time
         // NOTE: this is NOT intelligent enough to not return changesets that have no practical effect because their changes are hidden by data in upper layers
-        public async Task<IDictionary<Guid, Changeset>> GetLatestRelevantChangesetPerTraitEntity(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        // param filterOutNonTraitEntityCIs: set to true to force sanity checks per CI to ensure they actually have the trait, set to false if you are sure that the passed ciSelection is 100% trait entities (otherwise you get wrong results)
+        public async Task<IDictionary<Guid, Changeset>> GetLatestRelevantChangesetPerTraitEntity(ICIIDSelection ciSelection, bool includeRemovedTraitEntities, bool filterOutNonTraitEntityCIs, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            return await changesetModel.GetLatestChangesetPerCI(ciSelection, NamedAttributesSelection.Build(relevantAttributesForTrait), relevantPredicatesForTrait, layerSet.LayerIDs, trans, timeThreshold);
-
+            if (includeRemovedTraitEntities)
+                throw new NotImplementedException(); // hard to implement, not supported (yet)
+            // possible idea for implementing case when includingRemoved = true
             // GetLatestChangesetPerCI()
             // check cis if they fulfill trait at current time: yes -> add to return set
-            // for those who don't, repeat operation with previous timestamp
+            // for those who don't, repeat operation with timestamp that is just before the found changeset per CI
 
-            // for those who don't, check if they fulfilled trait before: yes -> add to return set
+            var r = await changesetModel.GetLatestChangesetPerCI(ciSelection, NamedAttributesSelection.Build(relevantAttributesForTrait), relevantPredicatesForTrait, layerSet.LayerIDs, trans, timeThreshold);
+            if (filterOutNonTraitEntityCIs)
+            {
+                var ret = new Dictionary<Guid, Changeset>();
+                var ciidSelectionWithChangeset = SpecificCIIDsSelection.Build(r.Keys.ToHashSet());
+                var cis = await ciModel.GetMergedCIs(ciidSelectionWithChangeset, layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold);
+                var ciidsWithET = effectiveTraitModel.FilterCIsWithTrait(cis, trait, layerSet).Select(ci => ci.ID).ToHashSet();
+
+                foreach (var ciidWithET in ciidsWithET)
+                    if (r.TryGetValue(ciidWithET, out var cs))
+                        ret[ciidWithET] = cs;
+
+                return ret;
+            } else
+            {
+                return r;
+            }
         }
 
         /*

@@ -274,14 +274,14 @@ namespace Omnikeeper.GraphQL
                 });
             return loader.LoadAsync(ciidSelection);
         }
-        public IDataLoaderResult<IDictionary<Guid, Changeset>> SetupAndLoadLatestRelevantChangesetPerTraitEntity(ICIIDSelection ciidSelection, TraitEntityModel traitEntityModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public IDataLoaderResult<IDictionary<Guid, Changeset>> SetupAndLoadLatestRelevantChangesetPerTraitEntity(ICIIDSelection ciidSelection, bool includeRemovedTraitEntities, bool filterOutNonTraitEntityCIs, TraitEntityModel traitEntityModel, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader<ICIIDSelection, IDictionary<Guid, Changeset>>($"GetLatestRelevantChangesetOfTraitEntityPerCI_{traitEntityModel.TraitID}_{layerSet}_{timeThreshold}",
+            var loader = dataLoaderContextAccessor.Context.GetOrAddBatchLoader<ICIIDSelection, IDictionary<Guid, Changeset>>($"GetLatestRelevantChangesetOfTraitEntityPerCI_{traitEntityModel.TraitID}_{includeRemovedTraitEntities}_{filterOutNonTraitEntityCIs}_{layerSet}_{timeThreshold}",
                 async (IEnumerable<ICIIDSelection> ciidSelections) =>
                 {
                     var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
 
-                    var combined = await traitEntityModel.GetLatestRelevantChangesetPerTraitEntity(combinedCIIDSelection, layerSet, trans, timeThreshold);
+                    var combined = await traitEntityModel.GetLatestRelevantChangesetPerTraitEntity(combinedCIIDSelection, includeRemovedTraitEntities, filterOutNonTraitEntityCIs, layerSet, trans, timeThreshold);
 
                     var ret = new Dictionary<ICIIDSelection, IDictionary<Guid, Changeset>>(); // NOTE: seems weird, cant lookup be created better?
                     foreach (var s in ciidSelections)
