@@ -67,9 +67,15 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         // returns the latest relevant changeset PER CI that affects/contributes the trait entity (filtered by ciSelection) at that time
         // NOTE: this is NOT intelligent enough to not return changesets that have no practical effect because their changes are hidden by data in upper layers
-        public async Task<IDictionary<Guid, Changeset>> GetLatestRelevantChangesetPerCI(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IDictionary<Guid, Changeset>> GetLatestRelevantChangesetPerTraitEntity(ICIIDSelection ciSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             return await changesetModel.GetLatestChangesetPerCI(ciSelection, NamedAttributesSelection.Build(relevantAttributesForTrait), relevantPredicatesForTrait, layerSet.LayerIDs, trans, timeThreshold);
+
+            // GetLatestChangesetPerCI()
+            // check cis if they fulfill trait at current time: yes -> add to return set
+            // for those who don't, repeat operation with previous timestamp
+
+            // for those who don't, check if they fulfilled trait before: yes -> add to return set
         }
 
         /*

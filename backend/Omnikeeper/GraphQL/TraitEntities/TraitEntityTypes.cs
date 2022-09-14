@@ -217,7 +217,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
                     var trans = userContext.Transaction;
 
-                    return dataLoaderService.SetupAndLoadLatestRelevantChangesetOfTraitEntityPerCI(SpecificCIIDsSelection.Build(et.CIID), traitEntityModel, layerset, timeThreshold, trans)
+                    return dataLoaderService.SetupAndLoadLatestRelevantChangesetPerTraitEntity(SpecificCIIDsSelection.Build(et.CIID), traitEntityModel, layerset, timeThreshold, trans)
                         .Then(r =>
                         {
                             if (r.TryGetValue(et.CIID, out var res))
