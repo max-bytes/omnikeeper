@@ -88,20 +88,6 @@ namespace Omnikeeper.GraphQL
                     return configs;
                 });
 
-            Field<ListGraphType<ODataAPIContextType>>("manage_odataapicontexts")
-                .ResolveAsync(async context =>
-                {
-                    var userContext = context.GetUserContext();
-
-                    CheckManagementPermissionThrow(userContext);
-
-                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-
-                    var configs = await odataAPIContextModel.GetByCIID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-
-                    return configs.Values;
-                });
-
             Field<StringGraphType>("manage_baseConfiguration")
                 .ResolveAsync(async context =>
                 {

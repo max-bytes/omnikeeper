@@ -168,7 +168,7 @@ export default function ReadWriteGraphRendering(props) {
                                 const [
                                     {data: authRoles, error: errorAuthRoles}, 
                                     {data: layers, error: errorLayers},
-                                    {data: odataContexts, error: errorODataContexts},
+                                    {data: odataContextsData, error: errorODataContexts},
                                 ] = results;
 
                                 if (errorAuthRoles) {
@@ -183,7 +183,10 @@ export default function ReadWriteGraphRendering(props) {
                                     console.log(errorODataContexts); // TODO
                                     return;
                                 }
-                                const { elements, alignmentConstraints } = data2elements(authRoles.manage_authRoles, layers.manage_layers, odataContexts.manage_odataapicontexts);
+
+                                const odataContexts = _.map(odataContextsData.traitEntities.m__meta__config__odata_context.all, e => e.entity);
+
+                                const { elements, alignmentConstraints } = data2elements(authRoles.manage_authRoles, layers.manage_layers, odataContexts);
 
                                 cy.json({ 
                                     elements: elements
@@ -318,12 +321,14 @@ function data2elements(authRoles, layers, odataContexts) {
         };
     });
     const odataContext2layerEdgesRead = _.flatten(_.map(odataContexts, odataContext => {
-        return _.map(odataContext.readLayers, layer => {
+        const config = JSON.parse(odataContext.config);
+        const readLayerIDs = config.ReadLayerset;
+        return _.map(readLayerIDs, layerID => {
             return {
                 data: {
-                    id: `edge_${createLayerNodeID(layer.id)}->can_be_read_from->${createODataContextNodeID(odataContext.id)}`,
+                    id: `edge_${createLayerNodeID(layerID)}->can_be_read_from->${createODataContextNodeID(odataContext.id)}`,
                     label: "can be read from",
-                    source: createLayerNodeID(layer.id),
+                    source: createLayerNodeID(layerID),
                     target: createODataContextNodeID(odataContext.id),
                 }
             }
@@ -395,11 +400,15 @@ query {
 `;
 
 const queryODataContexts = gql`
-query {
-    manage_odataapicontexts {
-      id
-      readLayers {
-        id
+{
+    traitEntities(layers: ["__okconfig"]) {
+      m__meta__config__odata_context {
+        all {
+          entity {
+            id
+            config
+          }
+        }
       }
     }
   }

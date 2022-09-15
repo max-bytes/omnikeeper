@@ -13,12 +13,18 @@ export const queries = {
         }
     `,
     ODataAPIContexts: gql`
-        query {
-            manage_odataapicontexts {
+    {
+        traitEntities(layers: ["__okconfig"]) {
+          m__meta__config__odata_context {
+            all {
+              entity {
                 id
                 config
+              }
             }
+          }
         }
+      }      
     `,
     Predicates: gql`
         query {

@@ -5,13 +5,14 @@ import { mutations } from '../../graphql/mutations_manage'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import AgGridCrud from './AgGridCrud';
+import _ from 'lodash';
 
 export default function ManageODataAPIContexts(props) {
   var [rowData, setRowData] = useState([]);
   const { loading, refetch } = useQuery(queries.ODataAPIContexts, { 
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
-      setRowData(data.manage_odataapicontexts);
+      setRowData(_.map(data.traitEntities.m__meta__config__odata_context.all, e => e.entity));
     },
     onError: (e) => {
       console.log("error"); // TODO
@@ -43,8 +44,8 @@ export default function ManageODataAPIContexts(props) {
         }
       }}
       saveRow={async row => {
-        return upsertODataAPIContext({variables: { odataAPIContext: { id: row.id, config: row.config }}})
-          .then(r => ({result: r.data.manage_upsertODataAPIContext, id: row.id}))
+        return upsertODataAPIContext({variables: { odataAPIContext: { id: row.id, config: row.config, name: `OData-Context - ${row.id}` }}})
+          .then(r => ({result: r.data.upsertByDataID_m__meta__config__odata_context.entity, id: row.id}))
           .catch(e => ({result: e, id: row.id }));
       }} />
   </>;

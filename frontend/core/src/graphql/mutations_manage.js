@@ -52,16 +52,26 @@ export const mutations = {
   `,
 
   UPSERT_ODATAAPICONTEXT: gql`
-    mutation($odataAPIContext: UpsertODataAPIContextInputType!) {
-      manage_upsertODataAPIContext(odataAPIContext: $odataAPIContext) {
-        id
-        config
+    mutation($odataAPIContext: TE_Insert_Input___meta__config__odata_context!) {
+      upsertByDataID_m__meta__config__odata_context(
+        layers: ["__okconfig"]
+        writeLayer: "__okconfig"
+        input: $odataAPIContext
+      ) {
+        entity {
+          id
+          config
+        }
       }
-    }
+    }    
   `,
   DELETE_ODATAAPICONTEXT: gql`
   mutation($id: String!) {
-    manage_deleteODataAPIContext(id: $id)
+    deleteSingleByFilter_m__meta__config__odata_context(
+      layers: ["__okconfig"]
+      writeLayer: "__okconfig"
+      filter: {id: {exact: $id}}
+    )
   }
   `,
   

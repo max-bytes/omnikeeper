@@ -154,57 +154,6 @@ namespace Omnikeeper.GraphQL
                   return deleted != null;
               });
 
-
-            Field<ODataAPIContextType>("manage_upsertODataAPIContext")
-                .Arguments(
-                    new QueryArgument<NonNullGraphType<UpsertODataAPIContextInputType>> { Name = "odataAPIContext" }
-                )
-                .ResolveAsync(async context =>
-                {
-                    var userContext = context.GetUserContext();
-
-                    var contextInput = context.GetArgument<UpsertODataAPIContextInput>("odataAPIContext")!;
-
-                    CheckManagementPermissionThrow(userContext, "modify ODataAPIContext");
-
-                    try
-                    {
-                        var config = ODataAPIContext.ConfigSerializer.Deserialize(contextInput.Config);
-                        var odataContext = new ODataAPIContext(contextInput.ID, config);
-
-                        var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                        var (created, _, _) = await odataAPIContextModel.InsertOrUpdate(odataContext, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                            userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
-                        userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
-
-                        return created;
-                    }
-                    catch (Exception e)
-                    {
-                        throw new ExecutionError($"Could not parse configuration", e);
-                    }
-                });
-
-            Field<BooleanGraphType>("manage_deleteODataAPIContext")
-              .Arguments(
-                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
-              )
-              .ResolveAsync(async context =>
-              {
-                  var userContext = context.GetUserContext();
-
-                  var id = context.GetArgument<string>("id")!;
-
-                  CheckManagementPermissionThrow(userContext, "delete ODataAPIContext");
-
-                  var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                  var deleted = await odataAPIContextModel.TryToDelete(id, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
-                  userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
-                  return deleted;
-              });
-
-
             Field<BooleanGraphType>("manage_truncateLayer")
               .Arguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
