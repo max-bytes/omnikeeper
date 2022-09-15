@@ -2,12 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/client';
 import { mutations } from 'graphql/mutations'
-import { Form, Button, Card, Space } from "antd";
+import { Form, Button, Card, Space, Input } from "antd";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import LayerDropdown from "components/LayerDropdown";
 import { ErrorPopupButton } from "components/ErrorPopupButton";
-import PredicateSelect from "components/PredicateSelect";
 import SingleCISelect from "components/SingleCISelect";
 import Checkbox from "antd/lib/checkbox/Checkbox";
 
@@ -42,9 +41,7 @@ function AddNewRelation(props) {
   if (isOpen) {
 
     const predicateSelect = <Form.Item name="predicate" key="predicate" noStyle>
-      <PredicateSelect predicateID={newRelation.predicateID} setPredicateID={(predicateID) => {
-          setNewRelation({...newRelation, predicateID: predicateID});
-        }} />
+      <Input type="text" placeholder="Predicate" value={newRelation.predicateID} onChange={e => setNewRelation({...newRelation, predicateID: e.target.value})} />
     </Form.Item>;
     const targetCISelect = <Form.Item name="targetCI" key="ci" noStyle>
       <SingleCISelect

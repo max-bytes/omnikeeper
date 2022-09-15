@@ -22,7 +22,6 @@ namespace Omnikeeper.GraphQL
     public partial class GraphQLMutation : ObjectGraphType
     {
         private readonly ILayerModel layerModel;
-        private readonly PredicateModel predicateModel;
         private readonly GeneratorV1Model generatorModel;
         private readonly IOIAContextModel oiaContextModel;
         private readonly AuthRoleModel authRoleModel;
@@ -39,8 +38,7 @@ namespace Omnikeeper.GraphQL
         private readonly IScheduler localScheduler;
 
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
-            PredicateModel predicateModel, GeneratorV1Model generatorModel,
-            IOIAContextModel oiaContextModel, AuthRoleModel authRoleModel,
+            GeneratorV1Model generatorModel, IOIAContextModel oiaContextModel, AuthRoleModel authRoleModel,
             RecursiveTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel, ChangesetDataModel changesetDataModel,
             IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
@@ -222,7 +220,6 @@ namespace Omnikeeper.GraphQL
                 });
 
             this.layerModel = layerModel;
-            this.predicateModel = predicateModel;
             this.generatorModel = generatorModel;
             this.oiaContextModel = oiaContextModel;
             this.authRoleModel = authRoleModel;

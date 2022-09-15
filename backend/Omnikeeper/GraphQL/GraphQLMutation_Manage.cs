@@ -209,49 +209,6 @@ namespace Omnikeeper.GraphQL
                     }
                 });
 
-            Field<PredicateType>("manage_upsertPredicate")
-              .Arguments(
-                new QueryArgument<NonNullGraphType<UpsertPredicateInputType>> { Name = "predicate" }
-              )
-              .ResolveAsync(async context =>
-              {
-                  var userContext = context.GetUserContext();
-
-                  var predicate = context.GetArgument<UpsertPredicateInput>("predicate")!;
-
-                  var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                  CheckModifyManagementThrow(userContext, metaConfiguration, "modify predicates");
-
-                  var @new = new Predicate(predicate.ID, predicate.WordingFrom, predicate.WordingTo);
-
-                  var newPredicate = await predicateModel.InsertOrUpdate(@new, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
-                  userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
-
-                  return newPredicate.dc;
-              });
-
-
-            Field<BooleanGraphType>("manage_removePredicate")
-              .Arguments(
-                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "predicateID" }
-              )
-              .ResolveAsync(async context =>
-              {
-                  var userContext = context.GetUserContext();
-
-                  var predicateID = context.GetArgument<string>("predicateID")!;
-
-                  var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                  CheckModifyManagementThrow(userContext, metaConfiguration, "remove predicates");
-
-                  var deleted = await predicateModel.TryToDelete(predicateID, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                      userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
-                  userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
-
-                  return deleted;
-              });
-
             Field<RecursiveTraitType>("manage_upsertRecursiveTrait")
               .Arguments(
                 new QueryArgument<NonNullGraphType<UpsertRecursiveTraitInputType>> { Name = "trait" }

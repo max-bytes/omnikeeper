@@ -1,6 +1,5 @@
 import React from "react";
 import { Form, Typography } from 'antd';
-import _ from 'lodash';
 import LayerIcon from "components/LayerIcon";
 import OriginPopup from "components/OriginPopup";
 import { CIID } from "utils/uuidRenderers";
@@ -10,17 +9,14 @@ const { Text } = Typography;
 
 export default function Relation(props) {
 
-  const {predicates, relation, layer, removed } = props;
+  const {relation, layer, removed } = props;
 
   const isMask = relation.mask;
   const maskStyle = (isMask) ? {border: '1px dashed black', background: '#f0f0f0', opacity: '0.7'} : {};
   const maskText = (isMask) ? ` [MASK]` : ``;
 
   // TODO: mergable with RelatedCIText?
-  const predicate = _.find(predicates, p => p.id === relation.predicateID);
-  const predicateWording = predicate ? 
-    <i>{predicate.wordingFrom}</i>
-  : <i style={{textDecorationStyle: 'dashed', textDecorationColor: 'red', textDecorationThickness: '1px', textDecorationLine: 'underline'}}>{relation.predicateID}</i>;
+  const predicateWording = <i>{relation.predicateID}</i>;
 
   // TODO: mergable with CIID component(?)
   const fromCILink = (relation.fromCIName) ? <Link to={"/explorer/" + relation.fromCIID}>{relation.fromCIName}</Link> : <CIID id={relation.fromCIID} link={true} />;

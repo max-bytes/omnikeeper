@@ -21,7 +21,6 @@ namespace Omnikeeper.Base.Model
             Named,
             GenericTraitEntityHelper.Class2RecursiveTrait<BaseConfigurationV2>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<RecursiveTrait>(),
-            GenericTraitEntityHelper.Class2RecursiveTrait<Predicate>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<AuthRole>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<GeneratorV1>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<CLConfigV1>(),

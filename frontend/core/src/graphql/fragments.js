@@ -119,15 +119,6 @@ export const Fragments = {
       }
   }
 `,
-  fullPredicate: gql`
-  fragment FullPredicate on PredicateType {
-    id,
-    wordingFrom
-    wordingTo,
-    labelWordingFrom @client,
-    labelWordingTo @client
-  }
-  `,
   recursiveTrait: gql`
   fragment RecursiveTrait on RecursiveTraitType {
     id

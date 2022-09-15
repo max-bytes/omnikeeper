@@ -81,21 +81,6 @@ export const mutations = {
   }
   `,
 
-  UPSERT_PREDICATE: gql`
-  mutation($predicate: UpsertPredicateInputType!) {
-    manage_upsertPredicate(predicate: $predicate) {
-        ...FullPredicate
-    }
-  }
-  ${Fragments.fullPredicate}
-  `,
-
-  REMOVE_PREDICATE: gql`
-  mutation($predicateID: String!) {
-    manage_removePredicate(predicateID: $predicateID)
-  }
-  `,
-
   UPSERT_RECURSIVE_TRAIT: gql`
   mutation($trait: UpsertRecursiveTraitInputType!) {
     manage_upsertRecursiveTrait(trait: $trait) {

@@ -6,7 +6,7 @@ import { RelatedCIText } from "./RelatedCIText";
 
 export default function RelatedCI(props) {
 
-  const {predicates, mergedRelation, onRemove, isOutgoingRelation} = props;
+  const {mergedRelation, onRemove, isOutgoingRelation} = props;
 
   return (
     <Form layout="inline" style={{flexFlow: 'nowrap', alignItems: 'center'}}>
@@ -15,7 +15,7 @@ export default function RelatedCI(props) {
       <Form.Item style={{flexGrow: 1, justifyContent: 'flex-start', paddingRight: "0.25rem", overflow: 'hidden',
         width: '0px' /* HACK: for whatever weird reason, this works */
         }}>
-        <RelatedCIText predicates={predicates} relation={mergedRelation.relation} isOutgoingRelation={isOutgoingRelation} /> 
+        <RelatedCIText relation={mergedRelation.relation} isOutgoingRelation={isOutgoingRelation} /> 
       </Form.Item>
       {onRemove && <Button type="danger" size="small" onClick={e => onRemove()}>Remove</Button>}
     </Form>

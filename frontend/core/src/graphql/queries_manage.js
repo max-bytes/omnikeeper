@@ -26,14 +26,6 @@ export const queries = {
         }
       }      
     `,
-    Predicates: gql`
-        query {
-            manage_predicates {
-                ...FullPredicate
-            }
-        }
-        ${Fragments.fullPredicate}
-    `,
     RecursiveTraits: gql`
         query {
             manage_recursiveTraits {

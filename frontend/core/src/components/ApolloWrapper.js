@@ -37,18 +37,6 @@ function ApolloWrapper({ component: Component, ...rest }) {
                 }});
                 return null;
             },
-        },
-        PredicateType: {
-            labelWordingFrom: (obj, args, context, info) => {
-                var stateStr = "";
-                if (obj.state !== 'ACTIVE') stateStr = " (DEPRECATED)";
-                return obj.wordingFrom + stateStr;
-            },
-            labelWordingTo: (obj, args, context, info) => {
-                var stateStr = "";
-                if (obj.state !== 'ACTIVE') stateStr = " (DEPRECATED)";
-                return obj.wordingTo + stateStr;
-            }
         }
     };
 

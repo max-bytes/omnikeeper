@@ -10,7 +10,6 @@ const breadcrumbNameMap = [
   { search: '^/manage/layers', name: 'Layers' },
   { search: '^/manage/oiacontexts', name: 'Online Inbound Adapter Contexts' },
   { search: '^/manage/odataapicontexts', name: 'OData API Contexts' },
-  { search: '^/manage/predicates', name: 'Predicates' },
   { search: '^/manage/traits', name: 'Traits' },
   { search: '^/manage/generators', name: 'Generators' },
   { search: '^/manage/auth-roles', name: 'Auth Roles' },

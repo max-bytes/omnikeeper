@@ -58,13 +58,6 @@ namespace Omnikeeper.Base.Model.TraitBased
         }
     }
 
-    public class PredicateModel : GenericTraitEntityModel<Predicate, string>
-    {
-        public PredicateModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)
-        {
-        }
-    }
-
     public class GeneratorV1Model : GenericTraitEntityModel<GeneratorV1, string>
     {
         public GeneratorV1Model(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel) : base(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel)

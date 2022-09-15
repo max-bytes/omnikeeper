@@ -14,7 +14,6 @@ namespace Omnikeeper.GraphQL.Types
             Field(x => x.RelationChanges);
             Field(x => x.Changesets);
             Field(x => x.Layers);
-            Field(x => x.Predicates);
             Field(x => x.Traits);
             Field(x => x.Generators);
         }

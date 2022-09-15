@@ -29,9 +29,6 @@ export default function Changeset(props) {
         variables: { id: changesetID, layers: visibleLayers.map((l) => l.id) },
         skip: visibleLayers.length === 0
     });
-    
-    const { data: dataPredicates } = useQuery(queries.PredicateList, { variables: {} });
-
 
     if (error) {
         // TODO: improve/generalize error handling
@@ -42,7 +39,7 @@ export default function Changeset(props) {
             <span key={i}>{message}</span>
           ))}
         </pre>
-    } else if (data && visibleLayers && dataPredicates) {
+    } else if (data && visibleLayers) {
 
         var defaultActiveTab = undefined;
         if (data.changeset.ciAttributes.length > 0) 
@@ -76,11 +73,11 @@ export default function Changeset(props) {
         
         const NewRelationItem = (index) => {
             const r = data.changeset.relations[index];
-            return <Relation predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />;
+            return <Relation relation={r} layer={data.changeset.layer} key={r.id} />;
         };
         const RemovedRelationItem = (index) => {
             const r = data.changeset.removedRelations[index];
-            return <Relation removed={true} predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />;
+            return <Relation removed={true} relation={r} layer={data.changeset.layer} key={r.id} />;
         };
 
         return <div style={{marginTop: '1rem', flex: '1', display: 'flex', flexDirection: 'row', gap: '20px'}}>

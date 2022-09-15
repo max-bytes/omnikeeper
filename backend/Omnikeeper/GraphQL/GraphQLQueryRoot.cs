@@ -36,7 +36,6 @@ namespace Omnikeeper.GraphQL
         private readonly ITraitsProvider traitsProvider;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
-        private readonly PredicateModel predicateModel;
         private readonly IChangesetModel changesetModel;
         private readonly ILayerStatisticsModel layerStatisticsModel;
         private readonly GeneratorV1Model generatorModel;
@@ -57,7 +56,7 @@ namespace Omnikeeper.GraphQL
         private readonly IDataLoaderService dataLoaderService;
 
         public GraphQLQueryRoot(ICIIDModel ciidModel, IAttributeModel attributeModel, ILayerModel layerModel, ILayerDataModel layerDataModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel,
-            ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, PredicateModel predicateModel,
+            ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, 
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GeneratorV1Model generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, ODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel, CLConfigV1Model clConfigModel,
             RecursiveTraitModel recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
@@ -74,7 +73,6 @@ namespace Omnikeeper.GraphQL
             this.traitsProvider = traitsProvider;
             this.metaConfigurationModel = metaConfigurationModel;
             this.baseConfigurationModel = baseConfigurationModel;
-            this.predicateModel = predicateModel;
             this.changesetModel = changesetModel;
             this.layerStatisticsModel = layerStatisticsModel;
             this.generatorModel = generatorModel;
@@ -317,21 +315,6 @@ namespace Omnikeeper.GraphQL
                     return new DiffingResult(leftCIIDSelection, rightCIIDSelection, leftAttributeSelection, rightAttributeSelection, leftLayers, rightLayers, leftTimeThreshold, rightTimeThreshold, showEqual, crossCIDiffingSettings);
                 });
 
-            Field<ListGraphType<PredicateType>>("predicates")
-                .Arguments(
-                    new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }
-                    )
-                .ResolveAsync(async context =>
-                {
-                    var userContext = context.GetUserContext()
-                        .WithTimeThreshold(context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()), context.Path);
-
-                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    var predicates = await predicateModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-
-                    return predicates.Values;
-                });
-
             Field<ListGraphType<LayerDataType>>("layers")
                 .Arguments(
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }
@@ -471,7 +454,6 @@ namespace Omnikeeper.GraphQL
 
                     var layers = await layerModel.GetLayers(userContext.Transaction); // TODO: we only need count, implement more efficient model method
                     var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-                    var predicates = await predicateModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement PredicateProvider
                     var generators = await generatorModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement GeneratorProvider
 
                     var numCIIDs = await layerStatisticsModel.GetCIIDsApproximate(userContext.Transaction);
@@ -481,7 +463,7 @@ namespace Omnikeeper.GraphQL
                     var numRelationChanges = await layerStatisticsModel.GetRelationChangesHistoryApproximate(userContext.Transaction);
                     var numChangesets = await changesetModel.GetNumberOfChangesets(userContext.Transaction);
 
-                    return new Statistics(numCIIDs, numActiveAttributes, numActiveRelations, numChangesets, numAttributeChanges, numRelationChanges, layers.Count(), traits.Count(), predicates.Count(), generators.Count());
+                    return new Statistics(numCIIDs, numActiveAttributes, numActiveRelations, numChangesets, numAttributeChanges, numRelationChanges, layers.Count(), traits.Count(), generators.Count());
                 });
 
             Field<TraitEntitiesType>("traitEntities")

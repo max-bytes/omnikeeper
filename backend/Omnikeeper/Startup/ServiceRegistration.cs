@@ -253,7 +253,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<ValidatorContextV1Model>().SingleInstance();
             builder.RegisterType<AuthRoleModel>().SingleInstance();
             builder.RegisterType<ChangesetDataModel>().SingleInstance();
-            builder.RegisterType<PredicateModel>().SingleInstance();
             builder.RegisterType<RecursiveTraitModel>().SingleInstance();
             builder.RegisterType<GridViewContextModel>().SingleInstance();
             builder.RegisterType<InnerLayerDataModel>().SingleInstance();

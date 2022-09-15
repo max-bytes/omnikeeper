@@ -2,15 +2,6 @@ import gql from 'graphql-tag';
 import { Fragments } from './fragments';
 
 export const queries = {
-    PredicateList: gql`
-        query {
-            predicates {
-                ...FullPredicate
-            }
-        }
-        ${Fragments.fullPredicate}
-    `,
-
     SearchCIs: gql`
         query($searchString: String!, $ciids: [Guid], $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
             cis(searchString: $searchString, ciids: $ciids, sortByCIName: true,

@@ -101,19 +101,6 @@ namespace Omnikeeper.GraphQL
                     return BaseConfigurationV2.Serializer.SerializeToString(cfg);
                 });
 
-            Field<ListGraphType<PredicateType>>("manage_predicates")
-                .ResolveAsync(async context =>
-                {
-                    var userContext = context.GetUserContext();
-
-                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    CheckReadManagementThrow(userContext, metaConfiguration, "read predicates");
-
-                    var predicates = await predicateModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-
-                    return predicates.Values;
-                });
-
             Field<ListGraphType<RecursiveTraitType>>("manage_recursiveTraits")
                 .ResolveAsync(async context =>
                 {

@@ -1,11 +1,9 @@
-import { useQuery, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import React, { useEffect, useState, useCallback } from 'react';
 import RelatedCI from './RelatedCI';
 import {Row, Col} from 'antd';
 import AddNewRelation from './AddNewRelation';
-import { queries } from 'graphql/queries'
 import { mutations } from 'graphql/mutations'
-import { ErrorView } from 'components/ErrorView';
 import { useExplorerLayers } from 'utils/layers';
 import AutoSizedList from 'utils/AutoSizedList';
 
@@ -16,8 +14,6 @@ function CIRelations(props) {
   const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
   const { data: visibleLayers } = useExplorerLayers(true);
 
-  const { loading: loadingPredicates, error: errorPredicates, data: dataPredicates } = useQuery(queries.PredicateList, { variables: {} });
-  
   // TODO: loading
   const [removeRelation] = useMutation(mutations.REMOVE_RELATION, { 
     update: (cache, data) => {
@@ -56,7 +52,7 @@ function CIRelations(props) {
     setSortedRelations(tmp);
   }, [mergedRelations, setSortedRelations, sortingFunc]);
 
-  if (sortedRelations && dataPredicates) {
+  if (sortedRelations) {
 
     const Item = (index) => {
       const r = sortedRelations[index];
@@ -77,7 +73,7 @@ function CIRelations(props) {
           backgroundColor: index % 2 === 0 ? "#eee" : "#fff",
           overflow: 'hidden'
       }}>
-        <RelatedCI mergedRelation={r} predicates={dataPredicates.predicates} onRemove={onRemove} isOutgoingRelation={areOutgoingRelations} />
+        <RelatedCI mergedRelation={r} onRemove={onRemove} isOutgoingRelation={areOutgoingRelations} />
       </div>;
     };
 
@@ -94,8 +90,6 @@ function CIRelations(props) {
       </Row>
     </div>);
   }
-  else if (loadingPredicates) return <p>Loading</p>;
-  else if (errorPredicates) return <ErrorView error={errorPredicates}/>;
   else return <p>?</p>;
 }
 

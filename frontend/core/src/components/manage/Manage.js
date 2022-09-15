@@ -1,7 +1,6 @@
 import React from 'react';
 import { Switch, Link, useRouteMatch, useLocation, Redirect } from 'react-router-dom';
 import { PrivateRoute } from 'components/PrivateRoute';
-import ManagePredicates from 'components/manage/ManagePredicates';
 import ManageBaseConfiguration from 'components/manage/ManageBaseConfiguration';
 import ManageLayers from 'components/manage/ManageLayers';
 import ManageOIAContexts from 'components/manage/ManageOIAContexts';
@@ -32,9 +31,6 @@ export default function Manage(props) {
             <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
             <PrivateRoute path={`${path}/base-configuration`} title="Manage Base Configuration">
                 <ManageBaseConfiguration />
-            </PrivateRoute>
-            <PrivateRoute path={`${path}/predicates`} title="Manage Predicates">
-                <ManagePredicates />
             </PrivateRoute>
             <PrivateRoute path={`${path}/layers/operations/:layerID`} title="Layer Operations">
                 <LayerOperations />
@@ -112,7 +108,6 @@ export default function Manage(props) {
 
                     <h3>Data-Config Management</h3>
                     <ul>
-                        <li><Link to={`${url}/predicates`}>Predicates</Link></li>
                         <li><Link to={`${url}/traits`}>Traits</Link></li>
                         <li><Link to={`${url}/auth-roles`}>Auth Roles</Link></li>
                         <li><Link to={`${url}/generators`}>Generators</Link></li>

@@ -40,7 +40,6 @@ namespace Tasks.DBInit
             var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
             var effectiveTraitModel = new EffectiveTraitModel(relationModel);
             var changesetModel = new ChangesetModel();
-            var predicateModel = new PredicateModel(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
             var userModel = new UserInDatabaseModel();
             var layerModel = new LayerModel();
             var layerDataModel = new LayerDataModel(layerModel, metaConfigurationModel, new InnerLayerDataModel(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel));
@@ -76,7 +75,6 @@ namespace Tasks.DBInit
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
             //var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
-            var predicateRunsOn = new Predicate("runs_on", "runs on", "is running");
 
             //var regularPredicates = new[] {
             //new Predicate("is_part_of", "is part of", "has part", AnchorState.Active),
@@ -119,17 +117,6 @@ namespace Tasks.DBInit
             {
                 return Guid.NewGuid();
             }).ToList();
-
-            var monitoringPredicates = new[] {
-                new Predicate("has_monitoring_module", "has monitoring module", "is assigned to"),
-                new Predicate("is_monitored_by", "is monitored by", "monitors"),
-                new Predicate("belongs_to_naemon_contactgroup", "belongs to naemon contactgroup", "has member")
-            };
-
-            var baseDataPredicates = new[] {
-                new Predicate("member_of_group", "is member of group", "has member"),
-                new Predicate("managed_by", "is managed by", "manages")
-            };
 
             // create layers
             string cmdbLayerID;
@@ -209,20 +196,6 @@ namespace Tasks.DBInit
                 trans.Commit();
             }
 
-            // create predicates
-            using (var trans = modelContextBuilder.BuildDeferred())
-            {
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
-                foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
-                {
-                    await predicateModel.InsertOrUpdate(new Predicate(predicate.ID, predicate.WordingFrom, predicate.WordingTo),
-                        metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                        changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
-                }
-
-                trans.Commit();
-            }
-
             // create regular attributes
             foreach (var ciid in applicationCIIDs)
             {
@@ -247,7 +220,7 @@ namespace Tasks.DBInit
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel, new DataOriginV1(DataOriginType.Manual));
                 var ciid1 = applicationCIIDs.GetRandom(random);
                 var ciid2 = hostCIIDs.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
-                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, false, cmdbLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
+                await relationModel.InsertRelation(ciid1, ciid2, "runs_on", false, cmdbLayerID, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                 trans.Commit();
             }
 
