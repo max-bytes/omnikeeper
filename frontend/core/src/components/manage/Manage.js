@@ -107,7 +107,6 @@ export default function Manage(props) {
                         <li><Link to={`${url}/base-configuration`}>Base Configuration</Link></li>
                         <li><Link to={`${url}/layers`}>Layers</Link></li>
                         <li><Link to={`${url}/oiacontexts`}>Online Inbound Layer Contexts</Link></li>
-                        <li><Link to={`${url}/odataapicontexts`}>OData API Contexts</Link></li>
                         <li><Link to={`${url}/restart-application`}>Restart Application</Link></li>
                     </ul>
 
@@ -119,6 +118,7 @@ export default function Manage(props) {
                         <li><Link to={`${url}/generators`}>Generators</Link></li>
                         <li><Link to={`${url}/cl-configs`}>Compute Layer Configurations</Link></li>
                         <li><Link to={`${url}/validator-contexts`}>Validator Contexts</Link></li>
+                        <li><Link to={`${url}/odataapicontexts`}>OData API Contexts</Link></li>
                     </ul>
 
                     <h3>Debug</h3>
