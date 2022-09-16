@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -47,7 +46,7 @@ namespace Omnikeeper.Base.Authz
             return httpUser.ClientRoles.Contains("__ok_superuser");
         }
 
-        public static async Task<IAuthenticatedUser> CreateAuthenticationUserFromHTTPUser(HttpUser httpUser, IUserInDatabaseModel userModel, ILayerModel LayerModel,
+        public static async Task<IAuthenticatedUser> CreateAuthenticatedUserFromHTTPUser(HttpUser httpUser, IUserInDatabaseModel userModel, ILayerModel LayerModel,
             IMetaConfigurationModel MetaConfigurationModel, AuthRoleModel AuthRoleModel, IModelContext trans)
         {
             var userInDatabase = await userModel.UpsertUser(httpUser.Username, httpUser.DisplayName, httpUser.UserID, httpUser.UserType, trans);

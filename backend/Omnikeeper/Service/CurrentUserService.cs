@@ -94,7 +94,7 @@ namespace Omnikeeper.Service
         private async Task<IAuthenticatedUser> _GetCurrentUser(IModelContext trans)
         {
             var httpUser = HttpUserUtils.CreateHttpUserFromClaims(HttpContextAccessor.HttpContext!.User.Claims, configuration.GetSection("Authentication")["Audience"], logger);
-            return await HttpUserUtils.CreateAuthenticationUserFromHTTPUser(httpUser, userModel, LayerModel, MetaConfigurationModel, AuthRoleModel, trans);
+            return await HttpUserUtils.CreateAuthenticatedUserFromHTTPUser(httpUser, userModel, LayerModel, MetaConfigurationModel, AuthRoleModel, trans);
         }
     }
 
