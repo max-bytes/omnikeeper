@@ -44,8 +44,8 @@ export default function ManageODataAPIContexts(props) {
         }
       }}
       saveRow={async row => {
-        return upsertODataAPIContext({variables: { odataAPIContext: { id: row.id, config: row.config, name: `OData-Context - ${row.id}` }}})
-          .then(r => ({result: r.data.upsertByDataID_m__meta__config__odata_context.entity, id: row.id}))
+        return upsertODataAPIContext({variables: { id: row.id, odataAPIContext: { id: row.id, config: row.config, name: `OData-Context - ${row.id}` }}})
+          .then(r => ({result: r.data.upsertSingleByFilter_m__meta__config__odata_context.entity, id: row.id}))
           .catch(e => ({result: e, id: row.id }));
       }} />
   </>;
