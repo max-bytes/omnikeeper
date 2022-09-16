@@ -40,16 +40,21 @@ namespace SystemTests
             {
                 Query = @"
                     mutation {
-	                    manage_upsertODataAPIContext(
-		                    odataAPIContext: { id: ""testcontext"", config: """"""{ ""$type"":""ConfigV4"", ""WriteLayerID"":""layer_1"", ""ReadLayerset"":[""layer_1""], ""ContextAuth"":{""type"":""ContextAuthNone""}}""""""}
+	                    upsertSingleByFilter_m__meta__config__odata_context(
+                            layers: [""__okconfig""]
+                            writeLayer: ""__okconfig""
+                            filter: {id: {exact: ""testcontext""}}
+		                    input: { id: ""testcontext"", config: """"""{ ""$type"":""ConfigV4"", ""WriteLayerID"":""layer_1"", ""ReadLayerset"":[""layer_1""], ""ContextAuth"":{""type"":""ContextAuthNone""}}""""""}
                     ) {
+                        entity {
 		                    id
-	                    }
+                        }
+	                  }
                     }"
             };
-            var graphQLResponse = await Query(createOdataContxt, () => new { manage_upsertODataAPIContext = new { id = ""} });
+            var graphQLResponse = await Query(createOdataContxt, () => new { upsertSingleByFilter_m__meta__config__odata_context = new { entity = new { id = "" } } });
             Assert.IsNull(graphQLResponse.Errors);
-            Assert.AreEqual("testcontext", graphQLResponse.Data.manage_upsertODataAPIContext.id);
+            Assert.AreEqual("testcontext", graphQLResponse.Data.upsertSingleByFilter_m__meta__config__odata_context.entity.id);
 
 
             // create layer_1
