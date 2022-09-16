@@ -99,14 +99,16 @@ namespace Omnikeeper.Base.Entity
         public readonly string taName;
         public readonly string aName;
         public readonly bool optional;
+        public readonly bool initToDefaultWhenMissing;
         public readonly Type? jsonSerializer;
         public readonly bool multilineTextHint;
 
-        public TraitAttributeAttribute(string taName, string aName, bool optional = false, Type? jsonSerializer = null, bool multilineTextHint = false)
+        public TraitAttributeAttribute(string taName, string aName, bool optional = false, bool initToDefaultWhenMissing = true, Type? jsonSerializer = null, bool multilineTextHint = false)
         {
             this.taName = taName;
             this.aName = aName;
             this.optional = optional;
+            this.initToDefaultWhenMissing = initToDefaultWhenMissing;
             this.jsonSerializer = jsonSerializer;
             this.multilineTextHint = multilineTextHint;
         }

@@ -1,11 +1,13 @@
 ﻿using Autofac;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -80,6 +82,44 @@ namespace Tests.Integration.Model
                     ),
                 "trait1", "trait2", "non_existant_id"
             );
+        }
+
+        [Test]
+        public async Task TestUnsetDefaults()
+        {
+            var (model, layer1, _, changesetBuilder) = await SetupModel();
+            var layerset = new LayerSet(layer1);
+
+            Guid ciid1;
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var t1 = new RecursiveTrait("trait1", new TraitOriginV1(TraitOriginType.Data),
+                    new List<TraitAttribute>() { new TraitAttribute("test_ta1", CIAttributeTemplate.BuildFromParams("test_a", AttributeValueType.Text, false, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
+                    new List<TraitAttribute>() { },
+                    new List<TraitRelation>() { },
+                    new List<string>() { }
+                    );
+                (_, _, ciid1) = await model.InsertOrUpdate(t1, layerset, layer1, changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                trans.Commit();
+            }
+
+            // manually remove optional trait attribute optionalAttributes
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var r = await ServiceProvider.GetRequiredService<IAttributeModel>().RemoveAttribute("trait.optional_attributes", ciid1, layer1, changesetBuilder(), trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                Assert.IsTrue(r);
+                trans.Commit();
+            }
+
+            // fetch entity, expect optionalAttributes to be set to an empty array (per the default constructor), not null
+            // this is because we set initToDefaultWhenMissing=false in the 
+            var ret = await model.GetSingleByCIID(ciid1, layerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            if (ret == null)
+            {
+                Assert.Fail();
+                return;
+            }
+            Assert.AreEqual(Array.Empty<TraitAttribute>(), ret.OptionalAttributes);
         }
     }
 }

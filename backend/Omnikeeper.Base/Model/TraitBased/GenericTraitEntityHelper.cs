@@ -100,8 +100,6 @@ namespace Omnikeeper.Base.Model.TraitBased
                     {
                         entityFieldValue = attribute.Attribute.Value.ToGenericObject();
                     }
-                    // TODO: depending on context, we might need to throw an exception if the attribute value is null (ToGenericObject() returns null) and the target trait field is not-null
-                    // otherwise, the (good) default value that is set in default constructor gets overwritten by null
                     taFieldInfo.Accessor.Set(ret, entityFieldValue);
                 }
                 else
@@ -111,8 +109,12 @@ namespace Omnikeeper.Base.Model.TraitBased
                         throw new Exception($"Could not find trait attribute {taFieldInfo.TraitAttributeAttribute.taName} for mandatory field");
                     else
                     {
-                        // set to default value, to ensure consistency and not rely on default constructor
-                        taFieldInfo.Accessor.Set(ret, default);
+                        // NOTE: before, this always set optional trait attributes that were not set through attributes to a default value
+                        // the reason was - to quote the old comment: "to ensure consistency and not rely on default constructor"
+                        // but, this leads to worse behaviour in certain circumstances, especially when collections are used which are set to empty collections via the constructor, but are then set to null here
+                        // the new behaviour is to have it customizable whether to set to default; if initToDefaultWhenMissing is set to false, rely on the default constructor of the trait entity type to properly initialize the fields
+                        if (taFieldInfo.TraitAttributeAttribute.initToDefaultWhenMissing)
+                            taFieldInfo.Accessor.Set(ret, default);
                     }
                 }
             }

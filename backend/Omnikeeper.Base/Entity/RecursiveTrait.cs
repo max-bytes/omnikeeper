@@ -69,13 +69,13 @@ namespace Omnikeeper.Base.Entity
         [TraitAttributeValueConstraintArrayLength(1, -1)]
         public TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
 
-        [TraitAttribute("optional_attributes", "trait.optional_attributes", jsonSerializer: typeof(RecursiveTraitModel.TraitAttributeSerializer), optional: true)]
+        [TraitAttribute("optional_attributes", "trait.optional_attributes", jsonSerializer: typeof(RecursiveTraitModel.TraitAttributeSerializer), optional: true, initToDefaultWhenMissing: false)]
         public TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
 
-        [TraitAttribute("optional_relations", "trait.optional_relations", jsonSerializer: typeof(RecursiveTraitModel.TraitRelationSerializer), optional: true)]
+        [TraitAttribute("optional_relations", "trait.optional_relations", jsonSerializer: typeof(RecursiveTraitModel.TraitRelationSerializer), optional: true, initToDefaultWhenMissing: false)]
         public TraitRelation[] OptionalRelations = Array.Empty<TraitRelation>();
 
-        [TraitAttribute("required_traits", "trait.required_traits", optional: true)]
+        [TraitAttribute("required_traits", "trait.required_traits", optional: true, initToDefaultWhenMissing: false)]
         public string[] RequiredTraits = Array.Empty<string>();
 
         public RecursiveTrait()
