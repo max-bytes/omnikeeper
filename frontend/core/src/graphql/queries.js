@@ -207,7 +207,6 @@ export const queries = {
                 relationChanges
                 changesets
                 layers
-                predicates
                 traits
                 generators
             }
