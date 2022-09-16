@@ -12,6 +12,7 @@
 [![license](https://img.shields.io/github/license/max-bytes/omnikeeper)](LICENSE)
 ![tests](https://github.com/max-bytes/omnikeeper/actions/workflows/run-tests.yml/badge.svg)
 ![system-tests](https://github.com/max-bytes/omnikeeper/actions/workflows/run-system-tests.yml/badge.svg)
+[![codecov](https://codecov.io/gh/max-bytes/omnikeeper/branch/master/graph/badge.svg?token=J149QGB4XG)](https://codecov.io/gh/max-bytes/omnikeeper)
 
 </div>
 
