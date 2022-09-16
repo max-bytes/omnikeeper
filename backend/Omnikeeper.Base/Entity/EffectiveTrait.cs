@@ -30,17 +30,6 @@ namespace Omnikeeper.Base.Entity
 
     public static class EffectiveTraitExtensions
     {
-        public static IEnumerable<(string attributeName, IAttributeValue attributeValue)> ExtractIDAttributeValueTuples(this EffectiveTrait effectiveTrait)
-        {
-            var idTraitAttributes = effectiveTrait.UnderlyingTrait.RequiredAttributes.Where(ra => ra.AttributeTemplate.IsID.GetValueOrDefault(false));
-            foreach (var idTraitAttribute in idTraitAttributes)
-            {
-                var ta = effectiveTrait.TraitAttributes[idTraitAttribute.Identifier];
-
-                yield return (ta.Attribute.Name, ta.Attribute.Value);
-            }
-        }
-
         public static IAttributeValue? ExtractAttributeValueByTraitAttributeIdentifier(this EffectiveTrait effectiveTrait, string traitAttributeIdentifier)
         {
             return effectiveTrait.TraitAttributes[traitAttributeIdentifier]?.Attribute.Value;

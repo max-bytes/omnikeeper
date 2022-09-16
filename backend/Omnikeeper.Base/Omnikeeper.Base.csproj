@@ -36,7 +36,7 @@
     <Nullable>enable</Nullable>
     <Copyright>max bytes</Copyright>
     <Description>Base package for Omnikeeper, required for building Omnikeeper plugins</Description>
-    <Version>21.16.0.0</Version>
+    <Version>22.0.0.0</Version>
   </PropertyGroup>
   
 </Project>
