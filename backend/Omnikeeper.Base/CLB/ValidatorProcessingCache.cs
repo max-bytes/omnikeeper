@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Omnikeeper.Base.CLB
 {
     public class ValidatorProcessingCache
     {
-        private static readonly IDictionary<string, (IReadOnlyDictionary<string, Guid> processedChangesets, DateTimeOffset contextActuality)> cache = new Dictionary<string, (IReadOnlyDictionary<string, Guid> processedChangesets, DateTimeOffset contextActuality)>();
+        private static readonly IDictionary<string, (IReadOnlyDictionary<string, Guid> processedChangesets, DateTimeOffset contextActuality)> cache = new ConcurrentDictionary<string, (IReadOnlyDictionary<string, Guid> processedChangesets, DateTimeOffset contextActuality)>();
 
         public void UpdateProcessedChangesets(string contextID, IReadOnlyDictionary<string, Guid> latestChangesets, DateTimeOffset contextActuality)
         {

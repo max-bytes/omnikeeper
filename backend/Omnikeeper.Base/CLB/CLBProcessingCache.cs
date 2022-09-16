@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Omnikeeper.Base.CLB
 {
     public class CLBProcessingCache
     {
-        private static IDictionary<string, (IReadOnlyDictionary<string, Guid> processedChangesets, DateTimeOffset configActuality)> Cache = new Dictionary<string, (IReadOnlyDictionary<string, Guid> processedChangesets, DateTimeOffset configActuality)>();
+        private static IDictionary<string, (IReadOnlyDictionary<string, Guid> processedChangesets, DateTimeOffset configActuality)> Cache = new ConcurrentDictionary<string, (IReadOnlyDictionary<string, Guid> processedChangesets, DateTimeOffset configActuality)>();
 
         public void UpdateCache(string clConfigID, string layerID, IReadOnlyDictionary<string, Guid> processedChangesets, DateTimeOffset configActuality)
         {
