@@ -169,6 +169,14 @@ jobs:
       with:
         workflow: run-perf-tests
         token: ${{ secrets.PAT }}
+  run-tests:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: "Invoke tests workflow"
+      uses: benc-uk/workflow-dispatch@v1
+      with:
+        workflow: run-tests
+        token: ${{ secrets.PAT }}
   publish-client-libraries:
     runs-on: ubuntu-20.04
     needs: build-swagger-definition
