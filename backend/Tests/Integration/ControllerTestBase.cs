@@ -25,17 +25,6 @@ namespace Tests.Integration.Controller
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<IAuthenticatedUser>(), It.IsAny<string>())).Returns(true);
             lbas.Setup(x => x.CanUserReadFromAllLayers(It.IsAny<IAuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
             builder.Register((sp) => lbas.Object).InstancePerLifetimeScope();
-            var cbas = new Mock<ICIBasedAuthorizationService>();
-            cbas.Setup(x => x.CanReadCI(It.IsAny<Guid>())).Returns(true);
-            Guid? tmp;
-            cbas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
-            cbas.Setup(x => x.FilterReadableCIs(It.IsAny<IReadOnlySet<Guid>>())).Returns<IReadOnlySet<Guid>>((i) => i);
-            cbas.Setup(x => x.FilterReadableCIs(It.IsAny<IEnumerable<MergedCI>>(), It.IsAny<Func<MergedCI, Guid>>())).Returns<IEnumerable<MergedCI>, Func<MergedCI, Guid>>((i, j) =>
-            {
-                return i;
-            });
-            builder.Register((sp) => cbas.Object).InstancePerLifetimeScope();
-
 
             var mas = new Mock<IManagementAuthorizationService>();
             string outMsg;

@@ -43,7 +43,7 @@ namespace Omnikeeper.GraphQL
             IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             IEnumerable<IPluginRegistration> plugins, IIndex<string, IScheduler> schedulers,
-            IAuthzFilterManager authzFilterManager, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerDataModel layerDataModel, ValidatorContextV1Model validatorContextModel)
+            IAuthzFilterManager authzFilterManager, ILayerDataModel layerDataModel, ValidatorContextV1Model validatorContextModel)
         {
             Field<MutateReturnType>("mutateCIs")
                 .Arguments(
@@ -74,8 +74,6 @@ namespace Omnikeeper.GraphQL
                     .Concat(insertRelations.SelectMany(a => new Guid[] { a.FromCIID, a.ToCIID }))
                     .Concat(removeRelations.SelectMany(a => new Guid[] { a.FromCIID, a.ToCIID }))
                     .Distinct();
-                    if (!ciBasedAuthorizationService.CanWriteToAllCIs(writeCIIDs, out var notAllowedCI))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to CI {notAllowedCI}");
 
                     var changeset = userContext.ChangesetProxy;
 

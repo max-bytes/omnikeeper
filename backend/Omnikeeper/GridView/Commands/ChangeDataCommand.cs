@@ -58,14 +58,12 @@ namespace Omnikeeper.GridView.Commands
             private readonly ITraitsProvider traitsProvider;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IAuthzFilterManager authzFilterManager;
-            private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly IMetaConfigurationModel metaConfigurationModel;
 
             public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
                 IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, GridViewContextModel gridViewContextModel,
                 IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
-                IAuthzFilterManager authzFilterManager, ICIBasedAuthorizationService ciBasedAuthorizationService,
-                IMetaConfigurationModel metaConfigurationModel)
+                IAuthzFilterManager authzFilterManager, IMetaConfigurationModel metaConfigurationModel)
             {
                 this.ciModel = ciModel;
                 this.attributeModel = attributeModel;
@@ -77,7 +75,6 @@ namespace Omnikeeper.GridView.Commands
                 this.traitsProvider = traitsProvider;
                 this.modelContextBuilder = modelContextBuilder;
                 this.authzFilterManager = authzFilterManager;
-                this.ciBasedAuthorizationService = ciBasedAuthorizationService;
                 this.metaConfigurationModel = metaConfigurationModel;
             }
             public async Task<(ChangeDataResponse?, Exception?)> Handle(Command request, CancellationToken cancellationToken)
@@ -145,9 +142,6 @@ namespace Omnikeeper.GridView.Commands
                         // TODO: proper check for write permissions
 
                         //var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
-
-                        if (!ciBasedAuthorizationService.CanWriteToCI(row.Ciid))
-                            return (null, new Exception($"User \"{user.Username}\" does not have permission to write to CI {row.Ciid}"));
 
                         if (cell.Value.Values.IsEmpty())
                         {
@@ -235,13 +229,6 @@ namespace Omnikeeper.GridView.Commands
                 foreach (var item in mergedCIs)
                 {
                     var ci_id = item.ID;
-
-                    var canWrite = ciBasedAuthorizationService.CanWriteToCI(ci_id); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
-
-                    if (!canWrite)
-                    {
-                        continue;
-                    }
 
                     var filteredColumns = config.Columns.Select(column =>
                     {

@@ -125,18 +125,6 @@ namespace Tests.Integration
             lbas.Setup(e => e.CanUserReadFromAllLayers(It.IsAny<IAuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
             builder.Register((sp) => lbas.Object).SingleInstance();
 
-            var cibas = new Mock<ICIBasedAuthorizationService>();
-            cibas.Setup(x => x.FilterReadableCIs(It.IsAny<IEnumerable<MergedCI>>(), It.IsAny<Func<MergedCI, Guid>>())).Returns<IEnumerable<MergedCI>, Func<MergedCI, Guid>>((i, j) =>
-            {
-                return i;
-            });
-            cibas.Setup(x => x.CanReadCI(It.IsAny<Guid>())).Returns(true);
-            Guid? tmp;
-            cibas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
-            cibas.Setup(x => x.CanWriteToCI(It.IsAny<Guid>())).Returns(true);
-            cibas.Setup(x => x.CanWriteToAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
-            builder.Register((sp) => cibas.Object).SingleInstance();
-
             // override quartz schedulers
             var localScheduler = new Mock<Quartz.IScheduler>();
             builder.Register<Quartz.IScheduler>(sp => localScheduler.Object).Keyed<Quartz.IScheduler>("localScheduler").SingleInstance();

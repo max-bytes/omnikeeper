@@ -470,8 +470,7 @@ namespace Omnikeeper.Service
 
     public class DiffingResultType : ObjectGraphType<DiffingResult>
     {
-        public DiffingResultType(IDataLoaderService dataLoaderService, DiffingCIService diffingCIService, ICIModel ciModel, IRelationModel relationModel, IEffectiveTraitModel effectiveTraitModel,
-            ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService)
+        public DiffingResultType(IDataLoaderService dataLoaderService, DiffingCIService diffingCIService, ICIModel ciModel, IRelationModel relationModel, IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider)
         {
             Field<ListGraphType<CIAttributesComparisonType>>("cis")
                 .ResolveAsync(async (context) =>
@@ -482,10 +481,6 @@ namespace Omnikeeper.Service
                     // TODO: use dataloader?
                     IEnumerable<MergedCI> leftCIs = await ciModel.GetMergedCIs(d.leftCIIDSelection, d.leftLayers, false, d.leftAttributes, userContext.Transaction, d.leftTimeThreshold);
                     IEnumerable<MergedCI> rightCIs = await ciModel.GetMergedCIs(d.rightCIIDSelection, d.rightLayers, false, d.rightAttributes, userContext.Transaction, d.rightTimeThreshold);
-
-                    // ci-based authz
-                    leftCIs = ciBasedAuthorizationService.FilterReadableCIs(leftCIs, (ci) => ci.ID);
-                    rightCIs = ciBasedAuthorizationService.FilterReadableCIs(rightCIs, (ci) => ci.ID);
 
                     var comparisons = (d.crossCIDiffingSettings != null) ?
                         diffingCIService.DiffCross2CIs(leftCIs.First(), rightCIs.First(), d.showEqual, d.crossCIDiffingSettings) :
@@ -512,10 +507,6 @@ namespace Omnikeeper.Service
                 if (rightRelations == null)
                     throw new Exception("Could not load right relations");
 
-                // ci-based authorization
-                leftRelations = leftRelations.Where(r => ciBasedAuthorizationService.CanReadCI(r.Relation.FromCIID) && ciBasedAuthorizationService.CanReadCI(r.Relation.ToCIID));
-                rightRelations = rightRelations.Where(r => ciBasedAuthorizationService.CanReadCI(r.Relation.FromCIID) && ciBasedAuthorizationService.CanReadCI(r.Relation.ToCIID));
-
                 return (d.crossCIDiffingSettings != null) ?
                     diffingCIService.DiffRelationsOf2CIs(leftRelations, rightRelations, outgoing, d.showEqual, d.crossCIDiffingSettings) :
                     diffingCIService.DiffRelations(leftRelations, rightRelations, outgoing, d.showEqual);
@@ -541,10 +532,6 @@ namespace Omnikeeper.Service
                     // TODO: use dataloader?
                     IEnumerable<MergedCI> leftCIs = await ciModel.GetMergedCIs(d.leftCIIDSelection, d.leftLayers, false, d.leftAttributes, userContext.Transaction, d.leftTimeThreshold);
                     IEnumerable<MergedCI> rightCIs = await ciModel.GetMergedCIs(d.rightCIIDSelection, d.rightLayers, false, d.rightAttributes, userContext.Transaction, d.rightTimeThreshold);
-
-                    // ci-based authz
-                    leftCIs = ciBasedAuthorizationService.FilterReadableCIs(leftCIs, (ci) => ci.ID);
-                    rightCIs = ciBasedAuthorizationService.FilterReadableCIs(rightCIs, (ci) => ci.ID);
 
                     var leftTraits = (await traitsProvider.GetActiveTraits(userContext.Transaction, d.leftTimeThreshold)).Values;
                     var rightTraits = (await traitsProvider.GetActiveTraits(userContext.Transaction, d.rightTimeThreshold)).Values;

@@ -36,12 +36,11 @@ namespace Omnikeeper.Controllers
         private readonly ICIModel ciModel;
         private readonly IBaseRelationModel baseRelationModel;
         private readonly IAuthzFilterManager authzFilterManager;
-        private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly IRelationModel relationModel;
 
         public ImportExportLayerController(IBaseAttributeModel baseAttributeModel, IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, ICIModel ciModel, IBaseRelationModel baseRelationModel, IAuthzFilterManager authzFilterManager,
-            IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerModel layerModel, IRelationModel relationModel)
+            IModelContextBuilder modelContextBuilder, ILayerModel layerModel, IRelationModel relationModel)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.changesetModel = changesetModel;
@@ -50,7 +49,6 @@ namespace Omnikeeper.Controllers
             this.ciModel = ciModel;
             this.baseRelationModel = baseRelationModel;
             this.authzFilterManager = authzFilterManager;
-            this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerModel = layerModel;
             this.relationModel = relationModel;
             this.attributeModel = attributeModel;
@@ -95,7 +93,6 @@ namespace Omnikeeper.Controllers
             // NOTE: we use GeneratedDataHandlingExclude to ignore generated data
             var attributesDict = (await baseAttributeModel.GetAttributes(ciidSelection, AllAttributeSelection.Instance, new string[] { layerID }, trans, timeThreshold, GeneratedDataHandlingExclude.Instance)).First();
             var attributesDTO = attributesDict
-                .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                 .SelectMany(kv => kv.Value.Values)
                 .Where(a => a.ChangesetID != GeneratorV1.StaticChangesetID) // HACK: skip generated attributes
                 .Select(a => CIAttributeDTO.Build(a));

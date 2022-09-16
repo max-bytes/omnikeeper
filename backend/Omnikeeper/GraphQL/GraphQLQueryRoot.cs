@@ -51,7 +51,6 @@ namespace Omnikeeper.GraphQL
         private readonly IBaseAttributeModel baseAttributeModel;
         private readonly IScheduler localScheduler;
         private readonly IScheduler distributedScheduler;
-        private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly IDataLoaderService dataLoaderService;
 
@@ -62,7 +61,7 @@ namespace Omnikeeper.GraphQL
             RecursiveTraitModel recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
             IUserInDatabaseModel userInDatabaseModel, IAuthzFilterManager authzFilterManager,
             IEnumerable<IPluginRegistration> plugins, IBaseAttributeModel baseAttributeModel, IIndex<string, IScheduler> schedulers,
-            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService, IDataLoaderService dataLoaderService, ValidatorContextV1Model validatorContextModel)
+            ILayerBasedAuthorizationService layerBasedAuthorizationService, IDataLoaderService dataLoaderService, ValidatorContextV1Model validatorContextModel)
         {
             this.ciidModel = ciidModel;
             this.attributeModel = attributeModel;
@@ -87,7 +86,6 @@ namespace Omnikeeper.GraphQL
             this.baseAttributeModel = baseAttributeModel;
             this.localScheduler = schedulers["localScheduler"];
             this.distributedScheduler = schedulers["distributedScheduler"];
-            this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.dataLoaderService = dataLoaderService;
             this.validatorContextModel = validatorContextModel;
@@ -105,8 +103,6 @@ namespace Omnikeeper.GraphQL
                     var userContext = context.GetUserContext();
 
                     var ciids = await ciidModel.GetCIIDs(userContext.Transaction);
-                    // reduce CIs to those that are allowed
-                    ciids = ciBasedAuthorizationService.FilterReadableCIs(ciids);
                     return ciids;
                 });
 
@@ -164,14 +160,6 @@ namespace Omnikeeper.GraphQL
                         }
                     }
 
-                    bool preAuthzCheckedCIs = false;
-                    if (ciidSelection is SpecificCIIDsSelection specificCIIDsSelection)
-                    {
-                        if (!ciBasedAuthorizationService.CanReadAllCIs(specificCIIDsSelection.CIIDs, out var notAllowedCI))
-                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {notAllowedCI}");
-                        preAuthzCheckedCIs = true;
-                    }
-
                     var requiredTraits = await traitsProvider.GetActiveTraitsByIDs(withEffectiveTraits, userContext.Transaction, timeThreshold);
                     var requiredNonTraits = await traitsProvider.GetActiveTraitsByIDs(withoutEffectiveTraits, userContext.Transaction, timeThreshold);
 
@@ -216,10 +204,6 @@ namespace Omnikeeper.GraphQL
                     }
 
                     var cisFilteredByTraits = effectiveTraitModel.FilterMergedCIsByTraits(workCIs, requiredTraitsCopy, requiredNonTraitsCopy, layerSet);
-
-                    // reduce CIs to those that are allowed
-                    if (!preAuthzCheckedCIs)
-                        cisFilteredByTraits = ciBasedAuthorizationService.FilterReadableCIs(cisFilteredByTraits, (ci) => ci.ID);
 
                     // sort by name, if requested
                     var sortByCIName = context.GetArgument<bool>("sortByCIName", false)!;

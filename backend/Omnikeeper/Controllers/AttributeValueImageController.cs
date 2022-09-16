@@ -28,17 +28,15 @@ namespace Omnikeeper.Controllers
         private readonly IAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly ICurrentUserAccessor currentUserService;
-        private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IAuthzFilterManager authzFilterManager;
         private readonly IModelContextBuilder modelContextBuilder;
 
         public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserAccessor currentUserService,
-            IModelContextBuilder modelContextBuilder, IChangesetModel changesetModel, ICIBasedAuthorizationService ciBasedAuthorizationService, IAuthzFilterManager authzFilterManager)
+            IModelContextBuilder modelContextBuilder, IChangesetModel changesetModel, IAuthzFilterManager authzFilterManager)
         {
             this.attributeModel = attributeModel;
             this.changesetModel = changesetModel;
             this.currentUserService = currentUserService;
-            this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.authzFilterManager = authzFilterManager;
             this.modelContextBuilder = modelContextBuilder;
         }
@@ -57,8 +55,6 @@ namespace Omnikeeper.Controllers
 
             if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), user, layerset, trans, timeThreshold) is AuthzFilterResultDeny d)
                 return Forbid(d.Reason);
-            if (!ciBasedAuthorizationService.CanReadCI(ciid))
-                return Forbid($"User \"{user.Username}\" does not have permission to read CI {ciid}");
 
             var a = await attributeModel.GetFullBinaryMergedAttribute(attributeName, ciid, layerset, trans, timeThreshold);
             if (a == null)
@@ -102,9 +98,6 @@ namespace Omnikeeper.Controllers
 
             if (await authzFilterManager.ApplyPreFilterForMutation(new PreMutateContextForCIs(), user, layerID, layerID, trans, timeThreshold) is AuthzFilterResultDeny d)
                 return Forbid(d.Reason);
-
-            if (!ciBasedAuthorizationService.CanWriteToCI(ciid))
-                return Forbid($"User \"{user.Username}\" does not have permission to write to CI {ciid}");
 
             var fileStreams = files.Select<IFormFile, (Func<Stream> stream, string contentType, string filename)>(f => (
                    () => f.OpenReadStream(),

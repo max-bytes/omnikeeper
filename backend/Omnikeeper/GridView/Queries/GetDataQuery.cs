@@ -51,12 +51,11 @@ namespace Omnikeeper.GridView.Queries
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly IAuthzFilterManager authzFilterManager;
-            private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly ICurrentUserAccessor currentUserService;
 
             public GetDataQueryHandler(GridViewContextModel gridViewContextModel, IEffectiveTraitModel effectiveTraitModel, IRelationModel relationModel, ICIModel ciModel,
                 ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
-                ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserAccessor currentUserService, IAuthzFilterManager authzFilterManager)
+                ICurrentUserAccessor currentUserService, IAuthzFilterManager authzFilterManager)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.effectiveTraitModel = effectiveTraitModel;
@@ -65,7 +64,6 @@ namespace Omnikeeper.GridView.Queries
                 this.traitsProvider = traitsProvider;
                 this.modelContextBuilder = modelContextBuilder;
                 this.metaConfigurationModel = metaConfigurationModel;
-                this.ciBasedAuthorizationService = ciBasedAuthorizationService;
                 this.currentUserService = currentUserService;
                 this.authzFilterManager = authzFilterManager;
             }
@@ -104,15 +102,12 @@ namespace Omnikeeper.GridView.Queries
                 var mergedCIs = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, readLayerset, false, attributeSelection, trans, atTime);
                 var mergedCIsWithTrait = effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, readLayerset);
 
-                // filter readable CIs based on authorization
-                var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(mergedCIsWithTrait, (t) => t.ID);
-
                 var attributeResolver = new AttributeResolver();
-                await attributeResolver.PrefetchRelatedCIsAndLookups(config, filteredCIs.Select(ci => ci.ID).ToHashSet(), relationModel, ciModel, trans, atTime);
+                await attributeResolver.PrefetchRelatedCIsAndLookups(config, mergedCIsWithTrait.Select(ci => ci.ID).ToHashSet(), relationModel, ciModel, trans, atTime);
 
                 var resultRows = new Dictionary<Guid, Row>();
 
-                foreach (var item in filteredCIs)
+                foreach (var item in mergedCIsWithTrait)
                 {
                     var ci_id = item.ID;
 

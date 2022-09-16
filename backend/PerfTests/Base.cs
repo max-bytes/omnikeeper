@@ -88,7 +88,6 @@ namespace PerfTests
             // override authorization
             containerBuilder.Register((sp) => new Mock<IManagementAuthorizationService>().Object).SingleInstance();
             containerBuilder.Register((sp) => new Mock<ILayerBasedAuthorizationService>().Object).SingleInstance();
-            containerBuilder.Register((sp) => new Mock<ICIBasedAuthorizationService>().Object).SingleInstance();
 
             return containerBuilder;
         }
