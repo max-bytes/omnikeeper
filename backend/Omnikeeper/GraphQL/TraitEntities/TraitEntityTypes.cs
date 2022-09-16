@@ -154,7 +154,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         // if the foundCIIDs contains any CIs that have the trait, we need to use this, not just the first CIID (which might NOT have the trait)
                         var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(foundCIIDs, traitEntityModel, layerset, trans, timeThreshold);
                         return bestMatchingET;
-                    });
+                    })
+                    .DeprecationReason("Superseded by filteredSingle*");
             }
         }
     }

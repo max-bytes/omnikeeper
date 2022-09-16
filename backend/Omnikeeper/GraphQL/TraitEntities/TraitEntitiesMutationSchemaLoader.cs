@@ -359,7 +359,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
                             return et;
-                        });
+                        })
+                        .DeprecationReason($"Superseded by {TraitEntityTypesNameGenerator.GenerateUpsertSingleByFilterMutationName(traitID)}");
 
                     var deleteByDataIDMutationName = TraitEntityTypesNameGenerator.GenerateDeleteByDataIDMutationName(traitID);
                     tet.Field(deleteByDataIDMutationName, new BooleanGraphType())
@@ -414,7 +415,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
 
                             return removed;
-                        });
+                        })
+                        .DeprecationReason($"Superseded by {TraitEntityTypesNameGenerator.GenerateDeleteSingleByFilterMutationName(traitID)}");
                 }
 
                 // changeset data insert
