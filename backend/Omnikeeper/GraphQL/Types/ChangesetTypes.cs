@@ -7,6 +7,7 @@ using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Omnikeeper.GraphQL.Types
@@ -29,7 +30,8 @@ namespace Omnikeeper.GraphQL.Types
 
     public class ChangesetType : ObjectGraphType<Changeset>
     {
-        public ChangesetType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel, IUserInDatabaseModel userInDatabaseModel, ICIModel ciModel, ChangesetDataModel changesetDataModel)
+        public ChangesetType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel, IUserInDatabaseModel userInDatabaseModel, ICIModel ciModel, 
+            ChangesetDataModel changesetDataModel, ITraitsProvider traitsProvider, IAttributeModel attributeModel)
         {
             Field("id", x => x.ID);
             Field(x => x.Timestamp);
@@ -152,7 +154,12 @@ namespace Omnikeeper.GraphQL.Types
                     var (changesetData, ciid) = await changesetDataModel.GetSingleByDataID(changesetID.ToString(), layerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
                     if (ciid == default)
                         return null;
-                    return await ciModel.GetMergedCI(ciid, layerset, AllAttributeSelection.Instance, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+
+                    IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(ciid), forwardAS, ciModel, attributeModel, layerset, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                        .Then(cis => cis.FirstOrDefault() ?? new MergedCI(ciid, null, layerset, userContext.GetTimeThreshold(context.Path), ImmutableDictionary<string, MergedCIAttribute>.Empty));
+
+                    return finalCI;
                 });
         }
     }
