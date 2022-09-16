@@ -29,7 +29,7 @@ jobs:
           ConnectionStrings__DatabaseConnection: Server=localhost;Port=5432;User Id=postgres;Password=postgres;Database=omnikeeper_tests;Pooling=false
         run: |
           cd backend
-          cd tests
+          cd Tests
           dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutput=coverage /p:CoverletOutputFormat=opencover # -- StopOnError=true
       - name: Upload coverage reports to Codecov
         run: |
