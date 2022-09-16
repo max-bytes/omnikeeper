@@ -104,6 +104,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 return foundETs.OrderBy(kv => kv.Key).Select(kv => (kv.Key, kv.Value)).First(); // we order by GUID to stay consistent even when multiple CIs would match
         }
 
+        // TODO: this is not only applicable to trait entities -> move to somewhere more general
         /*
             * NOTE: this does not care whether or not the CI is actually a trait entity or not
             */
