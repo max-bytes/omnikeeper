@@ -167,6 +167,8 @@ namespace Omnikeeper.GraphQL.Types
                     {
                         var field = selection as GraphQLField;
                         if (field == null) throw new Exception();
+                        if (field.Name.Value == "__typename")  // NOTE: some clients like to add "__typename" subfields to all fields, which we have to handle gracefully
+                            continue;
                         // TODO: can this be improved?
                         var ft = _GetAroundProtectedFunctions.PublicGetFieldDefinition(context.Schema, parentGraphType, field);
                         var rt = ft?.ResolvedType as ElementWrapperType;
