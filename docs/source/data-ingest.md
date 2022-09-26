@@ -134,6 +134,12 @@ The results of the IDMethod are one of three possibilities. If the IDMethod find
 - …no target-CI that fits, the noFoundTargetCIHandling property comes into play
 - …multiple target-CIs that fit, the importer will pick the first target-CI in the result list, which corresponds to the best fitting CI, and will write the attributes of the candidate-CI to that target-CI
 
+## Python library
+
+To ease the development of an importer that leverages the Raw Generic Ingest, a python-based library exists: <https://github.com/max-bytes/omnikeeper-importer-python>
+
+You can use this library for developing python based importers.
+
 ## Generic JSON Ingest
 
 via plugin OKPluginGenericJSONIngest
