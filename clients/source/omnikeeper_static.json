@@ -3776,13 +3776,13 @@
         "type": "oauth2",
         "flows": {
           "clientCredentials": {
-            "tokenUrl": "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/token",
+            "tokenUrl": "https://[keycloak-url]/auth/realms/acme/protocol/openid-connect/token",
             "scopes": { }
           },
           "authorizationCode": {
-            "authorizationUrl": "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/auth",
-            "tokenUrl": "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/token",
-            "refreshUrl": "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/token",
+            "authorizationUrl": "https://[keycloak-url]/auth/realms/acme/protocol/openid-connect/auth",
+            "tokenUrl": "https://[keycloak-url]/auth/realms/acme/protocol/openid-connect/token",
+            "refreshUrl": "https://[keycloak-url]/auth/realms/acme/protocol/openid-connect/token",
             "scopes": { }
           }
         }
