@@ -7,13 +7,12 @@
   * configuration
     * [application configuration](./configuration_application-configuration)
     * [configuration layers](./configuration_configuration-layers)
+  * [data ingest](./data-ingest)
   * [datamodel](./datamodel)
   * [eazy bi](./eazy-bi)
   * [generators](./generators)
   * [graphql api](./graphql-api)
   * [gridview](./gridview)
-  * inbound adapter
-    * [generic json inbound adapter](./inbound-adapter_generic-json-inbound-adapter)
   * [layers](./layers)
   * meta
     * [code of conduct](./meta_code-of-conduct)
