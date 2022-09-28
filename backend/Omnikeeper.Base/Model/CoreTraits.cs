@@ -27,7 +27,8 @@ namespace Omnikeeper.Base.Model
             GenericTraitEntityHelper.Class2RecursiveTrait<ValidatorContextV1>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<Issue>(),
             GenericTraitEntityHelper.Class2RecursiveTrait<ChangesetData>(),
-            GenericTraitEntityHelper.Class2RecursiveTrait<ODataAPIContext>()
+            GenericTraitEntityHelper.Class2RecursiveTrait<ODataAPIContext>(),
+            GenericTraitEntityHelper.Class2RecursiveTrait<LayerData>()
             //TraitBuilderFromClass.Class2RecursiveTrait<GridViewContext>(), // TODO: add?
         };
     }
