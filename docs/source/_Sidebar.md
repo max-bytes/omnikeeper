@@ -14,6 +14,7 @@
   * [generators](./generators)
   * [graphql api](./graphql-api)
   * [gridview](./gridview)
+  * [issues](./issues)
   * [layers](./layers)
   * meta
     * [code of conduct](./meta_code-of-conduct)
