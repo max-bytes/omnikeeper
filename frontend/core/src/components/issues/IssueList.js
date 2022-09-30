@@ -119,7 +119,7 @@ export default function IssueList(props) {
                         animateRows={true}
                         enableCellTextSelection={true}
                         getRowId={function (params) {
-                            return `${params.data.id}-${params.data.context}-${params.data.type}`;
+                            return `${params.data.id}-${params.data.group}-${params.data.context}-${params.data.type}`;
                         }}
                         onModelUpdated={(params) => setRowCount(params.api.getDisplayedRowCount())}
                     />
