@@ -222,8 +222,18 @@ namespace Omnikeeper.Base.Service
                 // duplicate handling
                 if (usedRelations.Contains((fromCIID, toCIID, cic.PredicateID)))
                 {
-                    // TODO: different handling options
-                    issueAccumulator.TryAdd("duplicate_relation_candidate", $"{fromCIID}_{toCIID}_{cic.PredicateID}", $"Duplicate relation candidate detected: (fromCIID: {fromCIID}, toCIID: {toCIID}, predicateID: {cic.PredicateID}), dropping", fromCIID, toCIID);
+                    switch (cic.DuplicateRelationHandling)
+                    {
+                        case DuplicateRelationHandling.DropAndWarn:
+                        case DuplicateRelationHandling.Drop:
+                            if (cic.DuplicateRelationHandling == DuplicateRelationHandling.DropAndWarn)
+                            {
+                                issueAccumulator.TryAdd("duplicate_relation_candidate", $"{fromCIID}_{toCIID}_{cic.PredicateID}", $"Duplicate relation candidate detected: (fromCIID: {fromCIID}, toCIID: {toCIID}, predicateID: {cic.PredicateID}), dropping", fromCIID, toCIID);
+                            }
+                            break;
+                        case DuplicateRelationHandling.Error:
+                            throw new Exception($"Duplicate relation candidate detected: (fromCIID: {fromCIID}, toCIID: {toCIID}, predicateID: {cic.PredicateID})");
+                    }
                     continue;
                 }
 
@@ -261,6 +271,13 @@ namespace Omnikeeper.Base.Service
         Drop
     }
 
+    public enum DuplicateRelationHandling
+    {
+        DropAndWarn, // default
+        Drop,
+        Error
+    }
+
     public class CICandidate
     {
         public Guid TempCIID { get; set; }
@@ -288,12 +305,14 @@ namespace Omnikeeper.Base.Service
         public CIIdentificationMethodByTempCIID IdentificationMethodFromCI { get; private set; }
         public CIIdentificationMethodByTempCIID IdentificationMethodToCI { get; private set; }
         public string PredicateID { get; private set; }
+        public DuplicateRelationHandling DuplicateRelationHandling { get; private set; }
 
-        public RelationCandidate(CIIdentificationMethodByTempCIID identificationMethodFromCI, CIIdentificationMethodByTempCIID identificationMethodToCI, string predicateID)
+        public RelationCandidate(CIIdentificationMethodByTempCIID identificationMethodFromCI, CIIdentificationMethodByTempCIID identificationMethodToCI, string predicateID, DuplicateRelationHandling duplicateRelationHandling)
         {
             IdentificationMethodFromCI = identificationMethodFromCI;
             IdentificationMethodToCI = identificationMethodToCI;
             PredicateID = predicateID;
+            DuplicateRelationHandling = duplicateRelationHandling;
         }
     }
 

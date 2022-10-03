@@ -60,8 +60,8 @@ namespace OKPluginGenericJSONIngest
     [JsonConverter(typeof(InboundIDMethodDiscriminatorConverter))]
     [SwaggerDiscriminator("type")]
     [SwaggerSubType(typeof(InboundIDMethodByData), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest")]
-    [SwaggerSubType(typeof(InboundIDMethodByAttributeModifiers), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByAttributeModifiers, OKPluginGenericJSONIngest")]
     [SwaggerSubType(typeof(InboundIDMethodByAttribute), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByAttribute, OKPluginGenericJSONIngest")]
+    [SwaggerSubType(typeof(InboundIDMethodByAttributeExists), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByAttributeExists, OKPluginGenericJSONIngest")]
     [SwaggerSubType(typeof(InboundIDMethodByRelatedTempID), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByRelatedTempID, OKPluginGenericJSONIngest")]
     [SwaggerSubType(typeof(InboundIDMethodByTemporaryCIID), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest")]
     [SwaggerSubType(typeof(InboundIDMethodByUnion), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByUnion, OKPluginGenericJSONIngest")]
@@ -109,7 +109,6 @@ namespace OKPluginGenericJSONIngest
 
     public class InboundIDMethodByAttribute : AbstractInboundIDMethod
     {
-        //public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         [JsonPropertyName("attribute")]
         public GenericInboundAttribute Attribute { get; set; }
         [JsonPropertyName("modifiers")]
@@ -120,6 +119,19 @@ namespace OKPluginGenericJSONIngest
         {
             Attribute = attribute;
             Modifiers = modifiers;
+            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
+        }
+    }
+
+    public class InboundIDMethodByAttributeExists : AbstractInboundIDMethod
+    {
+        [JsonPropertyName("attributes")]
+        public string[] Attributes { get; set; }
+
+        [JsonConstructor]
+        public InboundIDMethodByAttributeExists(string[] attributes)
+        {
+            Attributes = attributes;
             Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
@@ -204,6 +216,10 @@ namespace OKPluginGenericJSONIngest
 
         [JsonPropertyName("to")]
         public string To { get; set; }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        [JsonPropertyName("duplicateRelationHandling")]
+        public DuplicateRelationHandling DuplicateRelationHandling { get; set; }
     }
 }
 #pragma warning restore CS8618

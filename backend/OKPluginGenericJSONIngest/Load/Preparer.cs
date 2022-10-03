@@ -77,7 +77,7 @@ namespace OKPluginGenericJSONIngest.Load
                     }
                     return new RelationCandidate(
                         CIIdentificationMethodByTempCIID.Build(tempFromGuid),
-                        CIIdentificationMethodByTempCIID.Build(tempToGuid), r.Predicate);
+                        CIIdentificationMethodByTempCIID.Build(tempToGuid), r.Predicate, r.DuplicateRelationHandling);
                 }).Where(d => d != null).Cast<RelationCandidate>().ToList(); // NOTE: we force linq evaluation here
             } else
             {
@@ -92,7 +92,8 @@ namespace OKPluginGenericJSONIngest.Load
             {
                 if (a.Attribute.Value == null)
                 {
-                    issueAccumulator.TryAdd("prepare_id_method_by_attribute", tempID, $"Could not create fragment from generic attribute for idMethod CIIdentificationMethodByFragment using attribute name {a.Attribute.Name} on candidate CI with temp ID {tempID}");
+                    // we allow attribute values that are null here -> we just "bail" and let nothing match
+                    //issueAccumulator.TryAdd("prepare_id_method_by_attribute", tempID, $"Could not create fragment from generic attribute for idMethod CIIdentificationMethodByFragment using attribute name {a.Attribute.Name} on candidate CI with temp ID {tempID}");
                     return CIIdentificationMethodNoop.Build();
                 }
                 var fragment = new CICandidateAttributeData.Fragment(a.Attribute.Name, AttributeValueHelper.BuildFromDTO(a.Attribute.Value));
@@ -104,6 +105,7 @@ namespace OKPluginGenericJSONIngest.Load
             {
                 InboundIDMethodByData d => CIIdentificationMethodByData.BuildFromAttributes(d.Attributes, attributes, searchLayers),
                 InboundIDMethodByAttribute a => attributeF(a),
+                InboundIDMethodByAttributeExists a => CIIdentificationMethodByAttributeExists.Build(a.Attributes, searchLayers),
                 InboundIDMethodByRelatedTempID rt => CIIdentificationMethodByRelatedTempCIID.Build(tempCIIDMapping.GetValueOrDefault(rt.TempID), rt.OutgoingRelation, rt.PredicateID, searchLayers),
                 InboundIDMethodByTemporaryCIID t => CIIdentificationMethodByTempCIID.Build(tempCIIDMapping.GetValueOrDefault(t.TempID)),
                 InboundIDMethodByUnion f => CIIdentificationMethodByUnion.Build(f.Inner.Select(i => BuildCIIDMethod(i, attributes, searchLayers, tempID, tempCIIDMapping, issueAccumulator)).ToArray()),

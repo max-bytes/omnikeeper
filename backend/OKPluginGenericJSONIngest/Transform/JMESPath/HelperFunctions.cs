@@ -1,6 +1,7 @@
 ﻿using DevLab.JmesPath.Functions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -108,14 +109,27 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
     }
     public class RelationFunc : JmesPathFunction
     {
-        public RelationFunc() : base("relation", 3) { }
+        public RelationFunc() : base("relation", 3, true) { }
 
         public override JToken Execute(params JmesPathFunctionArgument[] args)
         {
             var from = args[0].Token.ToString();
             var predicate = args[1].Token.ToString();
             var to = args[2].Token.ToString();
-            return JObject.FromObject(new { from, predicate, to });
+            DuplicateRelationHandling duplicateRelationHandling = 0;
+            if (args.Length >= 4)
+            {
+                var s = args[3].Token.ToString();
+                if (s == null)
+                    throw new Exception("Invalid value for DuplicateRelationHandling");
+                duplicateRelationHandling = Enum.Parse<DuplicateRelationHandling>(s);
+            }
+
+            // NOTE: leave out default, to save space
+            if (duplicateRelationHandling != 0)
+                return JObject.FromObject(new { from, predicate, to, duplicateRelationHandling });
+            else
+                return JObject.FromObject(new { from, predicate, to });
         }
     }
 
@@ -156,6 +170,20 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             var attribute = ja;
             var type = SystemTextJSONSerializerMigrationHelper.GetTypeString(typeof(InboundIDMethodByAttribute));
             return JObject.FromObject(new { type, attribute, modifiers });
+        }
+    }
+
+    public class IDMethodByAttributeExistsFunc : JmesPathFunction
+    {
+        public IDMethodByAttributeExistsFunc() : base("idMethodByAttributeExists", 1) { }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            if (!(args[0].Token is JArray ja))
+                throw new Exception("Invalid attributes when constructing idMethodByAttributeExists");
+            var attributes = ja;
+            var type = SystemTextJSONSerializerMigrationHelper.GetTypeString(typeof(InboundIDMethodByAttributeExists));
+            return JObject.FromObject(new { type, attributes });
         }
     }
 

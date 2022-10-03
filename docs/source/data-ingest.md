@@ -115,9 +115,11 @@ Note that all IDMethods actually produce an ordered lists of CIIDs, not just a s
 The possible IDMethods:
 
 - ByAttribute:
-  - the most basic IDMethod: given a list of attribute-names, it tries to find a target-CI by looking for CIs that contain the specified attributes AND those attributes have the same value as the attributes of the candidate-CI, for each attribute respectively.
+  - the most basic IDMethod: given a list of attribute-names, it tries to find a target-CI by looking for CIs that contain ALL of the specified attributes AND those attributes have the same value as the attributes of the candidate-CI, for each attribute respectively.
 - ByData
   - similar to ByAttribute, but allows specifying full attributes that will be used for comparison instead of refering to attributes in the candidate-CI by name. Useful in scenarios when the attribute(s) to look for are not actually contained within the attributes of the candidate-CI
+- ByAttributeExists:
+  - given a list of attribute-names, it tries to find a target-CI by looking for CIs that contain ALL of the specified attributes.
 - ByRelatedTempID
   - find target-CIs that are related to a candidate-CI (specified via their tempID) through a relation with specified predicateID and direction.
 - ByTemporaryCIID
