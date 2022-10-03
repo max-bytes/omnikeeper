@@ -265,17 +265,20 @@
     {
       "from": "tempCIID\u003Erecord\u003E1569516122",
       "predicate": "assigned_to",
-      "to": "tempCIID\u003Ezone\u003Emhx-consulting.at"
+      "to": "tempCIID\u003Ezone\u003Emhx-consulting.at",
+      "duplicateRelationHandling": "DropAndWarn"
     },
     {
       "from": "tempCIID\u003Erecord\u003E1569516123",
       "predicate": "assigned_to",
-      "to": "tempCIID\u003Ezone\u003Emhx-consulting.at"
+      "to": "tempCIID\u003Ezone\u003Emhx-consulting.at",
+      "duplicateRelationHandling": "DropAndWarn"
     },
     {
       "from": "tempCIID\u003Erecord\u003E2569516148",
       "predicate": "assigned_to",
-      "to": "tempCIID\u003Ezone\u003Emhx.at"
+      "to": "tempCIID\u003Ezone\u003Emhx.at",
+      "duplicateRelationHandling": "DropAndWarn"
     }
   ]
 }

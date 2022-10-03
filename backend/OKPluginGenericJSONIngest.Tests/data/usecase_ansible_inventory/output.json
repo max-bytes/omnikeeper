@@ -1351,37 +1351,44 @@
     {
       "from": "tempCIID\u003Eh1jmplx01.mhx.at",
       "predicate": "has_mounted_device",
-      "to": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_mounts\u003E0"
+      "to": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_mounts\u003E0",
+      "duplicateRelationHandling": "DropAndWarn"
     },
     {
       "from": "tempCIID\u003Eh1jmplx01.mhx.at",
       "predicate": "has_mounted_device",
-      "to": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_mounts\u003E1"
+      "to": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_mounts\u003E1",
+      "duplicateRelationHandling": "DropAndWarn"
     },
     {
       "from": "tempCIID\u003Eh1jmplx01.mhx.at",
       "predicate": "has_network_interface",
-      "to": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_interfaces\u003E0"
+      "to": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_interfaces\u003E0",
+      "duplicateRelationHandling": "DropAndWarn"
     },
     {
       "from": "tempCIID\u003Eh1jmplx01.mhx.at",
       "predicate": "has_network_interface",
-      "to": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_interfaces\u003E1"
+      "to": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_interfaces\u003E1",
+      "duplicateRelationHandling": "DropAndWarn"
     },
     {
       "from": "tempCIID\u003Eh1lscapet01.mhx.local",
       "predicate": "has_mounted_device",
-      "to": "tempCIID\u003Eh1lscapet01.mhx.local\u003Eansible_mounts\u003E2"
+      "to": "tempCIID\u003Eh1lscapet01.mhx.local\u003Eansible_mounts\u003E2",
+      "duplicateRelationHandling": "DropAndWarn"
     },
     {
       "from": "tempCIID\u003Eh1lscapet01.mhx.local",
       "predicate": "has_mounted_device",
-      "to": "tempCIID\u003Eh1lscapet01.mhx.local\u003Eansible_mounts\u003E3"
+      "to": "tempCIID\u003Eh1lscapet01.mhx.local\u003Eansible_mounts\u003E3",
+      "duplicateRelationHandling": "DropAndWarn"
     },
     {
       "from": "tempCIID\u003Eh1lscapet01.mhx.local",
       "predicate": "has_network_interface",
-      "to": "tempCIID\u003Eh1lscapet01.mhx.local\u003Eansible_interfaces\u003E2"
+      "to": "tempCIID\u003Eh1lscapet01.mhx.local\u003Eansible_interfaces\u003E2",
+      "duplicateRelationHandling": "DropAndWarn"
     }
   ]
 }
