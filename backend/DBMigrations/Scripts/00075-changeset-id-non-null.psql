@@ -1,0 +1,4 @@
+﻿ALTER TABLE public.attribute ALTER COLUMN changeset_id SET NOT NULL;
+ALTER TABLE public.attribute_latest ALTER COLUMN changeset_id SET NOT NULL;
+ALTER TABLE public.relation ALTER COLUMN changeset_id SET NOT NULL;
+ALTER TABLE public.relation_latest ALTER COLUMN changeset_id SET NOT NULL;
