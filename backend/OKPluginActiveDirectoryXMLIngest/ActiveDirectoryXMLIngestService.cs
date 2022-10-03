@@ -123,7 +123,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 {
                     if (userLookupViaDN.TryGetValue(managedByUserDN, out var foundUser))
                     {
-                        var r = new RelationCandidate(CIIdentificationMethodByTempCIID.Build(computerGuid), CIIdentificationMethodByTempCIID.Build(foundUser.TempCIID), "managed_by");
+                        var r = new RelationCandidate(CIIdentificationMethodByTempCIID.Build(computerGuid), CIIdentificationMethodByTempCIID.Build(foundUser.TempCIID), "managed_by", DuplicateRelationHandling.DropAndWarn);
                         relations.Add(r);
                     }
                     else
@@ -179,7 +179,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                     { // find user CICandidate by distinguished name
                         if (userLookupViaDN.TryGetValue(userDN, out var foundUser))
                         {
-                            var r = new RelationCandidate(CIIdentificationMethodByTempCIID.Build(foundUser.TempCIID), CIIdentificationMethodByTempCIID.Build(groupGuid), "member_of_group");
+                            var r = new RelationCandidate(CIIdentificationMethodByTempCIID.Build(foundUser.TempCIID), CIIdentificationMethodByTempCIID.Build(groupGuid), "member_of_group", DuplicateRelationHandling.DropAndWarn);
                             relations.Add(r);
                         }
                         else
