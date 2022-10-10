@@ -190,7 +190,7 @@ export const queries = {
                 }
               }
             }
-          }          
+          }
     `,
     SelectedTimeThreshold: gql`
         query {

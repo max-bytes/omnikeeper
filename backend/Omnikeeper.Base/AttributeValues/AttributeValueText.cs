@@ -54,9 +54,9 @@ namespace Omnikeeper.Entity.AttributeValues
         public int Length => Values.Length;
         public bool IsArray => true;
 
-        public static AttributeArrayValueText BuildFromString(IEnumerable<string> values, bool multiline = false)
+        public static AttributeArrayValueText BuildFromString(string[] values, bool multiline = false)
         {
-            return new AttributeArrayValueText(values.ToArray(), multiline);
+            return new AttributeArrayValueText(values, multiline);
         }
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)

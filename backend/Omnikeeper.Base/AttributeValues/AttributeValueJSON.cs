@@ -68,7 +68,7 @@ namespace Omnikeeper.Entity.AttributeValues
         {
             if (t.RootElement.ValueKind == JsonValueKind.Array)
             {
-                var elements = t.RootElement.EnumerateArray().Select(e => e.ToString()); // TODO
+                var elements = t.RootElement.EnumerateArray().Select(e => e.ToString()).ToArray(); // TODO
                 return AttributeArrayValueJSON.BuildFromString(elements, false);
             }
             else
@@ -86,7 +86,7 @@ namespace Omnikeeper.Entity.AttributeValues
                 {
                     return e.ToString();
                 }); // TODO
-                return AttributeArrayValueJSON.BuildFromString(elements, false);
+                return AttributeArrayValueJSON.BuildFromString(elements.ToArray(), false);
             }
             else
             {
@@ -123,7 +123,7 @@ namespace Omnikeeper.Entity.AttributeValues
             return values;
         }
 
-        private static IEnumerable<JsonDocument> Parse(IEnumerable<string> valuesStr)
+        private static IEnumerable<JsonDocument> Parse(string[] valuesStr)
         {
             return valuesStr.Select(value =>
             {
@@ -145,26 +145,25 @@ namespace Omnikeeper.Entity.AttributeValues
         public int Length => valuesStr.Length;
         public bool IsArray => true;
 
-        public static AttributeArrayValueJSON BuildFromString(IEnumerable<string> values, bool parse)
+        public static AttributeArrayValueJSON BuildFromString(string[] values, bool parse)
         {
             if (parse)
             {
                 var documents = Parse(values).ToArray();
-                return new AttributeArrayValueJSON(values.ToArray())
+                return new AttributeArrayValueJSON(values)
                 {
                     values = documents
                 };
             }
             else
             {
-                return new AttributeArrayValueJSON(values.ToArray());
+                return new AttributeArrayValueJSON(values);
             }
         }
 
-        public static AttributeArrayValueJSON BuildFromJsonDocuments(IEnumerable<JsonDocument> values)
+        public static AttributeArrayValueJSON BuildFromJsonDocuments(JsonDocument[] values)
         {
-            var documents = values.ToArray();
-            var strings = documents.Select(d =>
+            var strings = values.Select(d =>
             {
                 if (d.RootElement.ValueKind == JsonValueKind.Array)
                     throw new Exception("Expected every element of AttributeArrayValueJSON to NOT be an array");
@@ -172,7 +171,7 @@ namespace Omnikeeper.Entity.AttributeValues
             }).ToArray();
             return new AttributeArrayValueJSON(strings)
             {
-                values = documents
+                values = values
             };
         }
 
