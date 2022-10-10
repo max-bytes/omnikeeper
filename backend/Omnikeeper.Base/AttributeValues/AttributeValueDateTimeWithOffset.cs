@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Omnikeeper.Base.Utils;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Omnikeeper.Base.Utils;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
@@ -36,16 +37,19 @@ namespace Omnikeeper.Entity.AttributeValues
         }
     }
 
-    public sealed record class AttributeArrayValueDateTimeWithOffset(AttributeScalarValueDateTimeWithOffset[] Values) : AttributeArrayValue<AttributeScalarValueDateTimeWithOffset, DateTimeOffset>(Values)
+    public sealed record class AttributeArrayValueDateTimeWithOffset(DateTimeOffset[] Values) : IAttributeArrayValue
     {
-        public override AttributeValueType Type => AttributeValueType.DateTimeWithOffset;
+        public AttributeValueType Type => AttributeValueType.DateTimeWithOffset;
+
+        public int Length => Values.Length;
+        public bool IsArray => true;
 
         public static AttributeArrayValueDateTimeWithOffset Build(DateTimeOffset[] values)
         {
-            return new AttributeArrayValueDateTimeWithOffset(
-                values.Select(v => new AttributeScalarValueDateTimeWithOffset(v)).ToArray()
-            );
+            return new AttributeArrayValueDateTimeWithOffset(values);
         }
+
+        public IEnumerable<byte[]> ToBytes() => Values.Select(v => v.GetBytes());
 
         // NOTE: assumes elements are packed one after the other
         internal static IAttributeValue BuildFromBytes(byte[] bytes)
@@ -70,5 +74,13 @@ namespace Omnikeeper.Entity.AttributeValues
             }).ToArray();
             return Build(elementValues);
         }
+
+        public bool Equals(AttributeArrayValueDateTimeWithOffset? other) => other != null && Values.SequenceEqual(other.Values);
+        public override int GetHashCode() => Values.GetHashCode();
+
+        public string[] ToRawDTOValues() => Values.Select(v => v.ToString("o")).ToArray();
+        public object ToGenericObject() => Values;
+        public object ToGraphQLValue() => Values;
+        public string Value2String() => string.Join(",", Values.Select(value => value.ToString("o")));
     }
 }

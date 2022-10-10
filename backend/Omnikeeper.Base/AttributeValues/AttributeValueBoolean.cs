@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
@@ -18,7 +18,7 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public AttributeValueType Type => AttributeValueType.Boolean;
 
-        public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeScalarValueBoolean);
+        //public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeScalarValueBoolean);
 
         public static AttributeScalarValueBoolean BuildFromBytes(byte[] value)
         {
@@ -35,16 +35,19 @@ namespace Omnikeeper.Entity.AttributeValues
         }
     }
 
-    public sealed record class AttributeArrayValueBoolean(AttributeScalarValueBoolean[] Values) : AttributeArrayValue<AttributeScalarValueBoolean, bool>(Values)
+    public sealed record class AttributeArrayValueBoolean(bool[] Values) : IAttributeArrayValue
     {
-        public override AttributeValueType Type => AttributeValueType.Boolean;
+        public AttributeValueType Type => AttributeValueType.Boolean;
+
+        public int Length => Values.Length;
+        public bool IsArray => true;
 
         public static AttributeArrayValueBoolean Build(bool[] values)
         {
-            return new AttributeArrayValueBoolean(
-                values.Select(v => new AttributeScalarValueBoolean(v)).ToArray()
-            );
+            return new AttributeArrayValueBoolean(values);
         }
+
+        public IEnumerable<byte[]> ToBytes() => Values.Select(v => BitConverter.GetBytes(v));
 
         // NOTE: assumes booleans are packed one after the other
         internal static IAttributeValue BuildFromBytes(byte[] bytes)
@@ -69,5 +72,13 @@ namespace Omnikeeper.Entity.AttributeValues
             }).ToArray();
             return Build(boolValues);
         }
+
+        public bool Equals(AttributeArrayValueBoolean? other) => other != null && Values.SequenceEqual(other.Values);
+        public override int GetHashCode() => Values.GetHashCode();
+
+        public string[] ToRawDTOValues() => Values.Select(v => v ? "true" : "false").ToArray();
+        public object ToGenericObject() => Values;
+        public object ToGraphQLValue() => Values;
+        public string Value2String() => string.Join(",", Values.Select(value => value ? "true" : "false"));
     }
 }

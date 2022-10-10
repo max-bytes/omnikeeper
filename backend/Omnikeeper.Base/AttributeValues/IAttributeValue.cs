@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace Omnikeeper.Entity.AttributeValues
@@ -9,7 +7,7 @@ namespace Omnikeeper.Entity.AttributeValues
     {
         Text, MultilineText, Integer, JSON, YAML, Image, Mask, Double, Boolean, DateTimeWithOffset
     }
-    public interface IAttributeValue : IEquatable<IAttributeValue>
+    public interface IAttributeValue
     {
         public string Value2String();
         public int GetHashCode();
@@ -32,32 +30,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public int Length { get; }
     }
 
-    public interface IAttributeArrayValue<S, T> : IAttributeArrayValue where S : IAttributeScalarValue<T>
-    {
-        public S[] Values { get; }
-    }
 
-    public abstract record class AttributeArrayValue<S, T>(S[] Values) : IAttributeArrayValue<S, T>, IEquatable<AttributeArrayValue<S, T>> where S : IAttributeScalarValue<T>
-    {
-        public abstract AttributeValueType Type { get; }
-
-        public int Length => Values.Length;
-
-        public bool IsArray => true;
-
-        public override string ToString() => $"AV-Array: {Value2String()}";
-
-        public bool Equals(IAttributeValue? other) => Equals(other as AttributeArrayValue<S, T>);
-        public virtual bool Equals(AttributeArrayValue<S, T>? other) => other != null && Values.SequenceEqual(other.Values);
-        public override int GetHashCode() => Values.GetHashCode();
-
-        public string[] ToRawDTOValues() => Values.Select(v => v.ToRawDTOValues()[0]).ToArray();
-
-        public object ToGenericObject() => Values.Select(v => v.Value).ToArray();
-        public string Value2String() => string.Join(",", Values.Select(value => value.Value2String().Replace(",", "\\,")));
-
-        public object ToGraphQLValue() => Values.Select(v => v.ToGraphQLValue()).ToArray();
-    }
 
     public static class Extensions
     {

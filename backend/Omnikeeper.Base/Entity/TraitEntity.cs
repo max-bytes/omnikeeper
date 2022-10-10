@@ -53,9 +53,9 @@ namespace Omnikeeper.Base.Entity
             else if (attribute is AttributeArrayValueJSON aa)
             {
                 var ret = new T[aa.Length];
-                for (int i = 0; i < aa.Values.Length; i++)
+                for (int i = 0; i < aa.ValuesStr.Length; i++)
                 {
-                    ret[i] = Deserialize(aa.Values[i].ValueStr);
+                    ret[i] = Deserialize(aa.ValuesStr[i]);
                 }
                 return ret;
             }

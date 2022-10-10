@@ -23,40 +23,47 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public AttributeValueType Type => (Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
 
-        public bool Equals(IAttributeValue? other) => Equals(other as AttributeScalarValueText);
-
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
         {
-            if (maximum.HasValue && Value.Length > maximum)
-                yield return new TemplateErrorAttributeGeneric("Text too long!");
-            else if (minimum.HasValue && Value.Length < minimum)
-                yield return new TemplateErrorAttributeGeneric("Text too short!");
+            return ApplyTextLengthConstraint(Value, minimum, maximum);
         }
         public IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex)
         {
-            var match = regex.Match(Value);
+            return MatchRegex(Value, regex);
+        }
+
+        public static IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(string value, int? minimum, int? maximum)
+        {
+            if (maximum.HasValue && value.Length > maximum)
+                yield return new TemplateErrorAttributeGeneric("Text too long!");
+            else if (minimum.HasValue && value.Length < minimum)
+                yield return new TemplateErrorAttributeGeneric("Text too short!");
+        }
+        public static IEnumerable<ITemplateErrorAttribute> MatchRegex(string value, Regex regex)
+        {
+            var match = regex.Match(value);
             if (!match.Success)
-                yield return new TemplateErrorAttributeGeneric($"Regex {regex} did not match text {Value}");
+                yield return new TemplateErrorAttributeGeneric($"Regex {regex} did not match text {value}");
         }
     }
 
-    public sealed record class AttributeArrayValueText(AttributeScalarValueText[] Values) : AttributeArrayValue<AttributeScalarValueText, string>(Values), IAttributeValueText
+    public sealed record class AttributeArrayValueText(string[] Values, bool Multiline) : IAttributeArrayValue, IAttributeValueText
     {
-        public override AttributeValueType Type => Values.Any(v => v.Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
+        public AttributeValueType Type => Multiline ? AttributeValueType.MultilineText : AttributeValueType.Text;
+
+        public int Length => Values.Length;
+        public bool IsArray => true;
 
         public static AttributeArrayValueText BuildFromString(IEnumerable<string> values, bool multiline = false)
         {
-            return new AttributeArrayValueText
-            (
-                values.Select(v => new AttributeScalarValueText(v, multiline)).ToArray()
-            );
+            return new AttributeArrayValueText(values.ToArray(), multiline);
         }
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
         {
             for (int i = 0; i < Values.Length; i++)
             {
-                foreach (var e in Values[i].ApplyTextLengthConstraint(minimum, maximum)) yield return e;
+                foreach (var e in AttributeScalarValueText.ApplyTextLengthConstraint(Values[i], minimum, maximum)) yield return e;
             }
         }
 
@@ -64,9 +71,16 @@ namespace Omnikeeper.Entity.AttributeValues
         {
             for (int i = 0; i < Values.Length; i++)
             {
-                foreach (var e in Values[i].MatchRegex(regex)) yield return e;
+                foreach (var e in AttributeScalarValueText.MatchRegex(Values[i], regex)) yield return e;
             }
         }
 
+        public bool Equals(AttributeArrayValueText? other) => other != null && Values.SequenceEqual(other.Values);
+        public override int GetHashCode() => Values.GetHashCode();
+
+        public string[] ToRawDTOValues() => Values;
+        public object ToGenericObject() => Values;
+        public object ToGraphQLValue() => Values;
+        public string Value2String() => string.Join(",", Values.Select(value => value.Replace(",", "\\,")));
     }
 }

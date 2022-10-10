@@ -84,9 +84,12 @@ namespace Omnikeeper.Entity.AttributeValues
     //}
 
 
-    public sealed record class AttributeArrayValueYAML(AttributeScalarValueYAML[] Values) : AttributeArrayValue<AttributeScalarValueYAML, YamlDocument>(Values)
+    public sealed record class AttributeArrayValueYAML(string[] ValuesStr, YamlDocument[] Values) : IAttributeArrayValue
     {
-        public override AttributeValueType Type => AttributeValueType.YAML;
+        public AttributeValueType Type => AttributeValueType.YAML;
+
+        public int Length => ValuesStr.Length;
+        public bool IsArray => true;
 
         public static AttributeArrayValueYAML BuildFromString(string[] values)
         {
@@ -97,17 +100,16 @@ namespace Omnikeeper.Entity.AttributeValues
                 var document = stream.Documents.FirstOrDefault();
                 if (document == null) throw new Exception("Could not parse YAML");
                 return document;
-            }).ToArray();
-            return Build(yamlDocuments, values);
+            }).ToArray(); // TODO: make lazy, like JSON
+            return new AttributeArrayValueYAML(values, yamlDocuments);
         }
 
-        public static AttributeArrayValueYAML Build(YamlDocument[] values, string[] valuesStr)
-        {
-            if (values.Length != valuesStr.Length) throw new Exception("Values and valuesStr must be equal length");
-            var n = new AttributeArrayValueYAML(
-                values.Select((v, index) => AttributeScalarValueYAML.Build(v, valuesStr[index])).ToArray()
-            );
-            return n;
-        }
+        public bool Equals(AttributeArrayValueYAML? other) => other != null && Values.SequenceEqual(other.Values);
+        public override int GetHashCode() => Values.GetHashCode();
+
+        public string[] ToRawDTOValues() => ValuesStr;
+        public object ToGenericObject() => Values;
+        public object ToGraphQLValue() => ValuesStr;
+        public string Value2String() => string.Join(",", ValuesStr.Select(value => value.Replace(",", "\\,")));
     }
 }

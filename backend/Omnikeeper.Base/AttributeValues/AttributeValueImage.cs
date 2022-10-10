@@ -27,9 +27,12 @@ namespace Omnikeeper.Entity.AttributeValues
         public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeScalarValueImage);
     }
 
-    public sealed record class AttributeArrayValueImage(AttributeScalarValueImage[] Values) : AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>(Values)
+    public sealed record class AttributeArrayValueImage(AttributeScalarValueImage[] Values) : IAttributeArrayValue
     {
-        public override AttributeValueType Type => AttributeValueType.Image;
+        public AttributeValueType Type => AttributeValueType.Image;
+
+        public int Length => Values.Length;
+        public bool IsArray => true;
 
         public static AttributeArrayValueImage Build(IEnumerable<BinaryScalarAttributeValueProxy> proxies)
         {
@@ -37,5 +40,14 @@ namespace Omnikeeper.Entity.AttributeValues
                 proxies.Select(p => new AttributeScalarValueImage(p)).ToArray()
             );
         }
+
+        public bool Equals(AttributeArrayValueImage? other) => other != null && Values.SequenceEqual(other.Values);
+        public override int GetHashCode() => Values.GetHashCode();
+
+        // TODO: simplify
+        public string[] ToRawDTOValues() => Values.Select(v => v.ToRawDTOValues()[0]).ToArray();
+        public object ToGenericObject() => Values.Select(v => v.Value).ToArray();
+        public object ToGraphQLValue() => Values.Select(v => v.ToGraphQLValue()).ToArray();
+        public string Value2String() => string.Join(",", Values.Select(value => value.Value2String().Replace(",", "\\,")));
     }
 }

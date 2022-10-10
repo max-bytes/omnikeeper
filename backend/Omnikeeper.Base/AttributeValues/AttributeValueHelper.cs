@@ -345,19 +345,19 @@ namespace Omnikeeper.Base.AttributeValues
             return av switch
             {
                 AttributeScalarValueText a => MarshalStringV2(a.Value),
-                AttributeArrayValueText a => MarshalStringArrayV2(a.Values.Select(v => v.Value)),
+                AttributeArrayValueText a => MarshalStringArrayV2(a.Values),
                 AttributeScalarValueInteger a => MarshalStringV2(a.Value.ToString()),
-                AttributeArrayValueInteger a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
+                AttributeArrayValueInteger a => MarshalStringArrayV2(a.Values.Select(v => v.ToString())),
                 AttributeScalarValueDouble a => MarshalSimpleBinaryV2(a.ToBytes()),
-                AttributeArrayValueDouble a => MarshalSimpleBinaryArrayV2(a.Values.Select(v => v.ToBytes())),
+                AttributeArrayValueDouble a => MarshalSimpleBinaryArrayV2(a.ToBytes()),
                 AttributeScalarValueBoolean a => MarshalSimpleBinaryV2(a.ToBytes()),
-                AttributeArrayValueBoolean a => MarshalSimpleBinaryArrayV2(a.Values.Select(v => v.ToBytes())),
+                AttributeArrayValueBoolean a => MarshalSimpleBinaryArrayV2(a.ToBytes()),
                 AttributeScalarValueDateTimeWithOffset a => MarshalSimpleBinaryV2(a.ToBytes()),
-                AttributeArrayValueDateTimeWithOffset a => MarshalSimpleBinaryArrayV2(a.Values.Select(v => v.ToBytes())),
-                AttributeScalarValueJSON a => MarshalStringV2(a.Value2String()),
-                AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value2String())),
-                AttributeScalarValueYAML a => MarshalStringV2((a.Value.ToString())!),
-                AttributeArrayValueYAML a => MarshalStringArrayV2(a.Values.Select(v => (v.Value.ToString())!)),
+                AttributeArrayValueDateTimeWithOffset a => MarshalSimpleBinaryArrayV2(a.ToBytes()),
+                AttributeScalarValueJSON a => MarshalStringV2(a.ValueStr),
+                AttributeArrayValueJSON a => MarshalStringArrayV2(a.ValuesStr),
+                AttributeScalarValueYAML a => MarshalStringV2((a.Value.ToString())!), // TODO: why the forced conversion from YAMLDocument?
+                AttributeArrayValueYAML a => MarshalStringArrayV2(a.Values.Select(v => (v.ToString())!)), // TODO: why the forced conversion from YAMLDocument?
                 AttributeScalarValueMask a => MarshalStringV2(""),
                 AttributeScalarValueImage a => MarshalComplexBinaryV2(a.Value),
                 AttributeArrayValueImage a => MarshalComplexBinaryArrayV2(a.Values.Select(v => v.Value)),

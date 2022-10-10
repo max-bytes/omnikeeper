@@ -28,15 +28,16 @@ namespace Omnikeeper.Entity.AttributeValues
 
     }
 
-    public sealed record class AttributeArrayValueInteger(AttributeScalarValueInteger[] Values) : AttributeArrayValue<AttributeScalarValueInteger, long>(Values)
+    public sealed record class AttributeArrayValueInteger(long[] Values) : IAttributeArrayValue
     {
-        public override AttributeValueType Type => AttributeValueType.Integer;
+        public AttributeValueType Type => AttributeValueType.Integer;
+
+        public int Length => Values.Length;
+        public bool IsArray => true;
 
         public static AttributeArrayValueInteger Build(long[] values)
         {
-            return new AttributeArrayValueInteger(
-                values.Select(v => new AttributeScalarValueInteger(v)).ToArray()
-            );
+            return new AttributeArrayValueInteger(values);
         }
 
         public static AttributeArrayValueInteger BuildFromString(string[] values)
@@ -50,5 +51,13 @@ namespace Omnikeeper.Entity.AttributeValues
             }).ToArray();
             return Build(longValues);
         }
+
+        public bool Equals(AttributeArrayValueInteger? other) => other != null && Values.SequenceEqual(other.Values);
+        public override int GetHashCode() => Values.GetHashCode();
+
+        public string[] ToRawDTOValues() => Values.Select(v => v.ToString()).ToArray();
+        public object ToGenericObject() => Values;
+        public object ToGraphQLValue() => Values;
+        public string Value2String() => string.Join(",", Values.Select(value => value.ToString()));
     }
 }

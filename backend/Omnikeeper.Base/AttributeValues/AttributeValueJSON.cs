@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
     // NOTE: not a record class because we do things like lazy initialization
-    public sealed class AttributeScalarValueJSON : IAttributeScalarValue<JsonDocument>, IEquatable<AttributeScalarValueJSON>
+    public sealed class AttributeScalarValueJSON : IAttributeScalarValue<JsonDocument>, IEquatable<AttributeScalarValueJSON>//, IEquatable<IAttributeValue>
     {
         private JsonDocument? value;
         private readonly string valueStr;
@@ -29,8 +28,9 @@ namespace Omnikeeper.Entity.AttributeValues
         public JsonDocument Value => GetValue();
         public AttributeValueType Type => AttributeValueType.JSON;
         public bool IsArray => false;
-        public bool Equals([AllowNull] IAttributeValue? other) => Equals(other as AttributeScalarValueJSON);
-        public bool Equals([AllowNull] AttributeScalarValueJSON other)
+        public override bool Equals(object? other) => Equals(other as AttributeScalarValueJSON);
+        //public bool Equals(IAttributeValue? other) => Equals(other as AttributeScalarValueJSON);
+        public bool Equals(AttributeScalarValueJSON? other)
         {
             // NOTE: we do basic string equality comparison, because other methods would be much more expensive and ideal either
             // this means that tiny changes to the JSON, like reordering of member order or whitespace means the attribute value has changed
@@ -107,34 +107,82 @@ namespace Omnikeeper.Entity.AttributeValues
         }
     }
 
-    public sealed record class AttributeArrayValueJSON(AttributeScalarValueJSON[] Values) : AttributeArrayValue<AttributeScalarValueJSON, JsonDocument>(Values)
+    // NOTE: not a record class because we do things like lazy initialization
+    public sealed class AttributeArrayValueJSON : IAttributeArrayValue, IEquatable<AttributeArrayValueJSON>
     {
-        public override AttributeValueType Type => AttributeValueType.JSON;
+        private JsonDocument[]? values;
+        private readonly string[] valuesStr;
+
+        public string[] ValuesStr => valuesStr;
+
+        // internal getter method, used to lazily initialize the JsonDocument
+        private JsonDocument[] GetValues()
+        {
+            if (values == null)
+                values = Parse(valuesStr).ToArray();
+            return values;
+        }
+
+        private static IEnumerable<JsonDocument> Parse(IEnumerable<string> valuesStr)
+        {
+            return valuesStr.Select(value =>
+            {
+                var d = JsonDocument.Parse(value);
+                if (d.RootElement.ValueKind == JsonValueKind.Array)
+                    throw new Exception("Expected every element of AttributeArrayValueJSON to NOT be an array");
+                return d;
+            });
+        }
+
+        private AttributeArrayValueJSON(string[] valuesStr)
+        {
+            this.values = null;
+            this.valuesStr = valuesStr;
+        }
+
+        public AttributeValueType Type => AttributeValueType.JSON;
+
+        public int Length => valuesStr.Length;
+        public bool IsArray => true;
 
         public static AttributeArrayValueJSON BuildFromString(IEnumerable<string> values, bool parse)
         {
-            var elements = values.Select(value =>
+            if (parse)
             {
-                var element = AttributeScalarValueJSON.BuildFromString(value, parse);
-                if (element is not AttributeScalarValueJSON jsonElement)
-                    throw new Exception("Expected every element of AttributeArrayValueJSON to be object, not array");
-                return jsonElement;
-            }).ToArray();
-            return new AttributeArrayValueJSON(elements);
+                var documents = Parse(values).ToArray();
+                return new AttributeArrayValueJSON(values.ToArray())
+                {
+                    values = documents
+                };
+            }
+            else
+            {
+                return new AttributeArrayValueJSON(values.ToArray());
+            }
         }
 
         public static AttributeArrayValueJSON BuildFromJsonDocuments(IEnumerable<JsonDocument> values)
         {
-            var n = new AttributeArrayValueJSON(
-                values.Select(v =>
-                {
-                    var element = AttributeScalarValueJSON.BuildFromJsonDocument(v);
-                    if (element is not AttributeScalarValueJSON jsonElement)
-                        throw new Exception("Expected every element of AttributeArrayValueJSON to be object, not array");
-                    return jsonElement;
-                }).ToArray()
-            );
-            return n;
+            var documents = values.ToArray();
+            var strings = documents.Select(d =>
+            {
+                if (d.RootElement.ValueKind == JsonValueKind.Array)
+                    throw new Exception("Expected every element of AttributeArrayValueJSON to NOT be an array");
+                return d.RootElement.ToString();
+            }).ToArray();
+            return new AttributeArrayValueJSON(strings)
+            {
+                values = documents
+            };
         }
+
+        public override bool Equals(object? other) => Equals(other as AttributeArrayValueJSON);
+        public bool Equals(AttributeArrayValueJSON? other) => other != null && valuesStr.SequenceEqual(other.valuesStr);
+        public override int GetHashCode() => valuesStr.GetHashCode();
+
+        public string[] ToRawDTOValues() => valuesStr;
+        public object ToGenericObject() => GetValues();
+        public object ToGraphQLValue() => valuesStr;
+        public string Value2String() => string.Join(",", valuesStr.Select(value => value.Replace(",", "\\,")));
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -42,16 +43,19 @@ namespace Omnikeeper.Entity.AttributeValues
                 NumberStyles.AllowExponent;
     }
 
-    public sealed record class AttributeArrayValueDouble(AttributeScalarValueDouble[] Values) : AttributeArrayValue<AttributeScalarValueDouble, double>(Values)
+    public sealed record class AttributeArrayValueDouble(double[] Values) : IAttributeArrayValue
     {
-        public override AttributeValueType Type => AttributeValueType.Double;
+        public AttributeValueType Type => AttributeValueType.Double;
+
+        public int Length => Values.Length;
+        public bool IsArray => true;
 
         public static AttributeArrayValueDouble Build(double[] values)
         {
-            return new AttributeArrayValueDouble(
-                values.Select(v => new AttributeScalarValueDouble(v)).ToArray()
-            );
+            return new AttributeArrayValueDouble(values);
         }
+
+        public IEnumerable<byte[]> ToBytes() => Values.Select(v => BitConverter.GetBytes(v));
 
         // NOTE: assumes doubles are packed one after the other
         internal static IAttributeValue BuildFromBytes(byte[] bytes)
@@ -76,5 +80,13 @@ namespace Omnikeeper.Entity.AttributeValues
             }).ToArray();
             return Build(doubleValues);
         }
+
+        public bool Equals(AttributeArrayValueDouble? other) => other != null && Values.SequenceEqual(other.Values);
+        public override int GetHashCode() => Values.GetHashCode();
+
+        public string[] ToRawDTOValues() => Values.Select(v => v.ToString(CultureInfo.InvariantCulture)).ToArray();
+        public object ToGenericObject() => Values;
+        public object ToGraphQLValue() => Values;
+        public string Value2String() => string.Join(",", Values.Select(value => value.ToString(CultureInfo.InvariantCulture)));
     }
 }
