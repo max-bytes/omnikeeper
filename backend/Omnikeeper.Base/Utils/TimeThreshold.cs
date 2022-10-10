@@ -2,17 +2,8 @@
 
 namespace Omnikeeper.Base.Utils
 {
-    public struct TimeThreshold
+    public readonly record struct TimeThreshold(bool IsLatest, DateTimeOffset Time)
     {
-        private TimeThreshold(bool isLatest, DateTimeOffset time)
-        {
-            IsLatest = isLatest;
-            Time = time;
-        }
-
-        public bool IsLatest { get; }
-        public DateTimeOffset Time { get; }
-
         public static TimeThreshold BuildLatest()
         {
             return new TimeThreshold(true, DateTimeOffset.Now);

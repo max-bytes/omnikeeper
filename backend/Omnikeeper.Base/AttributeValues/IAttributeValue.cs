@@ -39,7 +39,6 @@ namespace Omnikeeper.Entity.AttributeValues
 
     public abstract record class AttributeArrayValue<S, T>(S[] Values) : IAttributeArrayValue<S, T>, IEquatable<AttributeArrayValue<S, T>> where S : IAttributeScalarValue<T>
     {
-
         public abstract AttributeValueType Type { get; }
 
         public int Length => Values.Length;

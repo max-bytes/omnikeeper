@@ -4,10 +4,10 @@ using System.Collections.Generic;
 
 namespace Omnikeeper.Base.Entity
 {
-    public class MergedCIAttribute
+    public sealed class MergedCIAttribute
     {
-        public CIAttribute Attribute { get; private set; }
-        public IList<string> LayerStackIDs { get; private set; }
+        public CIAttribute Attribute { get; }
+        public IList<string> LayerStackIDs { get; }
 
         public MergedCIAttribute(CIAttribute attribute, IList<string> layerStackIDs)
         {
@@ -16,18 +16,12 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    //[ProtoContract(SkipConstructor = true)]
-    public class CIAttribute
+    public sealed class CIAttribute
     {
-        //[ProtoMember(1)] 
         public readonly Guid ID;
-        //[ProtoMember(2)] 
         public readonly string Name;
-        //[ProtoMember(3)] 
         public readonly Guid CIID;
-        //[ProtoMember(4)] 
         public readonly IAttributeValue Value;
-        //[ProtoMember(5)] 
         public readonly Guid ChangesetID;
 
         // information hash: 
@@ -56,7 +50,7 @@ namespace Omnikeeper.Base.Entity
         IAttributeValue GetValue(F fragment);
     }
 
-    public class BulkCIAttributeDataLayerScope : IBulkCIAttributeData<BulkCIAttributeDataLayerScope.Fragment>
+    public sealed class BulkCIAttributeDataLayerScope : IBulkCIAttributeData<BulkCIAttributeDataLayerScope.Fragment>
     {
         public class Fragment
         {
@@ -85,7 +79,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    public class BulkCIAttributeDataCIScope : IBulkCIAttributeData<BulkCIAttributeDataCIScope.Fragment>
+    public sealed class BulkCIAttributeDataCIScope : IBulkCIAttributeData<BulkCIAttributeDataCIScope.Fragment>
     {
         public class Fragment
         {
@@ -116,7 +110,7 @@ namespace Omnikeeper.Base.Entity
     }
 
 
-    public class BulkCIAttributeDataCIAndAttributeNameScope : IBulkCIAttributeData<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>
+    public sealed class BulkCIAttributeDataCIAndAttributeNameScope : IBulkCIAttributeData<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>
     {
         public IReadOnlySet<Guid> RelevantCIs;
 

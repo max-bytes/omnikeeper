@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace Omnikeeper.Base.Entity
 {
-    public class MergedRelation
+    public sealed class MergedRelation
     {
-        public Relation Relation { get; private set; }
-        public IList<string> LayerStackIDs { get; private set; }
+        public Relation Relation { get; }
+        public IList<string> LayerStackIDs { get; }
 
         public MergedRelation(Relation relation, IList<string> layerStackIDs)
         {
@@ -15,7 +15,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    public class Relation
+    public sealed class Relation
     {
         public readonly Guid ID;
         public readonly Guid FromCIID;
@@ -51,7 +51,7 @@ namespace Omnikeeper.Base.Entity
         bool GetMask(F fragment);
     }
 
-    public class BulkRelationDataPredicateScope : IBulkRelationData<BulkRelationDataPredicateScope.Fragment>
+    public sealed class BulkRelationDataPredicateScope : IBulkRelationData<BulkRelationDataPredicateScope.Fragment>
     {
         public class Fragment
         {
@@ -83,7 +83,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    public class BulkRelationDataLayerScope : IBulkRelationData<BulkRelationDataLayerScope.Fragment>
+    public sealed class BulkRelationDataLayerScope : IBulkRelationData<BulkRelationDataLayerScope.Fragment>
     {
         public class Fragment
         {
@@ -115,7 +115,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    public class BulkRelationDataCIAndPredicateScope : IBulkRelationData<BulkRelationDataCIAndPredicateScope.Fragment>
+    public sealed class BulkRelationDataCIAndPredicateScope : IBulkRelationData<BulkRelationDataCIAndPredicateScope.Fragment>
     {
         public class Fragment
         {
@@ -169,7 +169,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    public class BulkRelationDataSpecificScope : IBulkRelationData<BulkRelationDataSpecificScope.Fragment>
+    public sealed class BulkRelationDataSpecificScope : IBulkRelationData<BulkRelationDataSpecificScope.Fragment>
     {
 
         public class Fragment
