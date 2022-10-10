@@ -48,7 +48,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public override string ToString() => $"AV-Array: {Value2String()}";
 
         public bool Equals(IAttributeValue? other) => Equals(other as AttributeArrayValue<S, T>);
-        public virtual bool Equals(AttributeArrayValue<S, T>? other) => other != null && Values.SequenceEqual(other.Values); // does this work?, or do we have to use zip()?
+        public virtual bool Equals(AttributeArrayValue<S, T>? other) => other != null && Values.SequenceEqual(other.Values);
         public override int GetHashCode() => Values.GetHashCode();
 
         public string[] ToRawDTOValues() => Values.Select(v => v.ToRawDTOValues()[0]).ToArray();
