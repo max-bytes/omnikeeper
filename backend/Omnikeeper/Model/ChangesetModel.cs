@@ -301,19 +301,19 @@ namespace Omnikeeper.Model
             };
         }
 
-        // TODO: test
         public async Task<IDictionary<Guid, Changeset>> GetLatestChangesetPerCI(ICIIDSelection ciSelection, IAttributeSelection attributeSelection, IPredicateSelection predicateSelection, string[] layers, IModelContext trans, TimeThreshold timeThreshold)
         {
             var latestChangesets = new Dictionary<Guid, Changeset>();
 
+            // NOTE: faster than commented out query below (hopefully)
             using var command = new NpgsqlCommand($@"
-                SELECT DISTINCT
+                SELECT DISTINCT ON(i.ci_id) 
                  i.ci_id as ci_id,
-                 first_value(i.id) OVER win AS changeset_id,
-                 first_value(i.timestamp) OVER win AS timestamp,
-                 first_value(i.user_id) OVER win AS user_id,
-                 first_value(i.origin_type) OVER win AS origin_type,
-                 first_value(i.layer_id) OVER win AS layer_id
+                 i.id AS changeset_id,
+                 i.timestamp as timestamp,
+                 i.user_id AS user_id,
+                 i.origin_type AS origin_type,
+                 i.layer_id AS layer_id
                 FROM
                  (select c.timestamp, c.id, a.ci_id, c.user_id, c.origin_type, c.layer_id from changeset c
 	                INNER JOIN attribute a ON a.changeset_id = c.id AND {AttributeSelection2WhereClause(attributeSelection)} AND {CIIDSelection2WhereClauseAttributes(ciSelection)}
@@ -325,7 +325,29 @@ namespace Omnikeeper.Model
 	                INNER JOIN relation r ON r.changeset_id = c.id AND {PredicateSelection2WhereClause(predicateSelection)} AND {CIIDSelection2WhereClauseRelationsTo(ciSelection)}
 	                WHERE c.timestamp <= @threshold AND c.layer_id = ANY(@layer_ids)
                  ) i
-                WINDOW win AS (PARTITION BY i.ci_id ORDER BY i.timestamp DESC)", trans.DBConnection, trans.DBTransaction);
+                 order by i.ci_id, i.timestamp DESC
+            ", trans.DBConnection, trans.DBTransaction);
+
+            //using var command = new NpgsqlCommand($@"
+            //    SELECT DISTINCT
+            //     i.ci_id as ci_id,
+            //     first_value(i.id) OVER win AS changeset_id,
+            //     first_value(i.timestamp) OVER win AS timestamp,
+            //     first_value(i.user_id) OVER win AS user_id,
+            //     first_value(i.origin_type) OVER win AS origin_type,
+            //     first_value(i.layer_id) OVER win AS layer_id
+            //    FROM
+            //     (select c.timestamp, c.id, a.ci_id, c.user_id, c.origin_type, c.layer_id from changeset c
+	           //     INNER JOIN attribute a ON a.changeset_id = c.id AND {AttributeSelection2WhereClause(attributeSelection)} AND {CIIDSelection2WhereClauseAttributes(ciSelection)}
+	           //     WHERE c.timestamp <= @threshold AND c.layer_id = ANY(@layer_ids)
+            //     union select c.timestamp, c.id, r.from_ci_id as ci_id, c.user_id, c.origin_type, c.layer_id from changeset c
+	           //     INNER JOIN relation r ON r.changeset_id = c.id AND {PredicateSelection2WhereClause(predicateSelection)} AND {CIIDSelection2WhereClauseRelationsFrom(ciSelection)}
+	           //     WHERE c.timestamp <= @threshold AND c.layer_id = ANY(@layer_ids)
+            //     union select c.timestamp, c.id, r.to_ci_id as ci_id, c.user_id, c.origin_type, c.layer_id from changeset c
+	           //     INNER JOIN relation r ON r.changeset_id = c.id AND {PredicateSelection2WhereClause(predicateSelection)} AND {CIIDSelection2WhereClauseRelationsTo(ciSelection)}
+	           //     WHERE c.timestamp <= @threshold AND c.layer_id = ANY(@layer_ids)
+            //     ) i
+            //    WINDOW win AS (PARTITION BY i.ci_id ORDER BY i.timestamp DESC)", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("threshold", timeThreshold.Time.ToUniversalTime());
             command.Parameters.AddWithValue("layer_ids", layers);
             foreach (var p in CIIDSelection2Parameters(ciSelection))

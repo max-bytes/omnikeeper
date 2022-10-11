@@ -1,6 +1,6 @@
-﻿using NUnit.Framework;
+﻿using FluentAssertions;
+using NUnit.Framework;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -99,6 +99,120 @@ namespace Tests.Integration.Model
             Assert.IsNull(c4);
         }
 
+
+        [Test]
+        public async Task TestLatestChangesetPerCI()
+        {
+            using var trans0 = ModelContextBuilder.BuildDeferred();
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l1", trans0);
+            var layerset1 = new LayerSet();
+            var (layer2, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("l2", trans0);
+            var layerset2 = new LayerSet(new string[] { layer2.ID });
+            trans0.Commit();
+
+            using var trans1 = ModelContextBuilder.BuildDeferred();
+            var ciid1 = await GetService<ICIModel>().CreateCI(trans1);
+            var ciid2 = await GetService<ICIModel>().CreateCI(trans1);
+            var ciid3 = await GetService<ICIModel>().CreateCI(trans1);
+            trans1.Commit();
+
+            using var trans2 = ModelContextBuilder.BuildDeferred();
+            var changesetProxy1 = await CreateChangesetProxy();
+            await GetService<IAttributeModel>().InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changesetProxy1, trans2, OtherLayersValueHandlingForceWrite.Instance);
+            var changeset1 = changesetProxy1.GetActiveChangeset(layer1.ID);
+            trans2.Commit();
+
+            using var trans3 = ModelContextBuilder.BuildDeferred();
+            var changesetProxy2 = await CreateChangesetProxy();
+            await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changesetProxy2, trans3, OtherLayersValueHandlingForceWrite.Instance);
+            var changeset2 = changesetProxy2.GetActiveChangeset(layer1.ID);
+            trans3.Commit();
+
+            using var trans4 = ModelContextBuilder.BuildDeferred();
+            var changesetProxy3 = await CreateChangesetProxy();
+            await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid3, layer2.ID, changesetProxy3, trans4, OtherLayersValueHandlingForceWrite.Instance);
+            var changeset3 = changesetProxy3.GetActiveChangeset(layer2.ID);
+            trans4.Commit();
+
+            using var transI = ModelContextBuilder.BuildImmediate();
+
+            // layer1 solo
+            var changesets1 = await GetService<IChangesetModel>().GetLatestChangesetPerCI(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, new string[] { layer1.ID }, transI, TimeThreshold.BuildLatest());
+            changesets1.Should().BeEquivalentTo(new Dictionary<Guid, Changeset>()
+            {
+                { ciid2, changeset1! },
+                { ciid3, changeset2! }
+            });
+
+            // layer2 solo
+            var changesets2 = await GetService<IChangesetModel>().GetLatestChangesetPerCI(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, new string[] { layer2.ID }, transI, TimeThreshold.BuildLatest());
+            changesets2.Should().BeEquivalentTo(new Dictionary<Guid, Changeset>()
+            {
+                { ciid3, changeset3! }
+            });
+
+            // both layers together
+            var changesets3 = await GetService<IChangesetModel>().GetLatestChangesetPerCI(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, new string[] { layer1.ID, layer2.ID }, transI, TimeThreshold.BuildLatest());
+            changesets3.Should().BeEquivalentTo(new Dictionary<Guid, Changeset>()
+            {
+                { ciid2, changeset1! },
+                { ciid3, changeset3! }
+            });
+
+            // overwrite an attribute in layer2
+            using var trans5 = ModelContextBuilder.BuildDeferred();
+            var changesetProxy4 = await CreateChangesetProxy();
+            await GetService<IAttributeModel>().InsertAttribute("a2", new AttributeScalarValueText("textL2"), ciid3, layer2.ID, changesetProxy4, trans5, OtherLayersValueHandlingForceWrite.Instance);
+            var changeset4 = changesetProxy4.GetActiveChangeset(layer2.ID);
+            trans5.Commit();
+
+            // layer2 solo
+            var changesets4 = await GetService<IChangesetModel>().GetLatestChangesetPerCI(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, new string[] { layer2.ID }, transI, TimeThreshold.BuildLatest());
+            changesets4.Should().BeEquivalentTo(new Dictionary<Guid, Changeset>()
+            {
+                { ciid3, changeset4! }
+            });
+
+            // both layers together;
+            // layer1 is first in list, but layer2's latest changeset is nevertheless reported as latest change for ciid3, because GetLatestChangesetPerCI() is not aware of layer overwrite effects 
+            var changesets6 = await GetService<IChangesetModel>().GetLatestChangesetPerCI(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, new string[] { layer1.ID, layer2.ID }, transI, TimeThreshold.BuildLatest());
+            changesets6.Should().BeEquivalentTo(new Dictionary<Guid, Changeset>()
+            {
+                { ciid2, changeset1! },
+                { ciid3, changeset4! }
+            });
+
+            // remove attribute in layer2
+            using var trans6 = ModelContextBuilder.BuildDeferred();
+            var changesetProxy5 = await CreateChangesetProxy();
+            await GetService<IAttributeModel>().RemoveAttribute("a2", ciid3, layer2.ID, changesetProxy5, trans6, MaskHandlingForRemovalApplyNoMask.Instance);
+            var changeset5 = changesetProxy5.GetActiveChangeset(layer2.ID);
+            trans6.Commit();
+
+            // both layers together
+            var changesets7 = await GetService<IChangesetModel>().GetLatestChangesetPerCI(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, new string[] { layer1.ID, layer2.ID }, transI, TimeThreshold.BuildLatest());
+            changesets7.Should().BeEquivalentTo(new Dictionary<Guid, Changeset>()
+            {
+                { ciid2, changeset1! },
+                { ciid3, changeset5! }
+            });
+
+            // add relation
+            using var trans7 = ModelContextBuilder.BuildDeferred();
+            var changesetProxy6 = await CreateChangesetProxy();
+            await GetService<IRelationModel>().InsertRelation(ciid1, ciid2, "relates_to", false, layer1.ID, changesetProxy6, trans7, OtherLayersValueHandlingForceWrite.Instance);
+            var changeset6 = changesetProxy6.GetActiveChangeset(layer1.ID);
+            trans6.Commit();
+
+            // both layers together
+            var changesets8 = await GetService<IChangesetModel>().GetLatestChangesetPerCI(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, new string[] { layer1.ID, layer2.ID }, transI, TimeThreshold.BuildLatest());
+            changesets8.Should().BeEquivalentTo(new Dictionary<Guid, Changeset>()
+            {
+                { ciid1, changeset6! },
+                { ciid2, changeset6! },
+                { ciid3, changeset5! }
+            });
+        }
 
 
         [Test]
