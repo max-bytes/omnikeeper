@@ -362,9 +362,25 @@ namespace Omnikeeper.GraphQL
                     if (ciids != null)
                         selection = ChangesetSelectionSpecificCIs.Build(ciids);
 
-                    // NOTE: we can't filter the changesets using CIBasedAuthorizationService because changesets are not bound to CIs
-
                     return await changesetModel.GetChangesetsInTimespan(from, to, userContext.GetLayerSet(context.Path).LayerIDs, selection, userContext.Transaction, limit);
+                });
+
+            Field<ChangesetType>("latestChangeset")
+                .Arguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" })
+                .ResolveAsync(async context =>
+                {
+                    var layerStrings = context.GetArgument<string[]>("layers")!;
+
+                    var userContext = await context.GetUserContext()
+                        .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                    if (await authzFilterManager.ApplyFilterForQuery(new QueryOperationContext(), userContext.User, userContext.GetLayerSet(context.Path), userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
+                        throw new ExecutionError(d.Reason);
+
+                    var latestChangeset = await changesetModel.GetLatestChangesetOverall(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, PredicateSelectionAll.Instance, userContext.GetLayerSet(context.Path).LayerIDs, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+
+                    return latestChangeset;
                 });
 
             Field<TraitType>("activeTrait")
