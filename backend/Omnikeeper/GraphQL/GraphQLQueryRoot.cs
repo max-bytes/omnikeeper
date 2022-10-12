@@ -13,7 +13,6 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL.TraitEntities;
 using Omnikeeper.GraphQL.Types;
-using Omnikeeper.Model.Config;
 using Omnikeeper.Service;
 using Quartz;
 using System;
@@ -40,7 +39,6 @@ namespace Omnikeeper.GraphQL
         private readonly ILayerStatisticsModel layerStatisticsModel;
         private readonly GeneratorV1Model generatorModel;
         private readonly IOIAContextModel oiaContextModel;
-        private readonly ODataAPIContextModel odataAPIContextModel;
         private readonly AuthRoleModel authRoleModel;
         private readonly CLConfigV1Model clConfigModel;
         private readonly ValidatorContextV1Model validatorContextModel;
@@ -57,7 +55,7 @@ namespace Omnikeeper.GraphQL
         public GraphQLQueryRoot(ICIIDModel ciidModel, IAttributeModel attributeModel, ILayerModel layerModel, ILayerDataModel layerDataModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel,
             ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, 
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GeneratorV1Model generatorModel, IBaseConfigurationModel baseConfigurationModel,
-            IOIAContextModel oiaContextModel, ODataAPIContextModel odataAPIContextModel, AuthRoleModel authRoleModel, CLConfigV1Model clConfigModel,
+            IOIAContextModel oiaContextModel, AuthRoleModel authRoleModel, CLConfigV1Model clConfigModel,
             RecursiveTraitModel recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
             IUserInDatabaseModel userInDatabaseModel, IAuthzFilterManager authzFilterManager,
             IEnumerable<IPluginRegistration> plugins, IBaseAttributeModel baseAttributeModel, IIndex<string, IScheduler> schedulers,
@@ -76,7 +74,6 @@ namespace Omnikeeper.GraphQL
             this.layerStatisticsModel = layerStatisticsModel;
             this.generatorModel = generatorModel;
             this.oiaContextModel = oiaContextModel;
-            this.odataAPIContextModel = odataAPIContextModel;
             this.authRoleModel = authRoleModel;
             this.clConfigModel = clConfigModel;
             this.recursiveDataTraitModel = recursiveDataTraitModel;
