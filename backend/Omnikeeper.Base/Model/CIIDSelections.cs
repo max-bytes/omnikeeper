@@ -184,6 +184,15 @@ namespace Omnikeeper.Base.Model
             }
         }
 
+        public static ICIIDSelection IntersectAll(IEnumerable<ICIIDSelection> selections)
+        {
+            // TODO: better performance possible by handling working set manually?
+            // taken from https://stackoverflow.com/a/1676684
+            return selections
+                .Skip(1)
+                .Aggregate(selections.First(), (h, e) => h.Intersect(e));
+        }
+
         public static ICIIDSelection Except(this ICIIDSelection selection, ICIIDSelection other)
         {
             return selection switch
