@@ -2,13 +2,11 @@
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.GraphQL;
-using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -142,11 +140,11 @@ namespace Omnikeeper.Base.Model.TraitBased
             // TODO: not very good for performance, escpecially when a ciSelection != All is applied
             var relationsDL = dataLoaderService.SetupAndLoadRelation(RelationSelectionWithPredicate.Build(filters.Select(t => t.PredicateID)), relationModel, layerSet, timeThreshold, trans);
 
-            return relationsDL.Then(async relations =>
+            return relationsDL.Then(relations =>
             {
                 var relationsLookup = relations.ToLookup(r => r.Relation.PredicateID);
 
-                IList<IDataLoaderResult<IEnumerable<Guid>>> dls = new List<IDataLoaderResult<IEnumerable<Guid>>>();
+                IList<IDataLoaderResult<ICIIDSelection>> dls = new List<IDataLoaderResult<ICIIDSelection>>();
                 foreach (var filter in filters)
                 {
                     var candidateRelations = relationsLookup[filter.PredicateID];
@@ -157,31 +155,19 @@ namespace Omnikeeper.Base.Model.TraitBased
                     // TODO: performance improvement: after the first filter, we should reduce the input list
 
                     // NOTE: because the set of cis WITH and cis WITHOUT relations are a partition (i.e. have no overlap), we can do these two loops consecutively
-                    if (filter.Filter.RequiresCheckOfCIsWithNonEmptyRelations())
+                    if (filter.RequiresCheckOfCIsWithNonEmptyRelations())
                     {
                         dls.Add(filter.MatchAgainstNonEmpty(ciidGroupedRelations));
                     }
-                    if (filter.Filter.RequiresCheckOfCIsWithEmptyRelations())
+                    if (filter.RequiresCheckOfCIsWithEmptyRelations())
                     {
-                        var allCIIDs = await ciidModel.GetCIIDs(trans); // TODO: use dataloader?
-                        var ciidsWithoutRelations = allCIIDs.Except(ciidGroupedRelations.Select(g => g.Key));
-
-                        dls.Add(filter.MatchAgainstEmpty(ciidsWithoutRelations));
+                        dls.Add(filter.MatchAgainstEmpty(AllCIIDsExceptSelection.Build(ciidGroupedRelations.Select(g => g.Key).ToHashSet())));
                     }
                 }
 
-                var r = dls.ToResultOfListNonNull();
-                return r.Then(re =>
-                {
-                    // taken from https://stackoverflow.com/a/1676684
-                    var intersection = re
-                        .Skip(1)
-                        .Aggregate(
-                            (ISet<Guid>)new HashSet<Guid>(re.First()),
-                            (h, e) => { h.IntersectWith(e); return h; }
-                        );
-                    return (ICIIDSelection)SpecificCIIDsSelection.Build(intersection.ToImmutableHashSet());
-                });
+                return dls
+                    .ToResultOfListNonNull()
+                    .Then(re => CIIDSelectionExtensions.IntersectAll(re));
             }).ResolveNestedResults();
         }
 
