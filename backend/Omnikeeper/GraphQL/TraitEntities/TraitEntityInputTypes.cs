@@ -118,12 +118,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
-    public class RelationFilterInputType : InputObjectGraphType<InnerRelationFilter>
+    public class RelationFilterInputType : InputObjectGraphType<IInnerRelationFilter[]>
     {
         public RelationFilterInputType()
         {
-            Field("exactAmount", x => x.ExactAmount, nullable: true);
-            Field("exactOtherCIID", x => x.ExactOtherCIID, nullable: true, type: typeof(GuidGraphType));
+            Field("exactOtherCIID", typeof(GuidGraphType));
+            Field("exactAmount", typeof(UIntGraphType));
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)
@@ -131,7 +131,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
             var exactAmount = value.TryGetValue("exactAmount", out var ea) ? (uint?)ea : null;
             var exactOtherCIID = value.TryGetValue("exactOtherCIID", out var eociid) ? (Guid?)eociid : null;
 
-            return InnerRelationFilter.Build(exactAmount, exactOtherCIID);
+            var ret = new List<IInnerRelationFilter>();
+            if (exactAmount != null)
+                ret.Add(new ExactAmountInnerRelationFilter(exactAmount.Value));
+            if (exactOtherCIID != null)
+                ret.Add(new ExactOtherCIIDInnerRelationFilter(exactOtherCIID.Value));
+            return ret.ToArray();
         }
     }
 
@@ -156,16 +161,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
             IDataLoaderResult<ICIIDSelection> matchingCIIDs;
             if (!filter.RelationFilters.IsEmpty() && !filter.AttributeFilters.IsEmpty())
             {
-                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(ciSelection, relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService)
-                .Then(async matchingCIIDs =>
-                    await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(matchingCIIDs, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
-                );
+                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(ciSelection, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService)
+                    .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByRelationFilters(matchingCIIDs, relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService))
+                    .ResolveNestedResults();
             }
             else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
             {
-                matchingCIIDs = new SimpleDataLoader<ICIIDSelection>(async token =>
-                    await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(ciSelection, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold)
-                );
+                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(ciSelection, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService);
             }
             else if (filter.AttributeFilters.IsEmpty() && !filter.RelationFilters.IsEmpty())
             {
@@ -239,7 +241,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
             foreach (var r in trait.OptionalRelations)
             {
-                // TODO: support for trait hints
                 var relationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(r);
                 AddField(new FieldType()
                 {
@@ -247,6 +248,17 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     Name = relationFieldName
                 });
                 FieldName2TraitRelationMap.Add(relationFieldName, r);
+
+                // TODO: support for trait hints
+                //foreach (var traitIDHint in r.RelationTemplate.TraitHints)
+                //{
+                //    var relationFieldNameTH = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldWithTraitHintName(r, traitIDHint);
+                //    AddField(new FieldType()
+                //    {
+                //        Type = typeof(RelationFilterInputType), // TODO
+                //        Name = relationFieldNameTH
+                //    });
+                //}
             }
 
             this.trait = trait;
@@ -269,9 +281,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 }
                 else if (FieldName2TraitRelationMap.TryGetValue(inputFieldName, out var relation))
                 {
-                    if (kv.Value is not InnerRelationFilter f)
+                    if (kv.Value is not IInnerRelationFilter[] f)
                         throw new Exception($"Unknown relation filter for relation {inputFieldName} detected");
-                    relationFilters.Add(new RelationFilter(relation.RelationTemplate.PredicateID, relation.RelationTemplate.DirectionForward, f));
+                    relationFilters.AddRange(f.Select(ff => new RelationFilter(relation.RelationTemplate.PredicateID, relation.RelationTemplate.DirectionForward, ff)));
                 }
                 else
                 {

@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity.Issue;
+using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -47,12 +48,14 @@ namespace Omnikeeper.Base.Model
         private readonly GenericTraitEntityModel<Issue, (string type, string context, string group, string id)> model;
         private readonly IAttributeModel attributeModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
+        private readonly IDataLoaderService dataLoaderService;
 
-        public IssuePersister(GenericTraitEntityModel<Issue, (string type, string context, string group, string id)> model, IAttributeModel attributeModel, IMetaConfigurationModel metaConfigurationModel)
+        public IssuePersister(GenericTraitEntityModel<Issue, (string type, string context, string group, string id)> model, IAttributeModel attributeModel, IMetaConfigurationModel metaConfigurationModel, IDataLoaderService dataLoaderService)
         {
             this.model = model;
             this.attributeModel = attributeModel;
             this.metaConfigurationModel = metaConfigurationModel;
+            this.dataLoaderService = dataLoaderService;
         }
 
         public async Task<bool> Persist(IIssueAccumulator from, IModelContext trans, IChangesetProxy changesetProxy)
@@ -64,7 +67,7 @@ namespace Omnikeeper.Base.Model
                 new AttributeFilter("okissue.context", AttributeScalarTextFilter.Build(null, from.Context, null))
             };
 
-            var relevantCISelection = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, traitAttributeFilter, config.IssueLayerset, trans, changesetProxy.TimeThreshold);
+            var relevantCISelection = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, traitAttributeFilter, config.IssueLayerset, trans, changesetProxy.TimeThreshold, dataLoaderService).GetResultAsync();
             var r = await model.BulkReplace(relevantCISelection, from.Issues, config.IssueLayerset, config.IssueWriteLayer, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return r;
         }

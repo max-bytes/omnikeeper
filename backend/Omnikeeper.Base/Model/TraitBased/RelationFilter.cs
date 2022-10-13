@@ -9,11 +9,11 @@ namespace Omnikeeper.Base.Model.TraitBased
 {
     public class RelationFilter
     {
-        public readonly InnerRelationFilter Filter;
+        public readonly IInnerRelationFilter Filter;
         public readonly string PredicateID;
         public readonly bool DirectionForward;
 
-        public RelationFilter(string predicateID, bool directionForward, InnerRelationFilter filter)
+        public RelationFilter(string predicateID, bool directionForward, IInnerRelationFilter filter)
         {
             PredicateID = predicateID;
             DirectionForward = directionForward;
@@ -22,80 +22,65 @@ namespace Omnikeeper.Base.Model.TraitBased
 
     }
 
-    public class InnerRelationFilter
-    {
-        public uint? ExactAmount;
-        public Guid? ExactOtherCIID;
-
-        private InnerRelationFilter() { }
-
-        public static object Build(uint? exactAmount, Guid? exactOtherCIID)
-        {
-            if (exactAmount == null && exactOtherCIID == null)
-                throw new Exception("At least one filter option needs to be set for RelationFilter");
-            return new InnerRelationFilter()
-            {
-                ExactAmount = exactAmount,
-                ExactOtherCIID = exactOtherCIID,
-            };
-        }
+    public interface IInnerRelationFilter {
     }
+
+    public record class ExactAmountInnerRelationFilter(uint ExactAmount) : IInnerRelationFilter { }
+    public record class ExactOtherCIIDInnerRelationFilter(Guid ExactOtherCIID) : IInnerRelationFilter { }
 
     public static class RelationFilterHelper
     {
         // NOTE: expects that the passed relations are exactly the correct relations applicable for this filter: correct predicateID, direction, CI, ...
         public static IDataLoaderResult<IEnumerable<Guid>> MatchAgainstNonEmpty(this RelationFilter filter, IEnumerable<IGrouping<Guid, MergedRelation>> relations)
         {
-            if (filter.Filter.ExactAmount != null)
+            switch (filter.Filter)
             {
-                if (filter.Filter.ExactAmount == 0)
-                    throw new Exception("Must not be");
-                return new SimpleDataLoader<IEnumerable<Guid>>(c => Task.FromResult(relations.Where(r => r.Count() == filter.Filter.ExactAmount).Select(r => r.Key)));
-            } else if (filter.Filter.ExactOtherCIID != null)
-            {
-                return new SimpleDataLoader<IEnumerable<Guid>>(c => Task.FromResult(relations.Where(r => {
-                    if (r.Count() != 1) return false;
-                    return filter.Filter.ExactOtherCIID.Value == ((filter.DirectionForward) ? r.First().Relation.ToCIID : r.First().Relation.FromCIID);
-                }).Select(r => r.Key)));
+                case ExactAmountInnerRelationFilter ff:
+                    if (ff.ExactAmount == 0)
+                        throw new Exception("Must not be");
+                    return new SimpleDataLoader<IEnumerable<Guid>>(c => Task.FromResult(relations.Where(r => r.Count() == ff.ExactAmount).Select(r => r.Key)));
+                case ExactOtherCIIDInnerRelationFilter ff:
+                    return new SimpleDataLoader<IEnumerable<Guid>>(c => Task.FromResult(relations.Where(r => {
+                        if (r.Count() != 1) return false;
+                        return ff.ExactOtherCIID == ((filter.DirectionForward) ? r.First().Relation.ToCIID : r.First().Relation.FromCIID);
+                    }).Select(r => r.Key)));
+                default:
+                    throw new Exception("Encountered relation filter in unknown state");
             }
-            throw new Exception("Encountered relation filter in unknown state");
         }
 
-        public static IDataLoaderResult<IEnumerable<Guid>> MatchAgainstEmpty(this InnerRelationFilter filter, IEnumerable<Guid> relations)
+        public static IDataLoaderResult<IEnumerable<Guid>> MatchAgainstEmpty(this RelationFilter filter, IEnumerable<Guid> relations)
         {
-            if (filter.ExactAmount != null)
+            switch (filter.Filter)
             {
-                if (filter.ExactAmount != 0)
+                case ExactAmountInnerRelationFilter ff:
+                    if (ff.ExactAmount != 0)
+                        throw new Exception("Must not be");
+                    return new SimpleDataLoader<IEnumerable<Guid>>(c => Task.FromResult(relations));
+                case ExactOtherCIIDInnerRelationFilter ff:
                     throw new Exception("Must not be");
-                return new SimpleDataLoader<IEnumerable<Guid>>(c => Task.FromResult(relations));
-            } else if (filter.ExactOtherCIID != null)
-            {
-                throw new Exception("Must not be");
+                default:
+                    throw new Exception("Encountered relation filter in unknown state");
             }
-            throw new Exception("Encountered relation filter in unknown state");
         }
 
-        public static bool RequiresCheckOfCIsWithEmptyRelations(this InnerRelationFilter filter)
+        public static bool RequiresCheckOfCIsWithEmptyRelations(this IInnerRelationFilter filter)
         {
-            if (filter.ExactAmount != null)
+            return filter switch
             {
-                return filter.ExactAmount == 0;
-            } else if (filter.ExactOtherCIID != null)
-            {
-                return false;
-            }
-            throw new Exception("Encountered relation filter in unknown state");
+                ExactAmountInnerRelationFilter ff => ff.ExactAmount == 0,
+                ExactOtherCIIDInnerRelationFilter _ => false,
+                _ => throw new Exception("Encountered relation filter in unknown state"),
+            };
         }
-        public static bool RequiresCheckOfCIsWithNonEmptyRelations(this InnerRelationFilter filter)
+        public static bool RequiresCheckOfCIsWithNonEmptyRelations(this IInnerRelationFilter filter)
         {
-            if (filter.ExactAmount != null)
+            return filter switch
             {
-                return filter.ExactAmount != 0;
-            } else if (filter.ExactOtherCIID != null)
-            {
-                return true;
-            }
-            throw new Exception("Encountered relation filter in unknown state");
+                ExactAmountInnerRelationFilter ff => ff.ExactAmount != 0,
+                ExactOtherCIIDInnerRelationFilter _ => true,
+                _ => throw new Exception("Encountered relation filter in unknown state"),
+            };
         }
     }
 }
