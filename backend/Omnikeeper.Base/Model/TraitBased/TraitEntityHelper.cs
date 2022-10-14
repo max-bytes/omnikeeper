@@ -136,14 +136,14 @@ namespace Omnikeeper.Base.Model.TraitBased
         /*
         * NOTE: this does not care whether or not the CI is actually a trait entity or not
         */
-        public static IDataLoaderResult<ICIIDSelection> GetMatchingCIIDsByRelationFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IRelationModel relationModel, ICIModel ciModel, 
-            IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IEnumerable<RelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
+        public static IDataLoaderResult<ICIIDSelection> GetMatchingCIIDsByRelationFilters(ICIIDSelection ciSelection, 
+            IEnumerable<RelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
 
             // TODO: not very good for performance, escpecially when a ciSelection != All is applied
-            var relationsDL = dataLoaderService.SetupAndLoadRelation(RelationSelectionWithPredicate.Build(filters.Select(t => t.PredicateID)), relationModel, layerSet, timeThreshold, trans);
+            var relationsDL = dataLoaderService.SetupAndLoadRelation(RelationSelectionWithPredicate.Build(filters.Select(t => t.PredicateID)), layerSet, timeThreshold, trans);
 
             return relationsDL.Then(relations =>
             {
@@ -162,7 +162,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     // NOTE: because the set of cis WITH and cis WITHOUT relations are a partition (i.e. have no overlap), we can do these two loops consecutively
                     if (filter.RequiresCheckOfCIsWithNonEmptyRelations())
                     {
-                        dls.Add(filter.MatchAgainstNonEmpty(ciidGroupedRelations, attributeModel, relationModel, ciModel, effectiveTraitModel, dataLoaderService, traitsProvider, layerSet, trans, timeThreshold));
+                        dls.Add(filter.MatchAgainstNonEmpty(ciidGroupedRelations, dataLoaderService, layerSet, trans, timeThreshold));
                     }
                     if (filter.RequiresCheckOfCIsWithEmptyRelations())
                     {
@@ -180,7 +180,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         /*
         * NOTE: this does not care whether or not the CIs are actually a trait entities or not
         */
-        public static IDataLoaderResult<ICIIDSelection> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IEnumerable<AttributeFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
+        public static IDataLoaderResult<ICIIDSelection> GetMatchingCIIDsByAttributeFilters(ICIIDSelection ciSelection, IEnumerable<AttributeFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
@@ -196,7 +196,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 // NOTE: we reduce the ciSelection with each filter, and in the end, return the resulting ciSelection
                 result = result.Then(ciSelection =>
                 {
-                    return dataLoaderService.SetupAndLoadMergedAttributes(ciSelection, attributeSelection, attributeModel, layerSet, timeThreshold, trans)
+                    return dataLoaderService.SetupAndLoadMergedAttributes(ciSelection, attributeSelection, layerSet, timeThreshold, trans)
                     .Then(attributes =>
                     {
                         if (taFilter.filter is AttributeScalarTextFilter tf)

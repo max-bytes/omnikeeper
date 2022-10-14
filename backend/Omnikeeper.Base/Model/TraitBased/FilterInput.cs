@@ -22,23 +22,23 @@ namespace Omnikeeper.Base.Model.TraitBased
     public static class FilterInputExtensions
     {
         // NOTE: resulting CIIDs do NOT necessarily fulfill any trait requirements, systems using this method need to perform these checks if needed
-        public static IDataLoaderResult<ICIIDSelection> Apply(this FilterInput filter, ICIIDSelection ciSelection, IAttributeModel attributeModel, IRelationModel relationModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel, IDataLoaderService dataLoaderService,
-            ITraitsProvider traitsProvider, LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
+        public static IDataLoaderResult<ICIIDSelection> Apply(this FilterInput filter, ICIIDSelection ciSelection, IDataLoaderService dataLoaderService,
+            LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
         {
             IDataLoaderResult<ICIIDSelection> matchingCIIDs;
             if (!filter.RelationFilters.IsEmpty() && !filter.AttributeFilters.IsEmpty())
             {
-                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(ciSelection, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService)
-                    .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByRelationFilters(matchingCIIDs, attributeModel, relationModel, ciModel, effectiveTraitModel, traitsProvider, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService))
+                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(ciSelection, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService)
+                    .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByRelationFilters(matchingCIIDs, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService))
                     .ResolveNestedResults();
             }
             else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
             {
-                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(ciSelection, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService);
+                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(ciSelection, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService);
             }
             else if (filter.AttributeFilters.IsEmpty() && !filter.RelationFilters.IsEmpty())
             {
-                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(ciSelection, attributeModel, relationModel, ciModel, effectiveTraitModel, traitsProvider, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService);
+                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(ciSelection, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService);
             }
             else
             {

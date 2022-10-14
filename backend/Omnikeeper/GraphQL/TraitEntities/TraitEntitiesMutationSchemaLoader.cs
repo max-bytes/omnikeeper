@@ -227,7 +227,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
 
-                        var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, attributeModel, relationModel, ciModel, effectiveTraitModel, dataLoaderService, traitsProvider, layerset, trans, timeThreshold);
+                        var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, dataLoaderService, layerset, trans, timeThreshold);
                         return matchingCIIDs.Then(async matchingCIIDs =>
                         {
                             var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciModel.GetCIIDs(trans));
@@ -278,7 +278,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, attributeModel, relationModel, ciModel, effectiveTraitModel, dataLoaderService, traitsProvider, layerset, trans, timeThreshold);
+                            var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, dataLoaderService, layerset, trans, timeThreshold);
                             return matchingCIIDs.Then(async matchingCIIDs =>
                             {
                                 var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciModel.GetCIIDs(trans));

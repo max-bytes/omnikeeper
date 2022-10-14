@@ -67,7 +67,7 @@ namespace Omnikeeper.Base.Model
                 new AttributeFilter("okissue.context", AttributeScalarTextFilter.Build(null, from.Context, null))
             };
 
-            var relevantCISelection = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, attributeModel, traitAttributeFilter, config.IssueLayerset, trans, changesetProxy.TimeThreshold, dataLoaderService).GetResultAsync();
+            var relevantCISelection = await TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(AllCIIDsSelection.Instance, traitAttributeFilter, config.IssueLayerset, trans, changesetProxy.TimeThreshold, dataLoaderService).GetResultAsync();
             var r = await model.BulkReplace(relevantCISelection, from.Issues, config.IssueLayerset, config.IssueWriteLayer, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return r;
         }

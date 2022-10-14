@@ -305,7 +305,7 @@ namespace Omnikeeper.GraphQL
                     var userContext = context.GetUserContext()
                         .WithTimeThreshold(context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()), context.Path);
 
-                    return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                    return dataLoaderService.SetupAndLoadAllLayers(userContext.GetTimeThreshold(context.Path), userContext.Transaction)
                         .Then(layersDict =>
                         {
                             // authz filter

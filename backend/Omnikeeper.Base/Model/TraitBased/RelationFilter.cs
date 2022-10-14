@@ -35,8 +35,7 @@ namespace Omnikeeper.Base.Model.TraitBased
     {
         // NOTE: expects that the passed relations are exactly the correct relations applicable for this filter: correct predicateID, direction, CI, ...
         public static IDataLoaderResult<ICIIDSelection> MatchAgainstNonEmpty(this RelationFilter filter, IEnumerable<IGrouping<Guid, MergedRelation>> relations, 
-            IAttributeModel attributeModel, IRelationModel relationModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel, IDataLoaderService dataLoaderService, ITraitsProvider traitsProvider,
-            LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
+            IDataLoaderService dataLoaderService, LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
         {
             switch (filter.InnerFilter)
             {
@@ -52,11 +51,11 @@ namespace Omnikeeper.Base.Model.TraitBased
                 case RelatedToCIInnerRelationFilter ff:
                     var inverseLookup = relations.SelectMany(g => g.Select(gg => (key: g.Key, value: (filter.DirectionForward) ? gg.Relation.ToCIID : gg.Relation.FromCIID))).ToLookup(g => g.value, g => g.key);
                     var otherCIIDs = relations.SelectMany(g => g.Select(r => (filter.DirectionForward) ? r.Relation.ToCIID : r.Relation.FromCIID)).ToHashSet();
-                    var r = ff.Filter.Apply(SpecificCIIDsSelection.Build(otherCIIDs), attributeModel, relationModel, ciModel, effectiveTraitModel, dataLoaderService, traitsProvider, layerset, trans, timeThreshold)
+                    var r = ff.Filter.Apply(SpecificCIIDsSelection.Build(otherCIIDs), dataLoaderService, layerset, trans, timeThreshold)
                         .Then(filteredCIs =>
                         {
                             // check who actually fulfills the trait
-                            return dataLoaderService.SetupAndLoadEffectiveTraits(filteredCIs, ff.trait, ciModel, attributeModel, effectiveTraitModel, traitsProvider, layerset, timeThreshold, trans)
+                            return dataLoaderService.SetupAndLoadEffectiveTraits(filteredCIs, ff.trait, layerset, timeThreshold, trans)
                                 .Then(ets =>
                                 {
                                     var ciidsHavingTrait = ets.Keys;

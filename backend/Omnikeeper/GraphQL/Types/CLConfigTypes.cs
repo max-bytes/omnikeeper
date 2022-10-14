@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.GraphQL;
-using Omnikeeper.Base.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +12,7 @@ namespace Omnikeeper.GraphQL.Types
 {
     public class CLConfigType : ObjectGraphType<CLConfigV1>
     {
-        public CLConfigType(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, ILayerDataModel layerDataModel, IDataLoaderService dataLoaderService)
+        public CLConfigType(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, IDataLoaderService dataLoaderService)
         {
             var existingComputeLayerBrainsDictionary = existingComputeLayerBrains.ToDictionary(clb => clb.Name);
 
@@ -34,7 +33,7 @@ namespace Omnikeeper.GraphQL.Types
                 var targetLayerID = ""; // TODO: remove? or get somehow?
                 var dependentLayers = clb.GetDependentLayerIDs(targetLayerID, context.Source.CLBrainConfig, NullLogger.Instance);
 
-                return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                return dataLoaderService.SetupAndLoadAllLayers(userContext.GetTimeThreshold(context.Path), userContext.Transaction)
                     .Then(layersDict => layersDict.Where(kv => dependentLayers.Contains(kv.Key)).Select(kv => kv.Value));
             });
         }

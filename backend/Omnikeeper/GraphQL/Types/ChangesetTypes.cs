@@ -30,8 +30,7 @@ namespace Omnikeeper.GraphQL.Types
 
     public class ChangesetType : ObjectGraphType<Changeset>
     {
-        public ChangesetType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel, IUserInDatabaseModel userInDatabaseModel, ICIModel ciModel, 
-            ChangesetDataModel changesetDataModel, ITraitsProvider traitsProvider, IAttributeModel attributeModel)
+        public ChangesetType(IDataLoaderService dataLoaderService, ChangesetDataModel changesetDataModel, ITraitsProvider traitsProvider)
         {
             Field("id", x => x.ID);
             Field(x => x.Timestamp);
@@ -41,7 +40,7 @@ namespace Omnikeeper.GraphQL.Types
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
-                return dataLoaderService.SetupAndLoadUser(context.Source!.UserID, userInDatabaseModel, timeThreshold, userContext.Transaction);
+                return dataLoaderService.SetupAndLoadUser(context.Source!.UserID, timeThreshold, userContext.Transaction);
             });
             Field(x => x.LayerID);
             Field(x => x.DataOrigin, type: typeof(DataOriginGQL));
@@ -52,7 +51,7 @@ namespace Omnikeeper.GraphQL.Types
                     var layerID = context.Source!.LayerID;
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
 
-                    return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, timeThreshold, userContext.Transaction)
+                    return dataLoaderService.SetupAndLoadAllLayers(timeThreshold, userContext.Transaction)
                         .Then(layers => layers.GetOrWithClass(layerID, null));
                 });
             Field<ChangesetStatisticsType>("statistics")
@@ -156,7 +155,7 @@ namespace Omnikeeper.GraphQL.Types
                         return null;
 
                     IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
-                    var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(ciid), forwardAS, ciModel, attributeModel, layerset, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                    var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(ciid), forwardAS, layerset, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
                         .Then(cis => cis.FirstOrDefault() ?? new MergedCI(ciid, null, layerset, userContext.GetTimeThreshold(context.Path), ImmutableDictionary<string, MergedCIAttribute>.Empty));
 
                     return finalCI;
@@ -176,7 +175,7 @@ namespace Omnikeeper.GraphQL.Types
 
     public class ChangesetCIAttributesType : ObjectGraphType<ChangesetCIAttributes>
     {
-        public ChangesetCIAttributesType(IDataLoaderService dataLoaderService, IAttributeModel attributeModel, ICIIDModel ciidModel)
+        public ChangesetCIAttributesType(IDataLoaderService dataLoaderService)
         {
             Field("ciid", x => x.CIID);
             Field<StringGraphType>("ciName")
@@ -186,7 +185,7 @@ namespace Omnikeeper.GraphQL.Types
                     var layerset = userContext.GetLayerSet(context.Path);
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
                     var ciid = context.Source!.CIID;
-                    return dataLoaderService.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), attributeModel, ciidModel, layerset, timeThreshold, userContext.Transaction)
+                    return dataLoaderService.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), layerset, timeThreshold, userContext.Transaction)
                         .Then(rr => rr.GetOrWithClass(ciid, null));
                 });
             Field("attributes", x => x.Attributes, type: typeof(ListGraphType<CIAttributeType>));

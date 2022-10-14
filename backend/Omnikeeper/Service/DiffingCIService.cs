@@ -363,7 +363,7 @@ namespace Omnikeeper.Service
 
     public class CIRelationsComparisonType : ObjectGraphType<CIRelationsComparison>
     {
-        public CIRelationsComparisonType(IDataLoaderService dataLoaderService, IAttributeModel attributeModel, ICIIDModel ciidModel)
+        public CIRelationsComparisonType(IDataLoaderService dataLoaderService)
         {
             Field("leftCIID", x => x.leftCIID);
             Field<StringGraphType>("leftCIName")
@@ -373,7 +373,7 @@ namespace Omnikeeper.Service
                     var layerset = userContext.GetLayerSet(context.Path);
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
                     var ciid = context.Source!.leftCIID;
-                    return dataLoaderService.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), attributeModel, ciidModel, layerset, timeThreshold, userContext.Transaction)
+                    return dataLoaderService.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), layerset, timeThreshold, userContext.Transaction)
                         .Then(rr => rr.GetOrWithClass(ciid, null));
                 });
             Field("rightCIID", x => x.rightCIID);
@@ -384,7 +384,7 @@ namespace Omnikeeper.Service
                     var layerset = userContext.GetLayerSet(context.Path);
                     var timeThreshold = userContext.GetTimeThreshold(context.Path);
                     var ciid = context.Source!.rightCIID;
-                    return dataLoaderService.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), attributeModel, ciidModel, layerset, timeThreshold, userContext.Transaction)
+                    return dataLoaderService.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), layerset, timeThreshold, userContext.Transaction)
                         .Then(rr => rr.GetOrWithClass(ciid, null));
                 });
             Field("relationComparisons", x => x.relations, type: typeof(ListGraphType<RelationComparisonType>));
@@ -470,7 +470,7 @@ namespace Omnikeeper.Service
 
     public class DiffingResultType : ObjectGraphType<DiffingResult>
     {
-        public DiffingResultType(IDataLoaderService dataLoaderService, DiffingCIService diffingCIService, ICIModel ciModel, IRelationModel relationModel, IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider)
+        public DiffingResultType(IDataLoaderService dataLoaderService, DiffingCIService diffingCIService, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider)
         {
             Field<ListGraphType<CIAttributesComparisonType>>("cis")
                 .ResolveAsync(async (context) =>
@@ -497,9 +497,9 @@ namespace Omnikeeper.Service
                 IRelationSelection leftRelationSelection = (d.leftCIIDSelection is SpecificCIIDsSelection leftSS) ? srb(leftSS.CIIDs) : RelationSelectionAll.Instance;
                 IRelationSelection rightRelationSelection = (d.rightCIIDSelection is SpecificCIIDsSelection rightSS) ? srb(rightSS.CIIDs) : RelationSelectionAll.Instance;
 
-                var leftLoaded = dataLoaderService.SetupAndLoadRelation(leftRelationSelection, relationModel, d.leftLayers, d.leftTimeThreshold, userContext.Transaction);
+                var leftLoaded = dataLoaderService.SetupAndLoadRelation(leftRelationSelection, d.leftLayers, d.leftTimeThreshold, userContext.Transaction);
                 var leftRelations = await leftLoaded.GetResultAsync();
-                var rightLoaded = dataLoaderService.SetupAndLoadRelation(rightRelationSelection, relationModel, d.rightLayers, d.rightTimeThreshold, userContext.Transaction);
+                var rightLoaded = dataLoaderService.SetupAndLoadRelation(rightRelationSelection, d.rightLayers, d.rightTimeThreshold, userContext.Transaction);
                 var rightRelations = await rightLoaded.GetResultAsync();
 
                 if (leftRelations == null)

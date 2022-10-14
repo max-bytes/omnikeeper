@@ -40,7 +40,7 @@ namespace Omnikeeper.GraphQL
 
                     CheckManagementPermissionThrow(userContext);
 
-                    return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                    return dataLoaderService.SetupAndLoadAllLayers(userContext.GetTimeThreshold(context.Path), userContext.Transaction)
                         .Then(layersDict => layersDict.Values);
                 });
 

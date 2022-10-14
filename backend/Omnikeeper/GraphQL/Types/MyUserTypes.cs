@@ -1,7 +1,6 @@
 ﻿using GraphQL.DataLoader;
 using GraphQL.Types;
 using Omnikeeper.Base.GraphQL;
-using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Authz;
 
 namespace Omnikeeper.GraphQL.Types
@@ -16,20 +15,20 @@ namespace Omnikeeper.GraphQL.Types
 
     public class MyPermissionsType : ObjectGraphType<MyPermissions>
     {
-        public MyPermissionsType(ILayerBasedAuthorizationService layerBasedAuthorizationService, ILayerDataModel layerDataModel, IDataLoaderService dataLoaderService)
+        public MyPermissionsType(ILayerBasedAuthorizationService layerBasedAuthorizationService, IDataLoaderService dataLoaderService)
         {
             Field<ListGraphType<LayerDataType>>("readableLayers")
                 .Resolve(context =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                    return dataLoaderService.SetupAndLoadAllLayers(userContext.GetTimeThreshold(context.Path), userContext.Transaction)
                         .Then(layers => layerBasedAuthorizationService.FilterReadableLayers(userContext.User, layers.Values));
                 });
             Field<ListGraphType<LayerDataType>>("writableLayers")
                 .Resolve(context =>
                 {
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
+                    return dataLoaderService.SetupAndLoadAllLayers(userContext.GetTimeThreshold(context.Path), userContext.Transaction)
                         .Then(layers => layerBasedAuthorizationService.FilterWritableLayers(userContext.User, layers.Values));
                 });
         }

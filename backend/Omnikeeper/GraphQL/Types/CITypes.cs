@@ -19,11 +19,9 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL.Types
 {
-    // TODO: ci-based authorization!
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        public MergedCIType(IDataLoaderService dataLoaderService, IRelationModel relationModel,
-            IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider)
+        public MergedCIType(IDataLoaderService dataLoaderService)
         {
             Field("id", x => x.ID);
             Field("name", x => x.CIName, nullable: true);
@@ -56,7 +54,7 @@ namespace Omnikeeper.GraphQL.Types
                     RelationSelectionFrom.Build(new HashSet<string>() { requiredPredicateID }, CIIdentity) :
                     RelationSelectionFrom.BuildWithAllPredicateIDs(CIIdentity);
 
-                var loaded = dataLoaderService.SetupAndLoadRelation(relationSelection, relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                var loaded = dataLoaderService.SetupAndLoadRelation(relationSelection, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return loaded;
             });
             Field<ListGraphType<MergedRelationType>>("incomingMergedRelations")
@@ -71,7 +69,7 @@ namespace Omnikeeper.GraphQL.Types
                     RelationSelectionTo.Build(new HashSet<string>() { requiredPredicateID }, CIIdentity) :
                     RelationSelectionTo.BuildWithAllPredicateIDs(CIIdentity);
 
-                var loaded = dataLoaderService.SetupAndLoadRelation(relationSelection, relationModel, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                var loaded = dataLoaderService.SetupAndLoadRelation(relationSelection, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return loaded;
             });
 
@@ -87,7 +85,7 @@ namespace Omnikeeper.GraphQL.Types
                 if (traitIDs != null)
                     traitSelection = NamedTraitsSelection.Build(traitIDs);
 
-                var ret = dataLoaderService.SetupAndLoadEffectiveTraits(ci, traitSelection, traitModel, traitsProvider, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
+                var ret = dataLoaderService.SetupAndLoadEffectiveTraits(ci, traitSelection, userContext.GetLayerSet(context.Path), userContext.GetTimeThreshold(context.Path), userContext.Transaction);
                 return ret;
             });
         }
@@ -209,7 +207,7 @@ namespace Omnikeeper.GraphQL.Types
 
     public class MergedCIAttributeType : ObjectGraphType<MergedCIAttribute>
     {
-        public MergedCIAttributeType(IDataLoaderService dataLoaderService, ILayerDataModel layerDataModel)
+        public MergedCIAttributeType(IDataLoaderService dataLoaderService)
         {
             Field(x => x.LayerStackIDs);
             Field(x => x.Attribute, type: typeof(CIAttributeType));
@@ -221,7 +219,7 @@ namespace Omnikeeper.GraphQL.Types
                 var layerstackIDs = context.Source!.LayerStackIDs;
                 var timeThreshold = userContext.GetTimeThreshold(context.Path);
 
-                return dataLoaderService.SetupAndLoadAllLayers(layerDataModel, timeThreshold, userContext.Transaction)
+                return dataLoaderService.SetupAndLoadAllLayers(timeThreshold, userContext.Transaction)
                     .Then(layers => layers
                         .Where(kv => layerstackIDs.Contains(kv.Key))
                         .OrderBy(kv => layerstackIDs.IndexOf(kv.Key))
