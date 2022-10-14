@@ -17,11 +17,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public readonly IDInputType? IDInput;
         public readonly UpsertInputType UpsertInput;
         public readonly UpsertInputType UpdateInput;
-        public readonly FilterInputType? FilterInput;
+        public readonly FilterInputType FilterInput;
         public readonly TraitEntityModel TraitEntityModel;
 
         public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType,
-            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, UpsertInputType updateInputType, FilterInputType? filterInputType, TraitEntityModel traitEntityModel)
+            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, UpsertInputType updateInputType, FilterInputType filterInputType, TraitEntityModel traitEntityModel)
         {
             Trait = trait;
             Element = element;
@@ -76,6 +76,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             var relatedCIType = new RelatedCIType(traitsProvider, dataLoaderService, ciModel, attributeModel);
 
             var elementTypesContainerDictionary = new Dictionary<string, ElementTypesContainer>();
+            var filterInputTypesContainerDictionary = new Dictionary<string, FilterInputType>();
 
             foreach (var at in activeTraits)
             {
@@ -88,19 +89,32 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                     var tt = new ElementType();
                     var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, traitEntityModel, ciModel, attributeModel);
-                    var filterInputType = FilterInputType.Build(at.Value);
+                    var filterInputType = new FilterInputType(at.Value);
+                    filterInputTypesContainerDictionary.Add(at.Key, filterInputType);
                     var idt = IDInputType.Build(at.Value);
-                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, ciidModel, attributeModel, relationModel, changesetModel, dataLoaderService, ttWrapper, filterInputType, idt);
+                    var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel, dataLoaderService, traitsProvider, ttWrapper, filterInputType, idt);
                     var upsertInputType = new UpsertInputType(at.Value, false);
                     var updateInputType = new UpsertInputType(at.Value, true);
 
                     var container = new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType, updateInputType, filterInputType, traitEntityModel);
                     elementTypesContainerDictionary.Add(at.Key, container);
-
                 }
                 catch (Exception e)
                 {
                     logger.LogError(e, $"Could not create types for trait entity with trait ID {at.Key}");
+                }
+            }
+
+            // we do a delayed initialization of the FilterInputType to be able to resolve trait hints linking to other FilterInputTypes
+            foreach(var kv in filterInputTypesContainerDictionary)
+            {
+                try
+                {
+                    kv.Value.Init(filterInputTypesContainerDictionary);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, $"Could not create filter input type for trait entity with trait ID {kv.Key}");
                 }
             }
 
@@ -110,7 +124,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 try
                 {
                     var trait = activeTraits[kv.Key];
-                    kv.Value.Element.Init(trait, relatedCIType, elementTypesContainerDictionary.TryGetValue, relationModel, ciidModel, dataLoaderService, effectiveTraitModel, traitsProvider, ciModel, attributeModel, logger);
+                    kv.Value.Element.Init(trait, relatedCIType, elementTypesContainerDictionary.TryGetValue, relationModel, dataLoaderService, effectiveTraitModel, traitsProvider, ciModel, attributeModel, logger);
                 }
                 catch (Exception e)
                 {

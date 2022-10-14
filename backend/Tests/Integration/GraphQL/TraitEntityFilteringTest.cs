@@ -2,9 +2,10 @@
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Tests.Integration.GraphQL.Base;
 
@@ -368,7 +369,7 @@ mutation($flag: Boolean, $id: String!) {
 
 
         [Test]
-        public async Task TestAdvancedFiltering()
+        public async Task TestMultiAttributeFiltering()
         {
             var userInDatabase = await SetupDefaultUser();
             var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
@@ -571,7 +572,7 @@ mutation($name: String!, $id: String!, $optional: String) {
 
 
         [Test]
-        public async Task TestRelationFiltering()
+        public async Task TestBasicRelationFiltering()
         {
             var userInDatabase = await SetupDefaultUser();
             var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
@@ -692,6 +693,180 @@ mutation($name: String!, $id: String!, $assignments: [Guid]!) {
 }
 ";
             AssertQuerySuccess(queryFiltered, expected5, user);
+        }
+
+        [Test]
+        public async Task TestComplexRelationFiltering()
+        {
+            var userInDatabase = await SetupDefaultUser();
+            var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", ModelContextBuilder.BuildImmediate());
+            var user = new AuthenticatedInternalUser(userInDatabase);
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            string mutationCreateTrait = @"
+    mutation {
+      manage_upsertRecursiveTrait(
+        trait: {
+          id: ""test_trait_a""
+          requiredAttributes: [
+            {
+              identifier: ""id""
+              template: {
+                name: ""test_trait_a.id""
+                type: TEXT
+                isID: true
+                isArray: false
+                valueConstraints: [
+                    """"""{""$type"":""Omnikeeper.Base.Entity.CIAttributeValueConstraintTextLength, Omnikeeper.Base"",""Minimum"":1,""Maximum"":null}""""""
+                ]
+              }
+            }
+            {
+              identifier: ""name""
+              template: {
+                name: ""test_trait_a.name""
+                type: TEXT
+                isID: false
+                isArray: false
+                valueConstraints: []
+              }
+            }
+          ]
+          optionalAttributes: []
+          optionalRelations: [
+              {
+                  identifier: ""assignments""
+                  template: { 
+                    predicateID: ""is_assigned_to""
+                    directionForward: true
+                    traitHints: [""test_trait_a""]
+                  }
+              }
+          ],
+          requiredTraits: []
+        }
+      ) {
+        id
+      }
+    }
+    ";
+            var expected1 = @"
+    {
+        ""manage_upsertRecursiveTrait"":
+            {
+                ""id"": ""test_trait_a""
+            }
+    }";
+            AssertQuerySuccess(mutationCreateTrait, expected1, user);
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            var mutationInsert = @"
+    mutation($name: String!, $id: String!, $assignments: [Guid]!) {
+      insertNew_test_trait_a(
+        layers: [""layer_1""]
+        writeLayer: ""layer_1""
+        ciName: $name
+        input: { id: $id, name: $name, assignments: $assignments }
+      ) {
+                    ciid
+                    entity { id }
+      }
+            }
+    ";
+
+            var result1 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_1" }, { "name", "Entity 1" }, { "assignments", new Guid[] { } } }));
+            var ciid1 = JsonDocument.Parse(result1.json).RootElement.GetProperty("data").GetProperty("insertNew_test_trait_a").GetProperty("ciid").GetGuid();
+            var result2 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_2" }, { "name", "Entity 2" }, { "assignments", new Guid[] { ciid1 } } }));
+            var ciid2 = JsonDocument.Parse(result2.json).RootElement.GetProperty("data").GetProperty("insertNew_test_trait_a").GetProperty("ciid").GetGuid();
+            var result3 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_3" }, { "name", "Entity 3" }, { "assignments", new Guid[] { ciid1, ciid2 } } }));
+            var ciid3 = JsonDocument.Parse(result3.json).RootElement.GetProperty("data").GetProperty("insertNew_test_trait_a").GetProperty("ciid").GetGuid();
+
+            // insert a "fake" entity that has the relation and the id-attribute, but remove the required name attribute, so it does not fulfill the trait and must not be found when querying
+            var result4 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_4" }, { "name", "Entity 4" }, { "assignments", new Guid[] { ciid1, ciid2, ciid3 } } }));
+            var ciid4 = JsonDocument.Parse(result4.json).RootElement.GetProperty("data").GetProperty("insertNew_test_trait_a").GetProperty("ciid").GetGuid();
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                var changeset = await CreateChangesetProxy();
+                await GetService<IAttributeModel>().RemoveAttribute("test_trait_a.name", ciid4, layer1.ID, changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                trans.Commit();
+            }
+
+
+            var queryFiltered1 = @"
+    {
+      traitEntities(layers: [""layer_1""]) {
+        test_trait_a {
+                    filtered(filter: {assignments_as_test_trait_a: {contains:{id: {exact: ""entity_2""}}}}) {
+                        entity {
+                            id
+                            name
+                        }
+                    }
+                }
+            }
+        }
+    ";
+            var expected5 = @"
+    {
+      ""traitEntities"": {
+	      ""test_trait_a"": {
+	        ""filtered"": [
+              {
+                ""entity"": {
+                  ""id"": ""entity_3"",
+                  ""name"": ""Entity 3""
+                }
+              }
+            ]
+	      }
+      }
+    }
+    ";
+            AssertQuerySuccess(queryFiltered1, expected5, user);
+
+
+            var queryFiltered2 = @"
+    {
+      traitEntities(layers: [""layer_1""]) {
+        test_trait_a {
+                    filtered(filter: {assignments_as_test_trait_a: {contains: {id: {exact: ""entity_1""}}}}) {
+                        entity {
+                            id
+                            name
+                        }
+                    }
+                }
+            }
+        }
+    ";
+            var expected6 = @"
+    {
+      ""traitEntities"": {
+	      ""test_trait_a"": {
+	        ""filtered"": [
+              {
+                ""entity"": {
+                  ""id"": ""entity_2"",
+                  ""name"": ""Entity 2""
+                }
+              },
+              {
+                ""entity"": {
+                  ""id"": ""entity_3"",
+                  ""name"": ""Entity 3""
+                }
+              }
+            ]
+	      }
+      }
+    }
+    ";
+            AssertQuerySuccess(queryFiltered2, expected6, user);
         }
     }
 }

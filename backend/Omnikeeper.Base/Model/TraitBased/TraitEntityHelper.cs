@@ -104,8 +104,8 @@ namespace Omnikeeper.Base.Model.TraitBased
 
         // TODO: this is not only applicable to trait entities -> move to somewhere more general
         /*
-            * NOTE: this does not care whether or not the CI is actually a trait entity or not
-            */
+        * NOTE: this does not care whether or not the CI is actually a trait entity or not
+        */
         public static async Task<IEnumerable<Guid>> GetMatchingCIIDsByAttributeValues(IAttributeModel attributeModel, (string name, IAttributeValue value)[] attributeTuples, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...
@@ -132,7 +132,12 @@ namespace Omnikeeper.Base.Model.TraitBased
             return foundCIIDs;
         }
 
-        public static IDataLoaderResult<ICIIDSelection> GetMatchingCIIDsByRelationFilters(ICIIDSelection ciSelection, IRelationModel relationModel, ICIIDModel ciidModel, IEnumerable<RelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
+        // TODO: this is not only applicable to trait entities -> move to somewhere more general
+        /*
+        * NOTE: this does not care whether or not the CI is actually a trait entity or not
+        */
+        public static IDataLoaderResult<ICIIDSelection> GetMatchingCIIDsByRelationFilters(ICIIDSelection ciSelection, IAttributeModel attributeModel, IRelationModel relationModel, ICIModel ciModel, 
+            IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IEnumerable<RelationFilter> filters, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold, IDataLoaderService dataLoaderService)
         {
             if (filters.IsEmpty())
                 throw new Exception("Filtering with empty filter set not supported");
@@ -157,7 +162,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     // NOTE: because the set of cis WITH and cis WITHOUT relations are a partition (i.e. have no overlap), we can do these two loops consecutively
                     if (filter.RequiresCheckOfCIsWithNonEmptyRelations())
                     {
-                        dls.Add(filter.MatchAgainstNonEmpty(ciidGroupedRelations));
+                        dls.Add(filter.MatchAgainstNonEmpty(ciidGroupedRelations, attributeModel, relationModel, ciModel, effectiveTraitModel, dataLoaderService, traitsProvider, layerSet, trans, timeThreshold));
                     }
                     if (filter.RequiresCheckOfCIsWithEmptyRelations())
                     {

@@ -1,5 +1,8 @@
 ﻿using GraphQL.DataLoader;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.GraphQL;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,12 +29,14 @@ namespace Omnikeeper.Base.Model.TraitBased
 
     public record class ExactAmountInnerRelationFilter(uint ExactAmount) : IInnerRelationFilter { }
     public record class ExactOtherCIIDInnerRelationFilter(Guid ExactOtherCIID) : IInnerRelationFilter { }
-    //public record class RelatedToCIInnerRelationFilter(FilterInput Filter) : IInnerRelationFilter { } // TODO: should this not know about the trait?
+    public record class RelatedToCIInnerRelationFilter(FilterInput Filter, ITrait trait) : IInnerRelationFilter { }
 
     public static class RelationFilterHelper
     {
         // NOTE: expects that the passed relations are exactly the correct relations applicable for this filter: correct predicateID, direction, CI, ...
-        public static IDataLoaderResult<ICIIDSelection> MatchAgainstNonEmpty(this RelationFilter filter, IEnumerable<IGrouping<Guid, MergedRelation>> relations)
+        public static IDataLoaderResult<ICIIDSelection> MatchAgainstNonEmpty(this RelationFilter filter, IEnumerable<IGrouping<Guid, MergedRelation>> relations, 
+            IAttributeModel attributeModel, IRelationModel relationModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel, IDataLoaderService dataLoaderService, ITraitsProvider traitsProvider,
+            LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
         {
             switch (filter.InnerFilter)
             {
@@ -44,10 +49,22 @@ namespace Omnikeeper.Base.Model.TraitBased
                         if (r.Count() != 1) return false;
                         return ff.ExactOtherCIID == ((filter.DirectionForward) ? r.First().Relation.ToCIID : r.First().Relation.FromCIID);
                     }).Select(r => r.Key).ToHashSet())));
-                //case RelatedToCIInnerRelationFilter ff:
-                //    var ciids = relations.Select(g => g.Key).ToHashSet();
-                //    return ff.Filter.Apply(SpecificCIIDsSelection.Build(ciids), attributeModel, relationModel, ciidModel, dataLoaderService, layerset, trans, timeThreshold);
-
+                case RelatedToCIInnerRelationFilter ff:
+                    var inverseLookup = relations.SelectMany(g => g.Select(gg => (key: g.Key, value: (filter.DirectionForward) ? gg.Relation.ToCIID : gg.Relation.FromCIID))).ToLookup(g => g.value, g => g.key);
+                    var otherCIIDs = relations.SelectMany(g => g.Select(r => (filter.DirectionForward) ? r.Relation.ToCIID : r.Relation.FromCIID)).ToHashSet();
+                    var r = ff.Filter.Apply(SpecificCIIDsSelection.Build(otherCIIDs), attributeModel, relationModel, ciModel, effectiveTraitModel, dataLoaderService, traitsProvider, layerset, trans, timeThreshold)
+                        .Then(filteredCIs =>
+                        {
+                            // check who actually fulfills the trait
+                            return dataLoaderService.SetupAndLoadEffectiveTraits(filteredCIs, ff.trait, ciModel, attributeModel, effectiveTraitModel, traitsProvider, layerset, timeThreshold, trans)
+                                .Then(ets =>
+                                {
+                                    var ciidsHavingTrait = ets.Keys;
+                                    var baseCIIDs = ciidsHavingTrait.SelectMany(ciid => inverseLookup[ciid]).ToHashSet();
+                                    return SpecificCIIDsSelection.Build(baseCIIDs);
+                                });
+                        }).ResolveNestedResults();
+                    return r;
                 default:
                     throw new Exception("Encountered relation filter in unknown state");
             }
@@ -63,6 +80,8 @@ namespace Omnikeeper.Base.Model.TraitBased
                     return new SimpleDataLoader<ICIIDSelection>(c => Task.FromResult(relations));
                 case ExactOtherCIIDInnerRelationFilter ff:
                     throw new Exception("Must not be");
+                case RelatedToCIInnerRelationFilter ff:
+                    throw new Exception("Must not be");
                 default:
                     throw new Exception("Encountered relation filter in unknown state");
             }
@@ -74,6 +93,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             {
                 ExactAmountInnerRelationFilter ff => ff.ExactAmount == 0,
                 ExactOtherCIIDInnerRelationFilter _ => false,
+                RelatedToCIInnerRelationFilter _ => false,
                 _ => throw new Exception("Encountered relation filter in unknown state"),
             };
         }
@@ -83,6 +103,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             {
                 ExactAmountInnerRelationFilter ff => ff.ExactAmount != 0,
                 ExactOtherCIIDInnerRelationFilter _ => true,
+                RelatedToCIInnerRelationFilter _ => true,
                 _ => throw new Exception("Encountered relation filter in unknown state"),
             };
         }

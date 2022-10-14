@@ -140,16 +140,42 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
+    public record class TraitRelationFilterWrapper(FilterInput? Contains);
+
+    public class TraitRelationFilterWrapperType : InputObjectGraphType<TraitRelationFilterWrapper>
+    {
+        public TraitRelationFilterWrapperType (FilterInputType fit)
+        {
+            AddField(new FieldType()
+            {
+                ResolvedType = fit,
+                Name = "contains",
+            });
+        }
+
+        public override object ParseDictionary(IDictionary<string, object?> value)
+        {
+            var contains = value.TryGetValue("contains", out var it) ? (FilterInput?)it : null;
+
+            return new TraitRelationFilterWrapper(contains);
+        }
+    }
+
     public class FilterInputType : InputObjectGraphType<FilterInput>
     {
         private readonly ITrait trait;
         private readonly IDictionary<string, string> FieldName2AttributeNameMap = new Dictionary<string, string>();
         private readonly IDictionary<string, TraitRelation> FieldName2TraitRelationMap = new Dictionary<string, TraitRelation>();
+        private readonly IDictionary<string, (TraitRelation traitRelation, ITrait trait)> FieldName2TraitRelationWithTraitHintsMap = new Dictionary<string, (TraitRelation traitRelation, ITrait trait)>();
 
         public FilterInputType(ITrait trait)
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityFilterInputGraphTypeName(trait);
+            this.trait = trait;
+        }
 
+        public void Init(IDictionary<string, FilterInputType> allFilters)
+        {
             foreach (var ta in trait.RequiredAttributes.Concat(trait.OptionalAttributes))
             {
                 var attributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta);
@@ -192,7 +218,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         case AttributeValueType.DateTimeWithOffset:
                             break;
                     }
-                } else
+                }
+                else
                 {
                     // TODO: support for array types
                 }
@@ -208,19 +235,30 @@ namespace Omnikeeper.GraphQL.TraitEntities
                 });
                 FieldName2TraitRelationMap.Add(relationFieldName, r);
 
-                // TODO: support for trait hints
-                //foreach (var traitIDHint in r.RelationTemplate.TraitHints)
-                //{
-                //    var relationFieldNameTH = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldWithTraitHintName(r, traitIDHint);
-                //    AddField(new FieldType()
-                //    {
-                //        Type = typeof(RelationFilterInputType), // TODO
-                //        Name = relationFieldNameTH
-                //    });
-                //}
+                // trait hints
+                foreach (var traitIDHint in r.RelationTemplate.TraitHints)
+                {
+                    if (allFilters.TryGetValue(traitIDHint, out var filterType))
+                    {
+                        var relationFieldNameTH = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldWithTraitHintName(r, traitIDHint);
+                        AddField(new FieldType()
+                        {
+                            ResolvedType = new TraitRelationFilterWrapperType (filterType),
+                            Name = relationFieldNameTH
+                        });
+                        FieldName2TraitRelationWithTraitHintsMap.Add(relationFieldNameTH, (r, filterType.trait));
+                    } else
+                    {
+                        throw new Exception($"Could not find filter for trait with ID {traitIDHint}");
+                    }
+                }
             }
 
-            this.trait = trait;
+            if (Fields.IsEmpty())
+            {
+                // NOTE: because graphql types MUST define at least one field, we define a placeholder field whose single purpose is to simply exist and fulfill the requirement when there are no other fields
+                Field<StringGraphType>("placeholder").Resolve(ctx => "placeholder");
+            }
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)
@@ -244,6 +282,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         throw new Exception($"Unknown relation filter for relation {inputFieldName} detected");
                     relationFilters.AddRange(f.Select(ff => new RelationFilter(relation.RelationTemplate.PredicateID, relation.RelationTemplate.DirectionForward, ff)));
                 }
+                else if (FieldName2TraitRelationWithTraitHintsMap.TryGetValue(inputFieldName, out var tuple))
+                {
+                    var (traitRelation, trait) = tuple;
+                    if (kv.Value is not TraitRelationFilterWrapper wrapper)
+                        throw new Exception($"Unknown relation filter for relation {inputFieldName} detected");
+
+                    if (wrapper.Contains != null)
+                        relationFilters.Add(new RelationFilter(traitRelation.RelationTemplate.PredicateID, traitRelation.RelationTemplate.DirectionForward, new RelatedToCIInnerRelationFilter(wrapper.Contains, trait)));
+                }
                 else
                 {
                     throw new Exception($"Could not find input attribute- or relation-filter {inputFieldName} in trait entity {trait.ID}");
@@ -251,14 +298,6 @@ namespace Omnikeeper.GraphQL.TraitEntities
             }
 
             return new FilterInput(attributeFilters.ToArray(), relationFilters.ToArray());
-        }
-
-        public static FilterInputType? Build(ITrait at)
-        {
-            var t = new FilterInputType(at);
-            if (t.Fields.IsEmpty())
-                return null;
-            return t;
         }
     }
 

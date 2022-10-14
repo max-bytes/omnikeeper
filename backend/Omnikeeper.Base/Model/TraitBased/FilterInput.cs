@@ -3,7 +3,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Base.Utils;
-using System;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model.TraitBased
 {
@@ -22,14 +22,14 @@ namespace Omnikeeper.Base.Model.TraitBased
     public static class FilterInputExtensions
     {
         // NOTE: resulting CIIDs do NOT necessarily fulfill any trait requirements, systems using this method need to perform these checks if needed
-        public static IDataLoaderResult<ICIIDSelection> Apply(this FilterInput filter, ICIIDSelection ciSelection, IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel, IDataLoaderService dataLoaderService,
-            LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
+        public static IDataLoaderResult<ICIIDSelection> Apply(this FilterInput filter, ICIIDSelection ciSelection, IAttributeModel attributeModel, IRelationModel relationModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel, IDataLoaderService dataLoaderService,
+            ITraitsProvider traitsProvider, LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
         {
             IDataLoaderResult<ICIIDSelection> matchingCIIDs;
             if (!filter.RelationFilters.IsEmpty() && !filter.AttributeFilters.IsEmpty())
             {
                 matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByAttributeFilters(ciSelection, attributeModel, filter.AttributeFilters, layerset, trans, timeThreshold, dataLoaderService)
-                    .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByRelationFilters(matchingCIIDs, relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService))
+                    .Then(matchingCIIDs => TraitEntityHelper.GetMatchingCIIDsByRelationFilters(matchingCIIDs, attributeModel, relationModel, ciModel, effectiveTraitModel, traitsProvider, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService))
                     .ResolveNestedResults();
             }
             else if (!filter.AttributeFilters.IsEmpty() && filter.RelationFilters.IsEmpty())
@@ -38,11 +38,11 @@ namespace Omnikeeper.Base.Model.TraitBased
             }
             else if (filter.AttributeFilters.IsEmpty() && !filter.RelationFilters.IsEmpty())
             {
-                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(ciSelection, relationModel, ciidModel, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService);
+                matchingCIIDs = TraitEntityHelper.GetMatchingCIIDsByRelationFilters(ciSelection, attributeModel, relationModel, ciModel, effectiveTraitModel, traitsProvider, filter.RelationFilters, layerset, trans, timeThreshold, dataLoaderService);
             }
             else
             {
-                throw new Exception("At least one filter must be set");
+                matchingCIIDs = new SimpleDataLoader<ICIIDSelection>(token => Task.FromResult<ICIIDSelection>(AllCIIDsSelection.Instance));
             }
             return matchingCIIDs;
         }

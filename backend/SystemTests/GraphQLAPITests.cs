@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
 using GraphQL;
-using GraphQL.Client.Abstractions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SystemTests.Base;
@@ -109,26 +109,31 @@ mutation {
             var r2 = await Query(createLayer, () => new { manage_createLayer = new { id = "" } });
             Assert.IsNull(r2.Errors);
 
-
-            var insertNew = new GraphQLRequest
+            async Task<Guid> Insert(string id, string name, params Guid[] relatedCIIDs)
             {
-                Query = @"
-mutation {
+                var insertNew = new GraphQLRequest
+                {
+                    Query = @$"
+mutation {{
   insertNew_test_trait_a(
     layers: [""layer_1""]
     writeLayer: ""layer_1""
     ciName: ""Entity 1""
-    input: { id: ""entity_1"", name: ""Entity 1"" }
-  ) {
-                entity { id }
-  }
-        }
+    input: {{ id: ""{id}"", name: ""{name}"", assignments: [{string.Join(',', relatedCIIDs.Select(ciid => $"\"{ciid}\""))}] }}
+  ) {{
+                ciid
+                entity {{ id }}
+  }}
+}}
 "
-            };
-            var r3 = await Query(insertNew, () => new { insertNew_test_trait_a = new { entity = new { id = "" } } });
-            Assert.IsNull(r3.Errors);
-            Assert.AreEqual("entity_1", r3.Data.insertNew_test_trait_a.entity.id);
+                };
+                var r3 = await Query(insertNew, () => new { insertNew_test_trait_a = new { ciid = Guid.Empty, entity = new { id = "" } } });
+                Assert.IsNull(r3.Errors);
+                Assert.AreEqual(id, r3.Data.insertNew_test_trait_a.entity.id);
+                return r3.Data.insertNew_test_trait_a.ciid;
+            }
 
+            var ciidE1 = await Insert("entity_1", "Entity 1");
 
             var fetchAll = new GraphQLRequest
             {
@@ -156,6 +161,7 @@ mutation {
                 new EntityWrapperType{ Entity = new EntityType() { Id = "entity_1", Name = "Entity 1", Assignments = ImmutableList<RelatedAssignmentsType>.Empty}}
             });
 
+            var ciidE2 = await Insert("entity_2", "Entity 2", ciidE1);
         }
 
         class EntityWrapperType
