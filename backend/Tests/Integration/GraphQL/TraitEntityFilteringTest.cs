@@ -706,7 +706,7 @@ mutation($name: String!, $id: String!, $assignments: [Guid]!) {
             // force rebuild graphql schema
             await ReinitSchema();
 
-            string mutationCreateTrait = @"
+            string mutationCreateTrait1 = @"
     mutation {
       manage_upsertRecursiveTrait(
         trait: {
@@ -744,6 +744,14 @@ mutation($name: String!, $id: String!, $assignments: [Guid]!) {
                     directionForward: true
                     traitHints: [""test_trait_a""]
                   }
+              },
+              {
+                  identifier: ""assignments2""
+                  template: { 
+                    predicateID: ""is_assigned_to_2""
+                    directionForward: true
+                    traitHints: [""test_trait_b""]
+                  }
               }
           ],
           requiredTraits: []
@@ -760,18 +768,66 @@ mutation($name: String!, $id: String!, $assignments: [Guid]!) {
                 ""id"": ""test_trait_a""
             }
     }";
-            AssertQuerySuccess(mutationCreateTrait, expected1, user);
+            AssertQuerySuccess(mutationCreateTrait1, expected1, user);
+
+
+            string mutationCreateTrait2 = @"
+    mutation {
+      manage_upsertRecursiveTrait(
+        trait: {
+          id: ""test_trait_b""
+          requiredAttributes: [
+            {
+              identifier: ""id""
+              template: {
+                name: ""test_trait_b.id""
+                type: TEXT
+                isID: true
+                isArray: false
+                valueConstraints: [
+                    """"""{""$type"":""Omnikeeper.Base.Entity.CIAttributeValueConstraintTextLength, Omnikeeper.Base"",""Minimum"":1,""Maximum"":null}""""""
+                ]
+              }
+            }
+            {
+              identifier: ""name""
+              template: {
+                name: ""test_trait_b.name""
+                type: TEXT
+                isID: false
+                isArray: false
+                valueConstraints: []
+              }
+            }
+          ]
+          optionalAttributes: []
+          optionalRelations: [],
+          requiredTraits: []
+        }
+      ) {
+        id
+      }
+    }
+    ";
+            var expected2 = @"
+    {
+        ""manage_upsertRecursiveTrait"":
+            {
+                ""id"": ""test_trait_b""
+            }
+    }";
+            AssertQuerySuccess(mutationCreateTrait2, expected2, user);
 
             // force rebuild graphql schema
             await ReinitSchema();
 
-            var mutationInsert = @"
-    mutation($name: String!, $id: String!, $assignments: [Guid]!) {
-      insertNew_test_trait_a(
+            var mutationInsert0 = @"
+    mutation($name: String!, $id: String!) {
+      insertNew_test_trait_b(
         layers: [""layer_1""]
         writeLayer: ""layer_1""
         ciName: $name
-        input: { id: $id, name: $name, assignments: $assignments }
+        input: { id: $id, name: $name }
       ) {
                     ciid
                     entity { id }
@@ -779,15 +835,32 @@ mutation($name: String!, $id: String!, $assignments: [Guid]!) {
             }
     ";
 
-            var result1 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_1" }, { "name", "Entity 1" }, { "assignments", new Guid[] { } } }));
+            var result0 = RunQuery(mutationInsert0, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_0" }, { "name", "Entity 0" } }));
+            var ciid0 = JsonDocument.Parse(result0.json).RootElement.GetProperty("data").GetProperty("insertNew_test_trait_b").GetProperty("ciid").GetGuid();
+
+            var mutationInsert = @"
+    mutation($name: String!, $id: String!, $assignments: [Guid]!, $assignments2: [Guid]!) {
+      insertNew_test_trait_a(
+        layers: [""layer_1""]
+        writeLayer: ""layer_1""
+        ciName: $name
+        input: { id: $id, name: $name, assignments: $assignments, assignments2: $assignments2 }
+      ) {
+                    ciid
+                    entity { id }
+      }
+            }
+    ";
+
+            var result1 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_1" }, { "name", "Entity 1" }, { "assignments", new Guid[] { } }, { "assignments2", new Guid[] { } } }));
             var ciid1 = JsonDocument.Parse(result1.json).RootElement.GetProperty("data").GetProperty("insertNew_test_trait_a").GetProperty("ciid").GetGuid();
-            var result2 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_2" }, { "name", "Entity 2" }, { "assignments", new Guid[] { ciid1 } } }));
+            var result2 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_2" }, { "name", "Entity 2" }, { "assignments", new Guid[] { ciid1 } }, { "assignments2", new Guid[] { ciid0 } } }));
             var ciid2 = JsonDocument.Parse(result2.json).RootElement.GetProperty("data").GetProperty("insertNew_test_trait_a").GetProperty("ciid").GetGuid();
-            var result3 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_3" }, { "name", "Entity 3" }, { "assignments", new Guid[] { ciid1, ciid2 } } }));
+            var result3 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_3" }, { "name", "Entity 3" }, { "assignments", new Guid[] { ciid1, ciid2 } }, { "assignments2", new Guid[] { } } }));
             var ciid3 = JsonDocument.Parse(result3.json).RootElement.GetProperty("data").GetProperty("insertNew_test_trait_a").GetProperty("ciid").GetGuid();
 
             // insert a "fake" entity that has the relation and the id-attribute, but remove the required name attribute, so it does not fulfill the trait and must not be found when querying
-            var result4 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_4" }, { "name", "Entity 4" }, { "assignments", new Guid[] { ciid1, ciid2, ciid3 } } }));
+            var result4 = RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_4" }, { "name", "Entity 4" }, { "assignments", new Guid[] { ciid1, ciid2, ciid3 } }, { "assignments2", new Guid[] { ciid0 } } }));
             var ciid4 = JsonDocument.Parse(result4.json).RootElement.GetProperty("data").GetProperty("insertNew_test_trait_a").GetProperty("ciid").GetGuid();
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
@@ -867,6 +940,38 @@ mutation($name: String!, $id: String!, $assignments: [Guid]!) {
     }
     ";
             AssertQuerySuccess(queryFiltered2, expected6, user);
+
+            var queryFiltered3 = @"
+    {
+      traitEntities(layers: [""layer_1""]) {
+        test_trait_a {
+                    filtered(filter: {assignments_as_test_trait_a: {contains: {id: {exact: ""entity_1""}}}, assignments2_as_test_trait_b: {contains: {id: {exact: ""entity_0""}}}}) {
+                        entity {
+                            id
+                            name
+                        }
+                    }
+                }
+            }
+        }
+    ";
+            var expected7 = @"
+    {
+      ""traitEntities"": {
+	      ""test_trait_a"": {
+	        ""filtered"": [
+              {
+                ""entity"": {
+                  ""id"": ""entity_2"",
+                  ""name"": ""Entity 2""
+                }
+              }
+            ]
+	      }
+      }
+    }
+    ";
+            AssertQuerySuccess(queryFiltered3, expected7, user);
         }
     }
 }

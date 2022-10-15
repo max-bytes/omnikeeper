@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -38,6 +39,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public static string GenerateTraitEntityGraphTypeName(ITrait trait) => SanitizeTypeName("TE_" + trait.ID);
         public static string GenerateTraitEntityIDInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_ID_Input_" + trait.ID);
         public static string GenerateTraitEntityFilterInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_filter_Input_" + trait.ID);
+        public static string GenerateTraitRelationFilterWrapperInputGraphTypeName(ITrait trait) => SanitizeTypeName("TR_filter_Input_" + trait.ID);
         public static string GenerateUpsertTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Upsert_Input_" + trait.ID);
         public static string GenerateInsertTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Insert_Input_" + trait.ID);
         public static string GenerateSetRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "setRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);

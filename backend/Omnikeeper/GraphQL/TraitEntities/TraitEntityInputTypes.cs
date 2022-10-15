@@ -1,12 +1,8 @@
-﻿using GraphQL.DataLoader;
-using GraphQL.Types;
+﻿using GraphQL.Types;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.GraphQL;
-using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -144,8 +140,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class TraitRelationFilterWrapperType : InputObjectGraphType<TraitRelationFilterWrapper>
     {
-        public TraitRelationFilterWrapperType (FilterInputType fit)
+        public TraitRelationFilterWrapperType (FilterInputType fit, ITrait trait)
         {
+            Name = TraitEntityTypesNameGenerator.GenerateTraitRelationFilterWrapperInputGraphTypeName(trait);
             AddField(new FieldType()
             {
                 ResolvedType = fit,
@@ -172,11 +169,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
         {
             Name = TraitEntityTypesNameGenerator.GenerateTraitEntityFilterInputGraphTypeName(trait);
             this.trait = trait;
-        }
 
-        public void Init(IDictionary<string, FilterInputType> allFilters)
-        {
-            foreach (var ta in trait.RequiredAttributes.Concat(trait.OptionalAttributes))
+            foreach (var ta in this.trait.RequiredAttributes.Concat<TraitAttribute>(this.trait.OptionalAttributes))
             {
                 var attributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta);
 
@@ -234,20 +228,28 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     Name = relationFieldName
                 });
                 FieldName2TraitRelationMap.Add(relationFieldName, r);
+            }
+        }
 
+        public void LateInit(IDictionary<string, (TraitRelationFilterWrapperType wrapper, ITrait trait)> traitRelationFilterWrappers)
+        {
+            foreach (var r in trait.OptionalRelations)
+            {
                 // trait hints
                 foreach (var traitIDHint in r.RelationTemplate.TraitHints)
                 {
-                    if (allFilters.TryGetValue(traitIDHint, out var filterType))
+                    if (traitRelationFilterWrappers.TryGetValue(traitIDHint, out var tuple))
                     {
+                        var (trFilterWrapper, relatedTrait) = tuple;
                         var relationFieldNameTH = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldWithTraitHintName(r, traitIDHint);
                         AddField(new FieldType()
                         {
-                            ResolvedType = new TraitRelationFilterWrapperType (filterType),
+                            ResolvedType = trFilterWrapper,
                             Name = relationFieldNameTH
                         });
-                        FieldName2TraitRelationWithTraitHintsMap.Add(relationFieldNameTH, (r, filterType.trait));
-                    } else
+                        FieldName2TraitRelationWithTraitHintsMap.Add(relationFieldNameTH, (r, relatedTrait));
+                    }
+                    else
                     {
                         throw new Exception($"Could not find filter for trait with ID {traitIDHint}");
                     }

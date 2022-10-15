@@ -5,6 +5,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Omnikeeper.GraphQL.TraitEntities
 {
@@ -52,19 +53,17 @@ namespace Omnikeeper.GraphQL.TraitEntities
         private readonly ITraitsProvider traitsProvider;
         private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
-        private readonly ICIIDModel ciidModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
         private readonly IDataLoaderService dataLoaderService;
         private readonly IChangesetModel changesetModel;
 
-        public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel, ICIIDModel ciidModel,
+        public TypeContainerCreator(ITraitsProvider traitsProvider, IAttributeModel attributeModel, IRelationModel relationModel,
             IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IDataLoaderService dataLoaderService, IChangesetModel changesetModel)
         {
             this.traitsProvider = traitsProvider;
             this.attributeModel = attributeModel;
             this.relationModel = relationModel;
-            this.ciidModel = ciidModel;
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.dataLoaderService = dataLoaderService;
@@ -76,7 +75,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             var relatedCIType = new RelatedCIType(traitsProvider, dataLoaderService);
 
             var elementTypesContainerDictionary = new Dictionary<string, ElementTypesContainer>();
-            var filterInputTypesContainerDictionary = new Dictionary<string, FilterInputType>();
+            var filterInputTypesDictionary = new Dictionary<string, (FilterInputType filter, ITrait trait)>();
 
             foreach (var at in activeTraits)
             {
@@ -90,7 +89,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     var tt = new ElementType();
                     var ttWrapper = new ElementWrapperType(at.Value, tt, traitsProvider, dataLoaderService, traitEntityModel);
                     var filterInputType = new FilterInputType(at.Value);
-                    filterInputTypesContainerDictionary.Add(at.Key, filterInputType);
+                    filterInputTypesDictionary.Add(at.Key, (filterInputType, at.Value));
                     var idt = IDInputType.Build(at.Value);
                     var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel, dataLoaderService, ttWrapper, filterInputType, idt);
                     var upsertInputType = new UpsertInputType(at.Value, false);
@@ -106,11 +105,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
             }
 
             // we do a delayed initialization of the FilterInputType to be able to resolve trait hints linking to other FilterInputTypes
-            foreach(var kv in filterInputTypesContainerDictionary)
+            var traitRelationFilterWrapperDictionary = filterInputTypesDictionary.ToDictionary(kv => kv.Key, kv => (new TraitRelationFilterWrapperType(kv.Value.filter, kv.Value.trait), kv.Value.trait));
+            foreach (var kv in filterInputTypesDictionary)
             {
                 try
                 {
-                    kv.Value.Init(filterInputTypesContainerDictionary);
+                    kv.Value.filter.LateInit(traitRelationFilterWrapperDictionary);
                 }
                 catch (Exception e)
                 {

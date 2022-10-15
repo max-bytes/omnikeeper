@@ -194,16 +194,16 @@ namespace Omnikeeper.Base.Model.TraitBased
                 var attributeSelection = NamedAttributesSelection.Build(taFilter.attributeName);
 
                 // NOTE: we reduce the ciSelection with each filter, and in the end, return the resulting ciSelection
-                result = result.Then(ciSelection =>
+                result = result.Then(movingCISelection =>
                 {
-                    return dataLoaderService.SetupAndLoadMergedAttributes(ciSelection, attributeSelection, layerSet, timeThreshold, trans)
+                    return dataLoaderService.SetupAndLoadMergedAttributes(movingCISelection, attributeSelection, layerSet, timeThreshold, trans)
                     .Then(attributes =>
                     {
                         if (taFilter.filter is AttributeScalarTextFilter tf)
                         {
                             if (tf.IsSet.HasValue && !tf.IsSet.Value)
                             {
-                                ciSelection = ciSelection.Except(SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet()));
+                                return movingCISelection.Except(SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet()));
                             }
                             else
                             {
@@ -238,14 +238,14 @@ namespace Omnikeeper.Base.Model.TraitBased
                                     return true;
                                 }).Select(kv => kv.Key).ToHashSet();
 
-                                ciSelection = SpecificCIIDsSelection.Build(filtered);
+                                return SpecificCIIDsSelection.Build(filtered);
                             }
                         }
                         else if (taFilter.filter is AttributeScalarBooleanFilter bf)
                         {
                             if (bf.IsSet.HasValue && !bf.IsSet.Value)
                             {
-                                ciSelection = ciSelection.Except(SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet()));
+                                return movingCISelection.Except(SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet()));
                             }
                             else
                             {
@@ -271,10 +271,12 @@ namespace Omnikeeper.Base.Model.TraitBased
                                     return true;
                                 }).Select(kv => kv.Key).ToHashSet();
 
-                                ciSelection = SpecificCIIDsSelection.Build(filtered);
+                                return SpecificCIIDsSelection.Build(filtered);
                             }
+                        } else
+                        {
+                            throw new Exception("Invalid filter detected");
                         }
-                        return ciSelection;
                     });
                 }).ResolveNestedResults();
             }
