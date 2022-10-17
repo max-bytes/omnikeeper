@@ -112,6 +112,57 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         return et;
                     });
 
+                tet.Field(TraitEntityTypesNameGenerator.GenerateUpdateSingleByFilterMutationName(traitID), elementTypeContainer.ElementWrapper)
+                    .Arguments(
+                        new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpdateInput)) { Name = "input" },
+                        new QueryArgument(elementTypeContainer.FilterInput) { Name = "filter" },
+                        new QueryArgument<StringGraphType> { Name = "ciName" })
+                    .ResolveAsync(async context =>
+                    {
+                        var layerStrings = context.GetArgument<string[]>("layers")!;
+                        var writeLayerID = context.GetArgument<string>("writeLayer")!;
+                        var filter = context.GetArgument<FilterInput>("filter");
+                        var input = context.GetArgument<UpdateInput>("input");
+                        var ciName = context.GetArgument<string?>("ciName", null);
+
+                        var userContext = await context.GetUserContext()
+                            .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                        var layerset = userContext.GetLayerSet(context.Path);
+                        var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                        var trans = userContext.Transaction;
+
+                        var matchingCIIDs = filter.Apply(AllCIIDsSelection.Instance, dataLoaderService, layerset, trans, timeThreshold);
+                        return matchingCIIDs.Then(async matchingCIIDs =>
+                        {
+                            var ciids = await matchingCIIDs.GetCIIDsAsync(async () => await ciModel.GetCIIDs(trans));
+                            if (ciids.IsEmpty())
+                                throw new Exception($"Cannot update entity: no matching CI found through filter");
+
+                            // if the ciids contains any CIs that have the trait, we need to use this, not just the first CIID (which might NOT have the trait)
+                            // otherwise, throw
+                            var (bestMatchingCIID, bestMatchingET) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, elementTypeContainer.TraitEntityModel, layerset, trans, timeThreshold);
+
+                            // check if entity actually exists at that CI, error if not
+                            if (bestMatchingET == null)
+                                throw new Exception($"Cannot update entity at CI with ID {bestMatchingCIID}: entity does not exist at that CI");
+
+                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(bestMatchingCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
+
+                            var et = await Upsert(bestMatchingCIID, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, elementTypeContainer.TraitEntityModel, layerset, writeLayerID);
+
+                            if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(bestMatchingCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
+                                throw new ExecutionError(dPost.Reason);
+
+                            userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
+
+                            return et;
+                        });
+                    });
+
                 tet.Field(TraitEntityTypesNameGenerator.GenerateInsertNewMutationName(traitID), elementTypeContainer.ElementWrapper)
                     .Arguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
@@ -388,7 +439,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var id = context.GetArgument<IDInput>("id");
 
                             // TODO: use data loader?
-                            var idAttributeTuples = id.IDAttributeValues.Select(t => (t.traitAttribute.AttributeTemplate.Name, t.value)).ToArray();
+                            var idAttributeTuples = id.IDAttributeValues.Select(t => (t.traitAttribute.AttributeTemplate.Name, (IAttributeValue?)t.value)).ToArray();
                             var foundCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
                                 
                             Guid finalCIID;

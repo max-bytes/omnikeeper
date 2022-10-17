@@ -14,7 +14,7 @@ namespace Tests.Integration.GraphQL
     class TraitEntityUpdateTest : QueryTestBase
     {
         [Test]
-        public async Task TestUpsertSingleAndDeletionByFilter()
+        public async Task TestUpdateByCIIDAndFilter()
         {
             var userInDatabase = await SetupDefaultUser();
             var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
@@ -172,7 +172,7 @@ mutation {
             AssertQuerySuccess(queryTestTraitA, expected3, user);
 
 
-            // modify trait with an update
+            // modify trait with an update by ciid
             var mutationUpdate1 = $@"
             mutation {{
               updateByCIID_test_trait_a(
@@ -200,6 +200,36 @@ mutation {
               }
             ";
             AssertQuerySuccess(mutationUpdate1, expected4, user);
+
+
+            // modify trait again with an update by filter
+            var mutationUpdate2 = $@"
+            mutation {{
+              updateSingleByFilter_test_trait_a(
+                layers: [""layer_1""]
+                writeLayer: ""layer_1""
+                filter: {{ a1: {{exact: ""v1n"" }} }}
+                input: {{ a2: ""v2n"", a3: null }}
+              ) {{
+                            entity {{ a1, a2, a3, a4, a5, a6 }}
+              }}
+                    }}
+            ";
+            var expected5 = @"
+            {
+              ""updateSingleByFilter_test_trait_a"": {
+	            ""entity"": {
+                    ""a1"": ""v1n"",
+                    ""a2"": ""v2n"",
+                    ""a3"": null,
+                    ""a4"": null,
+                    ""a5"": ""v5n"",
+                    ""a6"": null
+                  }
+	            }
+              }
+            ";
+            AssertQuerySuccess(mutationUpdate2, expected5, user);
         }
     }
 }

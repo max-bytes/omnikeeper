@@ -112,7 +112,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         /*
         * NOTE: this does not care whether or not the CI is actually a trait entity or not
         */
-        public static async Task<IEnumerable<Guid>> GetMatchingCIIDsByAttributeValues(IAttributeModel attributeModel, (string name, IAttributeValue value)[] attributeTuples, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public static async Task<IEnumerable<Guid>> GetMatchingCIIDsByAttributeValues(IAttributeModel attributeModel, (string name, IAttributeValue? value)[] attributeTuples, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...
             var cisWithIDAttributes = await attributeModel.GetMergedAttributes(AllCIIDsSelection.Instance, NamedAttributesSelection.Build(attributeTuples.Select(t => t.name).ToHashSet()), layerSet, trans, timeThreshold, GeneratedDataHandlingInclude.Instance);
@@ -130,7 +130,8 @@ namespace Omnikeeper.Base.Model.TraitBased
                     }
                     else
                     {
-                        return false;
+                        if (attributeValue != null) // passed in attribute value was not null, yet CI does not have that attribute -> so it's not a match
+                            return false;
                     }
                 }
                 return true;
