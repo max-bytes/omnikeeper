@@ -14,10 +14,10 @@ namespace Omnikeeper.Base.Model.TraitBased
 {
     public static class TraitEntityHelper
     {
-        public static ((TraitAttribute traitAttribute, IAttributeValue value)[], (TraitRelation traitRelation, Guid[] relatedCIIDs)[]) 
+        public static ((TraitAttribute traitAttribute, IAttributeValue? value)[], (TraitRelation traitRelation, Guid[] relatedCIIDs)[]) 
             InputDictionary2AttributeAndRelationTuples(IDictionary<string, object?> inputDict, ITrait trait, bool throwOnMissingRequiredAttribute, bool throwOnMissingIDAttribute)
         {
-            var attributeValues = new List<(TraitAttribute traitAttribute, IAttributeValue value)>();
+            var attributeValues = new List<(TraitAttribute traitAttribute, IAttributeValue? value)>();
             var relationValues = new List<(TraitRelation traitRelation, Guid[] relatedCIIDs)>();
 
             foreach(var attribute in trait.RequiredAttributes)
@@ -33,6 +33,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     else
                         continue;
                 }
+
                 if (fittingInputField.Value == null) // input field is specified, but its value is null
                 {
                     if (attribute.AttributeTemplate.IsID.GetValueOrDefault(false) && throwOnMissingIDAttribute)
@@ -40,12 +41,14 @@ namespace Omnikeeper.Base.Model.TraitBased
                     else if (throwOnMissingRequiredAttribute)
                         throw new Exception($"Required input field {convertedAttributeFieldName} for trait {trait.ID} is null");
                     else
-                        continue;
+                        attributeValues.Add((attribute, null));
+                } else
+                {
+                    var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
+                    IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, fittingInputField.Value);
+                    attributeValues.Add((attribute, attributeValue));
                 }
 
-                var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
-                IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, fittingInputField.Value);
-                attributeValues.Add((attribute, attributeValue));
             }
 
             foreach(var attribute in trait.OptionalAttributes)
@@ -54,12 +57,15 @@ namespace Omnikeeper.Base.Model.TraitBased
                 var fittingInputField = inputDict.FirstOrDefault(kv => convertedAttributeFieldName == kv.Key);
                 if (fittingInputField.Equals(default(KeyValuePair<string, object?>)))
                     continue;
-                if (fittingInputField.Value == null) // input field is specified, but its value is null
-                    continue;
 
                 var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
-                IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, fittingInputField.Value);
-                attributeValues.Add((attribute, attributeValue));
+                if (fittingInputField.Value == null) // input field is specified, but its value is null, means remove
+                    attributeValues.Add((attribute, null));
+                else
+                {
+                    IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, fittingInputField.Value);
+                    attributeValues.Add((attribute, attributeValue));
+                }
             }
 
             foreach(var relation in trait.OptionalRelations)
@@ -68,7 +74,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 var fittingInputField = inputDict.FirstOrDefault(kv => convertedRelationFieldName == kv.Key);
                 if (fittingInputField.Equals(default(KeyValuePair<string, object?>)))
                     continue;
-                if (fittingInputField.Value == null) // input field is specified, but its value is null
+                if (fittingInputField.Value == null) // input field is specified, but its value is null, means ignore (empty array means remove)
                     continue;
                 var array = (object[])fittingInputField.Value;
                 var relatedCIIDs = array.Select(a =>

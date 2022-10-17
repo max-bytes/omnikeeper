@@ -305,9 +305,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
     public class UpsertInput
     {
-        public readonly (TraitAttribute traitAttribute, IAttributeValue value)[] AttributeValues;
+        public readonly (TraitAttribute traitAttribute, IAttributeValue? value)[] AttributeValues;
         public readonly (TraitRelation traitRelation, Guid[] relatedCIIDs)[] RelationValues;
-        public UpsertInput((TraitAttribute traitAttribute, IAttributeValue value)[] attributeValues, (TraitRelation traitRelation, Guid[] relatedCIIDs)[] relationValues)
+        public UpsertInput((TraitAttribute traitAttribute, IAttributeValue? value)[] attributeValues, (TraitRelation traitRelation, Guid[] relatedCIIDs)[] relationValues)
         {
             AttributeValues = attributeValues;
             RelationValues = relationValues;
@@ -317,18 +317,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
     public class UpsertInputType : InputObjectGraphType<UpsertInput>
     {
         private readonly ITrait trait;
-        private readonly bool isPureUpdate;
 
-        // NOTE: a pure update is one that has less restrictions on what the input must be
-        // a pure update does not require that all required attributes or all ID attributes are present
-        public UpsertInputType(ITrait trait, bool isPureUpdate)
+        public UpsertInputType(ITrait trait)
         {
-            Name = TraitEntityTypesNameGenerator.GenerateInsertTraitEntityInputGraphTypeName(trait);
+            Name = TraitEntityTypesNameGenerator.GenerateUpsertTraitEntityInputGraphTypeName(trait);
 
             foreach (var ta in trait.RequiredAttributes)
             {
                 var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
-                var resolvedType = (isPureUpdate) ? graphType : new NonNullGraphType(graphType);
+                var resolvedType = new NonNullGraphType(graphType);
                 AddField(new FieldType()
                 {
                     Name = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta),
@@ -354,13 +351,71 @@ namespace Omnikeeper.GraphQL.TraitEntities
             }
 
             this.trait = trait;
-            this.isPureUpdate = isPureUpdate;
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
-            var t = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(value, trait, throwOnMissingRequiredAttribute: !isPureUpdate, throwOnMissingIDAttribute: !isPureUpdate);
+            var t = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(value, trait, throwOnMissingRequiredAttribute: true, throwOnMissingIDAttribute: true);
             return new UpsertInput(t.Item1, t.Item2);
+        }
+    }
+
+    public class UpdateInput
+    {
+        public readonly (TraitAttribute traitAttribute, IAttributeValue? value)[] AttributeValues;
+        public readonly (TraitRelation traitRelation, Guid[] relatedCIIDs)[] RelationValues;
+        public UpdateInput((TraitAttribute traitAttribute, IAttributeValue? value)[] attributeValues, (TraitRelation traitRelation, Guid[] relatedCIIDs)[] relationValues)
+        {
+            AttributeValues = attributeValues;
+            RelationValues = relationValues;
+        }
+    }
+
+    public class UpdateInputType : InputObjectGraphType<UpdateInput>
+    {
+        private readonly ITrait trait;
+
+        // NOTE: a pure update (in contrast to upsert) is one that has less restrictions on what the input must be
+        // a pure update does not require that all required attributes or all ID attributes are present
+        public UpdateInputType(ITrait trait)
+        {
+            Name = TraitEntityTypesNameGenerator.GenerateUpdateTraitEntityInputGraphTypeName(trait);
+
+            foreach (var ta in trait.RequiredAttributes)
+            {
+                var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
+                var resolvedType = graphType;
+                AddField(new FieldType()
+                {
+                    Name = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta),
+                    ResolvedType = resolvedType
+                });
+            }
+            foreach (var ta in trait.OptionalAttributes)
+            {
+                var graphType = AttributeValueHelper.AttributeValueType2GraphQLType(ta.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text), ta.AttributeTemplate.IsArray.GetValueOrDefault(false));
+                AddField(new FieldType()
+                {
+                    Name = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(ta),
+                    ResolvedType = graphType
+                });
+            }
+            foreach (var rr in trait.OptionalRelations)
+            {
+                AddField(new FieldType()
+                {
+                    Name = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(rr),
+                    ResolvedType = new ListGraphType(new GuidGraphType())
+                });
+            }
+
+            this.trait = trait;
+        }
+
+        public override object ParseDictionary(IDictionary<string, object?> value)
+        {
+            var t = TraitEntityHelper.InputDictionary2AttributeAndRelationTuples(value, trait, throwOnMissingRequiredAttribute: false, throwOnMissingIDAttribute: false);
+            return new UpdateInput(t.Item1, t.Item2);
         }
     }
 }

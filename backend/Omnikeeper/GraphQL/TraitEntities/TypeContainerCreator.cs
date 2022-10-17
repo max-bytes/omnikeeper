@@ -17,12 +17,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public readonly TraitEntityRootType RootQuery;
         public readonly IDInputType? IDInput;
         public readonly UpsertInputType UpsertInput;
-        public readonly UpsertInputType UpdateInput;
+        public readonly UpdateInputType UpdateInput;
         public readonly FilterInputType FilterInput;
         public readonly TraitEntityModel TraitEntityModel;
 
         public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType,
-            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, UpsertInputType updateInputType, FilterInputType filterInputType, TraitEntityModel traitEntityModel)
+            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, UpdateInputType updateInputType, FilterInputType filterInputType, TraitEntityModel traitEntityModel)
         {
             Trait = trait;
             Element = element;
@@ -92,8 +92,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     filterInputTypesDictionary.Add(at.Key, (filterInputType, at.Value));
                     var idt = IDInputType.Build(at.Value);
                     var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel, dataLoaderService, ttWrapper, filterInputType, idt);
-                    var upsertInputType = new UpsertInputType(at.Value, false);
-                    var updateInputType = new UpsertInputType(at.Value, true);
+                    var upsertInputType = new UpsertInputType(at.Value);
+                    var updateInputType = new UpdateInputType(at.Value);
 
                     var container = new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType, updateInputType, filterInputType, traitEntityModel);
                     elementTypesContainerDictionary.Add(at.Key, container);

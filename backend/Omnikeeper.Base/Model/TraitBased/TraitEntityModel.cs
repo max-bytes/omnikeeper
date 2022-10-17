@@ -137,18 +137,21 @@ namespace Omnikeeper.Base.Model.TraitBased
         // NOTE: the ci MUST exist already
         public async Task<(EffectiveTrait et, bool changed)> InsertOrUpdate(Guid ciid, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
+            ISet<string>? relevantAttributes, // null if all are relevant
             ISet<string>? relevantOutgoingPredicateIDs, ISet<string>? relevantIncomingPredicateIDs, // null if all are relevant
             string? ciName, LayerSet layerSet, string writeLayer, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            var relevantAttributes = relevantAttributesForTrait;
+            var finalRelevantAttributes = relevantAttributesForTrait;
+            if (relevantAttributes != null)
+                finalRelevantAttributes = finalRelevantAttributes.Intersect(relevantAttributes).ToHashSet();
 
             if (ciName != null)
             {
-                relevantAttributes = relevantAttributes.Concat(ICIModel.NameAttribute).ToHashSet();
+                finalRelevantAttributes = finalRelevantAttributes.Concat(ICIModel.NameAttribute).ToHashSet();
                 attributeFragments = attributeFragments.Concat(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, ICIModel.NameAttribute, new AttributeScalarValueText(ciName)));
             }
 
-            var changed = await WriteAttributes(attributeFragments, new HashSet<Guid>() { ciid }, relevantAttributes, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
+            var changed = await WriteAttributes(attributeFragments, new HashSet<Guid>() { ciid }, finalRelevantAttributes, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
 
             IEnumerable<TraitRelation> relevantTraitRelations = trait.OptionalRelations;
             if (relevantIncomingPredicateIDs != null)

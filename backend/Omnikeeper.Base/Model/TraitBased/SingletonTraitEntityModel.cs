@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -34,7 +33,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var attributeFragments = Entities2Fragments(tuples);
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(tuples);
             // TODO: we should specify the actually relevant trait relations (through their predicateIDs, not ALL relations)
-            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, null, null, ciName, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
+            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, null, null, null, ciName, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
 
             var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, attributeFieldInfos, relationFieldInfos);
 

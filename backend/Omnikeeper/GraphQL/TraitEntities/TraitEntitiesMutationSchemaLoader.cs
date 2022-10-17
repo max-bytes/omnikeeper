@@ -44,19 +44,22 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
 
         // NOTE: expects the CI to exist already
+        // attributeValue null means delete attribute
         private async Task<EffectiveTrait> Upsert(Guid finalCIID,
-            (TraitAttribute attribute, IAttributeValue value)[] attributeValues, 
+            (TraitAttribute attribute, IAttributeValue? value)[] attributeValues, 
             (TraitRelation traitRelation, Guid[] relatedCIIDs)[] relationValues,
             string? ciName, IModelContext trans, IChangesetProxy changeset, TraitEntityModel traitEntityModel, LayerSet layerset, string writeLayerID)
         {
-            var attributeFragments = attributeValues.Select(i => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(finalCIID, i.attribute.AttributeTemplate.Name, i.value));
+            var relevantAttributes = attributeValues.Select(i => i.attribute.AttributeTemplate.Name).ToHashSet();
+            var attributeFragments = attributeValues.Where(i => i.value != null).Select(i => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(finalCIID, i.attribute.AttributeTemplate.Name, i.value!));
             var incomingRelationValues = relationValues.Where(rv => !rv.traitRelation.RelationTemplate.DirectionForward).ToList();
             var outgoingRelationValues = relationValues.Where(rv => rv.traitRelation.RelationTemplate.DirectionForward).ToList();
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations = incomingRelationValues.Select(rv => (finalCIID, rv.traitRelation.RelationTemplate.PredicateID, rv.relatedCIIDs)).ToList();
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations = outgoingRelationValues.Select(rv => (finalCIID, rv.traitRelation.RelationTemplate.PredicateID, rv.relatedCIIDs)).ToList();
             ISet<string>? relevantIncomingPredicateIDs = incomingRelationValues.Select(rv => rv.traitRelation.RelationTemplate.PredicateID).ToHashSet();
             ISet<string>? relevantOutgoingPredicateIDs = outgoingRelationValues.Select(rv => rv.traitRelation.RelationTemplate.PredicateID).ToHashSet();
-            var t = await traitEntityModel.InsertOrUpdate(finalCIID, attributeFragments, outgoingRelations, incomingRelations, relevantOutgoingPredicateIDs, relevantIncomingPredicateIDs, ciName, layerset, writeLayerID, changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+
+            var t = await traitEntityModel.InsertOrUpdate(finalCIID, attributeFragments, outgoingRelations, incomingRelations, relevantAttributes, relevantOutgoingPredicateIDs, relevantIncomingPredicateIDs, ciName, layerset, writeLayerID, changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return t.et;
         }
 
@@ -70,7 +73,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     .Arguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpsertInput)) { Name = "input" },
+                        new QueryArgument(new NonNullGraphType(elementTypeContainer.UpdateInput)) { Name = "input" },
                         new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "ciid" },
                         new QueryArgument<StringGraphType> { Name = "ciName" })
                     .ResolveAsync(async context =>
@@ -87,7 +90,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
 
-                        var input = context.GetArgument<UpsertInput>("input");
+                        var input = context.GetArgument<UpdateInput>("input");
 
                         // check if entity actually exists at that CI, error if not
                         var existingEntity = await elementTypeContainer.TraitEntityModel.GetSingleByCIID(ciid, layerset, trans, timeThreshold);

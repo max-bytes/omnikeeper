@@ -194,7 +194,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(tuples);
             string? ciName = null;
             // TODO: we should specify the actually relevant trait relations (through their predicateIDs, not ALL relations)
-            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, null, null, ciName, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
+            var (et, changed) = await traitEntityModel.InsertOrUpdate(ciid, attributeFragments, outgoingRelations, incomingRelations, null, null, null, ciName, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
 
             var dc = GenericTraitEntityHelper.EffectiveTrait2Object<T>(et, attributeFieldInfos, relationFieldInfos);
 
