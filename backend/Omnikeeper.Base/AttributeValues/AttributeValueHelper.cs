@@ -24,9 +24,9 @@ namespace Omnikeeper.Base.AttributeValues
                             else if (o is string str)
                                 return new AttributeScalarValueText(str, false);
                             else if (o is string[] strArray)
-                            {
                                 return AttributeArrayValueText.BuildFromString(strArray, false);
-                            }
+                            else if (o is object[] objArray)
+                                return AttributeArrayValueText.BuildFromString(Array.ConvertAll(objArray, x => (string)x), false);
                             else
                                 throw new Exception($"Expected object {o} to be string, found {o.GetType().Name}");
                         }
@@ -37,9 +37,9 @@ namespace Omnikeeper.Base.AttributeValues
                             else if (o is string str)
                                 return new AttributeScalarValueText(str, true);
                             else if (o is string[] strArray)
-                            {
                                 return AttributeArrayValueText.BuildFromString(strArray, true);
-                            }
+                            else if (o is object[] objArray)
+                                return AttributeArrayValueText.BuildFromString(Array.ConvertAll(objArray, x => (string)x), true);
                             else
                                 throw new Exception($"Expected object {o} to be string, found {o.GetType().Name}");
                         }
@@ -51,6 +51,8 @@ namespace Omnikeeper.Base.AttributeValues
                                 return new AttributeScalarValueInteger(lo);
                             else if (o is long[] loa)
                                 return AttributeArrayValueInteger.Build(loa);
+                            else if (o is object[] ooa)
+                                return AttributeArrayValueInteger.Build(Array.ConvertAll(ooa, x => (long)x));
                             else
                                 throw new Exception($"Expected object {o} to be long, found {o.GetType().Name}");
                         }
@@ -60,6 +62,8 @@ namespace Omnikeeper.Base.AttributeValues
                                 throw new Exception($"Expected object {o} to be double, found null");
                             else if (o is double[] da)
                                 return AttributeArrayValueDouble.Build(da);
+                            else if (o is object[] ooa)
+                                return AttributeArrayValueDouble.Build(Array.ConvertAll(ooa, x => (double)x));
                             else if (o is double d)
                                 return new AttributeScalarValueDouble(d);
                             else
@@ -71,6 +75,8 @@ namespace Omnikeeper.Base.AttributeValues
                                 throw new Exception($"Expected object {o} to be boolean, found null");
                             else if (o is bool[] da)
                                 return AttributeArrayValueBoolean.Build(da);
+                            else if (o is object[] ooa)
+                                return AttributeArrayValueBoolean.Build(Array.ConvertAll(ooa, x => (bool)x));
                             else if (o is bool d)
                                 return new AttributeScalarValueBoolean(d);
                             else
@@ -82,6 +88,8 @@ namespace Omnikeeper.Base.AttributeValues
                                 throw new Exception($"Expected object {o} to be DateTimeWithOffset, found null");
                             else if (o is DateTimeOffset[] da)
                                 return AttributeArrayValueDateTimeWithOffset.Build(da);
+                            else if (o is object[] ooa)
+                                return AttributeArrayValueDateTimeWithOffset.Build(Array.ConvertAll(ooa, x => (DateTimeOffset)x));
                             else if (o is DateTimeOffset d)
                                 return new AttributeScalarValueDateTimeWithOffset(d);
                             else
@@ -127,6 +135,8 @@ namespace Omnikeeper.Base.AttributeValues
                                 throw new Exception($"Expected object {o} to be string, found null");
                             else if (o is string[] oa)
                                 return AttributeArrayValueYAML.BuildFromString(oa);
+                            else if (o is object[] ooa)
+                                return AttributeArrayValueYAML.BuildFromString(Array.ConvertAll(ooa, x => (string)x));
                             else if (o is string t)
                                 return AttributeScalarValueYAML.BuildFromString(t);
                             else
