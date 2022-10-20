@@ -46,14 +46,12 @@ namespace Omnikeeper.Base.Model
     public class IssuePersister : IIssuePersister
     {
         private readonly GenericTraitEntityModel<Issue, (string type, string context, string group, string id)> model;
-        private readonly IAttributeModel attributeModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IDataLoaderService dataLoaderService;
 
-        public IssuePersister(GenericTraitEntityModel<Issue, (string type, string context, string group, string id)> model, IAttributeModel attributeModel, IMetaConfigurationModel metaConfigurationModel, IDataLoaderService dataLoaderService)
+        public IssuePersister(GenericTraitEntityModel<Issue, (string type, string context, string group, string id)> model, IMetaConfigurationModel metaConfigurationModel, IDataLoaderService dataLoaderService)
         {
             this.model = model;
-            this.attributeModel = attributeModel;
             this.metaConfigurationModel = metaConfigurationModel;
             this.dataLoaderService = dataLoaderService;
         }
