@@ -58,7 +58,48 @@ TODO
 
 ### Working with trait entities
 
-The main interface for working with trait entities is through the GraphQL interface. omnikeeper creates the relevant GraphQL types for each trait dynamically. This allows for structured querying of this data. As an example, consider the following GraphQL query for fetching all "host" trait entities (continuing the example from above):
+The main interface for working with trait entities is through the GraphQL interface. omnikeeper creates the relevant GraphQL types for each trait dynamically. This allows for structured querying of this data. As an example, consider the following GraphQL mutation which creates a new trait called "host":
+
+```graphql
+mutation {
+  manage_upsertRecursiveTrait(
+    trait: {
+      id: "host"
+      requiredAttributes: [
+        {
+          identifier:"hostname",
+          template: {
+            name:"hostname",
+            type:TEXT,
+            isArray:false,
+            isID:false,
+            valueConstraints:[]
+          }
+        }
+      ]
+      optionalAttributes: [
+        {
+          identifier:"os",
+          template: {
+            name:"host.os",
+            type:TEXT,
+            isArray:false,
+            isID:false,
+            valueConstraints:[]
+          }
+        }
+      ]
+      optionalRelations: []
+      requiredTraits: []
+    }
+  ) {
+    id
+  }
+}
+```
+
+Then consider the following GraphQL query for fetching all "host" trait entities (continuing the example from above):
+
 ```graphql
 query {
   traitEntities(layers: ["layer_1", "layer_2"]) {
