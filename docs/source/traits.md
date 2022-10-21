@@ -52,7 +52,7 @@ Trait entities are the reason why optional attributes/relations are useful. Whil
 
 ![Example for how trait entities are constructed](assets/drawio/trait-entities-applied.svg)
 
-### Trait Entity IDs
+### Trait Entity Data IDs (deprecated)
 
 TODO
 
@@ -104,14 +104,18 @@ The following diagram shows the structures that data passes through from the cor
   * queries:
     * `traitEntities.*.all`: gets all trait entities
     * `traitEntities.*.filtered`: gets trait entities meeting filter criteria
+    * `traitEntities.*.filteredSingle`: gets a single (at most one) trait entity meeting filter criteria
     * `traitEntities.*.byCIID`: gets a single trait entity by its CIID
-    * `traitEntities.*.byDataID`: gets a single trait entity by its data ID
+    * `traitEntities.*.byDataID` (deprecated): gets a single trait entity by its data ID
   * mutations:
     * `insertNew_*`: inserts a brand-new entity and CI. Will error if there is already an entity with the same data ID
     * `updateByCIID_*`: updates a trait entity identified by its CIID
+    * `updateSingleByFilter_*`: updates a single trait entity identified by a filter
+    * `upsertSingleByFilter_*`: upserts a single trait entity identified by a filter
+    * `deleteSingleByFilter_*`: deletes a single trait entity identified by a filter
     * `deleteByCIID_*`: deletes a trait entity identified by its CIID
-    * `upsertByDataID_*`: updates a trait entity identified by its data ID
-    * `deleteByDataID_*`: deletes a trait entity identified by its data ID
+    * `upsertByDataID_*` (deprecated, use `upsertSingleByFilter_*` instead): updates a trait entity identified by its data ID
+    * `deleteByDataID_*` (deprecated, use `deleteSingleByFilter_*` instead): deletes a trait entity identified by its data ID
   * mutations for relations (`$` should be substituted by the corresponding trait relation identifier):
     * `setRelationsByCIID_*_$`: completely replace the relations for a trait entity's trait relation
     * `addRelationsByCIID_*_$`: add a list of related CIs to an trait entity's trait relation
@@ -123,6 +127,7 @@ The following diagram shows the structures that data passes through from the cor
 * When deleting entities, its relations are deleted as well. For example, deleting an entity will also delete the relations between it and other entities/CIs. However, cascading deletes need to be done manually.
 
 ## trait-hints in trait relations
+
 TODO
 
 ## Changes to traits
@@ -150,14 +155,13 @@ The biggest difference between typical tagging systems and omnikeeper's tag syst
 TODO: Write about changes in data structures and requirements -> traits are flexible enough.
 
 ### Traits vs. layersets
-Traits and layers (or layersets) are two distinct, yet strongly related concepts. When talking about whether CIs have a trait, the question is always only answerable when a layerset is chosen as well. A CI might have a trait in one layerset, but not in another. 
+Traits and layers (or layersets) are two distinct, yet strongly related concepts. When talking about whether CIs have a trait, the question is always only answerable when a layerset is chosen as well. A CI might have a trait in one layerset, but not in another.
 
 ### Traits vs. blueprints/templates
-TODO: A trait is in a way a blueprint or template for CIs. 
+TODO: A trait is in a way a blueprint or template for CIs.
 
 ## Trait sources
 Traits can be defined and come from different sources.
 1. core traits: traits defined by the omnikeeper core itself. Core traits are read only. They are used by omnikeeper itself to define its own configuration items, such auth roles, predicates or even trait requirements themselves.
 2. plugin traits: every omnikeeper plugin has the ability to define its own traits. Their primary purpose is to be used by the plugins themselves, but they can also be used by other parts of omnikeeper.
 3. configured traits: additional traits may also be configured, either manually via the technical frontend UI or via API.
-
