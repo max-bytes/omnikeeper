@@ -63,7 +63,10 @@ namespace Omnikeeper.Startup
         public void ConfigureServices(IServiceCollection services)
         {
             var csOmnikeeper = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
-            services.AddHealthChecks().AddNpgSql(csOmnikeeper);
+            services.AddHealthChecks()
+                .AddNpgSql(csOmnikeeper)
+                .AddTypeActivatedCheck<LocalQuartzHealthCheck>("local-quartz-scheduler")
+                .AddTypeActivatedCheck<DistributedQuartzHealthCheck>("distributed-quartz-scheduler");
 
             services.AddResponseCompression(options =>
             {
