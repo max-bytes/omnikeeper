@@ -20,7 +20,7 @@ namespace Tests.Integration
 
             var dbcb = new DBConnectionBuilder();
             conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
-            modelContextBuilder = new ModelContextBuilder(conn, NullLogger<IModelContext>.Instance);
+            modelContextBuilder = new ModelContextBuilder(conn);
         }
 
         [TearDown]

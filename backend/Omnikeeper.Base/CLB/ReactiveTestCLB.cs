@@ -1,57 +1,103 @@
 ﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Incremental;
-using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Model.TraitBased;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Omnikeeper.Base.CLB
 {
-    public class ReactiveTestCLB : CLBBase
+    public class ReactiveTestCLB : IReactiveCLB
     {
-        private readonly ICIModel ciModel;
-        private readonly IAttributeModel attributeModel;
-        private readonly ITraitsProvider traitsProvider;
-        private readonly IEffectiveTraitModel effectiveTraitModel;
-        private readonly IChangesetModel changesetModel;
+        private readonly ReactiveRunService reactiveRunService;
+        private readonly ReactiveGenericTraitEntityModel<TargetHost> targetHostModel;
 
-        private static IncrementalStore store = new IncrementalStore(); // TODO: make cluster-aware or pin job to node
-
-        public ReactiveTestCLB(ICIModel ciModel, IAttributeModel attributeModel,
-            ITraitsProvider traitsProvider, IEffectiveTraitModel effectiveTraitModel, IChangesetModel changesetModel)
+        public ReactiveTestCLB(ReactiveRunService reactiveRunService, GenericTraitEntityModel<TargetHost> targetHostModel)
         {
-            this.ciModel = ciModel;
-            this.attributeModel = attributeModel;
-            this.traitsProvider = traitsProvider;
-            this.effectiveTraitModel = effectiveTraitModel;
-            this.changesetModel = changesetModel;
+            this.reactiveRunService = reactiveRunService;
+            this.targetHostModel = new ReactiveGenericTraitEntityModel<TargetHost>(targetHostModel);
         }
-        public override ISet<string> GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger) => new HashSet<string>() { "tsa_cmdb" };
 
-        public override async Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, 
-            JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger, IIssueAccumulator issueAccumulator)
+        public string Name => GetType().Name!;
+
+        public ISet<string> GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger) => new HashSet<string>() { "tmp" };
+
+        public IObservable<(bool result, ReactiveRunData runData)> BuildPipeline(IObservable<ReactiveRunData> run, ILogger logger)
         {
-            var incrementalCISelectionModel = new IncrementalCISelectionModel(changesetModel);
-            var incrementalCIModel = new IncrementalCIModel(ciModel, attributeModel, store);
-            var incrementalEffectiveTraitModel = new IncrementalEffectiveTraitModel(effectiveTraitModel, store);
-            var incrementalHosts = new IncrementalGenericTraitEntity<TargetHost>(store);
+            var changedCIIDs = reactiveRunService.ChangedCIIDsObs(run);
+            var changedCIIDs2 = reactiveRunService.ChangedCIIDsObs(run); // second time, testing model semaphore
 
-            var timeThreshold = changesetProxy.TimeThreshold;
+            //changedCIIDs.Zip(changedCIIDs2).Do(t =>
+            //{
+            //    var ciids1 = t.First;
+            //    var ciids2 = t.Second;
+            //    logger.LogInformation(ciids1.ToString());
+            //    logger.LogInformation(ciids2.ToString());
+            //});
 
-            var cmdbHostTrait = await traitsProvider.GetActiveTrait("tsa_cmdb.host", trans, timeThreshold);
-            if (cmdbHostTrait == null) throw new Exception();
-            var ciSelection = await incrementalCISelectionModel.InitOrUpdate(unprocessedChangesets, new LayerSet("tsa_cmdb"), trans);
-            var cis = await incrementalCIModel.InitOrUpdate(ciSelection, new LayerSet("tsa_cmdb"), AllAttributeSelection.Instance, "foo", trans, timeThreshold);
-            var ets = await incrementalEffectiveTraitModel.InitOrUpdate(cis, cmdbHostTrait, new LayerSet("tsa_cmdb"), "foo", trans, timeThreshold);
-            var entities = incrementalHosts.InitOrUpdate(ets, new LayerSet("tsa_cmdb"), "foo", trans, timeThreshold);
+            var runTimes = run.Scan(new List<TimeThreshold>(), (list, d) =>
+            {
+                list.Add(d.ChangesetProxy.TimeThreshold);
+                return list;
+            });
 
-            logger.LogInformation($"#entities: {entities.All.Count}, #changed: {entities.Updated.Count}, #removed: {entities.Removed.Count()}");
+            var newAndChangedTargetHosts = targetHostModel.GetNewAndChangedByCIID(changedCIIDs.Zip(run), new LayerSet("tmp"));
 
-            return true;
+            // TODO: move into method
+            var targetHosts = newAndChangedTargetHosts.Scan((IDictionary<Guid, TargetHost>)new Dictionary<Guid, TargetHost>(), (dict, tuple) =>
+            {
+                var (newAndChanged, ciSelection) = tuple;
+                switch (ciSelection)
+                {
+                    case AllCIIDsSelection _:
+                        return newAndChanged;
+                    case NoCIIDsSelection _:
+                        return dict;
+                    case SpecificCIIDsSelection s:
+                        foreach (var ciid in s.CIIDs)
+                            if (newAndChanged.TryGetValue(ciid, out var entity))
+                                dict[ciid] = entity;
+                            else
+                                dict.Remove(ciid);
+                        return dict;
+                    case AllCIIDsExceptSelection e:
+                        throw new NotImplementedException(); // TODO: think about and implement
+                    default:
+                        throw new Exception("Unknown CIIDSelection encountered");
+                }
+            });
+
+            //throw new Exception("!"); // TODO: testing
+
+            var tmp = changedCIIDs.Zip(changedCIIDs2, runTimes, targetHosts, run);
+
+            var final = tmp.Select(t =>
+            {
+                logger.LogInformation($"Starting inner; thread: {Thread.CurrentThread.ManagedThreadId}");
+                var ciids1 = t.First;
+                var ciids2 = t.Second;
+                var runTimes = t.Third;
+                var targetHosts = t.Fourth;
+                var runData = t.Fifth;
+                logger.LogInformation(ciids1.ToString());
+                logger.LogInformation(ciids2.ToString());
+                logger.LogInformation(string.Join(",", runTimes.Select(l => l.ToString())));
+                logger.LogInformation(targetHosts.Count.ToString());
+                logger.LogInformation(string.Join(",", targetHosts.Select(t => t.Value.ID)));
+                //Thread.Sleep(10000);
+                logger.LogInformation($"Finished inner; thread: {Thread.CurrentThread.ManagedThreadId}");
+
+                //throw new Exception("!"); // TODO: testing
+
+                return (result: true, runData: runData);
+            });
+            return final;
         }
     }
 

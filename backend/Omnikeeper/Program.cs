@@ -11,6 +11,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Controllers.OData;
 using Omnikeeper.GraphQL;
+using Omnikeeper.Runners.Reactive;
 using Omnikeeper.Service;
 using Omnikeeper.Startup;
 using Serilog;
@@ -54,6 +55,7 @@ namespace Omnikeeper
                     .ConfigureServices(services =>
                     {
                         services.AddHostedService<QuartzJobStarter>();
+                        services.AddHostedService<ReactiveHostedService>();
                     })
                     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                     .Build();

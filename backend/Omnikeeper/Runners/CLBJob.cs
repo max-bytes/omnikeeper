@@ -131,13 +131,15 @@ namespace Omnikeeper.Runners
         private readonly IIssuePersister issuePersister;
         private readonly ICalculateUnprocessedChangesetsService calculateUnprocessedChangesetsService;
         private readonly ILoggerFactory loggerFactory;
-        private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
+        private readonly IDictionary<string, IComputeLayerBrain> existingCLBs;
+        private readonly ISet<string> existingRCLBs;
 
-        public CLBSingleJob(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, ILifetimeScope lifetimeScope, IChangesetModel changesetModel, ILogger<CLBSingleJob> genericLogger,
+        public CLBSingleJob(IEnumerable<IComputeLayerBrain> existingCLBs, IEnumerable<IReactiveCLB> existingRCLBs, ILifetimeScope lifetimeScope, IChangesetModel changesetModel, ILogger<CLBSingleJob> genericLogger,
             ScopedLifetimeAccessor scopedLifetimeAccessor, IModelContextBuilder modelContextBuilder, ILoggerFactory loggerFactory, CLBProcessingCache clbProcessedChangesetsCache,
              IIssuePersister issuePersister, ICalculateUnprocessedChangesetsService calculateUnprocessedChangesetsService)
         {
-            this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
+            this.existingCLBs = existingCLBs.ToDictionary(l => l.Name);
+            this.existingRCLBs = existingRCLBs.Select(l => l.Name).ToHashSet();
             this.lifetimeScope = lifetimeScope;
             this.changesetModel = changesetModel;
             this.genericLogger = genericLogger;
@@ -193,9 +195,10 @@ namespace Omnikeeper.Runners
 
             var clLogger = loggerFactory.CreateLogger($"CLB_{clConfig_ID}@{layerID}");
 
-            if (!existingComputeLayerBrains.TryGetValue(clConfig_CLBrainReference, out var clb))
+            if (!existingCLBs.TryGetValue(clConfig_CLBrainReference, out var clb))
             {
-                clLogger.LogError($"Could not find compute layer brain with name {clConfig_CLBrainReference}");
+                if (!existingRCLBs.Contains(clConfig_CLBrainReference)) // NOTE: we test whether the referenced CLB is a reactive CLB and if so, ignore it
+                    clLogger.LogError($"Could not find compute layer brain with name {clConfig_CLBrainReference}");
                 return;
             }
 

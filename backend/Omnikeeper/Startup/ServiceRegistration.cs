@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
+using Omnikeeper.Authz;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.GraphQL;
@@ -39,8 +41,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
-using Omnikeeper.Base.Authz;
-using Omnikeeper.Authz;
 
 namespace Omnikeeper.Startup
 {
@@ -219,6 +219,8 @@ namespace Omnikeeper.Startup
             builder.RegisterType<AuthzFilterManager>().As<IAuthzFilterManager>().SingleInstance();
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IAuthzFilterForMutation>().As<IAuthzFilterForMutation>().SingleInstance();
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IAuthzFilterForQuery>().As<IAuthzFilterForQuery>().SingleInstance();
+
+            builder.RegisterType<ReactiveRunService>().SingleInstance();
         }
 
         public static void RegisterLogging(ContainerBuilder builder)
@@ -384,7 +386,6 @@ namespace Omnikeeper.Startup
                 .Keyed<IScheduler>("localScheduler")
                 .SingleInstance();
 
-
             builder.Register<ISchedulerFactory>(c =>
             {
                 var autofacSchedulerFactory = new AutofacSchedulerFactory(distributedSchedulerConfig, c.Resolve<AutofacJobFactory>());
@@ -422,7 +423,7 @@ namespace Omnikeeper.Startup
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IValidator>().AsImplementedInterfaces().SingleInstance();
 
             // TODO: remove
-            builder.RegisterType<ReactiveTestCLB>().As<IComputeLayerBrain>().SingleInstance();
+            builder.RegisterType<ReactiveTestCLB>().As<IReactiveCLB>().SingleInstance();
         }
     }
 }
