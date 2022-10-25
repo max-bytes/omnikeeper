@@ -1,46 +1,45 @@
-﻿using Microsoft.Extensions.Logging;
-using Npgsql;
+﻿using Npgsql;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Utils.ModelContext
 {
-    public class ModelContextBuilder : IModelContextBuilder
+    public class ModelContextBuilder : IModelContextBuilder//, IDisposable
     {
         private readonly NpgsqlConnection npgsqlConnection;
-        private readonly ILogger<IModelContext> logger;
 
-        public ModelContextBuilder(NpgsqlConnection npgsqlConnection, ILogger<IModelContext> logger)
+        public ModelContextBuilder(NpgsqlConnection npgsqlConnection)
         {
             this.npgsqlConnection = npgsqlConnection;
-            this.logger = logger;
         }
 
         public IModelContext BuildDeferred()
         {
             var npgsqlTransaction = npgsqlConnection.BeginTransaction();
-            return new ModelContextDeferredMode(npgsqlTransaction, logger);
+            return new ModelContextDeferredMode(npgsqlTransaction);
         }
         public IModelContext BuildDeferred(IsolationLevel isolationLevel)
         {
             var npgsqlTransaction = npgsqlConnection.BeginTransaction(isolationLevel);
-            return new ModelContextDeferredMode(npgsqlTransaction, logger);
+            return new ModelContextDeferredMode(npgsqlTransaction);
         }
 
         public IModelContext BuildImmediate()
         {
-            return new ModelContextImmediateMode(npgsqlConnection, logger);
+            return new ModelContextImmediateMode(npgsqlConnection);
         }
     }
 
     public class ModelContextImmediateMode : IModelContext
     {
         private readonly NpgsqlConnection conn;
-        private readonly ILogger<IModelContext> logger;
+        private readonly SemaphoreSlim sem;
 
-        public ModelContextImmediateMode(NpgsqlConnection conn, ILogger<IModelContext> logger)
+        public ModelContextImmediateMode(NpgsqlConnection conn)
         {
             this.conn = conn;
-            this.logger = logger;
+            sem = new SemaphoreSlim(1, 1);
         }
 
         public IDbConnection Connection => conn;
@@ -61,17 +60,23 @@ namespace Omnikeeper.Base.Utils.ModelContext
         {
             // NO-OP
         }
+
+        public async Task<WaitToken> WaitAsync()
+        {
+            await sem.WaitAsync();
+            return new WaitToken(() => sem.Release());
+        }
     }
 
 
     public class ModelContextDeferredMode : IModelContext
     {
-        private readonly ILogger<IModelContext> logger;
+        private readonly SemaphoreSlim sem;
 
-        public ModelContextDeferredMode(NpgsqlTransaction dbTransaction, ILogger<IModelContext> logger)
+        public ModelContextDeferredMode(NpgsqlTransaction dbTransaction)
         {
             DBTransaction = dbTransaction;
-            this.logger = logger;
+            sem = new SemaphoreSlim(1, 1);
         }
 
         public IDbConnection? Connection => DBTransaction.Connection;
@@ -81,7 +86,7 @@ namespace Omnikeeper.Base.Utils.ModelContext
 
         public void Commit()
         {
-            // TODO: need a distributed lock here
+            // TODO: need a lock here?
             DBTransaction.Commit();
         }
 
@@ -93,6 +98,13 @@ namespace Omnikeeper.Base.Utils.ModelContext
         public void Rollback()
         {
             DBTransaction.Rollback();
+        }
+
+
+        public async Task<WaitToken> WaitAsync()
+        {
+            await sem.WaitAsync();
+            return new WaitToken(() => sem.Release());
         }
     }
 }

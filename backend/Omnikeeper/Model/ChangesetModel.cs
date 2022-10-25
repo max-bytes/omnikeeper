@@ -23,6 +23,8 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("origin_type", dataOrigin.Type);
             command.Parameters.AddWithValue("timestamp", timeThreshold.Time.ToUniversalTime());
+
+            using var _ = await trans.WaitAsync();
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var timestampR = reader.GetDateTime(0);
@@ -36,6 +38,8 @@ namespace Omnikeeper.Model
 
             command.Parameters.AddWithValue("id", id);
             command.Prepare();
+
+            using var _ = await trans.WaitAsync();
             using var dr = await command.ExecuteReaderAsync();
 
             if (!await dr.ReadAsync())
@@ -57,8 +61,9 @@ namespace Omnikeeper.Model
 
             command.Parameters.AddWithValue("ids", ids.ToArray());
             command.Prepare();
-            using var dr = await command.ExecuteReaderAsync();
 
+            using var _ = await trans.WaitAsync();
+            using var dr = await command.ExecuteReaderAsync();
             var ret = new List<Changeset>();
             while (await dr.ReadAsync())
             {
@@ -85,6 +90,8 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("changeset_id", changesetID);
             command.Prepare();
+
+            using var _ = await trans.WaitAsync();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new HashSet<Guid>();
@@ -137,6 +144,8 @@ namespace Omnikeeper.Model
             if (limit.HasValue)
                 command.Parameters.AddWithValue("limit", limit.Value);
             command.Prepare();
+
+            using var _ = await trans.WaitAsync();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();
@@ -170,6 +179,8 @@ namespace Omnikeeper.Model
             if (limit.HasValue)
                 command.Parameters.AddWithValue("limit", limit.Value);
             command.Prepare();
+
+            using var _ = await trans.WaitAsync();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();
@@ -356,6 +367,8 @@ namespace Omnikeeper.Model
                 command.Parameters.Add(p);
             foreach (var p in PredicateSelection2Parameters(predicateSelection))
                 command.Parameters.Add(p);
+
+            using var _ = await trans.WaitAsync();
             using (var dr = await command.ExecuteReaderAsync())
             {
                 while (await dr.ReadAsync())
@@ -382,6 +395,8 @@ namespace Omnikeeper.Model
         {
             Changeset? latestAttributeChangeset = null;
             Changeset? latestRelationChangeset = null;
+
+            using var _ = await trans.WaitAsync();
 
             // TODO: possible to merge into one query?
 
@@ -462,6 +477,8 @@ namespace Omnikeeper.Model
             emptyChangesetsCommand.Parameters.AddWithValue("limit", limit);
             emptyChangesetsCommand.Prepare();
             var emptyChangesets = new List<Guid>();
+
+            using var _ = await trans.WaitAsync();
             using (var dr = await emptyChangesetsCommand.ExecuteReaderAsync())
             {
                 while (await dr.ReadAsync())
@@ -520,8 +537,8 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("now", now.Time.ToUniversalTime());
             command.Prepare();
 
+            using var _ = await trans.WaitAsync();
             var numArchived = await command.ExecuteNonQueryAsync();
-
             return numArchived;
         }
 
@@ -529,6 +546,7 @@ namespace Omnikeeper.Model
         {
             using var command = new NpgsqlCommand(@"SELECT count(*) FROM changeset c", trans.DBConnection, trans.DBTransaction);
             command.Prepare();
+            using var _ = await trans.WaitAsync();
             var ret = (long?)await command.ExecuteScalarAsync();
             return ret!.Value;
         }
@@ -538,6 +556,7 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(@"SELECT count(*) FROM changeset c WHERE layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Prepare();
+            using var _ = await trans.WaitAsync();
             var ret = (long?)await command.ExecuteScalarAsync();
             return ret!.Value;
         }
@@ -552,6 +571,7 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("layer_ids", layerIDs);
             command.Parameters.AddWithValue("threshold", timeThreshold.Time.ToUniversalTime());
             command.Prepare();
+            using var _ = await trans.WaitAsync();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();
