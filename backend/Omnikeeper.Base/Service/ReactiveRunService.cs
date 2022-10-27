@@ -78,13 +78,41 @@ namespace Omnikeeper.Base.Service
             this.model = model;
         }
 
-        public IObservable<(IDictionary<Guid, T>, ICIIDSelection)> GetNewAndChangedByCIID(IObservable<(ICIIDSelection, ReactiveRunData)> changedCIIDs, LayerSet layerSet)
+        public IObservable<(IDictionary<Guid, T> newAndChanged, ICIIDSelection ciSelection)> GetNewAndChangedByCIID(IObservable<(ICIIDSelection, ReactiveRunData)> changedCIIDs, LayerSet layerSet)
         {
             return changedCIIDs.Select(async tuple =>
             {
                 var (ciSelection, runData) = tuple;
                 return (await model.GetByCIID(ciSelection, layerSet, runData.Trans, runData.ChangesetProxy.TimeThreshold), ciSelection);
             }).Concat();
+        }
+
+        public IObservable<IDictionary<Guid, T>> GetAllByCIID(IObservable<(IDictionary<Guid, T>, ICIIDSelection)> newAndChangedTargetHosts)
+        {
+            return newAndChangedTargetHosts.Scan((IDictionary<Guid, T>)new Dictionary<Guid, T>(), (dict, tuple) =>
+            {
+                var (newAndChanged, ciSelection) = tuple;
+                switch (ciSelection)
+                {
+                    case AllCIIDsSelection _:
+                        return newAndChanged;
+                    case NoCIIDsSelection _:
+                        return dict;
+                    case SpecificCIIDsSelection s:
+                        foreach (var ciid in s.CIIDs)
+                        {
+                            if (newAndChanged.TryGetValue(ciid, out var entity))
+                                dict[ciid] = entity;
+                            else
+                                dict.Remove(ciid);
+                        }
+                        return dict;
+                    case AllCIIDsExceptSelection e:
+                        throw new NotImplementedException(); // TODO: think about and implement
+                    default:
+                        throw new Exception("Unknown CIIDSelection encountered");
+                }
+            });
         }
     }
 }

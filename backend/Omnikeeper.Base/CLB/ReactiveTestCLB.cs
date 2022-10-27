@@ -4,6 +4,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,20 +17,27 @@ namespace Omnikeeper.Base.CLB
     public class ReactiveTestCLB : IReactiveCLB
     {
         private readonly ReactiveRunService reactiveRunService;
+        private readonly IAttributeModel attributeModel;
+        private readonly ICIModel ciModel;
         private readonly ReactiveGenericTraitEntityModel<TargetHost> targetHostModel;
 
-        public ReactiveTestCLB(ReactiveRunService reactiveRunService, GenericTraitEntityModel<TargetHost> targetHostModel)
+        public ReactiveTestCLB(ReactiveRunService reactiveRunService, GenericTraitEntityModel<TargetHost> targetHostModel, IAttributeModel attributeModel, ICIModel ciModel)
         {
             this.reactiveRunService = reactiveRunService;
+            this.attributeModel = attributeModel;
+            this.ciModel = ciModel;
             this.targetHostModel = new ReactiveGenericTraitEntityModel<TargetHost>(targetHostModel);
         }
 
         public string Name => GetType().Name!;
 
-        public ISet<string> GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger) => new HashSet<string>() { "tmp" };
+        public ISet<string> GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger) => new HashSet<string>() { "tsa_cmdb" };
 
         public IObservable<(bool result, ReactiveRunData runData)> BuildPipeline(IObservable<ReactiveRunData> run, ILogger logger)
         {
+            var sourceLayerIDCMDB = "tsa_cmdb"; // TODO
+            var targetLayerID = "tmp"; // TODO
+
             var changedCIIDs = reactiveRunService.ChangedCIIDsObs(run);
             var changedCIIDs2 = reactiveRunService.ChangedCIIDsObs(run); // second time, testing model semaphore
 
@@ -41,62 +49,53 @@ namespace Omnikeeper.Base.CLB
             //    logger.LogInformation(ciids2.ToString());
             //});
 
-            var runTimes = run.Scan(new List<TimeThreshold>(), (list, d) =>
-            {
-                list.Add(d.ChangesetProxy.TimeThreshold);
-                return list;
-            });
+            //var runTimes = run.Scan(new List<TimeThreshold>(), (list, d) =>
+            //{
+            //    list.Add(d.ChangesetProxy.TimeThreshold);
+            //    return list;
+            //});
 
-            var newAndChangedTargetHosts = targetHostModel.GetNewAndChangedByCIID(changedCIIDs.Zip(run), new LayerSet("tmp"));
+            var newAndChangedTargetHosts = targetHostModel.GetNewAndChangedByCIID(changedCIIDs.Zip(run), new LayerSet(sourceLayerIDCMDB));
 
-            // TODO: move into method
-            var targetHosts = newAndChangedTargetHosts.Scan((IDictionary<Guid, TargetHost>)new Dictionary<Guid, TargetHost>(), (dict, tuple) =>
-            {
-                var (newAndChanged, ciSelection) = tuple;
-                switch (ciSelection)
-                {
-                    case AllCIIDsSelection _:
-                        return newAndChanged;
-                    case NoCIIDsSelection _:
-                        return dict;
-                    case SpecificCIIDsSelection s:
-                        foreach (var ciid in s.CIIDs)
-                            if (newAndChanged.TryGetValue(ciid, out var entity))
-                                dict[ciid] = entity;
-                            else
-                                dict.Remove(ciid);
-                        return dict;
-                    case AllCIIDsExceptSelection e:
-                        throw new NotImplementedException(); // TODO: think about and implement
-                    default:
-                        throw new Exception("Unknown CIIDSelection encountered");
-                }
-            });
+            //var targetHosts = targetHostModel.GetAllByCIID(newAndChangedTargetHosts);
 
             //throw new Exception("!"); // TODO: testing
 
-            var tmp = changedCIIDs.Zip(changedCIIDs2, runTimes, targetHosts, run);
+            var tmp = changedCIIDs.Zip(changedCIIDs2, newAndChangedTargetHosts, run);
 
-            var final = tmp.Select(t =>
+            var final = tmp.Select(async t =>
             {
-                logger.LogInformation($"Starting inner; thread: {Thread.CurrentThread.ManagedThreadId}");
                 var ciids1 = t.First;
                 var ciids2 = t.Second;
-                var runTimes = t.Third;
-                var targetHosts = t.Fourth;
-                var runData = t.Fifth;
+                var newAndChangedTargetHosts = t.Third.newAndChanged;
+                var relevantCIs = t.Third.ciSelection;
+                var runData = t.Fourth;
                 logger.LogInformation(ciids1.ToString());
                 logger.LogInformation(ciids2.ToString());
-                logger.LogInformation(string.Join(",", runTimes.Select(l => l.ToString())));
-                logger.LogInformation(targetHosts.Count.ToString());
-                logger.LogInformation(string.Join(",", targetHosts.Select(t => t.Value.ID)));
-                //Thread.Sleep(10000);
+                logger.LogInformation(newAndChangedTargetHosts.Count.ToString());
+                //logger.LogInformation(string.Join(",", targetHosts.Select(t => t.Value.ID)));
+
+                var uppercaseHostnameFragments = new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>();
+                foreach(var targetHost in newAndChangedTargetHosts)
+                {
+                    uppercaseHostnameFragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(targetHost.Key, "uppercase_hostname", new AttributeScalarValueText(targetHost.Value.Hostname?.ToUpperInvariant() ?? "NOT SET")));
+                }
+                var relevantCIsSet = (await relevantCIs.GetCIIDsAsync(async () => await ciModel.GetCIIDs(runData.Trans))).ToHashSet(); // TODO: remove
+                await attributeModel.BulkReplaceAttributes(
+                    new BulkCIAttributeDataCIAndAttributeNameScope(targetLayerID, uppercaseHostnameFragments, relevantCIsSet, new HashSet<string>() { "uppercase_hostname" }),
+                    //new BulkCIAttributeDataLayerScope(targetLayerID, uppercaseHostnameFragments),
+                    runData.ChangesetProxy,
+                    runData.Trans,
+                    MaskHandlingForRemovalApplyNoMask.Instance,
+                    OtherLayersValueHandlingForceWrite.Instance);
+
                 logger.LogInformation($"Finished inner; thread: {Thread.CurrentThread.ManagedThreadId}");
 
                 //throw new Exception("!"); // TODO: testing
 
                 return (result: true, runData: runData);
-            });
+            })
+                .Concat();
             return final;
         }
     }

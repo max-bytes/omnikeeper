@@ -6,8 +6,10 @@ using NUnit.Framework;
 using Omnikeeper.Runners.Reactive;
 using System;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Tests.Integration.Reactive
@@ -81,20 +83,43 @@ namespace Tests.Integration.Reactive
             //    o.OnCompleted();
             //    return Disposable.Empty;
             //})
-            var obs = Observable.Create<RunData>((o) => {
-                    o.OnNext(new RunData(counter));
-                    o.OnCompleted();
-                    return Disposable.Empty;
-                })
-                .Concat(Observable.Empty<RunData>().Delay(TimeSpan.FromSeconds(1)))
-                .Repeat(3) // Resubscribe indefinitely after source completes
+            var semaphoreSlim = new SemaphoreSlim(1, 1);
+            var obs = Observable.Create<RunData>(async (o) =>
+            {
+                Console.WriteLine("Waiting for semaphore");
+                await semaphoreSlim.WaitAsync();
+                o.OnNext(new RunData(counter));
+                //await Task.Delay(1000);
+                o.OnCompleted();
+                return Disposable.Empty;
+            })
+                .Concat(Observable.Empty<RunData>().Delay(TimeSpan.FromMilliseconds(10)))
+                .Repeat() // Resubscribe indefinitely after source completes
                 .Publish().RefCount() // see http://northhorizon.net/2011/sharing-in-rx/
                 ;
+
+            //var obs = Observable.Interval(TimeSpan.FromSeconds(1))
+            //    .Select(x => Observable.FromAsync(() => {
+            //        return Task.FromResult(1);
+            //    }))
+            //    .Merge(1)
+            //    .Select(x => new RunData(counter))
+            //    //.Select(_ =>
+            //    //{
+            //    //    return ;
+            //    //})
+            //    .Publish().RefCount() // see http://northhorizon.net/2011/sharing-in-rx/
+            //    //.ObserveLatestOn(Scheduler.Default)
+            //    ;
 
             // transforms the stream, exceptions might be thrown inside of stream, would like to catch them and handle them appropriately
             IObservable<(bool result, RunData runData)> TransformRunDataToResult(IObservable<RunData> obs)
             {
-                return obs.Select(rd => (result: true, runData: rd)); // very simple example, real-world transformation would be more complex
+                return obs.Select(rd => Observable.FromAsync(async ct =>
+                {
+                    await Task.Delay(3000);
+                    return (result: true, runData: rd);
+                })).Concat(); // very simple example, real-world transformation would be more complex
             }
 
             IObservable<(bool result, RunData runData)> safeObs;
@@ -113,41 +138,43 @@ namespace Tests.Integration.Reactive
                 safeObs = TransformRunDataToResult(obs);
             }
 
-            safeObs.Select(t =>
-                {
-                    var (result, runData) = t;
-                    try
-                    {
-                        Console.WriteLine($"Result: {result}");
-                    }
-                    finally
-                    {
-                        t.runData.Dispose(); // dispose RunData instance that was created by the observable above
-                    }
-                    return Unit.Default;
-                })
-                .Subscribe();
-
             //safeObs.Select(t =>
-            //    Observable.FromAsync(async () =>
             //    {
-            //        Console.WriteLine($"Calling async");
             //        var (result, runData) = t;
             //        try
             //        {
-            //            await Task.Delay(100); // just here to justify the async nature
-
             //            Console.WriteLine($"Result: {result}");
             //        }
             //        finally
             //        {
             //            t.runData.Dispose(); // dispose RunData instance that was created by the observable above
             //        }
-            //    }))
-            //    .Concat()
+            //        return Unit.Default;
+            //    })
             //    .Subscribe();
 
-            await Task.Delay(6000); // give observable enough time to produce a few items
+            safeObs.Select(t =>
+                Observable.FromAsync(async () =>
+                {
+                    Console.WriteLine($"Calling async");
+                    var (result, runData) = t;
+                    try
+                    {
+                        await Task.Delay(3000); // just here to justify the async nature
+
+                        Console.WriteLine($"Result: {result}");
+                    }
+                    finally
+                    {
+                        t.runData.Dispose(); // dispose RunData instance that was created by the observable above
+                        Console.WriteLine("Releasing semaphore");
+                        semaphoreSlim.Release();
+                    }
+                }))
+                .Concat()
+                .Subscribe();
+
+            await Task.Delay(7000); // give observable enough time to produce a few items
 
             Assert.AreEqual(0, counter.Value);
         }

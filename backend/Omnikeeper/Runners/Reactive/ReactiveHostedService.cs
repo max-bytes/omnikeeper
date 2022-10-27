@@ -224,7 +224,9 @@ namespace Omnikeeper.Runners.Reactive
 
             var clbProcessingCache = new CLBProcessingCache();
 
-            IObservable<ReactiveRunData> run = CreateRunObservable(clbProcessingCache, clConfig, layerID, clb, clLogger);
+            var runSemaphore = new SemaphoreSlim(1, 1);
+
+            IObservable<ReactiveRunData> run = CreateRunObservable(clbProcessingCache, clConfig, layerID, clb, runSemaphore, clLogger);
 
             // NOTE: idea using higher-order observable taken from https://stackoverflow.com/questions/74172099/rx-net-disposing-of-resources-created-during-observable-create
             // TODO: test
@@ -235,9 +237,11 @@ namespace Omnikeeper.Runners.Reactive
             //        return (Observable.Return((result: false, runData: rrd)));
             //    })
             //).Concat();
-            var final = clb.BuildPipeline(run, clLogger);
 
-            return final.Select(t =>
+            var final = clb.BuildPipeline(run, clLogger);
+            //var final = run.Select(rrd => (result: true, runData: rrd));
+
+            var runCancelToken = final.Select(t =>
             {
                 return Observable.FromAsync(async () =>
                 {
@@ -274,6 +278,9 @@ namespace Omnikeeper.Runners.Reactive
                     {
                         scopedLifetimeAccessor.ResetLifetimeScope();
                         t.runData.Dispose();
+
+                        clLogger.LogTrace("Releasing semaphore after run");
+                        runSemaphore.Release();
                     }
                 });
             })
@@ -282,6 +289,8 @@ namespace Omnikeeper.Runners.Reactive
                 {
                     onFatalError(e);
                 });
+
+            return new CompositeDisposable(runCancelToken, runSemaphore);
 
             //return final.Subscribe(
             //    async (t) =>
@@ -325,96 +334,115 @@ namespace Omnikeeper.Runners.Reactive
             //    });
         }
 
-        private IObservable<ReactiveRunData> CreateRunObservable(CLBProcessingCache clbProcessingCache, CLConfigV1 clConfig, string layerID, IReactiveCLB clb, ILogger clLogger)
+        private IObservable<ReactiveRunData> CreateRunObservable(CLBProcessingCache clbProcessingCache, CLConfigV1 clConfig, string layerID, IReactiveCLB clb, SemaphoreSlim runSemaphore, ILogger clLogger)
         {
             var start = Observable.Create<ReactiveRunData>(async (o) =>
             {
-                //clLogger.LogInformation($"Running CLBWrapper; thread: {Thread.CurrentThread.ManagedThreadId}");
+                clLogger.LogTrace("Waiting for semaphore");
+                await runSemaphore.WaitAsync();
+                clLogger.LogTrace("Aquired semaphore");
 
-                //Thread.Sleep(10000);
-
-                //throw new Exception("?");
-
-                // NOTE: to avoid race conditions, we use a single timeThreshold and base everything off of this
-                var timeThreshold = TimeThreshold.BuildLatest();
-
-                var canSkipRun = false;
-
-                IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets;
-                IReadOnlyDictionary<string, Guid> latestSeenChangesets;
-
-                var username = $"__cl.{clConfig.ID}@{layerID}"; // construct username
-                using (var scope = rootScope.BeginLifetimeScope(Autofac.Core.Lifetime.MatchingScopeLifetimeTags.RequestLifetimeScopeTag, builder =>
+                try
                 {
-                    builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().WithParameter("username", username).InstancePerLifetimeScope();
-                }))
-                {
-                    scopedLifetimeAccessor.SetLifetimeScope(scope);
-                    var modelContextBuilder = scope.Resolve<IModelContextBuilder>(); // resolve our own ModelContextBuilder, that has a request-lifetime
+                    //clLogger.LogInformation($"Running CLBWrapper; thread: {Thread.CurrentThread.ManagedThreadId}");
 
-                    //clLogger.LogInformation($"Running CLBWrapper 2; thread: {Thread.CurrentThread.ManagedThreadId}");
+                    //Thread.Sleep(10000);
 
-                    var dependentLayerIDs = clb.GetDependentLayerIDs(layerID, clConfig.CLBrainConfig, clLogger);
+                    //throw new Exception("?");
 
-                    // calculate unprocessed changesets
-                    var (processedChangesets, processedConfigActuality) = clbProcessingCache.TryGetValue(clConfig.ID, layerID);
-                    using var trans = modelContextBuilder.BuildImmediate();
-                    //clLogger.LogInformation($"intermediate CLBWrapper; thread: {Thread.CurrentThread.ManagedThreadId}");
-                    (unprocessedChangesets, latestSeenChangesets) = await calculateUnprocessedChangesetsService.CalculateUnprocessedChangesets(processedChangesets, dependentLayerIDs, timeThreshold, trans);
-                    //clLogger.LogInformation($"intermediate CLBWrapper; thread: {Thread.CurrentThread.ManagedThreadId}");
-                    if (unprocessedChangesets.All(kv => kv.Value != null && kv.Value.IsEmpty()))
+                    // NOTE: to avoid race conditions, we use a single timeThreshold and base everything off of this
+                    var timeThreshold = TimeThreshold.BuildLatest();
+
+                    var canSkipRun = false;
+
+                    IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets;
+                    IReadOnlyDictionary<string, Guid> latestSeenChangesets;
+
+                    var username = $"__cl.{clConfig.ID}@{layerID}"; // construct username
+                    using (var scope = rootScope.BeginLifetimeScope(Autofac.Core.Lifetime.MatchingScopeLifetimeTags.RequestLifetimeScopeTag, builder =>
                     {
-                        clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID} because no unprocessed changesets exist for dependent layers");
-                        canSkipRun = true;
+                        builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().WithParameter("username", username).InstancePerLifetimeScope();
+                    }))
+                    {
+                        scopedLifetimeAccessor.SetLifetimeScope(scope);
+                        var modelContextBuilder = scope.Resolve<IModelContextBuilder>(); // resolve our own ModelContextBuilder, that has a request-lifetime
+
+                        //clLogger.LogInformation($"Running CLBWrapper 2; thread: {Thread.CurrentThread.ManagedThreadId}");
+
+                        var dependentLayerIDs = clb.GetDependentLayerIDs(layerID, clConfig.CLBrainConfig, clLogger);
+
+                        // calculate unprocessed changesets
+                        var (processedChangesets, processedConfigActuality) = clbProcessingCache.TryGetValue(clConfig.ID, layerID);
+                        using var trans = modelContextBuilder.BuildImmediate();
+                        //clLogger.LogInformation($"intermediate CLBWrapper; thread: {Thread.CurrentThread.ManagedThreadId}");
+                        (unprocessedChangesets, latestSeenChangesets) = await calculateUnprocessedChangesetsService.CalculateUnprocessedChangesets(processedChangesets, dependentLayerIDs, timeThreshold, trans);
+                        //clLogger.LogInformation($"intermediate CLBWrapper; thread: {Thread.CurrentThread.ManagedThreadId}");
+                        if (unprocessedChangesets.All(kv => kv.Value != null && kv.Value.IsEmpty()))
+                        {
+                            clLogger.LogDebug($"Skipping run of CLB {clb.Name} on layer {layerID} because no unprocessed changesets exist for dependent layers");
+                            canSkipRun = true;
+                        }
+                        else
+                        {
+                            if (clLogger.IsEnabled(LogLevel.Debug))
+                            {
+                                var layersWhereAllChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value == null).ToList();
+                                if (!layersWhereAllChangesetsAreUnprocessed.IsEmpty())
+                                    clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets in layers: {string.Join(",", layersWhereAllChangesetsAreUnprocessed.Select(kv => kv.Key))}");
+                                var layersWhereSingleChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value != null && !kv.Value.IsEmpty()).ToList();
+                                if (!layersWhereSingleChangesetsAreUnprocessed.IsEmpty())
+                                    clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets: {string.Join(",", layersWhereSingleChangesetsAreUnprocessed.SelectMany(kv => kv.Value!.Select(c => c.ID)))}");
+                            }
+                        }
+
+                        scopedLifetimeAccessor.ResetLifetimeScope();
+                    }
+
+                    //canSkipRun = false; // TODO: for testing only
+
+                    if (!canSkipRun)
+                    {
+                        // create a scope for the runtime of the CLB, MUST be disposed later
+                        var scope = rootScope.BeginLifetimeScope(Autofac.Core.Lifetime.MatchingScopeLifetimeTags.RequestLifetimeScopeTag, builder =>
+                        {
+                            builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().WithParameter("username", username).InstancePerLifetimeScope();
+                        });
+                        scopedLifetimeAccessor.SetLifetimeScope(scope);
+                        var modelContextBuilder = scope.Resolve<IModelContextBuilder>(); // resolve our own ModelContextBuilder, that has a request-lifetime
+
+                        var issueAccumulator = new IssueAccumulator("ComputeLayerBrain", $"{clConfig.ID}@{layerID}");
+
+                        var transUpsertUser = modelContextBuilder.BuildDeferred();
+                        var currentUserService = scope.Resolve<ICurrentUserService>();
+                        var user = await currentUserService.GetCurrentUser(transUpsertUser);
+                        transUpsertUser.Commit();
+                        transUpsertUser.Dispose();
+
+                        var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.ComputeLayer));
+                        var transRun = modelContextBuilder.BuildDeferred();
+                        var runData = new ReactiveRunData(unprocessedChangesets, latestSeenChangesets, changesetProxy, transRun, scope, issueAccumulator);
+
+                        o.OnNext(runData);
                     }
                     else
                     {
-                        if (clLogger.IsEnabled(LogLevel.Debug))
-                        {
-                            var layersWhereAllChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value == null).ToList();
-                            if (!layersWhereAllChangesetsAreUnprocessed.IsEmpty())
-                                clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets in layers: {string.Join(",", layersWhereAllChangesetsAreUnprocessed.Select(kv => kv.Key))}");
-                            var layersWhereSingleChangesetsAreUnprocessed = unprocessedChangesets.Where(kv => kv.Value != null && !kv.Value.IsEmpty()).ToList();
-                            if (!layersWhereSingleChangesetsAreUnprocessed.IsEmpty())
-                                clLogger.LogDebug($"Cannot skip run of CLB {clb.Name} on layer {layerID} because of unprocessed changesets: {string.Join(",", layersWhereSingleChangesetsAreUnprocessed.SelectMany(kv => kv.Value!.Select(c => c.ID)))}");
-                        }
+                        clLogger.LogTrace("Releasing semaphore due to run skip");
+                        runSemaphore.Release(); // in case we can skip the run, we are not sending anything down the pipeline, so we need to release the semaphore here again
                     }
 
-                    scopedLifetimeAccessor.ResetLifetimeScope();
+                    //clLogger.LogInformation($"Finished CLBWrapper; thread: {Thread.CurrentThread.ManagedThreadId}");
                 }
-
-                //canSkipRun = false; // TODO: for testing only
-
-                if (!canSkipRun)
+                catch (Exception)
                 {
-                    // create a scope for the runtime of the CLB, MUST be disposed later
-                    var scope = rootScope.BeginLifetimeScope(Autofac.Core.Lifetime.MatchingScopeLifetimeTags.RequestLifetimeScopeTag, builder =>
-                    {
-                        builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().WithParameter("username", username).InstancePerLifetimeScope();
-                    });
-                    scopedLifetimeAccessor.SetLifetimeScope(scope);
-                    var modelContextBuilder = scope.Resolve<IModelContextBuilder>(); // resolve our own ModelContextBuilder, that has a request-lifetime
-
-                    var issueAccumulator = new IssueAccumulator("ComputeLayerBrain", $"{clConfig.ID}@{layerID}");
-
-                    var transUpsertUser = modelContextBuilder.BuildDeferred();
-                    var currentUserService = scope.Resolve<ICurrentUserService>();
-                    var user = await currentUserService.GetCurrentUser(transUpsertUser);
-                    transUpsertUser.Commit();
-                    transUpsertUser.Dispose();
-
-                    var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.ComputeLayer));
-                    var transRun = modelContextBuilder.BuildDeferred();
-                    var runData = new ReactiveRunData(unprocessedChangesets, latestSeenChangesets, changesetProxy, transRun, scope, issueAccumulator);
-
-                    o.OnNext(runData);
+                    clLogger.LogTrace("Releasing semaphore due to exception");
+                    runSemaphore.Release(); // in case of error, we couldn't call onNext(), so we need to release the semaphore here again
+                }
+                finally
+                {
+                    o.OnCompleted();
                 }
 
-                o.OnCompleted();
-
-                //clLogger.LogInformation($"Finished CLBWrapper; thread: {Thread.CurrentThread.ManagedThreadId}");
-
-                return Disposable.Empty;// Disposable.Create(() => clLogger.LogInformation("Observer has unsubscribed"));
+                return Disposable.Empty;
             })
                 .Concat(Observable.Empty<ReactiveRunData>().Delay(TimeSpan.FromSeconds(2)))
                 .Repeat() // Resubscribe indefinitely after source completes
