@@ -33,13 +33,14 @@ namespace Omnikeeper.Model
 
         public async Task<Changeset?> GetChangeset(Guid id, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             using var command = new NpgsqlCommand(@"SELECT c.timestamp, c.user_id, c.layer_id, c.origin_type FROM changeset c
                 WHERE c.id = @id", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("id", id);
             command.Prepare();
 
-            using var _ = await trans.WaitAsync();
             using var dr = await command.ExecuteReaderAsync();
 
             if (!await dr.ReadAsync())
@@ -56,13 +57,14 @@ namespace Omnikeeper.Model
 
         public async Task<IReadOnlyList<Changeset>> GetChangesets(ISet<Guid> ids, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             using var command = new NpgsqlCommand($@"SELECT c.id, c.timestamp, c.user_id, c.layer_id, c.origin_type FROM changeset c WHERE c.id = ANY(@ids)",
                 trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("ids", ids.ToArray());
             command.Prepare();
 
-            using var _ = await trans.WaitAsync();
             using var dr = await command.ExecuteReaderAsync();
             var ret = new List<Changeset>();
             while (await dr.ReadAsync())
@@ -80,6 +82,8 @@ namespace Omnikeeper.Model
 
         public async Task<IReadOnlySet<Guid>> GetCIIDsAffectedByChangeset(Guid changesetID, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             var query = @"SELECT DISTINCT inn.ci_id FROM (
                 SELECT a.ci_id as ci_id FROM attribute a WHERE a.changeset_id = @changeset_id
                 UNION
@@ -91,7 +95,6 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("changeset_id", changesetID);
             command.Prepare();
 
-            using var _ = await trans.WaitAsync();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new HashSet<Guid>();
@@ -119,6 +122,8 @@ namespace Omnikeeper.Model
         // sorted by timestamp
         private async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, string[] layers, Guid[] ciids, IModelContext trans, int? limit = null)
         {
+            using var _ = await trans.WaitAsync();
+
             var queryAttributes = @"SELECT distinct c.id, c.user_id, c.layer_id, c.origin_type, c.timestamp FROM changeset c 
                 INNER JOIN attribute a ON a.changeset_id = c.id 
                 INNER JOIN ci ci ON a.ci_id = ci.id
@@ -145,7 +150,6 @@ namespace Omnikeeper.Model
                 command.Parameters.AddWithValue("limit", limit.Value);
             command.Prepare();
 
-            using var _ = await trans.WaitAsync();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();
@@ -165,6 +169,8 @@ namespace Omnikeeper.Model
 
         private async Task<IReadOnlyList<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, string[] layers, IModelContext trans, int? limit = null)
         {
+            using var _ = await trans.WaitAsync();
+
             var query = @"SELECT distinct c.id, c.user_id, c.layer_id, c.origin_type, c.timestamp FROM changeset c 
                 WHERE c.timestamp >= @from AND c.timestamp <= @to
                 AND c.layer_id = ANY(@layer_ids)
@@ -180,7 +186,6 @@ namespace Omnikeeper.Model
                 command.Parameters.AddWithValue("limit", limit.Value);
             command.Prepare();
 
-            using var _ = await trans.WaitAsync();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();
@@ -466,6 +471,8 @@ namespace Omnikeeper.Model
 
         public async Task<int> DeleteEmptyChangesets(int limit, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             // NOTE: we do it in this roundabout way because otherwise, query takes a long time and might timeout for large datasets
             var emptyChangesetsQuery = @"
                 select c.id from changeset c where c.id not in (
@@ -478,7 +485,6 @@ namespace Omnikeeper.Model
             emptyChangesetsCommand.Prepare();
             var emptyChangesets = new List<Guid>();
 
-            using var _ = await trans.WaitAsync();
             using (var dr = await emptyChangesetsCommand.ExecuteReaderAsync())
             {
                 while (await dr.ReadAsync())
@@ -544,24 +550,25 @@ namespace Omnikeeper.Model
 
         public async Task<long> GetNumberOfChangesets(IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(@"SELECT count(*) FROM changeset c", trans.DBConnection, trans.DBTransaction);
             command.Prepare();
-            using var _ = await trans.WaitAsync();
             var ret = (long?)await command.ExecuteScalarAsync();
             return ret!.Value;
         }
 
         public async Task<long> GetNumberOfChangesets(string layerID, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(@"SELECT count(*) FROM changeset c WHERE layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Prepare();
-            using var _ = await trans.WaitAsync();
             var ret = (long?)await command.ExecuteScalarAsync();
             return ret!.Value;
         }
         public async Task<IReadOnlyList<Changeset>> GetChangesetsAfter(Guid afterChangesetID, string[] layerIDs, IModelContext trans, TimeThreshold timeThreshold)
         {
+            using var _ = await trans.WaitAsync();
             var query = @"SELECT distinct c.id, c.user_id, c.layer_id, c.origin_type, c.timestamp FROM changeset c 
                 WHERE c.timestamp > (SELECT i.timestamp FROM changeset i WHERE i.id = @changeset_id LIMIT 1) AND c.timestamp <= @threshold
                 AND c.layer_id = ANY(@layer_ids)
@@ -571,7 +578,6 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("layer_ids", layerIDs);
             command.Parameters.AddWithValue("threshold", timeThreshold.Time.ToUniversalTime());
             command.Prepare();
-            using var _ = await trans.WaitAsync();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();

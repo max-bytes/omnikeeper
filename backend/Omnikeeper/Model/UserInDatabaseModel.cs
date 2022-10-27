@@ -19,6 +19,8 @@ namespace Omnikeeper.Model
             if (existingUser != null && existingUser.UserType == type && existingUser.DisplayName == displayName)
                 return existingUser;
 
+            using var _ = await trans.WaitAsync();
+
             using var command = new NpgsqlCommand(@"INSERT INTO ""user"" (keycloak_id, timestamp, type, username, displayName) VALUES (@uuid, @timestamp, @type, @username, @displayName) returning id, timestamp", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("uuid", uuid);
             command.Parameters.AddWithValue("timestamp", DateTimeOffset.UtcNow);
@@ -32,36 +34,40 @@ namespace Omnikeeper.Model
             return new UserInDatabase(id, uuid, username, displayName, type, timestamp);
         }
 
-        public async Task<UserInDatabase?> GetUser(long id, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            NpgsqlCommand command;
-            if (timeThreshold.IsLatest)
-            {
-                command = new NpgsqlCommand(@"SELECT keycloak_id, username, displayName, type, timestamp FROM ""user"" WHERE id = @id ORDER BY timestamp DESC NULLS LAST LIMIT 1", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("id", id);
-                command.Prepare();
-            } else
-            {
-                command = new NpgsqlCommand(@"SELECT keycloak_id, username, displayName, type, timestamp FROM ""user"" WHERE id = @id and timestamp >= @timestamp ORDER BY timestamp DESC NULLS LAST LIMIT 1", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("id", id);
-                command.Parameters.AddWithValue("timestamp", timeThreshold.Time);
-            }
-            using var dr = await command.ExecuteReaderAsync();
-            command.Dispose();
+        //public async Task<UserInDatabase?> GetUser(long id, IModelContext trans, TimeThreshold timeThreshold)
+        //{
+        //    using var _ = await trans.WaitAsync();
 
-            if (!await dr.ReadAsync())
-                return null;
+        //    NpgsqlCommand command;
+        //    if (timeThreshold.IsLatest)
+        //    {
+        //        command = new NpgsqlCommand(@"SELECT keycloak_id, username, displayName, type, timestamp FROM ""user"" WHERE id = @id ORDER BY timestamp DESC NULLS LAST LIMIT 1", trans.DBConnection, trans.DBTransaction);
+        //        command.Parameters.AddWithValue("id", id);
+        //        command.Prepare();
+        //    } else
+        //    {
+        //        command = new NpgsqlCommand(@"SELECT keycloak_id, username, displayName, type, timestamp FROM ""user"" WHERE id = @id and timestamp >= @timestamp ORDER BY timestamp DESC NULLS LAST LIMIT 1", trans.DBConnection, trans.DBTransaction);
+        //        command.Parameters.AddWithValue("id", id);
+        //        command.Parameters.AddWithValue("timestamp", timeThreshold.Time);
+        //    }
+        //    using var dr = await command.ExecuteReaderAsync();
+        //    command.Dispose();
 
-            var uuid = dr.GetGuid(0);
-            var username = dr.GetString(1);
-            var displayName = dr.GetString(2);
-            var usertype = dr.GetFieldValue<UserType>(3);
-            var timestamp = dr.GetDateTime(4);
-            return new UserInDatabase(id, uuid, username, displayName, usertype, timestamp);
-        }
+        //    if (!await dr.ReadAsync())
+        //        return null;
+
+        //    var uuid = dr.GetGuid(0);
+        //    var username = dr.GetString(1);
+        //    var displayName = dr.GetString(2);
+        //    var usertype = dr.GetFieldValue<UserType>(3);
+        //    var timestamp = dr.GetDateTime(4);
+        //    return new UserInDatabase(id, uuid, username, displayName, usertype, timestamp);
+        //}
 
         public async Task<IReadOnlyList<UserInDatabase>> GetUsers(ISet<long>? userIDs, IModelContext trans, TimeThreshold timeThreshold)
         {
+            using var _ = await trans.WaitAsync();
+
             static string UserIDs2WhereClause(ISet<long>? userIDs) => (userIDs != null) ? "id = ANY(@ids)" : "1=1";
             NpgsqlCommand command;
             if (timeThreshold.IsLatest)
@@ -101,6 +107,8 @@ namespace Omnikeeper.Model
 
         private async Task<UserInDatabase?> GetUser(string username, Guid uuid, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             using var command = new NpgsqlCommand(@"SELECT id, timestamp, type, displayName FROM ""user"" WHERE keycloak_id = @uuid AND username = @username ORDER BY timestamp DESC NULLS LAST LIMIT 1", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("uuid", uuid);

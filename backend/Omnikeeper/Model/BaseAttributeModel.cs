@@ -170,6 +170,8 @@ namespace Omnikeeper.Model
                     command.Parameters.Add(p);
             }
 
+            using var _ = await trans.WaitAsync();
+
             if (ciidSelection2CTEClause == "")
                 command.Prepare(); // NOTE: preparing only makes sense if the query is somewhat static, which it won't be when a highly dynamic CTE is involved
 
@@ -262,6 +264,8 @@ namespace Omnikeeper.Model
                 command.Parameters.AddWithValue(partitionIndex);
             }
 
+            using var _ = await trans.WaitAsync();
+
             command.Prepare();
 
             using var dr = await command.ExecuteReaderAsync();
@@ -288,6 +292,8 @@ namespace Omnikeeper.Model
             ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue(changesetID);
             command.Parameters.AddWithValue(getRemoved);
+
+            using var _ = await trans.WaitAsync();
 
             command.Prepare();
 

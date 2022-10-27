@@ -24,6 +24,8 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(@"
                 SELECT config FROM config.general WHERE key = 'meta' LIMIT 1",
             trans.DBConnection, trans.DBTransaction);
+
+            using var _ = await trans.WaitAsync();
             using var s = await command.ExecuteReaderAsync();
 
             if (await s.ReadAsync())
@@ -53,7 +55,8 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(@"
                 INSERT INTO config.general (key, config) VALUES ('meta', @config) ON CONFLICT (key) DO UPDATE SET config = EXCLUDED.config
             ", trans.DBConnection, trans.DBTransaction);
-            command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJD });
+            command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJD }); 
+            using var _ = await trans.WaitAsync();
             await command.ExecuteScalarAsync();
 
             return config;

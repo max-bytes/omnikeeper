@@ -1,6 +1,5 @@
 ﻿using Npgsql;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
@@ -58,6 +57,7 @@ namespace Omnikeeper.Model
         public async Task<IReadOnlyList<Layer>> GetLayers(IModelContext trans)
         {
             var layers = new List<Layer>();
+            using var _ = await trans.WaitAsync();
             using (var command = new NpgsqlCommand($@"SELECT l.id FROM layer l", trans.DBConnection, trans.DBTransaction))
             {
                 command.Prepare();

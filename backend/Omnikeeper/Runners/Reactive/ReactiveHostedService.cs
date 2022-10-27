@@ -358,7 +358,7 @@ namespace Omnikeeper.Runners.Reactive
                     IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets;
                     IReadOnlyDictionary<string, Guid> latestSeenChangesets;
 
-                    var username = $"__cl.{clConfig.ID}@{layerID}"; // construct username
+                    var username = $"__rcl.{clConfig.ID}@{layerID}"; // construct username
                     using (var scope = rootScope.BeginLifetimeScope(Autofac.Core.Lifetime.MatchingScopeLifetimeTags.RequestLifetimeScopeTag, builder =>
                     {
                         builder.RegisterType<CurrentAuthorizedCLBUserService>().As<ICurrentUserService>().WithParameter("username", username).InstancePerLifetimeScope();

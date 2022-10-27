@@ -11,6 +11,7 @@ namespace Omnikeeper.Model
     {
         public async Task<DateTimeOffset> GetLatestPartitionIndex(TimeThreshold timeThreshold, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(@"SELECT max(partition_index) FROM partition WHERE partition_index <= @timestamp", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("timestamp", timeThreshold.Time.ToUniversalTime());
             command.Prepare();

@@ -11,6 +11,8 @@ namespace Omnikeeper.Model
     {
         public async Task<int> DeleteAllRelations(string layerID, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             using var commandLatest = new NpgsqlCommand(@"delete from relation_latest r where r.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
             commandLatest.Parameters.AddWithValue("layer_id", layerID);
             commandLatest.Prepare();
@@ -35,6 +37,8 @@ namespace Omnikeeper.Model
 	                WHERE i.id = r.id";
 
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
+
+            using var _ = await trans.WaitAsync();
 
             var now = TimeThreshold.BuildLatest();
             command.Parameters.AddWithValue("delete_threshold", threshold.ToUniversalTime());

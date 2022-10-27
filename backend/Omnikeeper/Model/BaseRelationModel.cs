@@ -85,6 +85,7 @@ namespace Omnikeeper.Model
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
+                using var _ = await trans.WaitAsync();
                 var query = $@"select id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, mask from relation_latest
                     where layer_id = ANY(@layer_ids) and ({innerWhereClause})";
                 command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
@@ -103,6 +104,8 @@ namespace Omnikeeper.Model
                 ) i where i.removed = false
                 "; // TODO: remove order by layer_id, but consider not breaking indices first
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
+
+                using var _ = await trans.WaitAsync();
                 command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
                 foreach (var p in parameters)
                     command.Parameters.Add(p);
@@ -119,6 +122,7 @@ namespace Omnikeeper.Model
             var tmp = new Dictionary<string, List<Relation>>();
             using (var command = await CreateRelationCommand(rs, layerIDs, trans, atTime))
             {
+                using var _ = await trans.WaitAsync();
                 using var dr = await command.ExecuteReaderAsync();
 
                 while (await dr.ReadAsync())
@@ -191,6 +195,7 @@ namespace Omnikeeper.Model
             }
 
             var ret = new HashSet<string>();
+            using var _ = await trans.WaitAsync();
             using (var command = await CreateCommand())
             {
                 using var dr = await command.ExecuteReaderAsync();
@@ -213,6 +218,8 @@ namespace Omnikeeper.Model
             ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("changeset_id", changesetID);
             command.Parameters.AddWithValue("removed", getRemoved);
+
+            using var _ = await trans.WaitAsync();
 
             command.Prepare();
 

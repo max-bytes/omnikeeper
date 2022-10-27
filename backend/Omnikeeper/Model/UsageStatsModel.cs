@@ -11,6 +11,8 @@ namespace Omnikeeper.Model
     {
         public async Task<IEnumerable<UsageStatElement>> GetElements(System.DateTimeOffset from, System.DateTimeOffset to, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             var query = @"SELECT element_type, element_name, username, layer_id, operation, timestamp FROM public.usage_stats where timestamp >= @from AND timestamp <= @to";
 
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
