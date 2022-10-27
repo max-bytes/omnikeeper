@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Service
@@ -23,15 +22,18 @@ namespace Omnikeeper.Base.Service
         }
     }
 
-    public class ReactiveRunService
+    public interface IReactiveRunService
+    {
+        IObservable<ICIIDSelection> ChangedCIIDsObs(IObservable<ReactiveRunData> rrd);
+    }
+
+    public class ReactiveRunService : IReactiveRunService
     {
         private readonly IChangesetModel changesetModel;
-        private readonly ICIModel ciModel;
 
-        public ReactiveRunService(IChangesetModel changesetModel, ICIModel ciModel)
+        public ReactiveRunService(IChangesetModel changesetModel)
         {
             this.changesetModel = changesetModel;
-            this.ciModel = ciModel;
         }
 
         private async Task<ICIIDSelection> ChangedCIIDs(ReactiveRunData rrd)
@@ -60,14 +62,14 @@ namespace Omnikeeper.Base.Service
                 .Concat();
         }
 
-        public IObservable<IReadOnlyList<MergedCI>> ChangedCIs(IObservable<ICIIDSelection> changedCIIDs, IAttributeSelection attributeSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            return changedCIIDs.Select(async changedCIIDs =>
-            {
-                var changedCIs = await ciModel.GetMergedCIs(changedCIIDs, layerSet, false, attributeSelection, trans, timeThreshold);
-                return changedCIs;
-            }).Concat();
-        }
+        //public IObservable<IReadOnlyList<MergedCI>> ChangedCIs(IObservable<ICIIDSelection> changedCIIDs, IAttributeSelection attributeSelection, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        //{
+        //    return changedCIIDs.Select(async changedCIIDs =>
+        //    {
+        //        var changedCIs = await ciModel.GetMergedCIs(changedCIIDs, layerSet, false, attributeSelection, trans, timeThreshold);
+        //        return changedCIs;
+        //    }).Concat();
+        //}
     }
 
     public class ReactiveGenericTraitEntityModel<T> where T : TraitEntity, new()

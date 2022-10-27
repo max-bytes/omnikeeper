@@ -220,7 +220,7 @@ namespace Omnikeeper.Startup
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IAuthzFilterForMutation>().As<IAuthzFilterForMutation>().SingleInstance();
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IAuthzFilterForQuery>().As<IAuthzFilterForQuery>().SingleInstance();
 
-            builder.RegisterType<ReactiveRunService>().SingleInstance();
+            builder.RegisterType<ReactiveRunService>().As<IReactiveRunService>().SingleInstance();
         }
 
         public static void RegisterLogging(ContainerBuilder builder)
@@ -261,6 +261,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<UsageStatsModel>().As<IUsageStatsModel>().SingleInstance();
             builder.RegisterGeneric(typeof(GenericTraitEntityModel<,>)).SingleInstance();
             builder.RegisterGeneric(typeof(GenericTraitEntityModel<>)).SingleInstance();
+            builder.RegisterGeneric(typeof(ReactiveGenericTraitEntityModel<>)).SingleInstance();
 
             // these aren't real models, but we keep them here because they are closely related to models
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
@@ -16,15 +15,15 @@ namespace Omnikeeper.Base.CLB
 {
     public class ReactiveTestCLB : IReactiveCLB
     {
-        private readonly ReactiveRunService reactiveRunService;
+        private readonly IReactiveRunService reactiveRunService;
         private readonly IAttributeModel attributeModel;
         private readonly ReactiveGenericTraitEntityModel<TargetHost> targetHostModel;
 
-        public ReactiveTestCLB(ReactiveRunService reactiveRunService, GenericTraitEntityModel<TargetHost> targetHostModel, IAttributeModel attributeModel)
+        public ReactiveTestCLB(IReactiveRunService reactiveRunService, ReactiveGenericTraitEntityModel<TargetHost> targetHostModel, IAttributeModel attributeModel)
         {
             this.reactiveRunService = reactiveRunService;
             this.attributeModel = attributeModel;
-            this.targetHostModel = new ReactiveGenericTraitEntityModel<TargetHost>(targetHostModel);
+            this.targetHostModel = targetHostModel;
         }
 
         public string Name => GetType().Name!;
