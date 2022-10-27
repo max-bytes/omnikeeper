@@ -1,3 +1,4 @@
+using Omnikeeper.Base.Model;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -50,6 +51,7 @@ namespace Omnikeeper.Base.Entity
         IAttributeValue GetValue(F fragment);
     }
 
+    // TODO: is just a special case of BulkCIAttributeDataCIAndAttributeNameScope, remove
     public sealed class BulkCIAttributeDataLayerScope : IBulkCIAttributeData<BulkCIAttributeDataLayerScope.Fragment>
     {
         public class Fragment
@@ -79,6 +81,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    // TODO: is just a special case of BulkCIAttributeDataCIAndAttributeNameScope, remove?
     public sealed class BulkCIAttributeDataCIScope : IBulkCIAttributeData<BulkCIAttributeDataCIScope.Fragment>
     {
         public class Fragment
@@ -112,7 +115,6 @@ namespace Omnikeeper.Base.Entity
 
     public sealed class BulkCIAttributeDataCIAndAttributeNameScope : IBulkCIAttributeData<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>
     {
-        public IReadOnlySet<Guid> RelevantCIs;
 
         public class Fragment
         {
@@ -128,15 +130,16 @@ namespace Omnikeeper.Base.Entity
             }
         }
 
-        public string LayerID { get; private set; }
-        public IEnumerable<Fragment> Fragments { get; private set; }
-        public IReadOnlySet<string> RelevantAttributes { get; }
+        public string LayerID { get; }
+        public IEnumerable<Fragment> Fragments { get; }
+        public IAttributeSelection RelevantAttributes { get; }
+        public ICIIDSelection RelevantCIs { get; }
 
         public Guid GetCIID(Fragment f) => f.CIID;
         public string GetFullName(Fragment f) => f.Name;
         public IAttributeValue GetValue(Fragment f) => f.Value;
 
-        public BulkCIAttributeDataCIAndAttributeNameScope(string layerID, IEnumerable<Fragment> fragments, IReadOnlySet<Guid> relevantCIs, IReadOnlySet<string> relevantAttributes)
+        public BulkCIAttributeDataCIAndAttributeNameScope(string layerID, IEnumerable<Fragment> fragments, ICIIDSelection relevantCIs, IAttributeSelection relevantAttributes)
         {
             LayerID = layerID;
             Fragments = fragments;

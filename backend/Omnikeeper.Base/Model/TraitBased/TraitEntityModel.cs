@@ -110,7 +110,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             if (attributeFragments.IsEmpty() && relevantCIIDs.IsEmpty() && outgoingRelations.IsEmpty() && incomingRelations.IsEmpty())
                 return false;
 
-            var changed = await WriteAttributes(attributeFragments, relevantCIIDs, relevantAttributesForTrait, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
+            var changed = await WriteAttributes(attributeFragments, SpecificCIIDsSelection.Build(relevantCIIDs), NamedAttributesSelection.Build(relevantAttributesForTrait), layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
 
             if (!trait.OptionalRelations.IsEmpty())
             {
@@ -151,7 +151,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 attributeFragments = attributeFragments.Concat(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, ICIModel.NameAttribute, new AttributeScalarValueText(ciName)));
             }
 
-            var changed = await WriteAttributes(attributeFragments, new HashSet<Guid>() { ciid }, finalRelevantAttributes, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
+            var changed = await WriteAttributes(attributeFragments, SpecificCIIDsSelection.Build(ciid), NamedAttributesSelection.Build(finalRelevantAttributes), layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
 
             IEnumerable<TraitRelation> relevantTraitRelations = trait.OptionalRelations;
             if (relevantIncomingPredicateIDs != null)
@@ -179,7 +179,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         }
 
         private async Task<bool> WriteAttributes(IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> fragments,
-            IReadOnlySet<Guid> relevantCIs, IReadOnlySet<string> relevantAttributes, LayerSet layerSet, string writeLayer, IChangesetProxy changesetProxy, IModelContext trans,
+            ICIIDSelection relevantCIs, IAttributeSelection relevantAttributes, LayerSet layerSet, string writeLayer, IChangesetProxy changesetProxy, IModelContext trans,
             IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             var otherLayersValueHandling = GetOtherLayersValueHandling(layerSet, writeLayer);
@@ -212,8 +212,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var relevantAttributes = relevantAttributesForTrait.Concat(ICIModel.NameAttribute).ToHashSet(); // NOTE: we also delete the __name attribute of the CI
             await attributeModel.BulkReplaceAttributes(
                 new BulkCIAttributeDataCIAndAttributeNameScope(writeLayerID, new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>(),
-                new HashSet<Guid>() { ciid },
-                relevantAttributes
+                SpecificCIIDsSelection.Build(ciid), NamedAttributesSelection.Build(relevantAttributes)
                 ),
                 changesetProxy, trans, maskHandlingForRemoval, otherLayersValueHandling);
         }

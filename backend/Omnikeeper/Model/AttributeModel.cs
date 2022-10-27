@@ -231,7 +231,7 @@ namespace Omnikeeper.Model
                 BulkCIAttributeDataCIScope d =>
                     await GetMergedAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, layerset, trans: trans, atTime: timeThreshold, GeneratedDataHandlingExclude.Instance),
                 BulkCIAttributeDataCIAndAttributeNameScope a =>
-                    await GetMergedAttributes(SpecificCIIDsSelection.Build(a.RelevantCIs), NamedAttributesSelection.Build(a.RelevantAttributes), layerset, trans, timeThreshold, GeneratedDataHandlingExclude.Instance),
+                    await GetMergedAttributes(a.RelevantCIs, a.RelevantAttributes, layerset, trans, timeThreshold, GeneratedDataHandlingExclude.Instance),
                 _ => throw new Exception("Unknown scope")
             };
         }

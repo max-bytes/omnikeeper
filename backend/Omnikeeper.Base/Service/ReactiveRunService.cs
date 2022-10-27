@@ -78,12 +78,12 @@ namespace Omnikeeper.Base.Service
             this.model = model;
         }
 
-        public IObservable<(IDictionary<Guid, T> newAndChanged, ICIIDSelection ciSelection)> GetNewAndChangedByCIID(IObservable<(ICIIDSelection, ReactiveRunData)> changedCIIDs, LayerSet layerSet)
+        public IObservable<IDictionary<Guid, T>> GetNewAndChangedByCIID(IObservable<(ICIIDSelection, ReactiveRunData)> changedCIIDs, LayerSet layerSet)
         {
             return changedCIIDs.Select(async tuple =>
             {
                 var (ciSelection, runData) = tuple;
-                return (await model.GetByCIID(ciSelection, layerSet, runData.Trans, runData.ChangesetProxy.TimeThreshold), ciSelection);
+                return await model.GetByCIID(ciSelection, layerSet, runData.Trans, runData.ChangesetProxy.TimeThreshold);
             }).Concat();
         }
 

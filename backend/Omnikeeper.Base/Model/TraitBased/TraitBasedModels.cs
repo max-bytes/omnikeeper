@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -104,11 +103,8 @@ namespace Omnikeeper.Base.Model.TraitBased
             var fragments = additionalAttributes.Select(a => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, a.name, a.value));
             var attributeNames = additionalAttributes.Select(a => a.name).ToHashSet();
             await attributeModel.BulkReplaceAttributes(
-                new BulkCIAttributeDataCIAndAttributeNameScope(layerID,
-                fragments,
-                new HashSet<Guid>() { ciid },
-                attributeNames
-                ), changesetProxy, trans, maskHandling, otherLayersValueHandling);
+                new BulkCIAttributeDataCIAndAttributeNameScope(layerID, fragments, SpecificCIIDsSelection.Build(ciid), NamedAttributesSelection.Build(attributeNames)), 
+                changesetProxy, trans, maskHandling, otherLayersValueHandling);
 
             return ciid;
         }

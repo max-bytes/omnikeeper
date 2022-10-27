@@ -48,7 +48,7 @@ namespace Omnikeeper.Base.Model
             var data = new BulkCIAttributeDataCIAndAttributeNameScope(layerID, new BulkCIAttributeDataCIAndAttributeNameScope.Fragment[]
             {
                 new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, name, value)
-            }, new HashSet<Guid>() { ciid }, new HashSet<string>() { name });
+            }, SpecificCIIDsSelection.Build(ciid), NamedAttributesSelection.Build(name));
             var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance; // NOTE: we can keep this fixed here, because it does not affect inserts
             var r = await attributeModel.BulkReplaceAttributes(data, changeset, trans, maskHandling, otherLayersValueHandling);
             return r > 0;
@@ -56,7 +56,7 @@ namespace Omnikeeper.Base.Model
 
         public static async Task<bool> RemoveAttribute(this IAttributeModel attributeModel, string name, Guid ciid, string layerID, IChangesetProxy changeset, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            var data = new BulkCIAttributeDataCIAndAttributeNameScope(layerID, new BulkCIAttributeDataCIAndAttributeNameScope.Fragment[] { }, new HashSet<Guid>() { ciid }, new HashSet<string>() { name });
+            var data = new BulkCIAttributeDataCIAndAttributeNameScope(layerID, new BulkCIAttributeDataCIAndAttributeNameScope.Fragment[] { }, SpecificCIIDsSelection.Build(ciid), NamedAttributesSelection.Build(name));
             var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance; // NOTE: we can keep this fixed here, because it does not affect removals
             var r = await attributeModel.BulkReplaceAttributes(data, changeset, trans, maskHandling, otherLayersValueHandling);
             return r > 0;

@@ -39,62 +39,33 @@ namespace Omnikeeper.Base.CLB
             var targetLayerID = "tmp"; // TODO
 
             var changedCIIDs = reactiveRunService.ChangedCIIDsObs(run);
-            var changedCIIDs2 = reactiveRunService.ChangedCIIDsObs(run); // second time, testing model semaphore
-
-            //changedCIIDs.Zip(changedCIIDs2).Do(t =>
-            //{
-            //    var ciids1 = t.First;
-            //    var ciids2 = t.Second;
-            //    logger.LogInformation(ciids1.ToString());
-            //    logger.LogInformation(ciids2.ToString());
-            //});
-
-            //var runTimes = run.Scan(new List<TimeThreshold>(), (list, d) =>
-            //{
-            //    list.Add(d.ChangesetProxy.TimeThreshold);
-            //    return list;
-            //});
 
             var newAndChangedTargetHosts = targetHostModel.GetNewAndChangedByCIID(changedCIIDs.Zip(run), new LayerSet(sourceLayerIDCMDB));
 
             //var targetHosts = targetHostModel.GetAllByCIID(newAndChangedTargetHosts);
 
-            //throw new Exception("!"); // TODO: testing
-
-            var tmp = changedCIIDs.Zip(changedCIIDs2, newAndChangedTargetHosts, run);
-
-            var final = tmp.Select(async t =>
-            {
-                var ciids1 = t.First;
-                var ciids2 = t.Second;
-                var newAndChangedTargetHosts = t.Third.newAndChanged;
-                var relevantCIs = t.Third.ciSelection;
-                var runData = t.Fourth;
-                logger.LogInformation(ciids1.ToString());
-                logger.LogInformation(ciids2.ToString());
-                logger.LogInformation(newAndChangedTargetHosts.Count.ToString());
-                //logger.LogInformation(string.Join(",", targetHosts.Select(t => t.Value.ID)));
-
-                var uppercaseHostnameFragments = new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>();
-                foreach(var targetHost in newAndChangedTargetHosts)
+            var final = changedCIIDs
+                .Zip(newAndChangedTargetHosts, run)
+                .Select(async t =>
                 {
-                    uppercaseHostnameFragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(targetHost.Key, "uppercase_hostname", new AttributeScalarValueText(targetHost.Value.Hostname?.ToUpperInvariant() ?? "NOT SET")));
-                }
-                var relevantCIsSet = (await relevantCIs.GetCIIDsAsync(async () => await ciModel.GetCIIDs(runData.Trans))).ToHashSet(); // TODO: remove
-                await attributeModel.BulkReplaceAttributes(
-                    new BulkCIAttributeDataCIAndAttributeNameScope(targetLayerID, uppercaseHostnameFragments, relevantCIsSet, new HashSet<string>() { "uppercase_hostname" }),
-                    //new BulkCIAttributeDataLayerScope(targetLayerID, uppercaseHostnameFragments),
-                    runData.ChangesetProxy,
-                    runData.Trans,
-                    MaskHandlingForRemovalApplyNoMask.Instance,
-                    OtherLayersValueHandlingForceWrite.Instance);
+                    var (relevantCIs, newAndChangedTargetHosts, runData) = t;
 
-                logger.LogInformation($"Finished inner; thread: {Thread.CurrentThread.ManagedThreadId}");
+                    var uppercaseHostnameFragments = new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>();
+                    foreach(var targetHost in newAndChangedTargetHosts)
+                    {
+                        uppercaseHostnameFragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(targetHost.Key, "uppercase_hostname", new AttributeScalarValueText(targetHost.Value.Hostname?.ToUpperInvariant() ?? "NOT SET")));
+                    }
+                    var writtenAttributes = await attributeModel.BulkReplaceAttributes(
+                        new BulkCIAttributeDataCIAndAttributeNameScope(targetLayerID, uppercaseHostnameFragments, relevantCIs, AllAttributeSelection.Instance),
+                        runData.ChangesetProxy,
+                        runData.Trans,
+                        MaskHandlingForRemovalApplyNoMask.Instance,
+                        OtherLayersValueHandlingForceWrite.Instance);
 
-                //throw new Exception("!"); // TODO: testing
+                    logger.LogInformation($"Finished inner; written {writtenAttributes} attributes, thread: {Thread.CurrentThread.ManagedThreadId}");
 
-                return (result: true, runData: runData);
-            })
+                    return (result: true, runData: runData);
+                })
                 .Concat();
             return final;
         }

@@ -46,7 +46,7 @@ namespace Tasks.DBInit
             var traitModel = new RecursiveTraitModel(effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
             var lbas = new Mock<ILayerBasedAuthorizationService>();
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<IAuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
-            var modelContextBuilder = new ModelContextBuilder(conn, NullLogger<IModelContext>.Instance);
+            var modelContextBuilder = new ModelContextBuilder(conn);
 
             var random = new Random(3);
 
