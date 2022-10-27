@@ -18,14 +18,12 @@ namespace Omnikeeper.Base.CLB
     {
         private readonly ReactiveRunService reactiveRunService;
         private readonly IAttributeModel attributeModel;
-        private readonly ICIModel ciModel;
         private readonly ReactiveGenericTraitEntityModel<TargetHost> targetHostModel;
 
-        public ReactiveTestCLB(ReactiveRunService reactiveRunService, GenericTraitEntityModel<TargetHost> targetHostModel, IAttributeModel attributeModel, ICIModel ciModel)
+        public ReactiveTestCLB(ReactiveRunService reactiveRunService, GenericTraitEntityModel<TargetHost> targetHostModel, IAttributeModel attributeModel)
         {
             this.reactiveRunService = reactiveRunService;
             this.attributeModel = attributeModel;
-            this.ciModel = ciModel;
             this.targetHostModel = new ReactiveGenericTraitEntityModel<TargetHost>(targetHostModel);
         }
 
@@ -33,10 +31,9 @@ namespace Omnikeeper.Base.CLB
 
         public ISet<string> GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger) => new HashSet<string>() { "tsa_cmdb" };
 
-        public IObservable<(bool result, ReactiveRunData runData)> BuildPipeline(IObservable<ReactiveRunData> run, ILogger logger)
+        public IObservable<(bool result, ReactiveRunData runData)> BuildPipeline(IObservable<ReactiveRunData> run, string targetLayerID, JsonDocument clbConfig, ILogger logger)
         {
             var sourceLayerIDCMDB = "tsa_cmdb"; // TODO
-            var targetLayerID = "tmp"; // TODO
 
             var changedCIIDs = reactiveRunService.ChangedCIIDsObs(run);
 

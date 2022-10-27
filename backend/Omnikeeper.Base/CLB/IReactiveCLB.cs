@@ -10,7 +10,7 @@ namespace Omnikeeper.Base.CLB
     {
         string Name { get; }
 
-        IObservable<(bool result, ReactiveRunData runData)> BuildPipeline(IObservable<ReactiveRunData> run, ILogger logger);
+        IObservable<(bool result, ReactiveRunData runData)> BuildPipeline(IObservable<ReactiveRunData> run, string targetLayerID, JsonDocument clbConfig, ILogger logger);
 
         ISet<string> GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger);
     }

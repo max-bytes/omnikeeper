@@ -238,7 +238,7 @@ namespace Omnikeeper.Runners.Reactive
             //    })
             //).Concat();
 
-            var final = clb.BuildPipeline(run, clLogger);
+            var final = clb.BuildPipeline(run, layerID, clConfig.CLBrainConfig, clLogger);
             //var final = run.Select(rrd => (result: true, runData: rrd));
 
             var runCancelToken = final.Select(t =>
