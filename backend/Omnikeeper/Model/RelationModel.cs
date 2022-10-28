@@ -68,8 +68,8 @@ namespace Omnikeeper.Model
 
         public async Task<bool> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, bool mask, string layerID, IChangesetProxy changesetProxy, IModelContext trans, IOtherLayersValueHandling otherLayersValueHandling)
         {
-            var scope = new BulkRelationDataSpecificScope(layerID, new BulkRelationDataSpecificScope.Fragment[] {
-                new BulkRelationDataSpecificScope.Fragment(fromCIID, toCIID, predicateID, mask)
+            var scope = new BulkRelationDataSpecificScope(layerID, new BulkRelationFullFragment[] {
+                new BulkRelationFullFragment(fromCIID, toCIID, predicateID, mask)
             }, Array.Empty<(Guid from, Guid to, string predicateID)>());
             var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance; // NOTE: we can keep this fixed here, because it does not affect inserts
 
@@ -79,7 +79,7 @@ namespace Omnikeeper.Model
 
         public async Task<bool> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandling)
         {
-            var scope = new BulkRelationDataSpecificScope(layerID, Array.Empty<BulkRelationDataSpecificScope.Fragment>(),
+            var scope = new BulkRelationDataSpecificScope(layerID, Array.Empty<BulkRelationFullFragment>(),
                 new List<(Guid from, Guid to, string predicateID)> { (fromCIID, toCIID, predicateID) });
             var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance; // NOTE: we can keep this fixed here, because it does not affect removals
 

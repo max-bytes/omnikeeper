@@ -40,6 +40,23 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+
+    public class BulkRelationFullFragment
+    {
+        public Guid From { get; private set; }
+        public Guid To { get; private set; }
+        public string PredicateID { get; private set; }
+        public bool Mask { get; private set; }
+
+        public BulkRelationFullFragment(Guid from, Guid to, string predicateID, bool mask)
+        {
+            From = from;
+            To = to;
+            PredicateID = predicateID;
+            Mask = mask;
+        }
+    }
+
     public interface IBulkRelationData<F>
     {
         public string LayerID { get; }
@@ -83,66 +100,34 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    public sealed class BulkRelationDataLayerScope : IBulkRelationData<BulkRelationDataLayerScope.Fragment>
+    public sealed class BulkRelationDataLayerScope : IBulkRelationData<BulkRelationFullFragment>
     {
-        public class Fragment
-        {
-            public Guid From { get; private set; }
-            public Guid To { get; private set; }
-            public string PredicateID { get; private set; }
-            public bool Mask { get; private set; }
-
-            public Fragment(Guid from, Guid to, string predicateID, bool mask)
-            {
-                From = from;
-                To = to;
-                PredicateID = predicateID;
-                Mask = mask;
-            }
-        }
-
         public string LayerID { get; private set; }
-        public IEnumerable<Fragment> Fragments { get; private set; }
-        public string GetPredicateID(Fragment fragment) => fragment.PredicateID;
-        public Guid GetFromCIID(Fragment fragment) => fragment.From;
-        public Guid GetToCIID(Fragment fragment) => fragment.To;
-        public bool GetMask(Fragment fragment) => fragment.Mask;
+        public IEnumerable<BulkRelationFullFragment> Fragments { get; private set; }
+        public string GetPredicateID(BulkRelationFullFragment fragment) => fragment.PredicateID;
+        public Guid GetFromCIID(BulkRelationFullFragment fragment) => fragment.From;
+        public Guid GetToCIID(BulkRelationFullFragment fragment) => fragment.To;
+        public bool GetMask(BulkRelationFullFragment fragment) => fragment.Mask;
 
-        public BulkRelationDataLayerScope(string layerID, IEnumerable<Fragment> fragments)
+        public BulkRelationDataLayerScope(string layerID, IEnumerable<BulkRelationFullFragment> fragments)
         {
             LayerID = layerID;
             Fragments = fragments;
         }
     }
 
-    public sealed class BulkRelationDataCIScope : IBulkRelationData<BulkRelationDataCIScope.Fragment>
+    public sealed class BulkRelationDataCIScope : IBulkRelationData<BulkRelationFullFragment>
     {
-        public class Fragment
-        {
-            public Guid From { get; private set; }
-            public Guid To { get; private set; }
-            public string PredicateID { get; private set; }
-            public bool Mask { get; private set; }
-
-            public Fragment(Guid from, Guid to, string predicateID, bool mask)
-            {
-                From = from;
-                To = to;
-                PredicateID = predicateID;
-                Mask = mask;
-            }
-        }
-
         public string LayerID { get; private set; }
-        public IEnumerable<Fragment> Fragments { get; private set; }
+        public IEnumerable<BulkRelationFullFragment> Fragments { get; private set; }
         public IReadOnlySet<Guid> RelevantCIIDs { get; }
 
-        public string GetPredicateID(Fragment fragment) => fragment.PredicateID;
-        public Guid GetFromCIID(Fragment fragment) => fragment.From;
-        public Guid GetToCIID(Fragment fragment) => fragment.To;
-        public bool GetMask(Fragment fragment) => fragment.Mask;
+        public string GetPredicateID(BulkRelationFullFragment fragment) => fragment.PredicateID;
+        public Guid GetFromCIID(BulkRelationFullFragment fragment) => fragment.From;
+        public Guid GetToCIID(BulkRelationFullFragment fragment) => fragment.To;
+        public bool GetMask(BulkRelationFullFragment fragment) => fragment.Mask;
 
-        public BulkRelationDataCIScope(string layerID, IEnumerable<Fragment> fragments, IReadOnlySet<Guid> relevantCIIDs)
+        public BulkRelationDataCIScope(string layerID, IEnumerable<BulkRelationFullFragment> fragments, IReadOnlySet<Guid> relevantCIIDs)
         {
             LayerID = layerID;
             Fragments = fragments;
@@ -150,34 +135,18 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    public sealed class BulkRelationDataCIAndPredicateScope : IBulkRelationData<BulkRelationDataCIAndPredicateScope.Fragment>
+    public sealed class BulkRelationDataCIAndPredicateScope : IBulkRelationData<BulkRelationFullFragment>
     {
-        public class Fragment
-        {
-            public Guid From { get; private set; }
-            public Guid To { get; private set; }
-            public string PredicateID { get; private set; }
-            public bool Mask { get; private set; }
-
-            public Fragment(Guid from, Guid to, string predicateID, bool mask)
-            {
-                From = from;
-                To = to;
-                PredicateID = predicateID;
-                Mask = mask;
-            }
-        }
-
         public string LayerID { get; private set; }
 
         private readonly IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> Data;
         public readonly bool Outgoing;
         public readonly ISet<(Guid thisCIID, string predicateID)> Relevant;
 
-        public string GetPredicateID(Fragment fragment) => fragment.PredicateID;
-        public Guid GetFromCIID(Fragment fragment) => fragment.From;
-        public Guid GetToCIID(Fragment fragment) => fragment.To;
-        public bool GetMask(Fragment fragment) => fragment.Mask;
+        public string GetPredicateID(BulkRelationFullFragment fragment) => fragment.PredicateID;
+        public Guid GetFromCIID(BulkRelationFullFragment fragment) => fragment.From;
+        public Guid GetToCIID(BulkRelationFullFragment fragment) => fragment.To;
+        public bool GetMask(BulkRelationFullFragment fragment) => fragment.Mask;
 
         public BulkRelationDataCIAndPredicateScope(string layerID, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> data, ISet<(Guid thisCIID, string predicateID)> relevant, bool outgoing)
         {
@@ -187,7 +156,7 @@ namespace Omnikeeper.Base.Entity
             Relevant = relevant;
         }
 
-        public IEnumerable<Fragment> Fragments
+        public IEnumerable<BulkRelationFullFragment> Fragments
         {
             get
             {
@@ -197,42 +166,25 @@ namespace Omnikeeper.Base.Entity
                     {
                         var fromCIID = (Outgoing) ? thisCIID : otherCIID;
                         var toCIID = (Outgoing) ? otherCIID : thisCIID;
-                        yield return new Fragment(fromCIID, toCIID, predicateID, false); // TODO: add support for masks
+                        yield return new BulkRelationFullFragment(fromCIID, toCIID, predicateID, false); // TODO: add support for masks
                     }
                 }
             }
         }
     }
 
-    public sealed class BulkRelationDataSpecificScope : IBulkRelationData<BulkRelationDataSpecificScope.Fragment>
+    public sealed class BulkRelationDataSpecificScope : IBulkRelationData<BulkRelationFullFragment>
     {
-
-        public class Fragment
-        {
-            public Guid From { get; private set; }
-            public Guid To { get; private set; }
-            public string PredicateID { get; private set; }
-            public bool Mask { get; private set; }
-
-            public Fragment(Guid from, Guid to, string predicateID, bool mask)
-            {
-                From = from;
-                To = to;
-                PredicateID = predicateID;
-                Mask = mask;
-            }
-        }
-
         public string LayerID { get; private set; }
-        public IEnumerable<Fragment> Fragments { get; private set; }
-        public string GetPredicateID(Fragment fragment) => fragment.PredicateID;
-        public Guid GetFromCIID(Fragment fragment) => fragment.From;
-        public Guid GetToCIID(Fragment fragment) => fragment.To;
-        public bool GetMask(Fragment fragment) => fragment.Mask;
+        public IEnumerable<BulkRelationFullFragment> Fragments { get; private set; }
+        public string GetPredicateID(BulkRelationFullFragment fragment) => fragment.PredicateID;
+        public Guid GetFromCIID(BulkRelationFullFragment fragment) => fragment.From;
+        public Guid GetToCIID(BulkRelationFullFragment fragment) => fragment.To;
+        public bool GetMask(BulkRelationFullFragment fragment) => fragment.Mask;
 
         public readonly IEnumerable<(Guid from, Guid to, string predicateID)> Removals;
 
-        public BulkRelationDataSpecificScope(string layerID, IEnumerable<Fragment> fragments, IEnumerable<(Guid from, Guid to, string predicateID)> removals)
+        public BulkRelationDataSpecificScope(string layerID, IEnumerable<BulkRelationFullFragment> fragments, IEnumerable<(Guid from, Guid to, string predicateID)> removals)
         {
             LayerID = layerID;
             Fragments = fragments;

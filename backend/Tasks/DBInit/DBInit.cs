@@ -293,14 +293,14 @@ namespace Tasks.DBInit
             // create monitoring relations
             using (var trans = modelContextBuilder.BuildDeferred())
             {
-                var fragments = new List<BulkRelationDataLayerScope.Fragment>();
+                var fragments = new List<BulkRelationFullFragment>();
                 if (!windowsHostCIIds.IsEmpty())
                 {
                     var windowsHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(windowsHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
                     foreach (var ci in windowsHosts)
                     {
-                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module", false));
-                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", false));
+                        fragments.Add(new BulkRelationFullFragment(ci.ID, ciMonModuleHost, "has_monitoring_module", false));
+                        fragments.Add(new BulkRelationFullFragment(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", false));
                         //await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                         //await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                     }
@@ -310,8 +310,8 @@ namespace Tasks.DBInit
                     var linuxHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(linuxHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
                     foreach (var ci in linuxHosts)
                     {
-                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module", false));
-                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", false));
+                        fragments.Add(new BulkRelationFullFragment(ci.ID, ciMonModuleHost, "has_monitoring_module", false));
+                        fragments.Add(new BulkRelationFullFragment(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", false));
                         //await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                         //await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                     }

@@ -201,7 +201,7 @@ namespace Omnikeeper.Base.Service
 
             var numAffectedAttributes = await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, trans, maskHandling, otherLayersValueHandling);
 
-            var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
+            var relationFragments = new List<BulkRelationFullFragment>();
             var usedRelations = new HashSet<(Guid fromCIID, Guid toCIID, string predicateID)>();
             foreach (var cic in data.RelationCandidates)
             {
@@ -237,7 +237,7 @@ namespace Omnikeeper.Base.Service
                     continue;
                 }
 
-                relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID, false));
+                relationFragments.Add(new BulkRelationFullFragment(fromCIID, toCIID, cic.PredicateID, false));
                 usedRelations.Add((fromCIID, toCIID, cic.PredicateID));
             }
             var bulkRelationData = new BulkRelationDataLayerScope(writeLayer.ID, relationFragments.ToArray());

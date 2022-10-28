@@ -258,8 +258,8 @@ namespace Omnikeeper.Base.Model.TraitBased
         public async Task<(EffectiveTrait et, bool changed)> AddRelations(TraitRelation tr, Guid thisCIID, Guid[] relatedCIIDsToAdd, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, MaskHandlingForRemovalApplyNoMask maskHandlingForRemoval)
         {
             var fragments = (tr.RelationTemplate.DirectionForward)
-                ? relatedCIIDsToAdd.Select(ciid => new BulkRelationDataSpecificScope.Fragment(thisCIID, ciid, tr.RelationTemplate.PredicateID, false))
-                : relatedCIIDsToAdd.Select(ciid => new BulkRelationDataSpecificScope.Fragment(ciid, thisCIID, tr.RelationTemplate.PredicateID, false));
+                ? relatedCIIDsToAdd.Select(ciid => new BulkRelationFullFragment(thisCIID, ciid, tr.RelationTemplate.PredicateID, false))
+                : relatedCIIDsToAdd.Select(ciid => new BulkRelationFullFragment(ciid, thisCIID, tr.RelationTemplate.PredicateID, false));
             var scope = new BulkRelationDataSpecificScope(writeLayerID, fragments, ImmutableList<(Guid from, Guid to, string predicateID)>.Empty);
 
             var changed = await WriteRelations(scope, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
@@ -275,7 +275,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var toRemove = (tr.RelationTemplate.DirectionForward)
                 ? relatedCIIDsToRemove.Select(ciid => (thisCIID, ciid, tr.RelationTemplate.PredicateID))
                 : relatedCIIDsToRemove.Select(ciid => (ciid, thisCIID, tr.RelationTemplate.PredicateID));
-            var scope = new BulkRelationDataSpecificScope(writeLayerID, ImmutableList<BulkRelationDataSpecificScope.Fragment>.Empty, toRemove);
+            var scope = new BulkRelationDataSpecificScope(writeLayerID, ImmutableList<BulkRelationFullFragment>.Empty, toRemove);
 
             var changed = await WriteRelations(scope, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
 
