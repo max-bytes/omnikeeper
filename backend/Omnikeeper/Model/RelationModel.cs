@@ -164,9 +164,25 @@ namespace Omnikeeper.Model
                 return await GetMergedRelations(RelationSelectionSpecific.Build(specificRelations), layerIDs, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance);
             }
 
+            async Task<IEnumerable<MergedRelation>> GetOutdatedRelationsFromCIScope(BulkRelationDataCIScope cs, LayerSet layerIDs, IModelContext trans, TimeThreshold timeThreshold, IMaskHandlingForRetrieval maskHandlingForRetrieval)
+            {
+                var from = await GetMergedRelations(RelationSelectionFrom.BuildWithAllPredicateIDs(cs.RelevantCIIDs), layerIDs, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance);
+                var to = await GetMergedRelations(RelationSelectionTo.BuildWithAllPredicateIDs(cs.RelevantCIIDs), layerIDs, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance);
+
+                // HACK, TODO: with this approach, we need to filter out duplicates
+                // if we had a RelationSelectionFromOrTo, we wouldn't need to do this
+                var dict = new Dictionary<Guid, MergedRelation>();
+                foreach (var f in from)
+                    dict[f.Relation.ID] = f;
+                foreach (var t in to)
+                    dict[t.Relation.ID] = t;
+                return dict.Values;
+            }
+
             return data switch
             {
                 BulkRelationDataPredicateScope p => await GetMergedRelations(RelationSelectionWithPredicate.Build(p.PredicateID), layerSet, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance),
+                BulkRelationDataCIScope p => await GetOutdatedRelationsFromCIScope(p, layerSet, trans, timeThreshold, maskHandlingForRetrieval),
                 BulkRelationDataLayerScope _ => await GetMergedRelations(RelationSelectionAll.Instance, layerSet, trans, timeThreshold, maskHandlingForRetrieval, GeneratedDataHandlingExclude.Instance),
                 BulkRelationDataCIAndPredicateScope cp => await GetOutdatedRelationsFromCIAndPredicateScope(cp, layerSet, trans, timeThreshold, maskHandlingForRetrieval),
                 BulkRelationDataSpecificScope ss => await GetOutdatedRelationsFromSpecificScope(ss, layerSet, trans, timeThreshold, maskHandlingForRetrieval),
