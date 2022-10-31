@@ -1,11 +1,12 @@
-import { useLazyQuery } from "@apollo/client";
+import { useLazyQuery, useMutation } from "@apollo/client";
 import React, {useCallback, useEffect, useState} from "react";
-import { Button } from 'antd';
+import { Button, Space } from 'antd';
 import _ from 'lodash';
 import { queries } from "../../graphql/queries";
+import { mutations } from '../../graphql/mutations'
 import { AgGridReact } from "ag-grid-react";
 import moment from 'moment';
-import { SyncOutlined } from '@ant-design/icons';
+import { SyncOutlined, DeleteOutlined } from '@ant-design/icons';
 import { CIID } from "utils/uuidRenderers";
 import { useAGGridEnterprise } from 'utils/useAGGridEnterprise';
 import { formatTimestamp } from "utils/datetime";
@@ -16,11 +17,16 @@ export default function IssueList(props) {
     const [search, { loading: loadingIssues, data: dataIssues }] = useLazyQuery(queries.Issues, {
         notifyOnNetworkStatusChange: true
     });
+    const [deleteIssues] = useMutation(mutations.DELETE_ISSUES);
 
     // debounce search, so its not called too often
     const debouncedSearch = useCallback(_.debounce(search, 500), [search]);
 
     const [refreshNonce, setRefreshNonce] = useState(null);
+
+    const [deleteInProgress, setDeleteInProgress] = useState(false);
+
+    const [selectedRows, setSelectedRows] = useState([]);
 
     useEffect(() => {
         debouncedSearch({
@@ -50,7 +56,10 @@ export default function IssueList(props) {
             filter: true,
             flex: 1,
             autoHeight: true, 
-            cellClass: 'cell-wrap-text'
+            cellClass: 'cell-wrap-text',
+            checkboxSelection: true,
+            headerCheckboxSelection: true,
+            headerCheckboxSelectionFilteredOnly: true
         },
         {
             headerName: "Affected CIs",
@@ -89,19 +98,40 @@ export default function IssueList(props) {
             cellRenderer: "timestampCellRenderer",
             width: 140
         },
+        {
+            headerName: "CIID",
+            field: "ciid",
+            hide: true,
+            suppressColumnsToolPanel: true,
+            suppressFiltersToolPanel: true
+         }
     ];
 
+
     const list = _.map(dataIssues?.traitEntities?.m__meta__issue__issue?.all, item => {
-        return {...item.entity, timestamp: item.latestChange.timestamp};
+        return {...item.entity, timestamp: item.latestChange.timestamp, ciid: item.ciid};
     });
+
+    const deleteButton = <Button icon={<DeleteOutlined />} type="primary" danger disabled={selectedRows.length === 0 || deleteInProgress} loading={deleteInProgress} onClick={() => {
+        const ciidsToDelete = selectedRows.map(r => r.ciid);
+
+        setDeleteInProgress(true);
+        deleteIssues({ variables: { ciids: ciidsToDelete } })
+            .then(r => setRefreshNonce(moment().toISOString()))
+            .catch(e => console.error(e))
+            .finally(() => setDeleteInProgress(false));
+    }}>Delete Selected ({selectedRows.length.toString()})</Button>;
 
     return <>
         <h2>Issues</h2>
         {list && 
             <>
-                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: "10px"}}>
                     <h3>Results: {rowCount} Issues</h3>
-                    <Button icon={<SyncOutlined />} type="primary" loading={loadingIssues} onClick={() => setRefreshNonce(moment().toISOString())}>Refresh</Button>
+                    <Space>
+                        <Button icon={<SyncOutlined />} type="primary" loading={loadingIssues} onClick={() => setRefreshNonce(moment().toISOString())}>Refresh</Button>
+                        {deleteButton}
+                    </Space>
                 </div>
                 <div style={{height:'100%'}} className={"ag-theme-balham"}>
                     <AgGridReact
@@ -122,6 +152,10 @@ export default function IssueList(props) {
                             return `${params.data.id}-${params.data.group}-${params.data.context}-${params.data.type}`;
                         }}
                         onModelUpdated={(params) => setRowCount(params.api.getDisplayedRowCount())}
+                        rowSelection='multiple'
+                        onSelectionChanged={(params) => {
+                            setSelectedRows(params.api.getSelectedRows());
+                        }}
                     />
                 </div>
             </>

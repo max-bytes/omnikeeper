@@ -249,10 +249,46 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         if (await authzFilterManager.ApplyPreFilterForMutation(new PreDeleteContextForTraitEntities(ciid, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
                             throw new ExecutionError(d.Reason);
 
-                        var removed = await elementTypeContainer.TraitEntityModel.TryToDelete(ciid, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                        var removed = await elementTypeContainer.TraitEntityModel.TryToDelete(SpecificCIIDsSelection.Build(ciid), layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                         if (await authzFilterManager.ApplyPostFilterForMutation(new PostDeleteContextForTraitEntities(ciid, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                             throw new ExecutionError(dPost.Reason);
+
+                        userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
+
+                        return removed;
+                    });
+
+                var deleteMultipleByCIIDMutationName = TraitEntityTypesNameGenerator.GenerateDeleteMultipleByCIIDMutationName(traitID);
+                tet.Field(deleteMultipleByCIIDMutationName, new BooleanGraphType())
+                    .Arguments(
+                        new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                        new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>> { Name = "ciids" }
+                    )
+                    .ResolveAsync(async context =>
+                    {
+                        var layerStrings = context.GetArgument<string[]>("layers")!;
+                        var writeLayerID = context.GetArgument<string>("writeLayer")!;
+                        var ciids = context.GetArgument<Guid[]>("ciids")!;
+
+                        var userContext = await context.GetUserContext()
+                            .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                        var layerset = userContext.GetLayerSet(context.Path);
+                        var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                        var trans = userContext.Transaction;
+
+                        // TODO: rework Pre/PostDeleteContextForTraitEntities to work with set of CIIDs
+                        foreach (var ciid in ciids)
+                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreDeleteContextForTraitEntities(ciid, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
+
+                        var removed = await elementTypeContainer.TraitEntityModel.TryToDelete(SpecificCIIDsSelection.Build(ciids), layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+
+                        foreach (var ciid in ciids)
+                            if (await authzFilterManager.ApplyPostFilterForMutation(new PostDeleteContextForTraitEntities(ciid, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
+                                throw new ExecutionError(dPost.Reason);
 
                         userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
 
@@ -348,7 +384,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 if (await authzFilterManager.ApplyPreFilterForMutation(new PreDeleteContextForTraitEntities(bestMatchingCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
                                     throw new ExecutionError(d.Reason);
 
-                                var removed = await elementTypeContainer.TraitEntityModel.TryToDelete(bestMatchingCIID, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                                var removed = await elementTypeContainer.TraitEntityModel.TryToDelete(SpecificCIIDsSelection.Build(bestMatchingCIID), layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                                 if (await authzFilterManager.ApplyPostFilterForMutation(new PostDeleteContextForTraitEntities(bestMatchingCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                                     throw new ExecutionError(dPost.Reason);
@@ -460,7 +496,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             if (await authzFilterManager.ApplyPreFilterForMutation(new PreDeleteContextForTraitEntities(finalCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
                                 throw new ExecutionError(d.Reason);
 
-                            var removed = await elementTypeContainer.TraitEntityModel.TryToDelete(finalCIID, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var removed = await elementTypeContainer.TraitEntityModel.TryToDelete(SpecificCIIDsSelection.Build(finalCIID), layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
 
                             if (await authzFilterManager.ApplyPostFilterForMutation(new PostDeleteContextForTraitEntities(finalCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
                                 throw new ExecutionError(dPost.Reason);

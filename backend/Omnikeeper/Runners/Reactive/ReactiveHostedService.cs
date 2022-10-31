@@ -268,7 +268,7 @@ namespace Omnikeeper.Runners.Reactive
                         await issuePersister.Persist(t.runData.IssueAccumulator, transUpdateIssues, t.runData.ChangesetProxy);
                         transUpdateIssues.Commit();
 
-                        clLogger.LogInformation($"Finished RCLB run; result: {(result ? "success" : "failure")}");
+                        runData.StopTimer.Stop((ts, elapsedTime) => clLogger.LogInformation($"Done in {elapsedTime}; result: {(result ? "success" : "failure")}"));
                     }
                     catch (Exception e)
                     {
@@ -420,7 +420,9 @@ namespace Omnikeeper.Runners.Reactive
 
                         var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel, new DataOriginV1(DataOriginType.ComputeLayer));
                         var transRun = modelContextBuilder.BuildDeferred();
-                        var runData = new ReactiveRunData(unprocessedChangesets, latestSeenChangesets, changesetProxy, transRun, scope, issueAccumulator);
+                        var runData = new ReactiveRunData(unprocessedChangesets, latestSeenChangesets, changesetProxy, transRun, scope, issueAccumulator, new StopTimer());
+
+                        clLogger.LogInformation($"Running RCLB {clb.Name} on layer {layerID}");
 
                         o.OnNext(runData);
                     }

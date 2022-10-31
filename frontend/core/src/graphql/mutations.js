@@ -87,6 +87,12 @@ export const mutations = {
   ${Fragments.fullCI}
   `,
 
+  DELETE_ISSUES: gql`
+  mutation($ciids: [Guid]!) {
+    deleteMultipleByCIID_m__meta__issue__issue(layers: ["__okissues"], writeLayer:"__okissues", ciids: $ciids)
+  }  
+  `,
+
   CREATE_CI: gql`
     mutation($name: String!, $layerIDForName: String!) {
       createCIs(cis: [

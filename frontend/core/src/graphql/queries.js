@@ -177,6 +177,7 @@ export const queries = {
                   latestChange {
                     timestamp
                   }
+                  ciid
                   entity {
                     type
                     context

@@ -74,7 +74,7 @@ namespace Tests.Integration.Reactive
         {
             var counter = new Counter();
 
-            var useHigherOrderExceptionHandling = false; // test succeeds when false, fails when true
+            var useHigherOrderExceptionHandling = true; // test succeeds when false, fails when true
 
             //var obs = Observable.Create<RunData>(async (o) =>
             //{
@@ -94,7 +94,7 @@ namespace Tests.Integration.Reactive
                 return Disposable.Empty;
             })
                 .Concat(Observable.Empty<RunData>().Delay(TimeSpan.FromMilliseconds(10)))
-                .Repeat() // Resubscribe indefinitely after source completes
+                .Repeat(3) // Resubscribe indefinitely after source completes
                 .Publish().RefCount() // see http://northhorizon.net/2011/sharing-in-rx/
                 ;
 
@@ -117,7 +117,7 @@ namespace Tests.Integration.Reactive
             {
                 return obs.Select(rd => Observable.FromAsync(async ct =>
                 {
-                    await Task.Delay(3000);
+                    await Task.Delay(100);
                     return (result: true, runData: rd);
                 })).Concat(); // very simple example, real-world transformation would be more complex
             }
@@ -125,33 +125,24 @@ namespace Tests.Integration.Reactive
             IObservable<(bool result, RunData runData)> safeObs;
             if (useHigherOrderExceptionHandling)
             {
-                safeObs = obs.Select(rd =>
-                    TransformRunDataToResult(obs)
-                    .Catch((Exception e) => // try to catch any exception occurring within the stream, return a new tuple with result: false if that happens
-                    {
-                        return (Observable.Return((result: false, runData: rd)));
-                    })
-                ).Concat();
+                //safeObs = obs.Select(rd =>
+                //    TransformRunDataToResult(obs)
+                //    .Catch((Exception e) => // try to catch any exception occurring within the stream, return a new tuple with result: false if that happens
+                //    {
+                //        return (Observable.Return((result: false, runData: rd)));
+                //    })
+                //).Concat();
+
+                safeObs = obs.Publish(_obs => _obs
+                    .Select(rd => TransformRunDataToResult(_obs)
+                        .Catch((Exception e) => Observable.Return((result: false, runData: rd)))
+                    ))
+                    .Concat();
             }
             else
             {
                 safeObs = TransformRunDataToResult(obs);
             }
-
-            //safeObs.Select(t =>
-            //    {
-            //        var (result, runData) = t;
-            //        try
-            //        {
-            //            Console.WriteLine($"Result: {result}");
-            //        }
-            //        finally
-            //        {
-            //            t.runData.Dispose(); // dispose RunData instance that was created by the observable above
-            //        }
-            //        return Unit.Default;
-            //    })
-            //    .Subscribe();
 
             safeObs.Select(t =>
                 Observable.FromAsync(async () =>
@@ -160,7 +151,7 @@ namespace Tests.Integration.Reactive
                     var (result, runData) = t;
                     try
                     {
-                        await Task.Delay(3000); // just here to justify the async nature
+                        await Task.Delay(100); // just here to justify the async nature
 
                         Console.WriteLine($"Result: {result}");
                     }
@@ -174,7 +165,69 @@ namespace Tests.Integration.Reactive
                 .Concat()
                 .Subscribe();
 
-            await Task.Delay(7000); // give observable enough time to produce a few items
+            await Task.Delay(3000); // give observable enough time to produce a few items
+
+            Assert.AreEqual(0, counter.Value);
+        }
+
+        [Test]
+        [Explicit]
+        public async Task TestHigherOrderExceptionHandling2()
+        {
+            var counter = new Counter();
+            var useHigherOrderExceptionHandling = true; // test succeeds when false, fails when true
+
+            var obs = Observable.Create<RunData>(o =>
+            {
+                o.OnNext(new RunData(counter)); // produce a new RunData object, must be disposed later!
+                o.OnCompleted();
+                return Disposable.Empty;
+            })
+                .Concat(Observable.Empty<RunData>().Delay(TimeSpan.FromSeconds(1)))
+                .Repeat(3) // Resubscribe two more times after source completes
+                .Publish().RefCount() // see http://northhorizon.net/2011/sharing-in-rx/
+                ;
+
+            // transforms the stream, exceptions might be thrown inside of stream, I would like to catch them and handle them appropriately
+            IObservable<(bool result, RunData runData)> TransformRunDataToResult(IObservable<RunData> obs)
+            {
+                return obs.Select(rd =>
+                {
+                    // simple toy example, could throw exception here in practice
+                    // throw new Exception();
+                    return (result: true, runData: rd);
+                });
+            }
+
+            IObservable<(bool result, RunData runData)> safeObs;
+            if (useHigherOrderExceptionHandling)
+            {
+                safeObs = obs.Publish(_obs => _obs
+                    .Select(rd => TransformRunDataToResult(_obs)
+                        .Catch((Exception e) => Observable.Return((result: false, runData: rd)))
+                    ))
+                    .Concat();
+            }
+            else
+            {
+                safeObs = TransformRunDataToResult(obs);
+            }
+
+            safeObs.Subscribe(
+                t =>
+                {
+                    var (result, runData) = t;
+                    try
+                    {
+                        Console.WriteLine($"Result: {result}");
+                    }
+                    finally
+                    {
+                        t.runData.Dispose(); // dispose RunData instance that was created by the observable above
+                    }
+                });
+
+            await Task.Delay(4000); // give observable enough time to produce a few items
 
             Assert.AreEqual(0, counter.Value);
         }

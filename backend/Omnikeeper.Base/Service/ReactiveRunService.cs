@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace Omnikeeper.Base.Service
 {
     public record class ReactiveRunData(IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> UnprocessedChangesets, IReadOnlyDictionary<string, Guid> LatestSeenChangesets,
-        ChangesetProxy ChangesetProxy, IModelContext Trans, ILifetimeScope Scope, IssueAccumulator IssueAccumulator) : IDisposable
+        ChangesetProxy ChangesetProxy, IModelContext Trans, ILifetimeScope Scope, IssueAccumulator IssueAccumulator, StopTimer StopTimer) : IDisposable
     {
         public void Dispose()
         {

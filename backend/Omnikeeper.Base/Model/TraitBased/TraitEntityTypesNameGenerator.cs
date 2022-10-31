@@ -50,6 +50,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public static string GenerateUpdateByCIIDMutationName(string traitID) => "updateByCIID_" + SanitizeMutationName(traitID);
         public static string GenerateUpdateSingleByFilterMutationName(string traitID) => "updateSingleByFilter_" + SanitizeMutationName(traitID);
         public static string GenerateDeleteByCIIDMutationName(string traitID) => "deleteByCIID_" + SanitizeMutationName(traitID);
+        public static string GenerateDeleteMultipleByCIIDMutationName(string traitID) => "deleteMultipleByCIID_" + SanitizeMutationName(traitID);
         public static string GenerateUpsertByDataIDMutationName(string traitID) => "upsertByDataID_" + SanitizeMutationName(traitID);
         public static string GenerateDeleteByDataIDMutationName(string traitID) => "deleteByDataID_" + SanitizeMutationName(traitID);
         public static string GenerateUpsertSingleByFilterMutationName(string traitID) => "upsertSingleByFilter_" + SanitizeMutationName(traitID);

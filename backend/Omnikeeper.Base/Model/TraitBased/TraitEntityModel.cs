@@ -195,42 +195,45 @@ namespace Omnikeeper.Base.Model.TraitBased
             return tmpNumChanged > 0;
         }
 
-        // NOTE: assumes that the ciid exists, does not check beforehand if the trait entity is actually present
+        // NOTE: assumes that the ciids exist, does not check beforehand if trait entities are actually present
         // NOTE: also deletes the __name ci attribute, if it exists
-        public async Task<bool> TryToDelete(Guid ciid, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        public async Task<bool> TryToDelete(ICIIDSelection ciSelection, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            await RemoveAllAttributes(ciid, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
-            await RemoveAllRelations(ciid, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
+            await RemoveAllAttributes(ciSelection, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
+            await RemoveAllRelations(ciSelection, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
 
-            var dcAfterDeletion = await GetSingleByCIID(ciid, layerSet, trans, changesetProxy.TimeThreshold);
-            return (dcAfterDeletion == null); // return successful if dc does not exist anymore afterwards
+            var dcAfterDeletion = await GetByCIID(ciSelection, layerSet, trans, changesetProxy.TimeThreshold);
+            return dcAfterDeletion.Count == 0; // return successful if dcs do not exist anymore afterwards
         }
 
-        private async Task RemoveAllAttributes(Guid ciid, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        private async Task RemoveAllAttributes(ICIIDSelection ciSelection, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             var otherLayersValueHandling = GetOtherLayersValueHandling(layerSet, writeLayerID);
             var relevantAttributes = relevantAttributesForTrait.Concat(ICIModel.NameAttribute).ToHashSet(); // NOTE: we also delete the __name attribute of the CI
             await attributeModel.BulkReplaceAttributes(
                 new BulkCIAttributeDataCIAndAttributeNameScope(writeLayerID, new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>(),
-                SpecificCIIDsSelection.Build(ciid), NamedAttributesSelection.Build(relevantAttributes)
+                ciSelection, NamedAttributesSelection.Build(relevantAttributes)
                 ),
                 changesetProxy, trans, maskHandlingForRemoval, otherLayersValueHandling);
         }
 
-        private async Task RemoveAllRelations(Guid ciid, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        private async Task RemoveAllRelations(ICIIDSelection ciSelection, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
             if (!trait.OptionalRelations.IsEmpty())
             {
                 var outgoing = new HashSet<(Guid thisCIID, string predicateID)>();
                 var incoming = new HashSet<(Guid thisCIID, string predicateID)>();
+                var ciids = await ciSelection.GetCIIDsAsync(async () => await ciModel.GetCIIDs(trans));
                 foreach (var traitRelation in trait.OptionalRelations)
                 {
                     var predicateID = traitRelation.RelationTemplate.PredicateID;
                     var isOutgoing = traitRelation.RelationTemplate.DirectionForward;
                     if (isOutgoing)
-                        outgoing.Add((ciid, predicateID));
+                        foreach(var ciid in ciids)
+                            outgoing.Add((ciid, predicateID));
                     else
-                        incoming.Add((ciid, predicateID));
+                        foreach (var ciid in ciids)
+                            incoming.Add((ciid, predicateID));
                 }
                 var otherLayersValueHandling = GetOtherLayersValueHandling(layerSet, writeLayerID);
                 await relationModel.BulkReplaceRelations(new BulkRelationDataCIAndPredicateScope(writeLayerID,
