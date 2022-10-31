@@ -51,7 +51,7 @@ namespace Omnikeeper.Service
             // get all issues
             var allIssues = await model.GetByCIID(AllCIIDsSelection.Instance, metaConfig.IssueLayerset, transI, timeThreshold);
 
-            var toRemove = new List<Guid>();
+            var toRemove = new HashSet<Guid>();
             foreach (var kv in allIssues)
             {
                 if (!validContexts.Contains((kv.Value.Type, kv.Value.Context)))
@@ -83,14 +83,16 @@ namespace Omnikeeper.Service
 
                             using (var transD = modelContextBuilder.BuildDeferred())
                             {
-                                var removed = 0;
-                                foreach (var ciid in toRemove)
+                                var success = await model.TryToDelete(SpecificCIIDsSelection.Build(toRemove), metaConfig.IssueLayerset, metaConfig.IssueWriteLayer, changesetProxy, transD, MaskHandlingForRemovalApplyNoMask.Instance);
+                                if (success)
                                 {
-                                    var success = await model.TryToDelete(ciid, metaConfig.IssueLayerset, metaConfig.IssueWriteLayer, changesetProxy, transD, MaskHandlingForRemovalApplyNoMask.Instance);
-                                    if (success) removed++;
+                                    transD.Commit();
+                                    return toRemove.Count;
+                                } else
+                                {
+                                    transD.Rollback();
+                                    return 0;
                                 }
-                                transD.Commit();
-                                return removed;
                             }
                         }
                         finally

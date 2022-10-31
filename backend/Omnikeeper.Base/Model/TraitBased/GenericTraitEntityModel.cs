@@ -211,7 +211,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                 return false; // no dc with this ID exists
             }
 
-            return await traitEntityModel.TryToDelete(t.ciid, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
+            return await traitEntityModel.TryToDelete(SpecificCIIDsSelection.Build(t.ciid), layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
         }
     }
 
@@ -261,9 +261,9 @@ namespace Omnikeeper.Base.Model.TraitBased
             return await traitEntityModel.GetLatestRelevantChangesetPerTraitEntity(ciSelection, includeRemovedTraitEntities, filterOutNonTraitEntityCIs, layerSet, trans, timeThreshold);
         }
 
-        public async Task<bool> TryToDelete(Guid ciid, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        public async Task<bool> TryToDelete(ICIIDSelection ciSelection, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            return await traitEntityModel.TryToDelete(ciid, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
+            return await traitEntityModel.TryToDelete(ciSelection, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
         }
 
         protected IList<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> Entities2Fragments(IEnumerable<(T t, Guid ciid)> entities)
