@@ -197,6 +197,72 @@ namespace Omnikeeper.Model
             }
         }
 
+        public async IAsyncEnumerable<CIAttribute> GetAttributesNew(ICIIDSelection selection, IAttributeSelection attributeSelection, string layerID, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        {
+            NpgsqlCommand command;
+
+            var ciidSelection2CTEClause = CIIDSelection2CTEClause(selection);
+
+            int parameterIndex = 0;
+            if (atTime.IsLatest && _USE_LATEST_TABLE)
+            {
+                command = new NpgsqlCommand($@"
+                    {ciidSelection2CTEClause}
+                    select id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id FROM attribute_latest a
+                    {CIIDSelection2JoinClause(selection)}
+                    where ({CIIDSelection2WhereClause(selection)}) and layer_id = {SetParameter(ref parameterIndex)}
+                    and ({AttributeSelection2WhereClause(attributeSelection, ref parameterIndex)})", trans.DBConnection, trans.DBTransaction);
+                command.Parameters.Add(new NpgsqlParameter { Value = layerID });
+                foreach (var p in AttributeSelection2Parameters(attributeSelection))
+                    command.Parameters.Add(p);
+            }
+            else
+            {
+                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
+
+                command = new NpgsqlCommand($@"
+                    {ciidSelection2CTEClause}
+                    select id, name, ci_id, type, value_text, value_binary, value_control, changeset_id from (
+                        select distinct on(a.ci_id, name, layer_id) removed, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
+                        {CIIDSelection2JoinClause(selection)}
+                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= {SetParameter(ref parameterIndex)} and layer_id = {SetParameter(ref parameterIndex)} and partition_index >= {SetParameter(ref parameterIndex)}
+                        and ({AttributeSelection2WhereClause(attributeSelection, ref parameterIndex)})
+                        order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
+                    ) i where removed = false
+                    ", trans.DBConnection, trans.DBTransaction);
+                command.Parameters.AddWithValue(atTime.Time.ToUniversalTime());
+                command.Parameters.AddWithValue(layerID);
+                command.Parameters.AddWithValue(partitionIndex);
+                foreach (var p in AttributeSelection2Parameters(attributeSelection))
+                    command.Parameters.Add(p);
+            }
+
+            using var _ = await trans.WaitAsync();
+
+            if (ciidSelection2CTEClause == "")
+                command.Prepare(); // NOTE: preparing only makes sense if the query is somewhat static, which it won't be when a highly dynamic CTE is involved
+
+            using var dr = await command.ExecuteReaderAsync();
+
+            command.Dispose();
+
+            while (dr.Read())
+            {
+                var id = dr.GetGuid(0);
+                var name = dr.GetString(1);
+                var CIID = dr.GetGuid(2);
+                var type = dr.GetFieldValue<AttributeValueType>(3);
+                var valueText = dr.GetString(4);
+                var valueBinary = dr.GetFieldValue<byte[]>(5);
+                var valueControl = dr.GetFieldValue<byte[]>(6);
+                var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                var changesetID = dr.GetGuid(7);
+
+                var att = new CIAttribute(id, name, CIID, av, changesetID);
+                yield return att;
+            }
+        }
+
 
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {

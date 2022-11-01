@@ -57,6 +57,38 @@ namespace Omnikeeper.Model
             return compound;
         }
 
+        private async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> MergeAttributesNew(IAsyncEnumerable<CIAttribute>[] layeredAttributes, string[] layerIDs)
+        {
+            // TODO: implement faster in case of single layer
+            // TODO: think about implementing it faster by using a sparse attribute array instead of a dictionary
+
+            var compound = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
+            for (var i = 0; i < layerIDs.Length; i++)
+            {
+                var layerID = layerIDs[i];
+                var attributes = layeredAttributes[i];
+                await foreach (var newAttribute in attributes)
+                {
+                    if (compound.TryGetValue(newAttribute.CIID, out var existingAttributes))
+                    {
+                        if (existingAttributes.TryGetValue(newAttribute.Name, out var existingMergedAttribute))
+                        {
+                            existingAttributes[newAttribute.Name].LayerStackIDs.Add(layerID);
+                        }
+                        else
+                        {
+                            existingAttributes[newAttribute.Name] = new MergedCIAttribute(newAttribute, new List<string> { layerID });
+                        }
+                    }
+                    else
+                    {
+                        compound.Add(newAttribute.CIID, new Dictionary<string, MergedCIAttribute>() { { newAttribute.Name, new MergedCIAttribute(newAttribute, new List<string> { layerID }) } });
+                    }
+                }
+            }
+            return compound;
+        }
+
         public async Task<MergedCIAttribute?> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             if (layers.IsEmpty)
@@ -86,11 +118,15 @@ namespace Omnikeeper.Model
             if (layers.IsEmpty)
                 return ImmutableDictionary<Guid, IDictionary<string, MergedCIAttribute>>.Empty; // return empty, an empty layer list can never produce any attributes
 
-            var attributes = await baseModel.GetAttributes(cs, attributeSelection, layers.LayerIDs, trans: trans, atTime: atTime, generatedDataHandling);
+            var attributes = layers.Select(layerID => baseModel.GetAttributesNew(cs, attributeSelection, layerID, trans, atTime, generatedDataHandling)).ToArray();
 
-            var ret = MergeAttributes(attributes, layers.LayerIDs);
+            return await MergeAttributesNew(attributes, layers.LayerIDs);
 
-            return ret;
+            //var attributes = await baseModel.GetAttributes(cs, attributeSelection, layers.LayerIDs, trans: trans, atTime: atTime, generatedDataHandling);
+
+            //var ret = MergeAttributes(attributes, layers.LayerIDs);
+
+            //return ret;
         }
 
         // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":

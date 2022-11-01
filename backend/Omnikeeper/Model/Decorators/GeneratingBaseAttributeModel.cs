@@ -82,6 +82,63 @@ namespace Omnikeeper.Model.Decorators
             return @base;
         }
 
+        public IAsyncEnumerable<CIAttribute> GetAttributesNew(ICIIDSelection selection, IAttributeSelection attributeSelection, string layerID, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        {
+            return model.GetAttributesNew(selection, attributeSelection, layerID, trans, atTime, generatedDataHandling); 
+            
+            // TODO: implement
+
+            //var @base = model.GetAttributesNew(selection, attributeSelection, layerID, trans, atTime, generatedDataHandling);
+
+            //switch (generatedDataHandling)
+            //{
+            //    case GeneratedDataHandlingExclude:    
+            //        await foreach (var b in @base)
+            //            yield return b;
+            //        break;
+            //    case GeneratedDataHandlingInclude:
+            //        var generatorSelection = new GeneratorSelectionAll();
+
+            //        // calculate effective generators
+            //        var effectiveGeneratorProvider = sp.GetRequiredService<IEffectiveGeneratorProvider>(); // use serviceProvider to avoid circular dependency
+            //        var egis = await effectiveGeneratorProvider.GetEffectiveGenerators(new string[] { layerID }, generatorSelection, attributeSelection, trans, atTime); // TODO: simplify to single layerID param
+
+            //        // bail early if there are no egis
+            //        if (egis.All(egi => egi.IsEmpty()))
+            //            await foreach(var b in @base)
+            //                yield return b;
+
+            //        // we need to potentially extend the attributeSelection so that it contains all attributes necessary to resolve the generated attributes
+            //        // the caller is allowed to not know or care about generated attributes and their requirements, so we need to extend here
+            //        // and also (for the return structure) ignore any additionally fetched attributes that were only fetched to calculate the generated attributes
+            //        var additionalAttributeNames = attributeSelection switch
+            //        {
+            //            NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection).ToImmutableHashSet(),
+            //            //NamedAttributesWithValueFiltersSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection).ToImmutableHashSet(),
+            //            AllAttributeSelection _ => ImmutableHashSet<string>.Empty, // we are fetching all attributes anyway, no need to add additional attributes
+            //            NoAttributesSelection _ => ImmutableHashSet<string>.Empty, // no attributes necessary
+            //            _ => throw new Exception("Invalid attribute selection encountered"),
+            //        };
+            //        var additionalAttributes = (additionalAttributeNames.Count > 0) ?
+            //            model.GetAttributesNew(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerID, trans, atTime, generatedDataHandling) :
+            //            AsyncEnumerable.Empty<CIAttribute>();
+            //            //Enumerable.Repeat(ImmutableDictionary<Guid, IDictionary<string, CIAttribute>>.Empty, layerIDs.Length).ToArray();
+
+            //        foreach(var egi in egis[0])
+            //        {
+            //            var generatedAttribute = resolver.Resolve(existing != null ? existing.Values : ImmutableList<CIAttribute>.Empty, additionals.Values, ciid, layerID, egi);
+            //        }
+
+            //        //@base = MergeInGeneratedAttributes(@base, additionalAttributes, egis, layerID, attributeSelection);
+
+            //        // TODO: remove additional attributes again, to be consistent; caller did not ask for them
+
+            //        break;
+            //    default:
+            //        throw new Exception("Unknown generated-data-handling detected");
+            //}
+        }
+
         private IDictionary<Guid, IDictionary<string, CIAttribute>>[] MergeInGeneratedAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] @base,
             IDictionary<Guid, IDictionary<string, CIAttribute>>[] additionalAttributes, IEnumerable<GeneratorV1>[] egis, string[] layerIDs, IAttributeSelection attributeSelection)
         {
@@ -123,7 +180,6 @@ namespace Omnikeeper.Model.Decorators
 
             return @base;
         }
-
 
         public async Task<IReadOnlyList<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {

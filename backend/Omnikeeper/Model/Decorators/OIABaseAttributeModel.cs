@@ -59,6 +59,11 @@ namespace Omnikeeper.Model.Decorators
             }
         }
 
+        public IAsyncEnumerable<CIAttribute> GetAttributesNew(ICIIDSelection selection, IAttributeSelection attributeSelection, string layerID, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        {
+            throw new NotImplementedException();
+        }
+
         private async Task<T[]> MixOnlineAndRegular<T>(string[] layerIDs, IModelContext trans, Func<string[], Task<T[]>> baseFetchF, Func<string[], Task<T[]>> proxyFetchF)
         {
             var layerMap = new Dictionary<string, (int index, bool isOnlineLayer)>();
