@@ -88,6 +88,7 @@ namespace Omnikeeper.Model
         public async Task<Guid> CreateCI(IModelContext trans) => await CreateCI(CreateCIID(), trans);
         public async Task<Guid> CreateCI(Guid id, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(@"INSERT INTO ci (id) VALUES (@id)", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("id", id);
             command.Prepare();
@@ -96,6 +97,7 @@ namespace Omnikeeper.Model
         }
         public async Task BulkCreateCIs(IEnumerable<Guid> ids, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             using var writer = trans.DBConnection.BeginBinaryImport(@"COPY ci (id) FROM STDIN (FORMAT BINARY)");
             foreach (var ciid in ids)
             {

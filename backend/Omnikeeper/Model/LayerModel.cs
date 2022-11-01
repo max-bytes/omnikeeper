@@ -22,6 +22,7 @@ namespace Omnikeeper.Model
 
             if (current == null)
             {
+                using var _ = await trans.WaitAsync();
                 // need to create layer
                 using (var command = new NpgsqlCommand(@"INSERT INTO layer (id) VALUES (@id)", trans.DBConnection, trans.DBTransaction))
                 {
@@ -43,6 +44,7 @@ namespace Omnikeeper.Model
 
             try
             {
+                using var _ = await trans.WaitAsync();
                 using var command = new NpgsqlCommand(@"DELETE FROM layer WHERE id = @id", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("id", id);
                 await command.ExecuteNonQueryAsync();

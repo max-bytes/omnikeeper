@@ -26,6 +26,7 @@ namespace Omnikeeper.Model
             // get old partition_index
             var oldPartitionIndex = await GetLatestPartitionIndex(timeThreshold, trans);
 
+            using var _ = await trans.WaitAsync();
             var partitionIndexValue = timeThreshold.Time.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ssZ");
 
             // create partition entry

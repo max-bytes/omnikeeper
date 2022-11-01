@@ -11,6 +11,8 @@ namespace Omnikeeper.Model
     {
         public async Task<ChangesetStatistics> GetStatistics(Guid changesetID, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             using var command = new NpgsqlCommand($@"
                 SELECT 
                     (SELECT count(*) FROM attribute a WHERE a.changeset_id = @changeset_id) as num_attribute_changes, 

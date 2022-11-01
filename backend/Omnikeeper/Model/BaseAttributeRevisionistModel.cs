@@ -55,6 +55,7 @@ namespace Omnikeeper.Model
                 };
             }
 
+            using var _ = await trans.WaitAsync();
             using var commandLatest = new NpgsqlCommand(@$"delete from attribute_latest a where a.layer_id = @layer_id and {CIIDSelection2WhereClause(ciidSelection)}", trans.DBConnection, trans.DBTransaction);
             commandLatest.Parameters.AddWithValue("layer_id", layerID);
             foreach (var p in CIIDSelection2Parameters(ciidSelection)) commandLatest.Parameters.Add(p);
@@ -74,6 +75,8 @@ namespace Omnikeeper.Model
 
         public async Task<int> DeleteOutdatedAttributesOlderThan(string[] layerIDs, IModelContext trans, DateTimeOffset threshold, TimeThreshold atTime)
         {
+            using var _ = await trans.WaitAsync();
+
             // query inspired by https://stackoverflow.com/questions/15959061/delete-records-which-do-not-have-a-match-in-another-table
             var query = @"DELETE FROM attribute a
                     USING (SELECT a2.id FROM attribute a2 WHERE a2.timestamp < @delete_threshold AND a2.layer_id = ANY(@layer_ids)

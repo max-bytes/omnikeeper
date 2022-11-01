@@ -45,6 +45,7 @@ namespace Omnikeeper.Model
 
         public async Task<int> DeleteOlderThan(DateTimeOffset deleteThreshold, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             var query = @"DELETE FROM public.usage_stats where ""timestamp"" < @delete_threshold";
 
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);

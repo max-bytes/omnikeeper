@@ -23,6 +23,8 @@ namespace Omnikeeper.Model.Config
 
         public async Task<IEnumerable<OIAContext>> GetContexts(bool useFallbackConfig, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             var ret = new List<OIAContext>();
 
             using var command = new NpgsqlCommand(@"
@@ -55,6 +57,8 @@ namespace Omnikeeper.Model.Config
 
         public async Task<OIAContext> GetContextByName(string name, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             using var command = new NpgsqlCommand(@"
                 SELECT id, config FROM config.onlineinboundadapter_context WHERE name = @name LIMIT 1
             ", trans.DBConnection, trans.DBTransaction);
@@ -79,6 +83,8 @@ namespace Omnikeeper.Model.Config
 
         public async Task<OIAContext> Create(string name, IOnlineInboundAdapter.IConfig config, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             var configJO = IOnlineInboundAdapter.IConfig.Serializer.SerializeToJsonDocument(config);
             using var command = new NpgsqlCommand(@"INSERT INTO config.onlineinboundadapter_context (name, config) VALUES (@name, @config) RETURNING id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("name", name);
@@ -89,6 +95,8 @@ namespace Omnikeeper.Model.Config
 
         public async Task<OIAContext> Update(long id, string name, IOnlineInboundAdapter.IConfig config, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             var configJO = IOnlineInboundAdapter.IConfig.Serializer.SerializeToJsonDocument(config);
             using var command = new NpgsqlCommand(@"UPDATE config.onlineinboundadapter_context SET name = @name, config = @config WHERE id = @id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("name", name);
@@ -100,6 +108,8 @@ namespace Omnikeeper.Model.Config
 
         public async Task<OIAContext> Delete(long id, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
+
             using var command = new NpgsqlCommand(@"DELETE FROM config.onlineinboundadapter_context WHERE id = @id RETURNING name, config", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("id", id);
 

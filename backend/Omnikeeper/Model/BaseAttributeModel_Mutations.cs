@@ -30,6 +30,8 @@ namespace Omnikeeper.Model
 
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
+            using var _ = await trans.WaitAsync();
+
             // historic
             // inserts
             // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html

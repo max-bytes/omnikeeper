@@ -10,6 +10,7 @@ namespace Omnikeeper.Model
     {
         public async Task<long> GetActiveAttributes(string layerID, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             // return number of all active attributes
             using var command = new NpgsqlCommand($@"
                 SELECT COUNT(*)
@@ -21,6 +22,7 @@ namespace Omnikeeper.Model
 
         public async Task<long> GetAttributeChangesHistory(string layerID, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             // return number of all historic attribute changes
             using var command = new NpgsqlCommand($@"
                 SELECT COUNT(*) 
@@ -32,6 +34,7 @@ namespace Omnikeeper.Model
 
         public async Task<long> GetActiveRelations(string layerID, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             // return number of all active relations
             using var command = new NpgsqlCommand($@"
             SELECT count(*)
@@ -44,6 +47,7 @@ namespace Omnikeeper.Model
 
         public async Task<long> GetRelationChangesHistory(string layerID, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             // return number of all historic relation changes
             using var command = new NpgsqlCommand($@"
                 SELECT COUNT(*)
@@ -56,6 +60,7 @@ namespace Omnikeeper.Model
 
         public async Task<long> GetLayerChangesetsHistory(string layerID, IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             // return number of all historic changesets that affect this layer
             using var command = new NpgsqlCommand($@"
                 SELECT COUNT(*)
@@ -80,6 +85,7 @@ namespace Omnikeeper.Model
 
         public async Task<long> GetCIIDsApproximate(IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             // return number of ciids
             var query = CreateApproximateCountQuery("ci");
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
@@ -89,24 +95,28 @@ namespace Omnikeeper.Model
         }
         public async Task<long> GetActiveAttributesApproximate(IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(CreateApproximateCountQuery("attribute_latest"), trans.DBConnection, trans.DBTransaction);
             return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
 
         public async Task<long> GetAttributeChangesHistoryApproximate(IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(CreateApproximateCountQueryForPartitionedTable("attribute"), trans.DBConnection, trans.DBTransaction);
             return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
 
         public async Task<long> GetActiveRelationsApproximate(IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(CreateApproximateCountQuery("relation_latest"), trans.DBConnection, trans.DBTransaction);
             return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
 
         public async Task<long> GetRelationChangesHistoryApproximate(IModelContext trans)
         {
+            using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(CreateApproximateCountQueryForPartitionedTable("relation"), trans.DBConnection, trans.DBTransaction);
             return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
