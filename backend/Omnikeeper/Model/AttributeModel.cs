@@ -40,7 +40,7 @@ namespace Omnikeeper.Model
                     {
                         if (existingAttributes.TryGetValue(newAttribute.Name, out var existingMergedAttribute))
                         {
-                            existingAttributes[newAttribute.Name].LayerStackIDs.Add(layerID);
+                            existingMergedAttribute.LayerStackIDs.Add(layerID);
                         }
                         else
                         {

@@ -201,18 +201,13 @@ namespace Omnikeeper.Base.Generator
                     var applicableGenerators = activeGeneratorIDsForLayer.Select(id => availableGenerators.GetOrWithClass(id, null)).Where(g => g != null).Select(g => g!);
 
                     var filteredApplicableGenerators = generatorSelection.Filter(applicableGenerators);
-                    var filteredItems = FilterGeneratorsByAttributeSelection(filteredApplicableGenerators, attributeSelection);
-                    l.AddRange(filteredItems);
+
+                    foreach (var generator in filteredApplicableGenerators)
+                        if (attributeSelection.ContainsAttributeName(generator.AttributeName))
+                            l.Add(generator);
                 }
             }
             return ret;
-        }
-
-        private IEnumerable<GeneratorV1> FilterGeneratorsByAttributeSelection(IEnumerable<GeneratorV1> generators, IAttributeSelection attributeSelection)
-        {
-            foreach (var generator in generators)
-                if (attributeSelection.ContainsAttributeName(generator.AttributeName))
-                    yield return generator;
         }
     }
 
