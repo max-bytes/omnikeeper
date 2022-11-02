@@ -57,7 +57,7 @@ namespace Omnikeeper.Model
             return compound;
         }
 
-        private ISet<string> CalculateAdditionalRequiredDependentAttributes(IEnumerable<GeneratorV1>[] egis, IAttributeSelection baseAttributeSelection)
+        private IReadOnlySet<string> CalculateAdditionalRequiredDependentAttributes(IEnumerable<GeneratorV1>[] egis, IAttributeSelection baseAttributeSelection)
         {
             var ret = new HashSet<string>();
             for (int i = 0; i < egis.Length; i++)
@@ -115,7 +115,7 @@ namespace Omnikeeper.Model
                     // and also (for the return structure) ignore any additionally fetched attributes that were only fetched to calculate the generated attributes
                     additionalAttributes = attributeSelection switch
                     {
-                        NamedAttributesSelection n => NamedAttributesSelection.Build(CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection).ToImmutableHashSet()),
+                        NamedAttributesSelection n => NamedAttributesSelection.Build(CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection)),
                         AllAttributeSelection _ => NoAttributesSelection.Instance, // we are fetching all attributes anyway, no need to add additional attributes
                         NoAttributesSelection _ => NoAttributesSelection.Instance, // no attributes necessary
                         _ => throw new Exception("Invalid attribute selection encountered"),
