@@ -216,9 +216,9 @@ namespace Omnikeeper.Base.Generator
         }
     }
 
-    public class GeneratorAttributeResolver
+    public static class GeneratorAttributeResolver
     {
-        public CIAttribute? Resolve(IDictionary<string, MergedCIAttribute> existingAttributes, Guid ciid, string layerID, GeneratorV1 generator)
+        public static CIAttribute? Resolve(IDictionary<string, MergedCIAttribute> existingAttributes, Guid ciid, string layerID, GeneratorV1 generator)
         {
             try
             {

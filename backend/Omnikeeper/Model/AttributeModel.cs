@@ -133,7 +133,6 @@ namespace Omnikeeper.Model
                 // add generated attributes
                 // NOTE: generated attributes can read from all selected layers
                 // TODO: remove additional attributes again that were only needed for generators by using base attributeSelection against layeredAttributes
-                var resolver = new GeneratorAttributeResolver();
                 for (var i = 0; i < layers.Length; i++)
                 {
                     var layerID = layers.LayerIDs[i];
@@ -143,7 +142,7 @@ namespace Omnikeeper.Model
                         {
                             var ciid = kv.Key;
                             var existing = kv.Value;
-                            var generatedAttribute = resolver.Resolve(existing, ciid, layerID, egi);
+                            var generatedAttribute = GeneratorAttributeResolver.Resolve(existing, ciid, layerID, egi);
                             if (generatedAttribute != null)
                             {
                                 if (existing != null)
