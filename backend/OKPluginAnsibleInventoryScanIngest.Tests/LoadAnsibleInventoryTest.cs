@@ -17,6 +17,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration;
 using Omnikeeper.Base.Authz;
+using Omnikeeper.Base.Generator;
+using System.Collections.Immutable;
 
 namespace Tests.Ingest
 {
@@ -56,7 +58,17 @@ namespace Tests.Ingest
             using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
             //using var conn = dbcb.Build("landscape_prototype", false, true);
             var partitionModel = new PartitionModel();
-            var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel, new CIIDModel()), () => null);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel, new CIIDModel()), () =>
+            {
+                var mock = new Mock<IEffectiveGeneratorProvider>();
+                mock.Setup(_ => _.GetEffectiveGenerators(It.IsAny<string[]>(), It.IsAny<IGeneratorSelection>(), It.IsAny<IAttributeSelection>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync((string[] a, IGeneratorSelection b, IAttributeSelection c, IModelContext d, TimeThreshold e) =>
+                {
+                    var r = new ImmutableList<GeneratorV1>[a.Length];
+                    Array.Fill(r, ImmutableList<GeneratorV1>.Empty);
+                    return r;
+                });
+                return mock.Object;
+            });
             var layerModel = new LayerModel();
             var userModel = new UserInDatabaseModel();
             var ciModel = new CIModel(attributeModel, new CIIDModel());
