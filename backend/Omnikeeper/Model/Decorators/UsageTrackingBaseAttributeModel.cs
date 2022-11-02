@@ -46,22 +46,7 @@ namespace Omnikeeper.Model.Decorators
                     usageTracker.TrackUseAttribute(name, layerID, operation);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
-        {
-            var usedAttributes = attributeSelection switch
-            {
-                AllAttributeSelection _ => (IEnumerable<string>)new string[] {"*"},
-                NoAttributesSelection _ => Array.Empty<string>(),
-                NamedAttributesSelection n => n.AttributeNames,
-                //NamedAttributesWithValueFiltersSelection f => f.NamesAndFilters.Select(t => t.Key),
-                _ => throw new NotImplementedException("")
-            };
-            TrackAttributeUsages(usedAttributes, layerIDs, UsageStatsOperation.Read);
-
-            return await model.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime, generatedDataHandling);
-        }
-
-        public IAsyncEnumerable<CIAttribute> GetAttributesNew(ICIIDSelection selection, IAttributeSelection attributeSelection, string layerID, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        public IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary = false)
         {
             var usedAttributes = attributeSelection switch
             {
@@ -73,7 +58,7 @@ namespace Omnikeeper.Model.Decorators
             };
             TrackAttributeUsages(usedAttributes, layerID, UsageStatsOperation.Read);
 
-            return model.GetAttributesNew(selection, attributeSelection, layerID, trans, atTime, generatedDataHandling);
+            return model.GetAttributes(selection, attributeSelection, layerID, trans, atTime);
         }
 
         public async Task<IReadOnlyList<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)

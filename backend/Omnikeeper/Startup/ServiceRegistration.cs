@@ -228,7 +228,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<NpgsqlLoggingProvider>().SingleInstance();
         }
 
-        public static void RegisterModels(ContainerBuilder builder, bool enablePerRequestModelCaching, bool enableOIA, bool enabledGenerators, bool enableUsageTracking)
+        public static void RegisterModels(ContainerBuilder builder, bool enablePerRequestModelCaching, bool enableOIA, bool enableUsageTracking)
         {
             builder.RegisterType<CIModel>().As<ICIModel>().SingleInstance();
             builder.RegisterType<CIIDModel>().As<ICIIDModel>().SingleInstance();
@@ -295,11 +295,6 @@ namespace Omnikeeper.Startup
             //    builder.RegisterDecorator<OIABaseRelationModel, IBaseRelationModel>();
             //}
 
-            if (enabledGenerators)
-            {
-                builder.RegisterDecorator<GeneratingBaseAttributeModel, IBaseAttributeModel>();
-            }
-
             if (enableUsageTracking)
             {
                 builder.RegisterType<ScopedUsageTracker>().As<IScopedUsageTracker>().InstancePerLifetimeScope();
@@ -309,11 +304,7 @@ namespace Omnikeeper.Startup
                 builder.RegisterDecorator<UsageTrackingBaseAttributeModel, IBaseAttributeModel>();
                 builder.RegisterDecorator<UsageTrackingBaseRelationModel, IBaseRelationModel>();
                 builder.RegisterDecorator<UsageTrackingAuthRolePermissionChecker, IAuthRolePermissionChecker>();
-
-                if (enabledGenerators)
-                {
-                    builder.RegisterDecorator<UsageTrackingEffectiveGeneratorProvider, IEffectiveGeneratorProvider>();
-                }
+                builder.RegisterDecorator<UsageTrackingEffectiveGeneratorProvider, IEffectiveGeneratorProvider>();
             }
         }
 

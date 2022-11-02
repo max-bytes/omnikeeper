@@ -18,7 +18,7 @@ namespace Tests.Integration.GraphQL.Base
 {
     abstract class QueryTestBase : DIServicedTestBase
     {
-        public QueryTestBase() : base(false, true)
+        public QueryTestBase() : base(false)
         {
             DBSetup.Setup();
         }

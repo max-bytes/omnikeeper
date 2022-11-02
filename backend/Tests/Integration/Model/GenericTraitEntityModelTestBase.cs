@@ -18,7 +18,7 @@ namespace Tests.Integration.Model
 {
     public abstract class GenericTraitEntityModelTestBase<T, ID> : DIServicedTestBase where T : TraitEntity, new() where ID : notnull, IEquatable<ID>
     {
-        public GenericTraitEntityModelTestBase() : base(false, false)
+        public GenericTraitEntityModelTestBase() : base(false)
         {
         }
 

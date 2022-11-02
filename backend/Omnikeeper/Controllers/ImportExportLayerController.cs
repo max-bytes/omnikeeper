@@ -2,10 +2,10 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.Base.AttributeValues;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
-using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -17,8 +17,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Authz;
-using Omnikeeper.Authz;
 
 namespace Omnikeeper.Controllers
 {
@@ -90,12 +88,10 @@ namespace Omnikeeper.Controllers
             if (ciids != null && ciids.Length > 0)
                 ciidSelection = SpecificCIIDsSelection.Build(ciids);
 
-            // NOTE: we use GeneratedDataHandlingExclude to ignore generated data
-            var attributesDict = (await baseAttributeModel.GetAttributes(ciidSelection, AllAttributeSelection.Instance, new string[] { layerID }, trans, timeThreshold, GeneratedDataHandlingExclude.Instance)).First();
-            var attributesDTO = attributesDict
-                .SelectMany(kv => kv.Value.Values)
-                .Where(a => a.ChangesetID != GeneratorV1.StaticChangesetID) // HACK: skip generated attributes
-                .Select(a => CIAttributeDTO.Build(a));
+            var attributesDict = baseAttributeModel.GetAttributes(ciidSelection, AllAttributeSelection.Instance, layerID, trans, timeThreshold);
+            var attributesDTO = await attributesDict
+                .Select(a => CIAttributeDTO.Build(a))
+                .ToArrayAsync();
 
             IEnumerable<Relation> relations = (await baseRelationModel.GetRelations(RelationSelectionAll.Instance, new string[] { layerID }, trans, timeThreshold, GeneratedDataHandlingExclude.Instance))[0];
 
@@ -108,7 +104,7 @@ namespace Omnikeeper.Controllers
             var relationsDTO = relations.Select(r => RelationDTO.BuildFromRelation(r));
             // TODO: ci authorization?
 
-            var data = new ExportedLayerDataV1(layerID, attributesDTO.ToArray(), relationsDTO.ToArray());
+            var data = new ExportedLayerDataV1(layerID, attributesDTO, relationsDTO.ToArray());
 
             using var fs = new MemoryStream();
             ExportedLayerDataV1.Serializer.SerializeToStream(data, fs);

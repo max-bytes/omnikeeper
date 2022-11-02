@@ -7,7 +7,6 @@ using Scriban;
 using Scriban.Runtime;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Omnikeeper.Base.Templating
 {
@@ -193,16 +192,12 @@ namespace Omnikeeper.Base.Templating
 
         public class ScriptObjectAttributes : ScriptObject
         {
-            public ScriptObjectAttributes(IEnumerable<CIAttribute> attributes)
+            public ScriptObjectAttributes(Dictionary<string, object> attributes)
             {
-                this.Import("attributes", new Func<Dictionary<string, object>>(() =>
-                {
-                    // TODO: caching
-                    return attributes.ToDictionary(a => a.Name, a => a.Value.ToGenericObject());
-                }));
+                this.Import("attributes", new Func<Dictionary<string, object>>(() => attributes));
             }
         }
-        public static TemplateContext CreateAttributesBasedTemplateContext(IEnumerable<CIAttribute> attributes)
+        public static TemplateContext CreateAttributesBasedTemplateContext(Dictionary<string, object> attributes)
         {
             var so = new ScriptObjectAttributes(attributes);
             var context = new TemplateContext

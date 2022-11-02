@@ -32,34 +32,34 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
-        {
-            switch (generatedDataHandling)
-            {
-                case GeneratedDataHandlingExclude:
-                    return await model.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime, generatedDataHandling);
-                case GeneratedDataHandlingInclude:
-                    return await MixOnlineAndRegular(layerIDs, trans,
-                    async (regularLayerIDs) => await model.GetAttributes(selection, attributeSelection, regularLayerIDs, trans, atTime, generatedDataHandling),
-                    async (onlineLayerIDs) =>
-                    {
-                        var onlineResults = await onlineAccessProxy.GetAttributes(selection, onlineLayerIDs, trans, atTime, attributeSelection);
+        //public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        //{
+        //    switch (generatedDataHandling)
+        //    {
+        //        case GeneratedDataHandlingExclude:
+        //            return await model.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime, generatedDataHandling);
+        //        case GeneratedDataHandlingInclude:
+        //            return await MixOnlineAndRegular(layerIDs, trans,
+        //            async (regularLayerIDs) => await model.GetAttributes(selection, attributeSelection, regularLayerIDs, trans, atTime, generatedDataHandling),
+        //            async (onlineLayerIDs) =>
+        //            {
+        //                var onlineResults = await onlineAccessProxy.GetAttributes(selection, onlineLayerIDs, trans, atTime, attributeSelection);
 
-                        var ret = new IDictionary<Guid, IDictionary<string, CIAttribute>>[onlineLayerIDs.Length];
-                        for (int i = 0; i < onlineResults.Length; i++)
-                        {
-                            var layerID = onlineLayerIDs[i];
-                            var tmp2 = (IDictionary<Guid, IDictionary<string, CIAttribute>>)onlineResults[i].GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
-                            ret[i] = tmp2;
-                        }
-                        return ret;
-                    });
-                default:
-                    throw new Exception("Unknown generated-data-handling detected");
-            }
-        }
+        //                var ret = new IDictionary<Guid, IDictionary<string, CIAttribute>>[onlineLayerIDs.Length];
+        //                for (int i = 0; i < onlineResults.Length; i++)
+        //                {
+        //                    var layerID = onlineLayerIDs[i];
+        //                    var tmp2 = (IDictionary<Guid, IDictionary<string, CIAttribute>>)onlineResults[i].GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
+        //                    ret[i] = tmp2;
+        //                }
+        //                return ret;
+        //            });
+        //        default:
+        //            throw new Exception("Unknown generated-data-handling detected");
+        //    }
+        //}
 
-        public IAsyncEnumerable<CIAttribute> GetAttributesNew(ICIIDSelection selection, IAttributeSelection attributeSelection, string layerID, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
+        public IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary = false)
         {
             throw new NotImplementedException();
         }

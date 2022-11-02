@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -14,52 +15,17 @@ namespace Omnikeeper.Model
     public class AttributeModel : IAttributeModel
     {
         private readonly IBaseAttributeModel baseModel;
+        private readonly Func<IEffectiveGeneratorProvider> effectiveGeneratorProviderFunc;
 
-        public AttributeModel(IBaseAttributeModel baseModel)
+        public AttributeModel(IBaseAttributeModel baseModel, Func<IEffectiveGeneratorProvider> effectiveGeneratorProviderFunc)
         {
             this.baseModel = baseModel;
+            this.effectiveGeneratorProviderFunc = effectiveGeneratorProviderFunc;
         }
 
-        // attributes must be a pre-sorted enumerable based on layer-sort
-        private IDictionary<Guid, IDictionary<string, MergedCIAttribute>> MergeAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] layeredAttributes, string[] layerIDs)
+        private async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> MergeAttributes(IAsyncEnumerable<CIAttribute>[] layeredAttributes, string[] layerIDs, ICIIDSelection ciSelection, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
         {
-            // TODO: implement faster in case of single layer
-            // TODO: think about implementing it faster by using a sparse attribute array instead of a dictionary
-
-            var compound = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
-            for (var i = 0; i < layerIDs.Length; i++)
-            {
-                var layerID = layerIDs[i];
-                var cis = layeredAttributes[i];
-                foreach (var ci in cis)
-                {
-                    var ciid = ci.Key;
-                    if (compound.TryGetValue(ciid, out var existingAttributes))
-                    {
-                        foreach (var newAttribute in ci.Value)
-                        {
-                            if (existingAttributes.TryGetValue(newAttribute.Key, out var existingMergedAttribute))
-                            {
-                                existingAttributes[newAttribute.Key].LayerStackIDs.Add(layerID);
-                            }
-                            else
-                            {
-                                existingAttributes[newAttribute.Key] = new MergedCIAttribute(newAttribute.Value, new List<string> { layerID });
-                            }
-                        }
-                    }
-                    else
-                    {
-                        compound.Add(ciid, ci.Value.ToDictionary(a => a.Key, a => new MergedCIAttribute(a.Value, new List<string> { layerID })));
-                    }
-                }
-            }
-            return compound;
-        }
-
-        private async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> MergeAttributesNew(IAsyncEnumerable<CIAttribute>[] layeredAttributes, string[] layerIDs)
-        {
-            // TODO: implement faster in case of single layer
+            // TODO: implement faster in case of single layer?
             // TODO: think about implementing it faster by using a sparse attribute array instead of a dictionary
 
             var compound = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
@@ -85,32 +51,116 @@ namespace Omnikeeper.Model
                         compound.Add(newAttribute.CIID, new Dictionary<string, MergedCIAttribute>() { { newAttribute.Name, new MergedCIAttribute(newAttribute, new List<string> { layerID }) } });
                     }
                 }
+
+                // NOTE: generated attributes can read from same layer and from layers below, which is weirdly inconsistent because when generators request additional attributes,
+                // they only fetch them from the current layer
+                // TODO: find a better way to handle all this; ideally, generators should be able to look at and request additional attributes from all selected layers
+                switch (generatedDataHandling)
+                {
+                    case GeneratedDataHandlingExclude:
+                        break;
+                    case GeneratedDataHandlingInclude:
+                        // TODO: maybe we can find an efficient way to not generate attributes that are guaranteed to be hidden by a higher layer anyway
+                        var resolver = new GeneratorAttributeResolver();
+                        var generatorSelection = new GeneratorSelectionAll();
+                        var effectiveGeneratorProvider = effectiveGeneratorProviderFunc();
+
+                        // calculate effective generators
+                        // TODO: single layer handling
+                        var egis = await effectiveGeneratorProvider.GetEffectiveGenerators(new string[] { layerID }, generatorSelection, attributeSelection, trans, atTime);
+
+                        // bail early if there are no egis
+                        if (egis.All(egi => egi.IsEmpty()))
+                            break;
+
+                        // we need to potentially extend the attributeSelection so that it contains all attributes necessary to resolve the generated attributes
+                        // the caller is allowed to not know or care about generated attributes and their requirements, so we need to extend here
+                        // and also (for the return structure) ignore any additionally fetched attributes that were only fetched to calculate the generated attributes
+                        var additionalAttributeNames = attributeSelection switch
+                        {
+                            NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection).ToImmutableHashSet(),
+                            AllAttributeSelection _ => ImmutableHashSet<string>.Empty, // we are fetching all attributes anyway, no need to add additional attributes
+                            NoAttributesSelection _ => ImmutableHashSet<string>.Empty, // no attributes necessary
+                            _ => throw new Exception("Invalid attribute selection encountered"),
+                        };
+                        var additionalAttributes = (additionalAttributeNames.Count > 0) ?
+                            baseModel.GetAttributes(ciSelection, NamedAttributesSelection.Build(additionalAttributeNames), layerID, trans, atTime) :
+                            AsyncEnumerable.Empty<CIAttribute>();
+
+                        var additionalAttributeLookup = await additionalAttributes.ToLookupAsync(a => a.CIID);
+                        foreach (var egi in egis[0])
+                        {
+                            foreach(var ciid in compound.Keys.Union(additionalAttributeLookup.Select(g => g.Key)))
+                            {
+                                var additionals = additionalAttributeLookup[ciid];
+                                var existing = compound.GetOrWithClass(ciid, null);
+                                var generatedAttribute = resolver.Resolve(existing != null ? existing.Values.Select(ma => ma.Attribute) : ImmutableList<CIAttribute>.Empty, additionals, ciid, layerID, egi);
+                                if (generatedAttribute != null)
+                                {
+                                    if (attributeSelection.ContainsAttribute(generatedAttribute)) // apply attribute selection to generated attribute
+                                    {
+                                        if (existing != null)
+                                        {
+                                            if (existing.TryGetValue(egi.AttributeName, out var _))
+                                            {
+                                                existing[egi.AttributeName].LayerStackIDs.Add(layerID);
+                                            }
+                                            else
+                                            {
+                                                // TODO: we are currently overwriting regular attributes with generated attributes... decide if that is the correct approach
+                                                existing[egi.AttributeName] = new MergedCIAttribute(generatedAttribute, new List<string> { layerID });
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // NOTE: CI is empty (=does not contain any attributes) in the base data, add it and add the generated attribute in there
+                                            compound[ciid] = new Dictionary<string, MergedCIAttribute>() { { egi.AttributeName, new MergedCIAttribute(generatedAttribute, new List<string> { layerID }) } };
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        break;
+                    default:
+                        throw new Exception("Unknown generated-data-handling detected");
+                }
             }
             return compound;
+        }
+
+        private ISet<string> CalculateAdditionalRequiredDependentAttributes(IEnumerable<GeneratorV1>[] egis, IAttributeSelection baseAttributeSelection)
+        {
+            var ret = new HashSet<string>();
+            for (int i = 0; i < egis.Length; i++)
+            {
+                foreach (var egi in egis[i])
+                    ret.UnionWith(egi.Template.UsedAttributeNames.Where(name => !baseAttributeSelection.ContainsAttributeName(name)));
+            }
+            return ret;
         }
 
         public async Task<MergedCIAttribute?> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             if (layers.IsEmpty)
                 return null; // return empty, an empty layer list can never produce any attributes
-            var attributes = new IDictionary<Guid, IDictionary<string, CIAttribute>>[layers.Length];
-            var i = 0;
+            CIAttribute? attribute = null;
+            var layerStackIDs = new List<string>();
+
             foreach (var layerID in layers) // TODO: rework for GetFullBinaryAttribute() to support multi layers
             {
                 CIAttribute? a = await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
                 if (a != null)
-                    attributes[i++] = new Dictionary<Guid, IDictionary<string, CIAttribute>>() { { ciid, new Dictionary<string, CIAttribute>() { { a.Name, a } } } };
-                else
-                    attributes[i++] = new Dictionary<Guid, IDictionary<string, CIAttribute>>();
+                {
+                    if (attribute == null)
+                        attribute = a;
+                    layerStackIDs.Add(layerID);
+                }
             }
 
-            var mergedAttributes = MergeAttributes(attributes, layers.LayerIDs);
-
-            if (mergedAttributes.Count() > 1)
-                throw new Exception("Should never happen!");
-
-            var ma = mergedAttributes.FirstOrDefault().Value?.Values.FirstOrDefault();
-            return ma;
+            if (attribute == null)
+                return null;
+            return new MergedCIAttribute(attribute, layerStackIDs);
         }
 
         public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, IAttributeSelection attributeSelection, LayerSet layers, IModelContext trans, TimeThreshold atTime, IGeneratedDataHandling generatedDataHandling)
@@ -118,15 +168,9 @@ namespace Omnikeeper.Model
             if (layers.IsEmpty)
                 return ImmutableDictionary<Guid, IDictionary<string, MergedCIAttribute>>.Empty; // return empty, an empty layer list can never produce any attributes
 
-            var attributes = layers.Select(layerID => baseModel.GetAttributesNew(cs, attributeSelection, layerID, trans, atTime, generatedDataHandling)).ToArray();
+            var attributes = layers.Select(layerID => baseModel.GetAttributes(cs, attributeSelection, layerID, trans, atTime)).ToArray();
 
-            return await MergeAttributesNew(attributes, layers.LayerIDs);
-
-            //var attributes = await baseModel.GetAttributes(cs, attributeSelection, layers.LayerIDs, trans: trans, atTime: atTime, generatedDataHandling);
-
-            //var ret = MergeAttributes(attributes, layers.LayerIDs);
-
-            //return ret;
+            return await MergeAttributes(attributes, layers.LayerIDs, cs, attributeSelection, trans, atTime, generatedDataHandling);
         }
 
         // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":

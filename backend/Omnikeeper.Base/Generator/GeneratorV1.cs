@@ -222,8 +222,11 @@ namespace Omnikeeper.Base.Generator
         {
             try
             {
-                var relevantAttributes = existingAttributes.Concat(additionalAttributes).Where(a => generator.Template.UsedAttributeNames.Contains(a.Name)).ToList();
-                var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes);
+                var relevantAttributes = existingAttributes
+                    .Concat(additionalAttributes)
+                    .Where(a => generator.Template.UsedAttributeNames.Contains(a.Name))
+                    .ToList();
+                var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes.ToDictionary(a => a.Name, a => a.Value.ToGenericObject()));
 
                 object evaluated = generator.Template.Template.Evaluate(context);
 
@@ -233,7 +236,7 @@ namespace Omnikeeper.Base.Generator
                     // create a deterministic, dependent guid from the ciid, layerID, attribute values; 
                     // we need to incorporate the dependent attributes, otherwise the attribute ID does not change when any of the dependent attributes change
                     // TODO: I *think* we also need a hash of the generator template, because otherwise, changes there are not reflected as new IDs
-                    var agGuid = GuidUtility.Create(ciid, $"{generator.AttributeName}-{layerID}-{string.Join("-", relevantAttributes.Select(a => a.ID))}");
+                    var agGuid = GuidUtility.Create(ciid, $"{generator.AttributeName}-{layerID}-{string.Join("-", relevantAttributes.Select(kv => kv.ID))}");
                     var ag = new CIAttribute(agGuid, generator.AttributeName, ciid, value, GeneratorV1.StaticChangesetID);
                     return ag;
                 }

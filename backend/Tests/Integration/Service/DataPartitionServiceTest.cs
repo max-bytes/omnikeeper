@@ -12,7 +12,7 @@ namespace Tests.Integration.Service
 {
     class DataPartitionServiceTest : DIServicedTestBase
     {
-        public DataPartitionServiceTest() : base(false, false)
+        public DataPartitionServiceTest() : base(false)
         {
         }
 

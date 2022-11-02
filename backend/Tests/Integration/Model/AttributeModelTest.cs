@@ -78,9 +78,9 @@ namespace Tests.Integration.Model
 
                 // compare fetching merged vs non-merged
                 var ma3 = await GetService<IAttributeModel>().GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
-                var a3 = await GetService<IBaseAttributeModel>().GetAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset.LayerIDs, trans, TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance);
+                var a3 = await GetService<IBaseAttributeModel>().GetAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, "l1", trans, TimeThreshold.BuildLatest()).ToListAsync();
                 Assert.AreEqual(0, ma3.Count);
-                Assert.AreEqual(0, a3[0].Count);
+                Assert.AreEqual(0, a3.Count);
 
                 trans.Commit();
             }
@@ -323,7 +323,7 @@ namespace Tests.Integration.Model
             trans2.Commit();
 
             using var trans3 = ModelContextBuilder.BuildImmediate();
-            var a1 = (await GetService<IBaseAttributeModel>().GetAttributes(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest(), GeneratedDataHandlingInclude.Instance)).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a1 = await GetService<IBaseAttributeModel>().GetAttributes(AllCIIDsSelection.Instance, AllAttributeSelection.Instance, layer1.ID, trans: trans3, atTime: TimeThreshold.BuildLatest()).ToListAsync();
             Assert.AreEqual(3, a1.Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a1").Count());

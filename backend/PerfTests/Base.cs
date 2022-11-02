@@ -52,7 +52,7 @@ namespace PerfTests
             ServiceRegistration.RegisterLogging(containerBuilder);
             ServiceRegistration.RegisterDB(containerBuilder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(containerBuilder);
-            ServiceRegistration.RegisterModels(containerBuilder, enablePerRequestModelCaching, false, false, false);
+            ServiceRegistration.RegisterModels(containerBuilder, enablePerRequestModelCaching, false, false);
             ServiceRegistration.RegisterServices(containerBuilder);
             ServiceRegistration.RegisterGraphQL(containerBuilder);
 

@@ -56,7 +56,7 @@ namespace Tests.Ingest
             using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
             //using var conn = dbcb.Build("landscape_prototype", false, true);
             var partitionModel = new PartitionModel();
-            var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel, new CIIDModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel, new CIIDModel()), () => null);
             var layerModel = new LayerModel();
             var userModel = new UserInDatabaseModel();
             var ciModel = new CIModel(attributeModel, new CIIDModel());

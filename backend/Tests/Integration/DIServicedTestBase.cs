@@ -31,17 +31,15 @@ namespace Tests.Integration
         private AutofacServiceProvider? serviceProvider;
 
         protected bool enablePerRequestModelCaching;
-        private readonly bool enableGenerators;
         protected Mock<ICurrentUserAccessor> currentUserServiceMock;
 
-        protected DIServicedTestBase(bool enablePerRequestModelCaching, bool enableGenerators)
+        protected DIServicedTestBase(bool enablePerRequestModelCaching)
         {
             this.enablePerRequestModelCaching = enablePerRequestModelCaching;
-            this.enableGenerators = enableGenerators;
             currentUserServiceMock = new Mock<ICurrentUserAccessor>();
         }
 
-        protected DIServicedTestBase() : this(false, false) { }
+        protected DIServicedTestBase() : this(false) { }
 
         [SetUp]
         public override void Setup()
@@ -88,7 +86,7 @@ namespace Tests.Integration
             ServiceRegistration.RegisterLogging(builder);
             ServiceRegistration.RegisterDB(builder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(builder);
-            ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching, false, enableGenerators, false);
+            ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching, false, false);
             ServiceRegistration.RegisterServices(builder);
             ServiceRegistration.RegisterGraphQL(builder);
             ServiceRegistration.RegisterQuartz(builder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), "instance-A");

@@ -258,7 +258,7 @@ namespace Omnikeeper.Startup
             var csOmnikeeper = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
             ServiceRegistration.RegisterDB(builder, csOmnikeeper, false);
 
-            ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching: true, true, true, true);
+            ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching: true, true, true);
 
             ServiceRegistration.RegisterGraphQL(builder);
             ServiceRegistration.RegisterOIABase(builder);
