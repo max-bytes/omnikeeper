@@ -20,12 +20,12 @@ namespace PerfTests
     [IterationCount(50)]
     public class GetTraitEntitiesByCIIDTest : Base
     {
-        private string layerID = "layer1";
-        private LayerSet layerset;
+        private readonly string layerID = "layer1";
+        private LayerSet? layerset;
         private ICIIDSelection? specificCIIDs;
         private ICIIDSelection? allExceptCIIDs;
         private GenericTraitEntityModel<TestTraitEntity, long>? traitEntityModel;
-        private readonly Consumer consumer = new Consumer();
+        private readonly Consumer consumer = new();
 
         [Params(10000)]
         public int NumTraitEntities { get; set; }
@@ -79,7 +79,7 @@ namespace PerfTests
         [Test]
         public void RunBenchmark()
         {
-            var summary = BenchmarkRunner.Run<GetMergedAttributesTest>();
+            var _ = BenchmarkRunner.Run<GetMergedAttributesTest>();
         }
 
         [GlobalCleanup(Target = nameof(GetTraitEntitiesByCIID))]

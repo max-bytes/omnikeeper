@@ -23,7 +23,7 @@ namespace Omnikeeper.Model
             this.effectiveGeneratorProviderFunc = effectiveGeneratorProviderFunc;
         }
 
-        private async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> MergeAttributes(IAsyncEnumerable<CIAttribute>[] layeredAttributes, string[] layerIDs)
+        private static async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> MergeAttributes(IAsyncEnumerable<CIAttribute>[] layeredAttributes, string[] layerIDs)
         {
             // TODO: implement faster in case of single layer?
             // TODO: think about implementing it faster by using a sparse attribute array instead of a dictionary
@@ -57,7 +57,7 @@ namespace Omnikeeper.Model
             return compound;
         }
 
-        private IReadOnlySet<string> CalculateAdditionalRequiredDependentAttributes(IEnumerable<GeneratorV1>[] egis, IAttributeSelection baseAttributeSelection)
+        private static IReadOnlySet<string> CalculateAdditionalRequiredDependentAttributes(IEnumerable<GeneratorV1>[] egis, IAttributeSelection baseAttributeSelection)
         {
             var ret = new HashSet<string>();
             for (int i = 0; i < egis.Length; i++)
@@ -80,8 +80,7 @@ namespace Omnikeeper.Model
                 CIAttribute? a = await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
                 if (a != null)
                 {
-                    if (attribute == null)
-                        attribute = a;
+                    attribute ??= a;
                     layerStackIDs.Add(layerID);
                 }
             }
@@ -270,19 +269,19 @@ namespace Omnikeeper.Model
                     var existingAttributesInOtherLayers = await GetAttributesInScope(data, new LayerSet(t.ReadLayersWithoutWriteLayer), trans, readTS);
                     for (var i = inserts.Count - 1; i >= 0; i--)
                     {
-                        var insert = inserts[i];
-                        if (existingAttributesInOtherLayers.TryGetValue(insert.ciid, out var a))
+                        var (ciid, fullName, value, existingAttributeID, newAttributeID) = inserts[i];
+                        if (existingAttributesInOtherLayers.TryGetValue(ciid, out var a))
                         {
-                            if (a.TryGetValue(insert.fullName, out var aa))
+                            if (a.TryGetValue(fullName, out var aa))
                             {
-                                if (aa.Attribute.Value.Equals(insert.value))
+                                if (aa.Attribute.Value.Equals(value))
                                 {
                                     inserts.RemoveAt(i);
 
                                     // in case there is an attribute there already, we actually remove it because the other layers provide the same attribute with the same value 
-                                    if (insert.existingAttributeID.HasValue)
+                                    if (existingAttributeID.HasValue)
                                     {
-                                        actualRemoves.Add((insert.ciid, insert.fullName, aa.Attribute.Value, insert.existingAttributeID.Value, Guid.NewGuid()));
+                                        actualRemoves.Add((ciid, fullName, aa.Attribute.Value, existingAttributeID.Value, Guid.NewGuid()));
                                     }
                                 }
                             }

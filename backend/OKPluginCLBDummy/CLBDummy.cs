@@ -26,7 +26,7 @@ namespace OKPluginCLBDummy
         }
         */
 
-        private Config ParseConfig(JsonDocument config) => JsonSerializer.Deserialize<Config>(config);
+        private static Config ParseConfig(JsonDocument config) => JsonSerializer.Deserialize<Config>(config);
 
         public override ISet<string> GetDependentLayerIDs(string targetLayerID, JsonDocument config, ILogger logger)
         {
@@ -34,7 +34,7 @@ namespace OKPluginCLBDummy
             return parsedConfig.SourceLayerset.ToHashSet();
         }
 
-        public override Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>?> unprocessedChangesets, 
+        public override Task<bool> Run(string targetLayerID, IReadOnlyDictionary<string, IReadOnlyList<Changeset>> unprocessedChangesets, 
             JsonDocument config, IChangesetProxy changesetProxy, IModelContext trans, ILogger logger, IIssueAccumulator issueAccumulator)
         {
             logger.LogDebug("Start dummy CLB");

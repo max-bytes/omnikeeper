@@ -82,7 +82,7 @@ namespace Omnikeeper.Base.Entity.DTO
         {
             return new AttributeValueDTO()
             {
-                Values = new string[0],
+                Values = Array.Empty<string>(),
                 IsArray = array,
                 Type = valueType
             };

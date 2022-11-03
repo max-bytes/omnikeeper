@@ -58,7 +58,7 @@ namespace Tests.Integration.Model
                 var c3 = await GetService<IRelationModel>().InsertRelation(ciid1, ciid3, predicateID2, false, layerID1, changeset, trans, OtherLayersValueHandlingForceWrite.Instance);
                 var r2 = await GetService<IRelationModel>().GetMergedRelations(RelationSelectionFrom.BuildWithAllPredicateIDs(ciid1), layerset, trans, TimeThreshold.BuildLatest(), MaskHandlingForRetrievalGetMasks.Instance, GeneratedDataHandlingInclude.Instance);
                 Assert.AreEqual(2, r2.Count());
-                var rr2 = r2.FirstOrDefault(r => r.Relation.ToCIID == ciid3);
+                var rr2 = r2.First(r => r.Relation.ToCIID == ciid3);
                 Assert.AreEqual(ciid1, rr2.Relation.FromCIID);
                 Assert.IsNotNull(rr2);
                 Assert.AreEqual(layerID1, rr2.LayerStackIDs[0]);

@@ -113,17 +113,17 @@ namespace Tests.Ingest
             Assert.IsTrue(cis.Any(ci => ci.CIName == "h1lscapet01.mhx.local:/"));
             Assert.IsTrue(cis.Any(ci => ci.CIName == "h1lscapet01.mhx.local:/boot"));
             Assert.IsTrue(cis.Any(ci => ci.CIName == "Network Interface eth0@h1lscapet01.mhx.local"));
-            Assert.AreEqual(34, cis.Count());
+            Assert.AreEqual(34, cis.Count);
             // TODO: more asserts
 
             // perform ingest again, ci count must stay equal
             var response2 = await PerformIngest(controller, hosts, insertLayer, layerSet);
             Assert.IsTrue(response2 is OkResult);
             var cis2 = await ciModel.GetMergedCIs(AllCIIDsSelection.Instance, layerSet, false, AllAttributeSelection.Instance, mc, TimeThreshold.BuildLatest());
-            Assert.AreEqual(34, cis2.Count());
+            Assert.AreEqual(34, cis2.Count);
         }
 
-        private async Task<ActionResult> PerformIngest(AnsibleInventoryScanIngestController controller, string[] hosts, Layer insertLayer, LayerSet searchLayerSet)
+        private static async Task<ActionResult> PerformIngest(AnsibleInventoryScanIngestController controller, string[] hosts, Layer insertLayer, LayerSet searchLayerSet)
         {
             var setupFacts = hosts.ToDictionary(fqdn => $"{fqdn}.json", fqdn =>
             {

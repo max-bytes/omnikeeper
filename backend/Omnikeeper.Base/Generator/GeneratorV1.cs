@@ -49,10 +49,7 @@ namespace Omnikeeper.Base.Generator
         {
             get
             {
-                if (_template == null)
-                {
-                    _template = GeneratorAttributeValue.Build(TemplateString);
-                }
+                _template ??= GeneratorAttributeValue.Build(TemplateString);
                 return _template;
             }
         }

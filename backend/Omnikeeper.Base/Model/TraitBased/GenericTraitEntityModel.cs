@@ -26,7 +26,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var idAttributeValues = idAttributeInfos.ExtractAttributeValuesFromID(id);
-            var foundCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames().Zip(idAttributeValues).ToArray(), layerSet, trans, timeThreshold);
+            var foundCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames().Zip(idAttributeValues).Cast<(string name, IAttributeValue? value)>().ToArray(), layerSet, trans, timeThreshold);
 
             if (foundCIIDs.IsEmpty())
                 return default;
@@ -176,7 +176,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             // NOTE: we do a CIID lookup based on the ID attributes and their values, but we DON'T require that the found CI must already be a trait entity
             var id = idAttributeInfos.ExtractIDFromEntity(t);
             var idAttributeValues = idAttributeInfos.ExtractAttributeValuesFromID(id);
-            var foundCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames().Zip(idAttributeValues).ToArray(), layerSet, trans, changesetProxy.TimeThreshold);
+            var foundCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeInfos.GetIDAttributeNames().Zip(idAttributeValues).Cast<(string name, IAttributeValue? value)>().ToArray(), layerSet, trans, changesetProxy.TimeThreshold);
 
             Guid ciid;
             if (foundCIIDs.IsEmpty())

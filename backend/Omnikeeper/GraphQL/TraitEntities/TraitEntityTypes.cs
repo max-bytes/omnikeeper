@@ -141,7 +141,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var id = context.GetArgument<IDInput>("id");
 
                         // TODO: use data loader
-                        var idAttributeTuples = id.IDAttributeValues.Select(t => (t.traitAttribute.AttributeTemplate.Name, t.value)).ToArray();
+                        var idAttributeTuples = id.IDAttributeValues.Select(t => (t.traitAttribute.AttributeTemplate.Name, t.value)).Cast<(string name, IAttributeValue? value)>().ToArray();
                         var foundCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
 
                         if (foundCIIDs.IsEmpty())
@@ -324,7 +324,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     }
                     else
                     {
-                        logger.LogError($"Could not create trait relation fields for trait-hint: could not find trait with ID \"{traitIDHint}\"");
+                        logger.LogError("Could not create trait relation fields for trait-hint: could not find trait with ID \"{TraitIDHint}\"", traitIDHint);
                     }
                 }
 

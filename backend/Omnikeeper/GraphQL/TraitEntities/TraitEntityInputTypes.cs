@@ -54,7 +54,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             if (relationValues.Length != 0)
                 throw new Exception($"Encountered unexpected input field(s)");
 
-            var t = attributeValues.Where(t => t.traitAttribute.AttributeTemplate.IsID.GetValueOrDefault(false)).ToArray();
+            var t = attributeValues.Where(t => t.traitAttribute.AttributeTemplate.IsID.GetValueOrDefault(false)).Cast<(TraitAttribute traitAttribute, IAttributeValue value)>().ToArray();
             return new IDInput(t);
         }
 

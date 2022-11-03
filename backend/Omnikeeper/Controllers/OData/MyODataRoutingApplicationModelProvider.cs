@@ -28,7 +28,7 @@ namespace Omnikeeper.Controllers.OData
 
         public void OnProvidersExecuted(ApplicationModelProviderContext context)
         {
-            EdmModel model = new EdmModel();
+            var model = new EdmModel();
             const string prefix = "api/odata/{context}";
             foreach (var controllerModel in context.Result.Controllers)
             {
@@ -50,13 +50,13 @@ namespace Omnikeeper.Controllers.OData
         {
         }
 
-        private void ProcessHandleAll(string prefix, IEdmModel model, ControllerModel controllerModel)
+        private static void ProcessHandleAll(string prefix, IEdmModel model, ControllerModel controllerModel)
         {
             foreach (var actionModel in controllerModel.Actions)
             {
                 if (actionModel.ActionName == "GetNavigation")
                 {
-                    ODataPathTemplate path = new ODataPathTemplate(
+                    var path = new ODataPathTemplate(
                         new EntitySetTemplateSegment(),
                         new EntitySetWithKeyTemplateSegment(),
                         new NavigationTemplateSegment());
@@ -67,13 +67,13 @@ namespace Omnikeeper.Controllers.OData
                 {
                     if (actionModel.Parameters.Count == 2)
                     {
-                        ODataPathTemplate path = new ODataPathTemplate(
+                        var path = new ODataPathTemplate(
                             new EntitySetTemplateSegment());
                         actionModel.AddSelector("get", prefix, model, path);
                     }
                     else
                     {
-                        ODataPathTemplate path = new ODataPathTemplate(
+                        var path = new ODataPathTemplate(
                             new EntitySetTemplateSegment(), 
                             new EntitySetWithKeyTemplateSegment());
                         actionModel.AddSelector("get", prefix, model, path);
@@ -82,19 +82,19 @@ namespace Omnikeeper.Controllers.OData
             }
         }
 
-        private void ProcessMetadata(string prefix, IEdmModel model, ControllerModel controllerModel)
+        private static void ProcessMetadata(string prefix, IEdmModel model, ControllerModel controllerModel)
         {
             foreach (var actionModel in controllerModel.Actions)
             {
                 if (actionModel.ActionName == "GetMetadata")
                 {
-                    ODataPathTemplate path = new ODataPathTemplate(
+                    var path = new ODataPathTemplate(
                         MetadataSegmentTemplate.Instance);
                     actionModel.AddSelector("get", prefix, model, path);
                 }
                 else if (actionModel.ActionName == "GetServiceDocument")
                 {
-                    ODataPathTemplate path = new ODataPathTemplate(
+                    var path = new ODataPathTemplate(
                         );
                     actionModel.AddSelector("get", prefix, model, path);
                 }
@@ -124,7 +124,7 @@ namespace Omnikeeper.Controllers.OData
                 //var edmEntitySet = context.Model.EntityContainer.FindEntitySet(entitySetName);
                 if (edmEntitySet != null)
                 {
-                    EntitySetSegment segment = new EntitySetSegment(edmEntitySet);
+                    var segment = new EntitySetSegment(edmEntitySet);
                     context.Segments.Add(segment);
                     return true;
                 }
@@ -163,7 +163,7 @@ namespace Omnikeeper.Controllers.OData
                 //var edmEntitySet = context.Model.EntityContainer.FindEntitySet(entitySetName);
                 if (edmEntitySet != null)
                 {
-                    EntitySetSegment entitySet = new EntitySetSegment(edmEntitySet);
+                    var entitySet = new EntitySetSegment(edmEntitySet);
                     IEdmEntityType entityType = entitySet.EntitySet.EntityType();
 
                     IEdmProperty keyProperty = entityType.Key().First();
@@ -180,10 +180,12 @@ namespace Omnikeeper.Controllers.OData
                     string prefixName = ODataParameterValue.ParameterValuePrefix + "key";
                     context.UpdatedValues[prefixName] = new ODataParameterValue(newValue, keyProperty.Type);
 
-                    IDictionary<string, object> keysValues = new Dictionary<string, object>();
-                    keysValues[keyProperty.Name] = newValue;
+                    IDictionary<string, object> keysValues = new Dictionary<string, object>
+                    {
+                        [keyProperty.Name] = newValue
+                    };
 
-                    KeySegment keySegment = new KeySegment(keysValues, entityType, entitySet.EntitySet);
+                    var keySegment = new KeySegment(keysValues, entityType, entitySet.EntitySet);
 
                     context.Segments.Add(entitySet);
                     context.Segments.Add(keySegment);
@@ -223,7 +225,7 @@ namespace Omnikeeper.Controllers.OData
 
                 if (asContained)
                 {
-                    NavigationPropertySegment seg = new NavigationPropertySegment(navigationProperty, navigationSource);
+                    var seg = new NavigationPropertySegment(navigationProperty, navigationSource);
                     context.Segments.Add(seg);
                     return true;
                 } 
@@ -238,7 +240,7 @@ namespace Omnikeeper.Controllers.OData
 
                     if (edmEntitySet != null)
                     {
-                        EntitySetSegment segment = new EntitySetSegment(edmEntitySet);
+                        var segment = new EntitySetSegment(edmEntitySet);
                         context.Segments.Add(segment);
                         return true;
                     }
