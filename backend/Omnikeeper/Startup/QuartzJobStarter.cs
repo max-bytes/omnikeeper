@@ -21,14 +21,14 @@ namespace Omnikeeper.Startup
     {
         public IServiceScopeFactory _serviceScopeFactory;
         private readonly IConfiguration configuration;
-        private static readonly JobKey JKCLB = new JobKey("CLB", "omnikeeper");
-        private static readonly JobKey JKValidator = new JobKey("Validator", "omnikeeper");
-        private static readonly JobKey JKMarkedForDeletion = new JobKey("MarkedForDeletion", "omnikeeper");
-        private static readonly JobKey JKExternalIDManager = new JobKey("ExternalIDManager", "omnikeeper");
-        private static readonly JobKey JKArchiveOldData = new JobKey("ArchiveOldData", "omnikeeper");
-        private static readonly JobKey JKUsageDataWriter = new JobKey("UsageDataWriter", "omnikeeper");
-        public static readonly JobKey JKGraphQLSchemaReloader = new JobKey("GraphQLSchemaReloader", "omnikeeper");
-        public static readonly JobKey JKEdmModelReloader = new JobKey("EdmModelReloader", "omnikeeper");
+        private static readonly JobKey JKCLB = new("CLB", "omnikeeper");
+        private static readonly JobKey JKValidator = new("Validator", "omnikeeper");
+        private static readonly JobKey JKMarkedForDeletion = new("MarkedForDeletion", "omnikeeper");
+        private static readonly JobKey JKExternalIDManager = new("ExternalIDManager", "omnikeeper");
+        private static readonly JobKey JKArchiveOldData = new("ArchiveOldData", "omnikeeper");
+        private static readonly JobKey JKUsageDataWriter = new("UsageDataWriter", "omnikeeper");
+        public static readonly JobKey JKGraphQLSchemaReloader = new("GraphQLSchemaReloader", "omnikeeper");
+        public static readonly JobKey JKEdmModelReloader = new("EdmModelReloader", "omnikeeper");
 
         public QuartzJobStarter(IServiceScopeFactory serviceScopeFactory, IConfiguration configuration)
         {
@@ -72,8 +72,8 @@ namespace Omnikeeper.Startup
                 await ScheduleJob<GraphQLSchemaReloaderJob>(localScheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly, 20);
                 await ScheduleJob<EdmModelReloaderJob>(localScheduler, JKEdmModelReloader, "0 * * * * ?", logger, deleteOnly, 20);
 
-                await distributedScheduler.Start();
-                await localScheduler.Start();
+                await distributedScheduler.Start(stoppingToken);
+                await localScheduler.Start(stoppingToken);
 
                 // plugin jobs
                 foreach (var plugin in plugins)
@@ -87,7 +87,7 @@ namespace Omnikeeper.Startup
             }
         }
 
-        private async Task ScheduleJob<J>(IScheduler scheduler, JobKey jobKey, string cronSchedule, ILogger logger, bool deleteOnly, int priority) where J : IJob
+        private static async Task ScheduleJob<J>(IScheduler scheduler, JobKey jobKey, string cronSchedule, ILogger logger, bool deleteOnly, int priority) where J : IJob
         {
             IJobDetail job = JobBuilder.Create<J>().WithIdentity(jobKey).Build();
 
