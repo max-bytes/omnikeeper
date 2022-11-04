@@ -118,7 +118,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Description", "ad.description"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "DistinguishedName", "ad.distinguishedName"));
 
-                var managedByUserDN = SProps.FirstOrDefault(d => d.Attribute("N") != null && d.Attribute("N").Value.Equals("ManagedBy"))?.Value;
+                var managedByUserDN = SProps.FirstOrDefault(d => d.Attribute("N") != null && d.Attribute("N")!.Value.Equals("ManagedBy"))?.Value;
                 if (managedByUserDN != null)
                 {
                     if (userLookupViaDN.TryGetValue(managedByUserDN, out var foundUser))
@@ -172,7 +172,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Description", "ad.description"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "DistinguishedName", "ad.distinguishedName"));
 
-                var userDNs = props.Elements(@namespace + "Obj").FirstOrDefault(d => d.Attribute("N") != null && d.Attribute("N").Value.Equals("Members"))?.Element(@namespace + "LST")?.Elements(@namespace + "S")?.Select(e => e.Value);
+                var userDNs = props.Elements(@namespace + "Obj").FirstOrDefault(d => d.Attribute("N") != null && d.Attribute("N")!.Value.Equals("Members"))?.Element(@namespace + "LST")?.Elements(@namespace + "S")?.Select(e => e.Value);
                 if (userDNs != null)
                 {
                     foreach (var userDN in userDNs)
@@ -206,7 +206,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
 
         CICandidateAttributeData.Fragment? ParseFragmentFromProps(IEnumerable<XElement> props, string propertyValue, string attributeName, string prefixValue = "")
         {
-            var dn = props.FirstOrDefault(d => d.Attribute("N") != null && d.Attribute("N").Value.Equals(propertyValue))?.Value;
+            var dn = props.FirstOrDefault(d => d.Attribute("N") != null && d.Attribute("N")!.Value.Equals(propertyValue))?.Value;
             if (dn == null) return null;
             return new CICandidateAttributeData.Fragment(attributeName, new AttributeScalarValueText(prefixValue + dn));
         }

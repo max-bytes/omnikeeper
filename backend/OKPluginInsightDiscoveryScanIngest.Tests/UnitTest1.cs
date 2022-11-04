@@ -22,7 +22,7 @@ namespace OKPluginInsightDiscoveryScanIngest.Tests
             var transformerConfig = new TransformConfigJMESPath(DefaultJMESPathExpression.Expression);
             var transformer = TransformerJMESPath.Build(transformerConfig);
 
-            string inputJson = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+            string inputJson = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath)!.Parent!.Parent!.Parent!.ToString(),
                 "data", "small_input.json"));
 
             string transformedOutput;

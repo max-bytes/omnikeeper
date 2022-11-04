@@ -155,7 +155,7 @@ namespace Omnikeeper.Service
                  WHEN EXISTS (SELECT * FROM relation_latest LIMIT 1) THEN 1
                      ELSE 0
                    END", trans.DBConnection, trans.DBTransaction);
-                var nonEmptyInt = (int)await commandCheckNonEmpty.ExecuteScalarAsync();
+                var nonEmptyInt = (int?)await commandCheckNonEmpty.ExecuteScalarAsync();
                 if (nonEmptyInt != 0)
                 {
                     return;

@@ -74,7 +74,7 @@ namespace Omnikeeper.Controllers.OData
                     continue;
                 }
 
-                IODataRoutingMetadata metadata = candidate.Endpoint.Metadata.OfType<IODataRoutingMetadata>().FirstOrDefault();
+                IODataRoutingMetadata? metadata = candidate.Endpoint.Metadata.OfType<IODataRoutingMetadata>().FirstOrDefault();
                 if (metadata == null)
                 {
                     continue;

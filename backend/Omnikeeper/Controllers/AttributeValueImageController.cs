@@ -68,7 +68,7 @@ namespace Omnikeeper.Controllers
                     return BadRequest($"Requested index {index} of scalar attribute value image");
                 }
                 var mimeType = scalar.Value.MimeType;
-                return File(scalar.Value.FullData, mimeType);
+                return File(scalar.Value.FullData!, mimeType);
             }
             else if (a.Attribute.Value is AttributeArrayValueImage array)
             {
@@ -77,7 +77,7 @@ namespace Omnikeeper.Controllers
                     return BadRequest($"Requested index {index} outside of valid boundaries (0-{array.Values.Length - 1})");
                 }
                 var mimeType = array.Values[index].Value.MimeType;
-                return File(array.Values[index].Value.FullData, mimeType);
+                return File(array.Values[index].Value.FullData!, mimeType);
             }
             else
             {
