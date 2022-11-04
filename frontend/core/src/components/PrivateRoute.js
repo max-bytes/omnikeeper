@@ -2,6 +2,7 @@ import React from 'react'
 import { Redirect } from 'react-router-dom'
 import { useKeycloak } from '@react-keycloak/web'
 import Page from './Page';
+import { Spin } from 'antd';
 
 export function PrivateRoute(props) {
 
@@ -9,7 +10,7 @@ export function PrivateRoute(props) {
 
   const { keycloak, initialized } = useKeycloak();
 
-  if (!initialized) return "Loading...";
+  if (!initialized) return <div style={{display: "flex", height: "100%"}}><Spin spinning={true} size="large" tip="Loading...">&nbsp;</Spin></div>;
 
   return <Page title={title}
       {...rest}

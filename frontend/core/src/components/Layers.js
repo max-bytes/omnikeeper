@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import LayerIcon from './LayerIcon';
-import { Button, Popover } from 'antd'
+import { Button, Popover, Spin } from 'antd'
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import { queries } from 'graphql/queries'
 import { useQuery } from '@apollo/client';
@@ -130,7 +130,7 @@ function Layers(props) {
   } else if (error) {
     return "Error";
   } else {
-    return "Loading";
+    return <div style={{display: "flex", height: "100%"}}><Spin spinning={true} size="large" tip="Loading...">&nbsp;</Spin></div>;
   }
 }
 

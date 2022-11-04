@@ -21,7 +21,7 @@ import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
 import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
 import { ReactKeycloakProvider } from '@react-keycloak/web'
-import { Menu, Layout, Button, Drawer } from 'antd';
+import { Menu, Layout, Button, Drawer, Spin } from 'antd';
 import { ExplorerLayers } from "components/ExplorerLayers";
 import { LayerSettingsContext } from "utils/layers";
 import Trait from "components/traits/Trait";
@@ -215,9 +215,11 @@ function App() {
     localStorage.setItem('token', token.token);
   }
 
+  const loadingComponent = <div style={{display: "flex", height: "100%"}}><Spin spinning={true} size="large" tip="Loading...">&nbsp;</Spin></div>;
+
   return (
       <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakProviderInitOptions} autoRefreshToken={true}
-        onTokens={tokenSetter}  LoadingComponent={<>Loading...</>}>
+        onTokens={tokenSetter} LoadingComponent={loadingComponent}>
         <React.StrictMode>
           <ApolloWrapper component={BR} />
         </React.StrictMode>

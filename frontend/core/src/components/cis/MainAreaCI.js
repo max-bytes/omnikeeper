@@ -31,7 +31,7 @@ function LoadingCI(props) {
   if (dataCI) return (<Spin spinning={loadingCI} wrapperClassName="workaround-antd-spinner-flex-full-height">
       <CI timeThreshold={timeThreshold} ci={dataCI.cis[0]} isEditable={isEditable} ></CI>
     </Spin>);
-  else if (loadingCI) return <p>Loading...</p>;
+  else if (loadingCI) return <div style={{display: "flex", height: "100%"}}><Spin spinning={true} size="large" tip="Loading...">&nbsp;</Spin></div>;
   else if (errorCI) return <ErrorView error={errorCI}/>;
   else return <p>?</p>;
 }

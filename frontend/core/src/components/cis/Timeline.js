@@ -22,7 +22,7 @@ function Timeline(props) {
 
   if (layers) {
     return <LoadingTimeline layers={layers} ciid={props.ciid} />;
-  } else return 'Loading...';
+  } else return <div style={{display: "flex", height: "100%"}}><Spin spinning={true} size="large" tip="Loading...">&nbsp;</Spin></div>;
 }
 
 function LoadingTimeline(props) {

@@ -1,6 +1,6 @@
 import { useQuery } from "@apollo/client";
 import React from "react";
-import { Descriptions, Tabs } from 'antd';
+import { Descriptions, Spin, Tabs } from 'antd';
 import { queries } from "../../graphql/queries";
 import { useExplorerLayers } from "../../utils/layers";
 import { useParams } from "react-router-dom";
@@ -114,6 +114,6 @@ export default function Changeset(props) {
         </div>;
 
     } else {
-        return "Loading...";
+        return <div style={{display: "flex", height: "100%"}}><Spin spinning={true} size="large" tip="Loading...">&nbsp;</Spin></div>;
     }
 }
