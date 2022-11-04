@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model.TraitBased;
@@ -231,7 +232,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             }
         }
 
-        public void LateInit(IDictionary<string, (TraitRelationFilterWrapperType wrapper, ITrait trait)> traitRelationFilterWrappers)
+        public void LateInit(IDictionary<string, (TraitRelationFilterWrapperType wrapper, ITrait trait)> traitRelationFilterWrappers, ILogger logger)
         {
             foreach (var r in trait.OptionalRelations)
             {
@@ -251,7 +252,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     }
                     else
                     {
-                        throw new Exception($"Could not find filter for trait with ID {traitIDHint}");
+                        logger.LogError($"Could not find filter for trait with ID {traitIDHint}");
+                        continue;
                     }
                 }
             }

@@ -110,7 +110,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             {
                 try
                 {
-                    kv.Value.filter.LateInit(traitRelationFilterWrapperDictionary);
+                    kv.Value.filter.LateInit(traitRelationFilterWrapperDictionary, logger);
                 }
                 catch (Exception e)
                 {
