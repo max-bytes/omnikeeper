@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import './App.css';
 import Explorer from './components/cis/Explorer';
 import Diffing from './components/diffing/Diffing';
@@ -21,7 +21,7 @@ import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
 import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
 import { ReactKeycloakProvider } from '@react-keycloak/web'
-import { Menu, Layout, Button, Drawer, Spin } from 'antd';
+import { Menu, Layout, Button, Drawer, Spin, notification } from 'antd';
 import { ExplorerLayers } from "components/ExplorerLayers";
 import { LayerSettingsContext } from "utils/layers";
 import Trait from "components/traits/Trait";
@@ -73,10 +73,7 @@ function App() {
     useAGGridEnterprise();
     
     return <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
-      <LayerSettingsContextProvider>
-        <Layout style={{height: '100vh', backgroundColor: 'unset'}}>
-            <Header style={{ position: 'fixed', zIndex: 10, width: '100%', top: '0px', 
-              borderBottom: "solid 1px #e8e8e8", boxShadow: "0 0 30px #f3f1f1", backgroundColor: 'white' }}>
+            <Header style={{ position: 'fixed', zIndex: 10, width: '100%', top: '0px', borderBottom: "solid 1px #e8e8e8", boxShadow: "0 0 30px #f3f1f1", backgroundColor: 'white' }}>
               <div style={{float: 'left', width: '200px'}}>
                   <Link to="/">
                       <img
@@ -205,8 +202,6 @@ function App() {
                 <ExplorerLayers />
               </Drawer>
             </Content>
-          </Layout>
-        </LayerSettingsContextProvider>
       </BrowserRouter>
   }
   
@@ -218,13 +213,36 @@ function App() {
   const loadingComponent = <div style={{display: "flex", height: "100%"}}><Spin spinning={true} size="large" tip="Loading...">&nbsp;</Spin></div>;
 
   return (
-      <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakProviderInitOptions} autoRefreshToken={true}
-        onTokens={tokenSetter} LoadingComponent={loadingComponent}>
-        <React.StrictMode>
-          <ApolloWrapper component={BR} />
-        </React.StrictMode>
-      </ReactKeycloakProvider>
+    
+    <LayerSettingsContextProvider>
+      <Layout style={{height: '100vh', backgroundColor: 'unset'}}>
+        <ErrorNotifier>
+            {(showError) => (
+            <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakProviderInitOptions} autoRefreshToken={true}
+            onTokens={tokenSetter} LoadingComponent={loadingComponent}>
+              <React.StrictMode>
+                <ApolloWrapper component={BR} showError={showError} />
+              </React.StrictMode>
+            </ReactKeycloakProvider>
+          )}
+        </ErrorNotifier>
+      </Layout>
+    </LayerSettingsContextProvider>
   );
+}
+
+// react+apollo error handling partly taken from https://shinesolutions.com/2021/06/30/automatically-handling-apollo-client-errors-in-your-react-ui/
+function ErrorNotifier({ children }) {
+  const showError = useCallback((error) => {
+    notification.error({
+      message: error.name,
+      description: <p>{error.message}</p>,
+      duration: 0,
+      placement: 'bottomLeft'
+    });
+  }, []);
+
+  return <>{children(showError)}</>;
 }
 
 export default App;

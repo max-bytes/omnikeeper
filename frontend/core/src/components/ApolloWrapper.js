@@ -7,7 +7,7 @@ import { setContext } from "@apollo/client/link/context";
 import moment from 'moment'
 import env from "@beam-australia/react-env";
 
-function ApolloWrapper({ component: Component, ...rest }) {
+function ApolloWrapper({ component: Component, showError, ...rest }) {
 
     const typeDefs = gql`
         type LayerSettings {
@@ -73,14 +73,16 @@ function ApolloWrapper({ component: Component, ...rest }) {
     });
 
     const errorLink = onError(({ graphQLErrors, networkError }) => {
-        if (graphQLErrors)
-          graphQLErrors.forEach(({ message, locations, path }) =>
-            console.log(
-              `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
-            ),
-          );
+        if (graphQLErrors) {
+          graphQLErrors.forEach(error => {
+            const { message, locations, path } = error;
+            showError(error);
+          });
+        }
       
-        if (networkError) console.log(`[Network error]: ${networkError}`);
+        if (networkError) {
+          showError(networkError);
+        }
       });
 
     function setInitialState() {
