@@ -52,7 +52,7 @@ export const mutations = {
   `,
 
   UPSERT_ODATAAPICONTEXT: gql`
-  mutation ($id: String!, $odataAPIContext: TE_Insert_Input___meta__config__odata_context!) {
+  mutation ($id: String!, $odataAPIContext: TE_Upsert_Input___meta__config__odata_context!) {
     upsertSingleByFilter_m__meta__config__odata_context(
       layers: ["__okconfig"]
       writeLayer: "__okconfig"
