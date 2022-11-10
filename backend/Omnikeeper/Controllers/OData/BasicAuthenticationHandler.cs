@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Omnikeeper.Base.Entity;
@@ -21,17 +22,19 @@ namespace Omnikeeper.Controllers.OData
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ODataAPIContextModel oDataAPIContextModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
+        private readonly bool debugAllowAll;
 
         public ODataAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock, IModelContextBuilder modelContextBuilder, ODataAPIContextModel oDataAPIContextModel, IMetaConfigurationModel metaConfigurationModel
+            ISystemClock clock, IModelContextBuilder modelContextBuilder, ODataAPIContextModel oDataAPIContextModel, IMetaConfigurationModel metaConfigurationModel, IConfiguration configuration
             ) : base(options, logger, encoder, clock)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.oDataAPIContextModel = oDataAPIContextModel;
             this.metaConfigurationModel = metaConfigurationModel;
+            debugAllowAll = configuration.GetSection("Authorization").GetValue("debugAllowAll", false);
         }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -41,6 +44,13 @@ namespace Omnikeeper.Controllers.OData
             { 
                 using var trans = modelContextBuilder.BuildImmediate();
                 var timeThreshold = TimeThreshold.BuildLatest();
+
+                if (debugAllowAll)
+                {
+                    var identity = new ClaimsIdentity(Array.Empty<Claim>(), "None");
+                    var claimsPrincipal = new ClaimsPrincipal(identity);
+                    return AuthenticateResult.Success(new AuthenticationTicket(claimsPrincipal, Scheme.Name));
+                }
 
                 var authConfig = await ODataAPIContextService.GetAuthConfigFromContext(oDataAPIContextModel, metaConfigurationModel, odataContext, trans, timeThreshold);
 
