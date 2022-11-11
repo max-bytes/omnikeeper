@@ -17,6 +17,7 @@ using Omnikeeper.Model.Config;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
@@ -75,9 +76,10 @@ namespace Omnikeeper.Controllers.OData
 
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, metaConfigurationModel, context, trans, timeThreshold);
 
+            var traits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
+
             var traitID = entityType.Name;
-            var trait = await traitsProvider.GetActiveTrait(traitID, trans, timeThreshold);
-            if (trait == null)
+            if (!traits.TryGetValue(traitID, out var trait))
                 return BadRequest();
 
             var traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
@@ -96,17 +98,77 @@ namespace Omnikeeper.Controllers.OData
                     throw new Exception("We don't support ordering");
                 }
 
+                // TODO: implement top query option
+
                 // TODO: use dataloader
                 // TODO: integrate query options, if possible?
                 var ets = await traitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerset, trans, timeThreshold);
 
-                var e = ConvertEffectiveTraits2EdmEntities(ets.Select(kv => (ciid: kv.Key, et: kv.Value)), entityType, trait);
+                IDictionary<string, IDictionary<Guid, IEnumerable<IEdmEntityObject>>> expandedETs = new Dictionary<string, IDictionary<Guid, IEnumerable<IEdmEntityObject>>>();
+                if (queryOptions.SelectExpand != null)
+                    expandedETs = await CalculateExpandedETs(queryOptions.SelectExpand.SelectExpandClause, ets, trait, traits, layerset, trans, timeThreshold);
+
+                var e = ConvertEffectiveTraits2EdmEntities(ets.Select(kv => (ciid: kv.Key, et: kv.Value)), entityType, trait, expandedETs);
 
                 return Ok(new EdmEntityObjectCollection(new EdmCollectionTypeReference(collectionType), e.ToList()));
-            } catch (Exception)
+            } catch (Exception e)
             {
-                return BadRequest();
+                return BadRequest(e);
             }
+        }
+
+        private async Task<IDictionary<string, IDictionary<Guid, IEnumerable<IEdmEntityObject>>>> CalculateExpandedETs(SelectExpandClause selectExpandClause, IDictionary<Guid, EffectiveTrait> baseETs, ITrait baseTrait, IDictionary<string, ITrait> traits, LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            var expandedETs = new Dictionary<string, IDictionary<Guid, IEnumerable<IEdmEntityObject>>>();
+            foreach (var selectedItem in selectExpandClause.SelectedItems)
+            {
+                if (selectedItem is ExpandedNavigationSelectItem ei)
+                {
+                    var innerPath = ei.PathToNavigationProperty;
+                    var lastInPath = innerPath.LastSegment;
+                    var ns = ei.NavigationSource;
+                    var innerEdmType = ns.EntityType();
+                    Contract.Assert(innerEdmType.TypeKind == EdmTypeKind.Entity);
+
+                    var innerTraitID = innerEdmType.Name;
+                    if (!traits.TryGetValue(innerTraitID, out var innerTrait))
+                        throw new Exception($"Could not find trait with ID \"{innerTraitID}\"");
+
+                    // split navigation into trait relation and other trait ID 
+                    var navigation = lastInPath.Identifier;
+                    var tmp = navigation.Split("_as_");
+                    var baseTraitRelationIdentifier = tmp[0];
+
+                    var traitRelation = baseTrait.OptionalRelations.FirstOrDefault(tr => tr.Identifier == baseTraitRelationIdentifier);
+                    if (traitRelation == null)
+                        throw new Exception($"Could not find trait relation with identifier \"{baseTraitRelationIdentifier}\" in trait with ID \"{baseTrait.ID}\"");
+
+                    var otherCIsDict = baseETs.ToDictionary(kv => kv.Key, kv => {
+                        if (traitRelation.RelationTemplate.DirectionForward)
+                            return kv.Value.OutgoingTraitRelations[traitRelation.Identifier].Select(mr => mr.Relation.ToCIID);
+                        else
+                            return kv.Value.IncomingTraitRelations[traitRelation.Identifier].Select(mr => mr.Relation.FromCIID);
+                    });
+
+                    var innerTraitEntityModel = new TraitEntityModel(innerTrait, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
+                    var innerEts = await innerTraitEntityModel.GetByCIID(SpecificCIIDsSelection.Build(otherCIsDict.Values.SelectMany(e => e).ToHashSet()), layerset, trans, timeThreshold);
+
+                    // nested expands
+                    var innerExpandedETs = await CalculateExpandedETs(ei.SelectAndExpand, innerEts, innerTrait, traits, layerset, trans, timeThreshold);
+
+                    // re-distribute innerETs to each baseET
+                    var innerEDMEntities = otherCIsDict.ToDictionary(kv => kv.Key, kv =>
+                    {
+                        var innerET = kv.Value.Select(innerCIID => (innerCIID, innerEts[innerCIID]));
+
+                        var innerInnerEDMEntities = ConvertEffectiveTraits2EdmEntities(innerET, innerEdmType, innerTrait, innerExpandedETs);
+                        return innerInnerEDMEntities;
+                    });
+
+                    expandedETs.Add(navigation, innerEDMEntities);
+                }
+            }
+            return expandedETs;
         }
 
         public async Task<ActionResult<IEdmEntityObject>> Get(string context, string entityset, Guid key)
@@ -119,6 +181,8 @@ namespace Omnikeeper.Controllers.OData
 
             //Set the SelectExpandClause on OdataFeature to include navigation property set in the $expand
             SetSelectExpandClauseOnODataFeature(path, entityType);
+
+            // TODO: support for expand?
 
             var timeThreshold = TimeThreshold.BuildLatest();
             using var trans = modelContextBuilder.BuildImmediate();
@@ -134,7 +198,7 @@ namespace Omnikeeper.Controllers.OData
 
             // TODO: use dataloader
             var ets = await traitEntityModel.GetByCIID(SpecificCIIDsSelection.Build(key), layerset, trans, timeThreshold);
-            var e = ConvertEffectiveTraits2EdmEntities(ets.Select(kv => (kv.Key, kv.Value)), entityType, trait);
+            var e = ConvertEffectiveTraits2EdmEntities(ets.Select(kv => (kv.Key, kv.Value)), entityType, trait, ImmutableDictionary<string, IDictionary<Guid, IEnumerable<IEdmEntityObject>>>.Empty);
 
             return Ok(e.FirstOrDefault());
         }
@@ -207,13 +271,13 @@ namespace Omnikeeper.Controllers.OData
             // TODO: use dataloader
             var otherEts = await otherTraitEntityModel.GetByCIID(SpecificCIIDsSelection.Build(otherCIIDs.ToHashSet()), layerset, trans, timeThreshold);
 
-            var e = ConvertEffectiveTraits2EdmEntities(otherEts.Select(kv => (ciid: kv.Key, et: kv.Value)), targetEntityType, otherTrait);
+            var e = ConvertEffectiveTraits2EdmEntities(otherEts.Select(kv => (ciid: kv.Key, et: kv.Value)), targetEntityType, otherTrait, ImmutableDictionary<string, IDictionary<Guid, IEnumerable<IEdmEntityObject>>>.Empty);
 
             var targetCollectionTypeRef = new EdmCollectionTypeReference(new EdmCollectionType(new EdmEntityTypeReference(targetEntityType, true)));
             return Ok(new EdmEntityObjectCollection(targetCollectionTypeRef, e.ToList()));
         }
 
-        private IEnumerable<IEdmEntityObject> ConvertEffectiveTraits2EdmEntities(IEnumerable<(Guid ciid, EffectiveTrait et)> ets, IEdmEntityType entityType, ITrait trait)
+        private IEnumerable<IEdmEntityObject> ConvertEffectiveTraits2EdmEntities(IEnumerable<(Guid ciid, EffectiveTrait et)> ets, IEdmEntityType entityType, ITrait trait, IDictionary<string, IDictionary<Guid, IEnumerable<IEdmEntityObject>>> expandedETs)
         {
             var e = ets.Select(tuple => {
                 var (ciid, et) = tuple;
@@ -240,9 +304,20 @@ namespace Omnikeeper.Controllers.OData
                         }
                     }
 
-                    // TODO:, when client wants expanded properties, add them through relations
+                    // NOTE:, when client wants expanded properties, add them through relations
                     // example https://localhost:44378/api/odata/testcontext/insight_discovery.hosts?$expand=has_patch_installed_as_insight_discovery.patch
-                    // get queryOptions, look into Expand options and fetch correct related entities, add here
+                    foreach (var optionalRelation in trait.OptionalRelations)
+                    {
+                        foreach(var traitHint in optionalRelation.RelationTemplate.TraitHints)
+                        {
+                            var key = optionalRelation.Identifier + "_as_" + traitHint;
+                            if (expandedETs.TryGetValue(key, out var expandedET))
+                            {
+                                if (expandedET.TryGetValue(ciid, out var expanded))
+                                    entity.TrySetPropertyValue(key, expanded);
+                            }
+                        }
+                    }
 
                     return entity as IEdmEntityObject;
                 }
