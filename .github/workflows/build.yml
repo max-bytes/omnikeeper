@@ -193,7 +193,6 @@ jobs:
       - name: Build
         run: |
           bash clients/scripts/go/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_GO }}"
-          bash clients/scripts/python/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_PYTHON }}"
           bash clients/scripts/java/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_JAVA }}"
           bash clients/scripts/powershell/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_POWERSHELL }}"
   call-backend-package-variants:
