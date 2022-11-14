@@ -102,7 +102,7 @@ mutation {
             Assert.IsNull(r1.Errors);
             Assert.AreEqual("test_trait_a", r1.Data.manage_upsertRecursiveTrait.id);
 
-            Thread.Sleep(1000); // sleep for a bit to let omnikeeper update its edm model and graphql schema
+            Thread.Sleep(6000); // sleep for a bit to let omnikeeper update its edm model and graphql schema
 
             // insert an entity
             var insertNew = new GraphQLRequest
