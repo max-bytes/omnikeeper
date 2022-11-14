@@ -13,6 +13,7 @@ using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.GraphQL;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Service;
 using System;
@@ -28,7 +29,7 @@ namespace Omnikeeper.Controllers.OData
     [Authorize(AuthenticationSchemes = "ODataBasicAuthentication")]
     public class TraitEntityController : ODataController
     {
-        private readonly ITraitsProvider traitsProvider;
+        private readonly ITraitsHolder traitsHolder;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
@@ -39,11 +40,11 @@ namespace Omnikeeper.Controllers.OData
         private readonly ODataAPIContextModel oDataAPIContextModel;
         private readonly ILogger<TraitEntityController> logger;
 
-        public TraitEntityController(ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
+        public TraitEntityController(ITraitsHolder traitsHolder, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
             IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IChangesetModel changesetModel,
             ODataAPIContextModel oDataAPIContextModel, ILogger<TraitEntityController> logger)
         {
-            this.traitsProvider = traitsProvider;
+            this.traitsHolder = traitsHolder;
             this.modelContextBuilder = modelContextBuilder;
             this.metaConfigurationModel = metaConfigurationModel;
             this.effectiveTraitModel = effectiveTraitModel;
@@ -76,7 +77,7 @@ namespace Omnikeeper.Controllers.OData
 
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, metaConfigurationModel, context, trans, timeThreshold);
 
-            var traits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
+            var traits = traitsHolder.GetTraits();
 
             var traitID = entityType.Name;
             if (!traits.TryGetValue(traitID, out var trait))
@@ -187,9 +188,10 @@ namespace Omnikeeper.Controllers.OData
             var timeThreshold = TimeThreshold.BuildLatest();
             using var trans = modelContextBuilder.BuildImmediate();
 
+            var traits = traitsHolder.GetTraits();
+
             var traitID = entityType.Name;
-            var trait = await traitsProvider.GetActiveTrait(traitID, trans, timeThreshold);
-            if (trait == null)
+            if (!traits.TryGetValue(traitID, out var trait))
                 return BadRequest();
 
             var traitEntityModel = new TraitEntityModel(trait, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel);
@@ -234,7 +236,7 @@ namespace Omnikeeper.Controllers.OData
             var timeThreshold = TimeThreshold.BuildLatest();
             using var trans = modelContextBuilder.BuildImmediate();
 
-            var traits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
+            var traits = traitsHolder.GetTraits();
 
             var baseTraitID = sourceEntityType.Name;
             if (!traits.TryGetValue(baseTraitID, out var baseTrait))

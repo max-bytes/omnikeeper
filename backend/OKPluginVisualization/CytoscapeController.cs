@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.GraphQL;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Authz;
 
 namespace OKPluginVisualization
 {
@@ -21,16 +21,16 @@ namespace OKPluginVisualization
     public class CytoscapeController : ControllerBase
     {
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly ITraitsProvider traitsProvider;
+        private readonly ITraitsHolder traitsHolder;
         private readonly ICurrentUserAccessor currentUserAccessor;
         private readonly IAuthzFilterManager authzFilterManager;
         private readonly TraitCentricDataGenerator traitCentricDataGenerator;
 
-        public CytoscapeController(IModelContextBuilder modelContextBuilder, ITraitsProvider traitsProvider, ICurrentUserAccessor currentUserAccessor,
+        public CytoscapeController(IModelContextBuilder modelContextBuilder, ITraitsHolder traitsHolder, ICurrentUserAccessor currentUserAccessor,
             IAuthzFilterManager authzFilterManager, TraitCentricDataGenerator traitCentricDataGenerator)
         {
             this.modelContextBuilder = modelContextBuilder;
-            this.traitsProvider = traitsProvider;
+            this.traitsHolder = traitsHolder;
             this.currentUserAccessor = currentUserAccessor;
             this.authzFilterManager = authzFilterManager;
             this.traitCentricDataGenerator = traitCentricDataGenerator;
@@ -54,9 +54,9 @@ namespace OKPluginVisualization
 
             IEnumerable<ITrait> traits;
             if (traitIDsRegex != null && !traitIDsRegex.IsEmpty())
-                traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values.Where(t => Regex.Match(t.ID, traitIDsRegex).Success);
+                traits = traitsHolder.GetTraits().Values.Where(t => Regex.Match(t.ID, traitIDsRegex).Success);
             else if (traitIDs != null && !traitIDs.IsEmpty())
-                traits = (await traitsProvider.GetActiveTraitsByIDs(traitIDs, trans, timeThreshold)).Values;
+                traits = traitsHolder.GetTraits(traitIDs).Values;
             else
                 return BadRequest("No trait IDs specified");
 

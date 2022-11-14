@@ -32,7 +32,7 @@ namespace Omnikeeper.GraphQL
         private readonly ILayerDataModel layerDataModel;
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
-        private readonly ITraitsProvider traitsProvider;
+        private readonly ITraitsHolder traitsHolder;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IChangesetModel changesetModel;
@@ -53,7 +53,7 @@ namespace Omnikeeper.GraphQL
         private readonly IDataLoaderService dataLoaderService;
 
         public GraphQLQueryRoot(ICIIDModel ciidModel, IAttributeModel attributeModel, ILayerModel layerModel, ILayerDataModel layerDataModel, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel,
-            ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, 
+            ITraitsHolder traitsHolder, IMetaConfigurationModel metaConfigurationModel, 
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, GeneratorV1Model generatorModel, IBaseConfigurationModel baseConfigurationModel,
             IOIAContextModel oiaContextModel, AuthRoleModel authRoleModel, CLConfigV1Model clConfigModel,
             RecursiveTraitModel recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
@@ -67,7 +67,7 @@ namespace Omnikeeper.GraphQL
             this.layerDataModel = layerDataModel;
             this.ciModel = ciModel;
             this.effectiveTraitModel = effectiveTraitModel;
-            this.traitsProvider = traitsProvider;
+            this.traitsHolder = traitsHolder;
             this.metaConfigurationModel = metaConfigurationModel;
             this.baseConfigurationModel = baseConfigurationModel;
             this.changesetModel = changesetModel;
@@ -157,10 +157,10 @@ namespace Omnikeeper.GraphQL
                         }
                     }
 
-                    var requiredTraits = await traitsProvider.GetActiveTraitsByIDs(withEffectiveTraits, userContext.Transaction, timeThreshold);
-                    var requiredNonTraits = await traitsProvider.GetActiveTraitsByIDs(withoutEffectiveTraits, userContext.Transaction, timeThreshold);
+                    var requiredTraits = traitsHolder.GetTraits(withEffectiveTraits);
+                    var requiredNonTraits = traitsHolder.GetTraits(withoutEffectiveTraits);
 
-                    IAttributeSelection attributeSelection = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, userContext.Transaction, timeThreshold);
+                    IAttributeSelection attributeSelection = MergedCIType.ForwardInspectRequiredAttributes(context, traitsHolder, userContext.Transaction, timeThreshold);
 
                     // create shallow copy, because we potentially modify these lists
                     IEnumerable<ITrait> requiredTraitsCopy = new List<ITrait>(requiredTraits.Values);
@@ -383,22 +383,22 @@ namespace Omnikeeper.GraphQL
             Field<TraitType>("activeTrait")
                 .Arguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" })
-                .ResolveAsync(async context =>
+                .Resolve(context =>
                 {
                     var userContext = context.GetUserContext();
 
                     var id = context.GetArgument<string>("id")!;
 
-                    var trait = await traitsProvider.GetActiveTrait(id, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    var trait = traitsHolder.GetTrait(id);
                     return trait;
                 });
 
             Field<ListGraphType<TraitType>>("activeTraits")
-                .ResolveAsync(async context =>
+                .Resolve(context =>
                 {
                     var userContext = context.GetUserContext();
 
-                    var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    var traits = traitsHolder.GetTraits();
                     return traits.Values.OrderBy(t => t.ID);
                 });
 
@@ -425,7 +425,7 @@ namespace Omnikeeper.GraphQL
                         ciidSelection = SpecificCIIDsSelection.Build(ciids);
                     }
 
-                    var trait = await traitsProvider.GetActiveTrait(traitID, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    var trait = traitsHolder.GetTrait(traitID);
                     if (trait == null)
                         throw new ExecutionError($"No trait with ID {traitID} found");
 
@@ -450,7 +450,7 @@ namespace Omnikeeper.GraphQL
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
 
                     var layers = await layerModel.GetLayers(userContext.Transaction); // TODO: we only need count, implement more efficient model method
-                    var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    var traits = traitsHolder.GetTraits();
                     var generators = await generatorModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement GeneratorProvider
 
                     var numCIIDs = await layerStatisticsModel.GetCIIDsApproximate(userContext.Transaction);

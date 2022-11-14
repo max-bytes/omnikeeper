@@ -19,21 +19,21 @@ namespace Omnikeeper.GraphQL
         private readonly ICIModel ciModel;
         private readonly IAttributeModel attributeModel;
         private readonly IEffectiveTraitModel effectiveTraitModel;
-        private readonly ITraitsProvider traitsProvider;
+        private readonly ITraitsHolder traitsHolder;
         private readonly ILayerDataModel layerDataModel;
         private readonly IRelationModel relationModel;
         private readonly IChangesetModel changesetModel;
         private readonly IUserInDatabaseModel userInDatabaseModel;
 
         public DataLoaderService(IDataLoaderContextAccessor dataLoaderContextAccessor, IEffectiveTraitModel traitModel, ICIModel ciModel, IAttributeModel attributeModel, IEffectiveTraitModel effectiveTraitModel,
-            ITraitsProvider traitsProvider, ILayerDataModel layerDataModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserInDatabaseModel userInDatabaseModel)
+            ITraitsHolder traitsHolder, ILayerDataModel layerDataModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserInDatabaseModel userInDatabaseModel)
         {
             this.dataLoaderContextAccessor = dataLoaderContextAccessor;
             this.traitModel = traitModel;
             this.ciModel = ciModel;
             this.attributeModel = attributeModel;
             this.effectiveTraitModel = effectiveTraitModel;
-            this.traitsProvider = traitsProvider;
+            this.traitsHolder = traitsHolder;
             this.layerDataModel = layerDataModel;
             this.relationModel = relationModel;
             this.changesetModel = changesetModel;
@@ -48,7 +48,7 @@ namespace Omnikeeper.GraphQL
                 var loader = dlContext.GetOrAddCollectionBatchLoader($"GetAllEffectiveTraits_{layerSet}_{timeThreshold}",
                     async (IEnumerable<(MergedCI ci, ITraitSelection traitSelection)> selections) =>
                     {
-                        var traits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
+                        var traits = traitsHolder.GetTraits().Values;
                         var requestedTraits = TraitSelectionExtensions.UnionAll(selections.Select(t => t.traitSelection));
                         var finalTraits = traits.Where(t => requestedTraits.Contains(t.ID));
 

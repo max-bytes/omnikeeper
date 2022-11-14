@@ -90,7 +90,7 @@ namespace Omnikeeper.GraphQL.Types
             });
         }
 
-        public static async Task<IAttributeSelection> ForwardInspectRequiredAttributes(IResolveFieldContext context, ITraitsProvider traitsProvider, IModelContext trans, TimeThreshold timeThreshold)
+        public static IAttributeSelection ForwardInspectRequiredAttributes(IResolveFieldContext context, ITraitsHolder traitsHolder, IModelContext trans, TimeThreshold timeThreshold)
         {
             // do a "forward" look into the graphql query to see which attributes we actually need to fetch to properly fulfill the request
             // because we need to at least fetch a single attribute (due to internal reasons), we might as well fetch the name attribute and then don't care if it is requested or not
@@ -135,9 +135,7 @@ namespace Omnikeeper.GraphQL.Types
                         return sv.Value.ToString();
                     }).ToHashSet();
 
-                    // TODO: more performant, rely on dictionary
-                    var allTraits = (await traitsProvider.GetActiveTraits(trans, timeThreshold)).Values;
-                    var requestedTraits = allTraits.Where(t => requestedTraitIDs.Contains(t.ID));
+                    var requestedTraits = traitsHolder.GetTraits(requestedTraitIDs).Values;
 
                     var relevantAttributesForTraits = requestedTraits.SelectMany(t =>
                     t.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Union(

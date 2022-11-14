@@ -264,6 +264,7 @@ namespace Omnikeeper.Startup
             builder.RegisterGeneric(typeof(ReactiveGenericTraitEntityModel<>)).SingleInstance();
 
             // these aren't real models, but we keep them here because they are closely related to models
+            builder.RegisterType<TraitsHolder>().As<ITraitsHolder>().SingleInstance();
             builder.RegisterType<TraitsProvider>().As<ITraitsProvider>().SingleInstance();
             builder.RegisterType<EffectiveGeneratorProvider>().As<IEffectiveGeneratorProvider>().SingleInstance();
             builder.RegisterType<IssuePersister>().As<IIssuePersister>().SingleInstance();
@@ -276,8 +277,6 @@ namespace Omnikeeper.Startup
                 builder.RegisterDecorator<CachingLayerModel, ILayerModel>();
                 builder.RegisterType<PerRequestMetaConfigurationCache>().InstancePerLifetimeScope();
                 builder.RegisterDecorator<CachingMetaConfigurationModel, IMetaConfigurationModel>();
-                builder.RegisterType<PerRequestTraitsProviderCache>().InstancePerLifetimeScope();
-                builder.RegisterDecorator<CachingTraitsProvider, ITraitsProvider>();
             }
 
             // latest layer change caching
@@ -409,6 +408,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<MarkedForDeletionJob>().InstancePerLifetimeScope();
             builder.RegisterType<UsageDataWriterJob>().InstancePerLifetimeScope();
             builder.RegisterType<GraphQLSchemaReloaderJob>().InstancePerLifetimeScope();
+            builder.RegisterType<TraitsReloaderJob>().InstancePerLifetimeScope();
             builder.RegisterType<EdmModelReloaderJob>().InstancePerLifetimeScope();
 
             // validators

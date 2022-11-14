@@ -77,6 +77,26 @@ namespace Omnikeeper
                         var trans = modelContextBuilder.BuildImmediate();
                         var activeTraits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
 
+                        var traitsHolder = scope.ServiceProvider.GetRequiredService<ITraitsHolder>();
+                        traitsHolder.SetTraits(activeTraits, timeThreshold.Time, logger);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogError(e, "Encountered error while trying to initialize traits");
+                    }
+                }
+
+                using (var scope = host.Services.CreateScope())
+                {
+                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                    try
+                    {
+                        var traitsHolder = scope.ServiceProvider.GetRequiredService<ITraitsHolder>();
+                        var modelContextBuilder = scope.ServiceProvider.GetRequiredService<IModelContextBuilder>();
+                        var timeThreshold = TimeThreshold.BuildLatest();
+                        var trans = modelContextBuilder.BuildImmediate();
+                        var activeTraits = traitsHolder.GetTraits();
+
                         var graphqlSchemaHolder = scope.ServiceProvider.GetRequiredService<GraphQLSchemaHolder>();
                         graphqlSchemaHolder.ReInitSchema(scope.ServiceProvider, activeTraits, logger);
                     }
@@ -91,11 +111,11 @@ namespace Omnikeeper
                     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
                     try
                     {
-                        var traitsProvider = scope.ServiceProvider.GetRequiredService<ITraitsProvider>();
+                        var traitsHolder = scope.ServiceProvider.GetRequiredService<ITraitsHolder>();
                         var modelContextBuilder = scope.ServiceProvider.GetRequiredService<IModelContextBuilder>();
                         var timeThreshold = TimeThreshold.BuildLatest();
                         var trans = modelContextBuilder.BuildImmediate();
-                        var activeTraits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
+                        var activeTraits = traitsHolder.GetTraits();
 
                         var edmModelHolder = scope.ServiceProvider.GetRequiredService<EdmModelHolder>();
                         edmModelHolder.ReInitModel(scope.ServiceProvider, activeTraits, logger);

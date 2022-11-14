@@ -27,6 +27,7 @@ namespace Omnikeeper.Startup
         private static readonly JobKey JKExternalIDManager = new("ExternalIDManager", "omnikeeper");
         private static readonly JobKey JKArchiveOldData = new("ArchiveOldData", "omnikeeper");
         private static readonly JobKey JKUsageDataWriter = new("UsageDataWriter", "omnikeeper");
+        public static readonly JobKey JKTraitsReloader = new("TraitsReloader", "omnikeeper");
         public static readonly JobKey JKGraphQLSchemaReloader = new("GraphQLSchemaReloader", "omnikeeper");
         public static readonly JobKey JKEdmModelReloader = new("EdmModelReloader", "omnikeeper");
 
@@ -69,8 +70,9 @@ namespace Omnikeeper.Startup
                     await ScheduleJob<ValidatorJob>(localScheduler, JKValidator, config.CLBRunnerInterval, logger, deleteOnly, -10); // TODO: add own settings
                 }
                 await ScheduleJob<UsageDataWriterJob>(localScheduler, JKUsageDataWriter, "0 * * * * ?", logger, deleteOnly, -20);
-                await ScheduleJob<GraphQLSchemaReloaderJob>(localScheduler, JKGraphQLSchemaReloader, "0 * * * * ?", logger, deleteOnly, 20);
-                await ScheduleJob<EdmModelReloaderJob>(localScheduler, JKEdmModelReloader, "0 * * * * ?", logger, deleteOnly, 20);
+                await ScheduleJob<TraitsReloaderJob>(localScheduler, JKTraitsReloader, "*/5 * * * * ?", logger, deleteOnly, 20);
+                await ScheduleJob<GraphQLSchemaReloaderJob>(localScheduler, JKGraphQLSchemaReloader, "*/5 * * * * ?", logger, deleteOnly, 20);
+                await ScheduleJob<EdmModelReloaderJob>(localScheduler, JKEdmModelReloader, "*/5 * * * * ?", logger, deleteOnly, 20);
 
                 await distributedScheduler.Start(stoppingToken);
                 await localScheduler.Start(stoppingToken);

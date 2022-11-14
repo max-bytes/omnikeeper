@@ -19,28 +19,21 @@ namespace Omnikeeper.GraphQL.TraitEntities
     public class TraitEntitiesMutationSchemaLoader
     {
         private readonly IAttributeModel attributeModel;
-        private readonly IRelationModel relationModel;
-        private readonly ITraitsProvider traitsProvider;
         private readonly IDataLoaderService dataLoaderService;
         private readonly ChangesetDataModel changesetDataModel;
         private readonly IAuthzFilterManager authzFilterManager;
         private readonly ICIModel ciModel;
         private readonly ILayerModel layerModel;
-        private readonly IEffectiveTraitModel effectiveTraitModel;
 
-        public TraitEntitiesMutationSchemaLoader(IAttributeModel attributeModel, IRelationModel relationModel, ITraitsProvider traitsProvider,
-            IDataLoaderService dataLoaderService, ChangesetDataModel changesetDataModel, IAuthzFilterManager authzFilterManager,
-            ICIModel ciModel, ILayerModel layerModel, IEffectiveTraitModel effectiveTraitModel)
+        public TraitEntitiesMutationSchemaLoader(IAttributeModel attributeModel, IDataLoaderService dataLoaderService, ChangesetDataModel changesetDataModel, IAuthzFilterManager authzFilterManager,
+            ICIModel ciModel, ILayerModel layerModel)
         {
             this.attributeModel = attributeModel;
-            this.relationModel = relationModel;
-            this.traitsProvider = traitsProvider;
             this.dataLoaderService = dataLoaderService;
             this.changesetDataModel = changesetDataModel;
             this.authzFilterManager = authzFilterManager;
             this.ciModel = ciModel;
             this.layerModel = layerModel;
-            this.effectiveTraitModel = effectiveTraitModel;
         }
 
         // NOTE: expects the CI to exist already

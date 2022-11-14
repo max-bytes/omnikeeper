@@ -30,7 +30,7 @@ namespace Omnikeeper.GraphQL.Types
 
     public class ChangesetType : ObjectGraphType<Changeset>
     {
-        public ChangesetType(IDataLoaderService dataLoaderService, ChangesetDataModel changesetDataModel, ITraitsProvider traitsProvider)
+        public ChangesetType(IDataLoaderService dataLoaderService, ChangesetDataModel changesetDataModel, ITraitsHolder traitsHolder)
         {
             Field("id", x => x.ID);
             Field(x => x.Timestamp);
@@ -154,7 +154,7 @@ namespace Omnikeeper.GraphQL.Types
                     if (ciid == default)
                         return null;
 
-                    IAttributeSelection forwardAS = await MergedCIType.ForwardInspectRequiredAttributes(context, traitsProvider, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
+                    IAttributeSelection forwardAS = MergedCIType.ForwardInspectRequiredAttributes(context, traitsHolder, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
                     var finalCI = dataLoaderService.SetupAndLoadMergedCIs(SpecificCIIDsSelection.Build(ciid), forwardAS, layerset, userContext.GetTimeThreshold(context.Path), userContext.Transaction)
                         .Then(cis => cis.FirstOrDefault() ?? new MergedCI(ciid, null, layerset, userContext.GetTimeThreshold(context.Path), ImmutableDictionary<string, MergedCIAttribute>.Empty));
 

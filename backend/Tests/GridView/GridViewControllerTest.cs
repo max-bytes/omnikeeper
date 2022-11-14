@@ -5,6 +5,7 @@ using LandscapeRegistry.GridView;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
@@ -15,12 +16,12 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.GraphQL;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Response;
 using Omnikeeper.Startup;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -39,7 +40,7 @@ namespace Tests.Integration.Controller
             serviceCollection.AddMediatR(typeof(Startup));
             builder.Populate(serviceCollection);
 
-            builder.RegisterType<MockedTraitsProvider>().As<ITraitsProvider>().InstancePerLifetimeScope();
+            //builder.RegisterType<MockedTraitsProvider>().As<ITraitsProvider>().InstancePerLifetimeScope();
         }
 
         [Test]
@@ -51,6 +52,19 @@ namespace Tests.Integration.Controller
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
             var controller = ServiceProvider.GetRequiredService<GridViewController>();
             var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
+
+            // set traits
+            var recursiveTraits = new List<RecursiveTrait>() {
+                    new RecursiveTrait("test_trait_1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
+                    {
+                        new TraitAttribute("a1",
+                            CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false, false)
+                        )
+                    }, new List<TraitAttribute>() { }, new List<TraitRelation>() { })
+                };
+            var t = RecursiveTraitService.FlattenRecursiveTraits(recursiveTraits);
+            var tt = (IDictionary<string, ITrait>)t.ToDictionary(t => t.Key, t => (ITrait)t.Value);
+            ServiceProvider.GetRequiredService<ITraitsHolder>().SetTraits(tt, DateTimeOffset.Now, NullLogger<GridViewControllerTest>.Instance);
 
             var userInDatabase = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
 
@@ -129,50 +143,6 @@ namespace Tests.Integration.Controller
                     }
                 ),
             }, options => options.WithoutStrictOrdering());
-        }
-
-        public class MockedTraitsProvider : ITraitsProvider
-        {
-            public async Task<ITrait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
-            {
-                var ts = await GetActiveTraits(trans, timeThreshold, _ => { });
-
-                if (ts.TryGetValue(traitName, out var trait))
-                    return trait;
-                return null;
-            }
-
-            public Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold, Action<string> errorF)
-            {
-                var r = new List<RecursiveTrait>() {
-                new RecursiveTrait("test_trait_1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
-                {
-                    new TraitAttribute("a1",
-                        CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false, false)
-                    )
-                }, new List<TraitAttribute>() { }, new List<TraitRelation>() { })
-            };
-
-                // TODO: should we really flatten here in a mocked class?
-                var t = RecursiveTraitService.FlattenRecursiveTraits(r);
-                var tt = (IDictionary<string, ITrait>)t.ToDictionary(t => t.Key, t => (ITrait)t.Value);
-                return Task.FromResult(tt);
-            }
-
-            public async Task<IDictionary<string, ITrait>> GetActiveTraitsByIDs(IEnumerable<string> IDs, IModelContext trans, TimeThreshold timeThreshold)
-            {
-                var ts = await GetActiveTraits(trans, timeThreshold, _ => { });
-
-                var foundTraits = ts.Where(t => IDs.Contains(t.Key)).ToDictionary(t => t.Key, t => t.Value);
-                if (foundTraits.Count() < IDs.Count())
-                    throw new Exception($"Encountered unknown trait(s): {string.Join(",", IDs.Except(foundTraits.Select(t => t.Key)))}");
-                return foundTraits;
-            }
-
-            public Task<DateTimeOffset?> GetLatestChangeToActiveDataTraits(IModelContext trans, TimeThreshold timeThreshold)
-            {
-                return Task.FromResult((DateTimeOffset?)null);
-            }
         }
     }
 }

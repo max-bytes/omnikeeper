@@ -234,11 +234,8 @@ namespace Omnikeeper.GraphQL
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  // trigger job to reload GraphQL schema
-                  await localScheduler.TriggerJob(QuartzJobStarter.JKGraphQLSchemaReloader);
-
-                  // trigger job to reload odata model
-                  await localScheduler.TriggerJob(QuartzJobStarter.JKEdmModelReloader);
+                  // trigger job to reload traits
+                  await localScheduler.TriggerJob(QuartzJobStarter.JKTraitsReloader);
 
                   return newTrait.dc;
               });
@@ -260,11 +257,8 @@ namespace Omnikeeper.GraphQL
                       userContext.ChangesetProxy, userContext.Transaction, MaskHandlingForRemovalApplyNoMask.Instance);
                   userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  // trigger job to reload GraphQL schema
-                  await localScheduler.TriggerJob(QuartzJobStarter.JKGraphQLSchemaReloader);
-
-                  // trigger job to reload odata model
-                  await localScheduler.TriggerJob(QuartzJobStarter.JKEdmModelReloader);
+                  // trigger job to reload traits
+                  await localScheduler.TriggerJob(QuartzJobStarter.JKTraitsReloader);
 
                   return deleted;
               });

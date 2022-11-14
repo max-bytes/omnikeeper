@@ -470,7 +470,7 @@ namespace Omnikeeper.Service
 
     public class DiffingResultType : ObjectGraphType<DiffingResult>
     {
-        public DiffingResultType(IDataLoaderService dataLoaderService, DiffingCIService diffingCIService, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider)
+        public DiffingResultType(IDataLoaderService dataLoaderService, DiffingCIService diffingCIService, ICIModel ciModel, IEffectiveTraitModel effectiveTraitModel, ITraitsHolder traitsHolder)
         {
             Field<ListGraphType<CIAttributesComparisonType>>("cis")
                 .ResolveAsync(async (context) =>
@@ -533,8 +533,8 @@ namespace Omnikeeper.Service
                     IEnumerable<MergedCI> leftCIs = await ciModel.GetMergedCIs(d.leftCIIDSelection, d.leftLayers, false, d.leftAttributes, userContext.Transaction, d.leftTimeThreshold);
                     IEnumerable<MergedCI> rightCIs = await ciModel.GetMergedCIs(d.rightCIIDSelection, d.rightLayers, false, d.rightAttributes, userContext.Transaction, d.rightTimeThreshold);
 
-                    var leftTraits = (await traitsProvider.GetActiveTraits(userContext.Transaction, d.leftTimeThreshold)).Values;
-                    var rightTraits = (await traitsProvider.GetActiveTraits(userContext.Transaction, d.rightTimeThreshold)).Values;
+                    var leftTraits = traitsHolder.GetTraits().Values;
+                    var rightTraits = traitsHolder.GetTraits().Values;
 
                     IDictionary<Guid, (ISet<string> traitIDs, string? ciName)> left = new Dictionary<Guid, (ISet<string> traitIDs, string? ciName)>();
                     IDictionary<Guid, (ISet<string> traitIDs, string? ciName)> right = new Dictionary<Guid, (ISet<string> traitIDs, string? ciName)>();

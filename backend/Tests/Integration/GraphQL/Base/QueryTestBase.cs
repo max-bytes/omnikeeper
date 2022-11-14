@@ -25,10 +25,11 @@ namespace Tests.Integration.GraphQL.Base
 
         protected async Task ReinitSchema()
         {
-            // force rebuild graphql schema
+            // force rebuild traits and graphql schema
             using var trans = ModelContextBuilder.BuildDeferred();
             var timeThreshold = TimeThreshold.BuildLatest();
             var activeTraits = await GetService<ITraitsProvider>().GetActiveTraits(trans, timeThreshold);
+            GetService<ITraitsHolder>().SetTraits(activeTraits, timeThreshold.Time, NullLogger.Instance);
             GetService<GraphQLSchemaHolder>().ReInitSchema(ServiceProvider, activeTraits, NullLogger.Instance);
             trans.Commit();
         }

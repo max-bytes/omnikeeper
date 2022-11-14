@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.GraphQL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,13 +16,13 @@ namespace Omnikeeper.Validators
 {
     public class ValidatorCIsShareEffectiveTrait : IValidator
     {
-        private readonly ITraitsProvider traitsProvider;
+        private readonly ITraitsHolder traitsHolder;
         private readonly IEffectiveTraitModel effectiveTraitModel;
         private readonly ICIModel ciModel;
 
-        public ValidatorCIsShareEffectiveTrait(ITraitsProvider traitsProvider, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel)
+        public ValidatorCIsShareEffectiveTrait(ITraitsHolder traitsHolder, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel)
         {
-            this.traitsProvider = traitsProvider;
+            this.traitsHolder = traitsHolder;
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
         }
@@ -54,13 +55,13 @@ namespace Omnikeeper.Validators
                 issueAccumulator.TryAdd("config", cfg.TraitA, $"TraitA and TraitB must be different");
                 return false;
             }
-            var traitA = await traitsProvider.GetActiveTrait(cfg.TraitA, trans, timeThreshold);
+            var traitA = traitsHolder.GetTrait(cfg.TraitA);
             if (traitA == null)
             {
                 issueAccumulator.TryAdd("config", cfg.TraitA, $"Couldn't find traitA with ID {cfg.TraitA}");
                 return false;
             }
-            var traitB = await traitsProvider.GetActiveTrait(cfg.TraitB, trans, timeThreshold);
+            var traitB = traitsHolder.GetTrait(cfg.TraitB);
             if (traitB == null)
             {
                 issueAccumulator.TryAdd("config", cfg.TraitB, $"Couldn't find traitB with ID {cfg.TraitB}");

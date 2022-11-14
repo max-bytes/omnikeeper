@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using MediatR;
 using Omnikeeper.Base.AttributeValues;
+using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
@@ -10,6 +11,7 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.GraphQL;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Request;
@@ -19,8 +21,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Authz;
-using Omnikeeper.Authz;
 
 namespace Omnikeeper.GridView.Commands
 {
@@ -55,14 +55,14 @@ namespace Omnikeeper.GridView.Commands
             private readonly ICurrentUserAccessor currentUserService;
             private readonly GridViewContextModel gridViewContextModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
-            private readonly ITraitsProvider traitsProvider;
+            private readonly ITraitsHolder traitsHolder;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IAuthzFilterManager authzFilterManager;
             private readonly IMetaConfigurationModel metaConfigurationModel;
 
             public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel,
                 IChangesetModel changesetModel, ICurrentUserAccessor currentUserService, GridViewContextModel gridViewContextModel,
-                IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
+                IEffectiveTraitModel effectiveTraitModel, ITraitsHolder traitsHolder, IModelContextBuilder modelContextBuilder,
                 IAuthzFilterManager authzFilterManager, IMetaConfigurationModel metaConfigurationModel)
             {
                 this.ciModel = ciModel;
@@ -72,7 +72,7 @@ namespace Omnikeeper.GridView.Commands
                 this.currentUserService = currentUserService;
                 this.gridViewContextModel = gridViewContextModel;
                 this.effectiveTraitModel = effectiveTraitModel;
-                this.traitsProvider = traitsProvider;
+                this.traitsHolder = traitsHolder;
                 this.modelContextBuilder = modelContextBuilder;
                 this.authzFilterManager = authzFilterManager;
                 this.metaConfigurationModel = metaConfigurationModel;
@@ -191,7 +191,7 @@ namespace Omnikeeper.GridView.Commands
                     }
                 }
 
-                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, timeThreshold);
+                var activeTrait = traitsHolder.GetTrait(config.Trait);
                 if (activeTrait == null)
                     return (null, new Exception($"Could not find trait {config.Trait}"));
 
