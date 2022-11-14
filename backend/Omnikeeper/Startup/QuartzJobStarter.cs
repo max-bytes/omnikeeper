@@ -71,8 +71,8 @@ namespace Omnikeeper.Startup
                 }
                 await ScheduleJob<UsageDataWriterJob>(localScheduler, JKUsageDataWriter, "0 * * * * ?", logger, deleteOnly, -20);
                 await ScheduleJob<TraitsReloaderJob>(localScheduler, JKTraitsReloader, "*/5 * * * * ?", logger, deleteOnly, 20);
-                await ScheduleJob<GraphQLSchemaReloaderJob>(localScheduler, JKGraphQLSchemaReloader, "*/5 * * * * ?", logger, deleteOnly, 20);
-                await ScheduleJob<EdmModelReloaderJob>(localScheduler, JKEdmModelReloader, "*/5 * * * * ?", logger, deleteOnly, 20);
+                await ScheduleJob<GraphQLSchemaReloaderJob>(localScheduler, JKGraphQLSchemaReloader, "*/2 * * * * ?", logger, deleteOnly, 20);
+                await ScheduleJob<EdmModelReloaderJob>(localScheduler, JKEdmModelReloader, "*/2 * * * * ?", logger, deleteOnly, 20);
 
                 await distributedScheduler.Start(stoppingToken);
                 await localScheduler.Start(stoppingToken);

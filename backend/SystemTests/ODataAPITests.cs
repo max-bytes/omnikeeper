@@ -124,7 +124,6 @@ mutation {
             Assert.IsNull(r3.Errors);
             Assert.AreEqual("entity_1", r3.Data.insertNew_test_trait_a.entity.name);
 
-
             var serviceRoot = $"{BaseUrl}/api/odata/testcontext";
             var context = new Container(new Uri(serviceRoot));
 
