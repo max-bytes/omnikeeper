@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -89,6 +91,44 @@ namespace Omnikeeper.Startup
             services.AddHttpContextAccessor();
 
             services.AddSignalR();
+
+            // test for opentelemetry
+            //<PackageReference Include="Npgsql.OpenTelemetry" Version="6.0.7" />
+            //<PackageReference Include="OpenTelemetry" Version="1.4.0-beta.3" />
+            //<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.4.0-beta.3" />
+            //<PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="1.4.0-beta.3" />
+            //<PackageReference Include="OpenTelemetry.Exporter.Zipkin" Version="1.3.1" />
+            //<PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc9.9" />
+            //<PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc9.9" />
+            //<PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc9.9" />
+            //<PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
+            //var serviceName = "MyCompany.MyProduct.MyService"; // TODO
+            //var serviceVersion = "1.0.0"; // TODO
+            //services.AddOpenTelemetryTracing(tracerProviderBuilder =>
+            //{
+            //    tracerProviderBuilder
+            //        .AddSource(serviceName)
+            //        .SetResourceBuilder(
+            //            ResourceBuilder.CreateDefault()
+            //                .AddService(serviceName: serviceName, serviceVersion: serviceVersion))
+            //        .AddHttpClientInstrumentation()
+            //        .AddAspNetCoreInstrumentation()
+            //        .AddQuartzInstrumentation(a =>
+            //        {
+            //            a.Enrich = (a, b, c) =>
+            //            {
+            //                a.AddTag("quartz", "yes"); // TODO: only once
+            //            };
+            //        })
+            //        .AddNpgsql()
+            //        // TODO: other instrumentations
+            //        //.AddConsoleExporter()
+            //        //.AddZipkinExporter()
+            //        .AddJaegerExporter(o =>
+            //        {
+            //        })
+            //        ;
+            //});
 
             // HACK: member is set here and used later
             mvcBuilder = services.AddControllers()
@@ -249,6 +289,11 @@ namespace Omnikeeper.Startup
             IdentityModelEventSource.ShowPII = Configuration.GetValue<bool>("ShowPII");
 
             services.AddMvcCore(options => { }).AddFluentValidation();
+
+            //services.AddHttpLogging(logging =>
+            //{
+            //    logging.LoggingFields = HttpLoggingFields.All;
+            //});
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
@@ -313,23 +358,26 @@ namespace Omnikeeper.Startup
             //// debug to log all requests and their headers
             //app.Use(async (context, next) =>
             //{
-            //    // Request method, scheme, and path
-            //    logger.LogInformation("Request Method: {Method}", context.Request.Method);
-            //    logger.LogInformation("Request Scheme: {Scheme}", context.Request.Scheme);
-            //    logger.LogInformation("Request Path: {Path}", context.Request.Path);
+                // Request method, scheme, and path
+                //logger.LogInformation("Request Method: {Method}", context.Request.Method);
+                //logger.LogInformation("Request Scheme: {Scheme}", context.Request.Scheme);
+                //logger.LogInformation("Request Path: {Path}", context.Request.Path);
+                //logger.LogInformation("Request Query: {Query}", context.Request.QueryString);
 
-            //    // Headers
-            //    foreach (var header in context.Request.Headers)
-            //    {
-            //        logger.LogInformation("Header: {Key}: {Value}", header.Key, header.Value);
-            //    }
+                //logger.LogInformation("Full Request: {Full}", context.Request.GetEncodedPathAndQuery());
 
-            //    // Connection: RemoteIp
-            //    logger.LogInformation("Request RemoteIp: {RemoteIpAddress}",
-            //        context.Connection.RemoteIpAddress);
+                // Headers
+                //foreach (var header in context.Request.Headers)
+                //{
+                //    logger.LogInformation("Header: {Key}: {Value}", header.Key, header.Value);
+                //}
 
-            //    logger.LogInformation("Known proxies: {KnownProxies}", (object)(new ForwardedHeadersOptions().KnownProxies));
-            //    logger.LogInformation("Known proxies: {KnownNetworks}", (object)(new ForwardedHeadersOptions().KnownNetworks));
+                //// Connection: RemoteIp
+                //logger.LogInformation("Request RemoteIp: {RemoteIpAddress}",
+                //    context.Connection.RemoteIpAddress);
+
+                //logger.LogInformation("Known proxies: {KnownProxies}", (object)(new ForwardedHeadersOptions().KnownProxies));
+                //logger.LogInformation("Known proxies: {KnownNetworks}", (object)(new ForwardedHeadersOptions().KnownNetworks));
 
             //    await next();
             //});

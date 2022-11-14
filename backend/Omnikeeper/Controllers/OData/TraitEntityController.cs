@@ -234,9 +234,10 @@ namespace Omnikeeper.Controllers.OData
             var timeThreshold = TimeThreshold.BuildLatest();
             using var trans = modelContextBuilder.BuildImmediate();
 
+            var traits = await traitsProvider.GetActiveTraits(trans, timeThreshold);
+
             var baseTraitID = sourceEntityType.Name;
-            ITrait? baseTrait = await traitsProvider.GetActiveTrait(baseTraitID, trans, timeThreshold);
-            if (baseTrait == null)
+            if (!traits.TryGetValue(baseTraitID, out var baseTrait))
                 return BadRequest();
 
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, metaConfigurationModel, context, trans, timeThreshold);
@@ -246,8 +247,7 @@ namespace Omnikeeper.Controllers.OData
             var baseTraitRelationIdentifier = tmp[0];
             var otherTraitID = tmp[1];
 
-            ITrait? otherTrait = await traitsProvider.GetActiveTrait(otherTraitID, trans, timeThreshold);
-            if (otherTrait == null)
+            if (!traits.TryGetValue(otherTraitID, out var otherTrait))
                 return BadRequest();
 
             var traitRelation = baseTrait.OptionalRelations.FirstOrDefault(tr => tr.Identifier == baseTraitRelationIdentifier);

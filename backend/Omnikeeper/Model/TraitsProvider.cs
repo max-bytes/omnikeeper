@@ -19,16 +19,14 @@ namespace Omnikeeper.Model
     {
         private readonly RecursiveTraitModel dataTraitModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
-        private readonly IChangesetModel changesetModel;
         private readonly IEnumerable<IPluginRegistration> loadedPlugins;
         private readonly ILogger<TraitsProvider> logger;
 
         public TraitsProvider(RecursiveTraitModel dataTraitModel,
-            IMetaConfigurationModel metaConfigurationModel, IChangesetModel changesetModel, IEnumerable<IPluginRegistration> loadedPlugins, ILogger<TraitsProvider> logger)
+            IMetaConfigurationModel metaConfigurationModel, IEnumerable<IPluginRegistration> loadedPlugins, ILogger<TraitsProvider> logger)
         {
             this.dataTraitModel = dataTraitModel;
             this.metaConfigurationModel = metaConfigurationModel;
-            this.changesetModel = changesetModel;
             this.loadedPlugins = loadedPlugins;
             this.logger = logger;
         }
