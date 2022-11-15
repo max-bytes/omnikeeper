@@ -146,7 +146,7 @@ namespace Omnikeeper.Controllers.OData
                             {
                                 var navProp = baseEdmEntity.AddUnidirectionalNavigation(new EdmNavigationPropertyInfo
                                 {
-                                    Name = tr.Identifier + "_as_" + targetTraitID,
+                                    Name = tr.Identifier + "_as_" + targetTraitID.Replace(".", "__"),
                                     TargetMultiplicity = EdmMultiplicity.Many,
                                     Target = targetEdmEntity,
                                     ContainsTarget = false,

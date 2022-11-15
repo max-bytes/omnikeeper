@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OData.Edm;
 using Microsoft.OData.UriParser;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
@@ -58,6 +59,8 @@ namespace Omnikeeper.Controllers.OData
 
         public async Task<ActionResult<EdmEntityObjectCollection>> Get(string context, string entityset)
         {
+            logger.LogDebug("GetAll - {context} - {entityset} - {query}", context, entityset, Request.QueryString);
+
             // Get Edm type from request.
             ODataPath path = Request.ODataFeature().Path;
             IEdmType edmType = path.Last().EdmType;
@@ -174,6 +177,8 @@ namespace Omnikeeper.Controllers.OData
 
         public async Task<ActionResult<IEdmEntityObject>> Get(string context, string entityset, Guid key)
         {
+            logger.LogDebug("GetSingle - {context} - {entityset} - {key} - {query}", context, entityset, key, Request.QueryString);
+
             // Get entity type from path.
             ODataPath path = Request.ODataFeature().Path;
             var entityType = path.Last().EdmType as IEdmEntityType;
@@ -207,6 +212,8 @@ namespace Omnikeeper.Controllers.OData
 
         public async Task<ActionResult<EdmEntityObjectCollection>> GetNavigation(string context, string entityset, Guid key, string navigation)
         {
+            logger.LogDebug("GetNavigation - {context} - {entityset} - {key} - {navigation} - {query}", context, entityset, key, navigation, Request.QueryString);
+
             ODataPath path = Request.ODataFeature().Path;
 
             var sourceSegment = path.FirstOrDefault(s => s is EntitySetSegment) as EntitySetSegment;
@@ -247,7 +254,7 @@ namespace Omnikeeper.Controllers.OData
             // split navigation into trait relation and other trait ID 
             var tmp = navigation.Split("_as_");
             var baseTraitRelationIdentifier = tmp[0];
-            var otherTraitID = tmp[1];
+            var otherTraitID = tmp[1].Replace("__", ".");
 
             if (!traits.TryGetValue(otherTraitID, out var otherTrait))
                 return BadRequest();
@@ -312,7 +319,7 @@ namespace Omnikeeper.Controllers.OData
                     {
                         foreach(var traitHint in optionalRelation.RelationTemplate.TraitHints)
                         {
-                            var key = optionalRelation.Identifier + "_as_" + traitHint;
+                            var key = optionalRelation.Identifier + "_as_" + traitHint.Replace(".", "__");
                             if (expandedETs.TryGetValue(key, out var expandedET))
                             {
                                 if (expandedET.TryGetValue(ciid, out var expanded))

@@ -24,7 +24,7 @@ namespace Omnikeeper.GraphQL
             }
         }
 
-        public DateTimeOffset? GetLatestTraitsCreation() => latestTraitsCreation;
+        public DateTimeOffset? GetLatestTraitsCreation() => latestTraitsCreation; // TODO: no locking required?
 
         public void SetTraits(IDictionary<string, ITrait> traits, DateTimeOffset latestTraitsCreation, ILogger logger)
         {
