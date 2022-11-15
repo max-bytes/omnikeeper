@@ -265,6 +265,13 @@ namespace Omnikeeper.GraphQL
                     //serializer.Serialize(writer, info.Extensions);
                 }
 
+                if (error.InnerException != null)
+                {
+                    writer.WriteValueSeparator();
+                    writer.WriteName("exception");
+                    writer.WriteString(error.InnerException.ToString());
+                }
+
                 writer.WriteEndObject();
 
                 separated = true;
