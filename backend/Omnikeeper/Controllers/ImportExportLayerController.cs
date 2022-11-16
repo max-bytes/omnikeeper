@@ -178,8 +178,8 @@ namespace Omnikeeper.Controllers
                     var maskHandling = MaskHandlingForRemovalApplyNoMask.Instance;
                     var otherLayersValueHandling = OtherLayersValueHandlingForceWrite.Instance;
 
-                    var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataLayerScope.Fragment(t.Name, AttributeValueHelper.BuildFromDTO(t.Value), t.CIID));
-                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(writeLayer.ID, attributeFragments), changesetProxy, trans, maskHandling, otherLayersValueHandling);
+                    var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(t.CIID, t.Name, AttributeValueHelper.BuildFromDTO(t.Value)));
+                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(writeLayer.ID, attributeFragments, AllCIIDsSelection.Instance, AllAttributeSelection.Instance), changesetProxy, trans, maskHandling, otherLayersValueHandling);
 
                     var relationFragments = data.Relations.Select(t => new BulkRelationFullFragment(t.FromCIID, t.ToCIID, t.PredicateID, t.Mask));
                     await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(writeLayer.ID, relationFragments), changesetProxy, trans, maskHandling, otherLayersValueHandling);

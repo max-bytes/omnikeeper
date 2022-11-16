@@ -195,9 +195,9 @@ namespace Omnikeeper.Base.Service
             if (!cisToCreate.IsEmpty())
                 await CIModel.BulkCreateCIs(cisToCreate, trans);
 
-            var bulkAttributeData = new BulkCIAttributeDataLayerScope(writeLayer.ID, ciCandidatesToInsert.Values.SelectMany(cic =>
-                cic.attributes.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, cic.targetCIID))
-            ));
+            var bulkAttributeData = new BulkCIAttributeDataCIAndAttributeNameScope(writeLayer.ID, ciCandidatesToInsert.Values.SelectMany(cic =>
+                cic.attributes.Fragments.Select(f => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(cic.targetCIID, f.Name, f.Value))
+            ), AllCIIDsSelection.Instance, AllAttributeSelection.Instance);
 
             var numAffectedAttributes = await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, trans, maskHandling, otherLayersValueHandling);
 

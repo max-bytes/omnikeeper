@@ -95,7 +95,7 @@ namespace Tests
                 var ciid = ciids.GetRandom(random);
                 var layer = layers.GetRandom(random)!;
                 var dataTransaction = random.Next(0, numDataTransactions);
-                return (layer, dataTransaction, new BulkCIAttributeDataLayerScope.Fragment(name, value, ciid));
+                return (layer, dataTransaction, new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, name, value));
             }).GroupBy(t => t.dataTransaction, t => (t.layer, t.Item3));
 
             foreach (var fg in fragments)
@@ -108,11 +108,11 @@ namespace Tests
 
                 foreach (var fl in fragmentsInLayers)
                 {
-                    IEnumerable<BulkCIAttributeDataLayerScope.Fragment> finalFragments = fl;
+                    IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> finalFragments = fl;
                     // filter out duplicates
                     if (filterDuplicates)
                     {
-                        var filtered = new Dictionary<string, BulkCIAttributeDataLayerScope.Fragment>();
+                        var filtered = new Dictionary<string, BulkCIAttributeDataCIAndAttributeNameScope.Fragment>();
                         foreach (var f in fl)
                         {
                             var hash = CIAttribute.CreateInformationHash(f.Name, f.CIID);
@@ -121,7 +121,7 @@ namespace Tests
                         finalFragments = filtered.Values;
                     }
 
-                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(fl.Key, finalFragments), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                    await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(fl.Key, finalFragments, AllCIIDsSelection.Instance, AllAttributeSelection.Instance), changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
                 }
                 mc.Commit();
             }

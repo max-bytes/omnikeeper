@@ -166,7 +166,7 @@ namespace Omnikeeper.Base.Model.TraitBased
             var relevantCIIDs = newCIDictionary.Values.Union(idMatchedCIDictionary.Values).Union(outdated.Keys).ToImmutableHashSet();
             var attributeFragments = Entities2Fragments(entities);
             var (outgoingRelations, incomingRelations) = Entities2RelationTuples(entities);
-            var changed = await traitEntityModel.BulkReplace(relevantCIIDs, attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
+            var changed = await traitEntityModel.BulkReplace(SpecificCIIDsSelection.Build(relevantCIIDs), attributeFragments, outgoingRelations, incomingRelations, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
 
             return changed;
         }

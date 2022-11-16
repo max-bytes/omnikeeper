@@ -103,18 +103,19 @@ namespace Omnikeeper.Base.Model.TraitBased
          * and will be considered as this trait's entities going forward
          */
         // NOTE: the cis MUST exist already
-        public async Task<bool> BulkReplace(IReadOnlySet<Guid> relevantCIIDs, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
+        public async Task<bool> BulkReplace(ICIIDSelection relevantCIs, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
             LayerSet layerSet, string writeLayer, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            if (attributeFragments.IsEmpty() && relevantCIIDs.IsEmpty() && outgoingRelations.IsEmpty() && incomingRelations.IsEmpty())
+            if (attributeFragments.IsEmpty() && relevantCIs is NoCIIDsSelection && outgoingRelations.IsEmpty() && incomingRelations.IsEmpty())
                 return false;
 
-            var changed = await WriteAttributes(attributeFragments, SpecificCIIDsSelection.Build(relevantCIIDs), NamedAttributesSelection.Build(relevantAttributesForTrait), layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
+            var changed = await WriteAttributes(attributeFragments, relevantCIs, NamedAttributesSelection.Build(relevantAttributesForTrait), layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
 
             if (!trait.OptionalRelations.IsEmpty())
             {
-                var relevantOutgoingRelations = trait.OptionalRelations.Where(rr => rr.RelationTemplate.DirectionForward).SelectMany(rr => relevantCIIDs.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
+                var ciids = await relevantCIs.GetCIIDsAsync(async () => await ciModel.GetCIIDs(trans)); // TODO: couldn't we stay in CIIDSelection space? Do we really need to materialize?
+                var relevantOutgoingRelations = trait.OptionalRelations.Where(rr => rr.RelationTemplate.DirectionForward).SelectMany(rr => ciids.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
                 if (!relevantOutgoingRelations.IsEmpty())
                 {
                     var outgoingScope = new BulkRelationDataCIAndPredicateScope(writeLayer, outgoingRelations, relevantOutgoingRelations, true);
@@ -122,7 +123,7 @@ namespace Omnikeeper.Base.Model.TraitBased
                     changed = changed || tmpChanged;
                 }
 
-                var relevantIncomingRelations = trait.OptionalRelations.Where(rr => !rr.RelationTemplate.DirectionForward).SelectMany(rr => relevantCIIDs.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
+                var relevantIncomingRelations = trait.OptionalRelations.Where(rr => !rr.RelationTemplate.DirectionForward).SelectMany(rr => ciids.Select(ciid => (ciid, rr.RelationTemplate.PredicateID))).ToHashSet();
                 if (!relevantIncomingRelations.IsEmpty())
                 {
                     var incomingScope = new BulkRelationDataCIAndPredicateScope(writeLayer, incomingRelations, relevantIncomingRelations, false);

@@ -167,10 +167,10 @@ namespace PerfTests
                         "JSONArray" => jsonArrayValue,
                         _ => throw new NotImplementedException(),
                     };
-                    return new BulkCIAttributeDataLayerScope.Fragment(name, value, ciid);
+                    return new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, name, value);
                 });
 
-                var data = new BulkCIAttributeDataLayerScope(layer!.ID, fragments);
+                var data = new BulkCIAttributeDataCIAndAttributeNameScope(layer!.ID, fragments, AllCIIDsSelection.Instance, AllAttributeSelection.Instance);
 
                 await attributeModel.BulkReplaceAttributes(data, changeset, mc, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
             }

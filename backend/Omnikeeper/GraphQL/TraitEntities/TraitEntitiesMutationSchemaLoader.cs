@@ -388,6 +388,65 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             });
                         });
 
+                tet.Field(TraitEntityTypesNameGenerator.GenerateReplaceMutationName(traitID), elementTypeContainer.ElementWrapper)
+                    .Arguments(
+                        new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                        new QueryArgument(new NonNullGraphType(new ListGraphType(elementTypeContainer.UpsertInput))) { Name = "input" },
+                        new QueryArgument(elementTypeContainer.FilterInput) { Name = "filter" },
+                        new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "idAttributes" })
+                    .ResolveAsync(async context =>
+                    {
+                        var layerStrings = context.GetArgument<string[]>("layers")!;
+                        var writeLayerID = context.GetArgument<string>("writeLayer")!;
+                        var idAttributes = context.GetArgument<string[]>("idAttributes")!;
+                        var filter = context.GetArgument<FilterInput>("filter");
+                        var input = context.GetArgument<UpsertInput[]>("input");
+
+                        var userContext = await context.GetUserContext()
+                            .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                        var layerset = userContext.GetLayerSet(context.Path);
+                        var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                        var trans = userContext.Transaction;
+
+
+                        var consideredCIs = filter.Apply(AllCIIDsSelection.Instance, dataLoaderService, layerset, trans, timeThreshold);
+                        return consideredCIs.Then(async consideredCIIDs =>
+                        {
+                            // only take into account CIs that actually fulfill the trait, otherwise we potentially work with CIs that should not be relevant
+                            var relevantETs = await elementTypeContainer.TraitEntityModel.GetByCIID(consideredCIIDs, layerset, trans, timeThreshold);
+
+                            // try to match the input data with the current CIs, building matching pairs if possible
+
+                            //elementTypeContainer.TraitEntityModel.BulkReplace(relevantCIIDs, )
+
+                            //var ciids = await consideredCIIDs.GetCIIDsAsync(async () => await ciModel.GetCIIDs(trans));
+                            //Guid finalCIID;
+                            //if (ciids.IsEmpty())
+                            //    finalCIID = await ciModel.CreateCI(trans);
+                            //else
+                            //{
+                            //    // if the matchingCIIDs contains any CIs that have the trait, we need to use this preferably, not just the first CIID (which might NOT have the trait)
+                            //    // only if there are no CIs that fulfill the trait, we can use the first one ordered by CIID only
+                            //    var (bestMatchingCIID, _) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, elementTypeContainer.TraitEntityModel, layerset, trans, timeThreshold);
+                            //    finalCIID = bestMatchingCIID;
+                            //}
+
+                            //if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(finalCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
+                            //    throw new ExecutionError(d.Reason);
+
+                            //var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, elementTypeContainer.TraitEntityModel, layerset, writeLayerID);
+
+                            //if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(finalCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
+                            //    throw new ExecutionError(dPost.Reason);
+
+                            //userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
+
+                            //return et;
+                        });
+                    });
+
                 if (elementTypeContainer.IDInput != null) // only add *byDataID-mutations for trait entities that have an ID
                 {
                     var upsertByDataIDMutationName = TraitEntityTypesNameGenerator.GenerateUpsertByDataIDMutationName(traitID);

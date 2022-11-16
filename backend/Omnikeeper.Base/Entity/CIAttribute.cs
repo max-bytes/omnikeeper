@@ -40,7 +40,6 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-
     public interface IBulkCIAttributeData<F>
     {
         Guid GetCIID(F f);
@@ -51,71 +50,8 @@ namespace Omnikeeper.Base.Entity
         IAttributeValue GetValue(F fragment);
     }
 
-    // TODO: is just a special case of BulkCIAttributeDataCIAndAttributeNameScope, remove
-    public sealed class BulkCIAttributeDataLayerScope : IBulkCIAttributeData<BulkCIAttributeDataLayerScope.Fragment>
-    {
-        public class Fragment
-        {
-            public string Name { get; private set; }
-            public IAttributeValue Value { get; private set; }
-            public Guid CIID { get; private set; }
-
-            public Fragment(string name, IAttributeValue value, Guid ciid)
-            {
-                Name = name;
-                Value = value;
-                CIID = ciid;
-            }
-        }
-        public string LayerID { get; private set; }
-        public IEnumerable<Fragment> Fragments { get; private set; }
-
-        public Guid GetCIID(Fragment f) => f.CIID;
-        public string GetFullName(Fragment fragment) => fragment.Name;
-        public IAttributeValue GetValue(Fragment f) => f.Value;
-
-        public BulkCIAttributeDataLayerScope(string layerID, IEnumerable<Fragment> fragments)
-        {
-            LayerID = layerID;
-            Fragments = fragments;
-        }
-    }
-
-    // TODO: is just a special case of BulkCIAttributeDataCIAndAttributeNameScope, remove?
-    public sealed class BulkCIAttributeDataCIScope : IBulkCIAttributeData<BulkCIAttributeDataCIScope.Fragment>
-    {
-        public class Fragment
-        {
-            public string Name { get; private set; }
-            public IAttributeValue Value { get; private set; }
-
-            public Fragment(string name, IAttributeValue value)
-            {
-                Name = name;
-                Value = value;
-            }
-        }
-
-        public string LayerID { get; private set; }
-        public Guid CIID { get; private set; }
-        public IEnumerable<Fragment> Fragments { get; private set; }
-
-        public Guid GetCIID(Fragment f) => CIID;
-        public string GetFullName(Fragment fragment) => fragment.Name;
-        public IAttributeValue GetValue(Fragment f) => f.Value;
-
-        public BulkCIAttributeDataCIScope(string layerID, Guid ciid, IEnumerable<Fragment> fragments)
-        {
-            LayerID = layerID;
-            CIID = ciid;
-            Fragments = fragments;
-        }
-    }
-
-
     public sealed class BulkCIAttributeDataCIAndAttributeNameScope : IBulkCIAttributeData<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>
     {
-
         public class Fragment
         {
             public Guid CIID { get; private set; }

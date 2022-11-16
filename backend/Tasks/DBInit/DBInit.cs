@@ -154,11 +154,11 @@ namespace Tasks.DBInit
                 await ciModel.BulkCreateCIs(applicationCIIDs, trans);
                 await ciModel.BulkCreateCIs(hostCIIDs, trans);
 
-                var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
+                var fragments = new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>();
                 foreach (var ciid in applicationCIIDs)
                 {
-                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText($"Application_{index}"), ciid));
-                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("application_name", new AttributeScalarValueText($"Application_{index}"), ciid));
+                    fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, ICIModel.NameAttribute, new AttributeScalarValueText($"Application_{index}")));
+                    fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, "application_name", new AttributeScalarValueText($"Application_{index}")));
                     //await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, trans);
                     //await attributeModel.InsertAttribute("application_name", new AttributeScalarValueText($"Application_{index}"), ciid, cmdbLayerID, changeset, trans);
                     index++;
@@ -167,8 +167,8 @@ namespace Tasks.DBInit
                 foreach (var ciid in hostCIIDs)
                 {
                     var ciType = new string[] { "Host Linux", "Host Windows" }.GetRandom(random);
-                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText($"{ciType}_{index}"), ciid));
-                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid));
+                    fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, ICIModel.NameAttribute, new AttributeScalarValueText($"{ciType}_{index}")));
+                    fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, "hostname", new AttributeScalarValueText($"hostname_{index}.domain")));
                     //await attributeModel.InsertCINameAttribute($"{ciType}_{index}", ciid, cmdbLayerID, changeset, trans);
                     //await attributeModel.InsertAttribute("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid, cmdbLayerID, changeset, trans);
                     //await attributeModel.InsertAttribute("system", new AttributeScalarValueText($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), ciid, cmdbLayerID, changeset, trans);
@@ -176,22 +176,22 @@ namespace Tasks.DBInit
                     if (ciType.Equals("Host Linux"))
                     {
                         linuxHostCIIds.Add(ciid);
-                        fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("system", new AttributeScalarValueText($"Linux"), ciid));
-                        fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("os_family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Redhat", 3), ("Gentoo", 1))), ciid));
+                        fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, "system", new AttributeScalarValueText($"Linux")));
+                        fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, "os_family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Redhat", 3), ("Gentoo", 1)))));
                         //await attributeModel.InsertAttribute("os.family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Redhat", 3), ("Gentoo", 1))), ciid, cmdbLayerID, changeset, trans);
                     }
                     else
                     {
                         windowsHostCIIds.Add(ciid);
-                        fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("system", new AttributeScalarValueText($"Windows"), ciid));
-                        fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("os_family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows 7", 10), ("Windows XP", 3), ("Windows 10", 20))), ciid));
+                        fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, "system", new AttributeScalarValueText($"Windows")));
+                        fragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid, "os_family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows 7", 10), ("Windows XP", 3), ("Windows 10", 20)))));
                         //await attributeModel.InsertAttribute("os.family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows 7", 10), ("Windows XP", 3), ("Windows 10", 20))), ciid, cmdbLayerID, changeset, trans);
                     }
 
                     index++;
                 }
 
-                await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(cmdbLayerID, fragments), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+                await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(cmdbLayerID, fragments, AllCIIDsSelection.Instance, AllAttributeSelection.Instance), changeset, trans, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
 
                 trans.Commit();
             }

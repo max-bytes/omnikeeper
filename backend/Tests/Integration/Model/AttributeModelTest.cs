@@ -315,11 +315,11 @@ namespace Tests.Integration.Model
 
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var changeset3 = await CreateChangesetProxy();
-            await GetService<IAttributeModel>().BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(layer1.ID, new BulkCIAttributeDataLayerScope.Fragment[] {
-                new BulkCIAttributeDataLayerScope.Fragment("prefix1.a1", new AttributeScalarValueText("textNew"), ciid1),
-                new BulkCIAttributeDataLayerScope.Fragment("prefix1.a4", new AttributeScalarValueText("textNew"), ciid2),
-                new BulkCIAttributeDataLayerScope.Fragment("prefix1.a2", new AttributeScalarValueText("textNew"), ciid2),
-            }), changeset3, trans2, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
+            await GetService<IAttributeModel>().BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(layer1.ID, new BulkCIAttributeDataCIAndAttributeNameScope.Fragment[] {
+                new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid1, "prefix1.a1", new AttributeScalarValueText("textNew")),
+                new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid2, "prefix1.a4", new AttributeScalarValueText("textNew")),
+                new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid2, "prefix1.a2", new AttributeScalarValueText("textNew")),
+            }, AllCIIDsSelection.Instance, AllAttributeSelection.Instance), changeset3, trans2, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
             trans2.Commit();
 
             using var trans3 = ModelContextBuilder.BuildImmediate();
@@ -341,16 +341,16 @@ namespace Tests.Integration.Model
             var layerset1 = new LayerSet(new string[] { layer1.ID });
 
             var changeset1 = await CreateChangesetProxy();
-            var fragments1 = TheNaughtyStrings.All.Select((s, i) => new BulkCIAttributeDataLayerScope.Fragment($"prefix1.a{i}", new AttributeScalarValueText(s), ciid1));
-            await GetService<IAttributeModel>().BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(layer1.ID, fragments1), 
+            var fragments1 = TheNaughtyStrings.All.Select((s, i) => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid1, $"prefix1.a{i}", new AttributeScalarValueText(s)));
+            await GetService<IAttributeModel>().BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(layer1.ID, fragments1, AllCIIDsSelection.Instance, AllAttributeSelection.Instance), 
                 changeset1, trans1, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
             trans1.Commit();
 
 
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var changeset2 = await CreateChangesetProxy();
-            var fragments2 = TheNaughtyStrings.All.Select((s, i) => new BulkCIAttributeDataLayerScope.Fragment($"prefix1.a{i}", new AttributeScalarValueText(s + "updated"), ciid1));
-            await GetService<IAttributeModel>().BulkReplaceAttributes(new BulkCIAttributeDataLayerScope(layer1.ID, fragments2), 
+            var fragments2 = TheNaughtyStrings.All.Select((s, i) => new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(ciid1, $"prefix1.a{i}", new AttributeScalarValueText(s + "updated")));
+            await GetService<IAttributeModel>().BulkReplaceAttributes(new BulkCIAttributeDataCIAndAttributeNameScope(layer1.ID, fragments2, AllCIIDsSelection.Instance, AllAttributeSelection.Instance), 
                 changeset2, trans2, MaskHandlingForRemovalApplyNoMask.Instance, OtherLayersValueHandlingForceWrite.Instance);
             trans2.Commit();
         }
