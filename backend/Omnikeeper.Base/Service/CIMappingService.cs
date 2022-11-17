@@ -145,6 +145,7 @@ namespace Omnikeeper.Base.Service
             void AddTemp2FinallCIIDMapping(Guid temp, Guid final);
         }
 
+        // mapping context that works without previous knowledge and builds its own caches while working
         public class CIMappingContext : ICIMappingContext
         {
             private readonly IAttributeModel attributeModel;

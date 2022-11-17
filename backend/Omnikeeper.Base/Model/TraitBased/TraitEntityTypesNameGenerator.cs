@@ -55,7 +55,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         public static string GenerateDeleteByDataIDMutationName(string traitID) => "deleteByDataID_" + SanitizeMutationName(traitID);
         public static string GenerateUpsertSingleByFilterMutationName(string traitID) => "upsertSingleByFilter_" + SanitizeMutationName(traitID);
         public static string GenerateDeleteSingleByFilterMutationName(string traitID) => "deleteSingleByFilter_" + SanitizeMutationName(traitID);
-        public static string GenerateReplaceMutationName(string traitID) => "replaceByFilter_" + SanitizeMutationName(traitID);
+        public static string GenerateBulkReplaceMutationName(string traitID) => "bulkReplaceByFilter_" + SanitizeMutationName(traitID);
         
         public static string GenerateTraitAttributeFieldName(TraitAttribute ta)
         {

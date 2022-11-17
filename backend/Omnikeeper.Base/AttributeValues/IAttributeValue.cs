@@ -30,8 +30,6 @@ namespace Omnikeeper.Entity.AttributeValues
         public int Length { get; }
     }
 
-
-
     public static class Extensions
     {
         public static IEnumerable<string> Tokenize(this string input, char separator, char escape)

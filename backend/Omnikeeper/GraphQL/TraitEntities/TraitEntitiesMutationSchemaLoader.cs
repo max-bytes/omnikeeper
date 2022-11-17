@@ -388,7 +388,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             });
                         });
 
-                tet.Field(TraitEntityTypesNameGenerator.GenerateReplaceMutationName(traitID), elementTypeContainer.ElementWrapper)
+                tet.Field(TraitEntityTypesNameGenerator.GenerateBulkReplaceMutationName(traitID), new BooleanGraphType())
                     .Arguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
@@ -399,9 +399,12 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     {
                         var layerStrings = context.GetArgument<string[]>("layers")!;
                         var writeLayerID = context.GetArgument<string>("writeLayer")!;
-                        var idAttributes = context.GetArgument<string[]>("idAttributes")!;
                         var filter = context.GetArgument<FilterInput>("filter");
                         var input = context.GetArgument<UpsertInput[]>("input");
+                        var idAttributes = context.GetArgument<string[]>("idAttributes")!; // TODO: generalize into a better IDMethod-like construct
+
+                        if (idAttributes.Length <= 0)
+                            throw new ExecutionError("idAttributes must not be empty");
 
                         var userContext = await context.GetUserContext()
                             .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
@@ -409,41 +412,87 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var layerset = userContext.GetLayerSet(context.Path);
                         var timeThreshold = userContext.GetTimeThreshold(context.Path);
                         var trans = userContext.Transaction;
-
-
                         var consideredCIs = filter.Apply(AllCIIDsSelection.Instance, dataLoaderService, layerset, trans, timeThreshold);
+
                         return consideredCIs.Then(async consideredCIIDs =>
                         {
+                            var cisToCreate = new HashSet<Guid>();
+                            var attributeFragments = new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>();
+                            var outgoingRelations = new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>();
+                            var incomingRelations = new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>();
+
                             // only take into account CIs that actually fulfill the trait, otherwise we potentially work with CIs that should not be relevant
                             var relevantETs = await elementTypeContainer.TraitEntityModel.GetByCIID(consideredCIIDs, layerset, trans, timeThreshold);
 
+                            // build a cache to make attribute lookup easier
+                            var attributeValueLookups = new Dictionary<string, ILookup<string, Guid>>();
+                            foreach (var idAttribute in idAttributes)
+                            {
+                                var lookup = relevantETs
+                                    .Select(kv => (ciid: kv.Key, attributeValueStr: kv.Value.ExtractAttributeValueByTraitAttributeIdentifier(idAttribute)?.Value2String()))
+                                    .Where(t => t.attributeValueStr != null)
+                                    .Cast<(Guid ciid, string attributeValueStr)>()
+                                    .ToLookup(t => t.attributeValueStr, t => t.ciid);
+                                attributeValueLookups.Add(idAttribute, lookup);
+                            }
+
                             // try to match the input data with the current CIs, building matching pairs if possible
+                            foreach(var inputCI in input)
+                            {
+                                ISet<Guid> candidateCIIDs = new HashSet<Guid>();
+                                var isFirst = true;
+                                foreach (var idAttribute in idAttributes)
+                                {
+                                    var av = inputCI.AttributeValues.FirstOrDefault(av => av.traitAttribute.Identifier == idAttribute);
+                                    if (av == default || av.value == null)
+                                        throw new Exception($"At least one InputCI does not contain required idAttribute {idAttribute}");
 
-                            //elementTypeContainer.TraitEntityModel.BulkReplace(relevantCIIDs, )
+                                    var foundMatchingCIIDs = attributeValueLookups[idAttribute][av.value.Value2String()];
+                                    if (isFirst)
+                                        candidateCIIDs.UnionWith(foundMatchingCIIDs);
+                                    else
+                                        candidateCIIDs.IntersectWith(foundMatchingCIIDs);
+                                    isFirst = false;
+                                }
 
-                            //var ciids = await consideredCIIDs.GetCIIDsAsync(async () => await ciModel.GetCIIDs(trans));
-                            //Guid finalCIID;
-                            //if (ciids.IsEmpty())
-                            //    finalCIID = await ciModel.CreateCI(trans);
-                            //else
-                            //{
-                            //    // if the matchingCIIDs contains any CIs that have the trait, we need to use this preferably, not just the first CIID (which might NOT have the trait)
-                            //    // only if there are no CIs that fulfill the trait, we can use the first one ordered by CIID only
-                            //    var (bestMatchingCIID, _) = await TraitEntityHelper.GetSingleBestMatchingCI(ciids, elementTypeContainer.TraitEntityModel, layerset, trans, timeThreshold);
-                            //    finalCIID = bestMatchingCIID;
-                            //}
+                                var finalCIID = candidateCIIDs.OrderBy(ciid => ciid).FirstOrDefault();
 
-                            //if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(finalCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
-                            //    throw new ExecutionError(d.Reason);
+                                if (finalCIID == default)
+                                {
+                                    var newCIID = ciModel.CreateCIID();
+                                    cisToCreate.Add(newCIID);
+                                    finalCIID = newCIID;
+                                }
 
-                            //var et = await Upsert(finalCIID, input.AttributeValues, input.RelationValues, ciName, trans, userContext.ChangesetProxy, elementTypeContainer.TraitEntityModel, layerset, writeLayerID);
+                                foreach (var t in inputCI.AttributeValues)
+                                    if (t.value != null)
+                                        attributeFragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(finalCIID, t.traitAttribute.AttributeTemplate.Name, t.value));
+                                foreach (var t in inputCI.RelationValues)
+                                    if (t.traitRelation.RelationTemplate.DirectionForward)
+                                        outgoingRelations.Add((finalCIID, t.traitRelation.RelationTemplate.PredicateID, t.relatedCIIDs));
+                                    else
+                                        incomingRelations.Add((finalCIID, t.traitRelation.RelationTemplate.PredicateID, t.relatedCIIDs));
+                            }
 
-                            //if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(finalCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
-                            //    throw new ExecutionError(dPost.Reason);
+                            var relevantCIIDs = relevantETs.Keys;
 
-                            //userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
+                            await ciModel.BulkCreateCIs(cisToCreate, trans);
 
-                            //return et;
+                            var relevantCIIDsIncludingNew = relevantCIIDs.Concat(cisToCreate).ToHashSet();
+
+                            foreach (var relevantCIID in relevantCIIDsIncludingNew)
+                                if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(relevantCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
+                                    throw new ExecutionError(d.Reason);
+
+                            var result = await elementTypeContainer.TraitEntityModel.BulkReplace(SpecificCIIDsSelection.Build(relevantCIIDsIncludingNew), attributeFragments, outgoingRelations, incomingRelations, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+
+                            foreach (var relevantCIID in relevantCIIDsIncludingNew)
+                                if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(relevantCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
+                                    throw new ExecutionError(dPost.Reason);
+
+                            userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
+
+                            return result;
                         });
                     });
 
