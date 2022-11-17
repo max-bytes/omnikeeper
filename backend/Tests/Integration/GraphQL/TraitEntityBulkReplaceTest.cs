@@ -216,5 +216,146 @@ mutation {
 ";
             AssertQuerySuccess(query, expectedQuery3, user);
         }
+
+
+        [Test]
+        public async Task TestTraitRelationID()
+        {
+            var userInDatabase = await SetupDefaultUser();
+            var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", ModelContextBuilder.BuildImmediate());
+            var user = new AuthenticatedInternalUser(userInDatabase);
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            string mutationCreateTrait = @"
+mutation {
+  manage_upsertRecursiveTrait(
+    trait: {
+      id: ""test_trait_a""
+      requiredAttributes: [
+        {
+          identifier: ""id""
+          template: {
+            name: ""test_trait_a.id""
+            type: INTEGER
+            isID: false
+            isArray: false
+            valueConstraints: []
+          }
+        }
+        {
+          identifier: ""name""
+          template: {
+            name: ""test_trait_a.name""
+            type: TEXT
+            isID: false
+            isArray: false
+            valueConstraints: []
+          }
+        }
+      ]
+      optionalAttributes: []
+      optionalRelations: [{
+          identifier: ""assignments""
+          template: { 
+            predicateID: ""is_assigned_to""
+            directionForward: true
+            traitHints: []
+          }
+        }],
+      requiredTraits: []
+    }
+  ) {
+    id
+  }
+}
+";
+            var expected1 = @"
+{
+    ""manage_upsertRecursiveTrait"":
+        {
+            ""id"": ""test_trait_a""
+        }
+}";
+            AssertQuerySuccess(mutationCreateTrait, expected1, user);
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            // add other CIs for relations
+            var relatedCIID1 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());
+            var relatedCIID2 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());
+            var relatedCIID3 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());
+
+            var expectedTrue = @"{ ""bulkReplaceByFilter_test_trait_a"": true }";
+            var expectedFalse = @"{ ""bulkReplaceByFilter_test_trait_a"": false }";
+
+            // insert initial set
+            var mutationBulkReplace1 = @$"
+mutation {{
+  bulkReplaceByFilter_test_trait_a(
+    layers: [""layer_1""]
+    writeLayer: ""layer_1""
+    filter: {{name: {{regex: {{pattern: ""testname.*""}}}}}}
+    input: [{{id: 1, name: ""testname_a"", assignments: [""{relatedCIID1}""]}}, {{id: 2, name: ""testname_b"", assignments: [""{relatedCIID1}"", ""{relatedCIID2}""]}}, {{id: 3, name: ""testname_c"", assignments: [""{relatedCIID2}""]}}],
+    idAttributes: [""id""]
+    idRelations: [""assignments""]
+  )
+}}
+";
+            AssertQuerySuccess(mutationBulkReplace1, expectedTrue, user);
+
+            // do it again, should return false
+            AssertQuerySuccess(mutationBulkReplace1, expectedFalse, user);
+
+            // update 1
+            var mutationBulkReplace2 = @$"
+mutation {{
+  bulkReplaceByFilter_test_trait_a(
+    layers: [""layer_1""]
+    writeLayer: ""layer_1""
+    filter: {{name: {{regex: {{pattern: ""testname.*""}}}}}}
+    input: [{{id: 1, name: ""testname_a2"", assignments: [""{relatedCIID1}""]}}, {{id: 2, name: ""testname_b2"", assignments: [""{relatedCIID1}"", ""{relatedCIID2}""]}}, {{id: 4, name: ""testname_d"", assignments: [""{relatedCIID3}""]}}],
+    idAttributes: [""id""]
+    idRelations: [""assignments""]
+  )
+}}
+";
+            AssertQuerySuccess(mutationBulkReplace2, expectedTrue, user);
+
+            var query = @"
+{
+  traitEntities(layers: [""layer_1""]) {
+    test_trait_a {
+                all {
+                    entity {
+                        id
+                        name
+                        assignments {
+                            relatedCIID
+                        }
+                    }
+                }
+            }
+        }
+    }
+            ";
+            var expectedQuery1 = @$"
+{{
+  ""traitEntities"": {{
+	  ""test_trait_a"": {{
+	    ""all"": [
+          {{ ""entity"": {{ ""id"": 1, ""name"": ""testname_a2"", ""assignments"": [{{ ""relatedCIID"": ""{relatedCIID1}""}}] }} }},
+          {{ ""entity"": {{ ""id"": 2, ""name"": ""testname_b2"", ""assignments"": [{{ ""relatedCIID"": ""{relatedCIID1}""}}, {{ ""relatedCIID"": ""{relatedCIID2}""}}] }} }},
+          {{ ""entity"": {{ ""id"": 4, ""name"": ""testname_d"", ""assignments"": [{{ ""relatedCIID"": ""{relatedCIID3}""}}] }} }}
+        ]
+	  }}
+  }}
+}}
+";
+            AssertQuerySuccess(query, expectedQuery1, user);
+        }
     }
 }

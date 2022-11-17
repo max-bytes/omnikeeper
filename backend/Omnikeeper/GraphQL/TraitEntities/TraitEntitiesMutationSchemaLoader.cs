@@ -394,7 +394,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
                         new QueryArgument(new NonNullGraphType(new ListGraphType(elementTypeContainer.UpsertInput))) { Name = "input" },
                         new QueryArgument(elementTypeContainer.FilterInput) { Name = "filter" },
-                        new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "idAttributes" })
+                        new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "idAttributes" },
+                        new QueryArgument<ListGraphType<StringGraphType>> { Name = "idRelations" })
                     .ResolveAsync(async context =>
                     {
                         var layerStrings = context.GetArgument<string[]>("layers")!;
@@ -402,6 +403,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         var filter = context.GetArgument<FilterInput>("filter");
                         var input = context.GetArgument<UpsertInput[]>("input");
                         var idAttributes = context.GetArgument<string[]>("idAttributes")!; // TODO: generalize into a better IDMethod-like construct
+                        var idRelations = context.GetArgument<string[]?>("idRelations") ?? Array.Empty<string>(); // TODO: generalize into a better IDMethod-like construct
 
                         if (idAttributes.Length <= 0)
                             throw new ExecutionError("idAttributes must not be empty");
@@ -424,7 +426,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             // only take into account CIs that actually fulfill the trait, otherwise we potentially work with CIs that should not be relevant
                             var relevantETs = await elementTypeContainer.TraitEntityModel.GetByCIID(consideredCIIDs, layerset, trans, timeThreshold);
 
-                            // build a cache to make attribute lookup easier
+                            // build a cache to make attribute lookups easier
                             var attributeValueLookups = new Dictionary<string, ILookup<string, Guid>>();
                             foreach (var idAttribute in idAttributes)
                             {
@@ -435,9 +437,32 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                     .ToLookup(t => t.attributeValueStr, t => t.ciid);
                                 attributeValueLookups.Add(idAttribute, lookup);
                             }
+                            // build a cache to make relation lookups easier
+                            // TODO: not sure if strings make the best keys in this case, the actual underlying key would be a Guid[]
+                            var outgoingRelationValueLookups = new Dictionary<string, ILookup<string, Guid>>();
+                            var incomingRelationValueLookups = new Dictionary<string, ILookup<string, Guid>>();
+                            foreach (var idRelation in idRelations)
+                            {
+                                var traitRelation = elementTypeContainer.Trait.OptionalRelations.FirstOrDefault(r => r.Identifier == idRelation);
+                                if (traitRelation == null)
+                                    throw new Exception($"Trait {traitID} does not contain trait relation {idRelation}, cannot use as idRelation");
+                                if (traitRelation.RelationTemplate.DirectionForward)
+                                {
+                                    var lookupOutgoing = relevantETs
+                                        .Select(kv => (ciid: kv.Key, relatedCIIDs: kv.Value.OutgoingTraitRelations[idRelation].Select(mr => mr.Relation.ToCIID)))
+                                        .ToLookup(t => string.Join("", t.relatedCIIDs.OrderBy(ciid => ciid).Select(ciid => ciid.ToString())), t => t.ciid);
+                                    outgoingRelationValueLookups.Add(idRelation, lookupOutgoing);
+                                } else
+                                {
+                                    var lookupIncoming = relevantETs
+                                        .Select(kv => (ciid: kv.Key, relatedCIIDs: kv.Value.IncomingTraitRelations[idRelation].Select(mr => mr.Relation.FromCIID)))
+                                        .ToLookup(t => string.Join("", t.relatedCIIDs.OrderBy(ciid => ciid).Select(ciid => ciid.ToString())), t => t.ciid);
+                                    incomingRelationValueLookups.Add(idRelation, lookupIncoming);
+                                }
+                            }
 
                             // try to match the input data with the current CIs, building matching pairs if possible
-                            foreach(var inputCI in input)
+                            foreach (var inputCI in input)
                             {
                                 ISet<Guid> candidateCIIDs = new HashSet<Guid>();
                                 var isFirst = true;
@@ -453,6 +478,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                     else
                                         candidateCIIDs.IntersectWith(foundMatchingCIIDs);
                                     isFirst = false;
+                                }
+                                foreach(var idRelation in idRelations)
+                                {
+                                    var rv = inputCI.RelationValues.FirstOrDefault(rv => rv.traitRelation.Identifier == idRelation);
+                                    if (rv == default)
+                                        throw new Exception($"At least one InputCI does not contain required idRelation {idRelation}");
+                                    var relationValueLookups = (rv.traitRelation.RelationTemplate.DirectionForward) ? outgoingRelationValueLookups : outgoingRelationValueLookups;
+                                    var foundMatchingCIIDs = relationValueLookups[idRelation][string.Join("", rv.relatedCIIDs.OrderBy(ciid => ciid).Select(ciid => ciid.ToString()))];
+                                    candidateCIIDs.IntersectWith(foundMatchingCIIDs); // NOTE: relations cannot be first, because at least one idAttribute must be present
                                 }
 
                                 var finalCIID = candidateCIIDs.OrderBy(ciid => ciid).FirstOrDefault();
