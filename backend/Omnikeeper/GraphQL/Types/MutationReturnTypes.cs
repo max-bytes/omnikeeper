@@ -52,4 +52,15 @@ namespace Omnikeeper.GraphQL.Types
             Field("changesetDataCIID", x => x.ChangesetDataCIID);
         }
     }
+
+    public record class BulkReplaceTraitEntityReturn(Changeset? Changeset, bool Success, bool IsNoOp);
+    public class BulkReplaceTraitEntityReturnType : ObjectGraphType<BulkReplaceTraitEntityReturn>
+    {
+        public BulkReplaceTraitEntityReturnType()
+        {
+            Field("changeset", x => x.Changeset, nullable: true, type: typeof(ChangesetType));
+            Field("success", x => x.Success);
+            Field("isNoOp", x => x.IsNoOp);
+        }
+    }
 }

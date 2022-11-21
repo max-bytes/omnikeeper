@@ -88,12 +88,14 @@ mutation {
     filter: {name: {regex: {pattern: ""unrelated.*""}}}
     input: [{id: 0, name: ""unrelated_a""}],
     idAttributes: [""id""]
-  )
+  ) {
+    isNoOp
+  }
 }
 ";
-            var expectedTrue = @"{ ""bulkReplaceByFilter_test_trait_a"": true }";
-            var expectedFalse = @"{ ""bulkReplaceByFilter_test_trait_a"": false }";
-            AssertQuerySuccess(mutationBulkReplace0, expectedTrue, user);
+            var expectedNoop = @"{ ""bulkReplaceByFilter_test_trait_a"": { ""isNoOp"": true } }";
+            var expectedOp = @"{ ""bulkReplaceByFilter_test_trait_a"": { ""isNoOp"": false } }";
+            AssertQuerySuccess(mutationBulkReplace0, expectedOp, user);
 
             // insert initial set
             var mutationBulkReplace1 = @"
@@ -104,13 +106,15 @@ mutation {
     filter: {name: {regex: {pattern: ""testname.*""}}}
     input: [{id: 1, name: ""testname_a""}, {id: 2, name: ""testname_b""}],
     idAttributes: [""id""]
-  )
+  ) {
+    isNoOp
+  }
 }
 ";
-            AssertQuerySuccess(mutationBulkReplace1, expectedTrue, user);
+            AssertQuerySuccess(mutationBulkReplace1, expectedOp, user);
 
             // do it again, should return false
-            AssertQuerySuccess(mutationBulkReplace1, expectedFalse, user);
+            AssertQuerySuccess(mutationBulkReplace1, expectedNoop, user);
 
             // update 1
             var mutationBulkReplace2 = @"
@@ -121,10 +125,12 @@ mutation {
     filter: {name: {regex: {pattern: ""testname.*""}}}
     input: [{id: 1, name: ""testname_a""}, {id: 2, name: ""testname_b""}, {id: 3, name: ""testname_c""}],
     idAttributes: [""id""]
-  )
+  ) {
+    isNoOp
+  }
 }
 ";
-            AssertQuerySuccess(mutationBulkReplace2, expectedTrue, user);
+            AssertQuerySuccess(mutationBulkReplace2, expectedOp, user);
 
             var query = @"
 {
@@ -166,10 +172,63 @@ mutation {
     filter: {name: {regex: {pattern: ""testname_[ab]""}}}
     input: [{id: 1, name: ""testname_a2""}, {id: 2, name: ""testname_b"", optional: ""foo""}, {id: 4, name: ""testname_d""}],
     idAttributes: [""id""]
-  )
+  ) {
+    isNoOp
+    success
+    changeset {
+      ciAttributes {
+        attributes {
+          name
+        }
+      }
+      removedCIAttributes {
+        attributes {
+          name
+        }
+      }
+    }
+  }
 }
 ";
-            AssertQuerySuccess(mutationBulkReplace3, expectedTrue, user);
+            var expected3 = @"
+{
+  ""bulkReplaceByFilter_test_trait_a"":{
+	 ""isNoOp"":false,
+	 ""success"":true,
+	 ""changeset"":{
+		""ciAttributes"":[
+		   {
+			  ""attributes"":[
+				 {
+					""name"":""test_trait_a.name""
+				 }
+			  ]
+		   },
+		   {
+			  ""attributes"":[
+				 {
+					""name"":""test_trait_a.optional""
+				 }
+			  ]
+		   },
+		   {
+			  ""attributes"":[
+				 {
+					""name"":""test_trait_a.id""
+				 },
+				 {
+					""name"":""test_trait_a.name""
+				 }
+			  ]
+		   }
+		],
+		""removedCIAttributes"":[
+		   
+		]
+	 }
+  }
+}";
+            AssertQuerySuccess(mutationBulkReplace3, expected3, user);
 
             var expectedQuery2 = @"
 {
@@ -197,10 +256,12 @@ mutation {
     filter: {name: {regex: {pattern: ""testname_.*""}}}
     input: [{id: 4, name: ""testname_d""}],
     idAttributes: [""id""]
-  )
+  ) {
+    isNoOp
+  }
 }
 ";
-            AssertQuerySuccess(mutationBulkReplace4, expectedTrue, user);
+            AssertQuerySuccess(mutationBulkReplace4, expectedOp, user);
 
             var expectedQuery3 = @"
 {

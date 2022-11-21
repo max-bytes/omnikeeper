@@ -9,6 +9,7 @@ using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.GraphQL.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -388,7 +389,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             });
                         });
 
-                tet.Field(TraitEntityTypesNameGenerator.GenerateBulkReplaceMutationName(traitID), new BooleanGraphType())
+                tet.Field<BulkReplaceTraitEntityReturnType>(TraitEntityTypesNameGenerator.GenerateBulkReplaceMutationName(traitID))
                     .Arguments(
                         new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                         new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
@@ -518,7 +519,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(relevantCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
                                     throw new ExecutionError(d.Reason);
 
-                            var result = await elementTypeContainer.TraitEntityModel.BulkReplace(SpecificCIIDsSelection.Build(relevantCIIDsIncludingNew), attributeFragments, outgoingRelations, incomingRelations, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var changed = await elementTypeContainer.TraitEntityModel.BulkReplace(SpecificCIIDsSelection.Build(relevantCIIDsIncludingNew), attributeFragments, outgoingRelations, incomingRelations, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var changeset = userContext.ChangesetProxy.GetActiveChangeset(writeLayerID);
 
                             foreach (var relevantCIID in relevantCIIDsIncludingNew)
                                 if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(relevantCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
@@ -526,7 +528,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
 
-                            return result;
+
+                            return new BulkReplaceTraitEntityReturn(changeset, true, !changed);
                         });
                     });
 
