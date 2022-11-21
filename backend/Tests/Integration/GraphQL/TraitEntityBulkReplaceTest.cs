@@ -350,8 +350,8 @@ mutation {
             var relatedCIID2 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());
             var relatedCIID3 = await GetService<ICIModel>().CreateCI(ModelContextBuilder.BuildImmediate());
 
-            var expectedTrue = @"{ ""bulkReplaceByFilter_test_trait_a"": true }";
-            var expectedFalse = @"{ ""bulkReplaceByFilter_test_trait_a"": false }";
+            var expectedNoop = @"{ ""bulkReplaceByFilter_test_trait_a"": { ""isNoOp"": true } }";
+            var expectedOp = @"{ ""bulkReplaceByFilter_test_trait_a"": { ""isNoOp"": false } }";
 
             // insert initial set
             var mutationBulkReplace1 = @$"
@@ -363,13 +363,15 @@ mutation {{
     input: [{{id: 1, name: ""testname_a"", assignments: [""{relatedCIID1}""]}}, {{id: 2, name: ""testname_b"", assignments: [""{relatedCIID1}"", ""{relatedCIID2}""]}}, {{id: 3, name: ""testname_c"", assignments: [""{relatedCIID2}""]}}],
     idAttributes: [""id""]
     idRelations: [""assignments""]
-  )
+  ) {{
+    isNoOp
+  }}
 }}
 ";
-            AssertQuerySuccess(mutationBulkReplace1, expectedTrue, user);
+            AssertQuerySuccess(mutationBulkReplace1, expectedOp, user);
 
             // do it again, should return false
-            AssertQuerySuccess(mutationBulkReplace1, expectedFalse, user);
+            AssertQuerySuccess(mutationBulkReplace1, expectedNoop, user);
 
             // update 1
             var mutationBulkReplace2 = @$"
@@ -381,10 +383,12 @@ mutation {{
     input: [{{id: 1, name: ""testname_a2"", assignments: [""{relatedCIID1}""]}}, {{id: 2, name: ""testname_b2"", assignments: [""{relatedCIID1}"", ""{relatedCIID2}""]}}, {{id: 4, name: ""testname_d"", assignments: [""{relatedCIID3}""]}}],
     idAttributes: [""id""]
     idRelations: [""assignments""]
-  )
+  ) {{
+    isNoOp
+  }}
 }}
 ";
-            AssertQuerySuccess(mutationBulkReplace2, expectedTrue, user);
+            AssertQuerySuccess(mutationBulkReplace2, expectedOp, user);
 
             var query = @"
 {
