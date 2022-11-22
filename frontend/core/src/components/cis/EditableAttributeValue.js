@@ -11,6 +11,8 @@ function EditableAttributeValue(props) {
   controlIdSuffix = controlIdSuffix ?? "";
   setHasErrors = setHasErrors ?? (() => void 0);
 
+  var [arrayLimit, setArrayLimit] = useState(10);
+
   var [errorsInArray, setErrorsInArray] = useState([]);
   useEffect(() => setHasErrors(errorsInArray.filter(e => e).length > 0), [errorsInArray, setHasErrors]);
 
@@ -18,7 +20,7 @@ function EditableAttributeValue(props) {
     const canRemoveItem = values.length > 1;
 
     return <div style={{ display: 'flex', flexDirection: 'column', flexGrow: '1', alignSelf: 'center' }}>
-        {values.map((v, index) => {
+        {values.slice(0, arrayLimit).map((v, index) => {
           return <Row key={index} id={`value:${name}:${index}:${controlIdSuffix}`} gutter={4}>
             <Col style={{flexGrow: 1}}>
                 <InputControl hideNameLabel={props.hideNameLabel} attributeName={name} ciid={ciid} setHasErrors={e => {
@@ -54,12 +56,17 @@ function EditableAttributeValue(props) {
           </Row>
           })
         }
+        {arrayLimit < values.length && <div style={{display: 'flex', justifyContent: 'center'}}>
+          <Button type="link" size='small' onClick={e => {e.preventDefault(); setArrayLimit(oldLimit => oldLimit + 10);}}>Show 10 more</Button>
+          <Button type="link" size='small' onClick={e => {e.preventDefault(); setArrayLimit(values.length);}}>Show all ({values.length - arrayLimit})</Button>
+        </div>}
         {isEditable && <Button disabled={!isEditable} onClick={e => {
           e.preventDefault();
           let newValues = values.slice();
           newValues.splice(values.length, 0, '');
           props.setValues(newValues);
-          }}>
+          setArrayLimit(newValues.length); // NOTE: when user clicks on add-button we make sure that the full list gets shown
+          }} style={{marginTop: '10px'}}>
             <FontAwesomeIcon icon={faPlus}/>
           </Button>}
     </div>;
