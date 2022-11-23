@@ -693,6 +693,80 @@ namespace Tests.Integration.Model
 
 
 
+    [TraitEntity("test_entity9", TraitOriginType.Data)]
+    class TestEntityWithOptionalInteger : TraitEntity
+    {
+        [TraitAttribute("id", "id")]
+        [TraitEntityID]
+        public long ID;
+
+        [TraitAttribute("test_attribute_a", "test_attribute_a", optional: true)]
+        public long? TestAttributeA;
+
+        public TestEntityWithOptionalInteger()
+        {
+            ID = 0L;
+            TestAttributeA = null;
+        }
+        public TestEntityWithOptionalInteger(long id, long? a)
+        {
+            ID = id;
+            TestAttributeA = a;
+        }
+    }
+
+    class GenericTraitEntityWithOptionalIntegerModelTest : GenericTraitEntityModelTestBase<TestEntityWithOptionalInteger, long>
+    {
+        protected override void InitServices(ContainerBuilder builder)
+        {
+            base.InitServices(builder);
+
+            builder.RegisterType<GenericTraitEntityModel<TestEntityWithOptionalInteger, long>>().WithParameter("jsonSerializer", null!);
+        }
+
+        [Test]
+        public async Task TestGenericOperations()
+        {
+            await TestGenericModelOperations(
+                () => new TestEntityWithOptionalInteger(1L, -2L),
+                () => new TestEntityWithOptionalInteger(2L, null),
+                1L, 2L, 3L
+                );
+        }
+        [Test]
+        public async Task TestGetByDataID()
+        {
+            await TestGenericModelGetByDataID(
+                () => new TestEntityWithOptionalInteger(1L, -2L),
+                () => new TestEntityWithOptionalInteger(2L, null),
+                1L, 2L, 3L
+                );
+        }
+
+        [Test]
+        public async Task TestBulkReplace()
+        {
+            await TestGenericModelBulkReplace(
+                () => new TestEntityWithOptionalInteger(1L, -2L),
+                () => new TestEntityWithOptionalInteger(2L, -3L),
+                () => new TestEntityWithOptionalInteger(2L, null),
+                1L, 2L
+                );
+        }
+
+        [Test]
+        public async Task TestUpdateIncompleteTraitEntity()
+        {
+            await TestGenericModelUpdateIncompleteTraitEntity(() => new TestEntityWithOptionalInteger(1L, null), 1L, true, true);
+        }
+
+        [Test]
+        public async Task TestOtherLayersValueHandling()
+        {
+            await TestGenericModelOtherLayersValueHandling(() => new TestEntityWithOptionalInteger(1L, null), 1L);
+        }
+    }
+
 
 
     [TraitEntity("test_entity7", TraitOriginType.Data)]

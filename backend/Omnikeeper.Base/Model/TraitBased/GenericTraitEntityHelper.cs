@@ -220,7 +220,11 @@ namespace Omnikeeper.Base.Model.TraitBased
                 }
                 else if (elementType == typeof(long))
                     avt = AttributeValueType.Integer;
+                else if (elementType == typeof(long?)) // NOTE: we need to treat nullable cases separately for value types
+                    avt = AttributeValueType.Integer;
                 else if (elementType == typeof(double))
+                    avt = AttributeValueType.Double;
+                else if (elementType == typeof(double?)) // NOTE: we need to treat nullable cases separately for value types
                     avt = AttributeValueType.Double;
                 else if (elementType == typeof(JsonDocument))
                     avt = AttributeValueType.JSON;
