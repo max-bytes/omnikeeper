@@ -23,7 +23,7 @@ function TraitAttributes(props) {
   if (traitAttributes.length <= 0)
     return <Text disabled>No trait attributes</Text>;
   return <>
-    {traitAttributes.map(a => <TraitAttribute key={a.identifier} traitAttribute={a} />)}
+    {traitAttributes.sort((a,b) => a.identifier.localeCompare(b.identifier)).map(a => <TraitAttribute key={a.identifier} traitAttribute={a} />)}
   </>;
 }
 
