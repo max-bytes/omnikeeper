@@ -39,4 +39,4 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:80
 
-HEALTHCHECK CMD wget --spider http://localhost/health || exit
+HEALTHCHECK CMD wget --spider http://127.0.0.1/health || exit
