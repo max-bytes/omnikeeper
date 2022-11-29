@@ -112,6 +112,7 @@ namespace Omnikeeper.Base.Model.TraitBased
         /*
         * NOTE: this does not care whether or not the CI is actually a trait entity or not
         */
+        // NOTE, TODO: only used by (deprecated) dataID methods, consider removing when possible
         public static async Task<IEnumerable<Guid>> GetMatchingCIIDsByAttributeValues(IAttributeModel attributeModel, (string name, IAttributeValue? value)[] attributeTuples, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: improve performance by only fetching CIs with matching attribute values to begin with, not fetch ALL, then filter in code...

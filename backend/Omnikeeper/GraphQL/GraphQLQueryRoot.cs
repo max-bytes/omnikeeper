@@ -451,7 +451,7 @@ namespace Omnikeeper.GraphQL
 
                     var layers = await layerModel.GetLayers(userContext.Transaction); // TODO: we only need count, implement more efficient model method
                     var traits = traitsHolder.GetTraits();
-                    var generators = await generatorModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement GeneratorProvider
+                    var generators = await generatorModel.GetByCIID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path)); // TODO: implement GeneratorProvider
 
                     var numCIIDs = await layerStatisticsModel.GetCIIDsApproximate(userContext.Transaction);
                     var numActiveAttributes = await layerStatisticsModel.GetActiveAttributesApproximate(userContext.Transaction);

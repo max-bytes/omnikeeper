@@ -110,7 +110,7 @@ namespace Omnikeeper.GraphQL
                     CheckReadManagementThrow(userContext, metaConfiguration, "read traits");
 
                     // TODO: should we not deliver non-DB traits (f.e. from CLBs) here?
-                    var traitSet = await recursiveDataTraitModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
+                    var traitSet = await recursiveDataTraitModel.GetByCIID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
                     return traitSet.Values;
                 });
 
@@ -123,7 +123,7 @@ namespace Omnikeeper.GraphQL
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read generators");
 
-                    var generators = await generatorModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
+                    var generators = await generatorModel.GetByCIID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
                     return generators.Values;
                 });
 
@@ -135,7 +135,7 @@ namespace Omnikeeper.GraphQL
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read auth roles");
 
-                    var authRoles = await authRoleModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
+                    var authRoles = await authRoleModel.GetByCIID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
                     return authRoles.Values;
                 });
 
@@ -147,7 +147,7 @@ namespace Omnikeeper.GraphQL
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read CL configs");
 
-                    var clConfigs = await clConfigModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
+                    var clConfigs = await clConfigModel.GetByCIID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
                     return clConfigs.Values;
                 });
 
@@ -160,7 +160,7 @@ namespace Omnikeeper.GraphQL
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     CheckReadManagementThrow(userContext, metaConfiguration, "read validator contexts configs");
 
-                    var contexts = await validatorContextModel.GetByDataID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
+                    var contexts = await validatorContextModel.GetByCIID(AllCIIDsSelection.Instance, metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
                     return contexts.Values;
                 });
 
