@@ -192,7 +192,10 @@ namespace Omnikeeper.Controllers
                                 if (field.SelectionSet != null)
                                     foreach(var teSelection in field.SelectionSet.Selections)
                                         if (teSelection is GraphQLField teField)
-                                            usageTracker.TrackUseGraphQLOperation($"traitEntities.{teField.Name.StringValue}", Base.Entity.UsageStatsOperation.Read);
+                                            if (teField.SelectionSet != null)
+                                                foreach(var oSelection in teField.SelectionSet.Selections)
+                                                    if (oSelection is GraphQLField oField)
+                                                        usageTracker.TrackUseGraphQLOperation($"traitEntities.{teField.Name.StringValue}.{oField.Name.StringValue}", Base.Entity.UsageStatsOperation.Read);
                             } else
                             {
                                 usageTracker.TrackUseGraphQLOperation(operationName, Base.Entity.UsageStatsOperation.Read);
