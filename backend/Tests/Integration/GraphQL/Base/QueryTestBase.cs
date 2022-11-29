@@ -110,7 +110,7 @@ namespace Tests.Integration.GraphQL.Base
                 options.ValidationRules = null;
                 options.RequestServices = ServiceProvider;
                 options.Listeners.Add(dataLoaderDocumentListener);
-                options.Listeners.Add(new MyDocumentExecutionListener());
+                options.Listeners.Add(new UserContextPreparationDocumentExecutionListener());
             }).GetAwaiter().GetResult();
 
             var serializer = GetService<IGraphQLTextSerializer>();

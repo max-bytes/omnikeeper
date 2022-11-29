@@ -13,6 +13,7 @@ namespace Omnikeeper.Base.Service
         void TrackUseGenerator(string generatorID, string layerID);
         void TrackUseAttribute(string attributeName, string layerID, UsageStatsOperation operation);
         void TrackUseRelationPredicate(string predicateID, string layerID, UsageStatsOperation operation);
+        void TrackUseGraphQLOperation(string queryName, UsageStatsOperation operation);
     }
 
     public class ScopedUsageTracker : IScopedUsageTracker, IDisposable
@@ -34,6 +35,7 @@ namespace Omnikeeper.Base.Service
         public const string ElementTypeGenerator = "generator";
         public const string ElementTypeAttributeName = "attribute";
         public const string ElementTypeRelationPredicateID = "relation-predicate";
+        public const string ElementTypeGraphQLOperation = "graphql-operation";
 
         public void TrackUseTrait(string traitID, string layerID)
         {
@@ -61,6 +63,11 @@ namespace Omnikeeper.Base.Service
             if (operation != UsageStatsOperation.Write && operation != UsageStatsOperation.Read)
                 throw new Exception("Invalid operation for relation-predicate use");
             TrackUse(ElementTypeRelationPredicateID, predicateID, layerID, operation);
+        }
+
+        public void TrackUseGraphQLOperation(string operationName, UsageStatsOperation operation)
+        {
+            TrackUse(ElementTypeGraphQLOperation, operationName, "", operation);
         }
 
         private void TrackUse(string elementType, string elementName, string layerID, UsageStatsOperation operation)
