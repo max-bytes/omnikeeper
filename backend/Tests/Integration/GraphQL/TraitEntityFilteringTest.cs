@@ -211,6 +211,162 @@ mutation($name: String!, $id: String!) {
 
 
         [Test]
+        public async Task TestIntegerFiltering()
+        {
+            var userInDatabase = await SetupDefaultUser();
+            var (layerOkConfig, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("__okconfig", ModelContextBuilder.BuildImmediate());
+            var (layer1, _) = await GetService<ILayerModel>().CreateLayerIfNotExists("layer_1", ModelContextBuilder.BuildImmediate());
+            var user = new AuthenticatedInternalUser(userInDatabase);
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            string mutationCreateTrait = @"
+mutation {
+  manage_upsertRecursiveTrait(
+    trait: {
+      id: ""test_trait_a""
+      requiredAttributes: [
+        {
+          identifier: ""id""
+          template: {
+            name: ""test_trait_a.id""
+            type: TEXT
+            isID: true
+            isArray: false
+            valueConstraints: [
+                """"""{""$type"":""Omnikeeper.Base.Entity.CIAttributeValueConstraintTextLength, Omnikeeper.Base"",""Minimum"":1,""Maximum"":null}""""""
+            ]
+          }
+        }
+      ]
+      optionalAttributes: [
+        {
+          identifier: ""int""
+          template: {
+            name: ""test_trait_a.int""
+            type: INTEGER
+            isID: false
+            isArray: false
+            valueConstraints: []
+          }
+        }]
+      optionalRelations: [],
+      requiredTraits: []
+    }
+  ) {
+    id
+  }
+}
+";
+            var expected1 = @"
+{
+    ""manage_upsertRecursiveTrait"":
+        {
+            ""id"": ""test_trait_a""
+        }
+}";
+            AssertQuerySuccess(mutationCreateTrait, expected1, user);
+
+            // force rebuild graphql schema
+            await ReinitSchema();
+
+            var mutationInsert = @"
+mutation($int: Long, $id: String!) {
+  insertNew_test_trait_a(
+    layers: [""layer_1""]
+    writeLayer: ""layer_1""
+    ciName: $id
+    input: { id: $id, int: $int }
+  ) {
+                entity { id }
+  }
+        }
+";
+
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_1" }, { "int", 1 } }));
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_2" }, { "int", -2 } }));
+            RunQuery(mutationInsert, user, new Inputs(new Dictionary<string, object?>() { { "id", "entity_3" }, { "int", null } }));
+
+            var queryTestTraitA = @"
+{
+  traitEntities(layers: [""layer_1""]) {
+    test_trait_a {
+                all {
+                    entity {
+                        id
+                        int
+                    }
+                }
+            }
+        }
+    }
+";
+            var expected4 = @"
+{
+  ""traitEntities"": {
+	  ""test_trait_a"": {
+	    ""all"": [
+          {
+            ""entity"": {
+              ""id"": ""entity_1"",
+              ""int"": 1
+            }
+          },
+          {
+            ""entity"": {
+              ""id"": ""entity_2"",
+              ""int"": -2
+            }
+          },
+          {
+            ""entity"": {
+              ""id"": ""entity_3"",
+              ""int"": null
+            }
+          }
+        ]
+	  }
+  }
+}
+";
+            AssertQuerySuccess(queryTestTraitA, expected4, user);
+
+
+            var queryFiltered = @"
+{
+  traitEntities(layers: [""layer_1""]) {
+    test_trait_a {
+                filtered(filter: {int: {exact: -2}}) {
+                    entity {
+                        id
+                        int
+                    }
+                }
+            }
+        }
+    }
+";
+            var expected5 = @"
+{
+  ""traitEntities"": {
+	  ""test_trait_a"": {
+	    ""filtered"": [
+          {
+            ""entity"": {
+              ""id"": ""entity_2"",
+              ""int"": -2
+            }
+          }
+        ]
+	  }
+  }
+}
+";
+            AssertQuerySuccess(queryFiltered, expected5, user);
+        }
+
+        [Test]
         public async Task TestBooleanFiltering()
         {
             var userInDatabase = await SetupDefaultUser();

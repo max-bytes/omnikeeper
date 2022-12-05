@@ -115,6 +115,23 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
+    public class AttributeIntegerFilterInputType : InputObjectGraphType<AttributeScalarIntegerFilter>
+    {
+        public AttributeIntegerFilterInputType()
+        {
+            Field("exact", x => x.Exact, nullable: true);
+            Field("isSet", x => x.IsSet, nullable: true);
+        }
+
+        public override object ParseDictionary(IDictionary<string, object?> value)
+        {
+            var exact = value.TryGetValue("exact", out var e) ? (long?)e : null;
+            var isSet = value.TryGetValue("isSet", out var i) ? (bool?)i : null;
+
+            return AttributeScalarIntegerFilter.Build(exact, isSet);
+        }
+    }
+
     public class RelationFilterInputType : InputObjectGraphType<IInnerRelationFilter[]>
     {
         public RelationFilterInputType()
@@ -197,9 +214,15 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             });
                             FieldName2AttributeNameMap.Add(attributeFieldName, ta.AttributeTemplate.Name);
                             break;
-                        // TODO: support for non-text types
                         case AttributeValueType.Integer:
+                            AddField(new FieldType()
+                            {
+                                Type = typeof(AttributeIntegerFilterInputType),
+                                Name = attributeFieldName,
+                            });
+                            FieldName2AttributeNameMap.Add(attributeFieldName, ta.AttributeTemplate.Name);
                             break;
+                        // TODO: support for non-text types
                         case AttributeValueType.JSON:
                             break;
                         case AttributeValueType.YAML:

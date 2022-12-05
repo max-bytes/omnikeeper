@@ -85,4 +85,23 @@ namespace Omnikeeper.Base.Model.TraitBased
             };
         }
     }
+
+    public class AttributeScalarIntegerFilter : IAttributeFilter
+    {
+        public long? Exact;
+        public bool? IsSet;
+
+        private AttributeScalarIntegerFilter() { }
+
+        public static AttributeScalarIntegerFilter Build(long? exact, bool? isSet)
+        {
+            if (exact == null && isSet == null)
+                throw new Exception("At least one filter option needs to be set for AttributeScalarIntegerFilter");
+            return new AttributeScalarIntegerFilter()
+            {
+                Exact = exact,
+                IsSet = isSet
+            };
+        }
+    }
 }

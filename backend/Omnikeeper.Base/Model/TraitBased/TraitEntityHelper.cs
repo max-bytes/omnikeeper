@@ -281,7 +281,45 @@ namespace Omnikeeper.Base.Model.TraitBased
 
                                 return SpecificCIIDsSelection.Build(filtered);
                             }
-                        } else
+                        } 
+                        else if (taFilter.filter is AttributeScalarIntegerFilter inf)
+                        {
+                            if (inf.IsSet.HasValue && !inf.IsSet.Value)
+                            {
+                                return movingCISelection.Except(SpecificCIIDsSelection.Build(attributes.Keys.ToHashSet()));
+                            }
+                            else
+                            {
+                                var filtered = attributes.Where(a =>
+                                {
+                                    // check for existance
+                                    // NOTE: we expect this method to only be called when the CI contains an attribute with name `filter.attributeName`
+                                    // hence, if the IsSet filter is set to "false", we know this filter cannot match
+                                    if (inf.IsSet.HasValue && !inf.IsSet.Value)
+                                        return false;
+
+                                    var attribute = a.Value[taFilter.attributeName];
+                                    var attributeValue = attribute.Attribute.Value;
+                                    // type check
+                                    if (attributeValue.Type != AttributeValueType.Integer)
+                                        return false;
+                                    if (attributeValue.IsArray)
+                                        return false;
+                                    if (attributeValue is not AttributeScalarValueInteger v)
+                                        return false;
+
+                                    if (inf.Exact != null)
+                                    {
+                                        if (v.Value != inf.Exact)
+                                            return false;
+                                    }
+                                    return true;
+                                }).Select(kv => kv.Key).ToHashSet();
+
+                                return SpecificCIIDsSelection.Build(filtered);
+                            }
+                        } 
+                        else
                         {
                             throw new Exception("Invalid filter detected");
                         }
