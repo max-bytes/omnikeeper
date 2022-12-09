@@ -63,26 +63,6 @@ namespace Omnikeeper.GraphQL.Types
                     var changesetID = context.Source!.ID;
                     return await statisticsModel.GetStatistics(changesetID, userContext.Transaction);
                 });
-            var attributes = Field<ListGraphType<CIAttributeType>>("attributes")
-                .ResolveAsync(async context =>
-                {
-                    // TODO: use dataloader
-                    var attributeModel = context.RequestServices!.GetRequiredService<IBaseAttributeModel>();
-                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    var changesetID = context.Source!.ID;
-                    return await attributeModel.GetAttributesOfChangeset(changesetID, false, userContext.Transaction);
-                })
-                .DeprecationReason("Superseded by ciAttributes");
-            var removedAttributes = Field<ListGraphType<CIAttributeType>>("removedAttributes")
-                .ResolveAsync(async context =>
-                {
-                    // TODO: use dataloader
-                    var attributeModel = context.RequestServices!.GetRequiredService<IBaseAttributeModel>();
-                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    var changesetID = context.Source!.ID;
-                    return await attributeModel.GetAttributesOfChangeset(changesetID, true, userContext.Transaction);
-                })
-                .DeprecationReason("Superseded by removedCIAttributes");
 
             Field<ListGraphType<ChangesetCIAttributesType>>("ciAttributes")
                 .ResolveAsync(async (context) =>
