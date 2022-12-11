@@ -8,9 +8,6 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
     {
         public readonly string Expression;
 
-        [JsonPropertyName("$type")]
-        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
-
         public TransformConfigJMESPath(string expression)
         {
             Expression = expression;

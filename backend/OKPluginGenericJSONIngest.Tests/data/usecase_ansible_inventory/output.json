@@ -3,10 +3,10 @@
     {
       "tempID": "tempCIID\u003Eh1jmplx01.mhx.at",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "fqdn"
-        ],
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
+        ]
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -218,12 +218,12 @@
     {
       "tempID": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_mounts\u003E0",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "__name",
           "device",
           "mount"
-        ],
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
+        ]
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -384,12 +384,12 @@
     {
       "tempID": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_mounts\u003E1",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "__name",
           "device",
           "mount"
-        ],
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
+        ]
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -550,10 +550,10 @@
     {
       "tempID": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_interfaces\u003E0",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "__name"
-        ],
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
+        ]
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -614,10 +614,10 @@
     {
       "tempID": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eansible_interfaces\u003E1",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "__name"
-        ],
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
+        ]
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -672,10 +672,10 @@
     {
       "tempID": "tempCIID\u003Eh1lscapet01.mhx.local",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "fqdn"
-        ],
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
+        ]
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -886,12 +886,12 @@
     {
       "tempID": "tempCIID\u003Eh1lscapet01.mhx.local\u003Eansible_mounts\u003E2",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "__name",
           "device",
           "mount"
-        ],
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
+        ]
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -1052,12 +1052,12 @@
     {
       "tempID": "tempCIID\u003Eh1lscapet01.mhx.local\u003Eansible_mounts\u003E3",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "__name",
           "device",
           "mount"
-        ],
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
+        ]
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -1218,10 +1218,10 @@
     {
       "tempID": "tempCIID\u003Eh1lscapet01.mhx.local\u003Eansible_interfaces\u003E2",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "__name"
-        ],
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
+        ]
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -1282,8 +1282,8 @@
     {
       "tempID": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eyum_installed",
       "idMethod": {
-        "tempID": "tempCIID\u003Eh1jmplx01.mhx.at",
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest"
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest",
+        "tempID": "tempCIID\u003Eh1jmplx01.mhx.at"
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -1304,8 +1304,8 @@
     {
       "tempID": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eyum_repos",
       "idMethod": {
-        "tempID": "tempCIID\u003Eh1jmplx01.mhx.at",
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest"
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest",
+        "tempID": "tempCIID\u003Eh1jmplx01.mhx.at"
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",
@@ -1329,8 +1329,8 @@
     {
       "tempID": "tempCIID\u003Eh1jmplx01.mhx.at\u003Eyum_updates",
       "idMethod": {
-        "tempID": "tempCIID\u003Eh1jmplx01.mhx.at",
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest"
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest",
+        "tempID": "tempCIID\u003Eh1jmplx01.mhx.at"
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",

@@ -10,21 +10,11 @@ namespace Omnikeeper.Base.Entity
     [TraitEntity("__meta.config.odata_context", TraitOriginType.Core)]
     public class ODataAPIContext : TraitEntity
     {
-        public class ConfigTypeDiscriminatorConverter : TypeDiscriminatorConverter<IConfig>
-        {
-            public ConfigTypeDiscriminatorConverter() : base("$type", new Dictionary<string, Type>()
-                {
-                    { SystemTextJSONSerializerMigrationHelper.GetTypeString(typeof(ConfigV3)), typeof(ConfigV3) },
-                    { "ConfigV4", typeof(ConfigV4) }
-                })
-            {
-            }
-        }
-
-        [JsonConverter(typeof(ConfigTypeDiscriminatorConverter))]
+        [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+        [JsonDerivedType(typeof(ConfigV3), typeDiscriminator: "Omnikeeper.Base.Entity.ConfigV3, Omnikeeper.Base")]
+        [JsonDerivedType(typeof(ConfigV4), typeDiscriminator: "ConfigV4")]
         public interface IConfig
         {
-            public string type { get; }
         }
 
         public class ConfigV3 : IConfig
@@ -35,33 +25,19 @@ namespace Omnikeeper.Base.Entity
                 ReadLayerset = readLayerset;
             }
 
-            [JsonPropertyName("$type")]
-            public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
-
             public string WriteLayerID { get; set; }
             public string[] ReadLayerset { get; set; }
         }
 
-        public class ContextAuthDiscriminatorConverter : TypeDiscriminatorConverter<IContextAuth>
-        {
-            public ContextAuthDiscriminatorConverter() : base("type", new Dictionary<string, Type>()
-                {
-                    { "ContextAuthNone", typeof(ContextAuthNone) },
-                    { "ContextAuthBasic", typeof(ContextAuthBasic) }
-                })
-            {
-            }
-        }
-
-        [JsonConverter(typeof(ContextAuthDiscriminatorConverter))]
+        [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+        [JsonDerivedType(typeof(ContextAuthNone), typeDiscriminator: "ContextAuthNone")]
+        [JsonDerivedType(typeof(ContextAuthBasic), typeDiscriminator: "ContextAuthBasic")]
         public interface IContextAuth
         {
-            public string type { get; }
         }
 
         public class ContextAuthNone : IContextAuth
         {
-            public string type => "ContextAuthNone";
         }
 
         public class ContextAuthBasic : IContextAuth
@@ -71,8 +47,6 @@ namespace Omnikeeper.Base.Entity
                 Username = username;
                 PasswordHashed = passwordHashed;
             }
-
-            public string type => "ContextAuthBasic";
 
             public string Username { get; set; }
             public string PasswordHashed { get; set; }
@@ -87,9 +61,6 @@ namespace Omnikeeper.Base.Entity
                 // workaround to enforce field exists in JSON taken from https://stackoverflow.com/a/66575565
                 ContextAuth = contextAuth ?? throw new ArgumentNullException(nameof(contextAuth));
             }
-
-            [JsonPropertyName("$type")]
-            public string type => "ConfigV4";
 
             public string WriteLayerID { get; set; }
             public string[] ReadLayerset { get; set; }

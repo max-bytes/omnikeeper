@@ -6,6 +6,7 @@ using GraphQL;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
+using GraphQL.Client.Serializer.Newtonsoft;
 using NUnit.Framework;
 using System;
 using System.Threading;
@@ -83,7 +84,9 @@ namespace SystemTests.Base
                 .Build();
             await omnikeeperContainer.StartAsync();
 
-            graphQLClient = new GraphQLHttpClient($"{BaseUrl}/graphql", new SystemTextJsonSerializer());
+            // SystemTextJsonSerializer() does not yet work with .Net 7.0
+            //graphQLClient = new GraphQLHttpClient($"{BaseUrl}/graphql", new SystemTextJsonSerializer());
+            graphQLClient = new GraphQLHttpClient($"{BaseUrl}/graphql", new NewtonsoftJsonSerializer());
 
             Thread.Sleep(2000); // wait a bit more to make sure omnikeeper is fully initialized (f.e. trait rebuilding)
         }

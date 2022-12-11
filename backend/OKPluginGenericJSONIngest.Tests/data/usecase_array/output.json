@@ -3,10 +3,10 @@
     {
       "tempID": "tempCIID",
       "idMethod": {
+        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest",
         "attributes": [
           "foo"
-        ],
-        "type": "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest"
+        ]
       },
       "sameTempIDHandling": "DropAndWarn",
       "sameTargetCIHandling": "Error",

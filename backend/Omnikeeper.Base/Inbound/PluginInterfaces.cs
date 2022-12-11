@@ -127,14 +127,7 @@ namespace Omnikeeper.Base.Inbound
 
     public interface IOnlineInboundAdapter
     {
-        public class OnlineInboundAdapterTypeDiscriminatorConverter : TypeDiscriminatorConverter<IOnlineInboundAdapter>
-        {
-            public OnlineInboundAdapterTypeDiscriminatorConverter() : base("$type", typeof(OnlineInboundAdapterTypeDiscriminatorConverter))
-            {
-            }
-        }
-
-        [JsonConverter(typeof(OnlineInboundAdapterTypeDiscriminatorConverter))]
+        [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
         public interface IConfig
         {
             public string BuilderName { get; }

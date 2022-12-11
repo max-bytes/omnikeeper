@@ -3,22 +3,13 @@ using System.Text.Json.Serialization;
 
 namespace OKPluginGenericJSONIngest.Extract
 {
-    public class ExtractConfigTypeDiscriminatorConverter : TypeDiscriminatorConverter<IExtractConfig>
-    {
-        public ExtractConfigTypeDiscriminatorConverter() : base("$type", typeof(ExtractConfigTypeDiscriminatorConverter))
-        {
-        }
-    }
-
-    [JsonConverter(typeof(ExtractConfigTypeDiscriminatorConverter))]
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+    [JsonDerivedType(typeof(ExtractConfigPassiveRESTFiles), typeDiscriminator: "OKPluginGenericJSONIngest.Extract.ExtractConfigPassiveRESTFiles, OKPluginGenericJSONIngest")]
     public interface IExtractConfig
     {
-        public string type { get; }
     }
 
     public class ExtractConfigPassiveRESTFiles : IExtractConfig
     {
-        [JsonPropertyName("$type")]
-        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
     }
 }

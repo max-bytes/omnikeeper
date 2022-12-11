@@ -44,7 +44,7 @@ namespace Tests.Serialization
             Assert.AreEqual(expectedSerialized, sSystemTextJson);
 
             var tSystemTextJson = ICIAttributeValueConstraint.SystemTextJSONSerializer.Deserialize(sSystemTextJson);
-            tSystemTextJson.Should().BeEquivalentTo(t);
+            tSystemTextJson.Should().BeEquivalentTo(t, options => options.RespectingRuntimeTypes());
         }
     }
 }

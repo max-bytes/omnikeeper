@@ -7,17 +7,12 @@ using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Base.Entity
 {
-    public class AttributeValueConstraintTypeDiscriminatorConverter : TypeDiscriminatorConverter<ICIAttributeValueConstraint>
-    {
-        public AttributeValueConstraintTypeDiscriminatorConverter() : base("$type", typeof(AttributeValueConstraintTypeDiscriminatorConverter))
-        {
-        }
-    }
-
-    [JsonConverter(typeof(AttributeValueConstraintTypeDiscriminatorConverter))]
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+    [JsonDerivedType(typeof(CIAttributeValueConstraintTextLength), typeDiscriminator: "Omnikeeper.Base.Entity.CIAttributeValueConstraintTextLength, Omnikeeper.Base")]
+    [JsonDerivedType(typeof(CIAttributeValueConstraintArrayLength), typeDiscriminator: "Omnikeeper.Base.Entity.CIAttributeValueConstraintArrayLength, Omnikeeper.Base")]
+    [JsonDerivedType(typeof(CIAttributeValueConstraintTextRegex), typeDiscriminator: "Omnikeeper.Base.Entity.CIAttributeValueConstraintTextRegex, Omnikeeper.Base")]
     public interface ICIAttributeValueConstraint
     {
-        public string type { get; }
         bool HasErrors(IAttributeValue value);
 
         public static readonly SystemTextJSONSerializer<ICIAttributeValueConstraint> SystemTextJSONSerializer = new SystemTextJSONSerializer<ICIAttributeValueConstraint>(() =>
@@ -42,9 +37,6 @@ namespace Omnikeeper.Base.Entity
             Minimum = minimum;
             Maximum = maximum;
         }
-
-        [JsonPropertyName("$type")]
-        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
         public static CIAttributeValueConstraintTextLength Build(int? min, int? max)
         {
@@ -77,9 +69,6 @@ namespace Omnikeeper.Base.Entity
             Maximum = maximum;
         }
 
-        [JsonPropertyName("$type")]
-        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
-
         public static CIAttributeValueConstraintArrayLength Build(int? min, int? max)
         {
             if (min > max) throw new Exception("Minimum value must not be larger than maximum value");
@@ -110,9 +99,6 @@ namespace Omnikeeper.Base.Entity
     {
         public readonly string RegexStr;
         public readonly RegexOptions RegexOptions;
-
-        [JsonPropertyName("$type")]
-        public string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
 
         [JsonIgnore]
         [NonSerialized]

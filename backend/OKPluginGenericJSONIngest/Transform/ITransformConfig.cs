@@ -1,18 +1,13 @@
-﻿using Omnikeeper.Base.Utils;
+﻿using OKPluginGenericJSONIngest.Extract;
+using OKPluginGenericJSONIngest.Transform.JMESPath;
+using Omnikeeper.Base.Utils;
 using System.Text.Json.Serialization;
 
 namespace OKPluginGenericJSONIngest.Transform
 {
-    public class TransformConfigTypeDiscriminatorConverter : TypeDiscriminatorConverter<ITransformConfig>
-    {
-        public TransformConfigTypeDiscriminatorConverter() : base("$type", typeof(TransformConfigTypeDiscriminatorConverter))
-        {
-        }
-    }
-
-    [JsonConverter(typeof(TransformConfigTypeDiscriminatorConverter))]
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+    [JsonDerivedType(typeof(TransformConfigJMESPath), typeDiscriminator: "OKPluginGenericJSONIngest.Transform.JMESPath.TransformConfigJMESPath, OKPluginGenericJSONIngest")]
     public interface ITransformConfig
     {
-        public string type { get; }
     }
 }

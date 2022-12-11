@@ -50,14 +50,14 @@ namespace OKPluginGenericJSONIngest
     }
 
 
-    public class InboundIDMethodDiscriminatorConverter : TypeDiscriminatorConverter<AbstractInboundIDMethod>
-    {
-        public InboundIDMethodDiscriminatorConverter() : base("type", typeof(InboundIDMethodDiscriminatorConverter))
-        {
-        }
-    }
-
-    [JsonConverter(typeof(InboundIDMethodDiscriminatorConverter))]
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+    [JsonDerivedType(typeof(InboundIDMethodByData), typeDiscriminator: "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest")]
+    [JsonDerivedType(typeof(InboundIDMethodByAttribute), typeDiscriminator: "OKPluginGenericJSONIngest.InboundIDMethodByAttribute, OKPluginGenericJSONIngest")]
+    [JsonDerivedType(typeof(InboundIDMethodByAttributeExists), typeDiscriminator: "OKPluginGenericJSONIngest.InboundIDMethodByAttributeExists, OKPluginGenericJSONIngest")]
+    [JsonDerivedType(typeof(InboundIDMethodByRelatedTempID), typeDiscriminator: "OKPluginGenericJSONIngest.InboundIDMethodByRelatedTempID, OKPluginGenericJSONIngest")]
+    [JsonDerivedType(typeof(InboundIDMethodByTemporaryCIID), typeDiscriminator: "OKPluginGenericJSONIngest.InboundIDMethodByTemporaryCIID, OKPluginGenericJSONIngest")]
+    [JsonDerivedType(typeof(InboundIDMethodByUnion), typeDiscriminator: "OKPluginGenericJSONIngest.InboundIDMethodByUnion, OKPluginGenericJSONIngest")]
+    [JsonDerivedType(typeof(InboundIDMethodByIntersect), typeDiscriminator: "OKPluginGenericJSONIngest.InboundIDMethodByIntersect, OKPluginGenericJSONIngest")]
     [SwaggerDiscriminator("type")]
     [SwaggerSubType(typeof(InboundIDMethodByData), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByData, OKPluginGenericJSONIngest")]
     [SwaggerSubType(typeof(InboundIDMethodByAttribute), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByAttribute, OKPluginGenericJSONIngest")]
@@ -68,22 +68,10 @@ namespace OKPluginGenericJSONIngest
     [SwaggerSubType(typeof(InboundIDMethodByIntersect), DiscriminatorValue = "OKPluginGenericJSONIngest.InboundIDMethodByIntersect, OKPluginGenericJSONIngest")]
     public abstract class AbstractInboundIDMethod
     {
-        [JsonPropertyName("type")]
-        public string Type { get; set; }
     }
 
     public class InboundIDMethodByData : AbstractInboundIDMethod
     {
-        //[JsonPropertyName("type")]
-        //public override string type
-        //{
-        //    get
-        //    {
-        //        return SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
-        //    }
-        //    set;
-        //}
-
         [JsonPropertyName("attributes")]
         public string[] Attributes { get; }
 
@@ -91,7 +79,6 @@ namespace OKPluginGenericJSONIngest
         public InboundIDMethodByData(string[] attributes)
         {
             Attributes = attributes;
-            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
 
@@ -119,7 +106,6 @@ namespace OKPluginGenericJSONIngest
         {
             Attribute = attribute;
             Modifiers = modifiers;
-            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
 
@@ -132,13 +118,11 @@ namespace OKPluginGenericJSONIngest
         public InboundIDMethodByAttributeExists(string[] attributes)
         {
             Attributes = attributes;
-            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
 
     public class InboundIDMethodByRelatedTempID : AbstractInboundIDMethod
     {
-        //public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         [JsonPropertyName("tempID")]
         public string TempID { get; set; }
         [JsonPropertyName("outgoingRelation")]
@@ -152,13 +136,11 @@ namespace OKPluginGenericJSONIngest
             TempID = tempID;
             OutgoingRelation = outgoingRelation;
             PredicateID = predicateID;
-            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
 
     public class InboundIDMethodByTemporaryCIID : AbstractInboundIDMethod
     {
-        //public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         [JsonPropertyName("tempID")]
         public string TempID { get; set; }
 
@@ -166,13 +148,11 @@ namespace OKPluginGenericJSONIngest
         public InboundIDMethodByTemporaryCIID(string tempID)
         {
             TempID = tempID;
-            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
 
     public class InboundIDMethodByUnion : AbstractInboundIDMethod
     {
-        //public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         [JsonPropertyName("inner")]
         public AbstractInboundIDMethod[] Inner { get; set; }
 
@@ -180,12 +160,10 @@ namespace OKPluginGenericJSONIngest
         public InboundIDMethodByUnion(AbstractInboundIDMethod[] inner)
         {
             Inner = inner;
-            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
     public class InboundIDMethodByIntersect : AbstractInboundIDMethod
     {
-        //public override string type => SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         [JsonPropertyName("inner")]
         public AbstractInboundIDMethod[] Inner { get; set; }
 
@@ -193,7 +171,6 @@ namespace OKPluginGenericJSONIngest
         public InboundIDMethodByIntersect(AbstractInboundIDMethod[] inner)
         {
             Inner = inner;
-            Type = SystemTextJSONSerializerMigrationHelper.GetTypeString(GetType());
         }
     }
 
