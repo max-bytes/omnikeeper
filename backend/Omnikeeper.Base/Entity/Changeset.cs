@@ -34,4 +34,11 @@ namespace Omnikeeper.Base.Entity
             Attributes = attributes;
         }
     }
+
+    public record class ChangesetCIChanges(Guid CIID, IEnumerable<CIAttributeChange> AttributeChanges);
+
+    public record class CIAttributeChange(CIAttribute? Before, CIAttribute? After)
+    {
+        public string Name => Before?.Name ?? After?.Name!;
+    }
 }

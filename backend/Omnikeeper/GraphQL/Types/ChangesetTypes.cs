@@ -7,6 +7,7 @@ using Omnikeeper.Base.GraphQL;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -106,6 +107,39 @@ namespace Omnikeeper.GraphQL.Types
                     return await relationModel.GetRelationsOfChangeset(changesetID, true, userContext.Transaction);
                 });
 
+            // TODO: finish, not production ready yet
+            Field<ListGraphType<ChangesetCIChangesType>>("ciChanges")
+                .ResolveAsync(async (context) =>
+                {
+                    // TODO: use dataloader
+                    var attributeModel = context.RequestServices!.GetRequiredService<IBaseAttributeModel>();
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var changesetID = context.Source!.ID;
+                    var attributes = await attributeModel.GetAttributesOfChangeset(changesetID, false, userContext.Transaction);
+                    var changedCIIDs = attributes.Select(a => a.CIID).ToHashSet();
+                    var changedAttributeNames = attributes.Select(a => a.Name).ToHashSet();
+                    // TODO: test minimum change
+                    var previousDT = context.Source.Timestamp.Subtract(new TimeSpan(10)); // maximum supported precision by postgres' timestamptz is 1 microsecond, which is 1000 nanoseconds and 10 times as much as C# supports with DateTimeOffset
+                    var previousTT = TimeThreshold.BuildAtTime(previousDT);
+                    var previousAttributes = attributeModel.GetAttributes(SpecificCIIDsSelection.Build(changedCIIDs), NamedAttributesSelection.Build(changedAttributeNames), context.Source!.LayerID, userContext.Transaction, previousTT);
+                    var previousAttributesByCIIDAndAttributeNameLookup = await previousAttributes.ToDictionaryAsync(a => (a.CIID, a.Name));
+
+                    var removedAttributes = await attributeModel.GetAttributesOfChangeset(changesetID, true, userContext.Transaction);
+
+                    // TODO: relations
+
+                    return attributes.Select(a =>
+                    {
+                        if (previousAttributesByCIIDAndAttributeNameLookup.TryGetValue((a.CIID, a.Name), out var previousAttribute))
+                            return (before: (CIAttribute?)previousAttribute, after: (CIAttribute?)a);
+                        else
+                            return (null, a);
+                    })
+                        .Concat(removedAttributes.Select(ra => (before: (CIAttribute?)ra, after: (CIAttribute?)null))) // add in removed attributes
+                        .GroupBy(t => (t.before?.CIID ?? t.after?.CIID)!.Value) // we know either before or after is non-null, but compiler needs convincing
+                        .Select(g => new ChangesetCIChanges(g.Key, g.Select(g => new CIAttributeChange(g.before, g.after))));
+                });
+
             Field<GuidGraphType>("dataCIID")
                 .ResolveAsync(async (context) =>
                 {
@@ -172,4 +206,32 @@ namespace Omnikeeper.GraphQL.Types
         }
     }
 
+    public class ChangesetCIChangesType : ObjectGraphType<ChangesetCIChanges>
+    {
+        public ChangesetCIChangesType(IDataLoaderService dataLoaderService)
+        {
+            Field("ciid", x => x.CIID);
+            Field<StringGraphType>("ciName")
+                .Resolve((context) =>
+                {
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var layerset = userContext.GetLayerSet(context.Path);
+                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                    var ciid = context.Source!.CIID;
+                    return dataLoaderService.SetupAndLoadCINames(SpecificCIIDsSelection.Build(ciid), layerset, timeThreshold, userContext.Transaction)
+                        .Then(rr => rr.GetOrWithClass(ciid, null));
+                });
+            Field("attributeChanges", x => x.AttributeChanges, type: typeof(ListGraphType<CIAttributeChangeType>));
+        }
+    }
+
+    public class CIAttributeChangeType : ObjectGraphType<CIAttributeChange>
+    {
+        public CIAttributeChangeType()
+        {
+            Field("before", x => x.Before, type: typeof(CIAttributeType), nullable: true);
+            Field("after", x => x.After, type: typeof(CIAttributeType), nullable: true);
+            Field("name", x => x.Name);
+        }
+    }
 }
