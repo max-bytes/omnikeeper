@@ -15,10 +15,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Setup .NET 6.0.x
+      - name: Setup .NET 7.0.x
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.0.x'
       - name: Set version
         run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Build and publish
@@ -114,10 +114,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Setup .NET 6.0.x
+      - name: Setup .NET 7.0.x
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.0.x'
       - name: Set version
         run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Build and publish
@@ -156,7 +156,7 @@ jobs:
             # dotnet build "Omnikeeper/Omnikeeper.csproj" -c Release
             # cd Omnikeeper
             # dotnet tool restore
-            # dotnet swagger tofile --output ../../omnikeeper.json ./bin/Release/net6.0/Omnikeeper.dll v1
+            # dotnet swagger tofile --output ../../omnikeeper.json ./bin/Release/net7.0/Omnikeeper.dll v1
       - uses: actions/upload-artifact@v2
         with:
           name: omnikeeper-swagger-json

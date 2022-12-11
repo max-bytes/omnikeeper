@@ -20,16 +20,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Setup .NET 6.0.x
+      - name: Setup .NET 7.0.x
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.0.x'
       - name: Run performance tests
         env:
           ConnectionStrings__DatabaseConnection: Server=localhost;Port=5432;User Id=postgres;Password=postgres;Database=omnikeeper_tests;Pooling=false
         run: |
           cd backend
-          dotnet run --project ./PerfTests -c Release -- --job short --runtimes net6.0 --filter '*' --exporters json --strategy Monitoring
+          dotnet run --project ./PerfTests -c Release -- --job short --runtimes net7.0 --filter '*' --exporters json --strategy Monitoring
       - name: upload GetMergedAttributes benchmark results
         uses: benchmark-action/github-action-benchmark@v1
         with:
