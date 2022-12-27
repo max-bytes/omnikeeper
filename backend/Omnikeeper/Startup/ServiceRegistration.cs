@@ -200,7 +200,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<CIMappingService>().SingleInstance();
             builder.RegisterType<ManagementAuthorizationService>().As<IManagementAuthorizationService>().SingleInstance();
             builder.RegisterType<LayerBasedAuthorizationService>().As<ILayerBasedAuthorizationService>().SingleInstance();
-            builder.RegisterType<DataPartitionService>().As<IDataPartitionService>().SingleInstance();
             builder.RegisterType<IngestDataService>().SingleInstance();
 
             builder.RegisterType<AuthRolePermissionChecker>().As<IAuthRolePermissionChecker>().SingleInstance();
@@ -248,7 +247,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<BaseConfigurationModel>().As<IBaseConfigurationModel>().SingleInstance();
             builder.RegisterType<MetaConfigurationModel>().As<IMetaConfigurationModel>().SingleInstance();
             builder.RegisterType<OIAContextModel>().As<IOIAContextModel>().SingleInstance();
-            builder.RegisterType<PartitionModel>().As<IPartitionModel>().SingleInstance();
             builder.RegisterType<GeneratorV1Model>().SingleInstance();
             builder.RegisterType<CLConfigV1Model>().SingleInstance();
             builder.RegisterType<ValidatorContextV1Model>().SingleInstance();

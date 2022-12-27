@@ -14,13 +14,11 @@ namespace Omnikeeper.Model
 {
     public partial class BaseAttributeModel : IBaseAttributeModel
     {
-        private readonly IPartitionModel partitionModel;
         private readonly ICIIDModel ciidModel;
         public static bool _USE_LATEST_TABLE = true;
 
-        public BaseAttributeModel(IPartitionModel partitionModel, ICIIDModel ciidModel)
+        public BaseAttributeModel(ICIIDModel ciidModel)
         {
-            this.partitionModel = partitionModel;
             this.ciidModel = ciidModel;
         }
 
@@ -150,21 +148,18 @@ namespace Omnikeeper.Model
             }
             else
             {
-                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
-
                 command = new NpgsqlCommand($@"
                     {ciidSelection2CTEClause}
                     select id, name, ci_id, type, value_text, value_binary, value_control, changeset_id from (
                         select distinct on(a.ci_id, name, layer_id) removed, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
                         {CIIDSelection2JoinClause(selection)}
-                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= {SetParameter(ref parameterIndex)} and layer_id = {SetParameter(ref parameterIndex)} and partition_index >= {SetParameter(ref parameterIndex)}
+                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= {SetParameter(ref parameterIndex)} and layer_id = {SetParameter(ref parameterIndex)}
                         and ({AttributeSelection2WhereClause(attributeSelection, ref parameterIndex)})
                         order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
                     ) i where removed = false
                     ", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue(atTime.Time.ToUniversalTime());
                 command.Parameters.AddWithValue(layerID);
-                command.Parameters.AddWithValue(partitionIndex);
                 foreach (var p in AttributeSelection2Parameters(attributeSelection))
                     command.Parameters.Add(p);
             }
@@ -218,20 +213,17 @@ namespace Omnikeeper.Model
             }
             else
             {
-                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
-
                 command = new NpgsqlCommand($@"
                     {CIIDSelection2CTEClause(selection)}
                     select distinct i.ci_id from (
                         select distinct on(a.ci_id, name, layer_id) a.ci_id as ci_id, removed FROM attribute a
                         {CIIDSelection2JoinClause(selection)}
-                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= {SetParameter(ref parameterIndex)} and layer_id = ANY({SetParameter(ref parameterIndex)}) and partition_index >= {SetParameter(ref parameterIndex)}
+                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= {SetParameter(ref parameterIndex)} and layer_id = ANY({SetParameter(ref parameterIndex)})
                         order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
                     ) i WHERE i.removed = false
                     ", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue(atTime.Time.ToUniversalTime());
                 command.Parameters.AddWithValue(layerIDs);
-                command.Parameters.AddWithValue(partitionIndex);
             }
 
             using var _ = await trans.WaitAsync();

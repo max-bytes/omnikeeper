@@ -13,13 +13,10 @@ namespace Omnikeeper.Model
 {
     public class BaseRelationModel : IBaseRelationModel
     {
-        private readonly IPartitionModel partitionModel;
-
         public static bool _USE_LATEST_TABLE = true;
 
-        public BaseRelationModel(IPartitionModel partitionModel)
+        public BaseRelationModel()
         {
-            this.partitionModel = partitionModel;
         }
 
         private (string? whereClause, IEnumerable<NpgsqlParameter> parameters) Eval(IRelationSelection rl)
@@ -99,11 +96,9 @@ namespace Omnikeeper.Model
                 var query = $@"select id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, mask from (
                 select distinct on (from_ci_id, to_ci_id, predicate_id) id, from_ci_id, to_ci_id, predicate_id, removed, changeset_id, layer_id, mask from relation 
                     where timestamp <= @time_threshold and ({innerWhereClause}) and layer_id = ANY(@layer_ids)
-                    and partition_index >= @partition_index
                     order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST
                 ) i where i.removed = false
                 "; // TODO: remove order by layer_id, but consider not breaking indices first
-                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
                 using var _ = await trans.WaitAsync();
                 command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
@@ -111,7 +106,6 @@ namespace Omnikeeper.Model
                     command.Parameters.Add(p);
                 command.Parameters.AddWithValue("time_threshold", atTime.Time.ToUniversalTime());
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
-                command.Parameters.AddWithValue("partition_index", partitionIndex);
                 command.Prepare();
             }
             return command;
@@ -178,17 +172,14 @@ namespace Omnikeeper.Model
                     var query = $@"select distinct predicate_id from (
                     select distinct on (from_ci_id, to_ci_id, predicate_id) id, from_ci_id, to_ci_id, predicate_id, removed, changeset_id, layer_id, mask from relation 
                         where timestamp <= @time_threshold and ({innerWhereClause}) and layer_id = ANY(@layer_ids)
-                        and partition_index >= @partition_index
                         order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST
                     ) i where i.removed = false
                     "; // TODO: remove order by layer_id, but consider not breaking indices first
-                    var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
                     command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
                     foreach (var p in parameters)
                         command.Parameters.Add(p);
                     command.Parameters.AddWithValue("time_threshold", atTime.Time.ToUniversalTime());
                     command.Parameters.AddWithValue("layer_ids", layerIDs);
-                    command.Parameters.AddWithValue("partition_index", partitionIndex);
                     command.Prepare();
                 }
                 return command;
@@ -247,10 +238,9 @@ namespace Omnikeeper.Model
             if (!inserts.IsEmpty() || !removes.IsEmpty())
             {
                 Changeset changeset = await changesetProxy.GetChangeset(layerID, trans);
-                var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
                 // historic
-                using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, removed, ""timestamp"", partition_index, mask) FROM STDIN (FORMAT BINARY)");
+                using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, removed, ""timestamp"", mask) FROM STDIN (FORMAT BINARY)");
                 foreach (var (fromCIID, toCIID, predicateID, _existingRelationID, newRelationID, mask) in inserts)
                 {
                     writerHistoric.StartRow();
@@ -262,7 +252,6 @@ namespace Omnikeeper.Model
                     writerHistoric.Write(layerID);
                     writerHistoric.Write(false);
                     writerHistoric.Write(changeset.Timestamp.ToUniversalTime(), NpgsqlDbType.TimestampTz);
-                    writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(mask);
                 }
 
@@ -278,7 +267,6 @@ namespace Omnikeeper.Model
                     writerHistoric.Write(layerID);
                     writerHistoric.Write(true);
                     writerHistoric.Write(changeset.Timestamp.ToUniversalTime(), NpgsqlDbType.TimestampTz);
-                    writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(mask);
                 }
                 writerHistoric.Complete();

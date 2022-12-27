@@ -31,13 +31,12 @@ namespace Tasks.DBInit
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
 
-            var partitionModel = new PartitionModel();
             var metaConfigurationModel = new MetaConfigurationModel(NullLogger<MetaConfigurationModel>.Instance);
-            var baseAttributeModel = new BaseAttributeModel(partitionModel, new CIIDModel());
+            var baseAttributeModel = new BaseAttributeModel(new CIIDModel());
             var attributeModel = new AttributeModel(baseAttributeModel, () => null);
-            var baseRelationModel = new BaseRelationModel(partitionModel);
+            var baseRelationModel = new BaseRelationModel();
             var ciModel = new CIModel(attributeModel, new CIIDModel());
-            var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
+            var relationModel = new RelationModel(new BaseRelationModel());
             var effectiveTraitModel = new EffectiveTraitModel(relationModel);
             var changesetModel = new ChangesetModel();
             var userModel = new UserInDatabaseModel();

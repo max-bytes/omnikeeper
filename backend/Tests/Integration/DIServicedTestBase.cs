@@ -107,7 +107,6 @@ namespace Tests.Integration
 
             // override user service
             builder.Register<ICurrentUserAccessor>((sp) => currentUserServiceMock.Object).SingleInstance();
-            builder.Register<ILogger<DataPartitionService>>((sp) => NullLogger<DataPartitionService>.Instance).SingleInstance();
 
             // override authorization
             var mas = new Mock<IManagementAuthorizationService>();

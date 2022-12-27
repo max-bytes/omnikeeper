@@ -28,14 +28,12 @@ namespace Omnikeeper.Model
 
             Changeset changeset = await changesetProxy.GetChangeset(layerID, trans);
 
-            var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
-
             using var _ = await trans.WaitAsync();
 
             // historic
             // inserts
             // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-            using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, removed, ""timestamp"", changeset_id, partition_index) FROM STDIN (FORMAT BINARY)");
+            using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, removed, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
             foreach (var (ciid, fullName, value, _, newAttributeID) in inserts)
             {
                 var (valueText, valueBinary, valueControl) = AttributeValueHelper.Marshal(value);
@@ -52,7 +50,6 @@ namespace Omnikeeper.Model
                 writerHistoric.Write(false);
                 writerHistoric.Write(changeset.Timestamp.ToUniversalTime(), NpgsqlDbType.TimestampTz);
                 writerHistoric.Write(changeset.ID);
-                writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
             }
 
             // removes 
@@ -72,7 +69,6 @@ namespace Omnikeeper.Model
                 writerHistoric.Write(true);
                 writerHistoric.Write(changeset.Timestamp.ToUniversalTime(), NpgsqlDbType.TimestampTz);
                 writerHistoric.Write(changeset.ID);
-                writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
             }
             writerHistoric.Complete();
             writerHistoric.Close();

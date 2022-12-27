@@ -83,7 +83,6 @@ namespace PerfTests
             // override user service
             var currentUserService = new Mock<ICurrentUserAccessor>();
             containerBuilder.Register<ICurrentUserAccessor>((sp) => currentUserService.Object).SingleInstance();
-            containerBuilder.Register<ILogger<DataPartitionService>>((sp) => NullLogger<DataPartitionService>.Instance).SingleInstance();
 
             // override authorization
             containerBuilder.Register((sp) => new Mock<IManagementAuthorizationService>().Object).SingleInstance();

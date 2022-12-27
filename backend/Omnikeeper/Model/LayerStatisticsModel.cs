@@ -103,7 +103,7 @@ namespace Omnikeeper.Model
         public async Task<long> GetAttributeChangesHistoryApproximate(IModelContext trans)
         {
             using var _ = await trans.WaitAsync();
-            using var command = new NpgsqlCommand(CreateApproximateCountQueryForPartitionedTable("attribute"), trans.DBConnection, trans.DBTransaction);
+            using var command = new NpgsqlCommand(CreateApproximateCountQuery("attribute"), trans.DBConnection, trans.DBTransaction);
             return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
 
@@ -117,7 +117,7 @@ namespace Omnikeeper.Model
         public async Task<long> GetRelationChangesHistoryApproximate(IModelContext trans)
         {
             using var _ = await trans.WaitAsync();
-            using var command = new NpgsqlCommand(CreateApproximateCountQueryForPartitionedTable("relation"), trans.DBConnection, trans.DBTransaction);
+            using var command = new NpgsqlCommand(CreateApproximateCountQuery("relation"), trans.DBConnection, trans.DBTransaction);
             return ((long?)await command.ExecuteScalarAsync())!.Value;
         }
 
@@ -135,21 +135,21 @@ namespace Omnikeeper.Model
             WHERE c.oid = '{tableName}'::regclass";
         }
 
-        private string CreateApproximateCountQueryForPartitionedTable(string tableName)
-        {
-            // taken from https://stackoverflow.com/a/7945274 and adapted for partitioned table
-            return $@"SELECT SUM(i.tableSize)::bigint FROM(
-                SELECT(CASE WHEN c.reltuples < 0 THEN NULL
-                         WHEN c.relpages = 0 THEN float8 '0'
-                         ELSE c.reltuples / c.relpages END
-                 * (pg_catalog.pg_relation_size(c.oid)
-                  / pg_catalog.current_setting('block_size')::int)
-                   )::bigint tableSize
-                FROM   pg_catalog.pg_class c
+        //private string CreateApproximateCountQueryForPartitionedTable(string tableName)
+        //{
+        //    // taken from https://stackoverflow.com/a/7945274 and adapted for partitioned table
+        //    return $@"SELECT SUM(i.tableSize)::bigint FROM(
+        //        SELECT(CASE WHEN c.reltuples < 0 THEN NULL
+        //                 WHEN c.relpages = 0 THEN float8 '0'
+        //                 ELSE c.reltuples / c.relpages END
+        //         * (pg_catalog.pg_relation_size(c.oid)
+        //          / pg_catalog.current_setting('block_size')::int)
+        //           )::bigint tableSize
+        //        FROM   pg_catalog.pg_class c
 
-                WHERE c.relname LIKE '{tableName}%' AND c.relispartition = true AND c.relkind = 'r'
-            ) i";
-        }
+        //        WHERE c.relname LIKE '{tableName}%' AND c.relispartition = true AND c.relkind = 'r'
+        //    ) i";
+        //}
 
     }
 }
