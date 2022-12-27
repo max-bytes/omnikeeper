@@ -28,7 +28,6 @@ export default function ManageLayers(props) {
     { headerName: "Description", field: "description" },
     { headerName: "Color", field: "color", width: 70, cellEditor: 'ARGBColorCellEditor', cellEditorPopup: true, cellRenderer: 'layerColorCellRenderer' },
     { headerName: "Compute Layer Config ID", field: "clConfigID" },
-    { headerName: "Online Inbound Adapter", field: "onlineInboundAdapterName" },
     { headerName: "Generators", field: "generators", 
       valueFormatter: (params) => params.value.join(','),
       valueParser: (params) => {
@@ -53,7 +52,7 @@ export default function ManageLayers(props) {
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} 
       columnDefs={columnDefs} onRefresh={refetch} disableAddRow={true}
       saveRow={async row => {
-          return upsertLayer({variables: { layer: { id: row.id, description: row.description, state: row.state, clConfigID: row.clConfigID, onlineInboundAdapterName: row.onlineInboundAdapterName, color: row.color, generators: row.generators ?? [] }}})
+          return upsertLayer({variables: { layer: { id: row.id, description: row.description, state: row.state, clConfigID: row.clConfigID, color: row.color, generators: row.generators ?? [] }}})
             .then(r => { apolloClient.resetStore(); return r; })
             .then(r => ({result: r.data.manage_upsertLayerData, id: row.id}))
             .catch(e => ({result: e, id: row.id }));

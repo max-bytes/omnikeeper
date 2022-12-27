@@ -51,8 +51,7 @@ namespace PerfTests
             var containerBuilder = new ContainerBuilder();
             ServiceRegistration.RegisterLogging(containerBuilder);
             ServiceRegistration.RegisterDB(containerBuilder, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
-            ServiceRegistration.RegisterOIABase(containerBuilder);
-            ServiceRegistration.RegisterModels(containerBuilder, enablePerRequestModelCaching, false, false);
+            ServiceRegistration.RegisterModels(containerBuilder, enablePerRequestModelCaching, false);
             ServiceRegistration.RegisterServices(containerBuilder);
             ServiceRegistration.RegisterGraphQL(containerBuilder);
 
@@ -72,7 +71,6 @@ namespace PerfTests
             // TODO: add generic?
             containerBuilder.Register<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance).SingleInstance();
             containerBuilder.Register<ILogger<MetaConfigurationModel>>((sp) => NullLogger<MetaConfigurationModel>.Instance).SingleInstance();
-            containerBuilder.Register<ILogger<OIAContextModel>>((sp) => NullLogger<OIAContextModel>.Instance).SingleInstance();
             containerBuilder.Register<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance).SingleInstance();
             containerBuilder.Register<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance).SingleInstance();
             containerBuilder.Register<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance).SingleInstance();

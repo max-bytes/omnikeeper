@@ -6,9 +6,9 @@ namespace Omnikeeper.Base.Entity
     [TraitEntity("__meta.config.layer_data", TraitOriginType.Core)]
     public class LayerData : TraitEntity, IEquatable<LayerData>
     {
-        public LayerData() { LayerID = ""; Name = ""; Description = ""; Color = 0L; CLConfigID = ""; Generators = Array.Empty<string>(); OIAReference = ""; State = AnchorState.Active.ToString(); }
+        public LayerData() { LayerID = ""; Name = ""; Description = ""; Color = 0L; CLConfigID = ""; Generators = Array.Empty<string>(); State = AnchorState.Active.ToString(); }
 
-        public LayerData(string layerID, string description, long color, string clConfigID, string[] generators, string oiaReference, string state)
+        public LayerData(string layerID, string description, long color, string clConfigID, string[] generators, string state)
         {
             LayerID = layerID;
             Name = $"Layer-Data - {LayerID}";
@@ -16,7 +16,6 @@ namespace Omnikeeper.Base.Entity
             Color = color;
             CLConfigID = clConfigID;
             Generators = generators;
-            OIAReference = oiaReference;
             State = state;
         }
 
@@ -41,9 +40,6 @@ namespace Omnikeeper.Base.Entity
         [TraitAttribute("generators", "layer_data.generators")]
         public string[] Generators;
 
-        [TraitAttribute("oia_reference", "layer_data.oia_reference")]
-        public string OIAReference;
-
         [TraitAttribute("state", "layer_data.state")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         // TODO: constraint to enum values, support enums
@@ -53,8 +49,8 @@ namespace Omnikeeper.Base.Entity
         public bool Equals(LayerData? other)
         {
             return other != null && LayerID == other.LayerID && Name == other.Name && Description == other.Description && Color == other.Color && CLConfigID == other.CLConfigID &&
-                Generators.NullRespectingSequenceEqual(other.Generators) && OIAReference == other.OIAReference && State == other.State;
+                Generators.NullRespectingSequenceEqual(other.Generators) && State == other.State;
         }
-        public override int GetHashCode() => HashCode.Combine(LayerID, Name, Description, Color, CLConfigID, Generators, OIAReference, State);
+        public override int GetHashCode() => HashCode.Combine(LayerID, Name, Description, Color, CLConfigID, Generators, State);
     }
 }

@@ -11,7 +11,6 @@ namespace Omnikeeper.GraphQL.Types
         public string Description { get; private set; }
         public AnchorState State { get; private set; }
         public string CLConfigID { get; private set; }
-        public string OnlineInboundAdapterName { get; private set; }
         public int Color { get; private set; }
         public string[] Generators { get; private set; }
     }
@@ -23,7 +22,6 @@ namespace Omnikeeper.GraphQL.Types
             Field(x => x.Description);
             Field(x => x.State, type: typeof(AnchorStateType));
             Field("clConfigID", x => x.CLConfigID, nullable: true);
-            Field(x => x.OnlineInboundAdapterName, nullable: true);
             Field(x => x.Color);
             Field(x => x.Generators);
         }
@@ -165,35 +163,6 @@ namespace Omnikeeper.GraphQL.Types
             Field("id", x => x.ID);
             Field("clBrainReference", x => x.CLBrainReference);
             Field("clBrainConfig", x => x.CLBrainConfig);
-        }
-    }
-
-    public class CreateOIAContextInput
-    {
-        public string Name { get; private set; }
-        public string Config { get; private set; }
-    }
-    public class CreateOIAContextInputType : InputObjectGraphType<CreateOIAContextInput>
-    {
-        public CreateOIAContextInputType()
-        {
-            Field(x => x.Name);
-            Field(x => x.Config);
-        }
-    }
-    public class UpdateOIAContextInput
-    {
-        public long ID { get; private set; }
-        public string Name { get; private set; }
-        public string Config { get; private set; }
-    }
-    public class UpdateOIAContextInputType : InputObjectGraphType<UpdateOIAContextInput>
-    {
-        public UpdateOIAContextInputType()
-        {
-            Field("id", x => x.ID);
-            Field(x => x.Name);
-            Field(x => x.Config);
         }
     }
 

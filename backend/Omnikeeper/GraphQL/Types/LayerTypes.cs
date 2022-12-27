@@ -25,7 +25,6 @@ namespace Omnikeeper.GraphQL.Types
                 var (clConfig, _) = await clConfigModel.GetSingleByDataID(clConfigID, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.GetTimeThreshold(context.Path));
                 return clConfig;
             });
-            Field("onlineInboundAdapterName", x => x.OIAReference);
             Field("id", x => x.LayerID);
             Field("color", x => x.Color);
             Field("generators", x => x.Generators);

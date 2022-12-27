@@ -23,7 +23,6 @@ namespace Omnikeeper.GraphQL
     {
         private readonly ILayerModel layerModel;
         private readonly GeneratorV1Model generatorModel;
-        private readonly IOIAContextModel oiaContextModel;
         private readonly AuthRoleModel authRoleModel;
         private readonly RecursiveTraitModel recursiveDataTraitModel;
         private readonly ILayerDataModel layerDataModel;
@@ -38,7 +37,7 @@ namespace Omnikeeper.GraphQL
         private readonly IScheduler localScheduler;
 
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
-            GeneratorV1Model generatorModel, IOIAContextModel oiaContextModel, AuthRoleModel authRoleModel,
+            GeneratorV1Model generatorModel, AuthRoleModel authRoleModel,
             RecursiveTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel, ChangesetDataModel changesetDataModel,
             IManagementAuthorizationService managementAuthorizationService, CLConfigV1Model clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
@@ -219,7 +218,6 @@ namespace Omnikeeper.GraphQL
 
             this.layerModel = layerModel;
             this.generatorModel = generatorModel;
-            this.oiaContextModel = oiaContextModel;
             this.authRoleModel = authRoleModel;
             this.recursiveDataTraitModel = recursiveDataTraitModel;
             this.baseConfigurationModel = baseConfigurationModel;

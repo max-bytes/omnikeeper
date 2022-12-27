@@ -77,7 +77,6 @@ export const Fragments = {
     state
     writable
     clConfigID
-    onlineInboundAdapterName
     generators
   }
   `,

@@ -61,7 +61,6 @@ namespace Omnikeeper.Startup
 
                 // schedule internal recurring jobs
                 await ScheduleJob<MarkedForDeletionJob>(distributedScheduler, JKMarkedForDeletion, config.MarkedForDeletionRunnerInterval, logger, deleteOnly, 0);
-                await ScheduleJob<ExternalIDManagerJob>(distributedScheduler, JKExternalIDManager, config.ExternalIDManagerRunnerInterval, logger, deleteOnly, 0);
                 await ScheduleJob<ArchiveOldDataJob>(distributedScheduler, JKArchiveOldData, config.ArchiveOldDataRunnerInterval, logger, deleteOnly, 0);
 
                 if (configuration.GetValue("RunComputeLayers", false))

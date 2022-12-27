@@ -76,18 +76,6 @@ namespace Omnikeeper.GraphQL
                         latestChange?.Timestamp);
                 });
 
-            Field<ListGraphType<OIAContextType>>("manage_oiacontexts")
-                .ResolveAsync(async context =>
-                {
-                    var userContext = context.GetUserContext();
-
-                    CheckManagementPermissionThrow(userContext);
-
-                    var configs = await oiaContextModel.GetContexts(true, userContext.Transaction);
-
-                    return configs;
-                });
-
             Field<StringGraphType>("manage_baseConfiguration")
                 .ResolveAsync(async context =>
                 {

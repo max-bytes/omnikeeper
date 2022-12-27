@@ -100,7 +100,7 @@ export default function LayerOperations(props) {
           </Row>
         </>}
         {error && <div>error</div>}
-        <Text italic>Note: showing statistics for stored data only, not showing data from online inbound adapters or generators</Text>
+        <Text italic>Note: showing statistics for stored data only, not showing data from generators</Text>
       </Spin>
 
       <Divider />

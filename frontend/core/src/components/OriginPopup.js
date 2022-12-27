@@ -51,8 +51,6 @@ function OriginPopup(props) {
         return faUser;
       case 'INBOUND_INGEST':
         return faArchive;
-      case 'INBOUND_ONLINE':
-        return faPlug;
       case 'COMPUTE_LAYER':
         return faCogs;
       case 'GENERATOR':

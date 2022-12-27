@@ -3,7 +3,6 @@ import { Switch, Link, useRouteMatch, useLocation, Redirect } from 'react-router
 import { PrivateRoute } from 'components/PrivateRoute';
 import ManageBaseConfiguration from 'components/manage/ManageBaseConfiguration';
 import ManageLayers from 'components/manage/ManageLayers';
-import ManageOIAContexts from 'components/manage/ManageOIAContexts';
 import ManageODataAPIContexts from 'components/manage/ManageODataAPIContexts';
 import ManageTraits from 'components/manage/ManageTraits';
 import ManageAuthRoles from 'components/manage/ManageAuthRoles';
@@ -37,9 +36,6 @@ export default function Manage(props) {
             </PrivateRoute>
             <PrivateRoute path={`${path}/layers`} title="Manage Layers">
                 <ManageLayers />
-            </PrivateRoute>
-            <PrivateRoute path={`${path}/oiacontexts`} title="Manage OIA Contexts">
-                <ManageOIAContexts />
             </PrivateRoute>
             <PrivateRoute path={`${path}/odataapicontexts`} title="Manage OData API Contexts">
                 <ManageODataAPIContexts />
@@ -102,7 +98,6 @@ export default function Manage(props) {
                     <ul>
                         <li><Link to={`${url}/base-configuration`}>Base Configuration</Link></li>
                         <li><Link to={`${url}/layers`}>Layers</Link></li>
-                        <li><Link to={`${url}/oiacontexts`}>Online Inbound Layer Contexts</Link></li>
                         <li><Link to={`${url}/restart-application`}>Restart Application</Link></li>
                     </ul>
 

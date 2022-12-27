@@ -12,7 +12,6 @@ using Omnikeeper.Base.Authz;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.GraphQL;
-using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Model.TraitBased;
@@ -55,14 +54,6 @@ namespace Omnikeeper.Startup
                 return dbcb.BuildFromConnectionString(connectionString, reloadTypes);
             }).InstancePerLifetimeScope();
             builder.RegisterType<ModelContextBuilder>().As<IModelContextBuilder>().InstancePerLifetimeScope();
-        }
-
-        public static void RegisterOIABase(ContainerBuilder builder)
-        {
-            builder.RegisterType<OnlineAccessProxy>().As<IOnlineAccessProxy>().SingleInstance();
-            builder.RegisterType<ExternalIDMapper>().As<IExternalIDMapper>().SingleInstance();
-            builder.RegisterType<ExternalIDMapPostgresPersister>().As<IExternalIDMapPersister>().SingleInstance();
-            builder.RegisterType<InboundAdapterManager>().As<IInboundAdapterManager>().SingleInstance();
         }
 
         public static IEnumerable<Assembly> RegisterOKPlugins(ContainerBuilder builder, string pluginFolder)
@@ -227,7 +218,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<NpgsqlLoggingProvider>().SingleInstance();
         }
 
-        public static void RegisterModels(ContainerBuilder builder, bool enablePerRequestModelCaching, bool enableOIA, bool enableUsageTracking)
+        public static void RegisterModels(ContainerBuilder builder, bool enablePerRequestModelCaching, bool enableUsageTracking)
         {
             builder.RegisterType<CIModel>().As<ICIModel>().SingleInstance();
             builder.RegisterType<CIIDModel>().As<ICIIDModel>().SingleInstance();
@@ -246,7 +237,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<EffectiveTraitModel>().As<IEffectiveTraitModel>().SingleInstance();
             builder.RegisterType<BaseConfigurationModel>().As<IBaseConfigurationModel>().SingleInstance();
             builder.RegisterType<MetaConfigurationModel>().As<IMetaConfigurationModel>().SingleInstance();
-            builder.RegisterType<OIAContextModel>().As<IOIAContextModel>().SingleInstance();
             builder.RegisterType<GeneratorV1Model>().SingleInstance();
             builder.RegisterType<CLConfigV1Model>().SingleInstance();
             builder.RegisterType<ValidatorContextV1Model>().SingleInstance();
@@ -285,12 +275,6 @@ namespace Omnikeeper.Startup
             //builder.RegisterDecorator<CachingLatestLayerChangeRelationModel, IBaseRelationModel>();
             //builder.RegisterDecorator<CachingLatestLayerChangeLayerModel, ILayerModel>();
 
-            // HACK: are defunct due to circular dependeny regarding LayerDataModel and OnlineAccessProxy
-            //if (enableOIA)
-            //{
-            //    builder.RegisterDecorator<OIABaseAttributeModel, IBaseAttributeModel>();
-            //    builder.RegisterDecorator<OIABaseRelationModel, IBaseRelationModel>();
-            //}
 
             if (enableUsageTracking)
             {
@@ -402,7 +386,6 @@ namespace Omnikeeper.Startup
             builder.RegisterType<ValidatorSingleJob>().InstancePerLifetimeScope();
             builder.RegisterType<ValidatorProcessingCache>().SingleInstance();
             builder.RegisterType<ArchiveOldDataJob>().InstancePerLifetimeScope();
-            builder.RegisterType<ExternalIDManagerJob>().InstancePerLifetimeScope();
             builder.RegisterType<MarkedForDeletionJob>().InstancePerLifetimeScope();
             builder.RegisterType<UsageDataWriterJob>().InstancePerLifetimeScope();
             builder.RegisterType<GraphQLSchemaReloaderJob>().InstancePerLifetimeScope();

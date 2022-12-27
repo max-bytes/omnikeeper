@@ -20,30 +20,6 @@ export const mutations = {
   }
   ${Fragments.fullLayer}
   `,
-
-  CREATE_OIACONTEXT: gql`
-    mutation($oiaContext: CreateOIAContextInputType!) {
-      manage_createOIAContext(oiaContext: $oiaContext) {
-        id
-        name
-        config
-      }
-    }
-  `,
-  UPDATE_OIACONTEXT: gql`
-  mutation($oiaContext: UpdateOIAContextInputType!) {
-    manage_updateOIAContext(oiaContext: $oiaContext) {
-      id
-      name
-      config
-    }
-  }
-  `,
-  DELETE_OIACONTEXT: gql`
-  mutation($oiaID: Long!) {
-    manage_deleteOIAContext(oiaID: $oiaID)
-  }
-  `,
   
   TRUNCATE_LAYER: gql`
   mutation($id: String!) {

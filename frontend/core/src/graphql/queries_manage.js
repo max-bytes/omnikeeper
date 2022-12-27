@@ -3,15 +3,6 @@ import { Fragments } from './fragments';
 
 export const queries = {
     
-    OIAContexts: gql`
-        query {
-            manage_oiacontexts {
-                id
-                name
-                config
-            }
-        }
-    `,
     ODataAPIContexts: gql`
     {
         traitEntities(layers: ["__okconfig"]) {

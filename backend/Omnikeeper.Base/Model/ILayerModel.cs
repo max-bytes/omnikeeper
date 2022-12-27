@@ -24,7 +24,7 @@ namespace Omnikeeper.Base.Model
 
         Task<IDictionary<string, LayerData>> GetLayerData(IModelContext trans, TimeThreshold timeThreshold);
 
-        Task<(LayerData layerData, bool changed, Guid ciid)> UpsertLayerData(string id, string description, long color, string state, string clConfigID, string oiaReference, string[] generators, IChangesetProxy changesetProxy, IModelContext trans);
+        Task<(LayerData layerData, bool changed, Guid ciid)> UpsertLayerData(string id, string description, long color, string state, string clConfigID, string[] generators, IChangesetProxy changesetProxy, IModelContext trans);
         Task<bool> TryToDelete(string id, IChangesetProxy changesetProxy, IModelContext trans);
     }
 

@@ -6,7 +6,6 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.GraphQL;
-using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GraphQL.Types;
@@ -50,12 +49,9 @@ namespace Omnikeeper.GraphQL
                     string clConfigID = "";
                     if (upsertLayer.CLConfigID != null && upsertLayer.CLConfigID != "")
                         clConfigID = upsertLayer.CLConfigID;
-                    string oiaReference = "";
-                    if (upsertLayer.OnlineInboundAdapterName != null && upsertLayer.OnlineInboundAdapterName != "")
-                        oiaReference = upsertLayer.OnlineInboundAdapterName;
                     var generators = upsertLayer.Generators.Where(g => !string.IsNullOrEmpty(g)).ToArray();
                     var (updatedLayer, _, _) = await layerDataModel.UpsertLayerData(
-                        upsertLayer.ID, upsertLayer.Description, upsertLayer.Color, upsertLayer.State.ToString(), clConfigID, oiaReference, generators,
+                        upsertLayer.ID, upsertLayer.Description, upsertLayer.Color, upsertLayer.State.ToString(), clConfigID, generators,
                         userContext.ChangesetProxy, userContext.Transaction
                         );
 
@@ -85,74 +81,6 @@ namespace Omnikeeper.GraphQL
 
                     return layerData;
                 });
-
-
-            Field<OIAContextType>("manage_createOIAContext")
-                .Arguments(
-                    new QueryArgument<NonNullGraphType<CreateOIAContextInputType>> { Name = "oiaContext" }
-                )
-                .ResolveAsync(async context =>
-                {
-                    var userContext = context.GetUserContext();
-
-                    var configInput = context.GetArgument<CreateOIAContextInput>("oiaContext")!;
-
-                    CheckManagementPermissionThrow(userContext, "create OIAContext");
-
-                    try
-                    {
-                        var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configInput.Config);
-                        var createdOIAContext = await oiaContextModel.Create(configInput.Name, config, userContext.Transaction);
-                        userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
-
-                        return createdOIAContext;
-                    }
-                    catch (Exception e)
-                    {
-                        throw new ExecutionError($"Could not parse configuration", e);
-                    }
-                });
-            Field<OIAContextType>("manage_updateOIAContext")
-              .Arguments(
-                new QueryArgument<NonNullGraphType<UpdateOIAContextInputType>> { Name = "oiaContext" }
-              )
-              .ResolveAsync(async context =>
-              {
-                  var userContext = context.GetUserContext();
-
-                  var configInput = context.GetArgument<UpdateOIAContextInput>("oiaContext")!;
-
-                  CheckManagementPermissionThrow(userContext, "update OIAContext");
-
-                  try
-                  {
-                      var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configInput.Config);
-                      var oiaContext = await oiaContextModel.Update(configInput.ID, configInput.Name, config, userContext.Transaction);
-                      userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
-
-                      return oiaContext;
-                  }
-                  catch (Exception e)
-                  {
-                      throw new ExecutionError($"Could not parse configuration", e);
-                  }
-              });
-            Field<BooleanGraphType>("manage_deleteOIAContext")
-              .Arguments(
-                new QueryArgument<NonNullGraphType<LongGraphType>> { Name = "oiaID" }
-              )
-              .ResolveAsync(async context =>
-              {
-                  var userContext = context.GetUserContext();
-
-                  var id = context.GetArgument<long>("oiaID");
-
-                  CheckManagementPermissionThrow(userContext, "delete OIAContext");
-
-                  var deleted = await oiaContextModel.Delete(id, userContext.Transaction);
-                  userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, modelContextBuilder => modelContextBuilder.BuildImmediate());
-                  return deleted != null;
-              });
 
             Field<BooleanGraphType>("manage_truncateLayer")
               .Arguments(

@@ -303,10 +303,9 @@ namespace Omnikeeper.Startup
             var csOmnikeeper = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
             ServiceRegistration.RegisterDB(builder, csOmnikeeper, false);
 
-            ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching: true, true, true);
+            ServiceRegistration.RegisterModels(builder, enablePerRequestModelCaching: true, true);
 
             ServiceRegistration.RegisterGraphQL(builder);
-            ServiceRegistration.RegisterOIABase(builder);
             ServiceRegistration.RegisterServices(builder);
             var csQuartz = Configuration.GetConnectionString("QuartzDatabaseConnection");
             ServiceRegistration.RegisterQuartz(builder, csQuartz, Configuration.GetValue<string>("DistributedQuartzInstanceID"));

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity.Config;
-using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
@@ -18,7 +17,6 @@ namespace Omnikeeper.Runners
     public class ArchiveOldDataJob : IJob
     {
         private readonly ILogger<ArchiveOldDataJob> logger;
-        private readonly IExternalIDMapPersister externalIDMapPersister;
         private readonly IArchiveOutdatedIssuesService archiveOutdatedIssuesService;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
@@ -29,12 +27,11 @@ namespace Omnikeeper.Runners
         private readonly ILayerModel layerModel;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public ArchiveOldDataJob(ILogger<ArchiveOldDataJob> logger, IExternalIDMapPersister externalIDMapPersister, IArchiveOutdatedIssuesService archiveOutdatedIssuesService,
+        public ArchiveOldDataJob(ILogger<ArchiveOldDataJob> logger, IArchiveOutdatedIssuesService archiveOutdatedIssuesService,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel, IArchiveOutdatedChangesetDataService archiveOutdatedChangesetDataService,
             IChangesetModel changesetModel, IMetaConfigurationModel metaConfigurationModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder)
         {
             this.logger = logger;
-            this.externalIDMapPersister = externalIDMapPersister;
             this.archiveOutdatedIssuesService = archiveOutdatedIssuesService;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
@@ -118,10 +115,9 @@ namespace Omnikeeper.Runners
                 logger.LogDebug($"Done deleting empty changesets");
 
                 // remove unused CIs
-                // approach: unused CIs are CIs that are completely empty (no attributes for relations relate to it) AND
-                // are not used in any OIA external ID mappings
+                // approach: unused CIs are CIs that are completely empty (no attributes for relations relate to it)
                 logger.LogDebug($"Archiving unused CIs");
-                var numArchivedCIs = await ArchiveUnusedCIsService.ArchiveUnusedCIs(externalIDMapPersister, modelContextBuilder, logger);
+                var numArchivedCIs = await ArchiveUnusedCIsService.ArchiveUnusedCIs(modelContextBuilder, logger);
                 if (numArchivedCIs > 0)
                     logger.LogInformation($"Archived {numArchivedCIs} CIs because they are unused");
                 logger.LogDebug($"Done archiving unused CIs");

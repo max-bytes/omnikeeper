@@ -111,7 +111,6 @@ function Layers(props) {
                 <LayerIcon layer={layer} />
                 {layerText}
                 {layer.clConfigID !== "" && (<FontAwesomeIcon icon={faCogs} fixedWidth />)}
-                {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} fixedWidth />)}
                 &nbsp;&nbsp;
                 <Button size='small' disabled={!previousLayer} onClick={() => changeLayerSortOrder(layer.id, previousLayer.id, 1, data.layers)}>
                   <FontAwesomeIcon icon={faArrowAltCircleUp} fixedWidth style={{ padding: "2px"}} size="xs" />

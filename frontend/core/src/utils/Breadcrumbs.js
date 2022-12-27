@@ -8,7 +8,6 @@ const breadcrumbNameMap = [
   { search: '^/manage/layers/operations/(.*)', name: 'Statistics & Operations For Layer %1%' },
   { search: '^/manage/layers/operations', skip: true },
   { search: '^/manage/layers', name: 'Layers' },
-  { search: '^/manage/oiacontexts', name: 'Online Inbound Adapter Contexts' },
   { search: '^/manage/odataapicontexts', name: 'OData API Contexts' },
   { search: '^/manage/traits', name: 'Traits' },
   { search: '^/manage/generators', name: 'Generators' },

@@ -90,7 +90,7 @@ namespace Omnikeeper.Model
             this.innerModel = innerModel;
         }
 
-        public async Task<(LayerData layerData, bool changed, Guid ciid)> UpsertLayerData(string id, string description, long color, string state, string clConfigID, string oiaReference, string[] generators, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(LayerData layerData, bool changed, Guid ciid)> UpsertLayerData(string id, string description, long color, string state, string clConfigID, string[] generators, IChangesetProxy changesetProxy, IModelContext trans)
         {
             IDValidations.ValidateLayerIDThrow(id);
 
@@ -105,7 +105,7 @@ namespace Omnikeeper.Model
 
             // upsert layer data
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-            var ld = new LayerData(id, description, color, clConfigID, generators, oiaReference, state);
+            var ld = new LayerData(id, description, color, clConfigID, generators, state);
             var t = await innerModel.InsertOrUpdate(ld, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, changesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
             return t;
         }
@@ -133,7 +133,7 @@ namespace Omnikeeper.Model
                 }
                 else
                 {
-                    return new LayerData(l.ID, "", ILayerDataModel.DefaultColor.ToArgb(), "", Array.Empty<string>(), "", ILayerDataModel.DefaultState.ToString());
+                    return new LayerData(l.ID, "", ILayerDataModel.DefaultColor.ToArgb(), "", Array.Empty<string>(), ILayerDataModel.DefaultState.ToString());
                 }
             }).ToDictionary(ld => ld.LayerID);
         }

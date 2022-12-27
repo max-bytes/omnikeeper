@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Npgsql;
-using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
@@ -12,7 +11,7 @@ namespace Omnikeeper.Service
     // TODO: make non-static and use interface
     public static class ArchiveUnusedCIsService
     {
-        public static async Task<int> ArchiveUnusedCIs(IExternalIDMapPersister externalIDMapPersister, IModelContextBuilder modelContextBuilder, ILogger logger)
+        public static async Task<int> ArchiveUnusedCIs(IModelContextBuilder modelContextBuilder, ILogger logger)
         {
             var trans = modelContextBuilder.BuildImmediate();
 
@@ -28,13 +27,6 @@ namespace Omnikeeper.Service
                 while (await s.ReadAsync())
                     unusedCIIDs.Add(s.GetGuid(0));
             }
-
-            // NOTE: we check for the existence of the CIIDs in foreign data mapping tables here.
-            // We could also just rely on the foreign key constraints of the database, so that it does not let us delete CIs that are still in use.
-            // But that is hacky and could lead to disaster -> better be safe
-            // also, trying to delete CIs with active foreign key constraints adds a lot of unneccessary exception output to the console
-            var mappedCIIDs = await externalIDMapPersister.GetAllMappedCIIDs(trans);
-            unusedCIIDs = unusedCIIDs.Except(mappedCIIDs).ToHashSet();
 
             var deleted = 0;
             if (unusedCIIDs.Count > 0)
