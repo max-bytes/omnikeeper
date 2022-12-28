@@ -124,15 +124,24 @@ namespace Omnikeeper.Model
             }
 
             IDictionary<Guid, IDictionary<string, MergedCIAttribute>> compound;
-            if (atTime.IsLatest)
+            var useAlternativeMergingAlgorithm = false;
+            if (useAlternativeMergingAlgorithm && atTime.IsLatest)
             {
                 compound = await baseModel.GetLatestMergedAttributes(cs, attributeSelection.Union(additionalAttributes), layers.LayerIDs, trans)
                     .GroupByAwait<MergedCIAttribute, Guid>(ma => new ValueTask<Guid>(ma.Attribute.CIID))
                     .ToDictionaryAwaitAsync(g => new ValueTask<Guid>(g.Key), async g => (IDictionary<string, MergedCIAttribute>)(await g.ToDictionaryAsync(ma => ma.Attribute.Name)));
-            } else
+                //compound = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
+                //await foreach(var ma in baseModel.GetLatestMergedAttributes(cs, attributeSelection.Union(additionalAttributes), layers.LayerIDs, trans))
+                //{
+                //    if (compound.TryGetValue(ma.Attribute.CIID, out var c))
+                //        c[ma.Attribute.Name] = ma;
+                //    else
+                //        compound.Add(ma.Attribute.CIID, new Dictionary<string, MergedCIAttribute>() { { ma.Attribute.Name, ma } });
+                //}
+            }
+            else
             {
                 var attributes = layers.Select(layerID => baseModel.GetAttributes(cs, attributeSelection.Union(additionalAttributes), layerID, trans, atTime)).ToArray();
-
                 compound = await MergeAttributes(attributes, layers.LayerIDs);
             }
 

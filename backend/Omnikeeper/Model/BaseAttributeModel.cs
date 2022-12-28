@@ -136,9 +136,9 @@ namespace Omnikeeper.Model
             {ciidSelection2CTEClause}
             select distinct 
                 first_value(id) over W, 
-                name, 
-                a.ci_id, 
-                first_value(type) over W, 
+                name,
+                a.ci_id,
+                first_value(type) over W,
                 first_value(value_text) over W, 
                 first_value(value_binary) over W, 
                 first_value(value_control) over W, 

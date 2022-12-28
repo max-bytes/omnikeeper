@@ -1,6 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Columns;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Engines;
+using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Validators;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
@@ -9,7 +13,6 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,8 +41,8 @@ namespace PerfTests
         [Params("all")]
         public string? CIIDSelection { get; set; }
 
-        [Params("Text", "TextArray", "Integer", "IntegerArray", "JSON", "JSONArray")]
-        //[Params("Text")]
+        //[Params("Text", "TextArray", "Integer", "IntegerArray", "JSON", "JSONArray")]
+        [Params("Text")]
         public string? AttributeValueType { get; set; }
 
         [GlobalSetup(Target = nameof(GetMergedAttributes))]
@@ -82,7 +85,12 @@ namespace PerfTests
         [Test]
         public void RunBenchmark()
         {
-            var summary = BenchmarkRunner.Run<GetMergedAttributesTest>();
+            var config = new ManualConfig()
+                .WithOptions(ConfigOptions.DisableOptimizationsValidator)
+                .AddValidator(JitOptimizationsValidator.DontFailOnError)
+                .AddLogger(ConsoleLogger.Default)
+                .AddColumnProvider(DefaultColumnProviders.Instance);
+            var summary = BenchmarkRunner.Run<GetMergedAttributesTest>(config);
         }
 
 

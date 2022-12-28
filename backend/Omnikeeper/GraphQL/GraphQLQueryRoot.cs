@@ -147,6 +147,7 @@ namespace Omnikeeper.GraphQL
                         }
                         else
                         {
+                            // TODO: use dataloader
                             var ciNames = await attributeModel.GetMergedCINames(ciidSelection, layerSet, userContext.Transaction, timeThreshold);
                             var foundCIIDs = ciNames.Where(kv => CultureInfo.InvariantCulture.CompareInfo.IndexOf(kv.Value, searchString, CompareOptions.IgnoreCase) >= 0).Select(kv => kv.Key).ToHashSet();
                             if (foundCIIDs.IsEmpty())
