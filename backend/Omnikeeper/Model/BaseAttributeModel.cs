@@ -127,6 +127,65 @@ namespace Omnikeeper.Model
             return $"${++cur}";
         }
 
+        public async IAsyncEnumerable<MergedCIAttribute> GetLatestMergedAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans)
+        {
+            var ciidSelection2CTEClause = CIIDSelection2CTEClause(selection);
+
+            int parameterIndex = 0;
+            var command = new NpgsqlCommand($@"
+            {ciidSelection2CTEClause}
+            select distinct 
+                first_value(id) over W, 
+                name, 
+                a.ci_id, 
+                first_value(type) over W, 
+                first_value(value_text) over W, 
+                first_value(value_binary) over W, 
+                first_value(value_control) over W, 
+                first_value(changeset_id) over W, 
+                array_agg(layer_id) over W as layer_ids
+            from attribute_latest a
+            {CIIDSelection2JoinClause(selection)}
+            where ({CIIDSelection2WhereClause(selection)}) and layer_id = any({SetParameter(ref parameterIndex)})
+            and ({AttributeSelection2WhereClause(attributeSelection, ref parameterIndex)})
+            WINDOW W AS(
+                partition by (a.ci_id, name)
+                order by array_position({SetParameter(ref parameterIndex)}, layer_id) -- explore alternative: https://stackoverflow.com/a/35456954/184619
+                RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            );
+            ", trans.DBConnection, trans.DBTransaction);
+            command.Parameters.Add(new NpgsqlParameter { Value = layerIDs });
+            foreach (var p in AttributeSelection2Parameters(attributeSelection))
+                command.Parameters.Add(p);
+            command.Parameters.Add(new NpgsqlParameter { Value = layerIDs }); // TODO, HACK: add layer parameter a second time
+
+            using var _ = await trans.WaitAsync();
+
+            //if (ciidSelection2CTEClause == "")
+            //    command.Prepare(); // NOTE: preparing only makes sense if the query is somewhat static, which it won't be when a highly dynamic CTE is involved
+
+            using var dr = await command.ExecuteReaderAsync();
+
+            command.Dispose();
+
+            while (dr.Read())
+            {
+                var id = dr.GetGuid(0);
+                var name = dr.GetString(1);
+                var CIID = dr.GetGuid(2);
+                var type = dr.GetFieldValue<AttributeValueType>(3);
+                var valueText = dr.GetString(4);
+                var valueBinary = dr.GetFieldValue<byte[]>(5);
+                var valueControl = dr.GetFieldValue<byte[]>(6);
+                var av = AttributeValueHelper.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                var changesetID = dr.GetGuid(7);
+                var layerStackIDs = dr.GetFieldValue<string[]>(8);
+
+                var att = new MergedCIAttribute(new CIAttribute(id, name, CIID, av, changesetID), layerStackIDs);
+                yield return att;
+            }
+        }
+
         public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary = false)
         {
             NpgsqlCommand command;

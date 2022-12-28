@@ -18,6 +18,9 @@ namespace Omnikeeper.Base.Model
 
     public interface IBaseAttributeModel : IBaseAttributeMutationModel
     {
+        // TODO: refactor interface after implementation settles
+        IAsyncEnumerable<MergedCIAttribute> GetLatestMergedAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans);
+
         IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary = false);
 
         Task<IReadOnlySet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime);

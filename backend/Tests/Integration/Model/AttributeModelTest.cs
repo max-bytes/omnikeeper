@@ -381,7 +381,7 @@ namespace Tests.Integration.Model
             await GetService<IAttributeModel>().InsertAttribute("a3", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, trans, OtherLayersValueHandlingForceWrite.Instance);
 
             var a1 = await GetService<IAttributeModel>().FindMergedAttributesByFullName("a1", AllCIIDsSelection.Instance, new LayerSet(layer1.ID, layer2.ID), trans, TimeThreshold.BuildLatest());
-            a1.Keys.Should().BeEquivalentTo(new List<Guid>() { ciid1, ciid2 }, options => options.WithStrictOrdering());
+            a1.Keys.Should().BeEquivalentTo(new List<Guid>() { ciid1, ciid2 }, options => options.WithoutStrictOrdering());
             a1.Values.Select(a => a.Attribute.Value).Should().BeEquivalentTo(new List<IAttributeValue>()
             {
                 new AttributeScalarValueText("textL1"),

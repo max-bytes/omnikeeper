@@ -45,11 +45,11 @@ namespace Tests.Integration.Model
 
             var cis1 = traitModel.FilterCIsWithTrait(cis, testTrait1, layerset);
             Assert.AreEqual(3, cis1.Count());
-            cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithStrictOrdering());
+            cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithoutStrictOrdering());
 
             var cis2 = traitModel.FilterCIsWithTrait(cis, testTrait2, layerset);
             Assert.AreEqual(2, cis2.Count());
-            cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
+            cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithoutStrictOrdering());
         }
 
         [Test]

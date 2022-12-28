@@ -61,6 +61,22 @@ namespace Omnikeeper.Model.Decorators
             return model.GetAttributes(selection, attributeSelection, layerID, trans, atTime);
         }
 
+        public IAsyncEnumerable<MergedCIAttribute> GetLatestMergedAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans)
+        {
+            var usedAttributes = attributeSelection switch
+            {
+                AllAttributeSelection _ => (IEnumerable<string>)new string[] { "*" },
+                NoAttributesSelection _ => Array.Empty<string>(),
+                NamedAttributesSelection n => n.AttributeNames,
+                //NamedAttributesWithValueFiltersSelection f => f.NamesAndFilters.Select(t => t.Key),
+                _ => throw new NotImplementedException("")
+            };
+            foreach(var layerID in layerIDs)
+                TrackAttributeUsages(usedAttributes, layerID, UsageStatsOperation.Read);
+
+            return model.GetLatestMergedAttributes(selection, attributeSelection, layerIDs, trans);
+        }
+
         public async Task<IReadOnlyList<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
             //TrackAttributeUsage("*"); // TODO: we should fetch the layer of this changeset here
