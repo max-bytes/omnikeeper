@@ -6,7 +6,7 @@ import { queries } from 'graphql/queries'
 import { useQuery } from '@apollo/client';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faEyeSlash, faArrowAltCircleUp, faArrowAltCircleDown, faCogs, faPlug, faBan, faEdit } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash, faArrowAltCircleUp, faArrowAltCircleDown, faCogs, faBan, faEdit } from '@fortawesome/free-solid-svg-icons'
 import _ from 'lodash';
 
 function Layers(props) {

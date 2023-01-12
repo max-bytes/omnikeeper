@@ -24,7 +24,7 @@ namespace Omnikeeper.Startup
         private static readonly JobKey JKCLB = new("CLB", "omnikeeper");
         private static readonly JobKey JKValidator = new("Validator", "omnikeeper");
         private static readonly JobKey JKMarkedForDeletion = new("MarkedForDeletion", "omnikeeper");
-        private static readonly JobKey JKExternalIDManager = new("ExternalIDManager", "omnikeeper");
+        private static readonly JobKey JKExternalIDManager = new("ExternalIDManager", "omnikeeper"); // old
         private static readonly JobKey JKArchiveOldData = new("ArchiveOldData", "omnikeeper");
         private static readonly JobKey JKUsageDataWriter = new("UsageDataWriter", "omnikeeper");
         public static readonly JobKey JKTraitsReloader = new("TraitsReloader", "omnikeeper");
@@ -63,6 +63,9 @@ namespace Omnikeeper.Startup
                 await ScheduleJob<MarkedForDeletionJob>(distributedScheduler, JKMarkedForDeletion, config.MarkedForDeletionRunnerInterval, logger, deleteOnly, 0);
                 await ScheduleJob<ArchiveOldDataJob>(distributedScheduler, JKArchiveOldData, config.ArchiveOldDataRunnerInterval, logger, deleteOnly, 0);
 
+                // remove old/outdated jobs
+                await DeleteJob(distributedScheduler, JKExternalIDManager);
+
                 if (configuration.GetValue("RunComputeLayers", false))
                 {
                     await ScheduleJob<CLBJob>(localScheduler, JKCLB, config.CLBRunnerInterval, logger, deleteOnly, 10);
@@ -88,15 +91,20 @@ namespace Omnikeeper.Startup
             }
         }
 
+        private static async Task DeleteJob(IScheduler scheduler, JobKey jobKey)
+        {
+            // delete existing job, if exists
+            if (await scheduler.CheckExists(jobKey))
+            {
+                await scheduler.DeleteJob(jobKey);
+            }
+        }
+
         private static async Task ScheduleJob<J>(IScheduler scheduler, JobKey jobKey, string cronSchedule, ILogger logger, bool deleteOnly, int priority) where J : IJob
         {
             IJobDetail job = JobBuilder.Create<J>().WithIdentity(jobKey).Build();
 
-            // delete existing job, if exists
-            if (await scheduler.CheckExists(job.Key))
-            {
-                await scheduler.DeleteJob(job.Key);
-            }
+            await DeleteJob(scheduler, job.Key);
 
             if (deleteOnly) return;
 

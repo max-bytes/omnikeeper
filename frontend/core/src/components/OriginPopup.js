@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 import { queries } from '../graphql/queries'
 import { Popover, Button } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSync, faExclamationCircle, faUser, faArchive, faPlug, faCogs, faCalculator, faInfo } from '@fortawesome/free-solid-svg-icons';
+import { faSync, faExclamationCircle, faUser, faArchive, faCogs, faCalculator, faInfo } from '@fortawesome/free-solid-svg-icons';
 import UserTypeIcon from './UserTypeIcon';
 import { formatTimestamp } from 'utils/datetime.js';
 import { ChangesetID } from 'utils/uuidRenderers';

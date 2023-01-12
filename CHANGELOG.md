@@ -6,6 +6,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [28.0.0] - 2023-01-12
+
+## Added
+
+- implemented ciChanges field for changeset in graphql-API
+
+### Changed
+
+- upgrade to .Net 7.0
+- reworked JSON polymorphic handling
+- removed partitioning of attribute and relation tables
+- (breaking) removed OIA feature
+- (breaking) removed deprecated attribute fields for changesets in GraphQL API
+
+## [26.5.0] - 2022-12-05
+
+### Added
+
+- implemented fetching latest relevant changesets per CI
+- added prioritites for CLB and validator jobs
+- GenericJSONIngest:
+  - allow IDMatching with null-attribute values, remove issue
+  - added options for duplicate-relation-handling
+  - added IDMethodAttributeExists
+- relatedCIFilter for trait entities
+- implemented updateSingleByFilter GraphQL mutation #270
+- added healthchecks for quartz schedulers
+- added docker based healthcheck, delegating to HTTP healthcheck
+- implemented deleteMultipleByCIID_* GraphQL mutation
+- implemented bulk replace for trait entities GraphQL mutation
+- improved odata backend: support expand, even nested
+- implemented usage tracking for graphql operations
+- implemented trait entity filtering for integer-typed attributes, supporting exact matching only
+- technical frontend:
+  - added functionality for deleting issues
+  - added proper loading animations to various screens
+  - improved handling of graphql errors
+  - by default, only show first 10 items in attribute value array, expand on user request
+
+### Changed
+
+- reworked plugin loading to be more resilient and work better with plugin dependencies
+- removed special API for manage_odatacontexts and replaced it with regular trait entity API
+- removed predicates (predicate-IDs stay) #193
+- improved handling of default values for optional trait attributes #264
+- performance improvements using dataloader for changeset-data
+- deprecation of dataID related GraphQL fields
+- rework of array handling for attribute values, increasing performance
+- lots of library updates in backend and frontend
+
+### Bugfix
+
+- fixed #266
+- bugfix when graphql queries contain __typename subfield in traitEntities field
+
 ## [21.17.7] - 2022-09-07
 
 ### Added

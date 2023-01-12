@@ -33,7 +33,7 @@ namespace Omnikeeper.Base.Entity.Config
         public TimeSpan ArchiveDataThreshold => TimeSpan.FromTicks(archiveDataThresholdTicks);
         public string CLBRunnerInterval => clbRunnerInterval;
         public string MarkedForDeletionRunnerInterval => markedForDeletionRunnerInterval;
-        public string ExternalIDManagerRunnerInterval => externalIDManagerRunnerInterval;
+        public string ExternalIDManagerRunnerInterval => externalIDManagerRunnerInterval; // TODO: remove
         public string ArchiveOldDataRunnerInterval => archiveOldDataRunnerInterval;
 
         public static SystemTextJSONSerializer<BaseConfigurationV2> Serializer = new SystemTextJSONSerializer<BaseConfigurationV2>(new JsonSerializerOptions() { });
