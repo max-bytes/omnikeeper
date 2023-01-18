@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.DotNet.InternalAbstractions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
@@ -27,7 +26,7 @@ namespace Tests.Ingest
     {
         private static string GetFilepath(string filename)
         {
-            string startupPath = ApplicationEnvironment.ApplicationBasePath;
+            string startupPath = AppContext.BaseDirectory;
             var pathItems = startupPath.Split(Path.DirectorySeparatorChar);
             var pos = pathItems.Reverse().ToList().FindIndex(x => string.Equals("bin", x));
             string projectPath = string.Join(Path.DirectorySeparatorChar.ToString(), pathItems.Take(pathItems.Length - pos - 1));
