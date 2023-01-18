@@ -1,7 +1,7 @@
 using FluentAssertions;
-using Microsoft.DotNet.InternalAbstractions;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -16,16 +16,16 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
         {
             var documents = new Dictionary<string, string>() {
                 {
-                    "inventory_scan_windows", (File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "inventory_scan_windows", (File.ReadAllText(Path.Combine(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.ToString(),
                         "data", "usecase_ecm_inv_scan", "input_win.json")))
                 },
                 {
-                    "inventory_scan_linux", (File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "inventory_scan_linux", (File.ReadAllText(Path.Combine(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.ToString(),
                         "data", "usecase_ecm_inv_scan", "input_linux.json")))
                 },
             };
 
-            string expression = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+            string expression = File.ReadAllText(Path.Combine(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.ToString(),
                 "data", "usecase_ecm_inv_scan", "expression.jmes"));
 
 
@@ -33,7 +33,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
             var inputJSON = transformer.Documents2JSON(documents);
             var genericInboundDataJson = transformer.TransformJSON(inputJSON);
 
-            File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+            File.WriteAllText(Path.Combine(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.ToString(),
                 "data", "usecase_ecm_inv_scan", "output_intermediate.json"), genericInboundDataJson.ToString());
 
             var result = transformer.DeserializeJson(genericInboundDataJson);
@@ -45,10 +45,10 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                 },
                 WriteIndented = true
             });
-            File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+            File.WriteAllText(Path.Combine(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.ToString(),
                 "data", "usecase_ecm_inv_scan", "output.json"), resultJson);
 
-            var expected = JsonSerializer.Deserialize<GenericInboundData>(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+            var expected = JsonSerializer.Deserialize<GenericInboundData>(File.ReadAllText(Path.Combine(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.ToString(),
                         "data", "usecase_ecm_inv_scan", "expected.json")), new JsonSerializerOptions()
                         {
                             IncludeFields = true,

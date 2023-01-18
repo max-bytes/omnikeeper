@@ -1,9 +1,9 @@
 using FluentAssertions;
-using Microsoft.DotNet.InternalAbstractions;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -19,20 +19,20 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
             var documents = new Dictionary<string, string>()
             {
                 {
-                    "listzones.json", (File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "listzones.json", (File.ReadAllText(Path.Combine(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.ToString(),
                         "data", "usecase_mhx_dns", "listzones.json")))
                 },
                 {
-                    "listrecords_mhx-consulting.at.json", (File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "listrecords_mhx-consulting.at.json", (File.ReadAllText(Path.Combine(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.ToString(),
                         "data", "usecase_mhx_dns", "listrecords_mhx-consulting.at.json")))
                 },
                 {
-                    "listrecords_mhx.at.json", (File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "listrecords_mhx.at.json", (File.ReadAllText(Path.Combine(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.ToString(),
                         "data", "usecase_mhx_dns", "listrecords_mhx.at.json")))
                 }
             };
 
-            string expression = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+            string expression = File.ReadAllText(Path.Combine(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.ToString(),
                 "data", "usecase_mhx_dns", "expression.jmes"));
 
             var transformer = TransformerJMESPath.Build(new TransformConfigJMESPath(expression));
@@ -135,7 +135,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                 },
                 WriteIndented = true
             });
-            File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+            File.WriteAllText(Path.Combine(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.ToString(),
                 "data", "usecase_mhx_dns", "output.json"), resultJson);
         }
     }

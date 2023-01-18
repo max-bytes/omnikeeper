@@ -1,5 +1,4 @@
-﻿using Microsoft.DotNet.InternalAbstractions;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 
@@ -9,7 +8,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
     {
         public static string GetFilepath(string filename, string subfolder)
         {
-            string startupPath = ApplicationEnvironment.ApplicationBasePath;
+            string startupPath = AppContext.BaseDirectory;
             var pathItems = startupPath.Split(Path.DirectorySeparatorChar);
             var pos = pathItems.Reverse().ToList().FindIndex(x => string.Equals("bin", x));
             string projectPath = string.Join(Path.DirectorySeparatorChar.ToString(), pathItems.Take(pathItems.Length - pos - 1));
