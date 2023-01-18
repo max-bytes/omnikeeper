@@ -7,17 +7,17 @@ namespace Omnikeeper.Base.Utils
     public class NpgsqlLoggingProvider : INpgsqlLoggingProvider
     {
         private readonly ILoggerFactory loggerFactory;
-        private readonly DBConnectionBuilder dBConnectionBuilder;
+        //private readonly DBConnectionBuilder dBConnectionBuilder;
 
-        public NpgsqlLoggingProvider(ILoggerFactory loggerFactory, DBConnectionBuilder dBConnectionBuilder)
+        public NpgsqlLoggingProvider(ILoggerFactory loggerFactory)//, DBConnectionBuilder dBConnectionBuilder)
         {
             this.loggerFactory = loggerFactory;
-            this.dBConnectionBuilder = dBConnectionBuilder;
+            //this.dBConnectionBuilder = dBConnectionBuilder;
         }
 
         public NpgsqlLogger CreateLogger(string name)
         {
-            return new MyNpgsqlLogger(loggerFactory, dBConnectionBuilder);
+            return new MyNpgsqlLogger(loggerFactory);//, dBConnectionBuilder);
         }
     }
 
@@ -25,13 +25,13 @@ namespace Omnikeeper.Base.Utils
     {
         private readonly ILogger applicationLogger;
         private readonly ILogger otherLogger;
-        private readonly DBConnectionBuilder dBConnectionBuilder;
+        //private readonly DBConnectionBuilder dBConnectionBuilder;
 
-        internal MyNpgsqlLogger(ILoggerFactory loggerFactory, DBConnectionBuilder dBConnectionBuilder)
+        internal MyNpgsqlLogger(ILoggerFactory loggerFactory)//, DBConnectionBuilder dBConnectionBuilder)
         {
             applicationLogger = loggerFactory.CreateLogger("npgsql.application");
             otherLogger = loggerFactory.CreateLogger("npgsql.other");
-            this.dBConnectionBuilder = dBConnectionBuilder;
+            //this.dBConnectionBuilder = dBConnectionBuilder;
         }
 
         public override bool IsEnabled(NpgsqlLogLevel level)
@@ -42,7 +42,7 @@ namespace Omnikeeper.Base.Utils
 
         public override void Log(NpgsqlLogLevel level, int connectorId, string msg, Exception? exception = null)
         {
-            if (dBConnectionBuilder.HasConnectorID(connectorId))
+            if (NpgsqlConnectionWrapper.HasConnectorID(connectorId))
                 applicationLogger.Log(ToMSLogLevel(level), exception, msg);
             else
                 otherLogger.Log(ToMSLogLevel(level), exception, msg);

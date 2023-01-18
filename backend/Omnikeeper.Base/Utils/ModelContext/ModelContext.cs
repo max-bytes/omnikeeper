@@ -7,27 +7,27 @@ namespace Omnikeeper.Base.Utils.ModelContext
 {
     public class ModelContextBuilder : IModelContextBuilder//, IDisposable
     {
-        private readonly NpgsqlConnection npgsqlConnection;
+        private readonly NpgsqlConnectionWrapper connectionWrapper;
 
-        public ModelContextBuilder(NpgsqlConnection npgsqlConnection)
+        public ModelContextBuilder(NpgsqlConnectionWrapper connectionWrapper)
         {
-            this.npgsqlConnection = npgsqlConnection;
+            this.connectionWrapper = connectionWrapper;
         }
 
         public IModelContext BuildDeferred()
         {
-            var npgsqlTransaction = npgsqlConnection.BeginTransaction();
+            var npgsqlTransaction = connectionWrapper.GetOpenedConnection().BeginTransaction();
             return new ModelContextDeferredMode(npgsqlTransaction);
         }
         public IModelContext BuildDeferred(IsolationLevel isolationLevel)
         {
-            var npgsqlTransaction = npgsqlConnection.BeginTransaction(isolationLevel);
+            var npgsqlTransaction = connectionWrapper.GetOpenedConnection().BeginTransaction(isolationLevel);
             return new ModelContextDeferredMode(npgsqlTransaction);
         }
 
         public IModelContext BuildImmediate()
         {
-            return new ModelContextImmediateMode(npgsqlConnection);
+            return new ModelContextImmediateMode(connectionWrapper.GetOpenedConnection());
         }
     }
 

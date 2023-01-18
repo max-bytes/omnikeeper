@@ -8,7 +8,7 @@ namespace Tests.Integration
 {
     public class DBBackedTestBase
     {
-        private NpgsqlConnection? conn;
+        private NpgsqlConnectionWrapper? connWrapper;
         private ModelContextBuilder? modelContextBuilder;
 
         protected ModelContextBuilder ModelContextBuilder => modelContextBuilder!;
@@ -19,15 +19,15 @@ namespace Tests.Integration
             DBSetup.Setup();
 
             var dbcb = new DBConnectionBuilder();
-            conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
-            modelContextBuilder = new ModelContextBuilder(conn);
+            connWrapper = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
+            modelContextBuilder = new ModelContextBuilder(connWrapper);
         }
 
         [TearDown]
         public virtual void TearDown()
         {
-            if (conn != null)
-                conn.Close();
+            if (connWrapper != null)
+                connWrapper.Dispose();
         }
     }
 }
