@@ -1,5 +1,6 @@
 ﻿using DbUp;
 using DbUp.Engine;
+using System;
 using System.Reflection;
 
 namespace DBMigrations
@@ -13,6 +14,7 @@ namespace DBMigrations
             var builder = DeployChanges.To
                     .PostgresqlDatabase(connectionString)
                     .WithTransaction()
+                    .WithExecutionTimeout(TimeSpan.FromMinutes(180))
                     .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly(), s => s.EndsWith(".psql"));
 
             if (logOutput)
