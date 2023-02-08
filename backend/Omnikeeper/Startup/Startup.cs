@@ -51,16 +51,6 @@ namespace Omnikeeper.Startup
 
         public IConfiguration Configuration { get; }
 
-        private TokenValidationParameters BuildTokenValidationParameters()
-        {
-            return new TokenValidationParameters
-            { // TODO: is this needed? According to https://developer.okta.com/blog/2018/03/23/token-authentication-aspnetcore-complete-guide, this should work automatically
-                ValidateAudience = true,
-                ValidAudience = Configuration.GetSection("Authentication")["Audience"],
-                ValidateIssuer = Configuration.GetSection("Authentication").GetValue<bool>("ValidateIssuer")
-            };
-        }
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -173,7 +163,12 @@ namespace Omnikeeper.Startup
             })
             .AddJwtBearer(options =>
             {
-                options.TokenValidationParameters = BuildTokenValidationParameters();
+                options.TokenValidationParameters = new TokenValidationParameters
+                { // TODO: is this needed? According to https://developer.okta.com/blog/2018/03/23/token-authentication-aspnetcore-complete-guide, this should work automatically
+                    ValidateAudience = true,
+                    ValidAudience = Configuration.GetSection("Authentication")["Audience"],
+                    ValidateIssuer = Configuration.GetSection("Authentication").GetValue<bool>("ValidateIssuer")
+                };
 
                 // NOTE: according to https://social.technet.microsoft.com/Forums/en-US/2f889c6f-b500-4ba6-bba0-a2a4fee1604f/cannot-authenticate-odata-feed-using-an-organizational-account
                 // windows applications want to receive an authorization_uri in the challenge response with an URI where the user can authenticate
