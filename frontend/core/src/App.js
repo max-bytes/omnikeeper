@@ -45,10 +45,6 @@ const keycloak = new Keycloak({
   "enable-cors": true
 })
 
-const keycloakProviderInitOptions = {
-  onLoad: 'check-sso'
-}
-
 function LayerSettingsContextProvider(props) {
   // get layerSettings from storage, initialize state with it
   const [layerSettingsInStorage, setLayerSettingsInStorage] = useLocalStorage('layerSettings', null);
@@ -218,8 +214,7 @@ function App() {
       <Layout style={{height: '100vh', backgroundColor: 'unset'}}>
         <ErrorNotifier>
             {(showError) => (
-            <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakProviderInitOptions} autoRefreshToken={true}
-            onTokens={tokenSetter} LoadingComponent={loadingComponent}>
+            <ReactKeycloakProvider authClient={keycloak} initOptions={{ onLoad: 'check-sso' }} autoRefreshToken={true} onTokens={tokenSetter} LoadingComponent={loadingComponent}>
               <React.StrictMode>
                 <ApolloWrapper component={BR} showError={showError} />
               </React.StrictMode>
