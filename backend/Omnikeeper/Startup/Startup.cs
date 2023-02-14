@@ -32,6 +32,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -167,7 +168,11 @@ namespace Omnikeeper.Startup
                 { // TODO: is this needed? According to https://developer.okta.com/blog/2018/03/23/token-authentication-aspnetcore-complete-guide, this should work automatically
                     ValidateAudience = true,
                     ValidAudience = Configuration.GetSection("Authentication")["Audience"],
-                    ValidateIssuer = Configuration.GetSection("Authentication").GetValue<bool>("ValidateIssuer")
+                    ValidateIssuer = Configuration.GetSection("Authentication").GetValue<bool>("ValidateIssuer"),
+
+                    // see https://stackoverflow.com/questions/60635967/idx10500-signature-validation-failed-no-security-keys-were-provided-to-validat
+                    // and https://github.com/aspnet/Security/issues/1741
+                    SignatureValidator = ((Configuration.GetSection("Authentication").GetValue<bool>("SignatureValidation", true)) ? null : delegate(string token, TokenValidationParameters parameters) { return new JwtSecurityToken(token); }),
                 };
 
                 // NOTE: according to https://social.technet.microsoft.com/Forums/en-US/2f889c6f-b500-4ba6-bba0-a2a4fee1604f/cannot-authenticate-odata-feed-using-an-organizational-account
