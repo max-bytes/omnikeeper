@@ -1,12 +1,12 @@
 import { useLazyQuery, useMutation } from "@apollo/client";
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState, useRef} from "react";
 import { Button, Space } from 'antd';
 import _ from 'lodash';
 import { queries } from "../../graphql/queries";
 import { mutations } from '../../graphql/mutations'
 import { AgGridReact } from "ag-grid-react";
 import moment from 'moment';
-import { SyncOutlined, DeleteOutlined } from '@ant-design/icons';
+import { SyncOutlined, DeleteOutlined, ExportOutlined } from '@ant-design/icons';
 import { CIID } from "utils/uuidRenderers";
 import { useAGGridEnterprise } from 'utils/useAGGridEnterprise';
 import { formatTimestamp } from "utils/datetime";
@@ -25,8 +25,12 @@ export default function IssueList(props) {
     const [refreshNonce, setRefreshNonce] = useState(null);
 
     const [deleteInProgress, setDeleteInProgress] = useState(false);
+    const [csvExportInProgress, setCSVExportInProgress] = useState(false);
+    const [excelExportInProgress, setExcelExportInProgress] = useState(false);
 
     const [selectedRows, setSelectedRows] = useState([]);
+
+    const gridRef = useRef();
 
     useEffect(() => {
         debouncedSearch({
@@ -122,6 +126,23 @@ export default function IssueList(props) {
             .finally(() => setDeleteInProgress(false));
     }}>Delete Selected ({selectedRows.length.toString()})</Button>;
 
+    const exportCSVButton = <Button icon={<ExportOutlined />} type="primary" disabled={csvExportInProgress} loading={csvExportInProgress} onClick={() => {
+        setCSVExportInProgress(true);
+        gridRef.current.api.exportDataAsCsv({
+            fileName: 'issues_export.csv',
+            columnKeys: ["message", "type", "context", "group", "id", "timestamp"]
+        });
+        setCSVExportInProgress(false);
+    }}>Export All as CSV</Button>;
+    const exportExcelButton = <Button icon={<ExportOutlined />} type="primary" disabled={excelExportInProgress} loading={excelExportInProgress} onClick={() => {
+        setExcelExportInProgress(true);
+        gridRef.current.api.exportDataAsExcel({
+            fileName: 'issues_export.xlsx',
+            columnKeys: ["message", "type", "context", "group", "id", "timestamp"]
+        });
+        setExcelExportInProgress(false);
+    }}>Export All as Excel</Button>;
+
     return <>
         <h2>Issues</h2>
         {list && 
@@ -131,10 +152,13 @@ export default function IssueList(props) {
                     <Space>
                         <Button icon={<SyncOutlined />} type="primary" loading={loadingIssues} onClick={() => setRefreshNonce(moment().toISOString())}>Refresh</Button>
                         {deleteButton}
+                        {exportCSVButton}
+                        {exportExcelButton}
                     </Space>
                 </div>
                 <div style={{height:'100%'}} className={"ag-theme-balham"}>
                     <AgGridReact
+                        ref={gridRef}
                         components={{
                             affectedCIsCellRenderer: affectedCIsCellRenderer,
                             timestampCellRenderer: timestampCellRenderer,
