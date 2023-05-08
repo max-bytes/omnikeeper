@@ -169,8 +169,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="dbup" Version="4.3.0" />
-    <PackageReference Include="dbup-postgresql" Version="4.3.0" />
+    <PackageReference Include="dbup-postgresql" Version="4.5.0" />
+    <PackageReference Include="Npgsql" Version="6.0.7" />
   </ItemGroup>
 
 </Project>
