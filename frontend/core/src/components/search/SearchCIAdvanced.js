@@ -91,7 +91,7 @@ function SearchCIAdvanced(props) {
                             <Input
                                 style={styles.searchField}
                                 icon="search"
-                                placeholder="Search by name for CI-ID..."
+                                placeholder="Search by name or CI-ID..."
                                 value={searchString ?? ""}
                                 onChange={(e) => setSearchString(e.target.value)}
                             />
