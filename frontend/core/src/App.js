@@ -21,9 +21,10 @@ import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
 import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
 import { ReactKeycloakProvider } from '@react-keycloak/web'
-import { Menu, Layout, Button, Drawer, Spin, notification } from 'antd';
+import { Menu, Layout, Button, Drawer, Spin, notification, Typography } from 'antd';
 import { ExplorerLayers } from "components/ExplorerLayers";
 import { LayerSettingsContext } from "utils/layers";
+import ConditionalWrapper from "utils/ConditionalWrapper";
 import Trait from "components/traits/Trait";
 import Breadcrumbs from "utils/Breadcrumbs";
 import GraphQLPlayground from "components/GraphQLPlayground";
@@ -32,6 +33,7 @@ import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
 import { useLocalStorage } from 'utils/useLocalStorage';
 import { useAGGridEnterprise } from 'utils/useAGGridEnterprise';
 const { Header, Content } = Layout;
+const { Text } = Typography;
 
 const keycloak = new Keycloak({
   "url": `${env("KEYCLOAK_URL")}`,
@@ -58,6 +60,10 @@ function LayerSettingsContextProvider(props) {
 }
 
 function App() {
+
+  const authDisabled = env("DISABLE_AUTH") === 'true';
+  
+  const ConditionallyPrivateRoute = (authDisabled) ? Page : PrivateRoute;
 
   const BR = () => {
     const [layerDrawerVisible, setLayerDrawerVisible] = useState(false);
@@ -86,7 +92,7 @@ function App() {
                   size="large">Layers</Button>
               </div>
               <div style={{float: 'right'}}>
-                <UserBar />
+                {(authDisabled) ? <div><Text type="secondary">Auth Disabled</Text></div> : <UserBar />}
               </div>
               <Route
                 render={({ location }) => {
@@ -124,39 +130,39 @@ function App() {
                   <Page path="/login" title="Login">
                     <LoginPage />
                   </Page>
-                  <PrivateRoute path="/graphql-playground" title="GraphQL Playground">
+                  <ConditionallyPrivateRoute path="/graphql-playground" title="GraphQL Playground">
                     <GraphQLPlayground />
-                  </PrivateRoute>
-                  <PrivateRoute path="/diffing" title="Diffing">
+                  </ConditionallyPrivateRoute>
+                  <ConditionallyPrivateRoute path="/diffing" title="Diffing">
                     <Diffing />
-                  </PrivateRoute>
-                  <PrivateRoute path="/createCI" title="Create CI">
+                  </ConditionallyPrivateRoute>
+                  <ConditionallyPrivateRoute path="/createCI" title="Create CI">
                     <AddNewCI />
-                  </PrivateRoute>
-                  <PrivateRoute path="/explorer/:ciid" title="View CI">
+                  </ConditionallyPrivateRoute>
+                  <ConditionallyPrivateRoute path="/explorer/:ciid" title="View CI">
                     <Explorer />
-                  </PrivateRoute>
-                  <PrivateRoute path="/explorer" title="Explore CIs">
+                  </ConditionallyPrivateRoute>
+                  <ConditionallyPrivateRoute path="/explorer" title="Explore CIs">
                     <SearchCIAdvanced />
-                  </PrivateRoute>
-                  <PrivateRoute path="/changesets/:changesetID" title="View Changeset">
+                  </ConditionallyPrivateRoute>
+                  <ConditionallyPrivateRoute path="/changesets/:changesetID" title="View Changeset">
                     <Changeset />
-                  </PrivateRoute>
-                  <PrivateRoute path="/changesets" title="Changesets">
+                  </ConditionallyPrivateRoute>
+                  <ConditionallyPrivateRoute path="/changesets" title="Changesets">
                     <ChangesetList />
-                  </PrivateRoute>
-                  <PrivateRoute path="/issues" title="Issues">
+                  </ConditionallyPrivateRoute>
+                  <ConditionallyPrivateRoute path="/issues" title="Issues">
                     <IssueList />
-                  </PrivateRoute>
-                  <PrivateRoute path="/grid-view" title="Grid-View">
+                  </ConditionallyPrivateRoute>
+                  <ConditionallyPrivateRoute path="/grid-view" title="Grid-View">
                     <GridView/>
-                  </PrivateRoute>
-                  <PrivateRoute path="/manage" title="Manage">
+                  </ConditionallyPrivateRoute>
+                  <ConditionallyPrivateRoute path="/manage" title="Manage">
                     <Manage/>
-                  </PrivateRoute>
-                  <PrivateRoute path="/traits/:traitID" title="View Trait">
+                  </ConditionallyPrivateRoute>
+                  <ConditionallyPrivateRoute path="/traits/:traitID" title="View Trait">
                     <Trait />
-                  </PrivateRoute>
+                  </ConditionallyPrivateRoute>
 
                   {
                     frontendPlugins.flatMap(plugin => {
@@ -164,9 +170,9 @@ function App() {
                       {
                         const items = plugin.components.menuComponents.map(mc => {
                             const Component = mc.component;
-                            return <PrivateRoute key={mc.url} path={mc.url} title={mc.title}>
+                            return <ConditionallyPrivateRoute key={mc.url} path={mc.url} title={mc.title}>
                               <Component />
-                            </PrivateRoute>
+                            </ConditionallyPrivateRoute>
                           }
                         ); 
                         return items;
@@ -176,9 +182,9 @@ function App() {
                     })
                   }
 
-                  <PrivateRoute path="/">
+                  <ConditionallyPrivateRoute path="/">
                     <Dashboard />
-                  </PrivateRoute>
+                  </ConditionallyPrivateRoute>
 
                   <Route path="*">
                     <Redirect to="/" />
@@ -209,16 +215,16 @@ function App() {
   const loadingComponent = <div style={{display: "flex", height: "100%"}}><Spin spinning={true} size="large" tip="Loading...">&nbsp;</Spin></div>;
 
   return (
-    
     <LayerSettingsContextProvider>
       <Layout style={{height: '100vh', backgroundColor: 'unset'}}>
         <ErrorNotifier>
             {(showError) => (
-            <ReactKeycloakProvider authClient={keycloak} initOptions={{ onLoad: 'check-sso' }} autoRefreshToken={true} onTokens={tokenSetter} LoadingComponent={loadingComponent}>
-              <React.StrictMode>
-                <ApolloWrapper component={BR} showError={showError} />
-              </React.StrictMode>
-            </ReactKeycloakProvider>
+              <ConditionalWrapper condition={!authDisabled} wrapper={children => 
+                <ReactKeycloakProvider authClient={keycloak} initOptions={{ onLoad: 'check-sso' }} autoRefreshToken={true} onTokens={tokenSetter} LoadingComponent={loadingComponent}>{children}</ReactKeycloakProvider>}>
+                <React.StrictMode>
+                  <ApolloWrapper component={BR} showError={showError} />
+                </React.StrictMode>
+            </ConditionalWrapper>
           )}
         </ErrorNotifier>
       </Layout>
