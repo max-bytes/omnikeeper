@@ -3,8 +3,9 @@ import { Redirect } from 'react-router-dom'
 import { useKeycloak } from '@react-keycloak/web'
 import Page from './Page';
 import { Spin } from 'antd';
+import env from "@beam-australia/react-env";
 
-export function PrivateRoute(props) {
+function StrictlyPrivateRoute(props) {
 
   const { children, title, ...rest} = props;
 
@@ -28,3 +29,7 @@ export function PrivateRoute(props) {
       }
     />;
 }
+
+const authDisabled = env("DISABLE_AUTH") === 'true';
+
+export const PrivateRoute = (authDisabled) ? Page : StrictlyPrivateRoute;

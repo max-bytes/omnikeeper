@@ -63,8 +63,6 @@ function App() {
 
   const authDisabled = env("DISABLE_AUTH") === 'true';
   
-  const ConditionallyPrivateRoute = (authDisabled) ? Page : PrivateRoute;
-
   const BR = () => {
     const [layerDrawerVisible, setLayerDrawerVisible] = useState(false);
 
@@ -130,39 +128,39 @@ function App() {
                   <Page path="/login" title="Login">
                     <LoginPage />
                   </Page>
-                  <ConditionallyPrivateRoute path="/graphql-playground" title="GraphQL Playground">
+                  <PrivateRoute path="/graphql-playground" title="GraphQL Playground">
                     <GraphQLPlayground />
-                  </ConditionallyPrivateRoute>
-                  <ConditionallyPrivateRoute path="/diffing" title="Diffing">
+                  </PrivateRoute>
+                  <PrivateRoute path="/diffing" title="Diffing">
                     <Diffing />
-                  </ConditionallyPrivateRoute>
-                  <ConditionallyPrivateRoute path="/createCI" title="Create CI">
+                  </PrivateRoute>
+                  <PrivateRoute path="/createCI" title="Create CI">
                     <AddNewCI />
-                  </ConditionallyPrivateRoute>
-                  <ConditionallyPrivateRoute path="/explorer/:ciid" title="View CI">
+                  </PrivateRoute>
+                  <PrivateRoute path="/explorer/:ciid" title="View CI">
                     <Explorer />
-                  </ConditionallyPrivateRoute>
-                  <ConditionallyPrivateRoute path="/explorer" title="Explore CIs">
+                  </PrivateRoute>
+                  <PrivateRoute path="/explorer" title="Explore CIs">
                     <SearchCIAdvanced />
-                  </ConditionallyPrivateRoute>
-                  <ConditionallyPrivateRoute path="/changesets/:changesetID" title="View Changeset">
+                  </PrivateRoute>
+                  <PrivateRoute path="/changesets/:changesetID" title="View Changeset">
                     <Changeset />
-                  </ConditionallyPrivateRoute>
-                  <ConditionallyPrivateRoute path="/changesets" title="Changesets">
+                  </PrivateRoute>
+                  <PrivateRoute path="/changesets" title="Changesets">
                     <ChangesetList />
-                  </ConditionallyPrivateRoute>
-                  <ConditionallyPrivateRoute path="/issues" title="Issues">
+                  </PrivateRoute>
+                  <PrivateRoute path="/issues" title="Issues">
                     <IssueList />
-                  </ConditionallyPrivateRoute>
-                  <ConditionallyPrivateRoute path="/grid-view" title="Grid-View">
+                  </PrivateRoute>
+                  <PrivateRoute path="/grid-view" title="Grid-View">
                     <GridView/>
-                  </ConditionallyPrivateRoute>
-                  <ConditionallyPrivateRoute path="/manage" title="Manage">
+                  </PrivateRoute>
+                  <PrivateRoute path="/manage" title="Manage">
                     <Manage/>
-                  </ConditionallyPrivateRoute>
-                  <ConditionallyPrivateRoute path="/traits/:traitID" title="View Trait">
+                  </PrivateRoute>
+                  <PrivateRoute path="/traits/:traitID" title="View Trait">
                     <Trait />
-                  </ConditionallyPrivateRoute>
+                  </PrivateRoute>
 
                   {
                     frontendPlugins.flatMap(plugin => {
@@ -170,9 +168,9 @@ function App() {
                       {
                         const items = plugin.components.menuComponents.map(mc => {
                             const Component = mc.component;
-                            return <ConditionallyPrivateRoute key={mc.url} path={mc.url} title={mc.title}>
+                            return <PrivateRoute key={mc.url} path={mc.url} title={mc.title}>
                               <Component />
-                            </ConditionallyPrivateRoute>
+                            </PrivateRoute>
                           }
                         ); 
                         return items;
@@ -182,9 +180,9 @@ function App() {
                     })
                   }
 
-                  <ConditionallyPrivateRoute path="/">
+                  <PrivateRoute path="/">
                     <Dashboard />
-                  </ConditionallyPrivateRoute>
+                  </PrivateRoute>
 
                   <Route path="*">
                     <Redirect to="/" />

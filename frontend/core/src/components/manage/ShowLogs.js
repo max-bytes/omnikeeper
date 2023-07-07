@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { HubConnectionBuilder } from '@microsoft/signalr';
-import { Console } from 'console-feed'
+import { Console } from '@nicksrandall/console-feed';
 import env from "@beam-australia/react-env";
 
 const convertLogLevel2Method = (logLevel) => {
