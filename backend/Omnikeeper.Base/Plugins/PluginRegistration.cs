@@ -12,6 +12,8 @@ namespace Omnikeeper.Base.Plugins
         IPluginDBMigrator? DBMigration { get; }
         void RegisterServices(IServiceCollection sc);
 
+        void ConfigureServices(IServiceProvider serviceProvider);
+
         void RegisterQuartzJobs();
 
         string? ManagementEndpoint { get; }
@@ -64,5 +66,6 @@ namespace Omnikeeper.Base.Plugins
 
         public virtual void RegisterGraphqlQueries(ObjectGraphType root) { }
         public virtual void RegisterGraphqlMutations(ObjectGraphType root) { }
+        public virtual void ConfigureServices(IServiceProvider serviceProvider) { }
     }
 }
