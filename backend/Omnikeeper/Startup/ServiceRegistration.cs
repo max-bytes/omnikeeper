@@ -209,6 +209,7 @@ namespace Omnikeeper.Startup
             builder.RegisterType<AuthzFilterManager>().As<IAuthzFilterManager>().SingleInstance();
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IAuthzFilterForMutation>().As<IAuthzFilterForMutation>().SingleInstance();
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).AssignableTo<IAuthzFilterForQuery>().As<IAuthzFilterForQuery>().SingleInstance();
+            builder.RegisterType<DynamicAuthSchemeService>().SingleInstance();
 
             builder.RegisterType<ReactiveRunService>().As<IReactiveRunService>().SingleInstance();
         }
