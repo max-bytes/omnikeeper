@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication;
+using Omnikeeper.Base.Service;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Service
 {
-    public class DynamicAuthSchemeService
+    public class DynamicAuthSchemeService : IDynamicAuthSchemeService
     {
         private readonly IAuthenticationSchemeProvider schemeProvider;
         //private readonly IOptionsMonitorCache<O> optionsCache;
