@@ -17,12 +17,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
         public readonly TraitEntityRootType RootQuery;
         public readonly IDInputType? IDInput;
         public readonly UpsertInputType UpsertInput;
+        public readonly CIIDAndUpsertAttributesOnlyInputType CIIDAndUpsertAttributesOnlyInput;
         public readonly UpdateInputType UpdateInput;
         public readonly FilterInputType FilterInput;
         public readonly TraitEntityModel TraitEntityModel;
 
         public ElementTypesContainer(ITrait trait, ElementType element, ElementWrapperType elementWrapper, IDInputType? iDInputType,
-            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, UpdateInputType updateInputType, FilterInputType filterInputType, TraitEntityModel traitEntityModel)
+            TraitEntityRootType rootQueryType, UpsertInputType upsertInputType, CIIDAndUpsertAttributesOnlyInputType ciidAndUpsertAttributesOnlyInput, UpdateInputType updateInputType, FilterInputType filterInputType, TraitEntityModel traitEntityModel)
         {
             Trait = trait;
             Element = element;
@@ -30,6 +31,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
             IDInput = iDInputType;
             RootQuery = rootQueryType;
             UpsertInput = upsertInputType;
+            CIIDAndUpsertAttributesOnlyInput = ciidAndUpsertAttributesOnlyInput;
             UpdateInput = updateInputType;
             FilterInput = filterInputType;
             TraitEntityModel = traitEntityModel;
@@ -93,9 +95,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     var idt = IDInputType.Build(at.Value);
                     var t = new TraitEntityRootType(at.Value, effectiveTraitModel, ciModel, attributeModel, relationModel, changesetModel, dataLoaderService, ttWrapper, filterInputType, idt);
                     var upsertInputType = new UpsertInputType(at.Value);
+                    var upsertAttributesOnlyInputType = new UpsertAttributesOnlyInputType(at.Value);
+                    var ciidAndUpsertAttributesOnlyInputType = new CIIDAndUpsertAttributesOnlyInputType(upsertAttributesOnlyInputType, at.Value);
                     var updateInputType = new UpdateInputType(at.Value);
 
-                    var container = new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType, updateInputType, filterInputType, traitEntityModel);
+                    var container = new ElementTypesContainer(at.Value, tt, ttWrapper, idt, t, upsertInputType, ciidAndUpsertAttributesOnlyInputType, updateInputType, filterInputType, traitEntityModel);
                     elementTypesContainerDictionary.Add(at.Key, container);
                 }
                 catch (Exception e)

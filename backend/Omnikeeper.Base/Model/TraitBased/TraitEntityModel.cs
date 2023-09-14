@@ -135,6 +135,20 @@ namespace Omnikeeper.Base.Model.TraitBased
             return changed;
         }
 
+        /*
+         * NOTE: unlike the regular update, this does not do any checks if the updated entities actually fulfill the trait requirements 
+         * and will be considered as this trait's entities going forward
+         */
+        // NOTE: the cis MUST exist already
+        public async Task<bool> BulkReplaceAttributesOnly(ICIIDSelection relevantCIs, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
+            LayerSet layerSet, string writeLayer, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        {
+            if (attributeFragments.IsEmpty() && relevantCIs is NoCIIDsSelection)
+                return false;
+
+            return await WriteAttributes(attributeFragments, relevantCIs, NamedAttributesSelection.Build(relevantAttributesForTrait), layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
+        }
+
         // NOTE: the ci MUST exist already
         public async Task<(EffectiveTrait et, bool changed)> InsertOrUpdate(Guid ciid, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,

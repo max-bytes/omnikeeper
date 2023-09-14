@@ -14,12 +14,8 @@ namespace Omnikeeper.Base.Model.TraitBased
 {
     public static class TraitEntityHelper
     {
-        public static ((TraitAttribute traitAttribute, IAttributeValue? value)[], (TraitRelation traitRelation, Guid[] relatedCIIDs)[]) 
-            InputDictionary2AttributeAndRelationTuples(IDictionary<string, object?> inputDict, ITrait trait, bool throwOnMissingRequiredAttribute, bool throwOnMissingIDAttribute)
+        public static IEnumerable<(TraitAttribute traitAttribute, IAttributeValue? value)> InputDictionary2AttributeTuples(IDictionary<string, object?> inputDict, ITrait trait, bool throwOnMissingRequiredAttribute, bool throwOnMissingIDAttribute)
         {
-            var attributeValues = new List<(TraitAttribute traitAttribute, IAttributeValue? value)>();
-            var relationValues = new List<(TraitRelation traitRelation, Guid[] relatedCIIDs)>();
-
             foreach(var attribute in trait.RequiredAttributes)
             {
                 var convertedAttributeFieldName = TraitEntityTypesNameGenerator.GenerateTraitAttributeFieldName(attribute);
@@ -41,14 +37,13 @@ namespace Omnikeeper.Base.Model.TraitBased
                     else if (throwOnMissingRequiredAttribute)
                         throw new Exception($"Required input field {convertedAttributeFieldName} for trait {trait.ID} is null");
                     else
-                        attributeValues.Add((attribute, null));
+                        yield return (attribute, null);
                 } else
                 {
                     var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
                     IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, fittingInputField.Value);
-                    attributeValues.Add((attribute, attributeValue));
+                    yield return (attribute, attributeValue);
                 }
-
             }
 
             foreach(var attribute in trait.OptionalAttributes)
@@ -60,15 +55,18 @@ namespace Omnikeeper.Base.Model.TraitBased
 
                 var type = attribute.AttributeTemplate.Type.GetValueOrDefault(AttributeValueType.Text);
                 if (fittingInputField.Value == null) // input field is specified, but its value is null, means remove
-                    attributeValues.Add((attribute, null));
+                    yield return (attribute, null);
                 else
                 {
                     IAttributeValue attributeValue = AttributeValueHelper.BuildFromTypeAndObject(type, fittingInputField.Value);
-                    attributeValues.Add((attribute, attributeValue));
+                    yield return (attribute, attributeValue);
                 }
             }
+        }
 
-            foreach(var relation in trait.OptionalRelations)
+        public static IEnumerable<(TraitRelation traitRelation, Guid[] relatedCIIDs)> InputDictionary2RelationTuples(IDictionary<string, object?> inputDict, ITrait trait)
+        {
+            foreach (var relation in trait.OptionalRelations)
             {
                 var convertedRelationFieldName = TraitEntityTypesNameGenerator.GenerateTraitRelationFieldName(relation);
                 var fittingInputField = inputDict.FirstOrDefault(kv => convertedRelationFieldName == kv.Key);
@@ -82,10 +80,8 @@ namespace Omnikeeper.Base.Model.TraitBased
                     var relatedCIID = (Guid)a;
                     return relatedCIID;
                 }).ToArray();
-                relationValues.Add((relation, relatedCIIDs));
+                yield return (relation, relatedCIIDs);
             }
-
-            return (attributeValues.ToArray(), relationValues.ToArray());
         }
 
         // returns both the "best" matching CIID according to its corresponding EffectiveTrait (if ci actually fulfills that)

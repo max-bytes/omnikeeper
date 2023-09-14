@@ -41,6 +41,8 @@ namespace Omnikeeper.Base.Model.TraitBased
         public static string GenerateTraitEntityFilterInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_filter_Input_" + trait.ID);
         public static string GenerateTraitRelationFilterWrapperInputGraphTypeName(ITrait trait) => SanitizeTypeName("TR_filter_Input_" + trait.ID);
         public static string GenerateUpsertTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Upsert_Input_" + trait.ID);
+        public static string GenerateUpsertAttributesOnlyTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Upsert_Attributes_Only_Input_" + trait.ID);
+        public static string GenerateCIIDAndUpsertAttributesOnlyInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_CIID_And_Upsert_Attributes_Only_Input_" + trait.ID);
         public static string GenerateUpdateTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Update_Input_" + trait.ID);
         public static string GenerateSetRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "setRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
         public static string GenerateAddRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "addRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
@@ -56,7 +58,8 @@ namespace Omnikeeper.Base.Model.TraitBased
         public static string GenerateUpsertSingleByFilterMutationName(string traitID) => "upsertSingleByFilter_" + SanitizeMutationName(traitID);
         public static string GenerateDeleteSingleByFilterMutationName(string traitID) => "deleteSingleByFilter_" + SanitizeMutationName(traitID);
         public static string GenerateBulkReplaceMutationName(string traitID) => "bulkReplaceByFilter_" + SanitizeMutationName(traitID);
-        
+        public static string GenerateBulkReplaceAllMutationName(string traitID) => "bulkReplace_" + SanitizeMutationName(traitID);
+
         public static string GenerateTraitAttributeFieldName(TraitAttribute ta)
         {
             // TODO: what if two unsanitized field names map to the same sanitized field name? TODO: detect this and provide a work-around

@@ -199,11 +199,13 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                     throw new Exception($"A trait entity with that data ID already exists; CIID: {bestMatchingCIID})");
                                 else
                                     finalCIID = bestMatchingCIID;
-                            } else
+                            }
+                            else
                             {
                                 finalCIID = await ciModel.CreateCI(trans);
                             }
-                        } else
+                        }
+                        else
                         {
                             finalCIID = await ciModel.CreateCI(trans);
                         }
@@ -453,7 +455,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                         .Select(kv => (ciid: kv.Key, relatedCIIDs: kv.Value.OutgoingTraitRelations[idRelation].Select(mr => mr.Relation.ToCIID)))
                                         .ToLookup(t => string.Join("", t.relatedCIIDs.OrderBy(ciid => ciid).Select(ciid => ciid.ToString())), t => t.ciid);
                                     outgoingRelationValueLookups.Add(idRelation, lookupOutgoing);
-                                } else
+                                }
+                                else
                                 {
                                     var lookupIncoming = relevantETs
                                         .Select(kv => (ciid: kv.Key, relatedCIIDs: kv.Value.IncomingTraitRelations[idRelation].Select(mr => mr.Relation.FromCIID)))
@@ -480,7 +483,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                         candidateCIIDs.IntersectWith(foundMatchingCIIDs);
                                     isFirst = false;
                                 }
-                                foreach(var idRelation in idRelations)
+                                foreach (var idRelation in idRelations)
                                 {
                                     var rv = inputCI.RelationValues.FirstOrDefault(rv => rv.traitRelation.Identifier == idRelation);
                                     if (rv == default)
@@ -531,6 +534,63 @@ namespace Omnikeeper.GraphQL.TraitEntities
 
                             return new BulkReplaceTraitEntityReturn(changeset, true, !changed);
                         });
+                    });
+
+                tet.Field<BulkReplaceTraitEntityReturnType>(TraitEntityTypesNameGenerator.GenerateBulkReplaceAllMutationName(traitID))
+                    .Arguments(
+                        new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                        new QueryArgument(new NonNullGraphType(new ListGraphType(elementTypeContainer.CIIDAndUpsertAttributesOnlyInput))) { Name = "input" }
+                        )
+                    .ResolveAsync(async context =>
+                    {
+                        var layerStrings = context.GetArgument<string[]>("layers")!;
+                        var writeLayerID = context.GetArgument<string>("writeLayer")!;
+                        var input = context.GetArgument<CIIDAndUpsertAttributesOnlyInput[]>("input")!;
+
+                        var userContext = await context.GetUserContext()
+                            .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                        var layerset = userContext.GetLayerSet(context.Path);
+                        var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                        var trans = userContext.Transaction;
+
+                        var cisToCreate = new HashSet<Guid>();
+                        var attributeFragments = new List<BulkCIAttributeDataCIAndAttributeNameScope.Fragment>();
+
+                        var allCIIDs = await ciModel.GetCIIDs(trans);
+
+                        foreach (var inputCI in input)
+                        {
+                            if (!allCIIDs.Contains(inputCI.CIID))
+                                cisToCreate.Add(inputCI.CIID);
+
+                            if (inputCI.Attributes != null)
+                                foreach (var t in inputCI.Attributes.AttributeValues)
+                                    if (t.value != null)
+                                        attributeFragments.Add(new BulkCIAttributeDataCIAndAttributeNameScope.Fragment(inputCI.CIID, t.traitAttribute.AttributeTemplate.Name, t.value));
+                        }
+
+                        await ciModel.BulkCreateCIs(cisToCreate, trans);
+
+                        // TODO: this could be done faster, because we only need the CIIDs that are TEs, not the TEs themselves at this point
+                        var relevantETs = await elementTypeContainer.TraitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerset, trans, timeThreshold);
+                        var relevantCIIDsIncludingNew = input.Select(i => i.CIID).Union(relevantETs.Keys).ToHashSet();
+
+                        foreach (var relevantCIID in relevantCIIDsIncludingNew)
+                            if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(relevantCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
+                                throw new ExecutionError(d.Reason);
+
+                        var changed = await elementTypeContainer.TraitEntityModel.BulkReplaceAttributesOnly(SpecificCIIDsSelection.Build(relevantCIIDsIncludingNew), attributeFragments, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                        var changeset = userContext.ChangesetProxy.GetActiveChangeset(writeLayerID);
+
+                        foreach (var relevantCIID in relevantCIIDsIncludingNew)
+                            if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(relevantCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
+                                throw new ExecutionError(dPost.Reason);
+
+                        userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
+
+                        return new BulkReplaceTraitEntityReturn(changeset, true, !changed);
                     });
 
                 if (elementTypeContainer.IDInput != null) // only add *byDataID-mutations for trait entities that have an ID
@@ -615,7 +675,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             // TODO: use data loader?
                             var idAttributeTuples = id.IDAttributeValues.Select(t => (t.traitAttribute.AttributeTemplate.Name, (IAttributeValue?)t.value)).ToArray();
                             var foundCIIDs = await TraitEntityHelper.GetMatchingCIIDsByAttributeValues(attributeModel, idAttributeTuples, layerset, trans, timeThreshold);
-                                
+
                             Guid finalCIID;
                             if (foundCIIDs.IsEmpty())
                                 return false;
