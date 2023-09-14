@@ -28,6 +28,7 @@ namespace Tests.Integration
             new NpgsqlCommand(@$"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE datname = '{dbName}' AND pid <> pg_backend_pid();", conn).ExecuteNonQuery();
             new NpgsqlCommand($"DROP DATABASE {dbName};", conn).ExecuteNonQuery();
             conn.Close();
+            NpgsqlConnection.ClearAllPools(); // necessary to make sure npgsql does not hold a pooled connection open to a now-dropped database
 
             // create db, setup schema and migrations
             connectionStringBuilder.Database = dbName;

@@ -20,7 +20,6 @@ namespace Tests.Integration.GraphQL.Base
     {
         public QueryTestBase() : base(false)
         {
-            DBSetup.Setup();
         }
 
         protected async Task ReinitSchema()
