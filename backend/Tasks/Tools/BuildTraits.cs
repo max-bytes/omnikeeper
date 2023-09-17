@@ -86,7 +86,7 @@ namespace Tasks.Tools
                     //),
 
 
-                    // TSA CMDB
+                    // CMDB
                     //new RecursiveTrait("tsa_cmdb_host", new TraitOriginV1(TraitOriginType.Data),
                     //    new List<TraitAttribute>() {
                     //        new TraitAttribute("hostid",

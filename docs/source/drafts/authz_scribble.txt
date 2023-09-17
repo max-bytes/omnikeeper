@@ -55,8 +55,3 @@ keycloak-leading-resources:
 Offene Fragen:
 - 1 Resource pro 1 Layer/CI/...? Oder 1 Resource für ALLE Layer + "Claims Pushing"?: https://stackoverflow.com/questions/67473677/keycloak-authorization-services-for-dozens-of-resources-which-belong-to-dozens-o
 ...
-
-TSA-usecases:
-- SCOPM/SDM Groups/Rollen mit unterschiedlichen Zugangsrechten
-- Schreibrechte nur auf einzelne CIs und Layer
-...

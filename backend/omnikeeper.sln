@@ -64,8 +64,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginInsightDiscoverySca
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginInsightDiscoveryScanIngest.Tests", "OKPluginInsightDiscoveryScanIngest.Tests\OKPluginInsightDiscoveryScanIngest.Tests.csproj", "{20A5CD5E-BA57-4B7F-B4DE-D315510B52E7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginCLBNaemonConfig", "OKPluginCLBNaemonConfig\OKPluginCLBNaemonConfig.csproj", "{002EF272-C890-4310-B830-35564D7A7E46}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SystemTests", "SystemTests\SystemTests.csproj", "{D71FCF63-5C92-4846-BBD0-34B3D2338F41}"
 EndProject
 Global
@@ -166,10 +164,6 @@ Global
 		{20A5CD5E-BA57-4B7F-B4DE-D315510B52E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{20A5CD5E-BA57-4B7F-B4DE-D315510B52E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{20A5CD5E-BA57-4B7F-B4DE-D315510B52E7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{002EF272-C890-4310-B830-35564D7A7E46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{002EF272-C890-4310-B830-35564D7A7E46}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{002EF272-C890-4310-B830-35564D7A7E46}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{002EF272-C890-4310-B830-35564D7A7E46}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D71FCF63-5C92-4846-BBD0-34B3D2338F41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D71FCF63-5C92-4846-BBD0-34B3D2338F41}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D71FCF63-5C92-4846-BBD0-34B3D2338F41}.Release|Any CPU.ActiveCfg = Release|Any CPU
