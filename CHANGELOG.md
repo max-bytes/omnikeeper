@@ -288,7 +288,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   - implemented automatic reload of trait entities GraphQL schema; fixes #173
 - implemented default behavior for Trait Entities to make it look for matching CIs based on IDs only if it can't find a complete entity
 - implemented "OtherLayersValueHandling", which allows the Trait Entity mutation APIs to skip attribute/relation writes if the data already exists in other layers. This means that data is not needlessly duplicated.
-- implementation and integration of plugin OKPluginVariableRendering; made part of tsa variant
+- implementation and integration of plugin OKPluginVariableRendering; made part of variant
 
 ### Changed
 
