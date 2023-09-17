@@ -1,7 +1,7 @@
-$BaseURL = "https://acme.omnikeeper-dev.bymhx.at/backend"
-$TokenURL = "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/token"
-$Username = "omnikeeper-client-library-test"
-$Password = "omnikeeper-client-library-test"
+$BaseURL = "https://example.com/backend"
+$TokenURL = "https://example.com/auth/realms/acme/protocol/openid-connect/token"
+$Username = "username"
+$Password = "password"
 $APIVersion = "1"
 
 # Token Request

@@ -12,14 +12,14 @@ import (
 func main() {
 	apiVersion := "1"
 
-	username := "omnikeeper-client-library-test"
-	password := "omnikeeper-client-library-test"
-	serverURL := "https://acme.omnikeeper-dev.bymhx.at/backend"
+	username := "username"
+	password := "password"
+	serverURL := "https://example.com/backend"
 
 	oauth2cfg := &oauth2.Config{
 		ClientID: "landscape-omnikeeper",
 		Endpoint: oauth2.Endpoint{
-			TokenURL: "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/token",
+			TokenURL: "https://example.com/auth/realms/acme/protocol/openid-connect/token",
 		},
 	}
 
