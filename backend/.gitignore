@@ -341,3 +341,4 @@ healthchecksdb
 
 Omnikeeper/OKPlugins/*.nupkg
 Omnikeeper/OKPlugins/extracted/*.dll
+Omnikeeper/appsettings.Development.json
