@@ -6,6 +6,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [29.2.0] - 2023-09-18
+
+## Added
+
+- added new bulkReplace trait entity GraphQL endpoint, for use via python API, among other things
+
+
+## [29.1.0] - 2023-08-21
+
+## Added
+
+- support for auth-less setups
+- technical frontend:
+  - added option for exporting issues as CSV and Excel
+
+## Changed
+
+- (breaking): added ConfigureServices() to plugin registration interface
+- upgrades to dbup-postgresql to support cluster configurations
+
+## Fixed
+
+- fixed various issues with startup and Quartz scheduler handling
+
 ## [28.0.0] - 2023-01-12
 
 ## Added
