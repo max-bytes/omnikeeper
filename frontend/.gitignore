@@ -1,2 +1,2 @@
 .vscode
-.env.development
+core/.env.development
