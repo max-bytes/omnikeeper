@@ -8,29 +8,29 @@ on:
         required: true
 
 jobs:
-  call-frontend-package-variant-tsa:
+  call-frontend-package-variant-a:
     runs-on: ubuntu-20.04
     steps:
     - name: Set env variables
       run: |
-        echo "variantName=tsa" >> $GITHUB_ENV
+        echo "variantName=a" >> $GITHUB_ENV
         echo "baseVersion=${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
         echo "pluginsFrontend=@max-bytes/okplugin-generic-json-ingest@${{ github.event.inputs.baseVersion }} @max-bytes/okplugin-visualization@${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
-    - name: "Invoke frontend variant: TSA"
+    - name: "Invoke frontend variant: a"
       uses: benc-uk/workflow-dispatch@v1
       with:
         workflow: package-frontend-variant
         token: ${{ secrets.PAT }}
         inputs: '{ "variantName": "${{ env.variantName }}", "baseVersion": "${{ env.baseVersion }}", "pluginsFrontend": "${{ env.pluginsFrontend }}" }'
-  call-frontend-package-variant-caritas:
+  call-frontend-package-variant-b:
     runs-on: ubuntu-20.04
     steps:
     - name: Set env variables
       run: |
-        echo "variantName=caritas" >> $GITHUB_ENV
+        echo "variantName=b" >> $GITHUB_ENV
         echo "baseVersion=${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
         echo "pluginsFrontend=@max-bytes/okplugin-generic-json-ingest@${{ github.event.inputs.baseVersion }} @max-bytes/okplugin-visualization@${{ github.event.inputs.baseVersion }}" >> $GITHUB_ENV
-    - name: "Invoke frontend variant: Caritas"
+    - name: "Invoke frontend variant: b"
       uses: benc-uk/workflow-dispatch@v1
       with:
         workflow: package-frontend-variant
