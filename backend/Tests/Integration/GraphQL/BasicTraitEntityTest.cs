@@ -110,6 +110,10 @@ mutation {
                         assignments { relatedCIID }
                     }
                 }
+                latestChangeAll {
+                    userID
+                    layerID
+                }
             }
         }
     }
@@ -118,7 +122,8 @@ mutation {
 {
   ""traitEntities"": {
 	  ""test_trait_a"": {
-	    ""all"": []
+	    ""all"": [],
+        ""latestChangeAll"": null
 	  }
   }
 }
@@ -166,7 +171,11 @@ mutation {
               }]
             }
           }
-        ]
+        ],
+        ""latestChangeAll"": {
+            ""userID"": " + userInDatabase.ID + @",
+            ""layerID"": ""layer_1""
+        }
 	  }
   }
 }
@@ -213,7 +222,11 @@ mutation {
               }]
             }
           }
-        ]
+        ],
+        ""latestChangeAll"": {
+            ""userID"": " + userInDatabase.ID + @",
+            ""layerID"": ""layer_1""
+        }
 	  }
   }
 }
@@ -284,7 +297,11 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
               }}]
             }}
           }}
-        ]
+        ],
+        ""latestChangeAll"": {{
+            ""userID"": " + userInDatabase.ID + $@",
+            ""layerID"": ""layer_1""
+        }}
 	  }}
   }}
 }}
@@ -325,7 +342,11 @@ mutation($baseCIID: Guid!, $relatedCIIDs: [Guid]!) {
               }}]
             }}
           }}
-        ]
+        ],
+        ""latestChangeAll"": {{
+            ""userID"": " + userInDatabase.ID + $@",
+            ""layerID"": ""layer_1""
+        }}
 	  }}
   }}
 }}
@@ -380,7 +401,11 @@ mutation($baseCIID: Guid!, $relatedCIIDsToAdd: [Guid]!) {
               }}]
             }}
           }}
-        ]
+        ],
+        ""latestChangeAll"": {{
+            ""userID"": " + userInDatabase.ID + $@",
+            ""layerID"": ""layer_1""
+        }}
 	  }}
   }}
 }}
@@ -432,7 +457,11 @@ mutation($baseCIID: Guid!, $relatedCIIDsToRemove: [Guid]!) {
               }}]
             }}
           }}
-        ]
+        ],
+        ""latestChangeAll"": {{
+            ""userID"": " + userInDatabase.ID + $@",
+            ""layerID"": ""layer_1""
+        }}
 	  }}
   }}
 }}
@@ -462,7 +491,11 @@ mutation($ciid: Guid!) {
 {{
   ""traitEntities"": {{
 	  ""test_trait_a"": {{
-	    ""all"": []
+	    ""all"": [],
+        ""latestChangeAll"": {{
+            ""userID"": " + userInDatabase.ID + $@",
+            ""layerID"": ""layer_1""
+        }}
 	  }}
   }}
 }}

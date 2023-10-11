@@ -55,6 +55,21 @@ namespace Omnikeeper.GraphQL.TraitEntities
                     var ets = await traitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerset, trans, timeThreshold);
                     return ets.Select(kv => kv.Value);
                 });
+            Field<ChangesetType>("latestChangeAll")
+                .Description("Note: the implementation that calculates the latest relevant changeset is done rather defensively. That means there are circumstances " +
+                "where this field returns a new/later changeset even though there are no (visible) changes to the trait entities themselves. However, it will never NOT report " +
+                "a new changeset when there have been changes to the trait entities. This behavior makes it reasonably suitable for implementing a client-side cache that only " +
+                "fetches new data when anything has changed")
+                .ResolveAsync(async context =>
+                {
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var layerset = userContext.GetLayerSet(context.Path);
+                    var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                    var trans = userContext.Transaction;
+
+                    // TODO: use dataloader
+                    return await traitEntityModel.GetLatestRelevantChangesetOverallHeuristic(AllCIIDsSelection.Instance, layerset, trans, timeThreshold);
+                });
 
             Field("filtered", new ListGraphType(wrapperElementGraphType))
                 .Arguments(
