@@ -158,8 +158,7 @@ namespace Omnikeeper.GraphQL
 
                     var userContext = context.GetUserContext();
 
-
-                    var layers = createCIs.Select(ci => ci.LayerIDForName);
+                    var layers = createCIs.Select(ci => ci.LayerIDForName).Where(layerID => layerID != null).Cast<string>().ToHashSet();
                     // TODO: this is not ideal; we should split up writes to multiple layers better
                     foreach (var layer in layers)
                         if (await authzFilterManager.ApplyPreFilterForMutation(new PreCreateContextForCIs(), userContext.User, layer, layer, userContext.Transaction, userContext.GetTimeThreshold(context.Path)) is AuthzFilterResultDeny d)
@@ -171,9 +170,18 @@ namespace Omnikeeper.GraphQL
                     var createdCIIDs = new List<Guid>();
                     foreach (var ci in createCIs)
                     {
-                        Guid ciid = await ciModel.CreateCI(userContext.Transaction);
+                        Guid? inputCIID = ci.CIID;
+                        Guid ciid;
+                        if (inputCIID.HasValue)
+                        {
+                            ciid = await ciModel.CreateCI(inputCIID.Value, userContext.Transaction);
+                        } else
+                        {
+                            ciid = await ciModel.CreateCI(userContext.Transaction);
+                        }
 
-                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, userContext.ChangesetProxy, userContext.Transaction, otherLayersValueHandling);
+                        if (ci.Name != null && ci.LayerIDForName != null)
+                            await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, userContext.ChangesetProxy, userContext.Transaction, otherLayersValueHandling);
 
                         createdCIIDs.Add(ciid);
                     }

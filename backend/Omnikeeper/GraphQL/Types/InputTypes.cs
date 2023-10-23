@@ -8,15 +8,17 @@ namespace Omnikeeper.GraphQL.Types
 {
     public class CreateCIInput
     {
-        public string Name { get; private set; }
-        public string LayerIDForName { get; private set; }
+        public Guid? CIID { get; private set; }
+        public string? Name { get; private set; }
+        public string? LayerIDForName { get; private set; }
     }
     public class CreateCIInputType : InputObjectGraphType<CreateCIInput>
     {
         public CreateCIInputType()
         {
-            Field(x => x.Name);
-            Field(x => x.LayerIDForName);
+            Field("ciid", x => x.CIID, type: typeof(GuidGraphType));
+            Field(x => x.Name, nullable: true);
+            Field(x => x.LayerIDForName, nullable: true);
         }
     }
 
