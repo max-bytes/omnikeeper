@@ -1,6 +1,7 @@
 ﻿using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Base.Utils;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -17,9 +18,17 @@ namespace Omnikeeper.Base.Entity
             Identifier = identifier;
             RelationTemplate = relationTemplate;
         }
+
+        public bool Equals(TraitRelation? other)
+        {  
+            // NOTE: see https://stackoverflow.com/questions/69133392/computing-hashcode-of-combination-of-value-type-and-array why we use StruturalComparisons
+            return other != null && Identifier == other.Identifier && StructuralComparisons.StructuralEqualityComparer.Equals(RelationTemplate, other.RelationTemplate);
+        }
+        public override bool Equals(object? other) => Equals(other as TraitRelation);
+        public override int GetHashCode() => HashCode.Combine(Identifier, RelationTemplate);
     }
 
-    public class TraitAttribute
+    public class TraitAttribute : IEquatable<TraitAttribute>
     {
         public readonly CIAttributeTemplate AttributeTemplate;
         public readonly string Identifier;
@@ -29,6 +38,14 @@ namespace Omnikeeper.Base.Entity
             Identifier = identifier;
             AttributeTemplate = attributeTemplate;
         }
+
+        public bool Equals(TraitAttribute? other)
+        {
+            // NOTE: see https://stackoverflow.com/questions/69133392/computing-hashcode-of-combination-of-value-type-and-array why we use StruturalComparisons
+            return other != null && Identifier == other.Identifier && StructuralComparisons.StructuralEqualityComparer.Equals(AttributeTemplate , other.AttributeTemplate);
+        }
+        public override bool Equals(object? other) => Equals(other as TraitAttribute);
+        public override int GetHashCode() => HashCode.Combine(Identifier, AttributeTemplate);
     }
 
     public enum TraitOriginType

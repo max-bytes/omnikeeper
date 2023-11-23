@@ -16,6 +16,7 @@ using Omnikeeper.GraphQL.Types;
 using Omnikeeper.Service;
 using Quartz;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
@@ -400,6 +401,35 @@ namespace Omnikeeper.GraphQL
                     var traits = traitsHolder.GetTraits();
                     return traits.Values.OrderBy(t => t.ID);
                 });
+
+
+
+            Field<BooleanGraphType>("checkTrait")
+              .Arguments(
+                new QueryArgument<NonNullGraphType<UpsertRecursiveTraitInputType>> { Name = "trait" }
+              )
+              .Resolve(context =>
+              {
+                  var userContext = context.GetUserContext();
+
+                  var trait = context.GetArgument<UpsertRecursiveTraitInput>("trait")!;
+
+                  var existingTraits = traitsHolder.GetTraits();
+
+                  if (!existingTraits.TryGetValue(trait.ID, out var existingTrait))
+                      return false;
+
+                  if (existingTrait is not GenericTrait existingGenericTrait) // cannot compare non-generic trait
+                      throw new ExecutionError("Cannot check against non-generic trait");
+
+                  // NOTE: we don't compare Origin, because the trait can be defined anywhere
+                  return existingGenericTrait.ID == trait.ID
+                    && StructuralComparisons.StructuralEqualityComparer.Equals(existingGenericTrait.RequiredAttributes, trait.RequiredAttributes)
+                    && StructuralComparisons.StructuralEqualityComparer.Equals(existingGenericTrait.OptionalAttributes, trait.OptionalAttributes)
+                    && StructuralComparisons.StructuralEqualityComparer.Equals(existingGenericTrait.OptionalRelations, trait.OptionalRelations)
+                    && StructuralComparisons.StructuralEqualityComparer.Equals(existingGenericTrait.AncestorTraits, trait.RequiredTraits)
+                    ;
+              });
 
             Field<ListGraphType<EffectiveTraitType>>("effectiveTraitsForTrait")
                 .Arguments(

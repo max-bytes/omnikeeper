@@ -1,7 +1,7 @@
 ﻿using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
@@ -27,7 +27,7 @@ namespace Omnikeeper.Base.Entity
         });
     }
 
-    public class CIAttributeValueConstraintTextLength : ICIAttributeValueConstraint
+    public class CIAttributeValueConstraintTextLength : ICIAttributeValueConstraint, IEquatable<CIAttributeValueConstraintTextLength>
     {
         public readonly int? Minimum;
         public readonly int? Maximum;
@@ -56,9 +56,13 @@ namespace Omnikeeper.Base.Entity
                 return true;
             }
         }
+
+        public bool Equals(CIAttributeValueConstraintTextLength? other) => other != null && Minimum == other.Minimum && Maximum == other.Maximum;
+        public override bool Equals(object? other) => Equals(other as CIAttributeValueConstraintTextLength);
+        public override int GetHashCode() => HashCode.Combine(Minimum, Maximum);
     }
 
-    public class CIAttributeValueConstraintArrayLength : ICIAttributeValueConstraint
+    public class CIAttributeValueConstraintArrayLength : ICIAttributeValueConstraint, IEquatable<CIAttributeValueConstraintArrayLength>
     {
         public readonly int? Minimum;
         public readonly int? Maximum;
@@ -93,9 +97,13 @@ namespace Omnikeeper.Base.Entity
                 return true;
             }
         }
+
+        public bool Equals(CIAttributeValueConstraintArrayLength? other) => other != null && Minimum == other.Minimum && Maximum == other.Maximum;
+        public override bool Equals(object? other) => Equals(other as CIAttributeValueConstraintArrayLength);
+        public override int GetHashCode() => HashCode.Combine(Minimum, Maximum);
     }
 
-    public class CIAttributeValueConstraintTextRegex : ICIAttributeValueConstraint
+    public class CIAttributeValueConstraintTextRegex : ICIAttributeValueConstraint, IEquatable<CIAttributeValueConstraintTextRegex>
     {
         public readonly string RegexStr;
         public readonly RegexOptions RegexOptions;
@@ -133,14 +141,18 @@ namespace Omnikeeper.Base.Entity
                 return true;
             }
         }
+
+        public bool Equals(CIAttributeValueConstraintTextRegex? other) => other != null && RegexStr == other.RegexStr && RegexOptions == other.RegexOptions;
+        public override bool Equals(object? other) => Equals(other as CIAttributeValueConstraintTextRegex);
+        public override int GetHashCode() => HashCode.Combine(RegexStr, RegexOptions);
     }
 
-    public class CIAttributeTemplate
+    public class CIAttributeTemplate : IEquatable<CIAttributeTemplate>
     {
         public readonly string Name;
         public readonly AttributeValueType? Type;
         public readonly bool? IsArray;
-        public readonly IEnumerable<ICIAttributeValueConstraint> ValueConstraints;
+        public readonly ICIAttributeValueConstraint[] ValueConstraints;
         public readonly bool? IsID;
 
         public static CIAttributeTemplate BuildFromParams(string name, AttributeValueType? type, bool? isArray, bool? isID, params ICIAttributeValueConstraint[] valueConstraints)
@@ -148,7 +160,7 @@ namespace Omnikeeper.Base.Entity
             return new CIAttributeTemplate(name, type, isArray, isID, valueConstraints);
         }
 
-        public CIAttributeTemplate(string name, AttributeValueType? type, bool? isArray, bool? isID, IEnumerable<ICIAttributeValueConstraint> valueConstraints)
+        public CIAttributeTemplate(string name, AttributeValueType? type, bool? isArray, bool? isID, ICIAttributeValueConstraint[] valueConstraints)
         {
             Name = name;
             Type = type;
@@ -156,5 +168,13 @@ namespace Omnikeeper.Base.Entity
             ValueConstraints = valueConstraints;
             IsID = isID;
         }
+
+        public bool Equals(CIAttributeTemplate? other)
+        {
+            // NOTE: see https://stackoverflow.com/questions/69133392/computing-hashcode-of-combination-of-value-type-and-array why we use StruturalComparisons
+            return other != null && Name == other.Name && Type == other.Type && IsArray == other.IsArray && IsID == other.IsID && StructuralComparisons.StructuralEqualityComparer.Equals(ValueConstraints, other.ValueConstraints);
+        }
+        public override bool Equals(object? other) => Equals(other as CIAttributeTemplate);
+        public override int GetHashCode() => HashCode.Combine(Name, Type, IsArray, IsID, StructuralComparisons.StructuralEqualityComparer.GetHashCode(ValueConstraints));
     }
 }

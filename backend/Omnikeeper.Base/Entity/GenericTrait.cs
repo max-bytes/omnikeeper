@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 
 namespace Omnikeeper.Base.Entity
@@ -7,13 +6,13 @@ namespace Omnikeeper.Base.Entity
     public interface ITrait
     {
         public string ID { get; }
-        public IImmutableSet<string> AncestorTraits { get; }
+        public string[] AncestorTraits { get; }
         public TraitOriginV1 Origin { get; }
 
-        public IImmutableList<TraitAttribute> RequiredAttributes { get; }
-        public IImmutableList<TraitAttribute> OptionalAttributes { get; }
+        public TraitAttribute[] RequiredAttributes { get; }
+        public TraitAttribute[] OptionalAttributes { get; }
 
-        public IImmutableList<TraitRelation> OptionalRelations { get; }
+        public TraitRelation[] OptionalRelations { get; }
     }
 
     public static class TraitExtensions
@@ -33,8 +32,8 @@ namespace Omnikeeper.Base.Entity
     /// </summary>
     public class GenericTrait : ITrait
     {
-        private GenericTrait(string id, TraitOriginV1 origin, IImmutableList<TraitAttribute> requiredAttributes, IImmutableList<TraitAttribute> optionalAttributes,
-            IImmutableList<TraitRelation> optionalRelations, IImmutableSet<string> ancestorTraits)
+        private GenericTrait(string id, TraitOriginV1 origin, TraitAttribute[] requiredAttributes, TraitAttribute[] optionalAttributes,
+            TraitRelation[] optionalRelations, string[] ancestorTraits)
         {
             ID = id;
             Origin = origin;
@@ -47,11 +46,12 @@ namespace Omnikeeper.Base.Entity
         public string ID { get; set; }
         public TraitOriginV1 Origin { get; set; }
 
-        public IImmutableSet<string> AncestorTraits { get; set; }
-        public IImmutableList<TraitAttribute> RequiredAttributes { get; set; }
-        public IImmutableList<TraitAttribute> OptionalAttributes { get; set; }
+        public string[] AncestorTraits { get; set; }
 
-        public IImmutableList<TraitRelation> OptionalRelations { get; set; }
+        public TraitAttribute[] RequiredAttributes { get; set; }
+        public TraitAttribute[] OptionalAttributes { get; set; }
+
+        public TraitRelation[] OptionalRelations { get; set; }
 
         public static GenericTrait Build(string id, TraitOriginV1 origin,
             IEnumerable<TraitAttribute> requiredAttributes,
@@ -59,8 +59,8 @@ namespace Omnikeeper.Base.Entity
             IEnumerable<TraitRelation> optionalRelations,
             ISet<string> ancestorTraits)
         {
-            return new GenericTrait(id, origin, requiredAttributes.ToImmutableList(), optionalAttributes.ToImmutableList(),
-                optionalRelations.ToImmutableList(), ancestorTraits.ToImmutableHashSet());
+            return new GenericTrait(id, origin, requiredAttributes.ToArray(), optionalAttributes.ToArray(),
+                optionalRelations.ToArray(), ancestorTraits.ToArray());
         }
     }
 }

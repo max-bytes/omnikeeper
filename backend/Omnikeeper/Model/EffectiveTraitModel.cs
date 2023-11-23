@@ -70,7 +70,7 @@ namespace Omnikeeper.Model
                 case GenericTrait tt:
                     ILookup<(Guid ciid, string predicateID), MergedRelation> fromRelations = Enumerable.Empty<MergedRelation>().ToLookup(x => default((Guid ciid, string predicateID)));
                     ILookup<(Guid ciid, string predicateID), MergedRelation> toRelations = Enumerable.Empty<MergedRelation>().ToLookup(x => default((Guid ciid, string predicateID)));
-                    if (tt.OptionalRelations.Count > 0)
+                    if (tt.OptionalRelations.Length > 0)
                     {
                         var ciids = cis.Select(ci => ci.ID).ToHashSet();
                         if (tt.OptionalRelations.Any(r => r.RelationTemplate.DirectionForward))
@@ -89,7 +89,7 @@ namespace Omnikeeper.Model
 
                     foreach (var ci in cis)
                     {
-                        var effectiveTraitAttributes = new Dictionary<string, MergedCIAttribute>(tt.RequiredAttributes.Count + tt.OptionalAttributes.Count);
+                        var effectiveTraitAttributes = new Dictionary<string, MergedCIAttribute>(tt.RequiredAttributes.Length + tt.OptionalAttributes.Length);
 
                         // required attributes
                         foreach (var ta in tt.RequiredAttributes)

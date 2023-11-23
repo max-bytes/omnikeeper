@@ -153,7 +153,7 @@ namespace Omnikeeper.Base.Model.TraitBased
 
             foreach (var taFieldInfo in attributeFieldInfos)
             {
-                var constraints = FieldInfo2AttributeValueConstraints(taFieldInfo.FieldInfo).ToList();
+                var constraints = FieldInfo2AttributeValueConstraints(taFieldInfo.FieldInfo).ToArray();
                 var taa = taFieldInfo.TraitAttributeAttribute;
                 var targetAttributeList = (taa.optional) ? optionalAttributes : requiredAttributes;
                 targetAttributeList.Add(new TraitAttribute(taa.taName, new CIAttributeTemplate(taa.aName, taFieldInfo.AttributeValueType, taFieldInfo.IsArray, taFieldInfo.IsID, constraints)));

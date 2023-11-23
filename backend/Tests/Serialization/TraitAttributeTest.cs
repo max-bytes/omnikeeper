@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
-using System.Collections.Generic;
 using System.Text.Json;
 
 namespace Tests.Serialization
@@ -13,7 +12,7 @@ namespace Tests.Serialization
         public void TestTraitAttribute()
         {
             var t = new TraitAttribute("traitIdentifier",
-                new CIAttributeTemplate("attributeName", Omnikeeper.Entity.AttributeValues.AttributeValueType.MultilineText, true, false, new List<ICIAttributeValueConstraint>()
+                new CIAttributeTemplate("attributeName", Omnikeeper.Entity.AttributeValues.AttributeValueType.MultilineText, true, false, new ICIAttributeValueConstraint[]
                 {
                     new CIAttributeValueConstraintTextRegex("foo[12]", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.ECMAScript),
                     new CIAttributeValueConstraintTextLength(null, 2),

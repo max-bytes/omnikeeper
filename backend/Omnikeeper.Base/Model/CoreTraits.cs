@@ -4,8 +4,8 @@ using Omnikeeper.Base.Entity.Issue;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model.TraitBased;
 using Omnikeeper.Entity.AttributeValues;
+using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace Omnikeeper.Base.Model
 {
@@ -40,13 +40,12 @@ namespace Omnikeeper.Base.Model
 
         public string ID => StaticID;
 
-        public IImmutableSet<string> AncestorTraits => ImmutableHashSet<string>.Empty;
+        public string[] AncestorTraits => Array.Empty<string>();
 
         public TraitOriginV1 Origin => new TraitOriginV1(TraitOriginType.Core);
 
-        public IImmutableList<TraitAttribute> RequiredAttributes { get => ImmutableList<TraitAttribute>.Empty; }
-        public IImmutableList<TraitAttribute> OptionalAttributes { get => ImmutableList<TraitAttribute>.Empty; }
-        public IImmutableList<TraitRelation> RequiredRelations { get => ImmutableList<TraitRelation>.Empty; }
-        public IImmutableList<TraitRelation> OptionalRelations { get => ImmutableList<TraitRelation>.Empty; }
+        public TraitAttribute[] RequiredAttributes { get => Array.Empty<TraitAttribute>(); }
+        public TraitAttribute[] OptionalAttributes { get => Array.Empty<TraitAttribute>(); }
+        public TraitRelation[] OptionalRelations { get => Array.Empty<TraitRelation>(); }
     }
 }
