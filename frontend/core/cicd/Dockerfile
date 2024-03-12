@@ -57,6 +57,9 @@ USER nginx
 # copy default environment file to set defaults that need to be overwritten
 COPY .env /var/www/
 
+# create empty folder that will contain __ENV.js file
+RUN mkdir /var/www/env_js
+
 ENV REACT_APP_VERSION=$version
 ENV REACT_APP_PLUGINS_FRONTEND=$plugins
 ENV NODE_ENV=production
