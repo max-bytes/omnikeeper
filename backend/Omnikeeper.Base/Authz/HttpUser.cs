@@ -84,8 +84,9 @@ namespace Omnikeeper.Base.Authz
             return new HttpUser("anonymous", "anonymous", anonymousGuid, UserType.Unknown, new HashSet<string>(), claims);
         }
 
-        public static HttpUser CreateHttpUserFromClaims(IEnumerable<Claim> claims, string audience, ILogger logger)
+        public static HttpUser CreateHttpUserFromClaimsPrincipal(ClaimsPrincipal claimsPrincipal, string audience, ILogger logger)
         {
+            var claims = claimsPrincipal.Claims;
             var username = GetUsernameFromClaims(claims);
 
             if (username == null)
@@ -94,10 +95,10 @@ namespace Omnikeeper.Base.Authz
             }
             else
             {
-                var guidString = claims.FirstOrDefault(c => c.Type == "id")?.Value;
+                var guidString = claimsPrincipal.FindFirstValue("id") ?? claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (guidString == null)
                 {
-                    throw new Exception("Cannot parse user id inside user token: key \"id\" not present");
+                    throw new Exception($"Cannot parse user id inside user token: neither key \"id\" nor key {ClaimTypes.NameIdentifier} present");
                 }
                 var guid = new Guid(guidString);
 

@@ -87,13 +87,13 @@ namespace Omnikeeper.Service
 
         public string GetCurrentUsername()
         {
-            var httpUser = HttpUserUtils.CreateHttpUserFromClaims(HttpContextAccessor.HttpContext!.User.Claims, configuration.GetSection("Authentication")["Audience"], logger);
+            var httpUser = HttpUserUtils.CreateHttpUserFromClaimsPrincipal(HttpContextAccessor.HttpContext!.User, configuration.GetSection("Authentication")["Audience"], logger);
             return httpUser.Username;
         }
 
         private async Task<IAuthenticatedUser> _GetCurrentUser(IModelContext trans)
         {
-            var httpUser = HttpUserUtils.CreateHttpUserFromClaims(HttpContextAccessor.HttpContext!.User.Claims, configuration.GetSection("Authentication")["Audience"], logger);
+            var httpUser = HttpUserUtils.CreateHttpUserFromClaimsPrincipal(HttpContextAccessor.HttpContext!.User, configuration.GetSection("Authentication")["Audience"], logger);
             return await HttpUserUtils.CreateAuthenticatedUserFromHTTPUser(httpUser, userModel, LayerModel, MetaConfigurationModel, AuthRoleModel, trans);
         }
     }
