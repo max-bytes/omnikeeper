@@ -30,21 +30,29 @@ COPY . ./
 RUN PUBLIC_URL=__PUBLIC_URL_PLACEHOLDER__ npm run build
 
 # Create deployable image
-FROM nginx:1.15-alpine
+FROM nginxinc/nginx-unprivileged:1.15-alpine
 ARG version
 ARG plugins
 
+USER root
 RUN apk add --no-cache nodejs yarn
 RUN yarn global add @beam-australia/react-env
 COPY cicd/nginx.conf /etc/nginx/nginx.conf
 COPY cicd/entrypoint.sh /var/entrypoint.sh
 RUN chmod +x /var/entrypoint.sh
+RUN chown nginx:nginx /var/entrypoint.sh
+USER nginx
 ENTRYPOINT ["/var/entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 
 WORKDIR /var/www
 
 COPY --from=build /app/build /var/www
+
+USER root
+RUN chown -R nginx:nginx /var/www
+RUN chown -R nginx:nginx /var/log
+USER nginx
 
 # copy default environment file to set defaults that need to be overwritten
 COPY .env /var/www/
