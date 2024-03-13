@@ -103,29 +103,35 @@ namespace Omnikeeper.Base.Authz
                 var guid = new Guid(guidString);
 
                 // extract client roles
+                var clientRoles = new HashSet<string>();
                 var resourceAccessStr = claims.Where(c => c.Type == "resource_access").FirstOrDefault()?.Value;
                 if (resourceAccessStr == null)
                 {
-                    throw new Exception("Cannot parse roles in user token: key \"resource_access\" not found");
-                }
-                using var resourceAccess = JsonDocument.Parse(resourceAccessStr);
-                if (resourceAccess == null)
+                    logger.LogDebug("Cannot parse roles in user token: key \"resource_access\" not found");
+                } 
+                else
                 {
-                    throw new Exception("Cannot parse roles in user token: Cannot parse resource_access JSON value");
-                }
-                var resourceName = audience;
-                var clientRoles = new HashSet<string>();
-                try
-                {
-                    var claimRoles = resourceAccess.RootElement.GetProperty(resourceName).GetProperty("roles").EnumerateArray();
-                    clientRoles = claimRoles.Select(tt => tt.GetString()!).ToHashSet();
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, $"Cannot parse roles in user token for user {username}: key-path \"resource_access\"->\"{resourceName}\"->\"roles\" not found; either no roles assigned or token structure invalid");
+                    using var resourceAccess = JsonDocument.Parse(resourceAccessStr);
+                    if (resourceAccess == null)
+                    {
+                        logger.LogDebug("Cannot parse roles in user token: Cannot parse resource_access JSON value");
+                    }
+                    else
+                    {
+                        var resourceName = audience;
+                        try
+                        {
+                            var claimRoles = resourceAccess.RootElement.GetProperty(resourceName).GetProperty("roles").EnumerateArray();
+                            clientRoles = claimRoles.Select(tt => tt.GetString()!).ToHashSet();
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogDebug(ex, $"Cannot parse roles in user token for user {username}: key-path \"resource_access\"->\"{resourceName}\"->\"roles\" not found; either no roles assigned or token structure invalid");
+                        }
+                    }
                 }
 
-                var usertype = UserType.Unknown;
+                var usertype = UserType.Unknown; 
                 if (clientRoles.Contains("human"))
                     usertype = UserType.Human;
                 else if (clientRoles.Contains("robot"))
