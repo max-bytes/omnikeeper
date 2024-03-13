@@ -17,7 +17,8 @@ namespace Omnikeeper.Model
                 FROM attribute_latest
                 WHERE layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("layer_id", layerID);
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+            if (await command.ExecuteScalarAsync() is long d) return d;
+            return 0L;
         }
 
         public async Task<long> GetAttributeChangesHistory(string layerID, IModelContext trans)
@@ -29,7 +30,8 @@ namespace Omnikeeper.Model
                 FROM attribute ATT 
                 WHERE ATT.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("layer_id", layerID);
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+            if (await command.ExecuteScalarAsync() is long d) return d;
+            return 0L;
         }
 
         public async Task<long> GetActiveRelations(string layerID, IModelContext trans)
@@ -42,7 +44,8 @@ namespace Omnikeeper.Model
             WHERE layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("time_threshold", DateTimeOffset.UtcNow);
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+            if (await command.ExecuteScalarAsync() is long d) return d;
+            return 0L;
         }
 
         public async Task<long> GetRelationChangesHistory(string layerID, IModelContext trans)
@@ -55,7 +58,8 @@ namespace Omnikeeper.Model
                 WHERE R.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("time_threshold", DateTimeOffset.UtcNow);
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+            if (await command.ExecuteScalarAsync() is long d) return d;
+            return 0L;
         }
 
         public async Task<long> GetLayerChangesetsHistory(string layerID, IModelContext trans)
@@ -71,7 +75,8 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("time_threshold", DateTimeOffset.UtcNow);
 
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+            if (await command.ExecuteScalarAsync() is long d) return d;
+            return 0L;
         }
 
         public async Task<bool> IsLayerEmpty(string layerID, IModelContext trans)
@@ -89,36 +94,39 @@ namespace Omnikeeper.Model
             // return number of ciids
             var query = CreateApproximateCountQuery("ci");
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
-
-            var d = await command.ExecuteScalarAsync();
-            return ((long?)d)!.Value;
+            if (await command.ExecuteScalarAsync() is long d) return d;
+            return 0L;
         }
         public async Task<long> GetActiveAttributesApproximate(IModelContext trans)
         {
             using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(CreateApproximateCountQuery("attribute_latest"), trans.DBConnection, trans.DBTransaction);
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+            if (await command.ExecuteScalarAsync() is long d) return d;
+            return 0L;
         }
 
         public async Task<long> GetAttributeChangesHistoryApproximate(IModelContext trans)
         {
             using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(CreateApproximateCountQuery("attribute"), trans.DBConnection, trans.DBTransaction);
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+            if (await command.ExecuteScalarAsync() is long d) return d;
+            return 0L;
         }
 
         public async Task<long> GetActiveRelationsApproximate(IModelContext trans)
         {
             using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(CreateApproximateCountQuery("relation_latest"), trans.DBConnection, trans.DBTransaction);
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+            if (await command.ExecuteScalarAsync() is long d) return d;
+            return 0L;
         }
 
         public async Task<long> GetRelationChangesHistoryApproximate(IModelContext trans)
         {
             using var _ = await trans.WaitAsync();
             using var command = new NpgsqlCommand(CreateApproximateCountQuery("relation"), trans.DBConnection, trans.DBTransaction);
-            return ((long?)await command.ExecuteScalarAsync())!.Value;
+            if (await command.ExecuteScalarAsync() is long d) return d;
+            return 0L;
         }
 
         private string CreateApproximateCountQuery(string tableName)
