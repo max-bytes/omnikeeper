@@ -853,6 +853,48 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
                             return t.et;
                         });
+
+
+                    tet.Field<BulkReplaceTraitEntityReturnType>(TraitEntityTypesNameGenerator.GenerateBulkReplaceRelationsMutationName(traitID, tr))
+                        .Arguments(
+                            new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                            new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
+                            new QueryArgument<NonNullGraphType<ListGraphType<CIIDAndUpsertRelationsOnlyInputType>>> { Name = "input" }
+                            )
+                        .ResolveAsync(async context =>
+                        {
+                            var layerStrings = context.GetArgument<string[]>("layers")!;
+                            var writeLayerID = context.GetArgument<string>("writeLayer")!;
+                            var input = context.GetArgument<CIIDAndUpsertRelationsOnlyInput[]>("input")!;
+
+                            var userContext = await context.GetUserContext()
+                                .WithLayersetAsync(async trans => await layerModel.BuildLayerSet(layerStrings, trans), context.Path);
+
+                            var layerset = userContext.GetLayerSet(context.Path);
+                            var timeThreshold = userContext.GetTimeThreshold(context.Path);
+                            var trans = userContext.Transaction;
+
+                            // TODO: this could be done faster, because we only need the CIIDs that are TEs, not the TEs themselves at this point
+                            var relevantETs = await elementTypeContainer.TraitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerset, trans, timeThreshold);
+                            var relevantCIIDs = relevantETs.Keys.ToHashSet();
+
+                            foreach (var relevantCIID in relevantCIIDs)
+                                if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(relevantCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
+                                    throw new ExecutionError(d.Reason);
+
+                            var fragments = input.SelectMany(i => i.RelatedCIIDs.Select(rc => new BulkRelationFullFragment(i.BaseCIID, rc, tr.RelationTemplate.PredicateID, false)));
+                            var changed = await elementTypeContainer.TraitEntityModel.BulkReplaceRelationsOnly(fragments, relevantCIIDs, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var changeset = userContext.ChangesetProxy.GetActiveChangeset(writeLayerID);
+
+                            foreach (var relevantCIID in relevantCIIDs)
+                                if (await authzFilterManager.ApplyPostFilterForMutation(new PostUpsertContextForTraitEntities(relevantCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny dPost)
+                                    throw new ExecutionError(dPost.Reason);
+
+                            userContext.CommitAndStartNewTransactionIfLastMutationAndNoErrors(context, mc => mc.BuildImmediate());
+
+                            return new BulkReplaceTraitEntityReturn(changeset, true, !changed);
+                        });
+
                 }
             }
         }

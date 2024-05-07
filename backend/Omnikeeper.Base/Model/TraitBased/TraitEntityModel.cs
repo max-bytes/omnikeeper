@@ -149,6 +149,22 @@ namespace Omnikeeper.Base.Model.TraitBased
             return await WriteAttributes(attributeFragments, relevantCIs, NamedAttributesSelection.Build(relevantAttributesForTrait), layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
         }
 
+
+        /*
+         * NOTE: unlike the regular update, this does not do any checks if the updated entities actually fulfill the trait requirements 
+         * and will be considered as this trait's entities going forward
+         */
+        // NOTE: the cis MUST exist already
+        public async Task<bool> BulkReplaceRelationsOnly(IEnumerable<BulkRelationFullFragment> fragments, IReadOnlySet<Guid> relevantCIIDs,
+            LayerSet layerSet, string writeLayer, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
+        {
+            if (relevantCIIDs.IsEmpty())
+                return false;
+
+            var scope = new BulkRelationDataCIScope(writeLayer, fragments, relevantCIIDs);
+            return await WriteRelations(scope, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
+        }
+
         // NOTE: the ci MUST exist already
         public async Task<(EffectiveTrait et, bool changed)> InsertOrUpdate(Guid ciid, IEnumerable<BulkCIAttributeDataCIAndAttributeNameScope.Fragment> attributeFragments,
             IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> outgoingRelations, IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> incomingRelations,
@@ -302,5 +318,18 @@ namespace Omnikeeper.Base.Model.TraitBased
                 throw new Exception("Cannot remove relations from trait entity: trait entity does not conform to trait requirements");
             return (dc, changed);
         }
+
+        //public async Task<(EffectiveTrait et, bool changed)> BulkReplaceRelations(TraitRelation tr, Guid thisCIID, Guid[] relatedCIIDs, LayerSet layerSet, string writeLayerID, IChangesetProxy changesetProxy, IModelContext trans, MaskHandlingForRemovalApplyNoMask maskHandlingForRemoval)
+        //{
+        //    var relevantRelations = new HashSet<(Guid thisCIID, string predicateID)>() { (thisCIID, tr.RelationTemplate.PredicateID) };
+        //    var relations = new List<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)>() { (thisCIID, predicateID: tr.RelationTemplate.PredicateID, relatedCIIDs) };
+        //    var scope = new BulkRelationDataCIAndPredicateScope(writeLayerID, relations, relevantRelations, tr.RelationTemplate.DirectionForward);
+        //    var changed = await WriteRelations(scope, layerSet, writeLayerID, changesetProxy, trans, maskHandlingForRemoval);
+
+        //    var dc = await GetSingleByCIID(thisCIID, layerSet, trans, changesetProxy.TimeThreshold);
+        //    if (dc == null)
+        //        throw new Exception("Cannot set relations of trait entity: trait entity does not conform to trait requirements");
+        //    return (dc, changed);
+        //}
     }
 }

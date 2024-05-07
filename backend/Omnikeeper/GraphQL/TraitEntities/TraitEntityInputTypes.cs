@@ -400,6 +400,28 @@ namespace Omnikeeper.GraphQL.TraitEntities
         }
     }
 
+    public class CIIDAndUpsertRelationsOnlyInput
+    {
+        public readonly Guid BaseCIID;
+        public readonly Guid[] RelatedCIIDs;
+
+        public CIIDAndUpsertRelationsOnlyInput(Guid baseCIID, Guid[] relatedCIIDs)
+        {
+            BaseCIID = baseCIID;
+            RelatedCIIDs = relatedCIIDs;
+        }
+    }
+    public class CIIDAndUpsertRelationsOnlyInputType : InputObjectGraphType<CIIDAndUpsertRelationsOnlyInput>
+    {
+        public CIIDAndUpsertRelationsOnlyInputType()
+        {
+            Name = TraitEntityTypesNameGenerator.GenerateUpsertRelationsOnlyTraitEntityInputGraphTypeName();
+
+            Field("baseCIID", x => x.BaseCIID);
+            Field("relatedCIIDs", x => x.RelatedCIIDs);
+        }
+    }
+
     public class UpsertInput
     {
         public readonly (TraitAttribute traitAttribute, IAttributeValue? value)[] AttributeValues;

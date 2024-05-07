@@ -42,11 +42,13 @@ namespace Omnikeeper.Base.Model.TraitBased
         public static string GenerateTraitRelationFilterWrapperInputGraphTypeName(ITrait trait) => SanitizeTypeName("TR_filter_Input_" + trait.ID);
         public static string GenerateUpsertTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Upsert_Input_" + trait.ID);
         public static string GenerateUpsertAttributesOnlyTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Upsert_Attributes_Only_Input_" + trait.ID);
+        public static string GenerateUpsertRelationsOnlyTraitEntityInputGraphTypeName() => SanitizeTypeName("TE_Upsert_Relations_Only_Input");
         public static string GenerateCIIDAndUpsertAttributesOnlyInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_CIID_And_Upsert_Attributes_Only_Input_" + trait.ID);
         public static string GenerateUpdateTraitEntityInputGraphTypeName(ITrait trait) => SanitizeTypeName("TE_Update_Input_" + trait.ID);
         public static string GenerateSetRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "setRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
         public static string GenerateAddRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "addRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
         public static string GenerateRemoveRelationsByCIIDMutationName(string traitID, TraitRelation tr) => "removeRelationsByCIID_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
+        public static string GenerateBulkReplaceRelationsMutationName(string traitID, TraitRelation tr) => "bulkReplaceRelations_" + SanitizeMutationName(traitID) + "_" + SanitizeMutationName(tr.Identifier);
         public static string GenerateInsertNewMutationName(string traitID) => "insertNew_" + SanitizeMutationName(traitID);
         public static string GenerateInsertChangesetDataAsTraitEntityMutationName(string traitID) => "insertChangesetData_" + SanitizeMutationName(traitID);
         public static string GenerateUpdateByCIIDMutationName(string traitID) => "updateByCIID_" + SanitizeMutationName(traitID);
