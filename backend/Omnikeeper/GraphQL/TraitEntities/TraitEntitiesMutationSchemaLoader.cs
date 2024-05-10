@@ -882,8 +882,9 @@ namespace Omnikeeper.GraphQL.TraitEntities
                                 if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(relevantCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)
                                     throw new ExecutionError(d.Reason);
 
-                            var fragments = input.SelectMany(i => i.RelatedCIIDs.Select(rc => new BulkRelationFullFragment(i.BaseCIID, rc, tr.RelationTemplate.PredicateID, false)));
-                            var changed = await elementTypeContainer.TraitEntityModel.BulkReplaceRelationsOnly(fragments, relevantCIIDs, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
+                            var fragments = input.Select(i => (i.BaseCIID, tr.RelationTemplate.PredicateID, i.RelatedCIIDs)).ToList();
+                            var relevant = relevantCIIDs.Select(ciid => (ciid, tr.RelationTemplate.PredicateID)).ToHashSet();
+                            var changed = await elementTypeContainer.TraitEntityModel.BulkReplaceRelationsOnly(fragments, relevant, tr.RelationTemplate.DirectionForward, layerset, writeLayerID, userContext.ChangesetProxy, trans, MaskHandlingForRemovalApplyNoMask.Instance);
                             var changeset = userContext.ChangesetProxy.GetActiveChangeset(writeLayerID);
 
                             foreach (var relevantCIID in relevantCIIDs)

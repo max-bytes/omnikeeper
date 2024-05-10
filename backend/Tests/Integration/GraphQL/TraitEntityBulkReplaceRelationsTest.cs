@@ -67,6 +67,14 @@ mutation {
             directionForward: true
             traitHints: [""test_trait_a""]
           }
+        },
+        {
+          identifier: ""unrelated""
+          template: { 
+            predicateID: ""is_unrelated_to""
+            directionForward: true
+            traitHints: [""test_trait_a""]
+          }
         }
       ],
       requiredTraits: []
@@ -104,6 +112,24 @@ mutation {
 }
 ";
             AssertQuerySuccess(initialBulkInsert, @"{ ""bulkReplace_test_trait_a"": { ""isNoOp"": false } }", user);
+
+
+            // setup unrelated relations
+            var mutationBulkReplaceUnrelated = @"
+mutation {
+  bulkReplaceRelations_test_trait_a_unrelated(
+    layers: [""layer_1""]
+    writeLayer: ""layer_1""
+    input: [
+        {baseCIID: ""e4125f12-0257-4835-aa25-b8f83a64a38c"", relatedCIIDs: [""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c""]},
+        {baseCIID: ""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c"", relatedCIIDs: [""e4125f12-0257-4835-aa25-b8f83a64a38c"", ""fb3772f6-6d3e-426b-86f3-1ff8ba165d0c""]}]
+  ) {
+    isNoOp
+  }
+}
+";
+            AssertQuerySuccess(mutationBulkReplaceUnrelated, @"{ ""bulkReplaceRelations_test_trait_a_unrelated"": { ""isNoOp"": false } }", user);
+
 
 
             var expectedNoop = @"{ ""bulkReplaceRelations_test_trait_a_assignments"": { ""isNoOp"": true } }";
@@ -158,6 +184,7 @@ mutation {
                         name
                         optional
                         assignments { relatedCIID }
+                        unrelated { relatedCIID }
                     }
                 }
             }
@@ -169,9 +196,9 @@ mutation {
   ""traitEntities"": {
 	  ""test_trait_a"": {
 	    ""all"": [
-          { ""entity"": { ""id"": 1, ""name"": ""testname_a"", ""optional"": null, ""assignments"": [] } },
-          { ""entity"": { ""id"": 2, ""name"": ""testname_b"", ""optional"": null, ""assignments"": [{""relatedCIID"": ""e4125f12-0257-4835-aa25-b8f83a64a38c""}] } },
-          { ""entity"": { ""id"": 3, ""name"": ""testname_c"", ""optional"": null, ""assignments"": [{""relatedCIID"": ""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c""}, {""relatedCIID"": ""e4125f12-0257-4835-aa25-b8f83a64a38c""}] } }
+          { ""entity"": { ""id"": 1, ""name"": ""testname_a"", ""optional"": null, ""assignments"": [], ""unrelated"": [{""relatedCIID"": ""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c""}] } },
+          { ""entity"": { ""id"": 2, ""name"": ""testname_b"", ""optional"": null, ""assignments"": [{""relatedCIID"": ""e4125f12-0257-4835-aa25-b8f83a64a38c""}], ""unrelated"": [{""relatedCIID"": ""e4125f12-0257-4835-aa25-b8f83a64a38c""}, {""relatedCIID"": ""fb3772f6-6d3e-426b-86f3-1ff8ba165d0c""}] } },
+          { ""entity"": { ""id"": 3, ""name"": ""testname_c"", ""optional"": null, ""assignments"": [{""relatedCIID"": ""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c""}, {""relatedCIID"": ""e4125f12-0257-4835-aa25-b8f83a64a38c""}], ""unrelated"": [] } }
         ]
 	  }
   }

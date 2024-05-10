@@ -155,13 +155,10 @@ namespace Omnikeeper.Base.Model.TraitBased
          * and will be considered as this trait's entities going forward
          */
         // NOTE: the cis MUST exist already
-        public async Task<bool> BulkReplaceRelationsOnly(IEnumerable<BulkRelationFullFragment> fragments, IReadOnlySet<Guid> relevantCIIDs,
+        public async Task<bool> BulkReplaceRelationsOnly(IList<(Guid thisCIID, string predicateID, Guid[] otherCIIDs)> fragments, ISet<(Guid thisCIID, string predicateID)> relevant, bool outgoing,
             LayerSet layerSet, string writeLayer, IChangesetProxy changesetProxy, IModelContext trans, IMaskHandlingForRemoval maskHandlingForRemoval)
         {
-            if (relevantCIIDs.IsEmpty())
-                return false;
-
-            var scope = new BulkRelationDataCIScope(writeLayer, fragments, relevantCIIDs);
+            var scope = new BulkRelationDataCIAndPredicateScope(writeLayer, fragments, relevant, outgoing);
             return await WriteRelations(scope, layerSet, writeLayer, changesetProxy, trans, maskHandlingForRemoval);
         }
 
