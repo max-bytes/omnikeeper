@@ -859,7 +859,8 @@ namespace Omnikeeper.GraphQL.TraitEntities
                         .Arguments(
                             new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                             new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "writeLayer" },
-                            new QueryArgument<NonNullGraphType<ListGraphType<CIIDAndUpsertRelationsOnlyInputType>>> { Name = "input" }
+                            new QueryArgument<NonNullGraphType<ListGraphType<CIIDAndUpsertRelationsOnlyInputType>>> { Name = "input" },
+                            new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>> { Name = "relevantCIIDs" }
                             )
                         .ResolveAsync(async context =>
                         {
@@ -874,9 +875,7 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             var timeThreshold = userContext.GetTimeThreshold(context.Path);
                             var trans = userContext.Transaction;
 
-                            // TODO: this could be done faster, because we only need the CIIDs that are TEs, not the TEs themselves at this point
-                            var relevantETs = await elementTypeContainer.TraitEntityModel.GetByCIID(AllCIIDsSelection.Instance, layerset, trans, timeThreshold);
-                            var relevantCIIDs = relevantETs.Keys.ToHashSet();
+                            var relevantCIIDs = context.GetArgument<Guid[]>("relevantCIIDs")!.ToHashSet(); // NOTE: force distinct by turning it into a hashset
 
                             foreach (var relevantCIID in relevantCIIDs)
                                 if (await authzFilterManager.ApplyPreFilterForMutation(new PreUpsertContextForTraitEntities(relevantCIID, elementTypeContainer.Trait), writeLayerID, userContext, context.Path) is AuthzFilterResultDeny d)

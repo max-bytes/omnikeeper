@@ -123,6 +123,7 @@ mutation {
     input: [
         {baseCIID: ""e4125f12-0257-4835-aa25-b8f83a64a38c"", relatedCIIDs: [""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c""]},
         {baseCIID: ""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c"", relatedCIIDs: [""e4125f12-0257-4835-aa25-b8f83a64a38c"", ""fb3772f6-6d3e-426b-86f3-1ff8ba165d0c""]}]
+    relevantCIIDs: [""e4125f12-0257-4835-aa25-b8f83a64a38c"", ""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c""]
   ) {
     isNoOp
   }
@@ -144,6 +145,7 @@ mutation {
     input: [
         {baseCIID: ""e4125f12-0257-4835-aa25-b8f83a64a38c"", relatedCIIDs: [""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c""]},
         {baseCIID: ""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c"", relatedCIIDs: [""e4125f12-0257-4835-aa25-b8f83a64a38c"", ""fb3772f6-6d3e-426b-86f3-1ff8ba165d0c""]}]
+    relevantCIIDs: [""e4125f12-0257-4835-aa25-b8f83a64a38c"", ""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c""]
   ) {
     isNoOp
   }
@@ -163,6 +165,7 @@ mutation {
     input: [
         {baseCIID: ""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c"", relatedCIIDs: [""e4125f12-0257-4835-aa25-b8f83a64a38c""]},
         {baseCIID: ""fb3772f6-6d3e-426b-86f3-1ff8ba165d0c"", relatedCIIDs: [""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c"", ""e4125f12-0257-4835-aa25-b8f83a64a38c""]}]
+    relevantCIIDs: [""e4125f12-0257-4835-aa25-b8f83a64a38c"", ""eb3772f6-6d3e-426b-86f3-1ff8ba165d0c"", ""fb3772f6-6d3e-426b-86f3-1ff8ba165d0c""]
   ) {
     isNoOp
   }
