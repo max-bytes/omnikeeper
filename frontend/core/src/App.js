@@ -218,7 +218,7 @@ function App() {
         <ErrorNotifier>
             {(showError) => (
               <ConditionalWrapper condition={!authDisabled} wrapper={children => 
-                <ReactKeycloakProvider authClient={keycloak} initOptions={{ onLoad: 'check-sso' }} autoRefreshToken={true} onTokens={tokenSetter} LoadingComponent={loadingComponent}>{children}</ReactKeycloakProvider>}>
+                <ReactKeycloakProvider authClient={keycloak} initOptions={{ onLoad: 'check-sso', redirectUri: process.env.PUBLIC_URL }} autoRefreshToken={true} onTokens={tokenSetter} LoadingComponent={loadingComponent}>{children}</ReactKeycloakProvider>}>
                 <React.StrictMode>
                   <ApolloWrapper component={BR} showError={showError} />
                 </React.StrictMode>
