@@ -418,7 +418,7 @@ namespace Omnikeeper.Startup
 
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "swagger/{documentName}/swagger.json";
+                c.RouteTemplate = $"{Configuration["BaseURL"]}/swagger/{{documentName}}/swagger.json";
                 // TODO: still needed? breaks swagger behind (certain) revery proxies, if commented in
                 //c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
                 //{
