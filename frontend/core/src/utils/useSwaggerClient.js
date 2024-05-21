@@ -19,6 +19,14 @@ export default function useSwaggerClient() {
                     oauth2: { token: { access_token: token } },
                 }
             }).then(d => {
+
+                // NOTE: we set the servers array explicitly, because - depending on the backend config and overall config (proxy, ...) - we cannot rely on the default set by swagger.json
+                d.spec.servers = [
+                    {
+                        "url": `${env('BACKEND_URL')}`
+                    }
+                ]
+
                 setSwaggerClient(d);
                 setLoading(false);
             }).catch(e => {
