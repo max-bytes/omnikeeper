@@ -266,8 +266,11 @@ namespace Omnikeeper.GraphQL.TraitEntities
                             return null;
                         }
 
+                        // ctx.FieldDefinition.Name is escaped (means "." is escaped as "__")
+                        // while o.TraitAttributes is still unescaped
                         var fn = ctx.FieldDefinition.Name;
-                        if (o.TraitAttributes.TryGetValue(fn, out var v))
+                        var fnUnescaped = fn.Replace("__", "."); // HACK: this is not 100% failure proof as the actual escaping process does more than just escaping ".", see GenerateTraitAttributeFieldName()
+                        if (o.TraitAttributes.TryGetValue(fnUnescaped, out var v))
                         {
                             return v.Attribute.Value.ToGraphQLValue();
                         }
